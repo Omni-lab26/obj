@@ -1,0 +1,341 @@
+<!-- ═══════════ SNS-02 · Text Thread ═══════════ -->
+<style>
+#SNS-02 .sns02-thread {
+  --col: 40px; --gap: 12px;
+  width: min(100%, 400px); color: var(--label);
+  font: 400 15px/1.45 var(--font-text); letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+#SNS-02 button { -webkit-tap-highlight-color: transparent; font: inherit; color: inherit; }
+
+/* — Post grid: rail (avatar + connector) | content — */
+#SNS-02 .sns02-post { display: grid; grid-template-columns: var(--col) minmax(0, 1fr); column-gap: var(--gap); }
+#SNS-02 .sns02-rail { display: flex; flex-direction: column; align-items: center; }
+#SNS-02 .sns02-rail .av { width: 40px; height: 40px; font-size: 17px; }
+#SNS-02 .sns02-line { flex: 1; width: 2px; min-height: 12px; margin: 8px 0 6px; border-radius: 1px; background: var(--label-4); transform-origin: top; }
+#SNS-02 .sns02-content { min-width: 0; padding-bottom: 20px; }
+
+/* — Byline — */
+#SNS-02 .sns02-by { display: flex; align-items: baseline; gap: 6px; min-height: 22px; margin-top: 1px; white-space: nowrap; }
+#SNS-02 .sns02-name { font: 650 16px/1.25 var(--font-display); letter-spacing: -0.02em; color: var(--label); }
+#SNS-02 .sns02-name em { font-style: normal; font-weight: 300; color: var(--label-3); margin: 0 3px; }
+#SNS-02 .sns02-handle, #SNS-02 .sns02-time { font-size: 15px; color: var(--label-2); letter-spacing: -0.01em; }
+#SNS-02 .sns02-handle { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#SNS-02 .sns02-time { font-variant-numeric: tabular-nums; flex: none; }
+#SNS-02 .sns02-dot { color: var(--label-3); flex: none; }
+#SNS-02 .sns02-more { align-self: center; margin: -10px -10px -10px auto; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--label-2); cursor: pointer; flex: none; transition: background var(--dur-1) ease, transform var(--dur-2) var(--ease-spring); }
+#SNS-02 .sns02-more .i { font-size: 18px; }
+#SNS-02 .sns02-more:active { transform: scale(.88); background: var(--fill-3); transition-duration: 90ms; }
+
+/* — Body: typography is the hero — */
+#SNS-02 .sns02-text { margin: 6px 0 0; font-size: 17px; line-height: 1.45; letter-spacing: 0; text-wrap: pretty; overflow-wrap: anywhere; word-break: auto-phrase; }
+#SNS-02 .sns02-lede { display: block; margin-bottom: 8px; font-weight: 600; letter-spacing: 0; text-wrap: balance; }
+#SNS-02 .sns02-a { color: var(--link); text-decoration: none; border-radius: 3px; white-space: nowrap; }
+#SNS-02 .sns02-a--url { letter-spacing: -0.01em; }
+@media (hover: hover) { #SNS-02 .sns02-a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; } }
+#SNS-02 .sns02-a:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+
+/* — Link preview — */
+#SNS-02 .sns02-card {
+  display: block; margin-top: 14px; overflow: hidden; border-radius: var(--r-m); color: inherit; text-decoration: none;
+  background: var(--bg); box-shadow: inset 0 0 0 .5px var(--separator);
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-2) ease;
+}
+#SNS-02 .sns02-card:active { transform: scale(.985); transition-duration: 100ms; }
+@media (hover: hover) { #SNS-02 .sns02-card:hover { background: var(--fill-4); } }
+#SNS-02 .sns02-card:focus-visible, #SNS-02 .sns02-quote:focus-visible { outline: none; box-shadow: inset 0 0 0 .5px var(--separator), 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+#SNS-02 .sns02-cover { position: relative; aspect-ratio: 2 / 1; overflow: hidden; box-shadow: inset 0 -.5px 0 var(--separator); }
+#SNS-02 .sns02-cover .art { position: absolute; inset: 0; background-size: 130% 150%; background-position: 30% 40%; }
+#SNS-02 .sns02-cover b {
+  position: absolute; left: 18px; bottom: 6px;
+  font: 800 76px/0.9 var(--font-display); letter-spacing: -0.02em; color: #1d1d1f; mix-blend-mode: multiply;
+}
+#SNS-02 .sns02-cover small {
+  position: absolute; top: 14px; left: 18px; right: 16px; display: flex; justify-content: space-between;
+  font: 600 10px/1 var(--font-mono); letter-spacing: .08em; color: rgba(29, 29, 31, .72); text-transform: uppercase;
+}
+#SNS-02 .sns02-cover::after { content: ""; position: absolute; inset: 0; background: light-dark(transparent, rgba(0, 0, 0, .14)); pointer-events: none; }
+#SNS-02 .sns02-cover i { position: absolute; right: 16px; bottom: 16px; width: 64px; height: 1px; background: rgba(29, 29, 31, .6); }
+#SNS-02 .sns02-cardtext { padding: 11px 14px 13px; }
+#SNS-02 .sns02-domain { display: flex; align-items: center; gap: 5px; font-size: 12px; line-height: 1.3; color: var(--label-2); letter-spacing: 0; }
+#SNS-02 .sns02-domain .i { font-size: 12px; }
+#SNS-02 .sns02-cardtitle { margin: 3px 0 0; font: 650 16px/1.35 var(--font-display); letter-spacing: 0; text-wrap: balance; word-break: auto-phrase; }
+
+/* — Quoted post — */
+#SNS-02 .sns02-quote {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; margin-top: 10px; padding: 12px 14px 13px;
+  border-radius: var(--r-m); box-shadow: inset 0 0 0 .5px var(--separator); cursor: pointer;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-2) ease;
+}
+#SNS-02 .sns02-quote:active { transform: scale(.985); transition-duration: 100ms; }
+@media (hover: hover) { #SNS-02 .sns02-quote:hover { background: var(--fill-4); } }
+#SNS-02 .sns02-qby { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; font-size: 14px; }
+#SNS-02 .sns02-qby .av { width: 20px; height: 20px; font-size: 10px; }
+#SNS-02 .sns02-qby b { font-weight: 600; letter-spacing: -0.01em; }
+#SNS-02 .sns02-qby .i { font-size: 14px; color: var(--blue); margin-left: -2px; }
+#SNS-02 .sns02-qby span { color: var(--label-2); overflow: hidden; text-overflow: ellipsis; }
+#SNS-02 .sns02-qtext { margin: 6px 0 0; font-size: 15px; line-height: 1.45; word-break: auto-phrase; }
+#SNS-02 .sns02-qthumb { width: 56px; height: 56px; align-self: center; border-radius: 10px; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .1); }
+
+/* — Dateline — */
+#SNS-02 .sns02-dateline { margin: 14px 0 0; font-size: 13px; line-height: 1.3; color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-02 .sns02-dateline b { color: var(--label); font-weight: 600; }
+
+/* — Actions — */
+#SNS-02 .sns02-actions { display: flex; align-items: center; gap: 2px; margin: 8px 0 0 -10px; }
+#SNS-02 .sns02-act {
+  --tint: var(--label-2);
+  display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 10px; border: 0; border-radius: 17px;
+  background: transparent; color: var(--label-2); cursor: pointer; user-select: none; -webkit-user-select: none;
+  transition: color var(--dur-2) ease, background var(--dur-1) ease;
+}
+#SNS-02 .sns02-act .i { font-size: 19px; transition: transform var(--dur-3) var(--ease-spring); }
+#SNS-02 .sns02-act:active .i { transform: scale(.82); transition-duration: 90ms; }
+#SNS-02 .sns02-act:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 50%, transparent); }
+@media (hover: hover) { #SNS-02 .sns02-act:hover { background: color-mix(in srgb, var(--tint) 10%, transparent); color: var(--tint); } }
+#SNS-02 .sns02-act--share { margin-left: auto; margin-right: -10px; }
+#SNS-02 .sns02-act--rp { --tint: var(--green); }
+#SNS-02 .sns02-act--like { --tint: var(--pink); }
+#SNS-02 .sns02-act--reply { --tint: var(--blue); }
+#SNS-02 .sns02-act--share { --tint: var(--blue); }
+#SNS-02 .sns02-act[aria-pressed="true"] { color: var(--tint); }
+#SNS-02 .sns02-act--rp[aria-pressed="true"] .i { transform: rotate(180deg); }
+#SNS-02 .sns02-act.is-pop .i { animation: sns02-pop 560ms both; }
+@keyframes sns02-pop {
+  0%   { transform: scale(1); animation-timing-function: ease-out; }
+  20%  { transform: scale(.72); animation-timing-function: cubic-bezier(.3, 1.6, .5, 1); }
+  60%  { transform: scale(1.24); animation-timing-function: ease-in-out; }
+  100% { transform: scale(1); }
+}
+
+/* rolling digits */
+#SNS-02 .sns02-count { display: inline-flex; height: 18px; font: 500 13px/18px var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-02 .sns02-dg { display: inline-block; height: 18px; overflow: hidden; }
+#SNS-02 .sns02-strip { display: block; white-space: pre; transform: translateY(calc(var(--d, 0) * -18px)); transition: transform 620ms cubic-bezier(.3, 1.32, .5, 1); }
+#SNS-02 .sns02-count.is-rolling .sns02-dg { -webkit-mask: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); mask: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); }
+
+/* — Reply — */
+#SNS-02 .sns02-post--reply .sns02-rail .av { width: 32px; height: 32px; font-size: 14px; }
+#SNS-02 .sns02-post--reply .sns02-text { margin-top: 3px; font-size: 15px; line-height: 1.45; }
+#SNS-02 .sns02-post--reply .sns02-name { font-size: 15px; }
+#SNS-02 .sns02-post--reply .sns02-handle, #SNS-02 .sns02-post--reply .sns02-time { font-size: 14px; }
+#SNS-02 .sns02-post--reply .sns02-by { min-height: 20px; margin-top: 4px; }
+#SNS-02 .sns02-post--reply .sns02-actions { margin-top: 4px; }
+#SNS-02 .sns02-post--reply .sns02-act { height: 30px; }
+#SNS-02 .sns02-post--reply .sns02-act .i { font-size: 16px; }
+#SNS-02 .sns02-post--reply .sns02-content { padding-bottom: 14px; }
+#SNS-02 .sns02-line--dash { flex: 1; background: none; border-left: 2px dotted var(--label-4); width: 0; border-radius: 0; margin-bottom: 4px; }
+#SNS-02 .sns02-extra { display: none; }
+#SNS-02 .sns02-extra.is-shown { display: grid; }
+
+/* — More replies — */
+#SNS-02 .sns02-morerow { display: grid; grid-template-columns: var(--col) minmax(0, 1fr); column-gap: var(--gap); align-items: center; }
+#SNS-02 .sns02-stack { display: flex; justify-content: center; }
+#SNS-02 .sns02-stack .av { width: 18px; height: 18px; font-size: 8px; box-shadow: 0 0 0 2px var(--bg); }
+#SNS-02 .sns02-stack .av + .av { margin-left: -5px; }
+#SNS-02 .sns02-showmore {
+  justify-self: start; height: 32px; margin-left: -10px; padding: 0 10px; border: 0; border-radius: 16px; background: transparent;
+  color: var(--label-2); font-size: 15px; font-variant-numeric: tabular-nums; cursor: pointer;
+  transition: background var(--dur-1) ease, opacity var(--dur-2) ease, transform var(--dur-2) var(--ease-spring);
+}
+@media (hover: hover) { #SNS-02 .sns02-showmore:hover { background: var(--fill-4); color: var(--label); } }
+#SNS-02 .sns02-showmore:active { transform: scale(.97); background: var(--fill-3); transition-duration: 90ms; }
+#SNS-02 .sns02-showmore:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 50%, transparent); }
+
+/* — Toast — */
+#SNS-02 .sns02-toast {
+  position: absolute; left: 50%; bottom: 18px; z-index: 5; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px 0 13px;
+  border-radius: 20px; background: var(--mat-thick); color: var(--label);
+  -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+  font-size: 14px; font-weight: 600; letter-spacing: 0; white-space: nowrap; pointer-events: none;
+  box-shadow: 0 0 0 .5px var(--separator), var(--shadow-2);
+  opacity: 0; transform: translate(-50%, 16px) scale(.96);
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring);
+}
+#SNS-02 .sns02-toast .i { font-size: 16px; color: var(--green); }
+#SNS-02 .sns02-toast.is-on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+
+@media (max-width: 420px) {
+  #SNS-02 .sns02-qthumb { width: 44px; height: 44px; border-radius: 8px; align-self: start; margin-top: 2px; }
+  #SNS-02 .sns02-quote { gap: 10px; padding: 11px 12px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #SNS-02 .sns02-strip, #SNS-02 .sns02-act .i, #SNS-02 .sns02-toast { transition: none; }
+  #SNS-02 .sns02-act.is-pop .i { animation: none; }
+}
+</style>
+<article class="obj" id="SNS-02" data-name="Text Thread" data-ja="テキスト投稿スレッド" data-vector="Editorial" data-size="m" data-desc="文字が主役のタイムライン投稿。返信をつなぐ線と引用カード。">
+  <div class="obj-stage" data-bg="plain">
+    <div class="sns02-thread">
+
+      <div class="sns02-post" role="article" aria-label="蓮 / Ren の投稿">
+        <div class="sns02-rail"><span class="av av-6" aria-hidden="true">R</span><span class="sns02-line" aria-hidden="true"></span></div>
+        <div class="sns02-content">
+          <header class="sns02-by">
+            <span class="sns02-name">蓮<em>/</em>Ren</span>
+            <span class="sns02-handle">@ren.design</span><span class="sns02-dot" aria-hidden="true">·</span><time class="sns02-time" datetime="2026-10-02T06:41">3時間</time>
+            <button class="sns02-more" type="button" aria-label="その他"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+          </header>
+          <p class="sns02-text"><span class="sns02-lede">「余白は『何もない場所』じゃない。情報同士の関係を語る、いちばん静かな文法だ。」</span><a class="sns02-a" href="#SNS-02">@haru.photo</a> さんの新しい写真集をめくりながら、あらためてそう思った朝。続きはノートに書きました → <a class="sns02-a sns02-a--url" href="#SNS-02">ren.design/notes/yohaku</a> <a class="sns02-a" href="#SNS-02">#タイポグラフィ</a></p>
+
+          <a class="sns02-card" href="#SNS-02" aria-label="リンク：余白のデザイン ― 情報の関係を整える7つの原則（ren.design）">
+            <div class="sns02-cover" aria-hidden="true"><div class="art art-7"></div><small><span>Notes — No.12</span><span>2026.10</span></small><b>余白</b><i></i></div>
+            <div class="sns02-cardtext">
+              <span class="sns02-domain"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg>ren.design · 8分で読めます</span>
+              <p class="sns02-cardtitle">余白のデザイン ― 情報の関係を整える7つの原則</p>
+            </div>
+          </a>
+
+          <div class="sns02-quote" role="link" tabindex="0" aria-label="引用：佐藤 春 @haru.photo の投稿">
+            <div>
+              <div class="sns02-qby"><span class="av av-1" aria-hidden="true">H</span><b>佐藤 春</b><svg class="i" role="img" aria-label="認証済み"><use href="#i-checkmark-seal-fill"/></svg><span>@haru.photo · 1日</span></div>
+              <p class="sns02-qtext">写真集『朝の光』の予約受付をはじめました。京都で撮りためた48枚を、一冊に。</p>
+            </div>
+            <div class="art art-1 sns02-qthumb" aria-hidden="true"></div>
+          </div>
+
+          <p class="sns02-dateline">午前6:41 · 2026年10月2日 · <b>1.8万</b> 回表示</p>
+
+          <div class="sns02-actions">
+            <button class="sns02-act sns02-act--reply" type="button" aria-label="返信 24件"><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg><span class="sns02-count" data-n="24" aria-hidden="true">24</span></button>
+            <button class="sns02-act sns02-act--rp" type="button" aria-pressed="false" data-n="112" aria-label="リポスト 112件"><svg class="i" aria-hidden="true"><use href="#i-arrow-2-squarepath"/></svg><span class="sns02-count" aria-hidden="true">112</span></button>
+            <button class="sns02-act sns02-act--like" type="button" aria-pressed="false" data-n="1249" aria-label="いいね 1.2K件"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><span class="sns02-count" aria-hidden="true">1.2K</span></button>
+            <button class="sns02-act sns02-act--share" type="button" aria-label="共有"><svg class="i" aria-hidden="true"><use href="#i-square-and-arrow-up"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sns02-post sns02-post--reply" role="article" aria-label="結菜 / Yuna の返信">
+        <div class="sns02-rail"><span class="av av-4" aria-hidden="true">Y</span><span class="sns02-line sns02-line--dash" aria-hidden="true"></span></div>
+        <div class="sns02-content">
+          <header class="sns02-by">
+            <span class="sns02-name">結菜<em>/</em>Yuna</span>
+            <span class="sns02-handle">@yuna</span><span class="sns02-dot" aria-hidden="true">·</span><time class="sns02-time" datetime="2026-10-02T07:41">2時間</time>
+          </header>
+          <p class="sns02-text">「いちばん静かな文法」って言葉、すごくしっくりきます。余白を削りたくなったら読み返します。</p>
+          <div class="sns02-actions">
+            <button class="sns02-act sns02-act--like" type="button" aria-pressed="false" data-n="38" aria-label="いいね 38件"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><span class="sns02-count" aria-hidden="true">38</span></button>
+            <button class="sns02-act sns02-act--reply" type="button" aria-label="返信 2件"><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg><span class="sns02-count" aria-hidden="true">2</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sns02-post sns02-post--reply sns02-extra" role="article" aria-label="海斗 / Kaito の返信">
+        <div class="sns02-rail"><span class="av av-3" aria-hidden="true">K</span><span class="sns02-line sns02-line--dash" aria-hidden="true"></span></div>
+        <div class="sns02-content">
+          <header class="sns02-by">
+            <span class="sns02-name">海斗<em>/</em>Kaito</span>
+            <span class="sns02-handle">@kaito.dev</span><span class="sns02-dot" aria-hidden="true">·</span><time class="sns02-time" datetime="2026-10-02T08:41">1時間</time>
+          </header>
+          <p class="sns02-text">コードでも同じですね。spacing のトークンを決めた瞬間に、画面の関係が一気に読みやすくなる。</p>
+          <div class="sns02-actions">
+            <button class="sns02-act sns02-act--like" type="button" aria-pressed="false" data-n="17" aria-label="いいね 17件"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><span class="sns02-count" aria-hidden="true">17</span></button>
+            <button class="sns02-act sns02-act--reply" type="button" aria-label="返信"><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sns02-morerow">
+        <span class="sns02-stack" aria-hidden="true"><span class="av av-2"></span><span class="av av-5"></span></span>
+        <button class="sns02-showmore" type="button">他23件の返信を表示</button>
+      </div>
+    </div>
+    <div class="sns02-toast" role="status" aria-live="polite"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg><span>リンクをコピーしました</span></div>
+  </div>
+  <ul class="obj-notes"><li>リポスト・いいねで数字が回転</li><li>他の返信を表示</li><li>共有でリンクをコピー</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-02');
+  if (!root) return;
+  const $ = (s) => root.querySelector(s);
+  const $$ = (s) => [...root.querySelectorAll(s)];
+  const reduced = () => !!(window.ObjKit && ObjKit.reducedMotion);
+
+  /* ── Odometer counts ─────────────────────── */
+  const fmt = (n) => (n >= 1000 ? (Math.round(n / 100) / 10).toFixed(1).replace(/\.0$/, '') + 'K' : String(n));
+  const DIGITS = '0\n1\n2\n3\n4\n5\n6\n7\n8\n9';
+  const build = (el, str) => {
+    el.textContent = '';
+    el.dataset.v = str;
+    for (const ch of str) {
+      if (/\d/.test(ch)) {
+        const slot = document.createElement('span');
+        slot.className = 'sns02-dg';
+        const strip = document.createElement('span');
+        strip.className = 'sns02-strip';
+        strip.textContent = DIGITS;
+        strip.style.setProperty('--d', ch);
+        slot.append(strip);
+        el.append(slot);
+      } else el.append(document.createTextNode(ch));
+    }
+  };
+  const setCount = (el, str) => {
+    const prev = el.dataset.v || '';
+    const shape = (s) => s.replace(/\d/g, '0');
+    if (reduced() || shape(prev) !== shape(str)) { build(el, str); return; }
+    const strips = el.querySelectorAll('.sns02-strip');
+    let k = 0;
+    el.classList.add('is-rolling');
+    for (const ch of str) if (/\d/.test(ch)) strips[k++].style.setProperty('--d', ch);
+    el.dataset.v = str;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('is-rolling'), 700);
+  };
+  $$('.sns02-count').forEach((el) => build(el, el.textContent.trim()));
+
+  /* ── Toggles ──────────────────────────────── */
+  const pop = (btn) => {
+    if (reduced()) return;
+    btn.classList.remove('is-pop'); void btn.offsetWidth; btn.classList.add('is-pop');
+  };
+  root.addEventListener('animationend', (e) => { const b = e.target.closest('.sns02-act'); if (b) b.classList.remove('is-pop'); });
+
+  $$('.sns02-act[aria-pressed]').forEach((btn) => {
+    const count = btn.querySelector('.sns02-count');
+    const base = +btn.dataset.n;
+    const isLike = btn.classList.contains('sns02-act--like');
+    const noun = isLike ? 'いいね' : 'リポスト';
+    btn.addEventListener('click', () => {
+      const on = btn.getAttribute('aria-pressed') !== 'true';
+      btn.setAttribute('aria-pressed', String(on));
+      const n = base + (on ? 1 : 0);
+      setCount(count, fmt(n));
+      btn.setAttribute('aria-label', `${noun}${on ? '済み' : ''} ${fmt(n)}件`);
+      if (isLike) {
+        btn.querySelector('use').setAttribute('href', on ? '#i-heart-fill' : '#i-heart');
+        if (on) pop(btn);
+      }
+    });
+  });
+
+  /* ── Share → toast ───────────────────────── */
+  const toast = $('.sns02-toast');
+  let toastT = 0;
+  $('.sns02-act--share').addEventListener('click', () => {
+    clearTimeout(toastT);
+    toast.classList.add('is-on');
+    toastT = setTimeout(() => toast.classList.remove('is-on'), 1800);
+  });
+
+  /* ── Show more replies ───────────────────── */
+  const more = $('.sns02-showmore');
+  const extra = $('.sns02-extra');
+  more.addEventListener('click', () => {
+    if (extra.classList.contains('is-shown')) return;
+    extra.classList.add('is-shown');
+    more.textContent = '他22件の返信を表示';
+    if (reduced()) return;
+    const h = extra.offsetHeight;
+    extra.animate([{ height: '0px', opacity: 0, transform: 'translateY(-6px)' }, { height: h + 'px', opacity: 1, transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.32,.72,0,1)' });
+    extra.style.overflow = 'hidden';
+    setTimeout(() => { extra.style.overflow = ''; }, 500);
+  });
+
+  /* links inside the demo never navigate */
+  root.addEventListener('click', (e) => { if (e.target.closest('a.sns02-a, a.sns02-card')) e.preventDefault(); });
+  const quote = $('.sns02-quote');
+  quote.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); quote.click(); } });
+})();
+</script>

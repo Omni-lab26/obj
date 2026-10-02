@@ -1,0 +1,338 @@
+<!-- ═══════════ FB-01 · Alert ═══════════ -->
+<style>
+#FB-01 {
+  --fb01-mat: light-dark(rgba(255, 255, 255, .6), rgba(40, 40, 46, .6));
+  --fb01-panel: light-dark(rgba(255, 255, 255, .42), rgba(54, 54, 62, .42));
+  --fb01-hair: light-dark(rgba(60, 60, 67, .2), rgba(255, 255, 255, .13));
+  --fb01-hl: light-dark(rgba(110, 110, 128, .2), rgba(255, 255, 255, .13));
+  --fb01-rim-a: light-dark(rgba(255, 255, 255, .95), rgba(255, 255, 255, .42));
+  --fb01-rim-b: light-dark(rgba(255, 255, 255, .25), rgba(255, 255, 255, .1));
+  --fb01-rim-c: light-dark(rgba(255, 255, 255, .6), rgba(255, 255, 255, .2));
+  --fb01-sheen: light-dark(rgba(255, 255, 255, .42), rgba(255, 255, 255, .07));
+  --fb01-scrim: light-dark(rgba(16, 12, 40, .24), rgba(0, 0, 0, .5));
+}
+#FB-01 .obj-stage { min-height: 440px; }
+
+/* ── Scene (content behind the alert) ── */
+#FB-01 .fb01-scene { position: relative; display: flex; flex-direction: column; align-items: center; gap: 22px; width: min(100%, 340px); }
+#FB-01 .fb01-panel {
+  position: relative; width: 100%; padding: 4px 0; border-radius: 24px;
+  background: var(--fb01-panel);
+  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+}
+#FB-01 .fb01-row { position: relative; display: grid; min-height: 68px; }
+#FB-01 .fb01-row + .fb01-row::before { content: ""; position: absolute; top: 0; left: 72px; right: 0; height: .5px; background: var(--fb01-hair); }
+#FB-01 .fb01-layer { grid-area: 1 / 1; display: flex; align-items: center; gap: 12px; padding: 10px 16px; min-width: 0;
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios), filter var(--dur-2) ease; }
+#FB-01 .fb01-row[data-state="deleted"] .fb01-layer--main,
+#FB-01 .fb01-row:not([data-state="deleted"]) .fb01-layer--alt { opacity: 0; transform: scale(.96); filter: blur(4px); pointer-events: none; visibility: hidden; transition: opacity var(--dur-1) ease, transform var(--dur-2) var(--ease-ios), filter var(--dur-1) ease, visibility 0s var(--dur-2); }
+#FB-01 .fb01-thumb { width: 44px; height: 44px; border-radius: 11px; flex: none; background-size: 150% 150%; background-position: 50% 75%; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .12); }
+#FB-01 .fb01-noteic {
+  position: relative; width: 44px; height: 44px; border-radius: 11px; flex: none; overflow: hidden;
+  background: repeating-linear-gradient(180deg, transparent 0 7px, rgba(60, 60, 67, .16) 7px 7.5px) 0 16px / 100% 100% no-repeat, linear-gradient(180deg, #FFFFFF, #F4F2EC);
+  box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .06);
+}
+#FB-01 .fb01-noteic::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 12px; background: linear-gradient(180deg, #FFD84E, #FFC61A); }
+#FB-01 .fb01-trashic { width: 44px; height: 44px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--fill-3); color: var(--label-2); font-size: 21px; }
+#FB-01 .fb01-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+#FB-01 .fb01-name { font: 600 var(--fs-subhead)/1.25 var(--font-text); letter-spacing: -0.2px; color: var(--label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-01 .fb01-sub { position: relative; display: grid; font-size: var(--fs-footnote); line-height: 16px; color: var(--label-2); letter-spacing: 0; }
+#FB-01 .fb01-sub > span { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios); }
+#FB-01 .fb01-sub > span:not(.is-on) { opacity: 0; transform: translateY(6px); }
+#FB-01 .fb01-dot { width: 7px; height: 7px; margin: 0 1px; border-radius: 50%; background: var(--orange); flex: none; }
+#FB-01 .fb01-sub .i { font-size: 14px; }
+#FB-01 .fb01-ok { color: var(--green); }
+#FB-01 .fb01-num { font-variant-numeric: tabular-nums; }
+#FB-01 .fb01-undo {
+  flex: none; height: 30px; padding: 0 12px; border: 0; border-radius: var(--r-full); cursor: pointer;
+  background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent);
+  font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#FB-01 .fb01-undo:active { transform: scale(.94); transition-duration: 90ms; }
+
+#FB-01 .fb01-triggers { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+#FB-01 .fb01-trigger {
+  position: relative; display: inline-flex; align-items: center; gap: 7px; height: 44px; padding: 0 18px 0 15px;
+  border: 0; border-radius: var(--r-full); cursor: pointer; color: var(--label);
+  font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-2) ease;
+}
+#FB-01 .fb01-trigger::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, var(--fb01-sheen), rgba(255, 255, 255, 0) 55%); }
+#FB-01 .fb01-trigger .i { font-size: 17px; }
+#FB-01 .fb01-trigger--del .i { color: var(--red); }
+#FB-01 .fb01-trigger--save .i { color: var(--accent); }
+@media (hover: hover) { #FB-01 .fb01-trigger:hover { background: light-dark(rgba(255, 255, 255, .7), rgba(72, 72, 80, .6)); } }
+#FB-01 .fb01-trigger:active { transform: scale(.96); transition-duration: 90ms; }
+#FB-01 .fb01-trigger:focus-visible, #FB-01 .fb01-undo:focus-visible { outline: none; box-shadow: var(--glass-shadow), 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+/* ── Scrim ── */
+#FB-01 .fb01-scrim {
+  position: absolute; inset: 0; z-index: 5; background: var(--fb01-scrim);
+  opacity: 0; pointer-events: none; transition: opacity 260ms ease;
+}
+#FB-01 .fb01-scrim.is-on { opacity: 1; pointer-events: auto; transition-duration: 300ms; }
+
+/* ── Alert ── */
+#FB-01 .fb01-host { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; padding: 16px; pointer-events: none; }
+#FB-01 .fb01-alert {
+  grid-area: 1 / 1; position: relative; width: min(270px, 100%); border-radius: 22px; overflow: hidden; isolation: isolate;
+  background: var(--fb01-mat);
+  -webkit-backdrop-filter: blur(30px) saturate(200%); backdrop-filter: blur(30px) saturate(200%);
+  box-shadow: 0 26px 64px light-dark(rgba(30, 20, 70, .22), rgba(0, 0, 0, .55)), 0 3px 10px light-dark(rgba(0, 0, 0, .08), rgba(0, 0, 0, .35));
+  opacity: 0; transform: scale(1.15); pointer-events: none; outline: none;
+}
+#FB-01 .fb01-alert[hidden] { display: none; }
+#FB-01 .fb01-alert.is-open { opacity: 1; transform: none; pointer-events: auto;
+  transition: opacity 200ms cubic-bezier(.2, 0, 0, 1), transform 520ms cubic-bezier(.16, 1, .3, 1); }
+#FB-01 .fb01-alert.is-closing { opacity: 0; transform: scale(.985); transition: opacity 210ms ease-in, transform 210ms ease-in; }
+/* Liquid-glass rim + specular sheen */
+#FB-01 .fb01-alert::before {
+  content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(140deg, var(--fb01-rim-a) 0%, var(--fb01-rim-b) 22%, rgba(255, 255, 255, 0) 46%, rgba(255, 255, 255, .05) 70%, var(--fb01-rim-c) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+#FB-01 .fb01-alert::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(120% 70% at 18% -10%, var(--fb01-sheen), rgba(255, 255, 255, 0) 60%);
+}
+#FB-01 .fb01-body { padding: 20px 16px 18px; text-align: center; }
+#FB-01 .fb01-title { margin: 0; font: 600 var(--fs-headline)/22px var(--font-text); letter-spacing: 0; color: var(--label); }
+#FB-01 .fb01-msg { margin: 4px 0 0; font: 400 var(--fs-footnote)/18px var(--font-text); letter-spacing: 0; color: var(--label); }
+#FB-01 .fb01-msg b { font-weight: 600; }
+#FB-01 .fb01-nb { display: inline-block; }
+#FB-01 .fb01-title, #FB-01 .fb01-msg { word-break: auto-phrase; text-wrap: balance; }
+
+#FB-01 .fb01-actions { position: relative; display: flex; touch-action: none; }
+#FB-01 .fb01-actions::before { content: ""; position: absolute; inset: 0 0 auto 0; height: .5px; background: var(--fb01-hair); z-index: 2; }
+#FB-01 .fb01-actions--v { flex-direction: column; }
+#FB-01 .fb01-actions--h .fb01-btn { flex: 1 1 0; }
+#FB-01 .fb01-btn {
+  position: relative; flex: none; min-width: 0; height: 44px; padding: 0 8px; border: 0; background: transparent; cursor: pointer;
+  color: var(--accent); font: 400 var(--fs-body)/1 var(--font-text); letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; outline: none;
+  transition: background 260ms ease;
+}
+#FB-01 .fb01-actions--h .fb01-btn + .fb01-btn::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: .5px; background: var(--fb01-hair); }
+#FB-01 .fb01-actions--v .fb01-btn + .fb01-btn::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: .5px; background: var(--fb01-hair); }
+#FB-01 .fb01-btn--bold { font-weight: 600; }
+#FB-01 .fb01-btn--red { color: var(--red); }
+@media (hover: hover) { #FB-01 .fb01-btn:hover { background: color-mix(in srgb, var(--fb01-hl) 45%, transparent); } }
+#FB-01 .fb01-btn.is-hl, #FB-01 .fb01-btn.is-hl:hover { background: var(--fb01-hl); transition-duration: 0s; }
+/* keyboard focus = iPadOS-style tinted cell (no web outline) */
+#FB-01 .fb01-btn:focus-visible { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+#FB-01 .fb01-btn--red:focus-visible { background: color-mix(in srgb, var(--red) 13%, transparent); }
+#FB-01 .fb01-btn.is-hl:focus-visible { background: var(--fb01-hl); }
+
+@media (prefers-reduced-motion: reduce) {
+  #FB-01 .fb01-alert, #FB-01 .fb01-alert.is-open, #FB-01 .fb01-alert.is-closing { transform: none; }
+  #FB-01 .fb01-layer, #FB-01 .fb01-sub > span { transition: opacity var(--dur-1) ease; transform: none; filter: none; }
+  #FB-01 .fb01-trigger, #FB-01 .fb01-undo { transition: background var(--dur-1) ease; }
+}
+</style>
+<article class="obj" id="FB-01" data-name="Alert" data-ja="アラート" data-vector="Glass" data-size="m" data-desc="画面中央に出る確認ダイアログ。2ボタン型と縦積み型。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="fb01-scene">
+      <div class="fb01-panel">
+        <div class="fb01-row" data-row="photo" data-state="normal">
+          <div class="fb01-layer fb01-layer--main">
+            <div class="fb01-thumb art art-1" aria-hidden="true"></div>
+            <div class="fb01-text">
+              <span class="fb01-name">夕焼けの丘.heic</span>
+              <span class="fb01-sub"><span class="is-on"><span class="fb01-num">4.2 MB · 今日 9:41</span></span></span>
+            </div>
+          </div>
+          <div class="fb01-layer fb01-layer--alt" aria-hidden="true">
+            <span class="fb01-trashic"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></span>
+            <div class="fb01-text">
+              <span class="fb01-name">ゴミ箱に移動しました</span>
+              <span class="fb01-sub"><span class="is-on">30日間は復元できます</span></span>
+            </div>
+            <button class="fb01-undo" type="button" tabindex="-1">元に戻す</button>
+          </div>
+        </div>
+        <div class="fb01-row" data-row="note">
+          <div class="fb01-layer">
+            <div class="fb01-noteic" aria-hidden="true"></div>
+            <div class="fb01-text">
+              <span class="fb01-name">旅のメモ</span>
+              <span class="fb01-sub" data-sub>
+                <span class="is-on" data-s="dirty"><i class="fb01-dot"></i>未保存の変更があります</span>
+                <span data-s="saved" class="fb01-ok"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg>保存しました</span>
+                <span data-s="discarded"><svg class="i" aria-hidden="true"><use href="#i-arrow-clockwise"/></svg>変更を破棄しました</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fb01-triggers">
+        <button class="fb01-trigger fb01-trigger--del" type="button" data-open="FB-01-del" aria-haspopup="dialog"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg>削除の確認</button>
+        <button class="fb01-trigger fb01-trigger--save" type="button" data-open="FB-01-save" aria-haspopup="dialog"><svg class="i" aria-hidden="true"><use href="#i-square-and-pencil"/></svg>3択アラート</button>
+      </div>
+      <p class="sr-only fb01-live" role="status" aria-live="polite"></p>
+    </div>
+
+    <div class="fb01-scrim" aria-hidden="true"></div>
+    <div class="fb01-host">
+      <div class="fb01-alert" id="FB-01-del" data-kind="delete" role="alertdialog" aria-modal="true" aria-labelledby="FB-01-del-t" aria-describedby="FB-01-del-m" tabindex="-1" hidden>
+        <div class="fb01-body">
+          <h4 class="fb01-title" id="FB-01-del-t">写真を削除しますか？</h4>
+          <p class="fb01-msg" id="FB-01-del-m"><span class="fb01-nb">“夕焼けの丘.heic” は</span><span class="fb01-nb">ゴミ箱に移動し、</span><span class="fb01-nb">30日後に完全に</span><span class="fb01-nb">削除されます。</span></p>
+        </div>
+        <div class="fb01-actions fb01-actions--h">
+          <button class="fb01-btn" type="button" data-v="cancel" data-focus>キャンセル</button>
+          <button class="fb01-btn fb01-btn--red fb01-btn--bold" type="button" data-v="delete">削除</button>
+        </div>
+      </div>
+      <div class="fb01-alert" id="FB-01-save" data-kind="save" role="alertdialog" aria-modal="true" aria-labelledby="FB-01-save-t" aria-describedby="FB-01-save-m" tabindex="-1" hidden>
+        <div class="fb01-body">
+          <h4 class="fb01-title" id="FB-01-save-t">変更を保存しますか？</h4>
+          <p class="fb01-msg" id="FB-01-save-m"><span class="fb01-nb">保存しないと、</span><span class="fb01-nb">“旅のメモ” への</span><span class="fb01-nb">変更は失われます。</span></p>
+        </div>
+        <div class="fb01-actions fb01-actions--v">
+          <button class="fb01-btn" type="button" data-v="save">保存</button>
+          <button class="fb01-btn fb01-btn--red" type="button" data-v="discard">保存しない</button>
+          <button class="fb01-btn fb01-btn--bold" type="button" data-v="cancel" data-focus>キャンセル</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>押したまま指を滑らせて選択</li><li>Esc でキャンセル</li><li>矢印キーで移動</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('FB-01');
+  const scene = root.querySelector('.fb01-scene');
+  const scrim = root.querySelector('.fb01-scrim');
+  const live = root.querySelector('.fb01-live');
+  const photoRow = root.querySelector('[data-row="photo"]');
+  const undoBtn = root.querySelector('.fb01-undo');
+  const noteSub = root.querySelector('[data-sub]');
+  const rm = () => window.ObjKit && ObjKit.reducedMotion;
+  let open = null, opener = null, hideT = 0, hl = null, tracking = null;
+
+  const buttons = (a) => [...a.querySelectorAll('.fb01-btn')];
+  const say = (t) => { live.textContent = ''; requestAnimationFrame(() => { live.textContent = t; }); };
+
+  function present(alert, from) {
+    if (open || !alert) return;
+    clearTimeout(hideT);
+    open = alert; opener = from || document.activeElement;
+    alert.hidden = false;
+    alert.classList.remove('is-closing');
+    void alert.offsetWidth;                      // commit the 1.15× start state
+    alert.classList.add('is-open');
+    scrim.classList.add('is-on');
+    scene.inert = true;
+    (alert.querySelector('[data-focus]') || buttons(alert)[0]).focus({ preventScroll: true });
+  }
+
+  function dismiss(value) {
+    const alert = open;
+    if (!alert) return;
+    open = null; setHl(null); tracking = null;
+    alert.classList.remove('is-open');
+    alert.classList.add('is-closing');
+    scrim.classList.remove('is-on');
+    scene.inert = false;
+    hideT = setTimeout(() => { alert.hidden = true; alert.classList.remove('is-closing'); }, rm() ? 0 : 230);
+    if (opener && root.contains(opener) && opener.isConnected) opener.focus({ preventScroll: true });
+    apply(alert.dataset.kind, value);
+  }
+
+  function setNote(state) {
+    noteSub.querySelectorAll('[data-s]').forEach((s) => s.classList.toggle('is-on', s.dataset.s === state));
+  }
+  function setPhoto(deleted) {
+    photoRow.dataset.state = deleted ? 'deleted' : 'normal';
+    photoRow.querySelector('.fb01-layer--main').setAttribute('aria-hidden', deleted ? 'true' : 'false');
+    photoRow.querySelector('.fb01-layer--alt').setAttribute('aria-hidden', deleted ? 'false' : 'true');
+    undoBtn.tabIndex = deleted ? 0 : -1;
+  }
+  function apply(kind, v) {
+    if (kind === 'delete') {
+      if (v === 'delete') { setPhoto(true); say('写真をゴミ箱に移動しました'); }
+      else say('キャンセルしました');
+    } else {
+      if (v === 'save') { setNote('saved'); say('保存しました'); }
+      else if (v === 'discard') { setNote('discarded'); say('変更を破棄しました'); }
+      else say('編集を続けます');
+    }
+  }
+  undoBtn.addEventListener('click', () => { setPhoto(false); say('元に戻しました'); });
+
+  root.querySelectorAll('[data-open]').forEach((t) => {
+    t.addEventListener('click', () => {
+      const a = root.querySelector('#' + t.dataset.open);
+      if (a && a.dataset.kind === 'save') setNote('dirty');
+      present(a, t);
+    });
+  });
+
+  /* Press-and-slide selection (like iOS): highlight follows the finger, release chooses. */
+  function setHl(b) {
+    if (hl === b) return;
+    if (hl) hl.classList.remove('is-hl');
+    hl = b;
+    if (hl) hl.classList.add('is-hl');
+  }
+  const btnAt = (x, y) => {
+    const el = document.elementFromPoint(x, y);
+    const b = el && el.closest('.fb01-btn');
+    return b && open && open.contains(b) ? b : null;
+  };
+  root.querySelectorAll('.fb01-actions').forEach((group) => {
+    group.addEventListener('pointerdown', (e) => {
+      if (!open || !open.contains(group) || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      const b = btnAt(e.clientX, e.clientY);
+      if (!b) return;
+      tracking = e.pointerId;
+      try { group.setPointerCapture(e.pointerId); } catch (_) {}
+      setHl(b);
+    });
+    group.addEventListener('pointermove', (e) => { if (tracking === e.pointerId) setHl(btnAt(e.clientX, e.clientY)); });
+    group.addEventListener('pointerup', (e) => {
+      if (tracking !== e.pointerId) return;
+      tracking = null;
+      const b = btnAt(e.clientX, e.clientY) || null;
+      setHl(null);
+      if (b) dismiss(b.dataset.v);
+    });
+    group.addEventListener('pointercancel', () => { tracking = null; setHl(null); });
+    group.addEventListener('lostpointercapture', () => { if (tracking != null) { tracking = null; setHl(null); } });
+    /* Keyboard / assistive activation arrives as a click with detail 0 */
+    group.addEventListener('click', (e) => {
+      const b = e.target.closest('.fb01-btn');
+      if (b && e.detail === 0 && open && open.contains(b)) dismiss(b.dataset.v);
+    });
+  });
+
+  /* Keep focus inside while presented: scrim doesn't steal focus; Tab cycles; arrows move. */
+  scrim.addEventListener('pointerdown', (e) => e.preventDefault());
+  root.addEventListener('keydown', (e) => {
+    if (!open) return;
+    const list = buttons(open);
+    const i = list.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dismiss('cancel'); }
+    else if (e.key === 'Tab') {
+      e.preventDefault();
+      const n = list.length;
+      list[((i < 0 ? 0 : i) + (e.shiftKey ? -1 : 1) + n) % n].focus();
+    } else if (/^Arrow(Left|Right|Up|Down)$/.test(e.key)) {
+      e.preventDefault();
+      const back = e.key === 'ArrowLeft' || e.key === 'ArrowUp';
+      const j = i < 0 ? 0 : Math.max(0, Math.min(list.length - 1, i + (back ? -1 : 1)));
+      list[j].focus();
+    }
+  });
+})();
+</script>

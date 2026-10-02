@@ -1,0 +1,249 @@
+<!-- ═══════════ BTN-05 · Icon Button ═══════════ -->
+<style>
+@property --btn05-glow { syntax: "<number>"; inherits: false; initial-value: 0; }
+
+#BTN-05 .btn05-stack { display: flex; flex-direction: column; align-items: stretch; gap: 22px; width: min(100%, 340px); }
+#BTN-05 .btn05-group { display: flex; flex-direction: column; gap: 10px; }
+#BTN-05 .btn05-cap {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 4px;
+  font: 500 var(--fs-caption1)/16px var(--font-text); color: var(--label-2); letter-spacing: 0;
+}
+#BTN-05 .btn05-meta { font: 500 10.5px/16px var(--font-mono); color: var(--label-3); letter-spacing: .02em; }
+
+/* — Liquid-glass circle (theme-adaptive) — */
+#BTN-05 .btn05 {
+  --s: 44px;
+  --g-bg: var(--glass-bg);
+  --g-bg-press: light-dark(rgba(255, 255, 255, .52), rgba(255, 255, 255, .22));
+  --g-spec: light-dark(rgba(255, 255, 255, .55), rgba(255, 255, 255, .16));
+  --g-rim-a: light-dark(rgba(255, 255, 255, .95), rgba(255, 255, 255, .42));
+  --g-rim-b: light-dark(rgba(255, 255, 255, .55), rgba(255, 255, 255, .16));
+  --g-shadow: var(--glass-shadow);
+  --g-edge: var(--glass-edge);
+  --mx: 50%; --my: 50%;
+  position: relative; display: inline-grid; place-items: center; flex: none;
+  width: var(--s); height: var(--s); padding: 0; border: 0; border-radius: 50%;
+  background-color: var(--g-bg); color: var(--label);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--g-shadow), var(--g-edge);
+  font: 600 var(--fs-callout)/1 var(--font-text); letter-spacing: 0;
+  cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  outline: 3px solid transparent; outline-offset: 5px;
+  transition:
+    transform var(--dur-4) var(--ease-spring), background-color var(--dur-2) ease, color var(--dur-2) ease,
+    --btn05-glow var(--dur-3) ease, outline-color var(--dur-1) ease, outline-offset var(--dur-2) var(--ease-out);
+}
+/* specular sheen + touch-point glow */
+#BTN-05 .btn05::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background:
+    radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, calc(.55 * var(--btn05-glow))), rgba(255, 255, 255, 0) 62%),
+    radial-gradient(110% 80% at 32% 0%, var(--g-spec), rgba(255, 255, 255, 0) 52%);
+}
+/* rim light: bright top-left, faint bottom-right (gradient hairline via mask) */
+#BTN-05 .btn05::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(140deg, var(--g-rim-a), rgba(255, 255, 255, .06) 36%, rgba(255, 255, 255, 0) 56%, rgba(255, 255, 255, .05) 72%, var(--g-rim-b));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+@media (hover: hover) { #BTN-05 .btn05:hover { --btn05-glow: .35; } }
+#BTN-05 .btn05:active, #BTN-05 .btn05.is-pressed {
+  transform: scale(.92); background-color: var(--g-bg-press); --btn05-glow: 1;
+  transition: transform 140ms var(--ease-out), background-color 90ms ease, --btn05-glow 90ms ease;
+}
+#BTN-05 .btn05:focus-visible { outline-color: color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 2px; }
+#BTN-05 .btn05 .i { font-size: calc(var(--s) * .43); }
+#BTN-05 .btn05-ico { position: relative; display: inline-grid; place-items: center; }
+#BTN-05 .btn05-ico.is-bounce { animation: btn05-bounce 460ms var(--ease-out); }
+
+/* sizes */
+#BTN-05 .btn05--36 { --s: 36px; }
+#BTN-05 .btn05--56 { --s: 56px; }
+#BTN-05 .btn05--56 .i { font-size: 23px; }
+
+/* — Media glass: sits on the photo, glyphs adapt to the dark content behind — */
+#BTN-05 .btn05--media {
+  --g-bg: rgba(255, 255, 255, .16); --g-bg-press: rgba(255, 255, 255, .34);
+  --g-spec: rgba(255, 255, 255, .28); --g-rim-a: rgba(255, 255, 255, .7); --g-rim-b: rgba(255, 255, 255, .3);
+  --g-shadow: 0 6px 18px rgba(20, 8, 40, .22), 0 1px 2px rgba(20, 8, 40, .18);
+  --g-edge: inset 0 0 0 .5px rgba(255, 255, 255, .28), inset 0 1px 0 rgba(255, 255, 255, .3);
+  color: #fff;
+}
+#BTN-05 .btn05-photo {
+  position: relative; height: 204px; border-radius: 28px; overflow: hidden; isolation: isolate;
+  box-shadow: 0 18px 40px -18px rgba(40, 10, 60, .45), 0 0 0 .5px rgba(0, 0, 0, .08);
+}
+#BTN-05 .btn05-photo > .art { position: absolute; inset: 0; z-index: -1; background-size: 100% 118%; background-position: 50% 100%; }
+#BTN-05 .btn05-bar { position: absolute; left: 12px; right: 12px; display: flex; align-items: center; justify-content: space-between; }
+#BTN-05 .btn05-bar--top { top: 12px; }
+#BTN-05 .btn05-bar--bottom { bottom: 12px; }
+/* grouped capsule (two actions, one piece of glass) */
+#BTN-05 .btn05-pair { display: inline-flex; width: auto; padding: 0 2px; border-radius: 22px; }
+#BTN-05 .btn05-pair:active { transform: none; background-color: var(--g-bg); --btn05-glow: 0; }
+#BTN-05 .btn05-seg {
+  position: relative; display: grid; place-items: center; width: 42px; height: 44px; padding: 0; border: 0; border-radius: 22px;
+  background: transparent; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  outline: 3px solid transparent; outline-offset: 2px;
+  transition: transform var(--dur-4) var(--ease-spring), background-color var(--dur-2) ease, outline-color var(--dur-1) ease;
+}
+#BTN-05 .btn05-seg .i { font-size: 19px; }
+#BTN-05 .btn05-seg:active { transform: scale(.88); background-color: rgba(255, 255, 255, .2); transition: transform 140ms var(--ease-out), background-color 90ms ease; }
+#BTN-05 .btn05-seg:focus-visible { outline-color: rgba(255, 255, 255, .7); }
+/* capsule with label */
+#BTN-05 .btn05--capsule { width: auto; height: 44px; padding: 0 18px 0 14px; gap: 7px; border-radius: 22px; display: inline-flex; align-items: center; }
+#BTN-05 .btn05--capsule .i { font-size: 18px; }
+#BTN-05 .btn05--capsule:active { transform: scale(.94); }
+
+/* heart toggle */
+#BTN-05 .btn05-heart .btn05-ico > svg { grid-area: 1 / 1; transition: opacity var(--dur-1) ease, transform var(--dur-3) var(--ease-spring); }
+#BTN-05 .btn05-heart .btn05-ico > svg + svg { color: var(--pink); opacity: 0; transform: scale(.3); }
+#BTN-05 .btn05-heart[aria-pressed="true"] .btn05-ico > svg:first-child { opacity: 0; transform: scale(.5); }
+#BTN-05 .btn05-heart[aria-pressed="true"] .btn05-ico > svg + svg { opacity: 1; transform: none; }
+#BTN-05 .btn05-heart[aria-pressed="true"] .btn05-ico.is-bounce { animation: btn05-love 620ms var(--ease-out); }
+#BTN-05 .btn05-ring { position: absolute; inset: -1px; border-radius: 50%; pointer-events: none; box-shadow: 0 0 0 2px var(--pink); opacity: 0; }
+#BTN-05 .btn05-ring.is-on { animation: btn05-ring 620ms var(--ease-out); }
+
+/* — Sizes row with colourful shapes behind (so the blur reads) — */
+#BTN-05 .btn05-sizes { display: flex; align-items: flex-end; justify-content: space-around; gap: 12px; padding: 6px 8px 0; }
+#BTN-05 .btn05-size { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#BTN-05 .btn05-size > .btn05 { z-index: 1; }
+#BTN-05 .btn05-px { font: 600 11px/1 var(--font-mono); color: var(--label-2); letter-spacing: .02em; }
+#BTN-05 .btn05-blob { position: absolute; z-index: 0; pointer-events: none; }
+#BTN-05 .btn05-blob--a { width: 30px; height: 30px; left: -16px; top: -10px; border-radius: 50%; background: linear-gradient(135deg, #FFD60A, #FF9F0A); }
+#BTN-05 .btn05-blob--b { width: 38px; height: 22px; right: -22px; top: 4px; border-radius: 11px; background: linear-gradient(135deg, #64D2FF, #0A84FF); transform: rotate(-18deg); }
+#BTN-05 .btn05-blob--c { width: 46px; height: 46px; left: -20px; top: -14px; border-radius: 14px; background: linear-gradient(135deg, #FF6FD8, #BF5AF2 55%, #5E5CE6); transform: rotate(14deg); }
+#BTN-05 .btn05-blob--d { width: 18px; height: 18px; right: -12px; top: 32px; border-radius: 50%; background: #30D158; }
+
+/* — Tinted glass — */
+#BTN-05 .btn05-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 8px; }
+#BTN-05 .btn05--tint {
+  --g-bg: color-mix(in srgb, var(--accent) 64%, transparent);
+  --g-bg-press: color-mix(in srgb, var(--accent) 80%, rgba(255, 255, 255, .6));
+  --g-spec: rgba(255, 255, 255, .42); --g-rim-a: rgba(255, 255, 255, .8); --g-rim-b: rgba(255, 255, 255, .35);
+  --g-shadow: 0 8px 22px -6px color-mix(in srgb, var(--accent) 55%, transparent), 0 1px 3px rgba(0, 30, 80, .18);
+  --g-edge: inset 0 0 0 .5px rgba(255, 255, 255, .3), inset 0 1px 0 rgba(255, 255, 255, .35);
+  color: #fff;
+}
+#BTN-05 .btn05--tint.btn05-heart .btn05-ico > svg + svg { color: #fff; }
+#BTN-05 .btn05--tint .btn05-ring { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 70%, #fff); }
+
+@keyframes btn05-bounce {
+  0% { transform: scale(1); }
+  28% { transform: scale(.76); }
+  62% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+@keyframes btn05-love {
+  0% { transform: scale(.4); }
+  45% { transform: scale(1.28); }
+  70% { transform: scale(.92); }
+  100% { transform: scale(1); }
+}
+@keyframes btn05-ring {
+  0% { opacity: .9; transform: scale(.7); }
+  100% { opacity: 0; transform: scale(1.55); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #BTN-05 .btn05, #BTN-05 .btn05:active, #BTN-05 .btn05-seg:active { transform: none !important; }
+  #BTN-05 .btn05-ico.is-bounce, #BTN-05 .btn05-ring.is-on { animation: none !important; }
+  #BTN-05 .btn05-heart .btn05-ico > svg { transform: none !important; }
+}
+</style>
+<article class="obj" id="BTN-05" data-name="Icon Button" data-ja="アイコンボタン" data-vector="Glass" data-size="m" data-desc="背景を透かすガラス素材の丸いアイコンボタン。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="btn05-stack">
+      <div class="btn05-photo">
+        <div class="art art-1" aria-hidden="true"></div>
+        <div class="btn05-bar btn05-bar--top">
+          <button class="btn05 btn05--media" type="button" aria-label="閉じる"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></span></button>
+          <div class="btn05 btn05--media btn05-pair" role="group" aria-label="写真の操作">
+            <button class="btn05-seg" type="button" aria-label="共有"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-square-and-arrow-up"/></svg></span></button>
+            <button class="btn05-seg" type="button" aria-label="その他"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></span></button>
+          </div>
+        </div>
+        <div class="btn05-bar btn05-bar--bottom">
+          <button class="btn05 btn05--media btn05--capsule" type="button"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-square-and-arrow-up"/></svg></span>共有</button>
+          <button class="btn05 btn05--media btn05-heart" type="button" aria-label="お気に入り" aria-pressed="false"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg></span><span class="btn05-ring"></span></button>
+        </div>
+      </div>
+
+      <div class="btn05-group">
+        <p class="btn05-cap"><span>サイズ</span><span class="btn05-meta">36 · 44 · 56pt</span></p>
+        <div class="btn05-sizes">
+          <div class="btn05-size">
+            <span class="btn05-blob btn05-blob--a" aria-hidden="true"></span>
+            <button class="btn05 btn05--36" type="button" aria-label="閉じる"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></span></button>
+            <span class="btn05-px">36</span>
+          </div>
+          <div class="btn05-size">
+            <span class="btn05-blob btn05-blob--b" aria-hidden="true"></span>
+            <button class="btn05" type="button" aria-label="その他"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></span></button>
+            <span class="btn05-px">44</span>
+          </div>
+          <div class="btn05-size">
+            <span class="btn05-blob btn05-blob--c" aria-hidden="true"></span>
+            <span class="btn05-blob btn05-blob--d" aria-hidden="true"></span>
+            <button class="btn05 btn05--56" type="button" aria-label="追加"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span></button>
+            <span class="btn05-px">56</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn05-group">
+        <p class="btn05-cap"><span>ティントガラス</span><span class="btn05-meta">accent · 64%</span></p>
+        <div class="btn05-row">
+          <button class="btn05 btn05--tint" type="button" aria-label="閉じる"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></span></button>
+          <button class="btn05 btn05--tint" type="button" aria-label="共有"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-square-and-arrow-up"/></svg></span></button>
+          <button class="btn05 btn05--tint" type="button" aria-label="その他"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></span></button>
+          <button class="btn05 btn05--tint btn05-heart" type="button" aria-label="お気に入り" aria-pressed="false"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg></span><span class="btn05-ring"></span></button>
+          <button class="btn05 btn05--tint" type="button" aria-label="追加"><span class="btn05-ico"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>押すとガラスが光って縮む</li><li>ハートでお気に入り</li><li>背景がぼけて透ける</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('BTN-05');
+  root.addEventListener('touchstart', () => {}, { passive: true });
+
+  // Touch-point glow: the highlight blooms where the finger lands.
+  root.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('.btn05:not(.btn05-pair)');
+    if (!b) return;
+    const r = b.getBoundingClientRect();
+    b.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+    b.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+  });
+  root.addEventListener('focusin', (e) => {
+    const b = e.target.closest && e.target.closest('.btn05');
+    if (b) { b.style.setProperty('--mx', '50%'); b.style.setProperty('--my', '50%'); }
+  });
+
+  const replay = (el, cls) => {
+    if (!el || ObjKit.reducedMotion) return;
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+  };
+  root.addEventListener('animationend', (e) => {
+    const c = e.target.classList;
+    if (c && c.contains('btn05-ico')) c.remove('is-bounce');
+    if (c && c.contains('btn05-ring')) c.remove('is-on');
+  });
+
+  root.addEventListener('click', (e) => {
+    const b = e.target.closest('.btn05-seg, .btn05:not(.btn05-pair)');
+    if (!b || !root.contains(b)) return;
+    if (b.classList.contains('btn05-heart')) {
+      const on = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(on));
+      if (on) { replay(b.querySelector('.btn05-ico'), 'is-bounce'); replay(b.querySelector('.btn05-ring'), 'is-on'); }
+      return;
+    }
+    replay(b.querySelector('.btn05-ico'), 'is-bounce');
+  });
+})();
+</script>

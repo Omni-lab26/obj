@@ -1,0 +1,443 @@
+<!-- ═══════════ MSC-01 · Context Menu ═══════════ -->
+<style>
+#MSC-01 .obj-stage { min-height: 520px; }
+#MSC-01 .msc01-scene { display: flex; flex-direction: column; align-items: center; gap: 22px; width: min(100%, 268px); }
+#MSC-01 .msc01-chat { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+#MSC-01 .msc01-time { margin: 0 0 -4px; text-align: center; font: 500 var(--fs-caption2)/1.2 var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#MSC-01 .msc01-time b { font-weight: 600; color: var(--label); opacity: .72; }
+
+/* — Long-pressable targets — */
+#MSC-01 .msc01-target {
+  position: relative; display: block; margin: 0; border: 0; padding: 0; font: inherit; color: inherit; cursor: default;
+  -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none;
+  transition: transform 380ms var(--ease-spring), box-shadow var(--dur-3) var(--ease-out), opacity var(--dur-2) ease, filter var(--dur-2) ease;
+}
+#MSC-01 .msc01-target.is-pressing { transform: scale(.955); transition: transform 450ms cubic-bezier(.35, 0, .55, 1); }
+#MSC-01 .msc01-target.is-lifted, #MSC-01 .msc01-target.is-settling { z-index: 20; transition: box-shadow var(--dur-3) var(--ease-out), filter var(--dur-3) var(--ease-out); }
+#MSC-01 .msc01-target:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); }
+#MSC-01 .msc01-target.is-gone { opacity: 0; transform: scale(.82); filter: blur(6px); pointer-events: none; transition: opacity 280ms ease, transform 380ms var(--ease-ios), filter 280ms ease; }
+
+#MSC-01 .msc01-photo { width: 200px; height: 200px; border-radius: 16px; align-self: flex-start; box-shadow: 0 10px 26px -10px rgba(40, 20, 70, .38), 0 1px 2px rgba(0, 0, 0, .08); }
+#MSC-01 .msc01-photo .art { position: absolute; inset: 0; border-radius: inherit; background-size: 120% 120%; background-position: 50% 70%; }
+#MSC-01 .msc01-photo::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .22); pointer-events: none; }
+#MSC-01 .msc01-photo.is-lifted { box-shadow: var(--shadow-3); }
+#MSC-01 .msc01-heart {
+  position: absolute; left: 10px; bottom: 9px; font-size: 18px; color: #fff; line-height: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .35)); transform: scale(0); opacity: 0;
+  transition: transform 420ms var(--ease-spring), opacity 200ms ease;
+}
+#MSC-01 .is-fav .msc01-heart { transform: none; opacity: 1; }
+
+#MSC-01 .msc01-bubble {
+  align-self: flex-end; max-width: 78%; padding: 7px 12px; border-radius: 18px; margin-right: 6px;
+  background: var(--bubble-out); color: #fff; text-align: left;
+  font: 400 var(--fs-body)/22px var(--font-text); letter-spacing: -0.01em;
+}
+#MSC-01 .msc01-bubble::after {
+  content: ""; position: absolute; right: -6px; bottom: 0; width: 21px; height: 18px; background: inherit;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 21 18'%3E%3Cpath d='M15 0v6c0 6.5 1.8 10.6 6 12-3.5 0-8-3-11.5-3-3 0-6.5 3-9.5 3V0z'/%3E%3C/svg%3E") no-repeat 0 0 / 100% 100%;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 21 18'%3E%3Cpath d='M15 0v6c0 6.5 1.8 10.6 6 12-3.5 0-8-3-11.5-3-3 0-6.5 3-9.5 3V0z'/%3E%3C/svg%3E") no-repeat 0 0 / 100% 100%;
+}
+#MSC-01 .msc01-bubble.is-lifted { filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .22)) drop-shadow(0 3px 8px rgba(0, 0, 0, .1)); }
+#MSC-01 .msc01-react {
+  position: absolute; left: -12px; top: -13px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--bg-elevated); color: var(--pink); font-size: 14px; line-height: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .14), 0 0 0 .5px rgba(0, 0, 0, .04);
+  transform: scale(0); opacity: 0; transition: transform 420ms var(--ease-spring), opacity 200ms ease;
+}
+#MSC-01 .is-fav .msc01-react { transform: none; opacity: 1; }
+
+/* — Hint button (desktop affordance) — */
+#MSC-01 .msc01-hint {
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px 0 11px; border: 0; border-radius: var(--r-full);
+  background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-edge); color: var(--label);
+  font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; cursor: pointer; user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#MSC-01 .msc01-hint .i { font-size: 16px; color: var(--label-2); }
+#MSC-01 .msc01-hint:active { transform: scale(.95); transition-duration: 90ms; }
+#MSC-01 .msc01-hint:focus-visible { outline: none; box-shadow: var(--glass-shadow), var(--glass-edge), 0 0 0 3px color-mix(in srgb, var(--accent) 50%, transparent); }
+@media (hover: hover) { #MSC-01 .msc01-hint:hover { background: var(--glass-bg-strong); } }
+
+/* — Blur + dim layer (inside the stage) — */
+#MSC-01 .msc01-dim {
+  position: absolute; inset: 0; z-index: 10; opacity: 0; visibility: hidden; pointer-events: none;
+  background: light-dark(rgba(36, 28, 64, .14), rgba(0, 0, 0, .46));
+  -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%);
+  transition: opacity 300ms ease, visibility 0s 300ms;
+}
+#MSC-01 .obj-stage.is-pressing .msc01-dim { visibility: visible; opacity: .35; transition: opacity 450ms cubic-bezier(.4, 0, .6, 1), visibility 0s; }
+#MSC-01 .obj-stage.is-menu .msc01-dim { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 260ms var(--ease-out), visibility 0s; }
+
+/* — The menu — */
+#MSC-01 .msc01-menu {
+  position: absolute; left: 0; top: 0; z-index: 30; width: 250px; max-width: calc(100% - 24px);
+  display: flex; flex-direction: column; gap: 8px; touch-action: none;
+  visibility: hidden; opacity: 0; transform: scale(.35); pointer-events: none;
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(.4, 0, .9, .6), visibility 0s 220ms;
+  font-family: var(--font-text);
+}
+#MSC-01 .msc01-menu.is-open { visibility: visible; opacity: 1; transform: none; pointer-events: auto; transition: opacity 160ms ease, transform 520ms cubic-bezier(.3, 1.32, .5, 1), visibility 0s; }
+#MSC-01 .msc01-menu {
+  --plate: light-dark(rgba(252, 252, 254, .76), rgba(46, 46, 52, .7));
+  --hl: light-dark(rgba(0, 0, 0, .085), rgba(255, 255, 255, .13));
+}
+#MSC-01 .msc01-plate {
+  position: relative; border-radius: 18px; background-color: var(--plate); overflow: hidden;
+  box-shadow: inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .7), rgba(255, 255, 255, .14)), inset 0 1px 0 light-dark(rgba(255, 255, 255, .9), rgba(255, 255, 255, .16)),
+    0 18px 48px light-dark(rgba(30, 20, 60, .2), rgba(0, 0, 0, .55)), 0 2px 8px light-dark(rgba(0, 0, 0, .06), rgba(0, 0, 0, .3));
+}
+#MSC-01 .msc01-plate::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: linear-gradient(160deg, light-dark(rgba(255, 255, 255, .55), rgba(255, 255, 255, .07)) 0%, transparent 42%); }
+
+#MSC-01 .msc01-quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+#MSC-01 .msc01-mi {
+  position: relative; z-index: 1; display: flex; align-items: center; width: 100%; border: 0; margin: 0; background-color: transparent; color: var(--label);
+  cursor: default; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; outline: none;
+}
+#MSC-01 .msc01-q { flex-direction: column; justify-content: center; gap: 5px; height: 62px; border-radius: 16px; background-color: var(--plate); padding: 0 4px; }
+#MSC-01 .msc01-q .i { font-size: 21px; }
+#MSC-01 .msc01-q span { font-size: var(--fs-caption1); font-weight: 500; letter-spacing: 0; white-space: nowrap; }
+#MSC-01 .msc01-li { justify-content: space-between; gap: 12px; height: 44px; padding: 0 16px; font-size: var(--fs-body); letter-spacing: 0; text-align: left; }
+#MSC-01 .msc01-li .i { font-size: 19px; flex: none; }
+#MSC-01 .msc01-li + .msc01-li { box-shadow: inset 0 .5px 0 light-dark(rgba(60, 60, 67, .2), rgba(255, 255, 255, .1)); }
+#MSC-01 .msc01-gap { position: relative; z-index: 1; height: 8px; background: light-dark(rgba(60, 60, 80, .08), rgba(0, 0, 0, .26)); }
+#MSC-01 .msc01-li.is-danger { color: var(--red); }
+#MSC-01 .msc01-mi.is-hl { background-image: linear-gradient(var(--hl), var(--hl)); }
+#MSC-01 .msc01-mi:focus-visible { background-image: linear-gradient(var(--hl), var(--hl)); }
+
+/* — Feedback toast — */
+#MSC-01 .msc01-toast {
+  position: absolute; left: 50%; bottom: 16px; z-index: 40; display: flex; align-items: center; gap: 8px; max-width: calc(100% - 24px);
+  height: 40px; padding: 0 16px 0 13px; border-radius: var(--r-full); white-space: nowrap;
+  background: var(--glass-bg-strong); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  font: 500 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; color: var(--label);
+  opacity: 0; visibility: hidden; transform: translate(-50%, 14px) scale(.94);
+  transition: opacity 200ms ease, transform 260ms var(--ease-out), visibility 0s 260ms;
+}
+#MSC-01 .msc01-toast.is-shown { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity 200ms ease, transform 480ms var(--ease-spring), visibility 0s; }
+#MSC-01 .msc01-toast .i { font-size: 17px; color: var(--accent); }
+#MSC-01 .msc01-toast[data-tone="pink"] .i { color: var(--pink); }
+#MSC-01 .msc01-toast[data-tone="red"] .i { color: var(--red); }
+#MSC-01 .msc01-toast-tx { overflow: hidden; text-overflow: ellipsis; }
+#MSC-01 .msc01-undo { margin: 0 -6px 0 6px; height: 30px; padding: 0 10px; border: 0; border-radius: var(--r-full); background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; cursor: pointer; }
+#MSC-01 .msc01-undo[hidden] { display: none; }
+#MSC-01 .msc01-undo:active { opacity: .6; }
+
+@media (prefers-reduced-motion: reduce) {
+  #MSC-01 .msc01-target, #MSC-01 .msc01-target.is-pressing, #MSC-01 .msc01-menu, #MSC-01 .msc01-menu.is-open, #MSC-01 .msc01-toast, #MSC-01 .msc01-toast.is-shown { transition-property: opacity, visibility; }
+  #MSC-01 .msc01-menu, #MSC-01 .msc01-target.is-pressing { transform: none; }
+}
+</style>
+<article class="obj" id="MSC-01" data-name="Context Menu" data-ja="コンテキストメニュー" data-vector="Glass" data-size="m" data-desc="長押しで対象が浮き上がり、メニューが開く。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="msc01-scene">
+      <div class="msc01-chat">
+        <p class="msc01-time"><b>今日</b> 9:41</p>
+        <button class="msc01-target msc01-photo" type="button" data-kind="photo" aria-haspopup="menu" aria-expanded="false" aria-label="写真 夕焼けの丘。長押しでメニュー">
+          <span class="art art-1" aria-hidden="true"></span>
+          <span class="msc01-heart" aria-hidden="true"><svg class="i"><use href="#i-heart-fill"/></svg></span>
+        </button>
+        <button class="msc01-target msc01-bubble" type="button" data-kind="bubble" aria-haspopup="menu" aria-expanded="false">夕焼け、最高だった🌅<span class="msc01-react" aria-hidden="true"><svg class="i"><use href="#i-heart-fill"/></svg></span></button>
+      </div>
+      <button class="msc01-hint" type="button"><svg class="i" aria-hidden="true"><use href="#i-ellipsis-circle"/></svg>メニューを表示</button>
+    </div>
+
+    <div class="msc01-dim" aria-hidden="true"></div>
+
+    <div class="msc01-menu" role="menu" aria-label="アクション" aria-hidden="true">
+      <div class="msc01-quick">
+        <button class="msc01-mi msc01-q msc01-plate" type="button" role="menuitem" tabindex="-1" data-act="link"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg><span>リンク</span></button>
+        <button class="msc01-mi msc01-q msc01-plate" type="button" role="menuitem" tabindex="-1" data-act="pin"><svg class="i" aria-hidden="true"><use href="#i-pin-fill"/></svg><span class="msc01-pin-label">ピン</span></button>
+        <button class="msc01-mi msc01-q msc01-plate" type="button" role="menuitem" tabindex="-1" data-act="info"><svg class="i" aria-hidden="true"><use href="#i-info-circle"/></svg><span>情報</span></button>
+      </div>
+      <div class="msc01-plate msc01-list">
+        <button class="msc01-mi msc01-li" type="button" role="menuitem" tabindex="-1" data-act="copy"><span>コピー</span><svg class="i" aria-hidden="true"><use href="#i-doc-on-doc"/></svg></button>
+        <button class="msc01-mi msc01-li" type="button" role="menuitem" tabindex="-1" data-act="share"><span>共有</span><svg class="i" aria-hidden="true"><use href="#i-square-and-arrow-up"/></svg></button>
+        <button class="msc01-mi msc01-li" type="button" role="menuitem" tabindex="-1" data-act="fav"><span class="msc01-fav-label">お気に入り</span><svg class="i" aria-hidden="true"><use class="msc01-fav-use" href="#i-heart"/></svg></button>
+        <div class="msc01-gap" role="separator"></div>
+        <button class="msc01-mi msc01-li is-danger" type="button" role="menuitem" tabindex="-1" data-act="delete"><span>削除</span><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
+      </div>
+    </div>
+
+    <div class="msc01-toast" role="status" aria-live="polite"><svg class="i" aria-hidden="true"><use class="msc01-toast-use" href="#i-checkmark-circle-fill"/></svg><span class="msc01-toast-tx"></span><button class="msc01-undo" type="button" hidden>取り消す</button></div>
+  </div>
+  <ul class="obj-notes"><li>長押しでメニュー</li><li>右クリックでも開く</li><li>押したまま項目へスライド</li><li>外側タップ・Escで閉じる</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('MSC-01');
+  if (!root) return;
+  const stage = root.querySelector('.obj-stage');
+  const menu = root.querySelector('.msc01-menu');
+  const dim = root.querySelector('.msc01-dim');
+  const hint = root.querySelector('.msc01-hint');
+  const toast = root.querySelector('.msc01-toast');
+  const toastTx = toast.querySelector('.msc01-toast-tx');
+  const toastUse = toast.querySelector('.msc01-toast-use');
+  const undo = toast.querySelector('.msc01-undo');
+  const targets = [...root.querySelectorAll('.msc01-target')];
+  const items = [...menu.querySelectorAll('.msc01-mi')];
+  const favLabel = menu.querySelector('.msc01-fav-label');
+  const favUse = menu.querySelector('.msc01-fav-use');
+  const pinLabel = menu.querySelector('.msc01-pin-label');
+  const rm = () => !!(window.ObjKit && ObjKit.reducedMotion);
+  const LONG = 450, GAP = 10, EDGE = 12;
+  const st = { open: null, pressT: 0, pid: null, sx: 0, sy: 0, drag: false, menuPid: null, hl: null, busy: false, settleT: 0, toastT: 0, restoreT: 0, gone: null };
+
+  const setHl = (it) => {
+    if (st.hl === it) return;
+    if (st.hl) st.hl.classList.remove('is-hl');
+    st.hl = it || null;
+    if (st.hl) st.hl.classList.add('is-hl');
+  };
+  const hitTest = (x, y) => {
+    const el = document.elementFromPoint(x, y);
+    const it = el && el.closest ? el.closest('.msc01-mi') : null;
+    setHl(it && menu.contains(it) ? it : null);
+  };
+  const posIn = (el) => {
+    let x = 0, y = 0, n = el;
+    while (n && n !== stage) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+    return { x, y };
+  };
+
+  function cancelPress() {
+    clearTimeout(st.pressT); st.pressT = 0;
+    targets.forEach((t) => t.classList.remove('is-pressing'));
+    stage.classList.remove('is-pressing');
+  }
+
+  function open(t, via) {
+    if (st.open || !t || t.classList.contains('is-gone')) return;
+    cancelPress();
+    toast.classList.remove('is-shown');
+    clearTimeout(st.settleT);
+    targets.forEach((x) => x.classList.remove('is-settling'));
+    st.open = t;
+    const fav = t.classList.contains('is-fav');
+    favLabel.textContent = fav ? 'お気に入り解除' : 'お気に入り';
+    favUse.setAttribute('href', fav ? '#i-heart-fill' : '#i-heart');
+    pinLabel.textContent = t.dataset.pinned ? '固定解除' : 'ピン';
+
+    /* — geometry: keep the menu inside the stage; flip above/below, or slide the preview to make room — */
+    const W = stage.clientWidth, H = stage.clientHeight;
+    const p = posIn(t), tw = t.offsetWidth, th = t.offsetHeight;
+    const mw = menu.offsetWidth, mh = menu.offsetHeight;
+    let place = 'below', dy = 0;
+    if (p.y + th + GAP + mh <= H - EDGE) place = 'below';
+    else if (p.y - GAP - mh >= EDGE) place = 'above';
+    else {
+      const roomBelow = H - EDGE - (p.y + th), roomAbove = p.y - EDGE;
+      place = roomBelow >= roomAbove ? 'below' : 'above';
+      dy = place === 'below' ? (H - EDGE - mh - GAP - th) - p.y : (EDGE + mh + GAP) - p.y;
+      dy = Math.max(EDGE - p.y, Math.min(H - EDGE - th - p.y, dy));
+    }
+    const ty = p.y + dy;
+    const alignRight = p.x + tw / 2 > W / 2;
+    let mx = alignRight ? p.x + tw - mw : p.x;
+    mx = Math.max(EDGE, Math.min(W - EDGE - mw, mx));
+    const my = place === 'below' ? ty + th + GAP : ty - GAP - mh;
+    menu.dataset.place = place;
+    menu.style.left = mx + 'px';
+    menu.style.top = Math.max(EDGE, my) + 'px';
+    const ox = Math.max(0, Math.min(mw, (alignRight ? p.x + tw - 24 : p.x + 24) - mx));
+    menu.style.transformOrigin = `${ox}px ${place === 'below' ? 0 : mh}px`;
+
+    /* — lift the preview: 0.955 (held) → 1.05 → 1, sliding by dy if needed — */
+    const from = getComputedStyle(t).transform;
+    t.classList.add('is-lifted');
+    const end = `translate(0px, ${dy}px)`;
+    t.style.transform = end;
+    if (!rm()) {
+      t.animate([
+        { transform: from === 'none' ? 'translate(0px, 0px) scale(1)' : from },
+        { transform: `${end} scale(1.05)`, offset: .45 },
+        { transform: `${end} scale(1)` },
+      ], { duration: 560, easing: 'cubic-bezier(.25, .8, .3, 1)' });
+    }
+    stage.classList.add('is-menu');
+    menu.classList.add('is-open');
+    menu.setAttribute('aria-hidden', 'false');
+    t.setAttribute('aria-expanded', 'true');
+    if (via === 'key') { items[0].tabIndex = 0; items[0].focus({ preventScroll: true }); }
+  }
+
+  function close(focusBack) {
+    const t = st.open;
+    if (!t) return;
+    st.open = null; st.drag = false; st.menuPid = null;
+    setHl(null);
+    stage.classList.remove('is-menu');
+    menu.classList.remove('is-open');
+    menu.setAttribute('aria-hidden', 'true');
+    items.forEach((it) => { it.tabIndex = -1; });
+    t.setAttribute('aria-expanded', 'false');
+    const from = getComputedStyle(t).transform;
+    t.getAnimations().forEach((a) => a.cancel());
+    t.classList.remove('is-lifted');
+    t.classList.add('is-settling');
+    t.style.transform = '';
+    if (!rm()) t.animate([{ transform: from === 'none' ? 'none' : from }, { transform: 'none' }], { duration: 440, easing: 'cubic-bezier(.32, .72, 0, 1)' });
+    clearTimeout(st.settleT);
+    st.settleT = setTimeout(() => t.classList.remove('is-settling'), rm() ? 0 : 450);
+    if (focusBack) t.focus({ preventScroll: true });
+  }
+
+  /* — feedback toast — */
+  function showToast(icon, text, withUndo, tone) {
+    toastUse.setAttribute('href', '#i-' + icon);
+    toast.dataset.tone = tone || '';
+    toastTx.textContent = text;
+    undo.hidden = !withUndo;
+    toast.classList.remove('is-shown');
+    void toast.offsetWidth;
+    toast.classList.add('is-shown');
+    clearTimeout(st.toastT);
+    st.toastT = setTimeout(() => toast.classList.remove('is-shown'), withUndo ? 4200 : 1800);
+  }
+
+  /* — delete: fade out, then collapse the slot; restore on 取り消す (or after a few seconds, to keep the demo usable) — */
+  const COLLAPSE = (t) => {
+    const cs = getComputedStyle(t);
+    return [
+      { height: t.offsetHeight + 'px', paddingTop: cs.paddingTop, paddingBottom: cs.paddingBottom, marginBottom: '0px' },
+      { height: '0px', paddingTop: '0px', paddingBottom: '0px', marginBottom: '-14px' },
+    ];
+  };
+  function remove(t) {
+    st.gone = t;
+    t.classList.add('is-gone');
+    if (!rm()) st.collapse = t.animate(COLLAPSE(t), { duration: 420, delay: 160, easing: 'cubic-bezier(.32, .72, 0, 1)', fill: 'forwards' });
+    clearTimeout(st.restoreT);
+    st.restoreT = setTimeout(restore, 5200);
+  }
+  function restore() {
+    const t = st.gone;
+    st.gone = null;
+    clearTimeout(st.restoreT); clearTimeout(st.goneT);
+    if (!t) return;
+    if (st.collapse) {
+      const a = st.collapse; st.collapse = null;
+      a.reverse();
+      a.finished.then(() => a.cancel(), () => {});
+      setTimeout(() => t.classList.remove('is-gone'), 160);
+    } else t.classList.remove('is-gone');
+  }
+
+  function perform(act, t) {
+    const photo = t.dataset.kind === 'photo';
+    if (act === 'copy') showToast('doc-on-doc', photo ? '写真をコピーしました' : 'テキストをコピーしました');
+    else if (act === 'share') showToast('square-and-arrow-up', 'AirDropで共有しました');
+    else if (act === 'link') showToast('link', 'リンクをコピーしました');
+    else if (act === 'info') showToast('info-circle', photo ? '10月1日(木) 17:48 · 江の島' : '9:41 に送信 · 既読');
+    else if (act === 'pin') {
+      if (t.dataset.pinned) delete t.dataset.pinned; else t.dataset.pinned = '1';
+      showToast('pin-fill', t.dataset.pinned ? 'ピンで固定しました' : 'ピンを外しました');
+    } else if (act === 'fav') {
+      const on = t.classList.toggle('is-fav');
+      showToast(on ? 'heart-fill' : 'heart', on ? 'お気に入りに追加しました' : 'お気に入りから削除しました', false, 'pink');
+    } else if (act === 'delete') {
+      if (st.gone) restore();
+      clearTimeout(st.goneT);
+      st.goneT = setTimeout(() => remove(t), rm() ? 0 : 320);
+      showToast('trash', photo ? '写真を削除しました' : 'メッセージを削除しました', true, 'red');
+    }
+  }
+
+  function activate(it) {
+    if (!it || st.busy || !st.open) return;
+    st.busy = true;
+    setHl(it);
+    const t = st.open, act = it.dataset.act;
+    setTimeout(() => {
+      st.busy = false;
+      close(false);
+      perform(act, t);
+    }, rm() ? 0 : 120);
+  }
+
+  /* — long-press on targets (with drag-to-select while still held) — */
+  targets.forEach((t) => {
+    t.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || st.open || st.busy || t.classList.contains('is-gone')) return;
+      st.pid = e.pointerId; st.sx = e.clientX; st.sy = e.clientY; st.drag = false;
+      try { t.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      t.classList.add('is-pressing');
+      stage.classList.add('is-pressing');
+      clearTimeout(st.pressT);
+      st.pressT = setTimeout(() => { st.pressT = 0; open(t, 'pointer'); st.drag = !!st.open; }, LONG);
+    });
+    t.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== st.pid) return;
+      if (st.pressT) { if (Math.hypot(e.clientX - st.sx, e.clientY - st.sy) > 10) cancelPress(); }
+      else if (st.drag) hitTest(e.clientX, e.clientY);
+    });
+    const end = (e) => {
+      if (e.pointerId !== st.pid) return;
+      st.pid = null;
+      if (st.pressT) { cancelPress(); return; }
+      if (st.drag) {
+        st.drag = false;
+        if (e.type === 'pointerup') { hitTest(e.clientX, e.clientY); if (st.hl) activate(st.hl); }
+      }
+    };
+    t.addEventListener('pointerup', end);
+    t.addEventListener('pointercancel', end);
+    t.addEventListener('lostpointercapture', (e) => { if (e.pointerId === st.pid) { st.pid = null; if (st.pressT) cancelPress(); } });
+    t.addEventListener('touchmove', (e) => { if (st.drag) e.preventDefault(); }, { passive: false });
+    t.addEventListener('contextmenu', (e) => { e.preventDefault(); if (!st.open) open(t, 'pointer'); });
+    t.addEventListener('click', (e) => { if (e.detail === 0 && !st.open) open(t, 'key'); });
+    t.addEventListener('keydown', (e) => {
+      if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) { e.preventDefault(); open(t, 'key'); }
+    });
+  });
+
+  hint.addEventListener('click', (e) => {
+    const t = targets.find((x) => !x.classList.contains('is-gone'));
+    open(t, e.detail === 0 ? 'key' : 'pointer');
+  });
+
+  /* — menu: tap, slide across items, hover, keyboard — */
+  menu.addEventListener('pointerdown', (e) => {
+    const it = e.target.closest('.msc01-mi');
+    if (!it || !st.open) return;
+    st.menuPid = e.pointerId;
+    setHl(it);
+    try { menu.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  });
+  menu.addEventListener('pointermove', (e) => {
+    if (st.menuPid === e.pointerId) hitTest(e.clientX, e.clientY);
+    else if (e.pointerType === 'mouse' && !st.drag && st.open) setHl(e.target.closest('.msc01-mi'));
+  });
+  menu.addEventListener('pointerup', (e) => {
+    if (st.menuPid !== e.pointerId) return;
+    st.menuPid = null;
+    hitTest(e.clientX, e.clientY);
+    if (st.hl) activate(st.hl);
+  });
+  menu.addEventListener('pointercancel', () => { st.menuPid = null; setHl(null); });
+  menu.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && st.menuPid == null && !st.drag) setHl(null); });
+  menu.addEventListener('click', (e) => { if (e.detail === 0) activate(e.target.closest('.msc01-mi')); });
+  menu.addEventListener('keydown', (e) => {
+    const i = items.indexOf(document.activeElement);
+    let n = -1;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') n = (i + 1) % items.length;
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') n = (i - 1 + items.length) % items.length;
+    else if (e.key === 'Home') n = 0;
+    else if (e.key === 'End') n = items.length - 1;
+    else if (e.key === 'Tab') { e.preventDefault(); close(true); return; }
+    if (n < 0) return;
+    e.preventDefault();
+    items.forEach((it) => { it.tabIndex = -1; });
+    items[n].tabIndex = 0;
+    items[n].focus({ preventScroll: true });
+  });
+
+  dim.addEventListener('click', () => close(false));
+  undo.addEventListener('click', () => { clearTimeout(st.toastT); restore(); toast.classList.remove('is-shown'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && st.open) { e.preventDefault(); close(true); } });
+  document.addEventListener('pointerdown', (e) => { if (st.open && !root.contains(e.target)) close(false); });
+})();
+</script>

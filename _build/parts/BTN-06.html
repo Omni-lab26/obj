@@ -1,0 +1,337 @@
+<!-- ═══════════ BTN-06 · Loading Button ═══════════ -->
+<style>
+#BTN-06 .btn06-stack { display: flex; flex-direction: column; align-items: stretch; gap: 24px; width: min(100%, 320px); }
+#BTN-06 .btn06-group { display: flex; flex-direction: column; gap: 8px; }
+#BTN-06 .btn06-cap {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 4px;
+  font: 500 var(--fs-caption1)/16px var(--font-text); color: var(--label-2); letter-spacing: 0;
+}
+#BTN-06 .btn06-meta { font: 500 10.5px/16px var(--font-mono); color: var(--label-3); letter-spacing: .02em; }
+#BTN-06 .btn06-check { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ───────── 1 · Vivid morphing purchase button ───────── */
+#BTN-06 .btn06-card {
+  position: relative; display: flex; flex-direction: column; gap: 16px; padding: 16px 16px 14px; border-radius: 24px; overflow: hidden; isolation: isolate;
+  background: var(--bg-grouped-2);
+  box-shadow: 0 0 0 .5px light-dark(rgba(0, 0, 0, .04), rgba(255, 255, 255, .07)), 0 10px 30px -14px light-dark(rgba(120, 40, 120, .25), rgba(0, 0, 0, .7));
+}
+#BTN-06 .btn06-card::before {
+  content: ""; position: absolute; inset: -40% -20% auto; height: 120%; z-index: -1; pointer-events: none;
+  background: radial-gradient(50% 45% at 22% 30%, light-dark(rgba(255, 159, 10, .12), rgba(255, 159, 10, .10)), transparent 70%),
+              radial-gradient(45% 45% at 80% 25%, light-dark(rgba(191, 90, 242, .12), rgba(191, 90, 242, .14)), transparent 70%);
+}
+#BTN-06 .btn06-prod { display: flex; align-items: center; gap: 14px; min-width: 0; }
+#BTN-06 .btn06-art { width: 56px; height: 56px; flex: none; border-radius: 14px; background-size: 150% 150%; background-position: 40% 30%; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .12), 0 4px 12px -4px rgba(10, 30, 60, .45); }
+#BTN-06 .btn06-prod-t { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+#BTN-06 .btn06-prod-t b { font: 600 var(--fs-headline)/22px var(--font-text); color: var(--label); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#BTN-06 .btn06-prod-t span { font: 400 var(--fs-footnote)/18px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#BTN-06 .btn06-fine { margin: 2px 0 0; text-align: center; font: 400 var(--fs-caption1)/16px var(--font-text); color: var(--label-3); letter-spacing: 0; }
+
+/* the slot reserves the full pill box — nothing around it ever moves */
+#BTN-06 .btn06-slot { position: relative; height: 52px; display: grid; justify-items: center; }
+#BTN-06 .btn06-v {
+  position: relative; width: 100%; height: 52px; padding: 0; border: 0; border-radius: 26px; background: none; color: #fff;
+  cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  outline: 3px solid transparent; outline-offset: 5px;
+  /* default (expanding back): springy */
+  transition: width 720ms cubic-bezier(.3, 1.22, .5, 1), transform var(--dur-3) var(--ease-spring), outline-color var(--dur-1) ease, outline-offset var(--dur-2) var(--ease-out);
+}
+#BTN-06 .btn06-v.is-loading { width: 52px; transition: width 540ms cubic-bezier(.62, 0, .22, 1) 40ms, transform var(--dur-3) var(--ease-spring); }
+#BTN-06 .btn06-v:focus-visible { outline-color: color-mix(in srgb, var(--pink) 45%, transparent); outline-offset: 2px; }
+#BTN-06 .btn06-v:not([aria-disabled="true"]):active { transform: scale(.96); transition: width 720ms cubic-bezier(.3, 1.22, .5, 1), transform 120ms var(--ease-out); }
+#BTN-06 .btn06-v.is-pop { animation: btn06-pop 620ms var(--ease-out); }
+
+#BTN-06 .btn06-glow {
+  position: absolute; left: 10%; right: 10%; top: 16px; bottom: -7px; z-index: -1; border-radius: 26px; pointer-events: none;
+  background: var(--grad-vivid); filter: blur(12px); opacity: .5;
+  transition: opacity var(--dur-3) ease, left 540ms cubic-bezier(.62, 0, .22, 1), right 540ms cubic-bezier(.62, 0, .22, 1);
+}
+#BTN-06 .btn06-glow::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: #30D158; opacity: 0; transition: opacity var(--dur-3) ease; }
+#BTN-06 .btn06-v.is-loading .btn06-glow { left: 4px; right: 4px; }
+#BTN-06 .btn06-v.is-success .btn06-glow::after { opacity: 1; }
+@media (hover: hover) { #BTN-06 .btn06-v:not([aria-disabled="true"]):hover .btn06-glow { opacity: .7; } }
+
+#BTN-06 .btn06-face { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; display: grid; place-items: center; place-content: center; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), inset 0 -1px 0 rgba(0, 0, 0, .06); }
+#BTN-06 .btn06-grad { position: absolute; inset: 0; background: var(--grad-vivid); background-size: 135% 100%; background-position: 0% 50%; transition: background-position 900ms var(--ease-out); }
+@media (hover: hover) { #BTN-06 .btn06-v:not([aria-disabled="true"]):hover .btn06-grad { background-position: 100% 50%; } }
+#BTN-06 .btn06-green { position: absolute; inset: 0; background: linear-gradient(180deg, #3ADB63, #28C04F); opacity: 0; transition: opacity var(--dur-3) ease; }
+#BTN-06 .btn06-v.is-success .btn06-green { opacity: 1; }
+#BTN-06 .btn06-shine { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 55%); pointer-events: none; }
+
+#BTN-06 .btn06-lbl {
+  position: relative; grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  font: 600 var(--fs-headline)/1 var(--font-text); letter-spacing: 0;
+  transition: opacity 200ms var(--ease-out), transform var(--dur-3) var(--ease-out), filter 200ms ease;
+}
+#BTN-06 .btn06-lbl b { font: 700 var(--fs-headline)/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+#BTN-06 .btn06-lbl .btn06-check { width: 19px; height: 19px; stroke-width: 2.6; }
+#BTN-06 .btn06-lbl[data-s="done"] { opacity: 0; transform: scale(.9); filter: blur(4px); }
+#BTN-06 .btn06-v.is-loading .btn06-lbl[data-s="idle"], #BTN-06 .btn06-v.is-done .btn06-lbl[data-s="idle"] { opacity: 0; transform: scale(.9); filter: blur(4px); transition-duration: 160ms; }
+#BTN-06 .btn06-v.is-done .btn06-lbl[data-s="done"] { opacity: 1; transform: none; filter: none; transition-delay: 220ms; }
+
+/* spinner: tapered arc with a round head */
+#BTN-06 .btn06-spin {
+  position: relative; grid-area: 1 / 1; width: 24px; height: 24px; border-radius: 50%; opacity: 0; transform: scale(.5);
+  transition: opacity 220ms ease, transform var(--dur-3) var(--ease-spring);
+}
+#BTN-06 .btn06-spin i {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 70deg, rgba(255, 255, 255, 0) 0deg, rgba(255, 255, 255, .95) 290deg, rgba(255, 255, 255, 0) 290deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.6px), #000 calc(100% - 2.4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2.6px), #000 calc(100% - 2.4px));
+}
+#BTN-06 .btn06-spin i::after { content: ""; position: absolute; left: 50%; top: 0; width: 2.6px; height: 2.6px; margin-left: -1.3px; border-radius: 50%; background: #fff; }
+#BTN-06 .btn06-v.is-loading .btn06-spin { opacity: 1; transform: none; transition-delay: 330ms; }
+#BTN-06 .btn06-v.is-loading .btn06-spin i { animation: btn06-spin 760ms linear infinite; }
+#BTN-06 .btn06-v.is-success .btn06-spin { opacity: 0; transform: scale(.4); transition-delay: 0s; transition-duration: 140ms; }
+#BTN-06 .btn06-v > .btn06-face > .btn06-check { position: relative; grid-area: 1 / 1; width: 26px; height: 26px; stroke-width: 3; opacity: 0; }
+#BTN-06 .btn06-v > .btn06-face > .btn06-check path { stroke-dasharray: 22; stroke-dashoffset: 22; }
+#BTN-06 .btn06-v.is-success.is-loading > .btn06-face > .btn06-check { opacity: 1; }
+#BTN-06 .btn06-v.is-success.is-loading > .btn06-face > .btn06-check path { stroke-dashoffset: 0; transition: stroke-dashoffset 420ms cubic-bezier(.5, 0, .2, 1) 110ms; }
+#BTN-06 .btn06-v.is-done > .btn06-face > .btn06-check { transition: opacity 120ms ease; }
+
+/* ───────── 2 · Standard filled with inline spinner ───────── */
+#BTN-06 .btn06-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#BTN-06 .btn06-std {
+  position: relative; display: inline-grid; place-items: center; height: 44px; padding: 0 18px; border: 0; border-radius: 12px;
+  background-color: var(--accent); color: var(--on-accent);
+  font: 600 var(--fs-callout)/1 var(--font-text); letter-spacing: 0; white-space: nowrap;
+  box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .28);
+  cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  outline: 3px solid transparent; outline-offset: 5px;
+  transition: transform var(--dur-3) var(--ease-spring), background-color var(--dur-2) ease, color var(--dur-2) ease, outline-color var(--dur-1) ease, outline-offset var(--dur-2) var(--ease-out);
+}
+#BTN-06 .btn06-std:focus-visible { outline-color: light-dark(color-mix(in srgb, var(--accent) 35%, transparent), color-mix(in srgb, var(--accent) 60%, transparent)); outline-offset: 2px; }
+@media (hover: hover) { #BTN-06 .btn06-std:not([aria-disabled="true"]):hover { background-color: color-mix(in srgb, var(--accent) 92%, #fff); } }
+#BTN-06 .btn06-std:not([aria-disabled="true"]):active { transform: scale(.97); background-color: light-dark(color-mix(in srgb, var(--accent) 82%, #fff), color-mix(in srgb, var(--accent) 82%, #000)); transition: transform 110ms var(--ease-out), background-color 60ms ease; }
+#BTN-06 .btn06-std[aria-disabled="true"] { cursor: default; }
+#BTN-06 .btn06-std.is-busy { background-color: color-mix(in srgb, var(--accent) 78%, light-dark(#fff, #000)); }
+#BTN-06 .btn06-std.is-busy .btn06-s { color: rgba(255, 255, 255, .92); }
+#BTN-06 .btn06-gray { height: 44px; padding: 0 18px; border: 0; border-radius: 12px; background: var(--fill-3); color: var(--label); font: 600 var(--fs-callout)/1 var(--font-text); letter-spacing: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform var(--dur-3) var(--ease-spring), background-color var(--dur-2) ease, opacity var(--dur-2) ease; outline: 3px solid transparent; outline-offset: 2px; }
+#BTN-06 .btn06-gray:focus-visible { outline-color: light-dark(color-mix(in srgb, var(--accent) 35%, transparent), color-mix(in srgb, var(--accent) 60%, transparent)); }
+#BTN-06 .btn06-gray:active { transform: scale(.97); background: var(--fill); transition: transform 110ms var(--ease-out), background-color 60ms ease; }
+#BTN-06 .btn06-gray:disabled { opacity: .45; cursor: default; transform: none; }
+#BTN-06 .btn06-s { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 7px; transition: opacity 180ms var(--ease-out), transform var(--dur-3) var(--ease-ios); }
+#BTN-06 .btn06-s[data-s="busy"], #BTN-06 .btn06-s[data-s="done"] { opacity: 0; transform: translateY(10px); }
+#BTN-06 .btn06-std.is-busy .btn06-s[data-s="idle"], #BTN-06 .btn06-std.is-saved .btn06-s[data-s="idle"], #BTN-06 .btn06-std.is-saved .btn06-s[data-s="busy"] { opacity: 0; transform: translateY(-10px); }
+#BTN-06 .btn06-std.is-busy .btn06-s[data-s="busy"], #BTN-06 .btn06-std.is-saved .btn06-s[data-s="done"] { opacity: 1; transform: none; }
+#BTN-06 .btn06-s .btn06-check { width: 16px; height: 16px; stroke-width: 2.6; }
+#BTN-06 .btn06-s .btn06-check path { stroke-dasharray: 20; stroke-dashoffset: 20; }
+#BTN-06 .btn06-std.is-saved .btn06-s .btn06-check path { stroke-dashoffset: 0; transition: stroke-dashoffset 380ms var(--ease-out) 120ms; }
+/* classic iOS activity indicator (8 spokes) */
+#BTN-06 .btn06-ai { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; }
+#BTN-06 .btn06-std.is-busy .btn06-ai { animation: btn06-spin 800ms steps(8) infinite; }
+
+/* ───────── 3 · App Store style 入手 → progress → 開く ───────── */
+#BTN-06 .btn06-app {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 12px; border-radius: 18px;
+  background: var(--bg-grouped-2); box-shadow: 0 0 0 .5px light-dark(rgba(0, 0, 0, .04), rgba(255, 255, 255, .06));
+}
+#BTN-06 .btn06-icon { width: 48px; height: 48px; flex: none; border-radius: 11px; display: grid; place-items: center; color: #fff; font-size: 24px; background: var(--grad-berry); box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .08), inset 0 1px 0 rgba(255, 255, 255, .25); }
+#BTN-06 .btn06-app-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#BTN-06 .btn06-app-t b { font: 600 var(--fs-subhead)/20px var(--font-text); color: var(--label); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#BTN-06 .btn06-app-t span { font: 400 var(--fs-footnote)/16px var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#BTN-06 .btn06-getslot { position: relative; width: 76px; height: 30px; flex: none; display: grid; justify-items: center; }
+#BTN-06 .btn06-get {
+  position: relative; display: grid; place-items: center; width: 76px; height: 30px; padding: 0; border: 0; border-radius: 15px;
+  background-color: light-dark(rgba(118, 118, 128, .12), rgba(118, 118, 128, .24)); color: var(--accent);
+  font: 700 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none;
+  outline: 3px solid transparent; outline-offset: 2px;
+  transition: width 560ms cubic-bezier(.3, 1.2, .5, 1), background-color var(--dur-2) ease, transform var(--dur-3) var(--ease-spring), outline-color var(--dur-1) ease;
+}
+#BTN-06 .btn06-get:focus-visible { outline-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+#BTN-06 .btn06-get:not([aria-disabled="true"]):active { transform: scale(.94); transition: width 560ms ease, transform 110ms var(--ease-out); }
+#BTN-06 .btn06-get.is-dl { width: 30px; background-color: transparent; transition: width 420ms cubic-bezier(.62, 0, .22, 1), background-color 300ms ease 120ms; }
+#BTN-06 .btn06-get-l { grid-area: 1 / 1; transition: opacity 160ms ease, transform var(--dur-3) var(--ease-out); }
+#BTN-06 .btn06-get-l[data-s="open"] { opacity: 0; transform: scale(.85); }
+#BTN-06 .btn06-get.is-dl .btn06-get-l, #BTN-06 .btn06-get.is-open .btn06-get-l[data-s="get"] { opacity: 0; transform: scale(.85); }
+#BTN-06 .btn06-get.is-open:not(.is-dl) .btn06-get-l[data-s="open"] { opacity: 1; transform: none; transition-delay: 160ms; }
+#BTN-06 .btn06-ring { grid-area: 1 / 1; width: 30px; height: 30px; opacity: 0; transform: scale(.6) rotate(-90deg); transition: opacity 200ms ease, transform var(--dur-3) var(--ease-spring); }
+#BTN-06 .btn06-get.is-dl .btn06-ring { opacity: 1; transform: rotate(-90deg); transition-delay: 220ms; }
+#BTN-06 .btn06-ring circle { fill: none; stroke-width: 2.5; }
+#BTN-06 .btn06-ring .btn06-track { stroke: light-dark(rgba(118, 118, 128, .2), rgba(118, 118, 128, .4)); }
+#BTN-06 .btn06-ring .btn06-prog { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 81.7; stroke-dashoffset: calc(81.7 * (1 - var(--q, 0))); }
+#BTN-06 .btn06-get.is-wait .btn06-prog { stroke-dashoffset: 61; transform-origin: 15px 15px; animation: btn06-spin 900ms linear infinite; }
+#BTN-06 .btn06-ring rect { fill: var(--accent); }
+
+@keyframes btn06-spin { to { transform: rotate(360deg); } }
+@keyframes btn06-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.14); }
+  65% { transform: scale(.96); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #BTN-06 .btn06-v, #BTN-06 .btn06-v.is-loading { width: 100%; transition: none; }
+  #BTN-06 .btn06-v.is-pop { animation: none; }
+  #BTN-06 .btn06-v.is-loading .btn06-glow { left: 10%; right: 10%; }
+  #BTN-06 .btn06-lbl, #BTN-06 .btn06-s, #BTN-06 .btn06-spin, #BTN-06 .btn06-get-l, #BTN-06 .btn06-ring { transform: none !important; filter: none !important; }
+  #BTN-06 .btn06-ring { transform: rotate(-90deg) !important; }
+  #BTN-06 .btn06-get, #BTN-06 .btn06-get.is-dl { transition: background-color var(--dur-2) ease; }
+  #BTN-06 .btn06-std, #BTN-06 .btn06-gray, #BTN-06 .btn06-std:active, #BTN-06 .btn06-gray:active, #BTN-06 .btn06-get:active { transform: none !important; }
+}
+</style>
+<article class="obj" id="BTN-06" data-name="Loading Button" data-ja="ローディングボタン" data-vector="Vivid" data-size="m" data-desc="押すと読み込み中→完了へ形が変わるボタン。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="btn06-stack">
+      <div class="btn06-group">
+        <p class="btn06-cap"><span>グラデーション・モーフ</span><span class="btn06-meta">52pt · pill → circle</span></p>
+        <div class="btn06-card">
+          <div class="btn06-prod">
+            <div class="btn06-art art art-6" aria-hidden="true"></div>
+            <div class="btn06-prod-t"><b>テーマパック「オーロラ」</b><span>壁紙とアイコン 24点</span></div>
+          </div>
+          <div class="btn06-slot">
+            <button class="btn06-v" type="button" aria-label="購入する 480円">
+              <span class="btn06-glow" aria-hidden="true"></span>
+              <span class="btn06-face" aria-hidden="true">
+                <span class="btn06-grad"></span><span class="btn06-green"></span><span class="btn06-shine"></span>
+                <span class="btn06-lbl" data-s="idle">購入する<b>¥480</b></span>
+                <span class="btn06-lbl" data-s="done"><svg class="btn06-check" viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg>購入済み</span>
+                <span class="btn06-spin"><i></i></span>
+                <svg class="btn06-check" viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg>
+              </span>
+            </button>
+          </div>
+          <p class="btn06-fine">購入後すぐにダウンロードできます</p>
+        </div>
+      </div>
+
+      <div class="btn06-group">
+        <p class="btn06-cap"><span>標準・インラインスピナー</span><span class="btn06-meta">44pt · 幅は固定</span></p>
+        <div class="btn06-row">
+          <button class="btn06-gray" type="button">キャンセル</button>
+          <button class="btn06-std" type="button" aria-label="保存">
+            <span class="btn06-s" data-s="idle" aria-hidden="true">保存</span>
+            <span class="btn06-s" data-s="busy" aria-hidden="true"><svg class="btn06-ai" viewBox="0 0 16 16"><g><path d="M8 1.6v2.8" opacity="1"/><path d="M12.5 3.5l-2 2" opacity=".86"/><path d="M14.4 8h-2.8" opacity=".72"/><path d="M12.5 12.5l-2-2" opacity=".6"/><path d="M8 14.4v-2.8" opacity=".48"/><path d="M3.5 12.5l2-2" opacity=".38"/><path d="M1.6 8h2.8" opacity=".3"/><path d="M3.5 3.5l2 2" opacity=".22"/></g></svg>保存中…</span>
+            <span class="btn06-s" data-s="done" aria-hidden="true"><svg class="btn06-check" viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg>保存しました</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="btn06-group">
+        <p class="btn06-cap"><span>App Store 風</span><span class="btn06-meta">入手 → 進捗 → 開く</span></p>
+        <div class="btn06-app">
+          <span class="btn06-icon" aria-hidden="true"><svg class="i"><use href="#i-cloud-sun-fill"/></svg></span>
+          <div class="btn06-app-t"><b>そらもよう</b><span>天気・雨雲レーダー</span></div>
+          <div class="btn06-getslot">
+            <button class="btn06-get" type="button" aria-label="入手">
+              <span class="btn06-get-l" data-s="get" aria-hidden="true">入手</span>
+              <span class="btn06-get-l" data-s="open" aria-hidden="true">開く</span>
+              <svg class="btn06-ring" viewBox="0 0 30 30" aria-hidden="true"><circle class="btn06-track" cx="15" cy="15" r="13"/><circle class="btn06-prog" cx="15" cy="15" r="13"/><rect x="11" y="11" width="8" height="8" rx="1.6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <span class="sr-only" role="status" aria-live="polite"></span>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>購入ボタンが円に変形</li><li>保存は幅を固定して切替</li><li>入手は進捗リングに</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('BTN-06');
+  root.addEventListener('touchstart', () => {}, { passive: true });
+  const live = root.querySelector('[role="status"]');
+  const say = (t) => { live.textContent = t; };
+  const rm = () => ObjKit.reducedMotion;
+
+  /* 1 · Vivid: pill → circle + spinner → green check → pill 「購入済み」 → reset */
+  const v = root.querySelector('.btn06-v');
+  let vt = [];
+  const later = (arr, fn, ms) => arr.push(setTimeout(fn, ms));
+  v.addEventListener('click', () => {
+    if (v.getAttribute('aria-disabled') === 'true') return;
+    v.setAttribute('aria-disabled', 'true');
+    v.setAttribute('aria-busy', 'true');
+    say('購入処理中');
+    v.classList.add('is-loading');
+    const morph = rm() ? 0 : 580;
+    later(vt, () => {
+      v.classList.add('is-success');
+      v.removeAttribute('aria-busy');
+      if (!rm()) { v.classList.remove('is-pop'); void v.offsetWidth; v.classList.add('is-pop'); }
+      say('購入が完了しました');
+    }, morph + 1600);
+    later(vt, () => {
+      v.classList.add('is-done');
+      v.classList.remove('is-loading');
+      v.setAttribute('aria-label', '購入済み');
+    }, morph + 1600 + 950);
+    later(vt, () => {
+      v.classList.remove('is-success', 'is-done', 'is-pop');
+      v.setAttribute('aria-label', '購入する 480円');
+      v.removeAttribute('aria-disabled');
+      say('');
+    }, morph + 1600 + 950 + 2200);
+  });
+
+  /* 2 · Standard: 保存 → 保存中… → 保存しました (width never changes) */
+  const s = root.querySelector('.btn06-std');
+  const cancel = root.querySelector('.btn06-gray');
+  s.addEventListener('click', () => {
+    if (s.getAttribute('aria-disabled') === 'true') return;
+    s.setAttribute('aria-disabled', 'true');
+    s.setAttribute('aria-busy', 'true');
+    s.setAttribute('aria-label', '保存中');
+    cancel.disabled = true;
+    s.classList.add('is-busy');
+    setTimeout(() => {
+      s.classList.remove('is-busy');
+      s.classList.add('is-saved');
+      s.removeAttribute('aria-busy');
+      s.setAttribute('aria-label', '保存しました');
+      cancel.disabled = false;
+      say('保存しました');
+    }, 1500);
+    setTimeout(() => {
+      s.classList.remove('is-saved');
+      s.removeAttribute('aria-disabled');
+      s.setAttribute('aria-label', '保存');
+    }, 3300);
+  });
+
+  /* 3 · App Store: 入手 → waiting spin → progress ring → 開く */
+  const g = root.querySelector('.btn06-get');
+  let raf = 0, gt = [];
+  const runProgress = (dur, done) => {
+    const t0 = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / dur);
+      // downloads arrive in bursts: a gentle ease with a small mid-stall
+      const q = t < .5 ? 0.62 * (1 - Math.pow(1 - t / .5, 2)) * 1 : 0.62 + 0.38 * Math.pow((t - .5) / .5, 1.4);
+      g.style.setProperty('--q', q.toFixed(3));
+      if (t < 1) raf = requestAnimationFrame(step); else { raf = 0; done(); }
+    };
+    raf = requestAnimationFrame(step);
+  };
+  g.addEventListener('click', () => {
+    if (g.getAttribute('aria-disabled') === 'true') return;
+    if (g.classList.contains('is-open')) {   // 開く → (demo) back to 入手
+      g.classList.remove('is-open');
+      g.setAttribute('aria-label', '入手');
+      gt.forEach(clearTimeout); gt = [];
+      return;
+    }
+    g.setAttribute('aria-disabled', 'true');
+    g.setAttribute('aria-label', 'ダウンロード中');
+    g.style.setProperty('--q', '0');
+    g.classList.add('is-dl', 'is-wait');
+    say('ダウンロード中');
+    later(gt, () => {
+      g.classList.remove('is-wait');
+      runProgress(1500, () => {
+        later(gt, () => {
+          g.classList.remove('is-dl');
+          g.classList.add('is-open');
+          g.removeAttribute('aria-disabled');
+          g.setAttribute('aria-label', '開く');
+          say('インストールが完了しました');
+        }, 180);
+        later(gt, () => { g.classList.remove('is-open'); g.setAttribute('aria-label', '入手'); }, 4200);
+      });
+    }, rm() ? 300 : 900);
+  });
+
+})();
+</script>

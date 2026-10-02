@@ -1,0 +1,500 @@
+<!-- ═══════════ SNS-18 · Media Grid ═══════════ -->
+<style>
+#SNS-18 .obj-stage { padding-left: 0; padding-right: 0; }
+#SNS-18 .sns18 { width: min(100%, 375px); font-family: var(--font-text); color: var(--label); -webkit-tap-highlight-color: transparent; }
+
+/* — Tab bar — */
+#SNS-18 .sns18-tabs { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); height: 44px; box-shadow: inset 0 -.5px 0 var(--separator); }
+#SNS-18 .sns18-tab {
+  display: grid; place-items: center; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer;
+  color: var(--label-3); font-size: 22px; user-select: none; -webkit-user-select: none;
+  transition: color var(--dur-2) ease;
+}
+#SNS-18 .sns18-tab .i { transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-18 .sns18-tab:active .i { transform: scale(.88); transition-duration: 90ms; }
+#SNS-18 .sns18-tab[aria-selected="true"] { color: var(--label); }
+@media (hover: hover) { #SNS-18 .sns18-tab[aria-selected="false"]:hover { color: var(--label-2); } }
+#SNS-18 .sns18-tab:focus-visible { outline: none; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 8px; }
+#SNS-18 .sns18-ink { position: absolute; left: 0; bottom: 0; width: calc(100% / 3); height: 1px; background: var(--label); transform: translate3d(calc(var(--t, 0) * 100%), 0, 0); transition: transform var(--dur-3) var(--ease-ios); }
+
+/* — Toolbar: count + ratio segmented control — */
+#SNS-18 .sns18-bar { display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 12px 0 14px; }
+#SNS-18 .sns18-count { font: 400 13px/18px var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-18 .sns18-count b { font-weight: 600; color: var(--label); }
+#SNS-18 .sns18-seg { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; width: 96px; height: 28px; padding: 2px; border-radius: 8px; background: var(--segment-bg); transition: opacity var(--dur-2) ease, transform var(--dur-2) var(--ease-out); }
+#SNS-18 .sns18-seg.is-off { opacity: 0; transform: scale(.94); pointer-events: none; }
+#SNS-18 .sns18-seg-thumb { position: absolute; top: 2px; left: 2px; width: calc(50% - 2px); height: 24px; border-radius: 6px; background: var(--segment-thumb); box-shadow: 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04), inset 0 0 0 .5px rgba(0, 0, 0, .04); transform: translate3d(calc(var(--s, 1) * 100%), 0, 0); transition: transform var(--dur-3) var(--ease-ios); }
+#SNS-18 .sns18-seg button { position: relative; z-index: 1; padding: 0; border: 0; background: transparent; cursor: pointer; font: 500 12px/24px var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--label); transition: opacity var(--dur-1) ease; }
+#SNS-18 .sns18-seg button[aria-checked="true"] { font-weight: 600; }
+#SNS-18 .sns18-seg button:active { opacity: .55; }
+#SNS-18 .sns18-seg button:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 6px; }
+
+/* — Panels / grid — */
+#SNS-18 .sns18-panels { position: relative; aspect-ratio: 24 / 35; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+#SNS-18 .sns18-panels::-webkit-scrollbar { display: none; }
+#SNS-18 .sns18-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios); }
+#SNS-18 .sns18-grid[aria-hidden="true"] { position: absolute; inset: 0 0 auto; opacity: 0; transform: scale(.985); visibility: hidden; pointer-events: none; transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios), visibility 0s linear var(--dur-3); }
+#SNS-18 .sns18-tile {
+  --ar: 125%;
+  position: relative; display: block; width: 100%; height: 0; padding: var(--ar) 0 0; border: 0; overflow: hidden; cursor: pointer;
+  background: var(--fill-3); color: #fff; user-select: none; -webkit-user-select: none;
+  transition: padding-top var(--dur-3) var(--ease-ios);
+}
+#SNS-18 .sns18.is-square .sns18-grid--posts .sns18-tile, #SNS-18 .sns18.is-square .sns18-grid--tagged .sns18-tile { --ar: 100%; }
+#SNS-18 .sns18-grid--reels .sns18-tile { --ar: 177.78%; }
+#SNS-18 .sns18-img { position: absolute; left: 0; top: 50%; width: 100%; aspect-ratio: 4 / 5; transform: translate3d(0, -50%, 0); }
+#SNS-18 .sns18-grid--reels .sns18-img { aspect-ratio: 9 / 16; }
+#SNS-18 .sns18-tile::after { content: ""; position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity var(--dur-1) ease; pointer-events: none; }
+@media (hover: hover) { #SNS-18 .sns18-tile:hover::after { opacity: .15; } }
+#SNS-18 .sns18-tile:active::after { opacity: .15; transition-duration: 60ms; }
+#SNS-18 .sns18-tile:focus-visible { outline: none; }
+#SNS-18 .sns18-tile:focus-visible::before { content: ""; position: absolute; inset: 0; z-index: 3; box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--accent) 80%, transparent); }
+#SNS-18 .sns18-tile.is-hidden .sns18-img, #SNS-18 .sns18-tile.is-hidden .sns18-ov { opacity: 0; }
+#SNS-18 .sns18-ov { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+#SNS-18 .sns18-badge { position: absolute; top: 7px; right: 7px; font-size: 17px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .4)); }
+#SNS-18 .sns18-badge--pin { font-size: 16px; }
+#SNS-18 .sns18-ov--video { background: linear-gradient(180deg, transparent 58%, rgba(0, 0, 0, .44)); }
+#SNS-18 .sns18-views { position: absolute; left: 7px; bottom: 6px; display: inline-flex; align-items: center; gap: 3px; font: 600 12px/1 var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px rgba(0, 0, 0, .3); }
+#SNS-18 .sns18-views .i { font-size: 11px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .3)); }
+#SNS-18 .sns18-by { position: absolute; left: 6px; bottom: 6px; width: 20px; height: 20px; font-size: 9px; box-shadow: 0 0 0 1.5px #fff, 0 1px 4px rgba(0, 0, 0, .3); }
+
+/* — Lightbox (inside the stage) — */
+#SNS-18 .sns18-lb { position: absolute; inset: 0; z-index: 30; visibility: hidden; color: #fff; }
+#SNS-18 .sns18-lb.is-open { visibility: visible; }
+#SNS-18 .sns18-lb [hidden] { display: none !important; }
+#SNS-18 .sns18-lb-bg { position: absolute; inset: 0; background: rgba(0, 0, 0, .94); opacity: 0; transition: opacity var(--dur-3) var(--ease-out); }
+#SNS-18 .sns18-lb.is-shown .sns18-lb-bg { opacity: var(--bgo, 1); }
+#SNS-18 .sns18-lb-head, #SNS-18 .sns18-lb-foot { position: absolute; left: 16px; right: 16px; opacity: 0; transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios); }
+#SNS-18 .sns18-lb.is-shown .sns18-lb-head, #SNS-18 .sns18-lb.is-shown .sns18-lb-foot { opacity: var(--uio, 1); transform: none; transition-delay: 80ms; }
+#SNS-18 .sns18-lb.is-dragging .sns18-lb-bg, #SNS-18 .sns18-lb.is-dragging .sns18-lb-head, #SNS-18 .sns18-lb.is-dragging .sns18-lb-foot { transition: none; }
+#SNS-18 .sns18-lb-head { top: 12px; display: flex; align-items: center; gap: 10px; height: 44px; transform: translate3d(0, -8px, 0); }
+#SNS-18 .sns18-lb-head .av { width: 34px; height: 34px; font-size: 14px; }
+#SNS-18 .sns18-lb-who { display: flex; flex-direction: column; min-width: 0; }
+#SNS-18 .sns18-lb-name { display: flex; align-items: center; gap: 3px; font: 600 14px/18px var(--font-text); letter-spacing: -.1px; }
+#SNS-18 .sns18-lb-name .i { font-size: 13px; color: #0A84FF; }
+#SNS-18 .sns18-lb-loc { font: 400 12px/16px var(--font-text); color: rgba(255, 255, 255, .62); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#SNS-18 .sns18-lb-close { margin-left: auto; flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: #fff; font-size: 14px; background: rgba(255, 255, 255, .16); transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease; }
+#SNS-18 .sns18-lb-close:active { transform: scale(.88); background: rgba(255, 255, 255, .26); transition-duration: 90ms; }
+#SNS-18 .sns18-lb-media { position: absolute; overflow: hidden; border-radius: 14px; background: #111; touch-action: none; cursor: grab; will-change: transform; box-shadow: 0 20px 50px rgba(0, 0, 0, .4); }
+#SNS-18 .sns18-lb-media:active { cursor: grabbing; }
+#SNS-18 .sns18-lb-track { display: flex; height: 100%; transition: transform var(--dur-3) var(--ease-ios); }
+#SNS-18 .sns18-lb-slide { flex: none; width: 100%; height: 100%; }
+#SNS-18 .sns18-lb-media.is-playing .sns18-lb-slide { animation: sns18-kb 14s linear forwards; }
+@keyframes sns18-kb { from { transform: scale(1); } to { transform: scale(1.12) translate3d(-2%, -1%, 0); } }
+#SNS-18 .sns18-lb-pages { position: absolute; top: 10px; right: 10px; padding: 4px 8px; border-radius: var(--r-full); background: rgba(0, 0, 0, .45); font: 600 11px/1 var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-18 .sns18-lb-play { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; padding: 0 0 0 4px; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: #fff; font-size: 26px;
+  background: rgba(255, 255, 255, .2); -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .35), inset 0 1px 0 rgba(255, 255, 255, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring); }
+#SNS-18 .sns18-lb-media.is-playing .sns18-lb-play { opacity: 0; transform: scale(1.3); }
+#SNS-18 .sns18-lb-prog { position: absolute; left: 12px; right: 12px; bottom: 12px; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .3); overflow: hidden; }
+#SNS-18 .sns18-lb-prog i { display: block; height: 100%; width: 100%; background: #fff; border-radius: inherit; transform-origin: 0 50%; transform: scaleX(0); animation: sns18-prog 14s linear forwards paused; }
+#SNS-18 .sns18-lb-media.is-playing .sns18-lb-prog i { animation-play-state: running; }
+@keyframes sns18-prog { to { transform: scaleX(1); } }
+#SNS-18 .sns18-lb-dur { position: absolute; right: 12px; bottom: 22px; font: 600 11px/1 var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
+#SNS-18 .sns18-lb-foot { bottom: 12px; transform: translate3d(0, 8px, 0); }
+#SNS-18 .sns18-lb-actions { display: flex; align-items: center; gap: 4px; margin-left: -8px; }
+#SNS-18 .sns18-lb-actions button { width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; background: transparent; cursor: pointer; color: #fff; font-size: 22px; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-18 .sns18-lb-actions button:active { transform: scale(.86); transition-duration: 90ms; }
+#SNS-18 .sns18-lb-actions .sns18-lb-save { margin-left: auto; margin-right: -8px; }
+#SNS-18 .sns18-lb-like[aria-pressed="true"] { color: #FF375F; }
+#SNS-18 .sns18-lb-actions .i-on { display: none; }
+#SNS-18 .sns18-lb-actions [aria-pressed="true"] .i-on { display: block; }
+#SNS-18 .sns18-lb-actions [aria-pressed="true"] .i-off { display: none; }
+#SNS-18 .sns18-lb-dots { position: absolute; left: 50%; top: 20px; display: flex; gap: 5px; transform: translateX(-50%); }
+#SNS-18 .sns18-lb-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .35); transition: background var(--dur-2) ease, transform var(--dur-2) var(--ease-spring); }
+#SNS-18 .sns18-lb-dots i.is-on { background: #fff; transform: scale(1.1); }
+#SNS-18 .sns18-lb-likes { margin-top: 2px; font: 600 13px/18px var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-18 .sns18-lb-cap { font: 400 13px/18px var(--font-text); letter-spacing: 0; color: rgba(255, 255, 255, .86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#SNS-18 .sns18-lb-cap b { font-weight: 600; color: #fff; margin-right: 4px; }
+#SNS-18 .sns18-lb :focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .85); }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-18 .sns18-tile, #SNS-18 .sns18-grid, #SNS-18 .sns18-ink, #SNS-18 .sns18-lb-track { transition: none; }
+  #SNS-18 .sns18-lb-media.is-playing .sns18-lb-slide { animation: none; }
+}
+</style>
+<article class="obj" id="SNS-18" data-name="Media Grid" data-ja="メディアグリッド" data-vector="Clean" data-size="m" data-desc="プロフィールの3列グリッド。複数枚・動画・固定のアイコン付き。">
+  <div class="obj-stage" data-bg="plain">
+    <div class="sns18">
+      <div class="sns18-tabs" role="tablist" aria-label="プロフィールのコンテンツ">
+        <button class="sns18-tab" type="button" role="tab" aria-selected="true" aria-controls="SNS-18-p0" aria-label="投稿" data-t="0"><svg class="i" aria-hidden="true"><use href="#i-square-grid-2x2-fill"/></svg></button>
+        <button class="sns18-tab" type="button" role="tab" aria-selected="false" aria-controls="SNS-18-p1" aria-label="リール" data-t="1" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-play-rectangle-fill"/></svg></button>
+        <button class="sns18-tab" type="button" role="tab" aria-selected="false" aria-controls="SNS-18-p2" aria-label="タグ付け" data-t="2" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg></button>
+        <span class="sns18-ink" aria-hidden="true"></span>
+      </div>
+      <div class="sns18-bar">
+        <span class="sns18-count" aria-live="polite"><b>248</b>件の投稿</span>
+        <div class="sns18-seg" role="radiogroup" aria-label="グリッドの比率">
+          <span class="sns18-seg-thumb" aria-hidden="true"></span>
+          <button type="button" role="radio" aria-checked="false" data-r="sq">1:1</button>
+          <button type="button" role="radio" aria-checked="true" data-r="45">4:5</button>
+        </div>
+      </div>
+      <div class="sns18-panels">
+        <div class="sns18-grid sns18-grid--posts" id="SNS-18-p0" role="tabpanel" aria-label="投稿"></div>
+        <div class="sns18-grid sns18-grid--reels" id="SNS-18-p1" role="tabpanel" aria-label="リール" aria-hidden="true"></div>
+        <div class="sns18-grid sns18-grid--tagged" id="SNS-18-p2" role="tabpanel" aria-label="タグ付けされた投稿" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="sns18-lb force-dark" role="dialog" aria-modal="true" aria-label="投稿を表示" aria-hidden="true">
+      <div class="sns18-lb-bg"></div>
+      <header class="sns18-lb-head">
+        <span class="av av-1">H</span>
+        <span class="sns18-lb-who">
+          <span class="sns18-lb-name"><span class="sns18-lb-user">haru.photo</span><svg class="i sns18-lb-seal" aria-label="認証済み"><use href="#i-checkmark-seal-fill"/></svg></span>
+          <span class="sns18-lb-loc">江ノ島</span>
+        </span>
+        <button class="sns18-lb-close" type="button" aria-label="閉じる"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>
+      </header>
+      <div class="sns18-lb-media">
+        <div class="sns18-lb-track"></div>
+        <span class="sns18-lb-pages" hidden></span>
+        <button class="sns18-lb-play" type="button" aria-label="再生" hidden><svg class="i" aria-hidden="true"><use href="#i-play-fill"/></svg></button>
+        <span class="sns18-lb-prog" hidden><i></i></span>
+        <span class="sns18-lb-dur" hidden>0:14</span>
+      </div>
+      <footer class="sns18-lb-foot">
+        <div class="sns18-lb-actions">
+          <button class="sns18-lb-like" type="button" aria-pressed="false" aria-label="いいね"><svg class="i i-off" aria-hidden="true"><use href="#i-heart"/></svg><svg class="i i-on" aria-hidden="true"><use href="#i-heart-fill"/></svg></button>
+          <button type="button" aria-label="コメント"><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg></button>
+          <button type="button" aria-label="送信"><svg class="i" aria-hidden="true"><use href="#i-paperplane"/></svg></button>
+          <span class="sns18-lb-dots" aria-hidden="true"></span>
+          <button class="sns18-lb-save" type="button" aria-pressed="false" aria-label="保存"><svg class="i i-off" aria-hidden="true"><use href="#i-bookmark"/></svg><svg class="i i-on" aria-hidden="true"><use href="#i-bookmark-fill"/></svg></button>
+        </div>
+        <div class="sns18-lb-likes">いいね！<span class="sns18-lb-n">2,481</span>件</div>
+        <div class="sns18-lb-cap"><b class="sns18-lb-capuser">haru.photo</b><span class="sns18-lb-captext"></span></div>
+      </footer>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>タイルを押すと拡大</li><li>下にドラッグ / Escで閉じる</li><li>複数枚は横スワイプ</li><li>1:1 と 4:5 を切り替え</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-18');
+  if (!root) return;
+  const $ = (s, r = root) => r.querySelector(s);
+  const $$ = (s, r = root) => [...r.querySelectorAll(s)];
+  const stage = $('.obj-stage');
+  const wrap = $('.sns18');
+  const reduced = () => window.ObjKit && ObjKit.reducedMotion;
+  const icon = (id, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+
+  /* art, background-size, background-position, filter */
+  const POSTS = [
+    { a: 1, s: '130% 120%', p: '50% 90%', pin: 1, multi: 1, loc: '江ノ島', cap: '夕焼けの丘で。今年いちばんの空でした', likes: '2,481' },
+    { a: 2, s: '160% 130%', p: '70% 30%', pin: 1, loc: '石垣島', cap: '水平線まで続く青。', likes: '1,932' },
+    { a: 4, s: '150% 140%', p: '30% 70%', video: '1.2万', loc: '渋谷', cap: '雨上がりの交差点をタイムラプスで', likes: '4,105' },
+    { a: 3, s: '140% 120%', p: '20% 80%', loc: '八ヶ岳', cap: '朝霧が晴れていく瞬間', likes: '1,210' },
+    { a: 8, s: '120% 120%', p: '50% 50%', multi: 1, loc: '代官山', cap: 'いつものカフェで、いつものラテ', likes: '986' },
+    { a: 5, s: '170% 140%', p: '80% 60%', video: '8,420', loc: '鳥取砂丘', cap: '風が描く砂の模様', likes: '2,054' },
+    { a: 6, s: '150% 130%', p: '40% 30%', loc: '北海道・美瑛', cap: '初めてのオーロラ予報、的中', likes: '5,672' },
+    { a: 7, s: '180% 160%', p: '20% 20%', multi: 1, loc: 'アトリエ', cap: '色の実験。パステル多め', likes: '742' },
+    { a: 1, s: '220% 180%', p: '15% 20%', f: 'hue-rotate(-28deg) saturate(1.1)', loc: '湘南', cap: 'マジックアワー', likes: '1,388' },
+    { a: 2, s: '200% 200%', p: '90% 45%', video: '3.4万', loc: '石垣島', cap: '波の音をどうぞ', likes: '6,019' },
+    { a: 3, s: '170% 150%', p: '90% 90%', f: 'hue-rotate(35deg)', loc: '奥入瀬', cap: '苔の緑が深くなってきた', likes: '1,104' },
+    { a: 5, s: '190% 160%', p: '10% 85%', f: 'saturate(1.2) hue-rotate(-10deg)', loc: 'モロッコ', cap: '旅の記録 Day 3', likes: '2,377' },
+    { a: 6, s: '210% 170%', p: '85% 15%', f: 'hue-rotate(70deg)', multi: 1, loc: 'アイスランド', cap: '空が踊った夜', likes: '3,560' },
+    { a: 8, s: '220% 220%', p: '15% 80%', video: '6,120', loc: '中目黒', cap: 'ラテアートの練習記録', likes: '1,471' },
+    { a: 7, s: '160% 160%', p: '90% 90%', f: 'saturate(1.35)', loc: 'アトリエ', cap: '新しいパレットを作った', likes: '655' },
+  ];
+  const REELS = [
+    { a: 4, s: '200% 120%', p: '20% 60%', video: '12.8万', loc: '新宿', cap: '夜の街を30秒で', likes: '1.1万' },
+    { a: 6, s: '220% 130%', p: '50% 30%', video: '8.1万', loc: '北海道', cap: 'オーロラのタイムラプス', likes: '9,804' },
+    { a: 2, s: '220% 120%', p: '70% 50%', video: '5.6万', loc: '石垣島', cap: 'ドローンで海の上を', likes: '6,230' },
+    { a: 5, s: '240% 130%', p: '85% 70%', video: '3.9万', loc: '鳥取砂丘', cap: '砂丘を歩く', likes: '4,118' },
+    { a: 7, s: '230% 120%', p: '30% 40%', video: '2.2万', loc: 'アトリエ', cap: '色づくりの裏側', likes: '2,906' },
+    { a: 1, s: '210% 120%', p: '50% 90%', video: '1.4万', f: 'hue-rotate(-14deg)', loc: '江ノ島', cap: '夕日が沈むまで', likes: '1,775' },
+    { a: 8, s: '260% 140%', p: '50% 50%', video: '9,820', loc: '代官山', cap: 'ハンドドリップの音', likes: '1,203' },
+    { a: 3, s: '240% 130%', p: '30% 85%', video: '7,450', f: 'hue-rotate(20deg)', loc: '八ヶ岳', cap: '霧の森を歩く', likes: '980' },
+    { a: 6, s: '250% 140%', p: '70% 20%', video: '6,010', f: 'hue-rotate(-40deg)', loc: '北海道', cap: '星空タイムラプス', likes: '1,640' },
+  ];
+  const TAGGED = [
+    { a: 8, s: '140% 140%', p: '30% 30%', by: ['mio_k', 'av-2', 'M'], loc: '中目黒', cap: '@haru.photo とカフェ巡り', likes: '412' },
+    { a: 7, s: '160% 140%', p: '70% 80%', by: ['yuna', 'av-4', 'Y'], loc: '表参道', cap: '撮ってもらった！', likes: '608' },
+    { a: 1, s: '150% 130%', p: '60% 70%', by: ['sora_travel', 'av-5', 'S'], loc: '江ノ島', cap: '撮影旅行 with @haru.photo', likes: '1,026' },
+    { a: 3, s: '150% 130%', p: '50% 50%', by: ['aoi', 'av-7', 'A'], loc: '高尾山', cap: '朝の登山', likes: '377' },
+    { a: 2, s: '170% 150%', p: '20% 60%', by: ['ren.design', 'av-6', 'R'], loc: '葉山', cap: '海辺のワークショップ', likes: '529' },
+    { a: 4, s: '160% 150%', p: '80% 30%', by: ['kaito.dev', 'av-3', 'K'], loc: '渋谷', cap: '夜景撮影会おつかれさま', likes: '844' },
+    { a: 5, s: '170% 150%', p: '30% 80%', by: ['sora_travel', 'av-5', 'S'], loc: '鳥取砂丘', cap: '砂丘ロケ、また行きたい', likes: '1,318' },
+    { a: 6, s: '180% 150%', p: '60% 30%', by: ['ren.design', 'av-6', 'R'], loc: '北海道', cap: 'オーロラ遠征メンバー', likes: '702' },
+    { a: 8, s: '180% 180%', p: '70% 20%', f: 'hue-rotate(-12deg)', by: ['mio_k', 'av-2', 'M'], loc: '清澄白河', cap: '朝カフェの会', likes: '366' },
+    { a: 2, s: '200% 160%', p: '80% 80%', by: ['aoi', 'av-7', 'A'], loc: '逗子', cap: '夏の終わりの海', likes: '451' },
+    { a: 7, s: '200% 170%', p: '10% 30%', f: 'hue-rotate(25deg)', by: ['yuna', 'av-4', 'Y'], loc: 'ギャラリー', cap: '展示に来てくれた！', likes: '583' },
+    { a: 3, s: '190% 160%', p: '80% 40%', by: ['kaito.dev', 'av-3', 'K'], loc: '奥多摩', cap: 'キャンプの朝', likes: '417' },
+    { a: 1, s: '190% 150%', p: '20% 60%', f: 'hue-rotate(15deg)', by: ['sora_travel', 'av-5', 'S'], loc: '小豆島', cap: 'フェリーからの夕日', likes: '894' },
+    { a: 4, s: '200% 170%', p: '20% 90%', f: 'hue-rotate(30deg)', by: ['ren.design', 'av-6', 'R'], loc: '六本木', cap: 'デザインウィークにて', likes: '760' },
+    { a: 5, s: '160% 140%', p: '60% 40%', f: 'hue-rotate(-20deg) saturate(1.2)', by: ['yuna', 'av-4', 'Y'], loc: 'ドバイ', cap: '撮影ありがとう〜', likes: '1,092' },
+  ];
+  const SETS = [POSTS, REELS, TAGGED];
+  const COUNT = ['<b>248</b>件の投稿', '<b>32</b>本のリール', '<b>56</b>件のタグ付け'];
+  const artStyle = (d, extra = '') => `background-size:${d.s};background-position:${d.p};${d.f ? `filter:${d.f};` : ''}${extra}`;
+
+  /* — Build grids — */
+  const grids = $$('.sns18-grid');
+  grids.forEach((g, gi) => {
+    g.innerHTML = SETS[gi].map((d, i) => {
+      const kind = [d.pin && '固定', d.multi && '複数枚', d.video && `動画 ${d.video}回再生`].filter(Boolean).join('、');
+      let ov = '';
+      if (d.video) ov += `<span class="sns18-ov sns18-ov--video"><span class="sns18-views">${icon('i-play-fill')}${d.video}</span></span>`;
+      if (d.pin) ov += `<span class="sns18-ov">${icon('i-pin-fill', 'sns18-badge sns18-badge--pin')}</span>`;
+      else if (d.multi) ov += `<span class="sns18-ov">${icon('i-square-on-square', 'sns18-badge')}</span>`;
+      if (d.by) ov += `<span class="sns18-ov"><span class="av ${d.by[1]} sns18-by">${d.by[2]}</span></span>`;
+      return `<button class="sns18-tile" type="button" data-g="${gi}" data-i="${i}" aria-label="${d.loc}の投稿${kind ? '（' + kind + '）' : ''}"${gi ? ' tabindex="-1"' : ''}><span class="sns18-img art art-${d.a}" style="${artStyle(d)}"></span>${ov}</button>`;
+    }).join('');
+  });
+
+  /* — Tabs with cross-fade + height morph — */
+  const tabs = $$('.sns18-tab');
+  const panels = $('.sns18-panels');
+  const seg = $('.sns18-seg');
+  let tab = 0;
+  function setTab(t, focus) {
+    if (t === tab) return;
+    const from = grids[tab], to = grids[t];
+    tab = t;
+    tabs.forEach((b, i) => { b.setAttribute('aria-selected', String(i === t)); b.tabIndex = i === t ? 0 : -1; });
+    if (focus) tabs[t].focus({ preventScroll: true });
+    $('.sns18-ink').style.setProperty('--t', t);
+    $('.sns18-count').innerHTML = COUNT[t];
+    seg.classList.toggle('is-off', t === 1);
+    from.setAttribute('aria-hidden', 'true');
+    to.removeAttribute('aria-hidden');
+    $$('.sns18-tile', from).forEach((b) => (b.tabIndex = -1));
+    $$('.sns18-tile', to).forEach((b) => b.removeAttribute('tabindex'));
+    panels.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' });
+  }
+  tabs.forEach((b, i) => b.addEventListener('click', () => setTab(i)));
+  $('.sns18-tabs').addEventListener('keydown', (e) => {
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    setTab((tab + d + 3) % 3, true);
+  });
+
+  /* — Ratio toggle — */
+  $$('button', seg).forEach((b, i) => b.addEventListener('click', () => {
+    $$('button', seg).forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+    seg.style.setProperty('--s', i);
+    wrap.classList.toggle('is-square', b.dataset.r === 'sq');
+  }));
+  seg.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    const b = $$('button', seg)[e.key === 'ArrowLeft' ? 0 : 1];
+    b.click(); b.focus();
+  });
+
+  /* — Lightbox — */
+  const lb = $('.sns18-lb');
+  const media = $('.sns18-lb-media');
+  const track = $('.sns18-lb-track');
+  const dots = $('.sns18-lb-dots');
+  const pages = $('.sns18-lb-pages');
+  const play = $('.sns18-lb-play');
+  const prog = $('.sns18-lb-prog');
+  const dur = $('.sns18-lb-dur');
+  const EASE = 'cubic-bezier(.32,.72,0,1)';
+  let cur = null, page = 0, nPages = 1, anim = null, busy = false;
+
+  function layoutTarget(ar) {
+    const W0 = stage.clientWidth, H0 = stage.clientHeight;
+    const top = 68, bottom = 108;
+    const availW = W0 - 32, availH = H0 - top - bottom;
+    const w = Math.min(availW, availH * ar, 460), h = w / ar;
+    return { x: (W0 - w) / 2, y: top + (availH - h) / 2, w, h };
+  }
+  function fromTile(tile, tgt) {
+    const S = stage.getBoundingClientRect(), T = tile.getBoundingClientRect();
+    const s = T.width / tgt.w;
+    const dx = T.left - S.left + T.width / 2 - (tgt.x + tgt.w / 2);
+    const dy = T.top - S.top + T.height / 2 - (tgt.y + tgt.h / 2);
+    const iy = Math.max(0, (tgt.h - T.height / s) / 2);
+    return { transform: `translate3d(${dx}px,${dy}px,0) scale(${s})`, clip: `inset(${iy}px 0px ${iy}px 0px round 0px)` };
+  }
+  function setPage(p, animate = true) {
+    page = Math.max(0, Math.min(nPages - 1, p));
+    track.style.transition = animate && !reduced() ? '' : 'none';
+    track.style.transform = `translate3d(${-page * 100}%,0,0)`;
+    $$('i', dots).forEach((d, i) => d.classList.toggle('is-on', i === page));
+    pages.textContent = `${page + 1}/${nPages}`;
+  }
+  function open(tile) {
+    if (busy || cur) return;
+    const gi = +tile.dataset.g, d = SETS[gi][+tile.dataset.i];
+    cur = { tile, d, gi };
+    const ar = gi === 1 ? 9 / 16 : 4 / 5;
+    // content
+    const by = d.by || ['haru.photo', 'av-1', 'H'];
+    const head = $('.sns18-lb-head .av');
+    head.className = `av ${by[1]}`; head.textContent = by[2];
+    $('.sns18-lb-user').textContent = by[0];
+    $('.sns18-lb-seal').style.display = by[0] === 'haru.photo' ? '' : 'none';
+    $('.sns18-lb-capuser').textContent = by[0];
+    $('.sns18-lb-loc').textContent = d.loc;
+    $('.sns18-lb-captext').textContent = d.cap;
+    $('.sns18-lb-n').textContent = d.likes;
+    $('.sns18-lb-like').setAttribute('aria-pressed', 'false');
+    $('.sns18-lb-save').setAttribute('aria-pressed', 'false');
+    nPages = d.multi ? 3 : 1;
+    const variants = ['', 'background-size:260% 220%;background-position:20% 30%;', 'background-size:240% 240%;background-position:85% 80%;'];
+    track.innerHTML = Array.from({ length: nPages }, (_, i) => `<div class="sns18-lb-slide art art-${d.a}" style="${artStyle(d)}${variants[i]}"></div>`).join('');
+    dots.innerHTML = nPages > 1 ? '<i></i>'.repeat(nPages) : '';
+    pages.hidden = nPages < 2;
+    const isVideo = !!d.video;
+    play.hidden = prog.hidden = dur.hidden = !isVideo;
+    setPlaying(false);
+    resetProg();
+    setPage(0, false);
+    // geometry
+    const tgt = layoutTarget(ar);
+    Object.assign(media.style, { left: tgt.x + 'px', top: tgt.y + 'px', width: tgt.w + 'px', height: tgt.h + 'px', transform: '', clipPath: '' });
+    lb.style.removeProperty('--bgo'); lb.style.removeProperty('--uio');
+    lb.classList.add('is-open');
+    lb.setAttribute('aria-hidden', 'false');
+    const f = fromTile(tile, tgt);
+    tile.classList.add('is-hidden');
+    void lb.offsetWidth;
+    lb.classList.add('is-shown');
+    if (!reduced()) {
+      busy = true;
+      anim = media.animate([
+        { transform: f.transform, clipPath: f.clip, boxShadow: '0 0 0 rgba(0,0,0,0)' },
+        { transform: 'translate3d(0,0,0) scale(1)', clipPath: 'inset(0px 0px 0px 0px round 14px)', boxShadow: '0 20px 50px rgba(0,0,0,.4)' },
+      ], { duration: 480, easing: EASE });
+      anim.onfinish = () => { busy = false; };
+    }
+    media.style.clipPath = 'inset(0px 0px 0px 0px round 14px)';
+    setTimeout(() => $('.sns18-lb-close').focus({ preventScroll: true }), 30);
+  }
+  function close(fromTransform) {
+    if (!cur || busy) return;
+    const { tile } = cur;
+    const tgt = { x: parseFloat(media.style.left), y: parseFloat(media.style.top), w: parseFloat(media.style.width), h: parseFloat(media.style.height) };
+    // keep the destination tile inside the scroll viewport
+    const pr = panels.getBoundingClientRect(), tr = tile.getBoundingClientRect();
+    if (tr.top < pr.top) panels.scrollTop -= pr.top - tr.top;
+    else if (tr.bottom > pr.bottom) panels.scrollTop += tr.bottom - pr.bottom;
+    const f = fromTile(tile, tgt);
+    setPlaying(false);
+    lb.style.removeProperty('--bgo'); lb.style.removeProperty('--uio');
+    lb.classList.remove('is-shown');
+    const finish = () => {
+      busy = false;
+      lb.classList.remove('is-open');
+      lb.setAttribute('aria-hidden', 'true');
+      tile.classList.remove('is-hidden');
+      media.style.transform = '';
+      cur = null;
+      tile.focus({ preventScroll: true });
+    };
+    if (reduced()) { finish(); return; }
+    busy = true;
+    anim = media.animate([
+      { transform: fromTransform || 'translate3d(0,0,0) scale(1)', clipPath: 'inset(0px 0px 0px 0px round 14px)' },
+      { transform: f.transform, clipPath: f.clip },
+    ], { duration: 420, easing: EASE, fill: 'forwards' });
+    anim.onfinish = () => { finish(); anim.cancel(); };
+  }
+  root.addEventListener('click', (e) => {
+    const tile = e.target.closest('.sns18-tile');
+    if (tile && root.contains(tile)) open(tile);
+  });
+  $('.sns18-lb-close').addEventListener('click', () => close());
+  $('.sns18-lb-bg').addEventListener('click', () => close());
+  const progI = prog.firstElementChild;
+  let tickT = 0;
+  const updDur = () => {
+    const a = progI.getAnimations()[0];
+    const t = a && a.currentTime ? a.currentTime / 1000 : 0;
+    dur.textContent = `0:${String(Math.max(0, Math.ceil(14 - t))).padStart(2, '0')}`;
+  };
+  function setPlaying(on) {
+    media.classList.toggle('is-playing', on);
+    play.setAttribute('aria-label', on ? '一時停止' : '再生');
+    clearInterval(tickT);
+    if (on) tickT = setInterval(updDur, 250);
+    updDur();
+  }
+  const resetProg = () => { progI.style.animation = 'none'; void progI.offsetWidth; progI.style.animation = ''; dur.textContent = '0:14'; };
+  progI.addEventListener('animationend', () => { setPlaying(false); resetProg(); });
+  play.addEventListener('click', (e) => { e.stopPropagation(); setPlaying(!media.classList.contains('is-playing')); });
+  ['.sns18-lb-like', '.sns18-lb-save'].forEach((sel) => $(sel).addEventListener('click', (e) => {
+    const b = e.currentTarget, on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', String(on));
+    if (on && !reduced()) b.animate([{ transform: 'scale(.7)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 380, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    if (sel === '.sns18-lb-like') {
+      const n = $('.sns18-lb-n');
+      const v = n.textContent;
+      if (/^[\d,]+$/.test(v)) n.textContent = (parseInt(v.replace(/,/g, ''), 10) + (on ? 1 : -1)).toLocaleString('en-US');
+    }
+  }));
+  lb.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+    else if (e.key === 'ArrowRight' && nPages > 1) { e.preventDefault(); setPage(page + 1); }
+    else if (e.key === 'ArrowLeft' && nPages > 1) { e.preventDefault(); setPage(page - 1); }
+    else if (e.key === 'Tab') {
+      const f = $$('button:not([hidden])', lb);
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+    }
+  });
+
+  /* — Drag: down to dismiss, sideways to page — */
+  let drag = null;
+  media.addEventListener('pointerdown', (e) => {
+    if (busy || e.button > 0 || e.target.closest('button')) return;
+    drag = { x: e.clientX, y: e.clientY, axis: null, id: e.pointerId, t: performance.now() };
+    media.setPointerCapture(e.pointerId);
+  });
+  media.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.axis) {
+      if (Math.hypot(dx, dy) < 8) return;
+      drag.axis = Math.abs(dx) > Math.abs(dy) && nPages > 1 ? 'x' : 'y';
+    }
+    if (drag.axis === 'y') {
+      const p = Math.min(1, Math.abs(dy) / 320);
+      media.style.transform = `translate3d(${dx * .6}px,${dy}px,0) scale(${1 - p * .3})`;
+      lb.style.setProperty('--bgo', String(1 - p * .85));
+      lb.style.setProperty('--uio', String(Math.max(0, 1 - p * 3)));
+      lb.classList.add('is-dragging');
+      drag.dx = dx; drag.dy = dy;
+    } else {
+      const w = media.clientWidth;
+      let off = dx;
+      if ((page === 0 && dx > 0) || (page === nPages - 1 && dx < 0)) off = dx / 3;
+      track.style.transition = 'none';
+      track.style.transform = `translate3d(${-page * w + off}px,0,0)`;
+      drag.dx = dx;
+    }
+  });
+  const endDrag = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null;
+    lb.classList.remove('is-dragging');
+    if (d.axis === 'y') {
+      const v = Math.abs(d.dy) / Math.max(1, performance.now() - d.t);
+      if (Math.abs(d.dy) > 110 || v > .7) {
+        const t = media.style.transform;
+        media.style.transform = '';
+        close(t);
+      } else {
+        media.animate([{ transform: media.style.transform }, { transform: 'translate3d(0,0,0) scale(1)' }], { duration: 380, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+        media.style.transform = '';
+        lb.style.removeProperty('--bgo'); lb.style.removeProperty('--uio');
+      }
+    } else if (d.axis === 'x') {
+      const w = media.clientWidth;
+      setPage(d.dx < -w * .18 ? page + 1 : d.dx > w * .18 ? page - 1 : page);
+    } else if (cur && cur.d.video) {
+      play.click();
+    }
+  };
+  media.addEventListener('pointerup', endDrag);
+  media.addEventListener('pointercancel', endDrag);
+})();
+</script>

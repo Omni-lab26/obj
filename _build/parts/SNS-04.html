@@ -1,0 +1,542 @@
+<!-- ═══════════ SNS-04 · Story Viewer ═══════════ -->
+<style>
+#SNS-04 .sns04-screen { background: #000; color: #fff; font-family: var(--font-text); letter-spacing: 0; -webkit-tap-highlight-color: transparent; }
+#SNS-04 button { -webkit-tap-highlight-color: transparent; font: inherit; color: inherit; }
+
+/* — Viewer surface — */
+#SNS-04 .sns04-viewer {
+  position: absolute; inset: 0; z-index: 1; overflow: hidden; background: #000; outline: none;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: pointer;
+  transform-origin: 50% 46%;
+  transition: transform 520ms var(--ease-ios), opacity 360ms ease, border-radius 520ms var(--ease-ios);
+}
+#SNS-04 .sns04-viewer.is-drag { transition: none; }
+#SNS-04 .sns04-viewer.is-closed { transform: scale(.32) translateY(-40px); opacity: 0; border-radius: 120px; pointer-events: none; }
+#SNS-04 .sns04-viewer:focus-visible::after { content: ""; position: absolute; inset: 0; z-index: 10; border-radius: inherit; box-shadow: inset 0 0 0 3px rgba(100, 210, 255, .75); pointer-events: none; }
+
+/* — Slides — */
+#SNS-04 .sns04-media { position: absolute; inset: 0; }
+#SNS-04 .sns04-slide { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity 240ms ease; }
+#SNS-04 .sns04-slide.is-active { opacity: 1; }
+#SNS-04 .sns04-art { position: absolute; inset: 0; will-change: transform; }
+#SNS-04 .sns04-slide:nth-child(1) .sns04-art { transform-origin: 70% 35%; }
+#SNS-04 .sns04-slide:nth-child(2) .sns04-art { background-size: 112% 104%; background-position: 50% 30%; transform-origin: 50% 40%; }
+#SNS-04 .sns04-slide:nth-child(3) .sns04-art { background-size: 180% 100%; background-position: 50% 0; transform-origin: 50% 70%; }
+#SNS-04 .sns04-slide:nth-child(4) .sns04-art { background-size: 200% 100%; background-position: 30% 0; transform-origin: 30% 30%; }
+
+#SNS-04 .sns04-scrim { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; transition: opacity var(--dur-2) ease; }
+#SNS-04 .sns04-scrim--top { top: 0; height: 150px; background: linear-gradient(180deg, rgba(0, 0, 0, .55) 0%, rgba(0, 0, 0, .22) 55%, transparent); }
+#SNS-04 .sns04-scrim--bot { bottom: 0; height: 170px; background: linear-gradient(0deg, rgba(0, 0, 0, .6) 0%, rgba(0, 0, 0, .25) 55%, transparent); }
+
+/* — Stickers — */
+#SNS-04 .sns04-stk { position: absolute; z-index: 1; }
+#SNS-04 .sns04-slide.is-active .sns04-stk { animation: sns04-in 640ms 120ms both; }
+@keyframes sns04-in {
+  0% { opacity: 0; transform: var(--r, rotate(0)) scale(.6); animation-timing-function: cubic-bezier(.3, 1.5, .5, 1); }
+  100% { opacity: 1; transform: var(--r, rotate(0)) scale(1); }
+}
+#SNS-04 .sns04-type { --r: rotate(-4deg); left: 26px; right: 26px; top: 36%; transform: var(--r); text-align: left; }
+#SNS-04 .sns04-type span {
+  font: 800 31px/1.38 var(--font-display); letter-spacing: 0; color: #fff;
+  background: #FF375F; padding: 1px 10px 3px; border-radius: 8px;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  box-shadow: 0 10px 30px rgba(120, 0, 30, .25);
+}
+#SNS-04 .sns04-type small { display: block; margin: 0 0 10px 4px; font: 600 15px/1 var(--font-text); color: rgba(255, 255, 255, .92); text-shadow: 0 1px 6px rgba(0, 0, 0, .35); }
+
+#SNS-04 .sns04-poll {
+  --r: rotate(-2deg); left: 50%; top: 55%; width: 224px; margin-left: -112px; overflow: hidden; cursor: default;
+  border-radius: 18px; background: #fff; color: #111; transform: var(--r);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .35), 0 2px 6px rgba(0, 0, 0, .2);
+}
+#SNS-04 .sns04-poll p { margin: 0; padding: 12px 14px 11px; background: var(--grad-sunset); color: #fff; text-align: center; font: 700 16px/1.25 var(--font-display); text-shadow: 0 1px 2px rgba(150, 40, 0, .3); }
+#SNS-04 .sns04-opts { display: grid; gap: 8px; padding: 10px; }
+#SNS-04 .sns04-opt {
+  position: relative; display: flex; align-items: center; gap: 6px; height: 42px; padding: 0 14px; overflow: hidden; border: 0; border-radius: 12px;
+  background: #F2F2F7; color: #111; cursor: pointer; text-align: left;
+  font: 700 16px/1 var(--font-text); transition: transform var(--dur-2) var(--ease-spring);
+}
+#SNS-04 .sns04-opt:active { transform: scale(.96); transition-duration: 90ms; }
+#SNS-04 .sns04-opt i { position: absolute; inset: 0 auto 0 0; width: 100%; transform: scaleX(0); transform-origin: left; background: rgba(60, 60, 67, .14); transition: transform 700ms var(--ease-ios); }
+#SNS-04 .sns04-opt span, #SNS-04 .sns04-opt b, #SNS-04 .sns04-opt svg { position: relative; }
+#SNS-04 .sns04-opt b { margin-left: auto; font: 700 15px/1 var(--font-rounded); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity var(--dur-2) ease; }
+#SNS-04 .sns04-opt svg { font-size: 16px; color: #FF7A3D; opacity: 0; transform: scale(.4); transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring); }
+#SNS-04 .sns04-poll.is-voted .sns04-opt { cursor: default; }
+#SNS-04 .sns04-poll.is-voted .sns04-opt b { opacity: 1; }
+#SNS-04 .sns04-poll.is-voted .sns04-opt[aria-pressed="true"] i { background: linear-gradient(90deg, rgba(255, 159, 10, .32), rgba(255, 69, 58, .3)); }
+#SNS-04 .sns04-poll.is-voted .sns04-opt[aria-pressed="true"] svg { opacity: 1; transform: none; }
+#SNS-04 .sns04-opt:focus-visible { outline: none; box-shadow: 0 0 0 2px #FF9F0A; }
+#SNS-04 .sns04-meta { left: 0; right: 0; top: 81%; text-align: center; font: 600 13px/1 var(--font-text); color: rgba(255, 255, 255, .9); text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }
+
+#SNS-04 .sns04-loc {
+  --r: rotate(-6deg); left: 50%; top: 56%; display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 14px 0 10px; margin-left: -64px;
+  border-radius: 11px; background: #fff; box-shadow: 0 12px 28px rgba(60, 10, 40, .35); transform: var(--r);
+}
+#SNS-04 .sns04-loc .i { font-size: 20px; color: #FF6A3D; }
+#SNS-04 .sns04-loc b { font: 800 20px/1 var(--font-display); background: var(--grad-sunset); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: .02em; }
+#SNS-04 .sns04-clock { --r: rotate(3deg); right: 30px; top: 30%; font: 300 44px/1 var(--font-display); letter-spacing: -0.02em; color: #fff; text-shadow: 0 2px 16px rgba(0, 0, 0, .3); font-variant-numeric: tabular-nums; transform: var(--r); }
+
+#SNS-04 .sns04-night { left: 28px; right: 28px; top: 30%; text-align: center; }
+#SNS-04 .sns04-night p { margin: 0; font: 700 23px/1.4 var(--font-display); color: #fff; text-shadow: 0 2px 14px rgba(0, 0, 0, .45); }
+#SNS-04 .sns04-night span { display: inline-block; margin-top: 12px; padding: 6px 12px; border-radius: 9px; background: rgba(255, 255, 255, .92); color: #5E5CE6; font: 700 14px/1 var(--font-text); }
+
+/* — Chrome — */
+#SNS-04 .sns04-chrome { position: absolute; z-index: 3; left: 0; right: 0; top: calc(var(--phone-safe-top) - 3px); transition: opacity var(--dur-2) ease; }
+#SNS-04 .sns04-bars { display: flex; gap: 3px; padding: 0 8px; }
+#SNS-04 .sns04-bar { flex: 1; height: 2px; overflow: hidden; border-radius: 1px; background: rgba(255, 255, 255, .35); }
+#SNS-04 .sns04-bar i { display: block; height: 100%; background: #fff; transform: scaleX(0); transform-origin: left; border-radius: inherit; }
+#SNS-04 .sns04-head { display: flex; align-items: center; gap: 8px; height: 44px; padding: 4px 4px 0 12px; }
+#SNS-04 .sns04-head .av { width: 32px; height: 32px; font-size: 14px; box-shadow: 0 0 0 .5px rgba(255, 255, 255, .25); }
+#SNS-04 .sns04-who { display: flex; align-items: baseline; gap: 6px; min-width: 0; text-shadow: 0 1px 4px rgba(0, 0, 0, .25); }
+#SNS-04 .sns04-who b { font: 600 14px/1 var(--font-text); letter-spacing: -0.01em; }
+#SNS-04 .sns04-who span { font-size: 14px; color: rgba(255, 255, 255, .7); font-variant-numeric: tabular-nums; }
+#SNS-04 .sns04-hbtns { display: flex; margin-left: auto; }
+#SNS-04 .sns04-ib {
+  display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: #fff; cursor: pointer; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .3));
+}
+#SNS-04 .sns04-ib .i { font-size: 24px; transition: transform var(--dur-2) var(--ease-spring), opacity var(--dur-1) ease; }
+#SNS-04 .sns04-ib:active .i { transform: scale(.84); opacity: .7; transition-duration: 90ms; }
+#SNS-04 .sns04-ib:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .8); }
+
+/* — Footer — */
+#SNS-04 .sns04-foot { position: absolute; z-index: 3; left: 0; right: 0; bottom: calc(var(--phone-safe-bottom) + 2px); display: flex; align-items: center; gap: 2px; padding: 0 6px 0 12px; transition: opacity var(--dur-2) ease; }
+#SNS-04 .sns04-reply {
+  flex: 1; min-width: 0; height: 44px; padding: 0 18px; border: 1px solid rgba(255, 255, 255, .4); border-radius: 22px;
+  background: transparent; color: #fff; outline: none; cursor: text;
+  font: 400 16px/1 var(--font-text); letter-spacing: 0;
+  transition: border-color var(--dur-2) ease, background var(--dur-2) ease;
+}
+#SNS-04 .sns04-reply::placeholder { color: rgba(255, 255, 255, .88); }
+#SNS-04 .sns04-reply:focus { border-color: rgba(255, 255, 255, .75); background: rgba(0, 0, 0, .28); }
+#SNS-04 .sns04-like[aria-pressed="true"] { color: #FF375F; filter: drop-shadow(0 2px 10px rgba(255, 55, 95, .45)); }
+#SNS-04 .sns04-like.is-pop .i { animation: sns04-pop 560ms both; }
+@keyframes sns04-pop {
+  0% { transform: scale(1); animation-timing-function: ease-out; }
+  20% { transform: scale(.7); animation-timing-function: cubic-bezier(.3, 1.6, .5, 1); }
+  60% { transform: scale(1.32); animation-timing-function: ease-in-out; }
+  100% { transform: scale(1); }
+}
+#SNS-04 .sns04-ib--send .i { font-size: 23px; }
+
+/* quick reactions (while typing) */
+#SNS-04 .sns04-reacts {
+  position: absolute; z-index: 3; left: 12px; right: 12px; bottom: calc(var(--phone-safe-bottom) + 58px);
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; pointer-events: none;
+}
+#SNS-04 .sns04-reacts button {
+  height: 46px; padding: 0; border: 0; border-radius: 14px; background: transparent; cursor: pointer;
+  font: 30px/1 var(--font-emoji); opacity: 0; transform: translateY(14px) scale(.6);
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring);
+}
+#SNS-04 .sns04-reacts button:active { background: rgba(255, 255, 255, .14); }
+#SNS-04 .sns04-viewer.is-typing .sns04-reacts { pointer-events: auto; }
+#SNS-04 .sns04-viewer.is-typing .sns04-reacts button { opacity: 1; transform: none; transition-delay: calc(var(--k) * 30ms); }
+#SNS-04 .sns04-dim { position: absolute; inset: 0; z-index: 2; background: rgba(0, 0, 0, .5); opacity: 0; pointer-events: none; transition: opacity var(--dur-3) ease; }
+#SNS-04 .sns04-viewer.is-typing .sns04-dim { opacity: 1; }
+#SNS-04 .sns04-fly { position: absolute; z-index: 6; left: 50%; top: 50%; font: 72px/1 var(--font-emoji); pointer-events: none; margin: -36px 0 0 -36px; }
+
+/* hold → chrome fades */
+#SNS-04 .sns04-viewer.is-hold .sns04-chrome, #SNS-04 .sns04-viewer.is-hold .sns04-foot, #SNS-04 .sns04-viewer.is-hold .sns04-scrim,
+#SNS-04 .sns04-viewer.is-drag .sns04-foot { opacity: 0; }
+
+/* hint + toast */
+#SNS-04 .sns04-hint {
+  position: absolute; z-index: 4; left: 50%; top: 64%; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px 0 15px; border-radius: 22px;
+  background: rgba(30, 30, 32, .42); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .22), inset 0 1px 0 rgba(255, 255, 255, .14), 0 10px 30px rgba(0, 0, 0, .3);
+  font: 600 15px/1 var(--font-text); white-space: nowrap; pointer-events: none;
+  opacity: 0; transform: translate(-50%, 0) scale(.86); transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring);
+}
+#SNS-04 .sns04-hint .i { font-size: 17px; }
+#SNS-04 .sns04-hint.is-on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+#SNS-04 .sns04-toast {
+  position: absolute; z-index: 7; left: 50%; bottom: calc(var(--phone-safe-bottom) + 60px); display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 15px 0 12px; border-radius: 18px;
+  background: rgba(255, 255, 255, .94); color: #111; box-shadow: 0 8px 24px rgba(0, 0, 0, .3);
+  font: 600 13px/1 var(--font-text); white-space: nowrap; pointer-events: none;
+  opacity: 0; transform: translate(-50%, 10px) scale(.94); transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring);
+}
+#SNS-04 .sns04-toast .i { font-size: 16px; color: #30D158; }
+#SNS-04 .sns04-toast.is-on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+
+/* action sheet */
+#SNS-04 .sns04-sheet-scrim { position: absolute; inset: 0; z-index: 8; background: rgba(0, 0, 0, .4); opacity: 0; pointer-events: none; transition: opacity var(--dur-3) ease; }
+#SNS-04 .sns04-sheet {
+  position: absolute; z-index: 9; left: 8px; right: 8px; bottom: calc(var(--phone-safe-bottom) - 6px); display: grid; gap: 8px;
+  transform: translateY(calc(100% + 40px)); transition: transform 460ms var(--ease-ios); visibility: hidden;
+}
+#SNS-04 .sns04-viewer.is-sheet .sns04-sheet-scrim { opacity: 1; pointer-events: auto; }
+#SNS-04 .sns04-viewer.is-sheet .sns04-sheet { transform: none; visibility: visible; }
+#SNS-04 .sns04-group { overflow: hidden; border-radius: 14px; background: rgba(44, 44, 48, .78); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); }
+#SNS-04 .sns04-group button {
+  display: block; width: 100%; height: 52px; border: 0; background: transparent; color: #0A84FF; cursor: pointer;
+  font: 400 18px/1 var(--font-text); letter-spacing: 0; box-shadow: inset 0 -.5px 0 rgba(255, 255, 255, .14);
+}
+#SNS-04 .sns04-group button:last-child { box-shadow: none; }
+#SNS-04 .sns04-group button:active { background: rgba(255, 255, 255, .1); }
+#SNS-04 .sns04-group button.is-danger { color: #FF453A; }
+#SNS-04 .sns04-group--cancel { background: rgba(44, 44, 48, .94); }
+#SNS-04 .sns04-group--cancel button { font-weight: 600; }
+#SNS-04 .sns04-group button:focus-visible { outline: none; background: rgba(255, 255, 255, .12); }
+
+/* closed state */
+#SNS-04 .sns04-closed {
+  position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; padding: 60px 24px;
+  background: radial-gradient(120% 70% at 50% 30%, #23233a 0%, #0b0b10 70%);
+}
+#SNS-04 .sns04-tray { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; opacity: 0; transform: scale(.94); transition: opacity var(--dur-3) ease, transform var(--dur-4) var(--ease-spring); }
+#SNS-04 .sns04-screen.is-closed .sns04-tray { opacity: 1; transform: none; transition-delay: 140ms; }
+#SNS-04 .sns04-reopen { display: grid; place-items: center; width: 92px; height: 92px; padding: 0; border: 0; border-radius: 50%; background: rgba(235, 235, 245, .3); cursor: pointer; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-04 .sns04-reopen .av { width: 84px; height: 84px; font-size: 32px; box-shadow: 0 0 0 3px #0f0f16; }
+#SNS-04 .sns04-reopen:active { transform: scale(.93); transition-duration: 90ms; }
+#SNS-04 .sns04-tray b { margin-top: 4px; font: 600 17px/1.2 var(--font-text); letter-spacing: -0.01em; }
+#SNS-04 .sns04-tray p { margin: 0; font-size: 14px; color: rgba(235, 235, 245, .6); }
+#SNS-04 .sns04-again {
+  display: inline-flex; align-items: center; gap: 7px; height: 40px; margin-top: 8px; padding: 0 18px 0 15px; border: 0; border-radius: 20px;
+  background: rgba(255, 255, 255, .14); color: #fff; cursor: pointer; font: 600 15px/1 var(--font-text);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18), inset 0 1px 0 rgba(255, 255, 255, .12);
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#SNS-04 .sns04-again .i { font-size: 16px; }
+#SNS-04 .sns04-again:active { transform: scale(.95); background: rgba(255, 255, 255, .2); transition-duration: 90ms; }
+#SNS-04 .sns04-again:focus-visible, #SNS-04 .sns04-reopen:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(100, 210, 255, .7); }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-04 .sns04-slide.is-active .sns04-stk { animation: none; }
+  #SNS-04 .sns04-viewer { transition: opacity var(--dur-2) ease; }
+  #SNS-04 .sns04-viewer.is-closed { transform: none; }
+}
+</style>
+<article class="obj" id="SNS-04" data-name="Story Viewer" data-ja="ストーリービューアー" data-vector="Immersive" data-size="m" data-desc="全画面のストーリー表示。上部の進捗バーで自動送り。">
+  <div class="obj-stage" data-bg="dark">
+    <div class="phone" data-status="light" style="--phone-h: 640px">
+      <div class="phone-screen sns04-screen">
+        <div class="sns04-closed" aria-hidden="true">
+          <div class="sns04-tray">
+            <button class="sns04-reopen" type="button" aria-label="mio_k のストーリーズを開く" tabindex="-1"><span class="av av-2">M</span></button>
+            <b>mio_k</b>
+            <p>ストーリーズを閉じました</p>
+            <button class="sns04-again" type="button" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-arrow-clockwise"/></svg>もう一度見る</button>
+          </div>
+        </div>
+
+        <div class="sns04-viewer" tabindex="0" role="region" aria-roledescription="ストーリー" aria-label="mio_k のストーリーズ。左右キーで移動、スペースで一時停止">
+          <div class="sns04-media">
+            <div class="sns04-slide is-active" data-time="3時間" aria-label="1 / 4">
+              <div class="art art-2 sns04-art"></div>
+              <div class="sns04-stk sns04-type"><small>週末の記録 🌊</small><span>海、<br>はじめました。</span></div>
+            </div>
+            <div class="sns04-slide" data-time="2時間" aria-label="2 / 4">
+              <div class="art art-8 sns04-art"></div>
+              <div class="sns04-stk sns04-poll" role="group" aria-label="アンケート：朝の一杯、どっち派？">
+                <p>朝の一杯、どっち派？</p>
+                <div class="sns04-opts">
+                  <button class="sns04-opt" type="button" data-p="64" aria-pressed="false"><i></i><span>ラテ</span><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg><b>64%</b></button>
+                  <button class="sns04-opt" type="button" data-p="36" aria-pressed="false"><i></i><span>ブラック</span><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg><b>36%</b></button>
+                </div>
+              </div>
+              <div class="sns04-stk sns04-meta">タップして投票</div>
+            </div>
+            <div class="sns04-slide" data-time="58分" aria-label="3 / 4">
+              <div class="art art-1 sns04-art"></div>
+              <div class="sns04-stk sns04-clock">18:24</div>
+              <div class="sns04-stk sns04-loc"><svg class="i" aria-hidden="true"><use href="#i-location-fill"/></svg><b>江の島</b></div>
+            </div>
+            <div class="sns04-slide" data-time="12分" aria-label="4 / 4">
+              <div class="art art-6 sns04-art"></div>
+              <div class="sns04-stk sns04-night"><p>おやすみ。<br>今日の空、すごかった。</p><span>@sora_travel</span></div>
+            </div>
+          </div>
+          <div class="sns04-scrim sns04-scrim--top" aria-hidden="true"></div>
+          <div class="sns04-scrim sns04-scrim--bot" aria-hidden="true"></div>
+          <div class="sns04-dim" aria-hidden="true"></div>
+
+          <div class="sns04-chrome">
+            <div class="sns04-bars" aria-hidden="true"><span class="sns04-bar"><i></i></span><span class="sns04-bar"><i></i></span><span class="sns04-bar"><i></i></span><span class="sns04-bar"><i></i></span></div>
+            <header class="sns04-head">
+              <span class="av av-2" aria-hidden="true">M</span>
+              <span class="sns04-who"><b>mio_k</b><span class="sns04-time">3時間</span></span>
+              <span class="sns04-hbtns">
+                <button class="sns04-ib sns04-menu" type="button" aria-label="その他のオプション"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+                <button class="sns04-ib sns04-close" type="button" aria-label="閉じる"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>
+              </span>
+            </header>
+          </div>
+
+          <div class="sns04-reacts" aria-label="クイックリアクション">
+            <button type="button" style="--k:0" aria-label="笑い">😂</button><button type="button" style="--k:1" aria-label="驚き">😮</button><button type="button" style="--k:2" aria-label="大好き">😍</button><button type="button" style="--k:3" aria-label="悲しい">😢</button><button type="button" style="--k:4" aria-label="拍手">👏</button><button type="button" style="--k:5" aria-label="最高">🔥</button>
+          </div>
+
+          <footer class="sns04-foot">
+            <input class="sns04-reply" type="text" placeholder="メッセージを送信" aria-label="mio_k にメッセージを送信" enterkeyhint="send" autocomplete="off">
+            <button class="sns04-ib sns04-like" type="button" aria-pressed="false" aria-label="いいね"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg></button>
+            <button class="sns04-ib sns04-ib--send" type="button" aria-label="送信"><svg class="i" aria-hidden="true"><use href="#i-paperplane"/></svg></button>
+          </footer>
+
+          <div class="sns04-hint" aria-hidden="true"><svg class="i"><use href="#i-arrow-clockwise"/></svg>もう一度見る</div>
+          <div class="sns04-toast" role="status" aria-live="polite"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg><span></span></div>
+
+          <div class="sns04-sheet-scrim" aria-hidden="true"></div>
+          <div class="sns04-sheet" role="dialog" aria-label="ストーリーのオプション">
+            <div class="sns04-group">
+              <button type="button" data-msg="リンクをコピーしました">リンクをコピー</button>
+              <button type="button" data-msg="mio_k をミュートしました">mio_k をミュート</button>
+              <button type="button" class="is-danger" data-msg="報告を受け付けました">報告する</button>
+            </div>
+            <div class="sns04-group sns04-group--cancel"><button type="button">キャンセル</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>右をタップで次・左で前</li><li>長押しで一時停止</li><li>下にスワイプで閉じる</li><li>アンケートに投票</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-04');
+  if (!root) return;
+  const $ = (s) => root.querySelector(s);
+  const $$ = (s) => [...root.querySelectorAll(s)];
+  const reduced = () => !!(window.ObjKit && ObjKit.reducedMotion);
+
+  const screen = $('.sns04-screen');
+  const viewer = $('.sns04-viewer');
+  const slides = $$('.sns04-slide');
+  const arts = slides.map((s) => s.querySelector('.sns04-art'));
+  const fills = $$('.sns04-bar i');
+  const timeEl = $('.sns04-time');
+  const hint = $('.sns04-hint');
+  const toast = $('.sns04-toast');
+  const input = $('.sns04-reply');
+  const likeBtn = $('.sns04-like');
+  const N = slides.length;
+  const DUR = 5000;
+
+  /* ── State ─────────────────────────────────── */
+  let idx = 0;
+  let elapsed = 0;     // ms into the current story (wall-clock driven)
+  let last = 0;
+  let raf = 0;
+  const flags = { visible: false, hidden: document.hidden, hold: false, typing: false, closed: false, drag: false, sheet: false, kb: false };
+  const running = () => flags.visible && !flags.hidden && !flags.hold && !flags.typing && !flags.closed && !flags.drag && !flags.sheet && !flags.kb;
+
+  const render = () => {
+    const p = Math.min(1, elapsed / DUR);
+    fills.forEach((f, i) => { f.style.transform = `scaleX(${i < idx ? 1 : i === idx ? p : 0})`; });
+    if (!reduced()) arts[idx].style.transform = `scale(${(1.02 + 0.07 * p).toFixed(4)})`;
+  };
+  const tick = (now) => {
+    raf = 0;
+    if (!running()) { last = 0; return; }
+    const dt = last ? Math.min(now - last, 100) : 0;   // elapsed time, clamped so a stalled tab never jumps ahead
+    last = now;
+    elapsed += dt;
+    if (elapsed >= DUR) { if (idx === N - 1) { go(0); showHint(); } else go(idx + 1); }
+    render();
+    raf = requestAnimationFrame(tick);
+  };
+  const sync = () => {
+    if (running()) { if (!raf) { last = 0; raf = requestAnimationFrame(tick); } }
+    else if (raf) { cancelAnimationFrame(raf); raf = 0; last = 0; }
+  };
+  const set = (k, v) => { flags[k] = v; sync(); };
+
+  const go = (i) => {
+    const prev = idx;
+    idx = (i + N) % N;
+    elapsed = 0;
+    if (prev !== idx) {
+      slides[prev].classList.remove('is-active');
+      arts[prev].style.transform = '';
+    } else {
+      /* restart sticker entrance on replay of the same story */
+      slides[idx].classList.remove('is-active'); void slides[idx].offsetWidth;
+    }
+    slides[idx].classList.add('is-active');
+    slides.forEach((s, k) => s.setAttribute('aria-hidden', String(k !== idx)));
+    timeEl.textContent = slides[idx].dataset.time;
+    render();
+  };
+  let hintT = 0;
+  const showHint = () => {
+    clearTimeout(hintT);
+    hint.classList.add('is-on');
+    hintT = setTimeout(() => hint.classList.remove('is-on'), 1900);
+  };
+  let toastT = 0;
+  const showToast = (msg) => {
+    toast.querySelector('span').textContent = msg;
+    clearTimeout(toastT);
+    toast.classList.add('is-on');
+    toastT = setTimeout(() => toast.classList.remove('is-on'), 1700);
+  };
+  const next = () => { if (idx === N - 1) { go(0); showHint(); } else go(idx + 1); sync(); };
+  const prev = () => { go(idx - 1 < 0 ? 0 : idx - 1); sync(); };
+
+  /* ── Pointer: tap zones, hold-to-pause, swipe-down-to-close ─── */
+  const INTERACTIVE = 'button, input, .sns04-poll, .sns04-sheet, .sns04-sheet-scrim';
+  let ptr = null;
+  let holdT = 0;
+  viewer.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || flags.closed || e.target.closest(INTERACTIVE)) return;
+    if (flags.typing) { input.blur(); return; }
+    ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, dy: 0, moved: false };
+    viewer.setPointerCapture(e.pointerId);
+    clearTimeout(holdT);
+    holdT = setTimeout(() => { if (ptr && !ptr.moved) { viewer.classList.add('is-hold'); set('hold', true); } }, 200);
+  });
+  viewer.addEventListener('pointermove', (e) => {
+    if (!ptr || e.pointerId !== ptr.id) return;
+    const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y;
+    if (!ptr.moved && Math.hypot(dx, dy) > 8) {
+      ptr.moved = true;
+      clearTimeout(holdT);
+      if (dy > 0 && Math.abs(dy) > Math.abs(dx)) { ptr.drag = true; viewer.classList.add('is-drag'); set('drag', true); }
+    }
+    if (ptr.drag) {
+      ptr.dy = Math.max(0, dy);
+      const s = 1 - Math.min(ptr.dy, 400) / 1600;
+      viewer.style.transform = `translateY(${ptr.dy * 0.7}px) scale(${s})`;
+      viewer.style.borderRadius = `${Math.min(36, ptr.dy / 4)}px`;
+    }
+  });
+  const release = (e, cancelled) => {
+    if (!ptr || e.pointerId !== ptr.id) return;
+    const p = ptr;
+    ptr = null;
+    clearTimeout(holdT);
+    if (p.drag) {
+      viewer.classList.remove('is-drag');
+      viewer.style.transform = '';
+      viewer.style.borderRadius = '';
+      flags.drag = false;
+      if (p.dy > 110) close(); else sync();
+      return;
+    }
+    if (flags.hold) { viewer.classList.remove('is-hold'); set('hold', false); return; }
+    if (cancelled || p.moved) return;
+    const r = viewer.getBoundingClientRect();
+    if (e.clientX - r.left < r.width / 3) prev(); else next();
+  };
+  viewer.addEventListener('pointerup', (e) => release(e, false));
+  viewer.addEventListener('pointercancel', (e) => release(e, true));
+  viewer.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  /* ── Keyboard ─────────────────────────────── */
+  viewer.addEventListener('keydown', (e) => {
+    if (e.target === input) {
+      if (e.key === 'Escape') input.blur();
+      return;
+    }
+    if (flags.sheet) { if (e.key === 'Escape') closeSheet(); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    else if (e.key === ' ' && e.target === viewer) { e.preventDefault(); viewer.classList.toggle('is-hold', !flags.kb); set('kb', !flags.kb); }
+    else if (e.key === 'Escape') { e.preventDefault(); close(); }
+  });
+
+  /* ── Poll ─────────────────────────────────── */
+  const poll = $('.sns04-poll');
+  $$('.sns04-opt').forEach((opt) => opt.addEventListener('click', () => {
+    if (poll.classList.contains('is-voted')) return;
+    poll.classList.add('is-voted');
+    opt.setAttribute('aria-pressed', 'true');
+    $('.sns04-meta').textContent = '128人が投票しました';
+    $$('.sns04-opt').forEach((o) => {
+      const pct = +o.dataset.p;
+      const bar = o.querySelector('i');
+      const label = o.querySelector('b');
+      requestAnimationFrame(() => { bar.style.transform = `scaleX(${pct / 100})`; });
+      if (reduced()) { label.textContent = pct + '%'; return; }
+      const t0 = performance.now();
+      const step = (now) => {
+        const t = Math.min(1, (now - t0) / 700);
+        label.textContent = Math.round(pct * (1 - Math.pow(1 - t, 3))) + '%';
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }));
+
+  /* ── Header buttons ───────────────────────── */
+  const sheetScrim = $('.sns04-sheet-scrim');
+  const openSheet = () => { viewer.classList.add('is-sheet'); set('sheet', true); setTimeout(() => $('.sns04-sheet button').focus({ preventScroll: true }), 60); };
+  const closeSheet = (msg) => { viewer.classList.remove('is-sheet'); set('sheet', false); if (msg) showToast(msg); viewer.focus({ preventScroll: true }); };
+  $('.sns04-menu').addEventListener('click', openSheet);
+  sheetScrim.addEventListener('click', () => closeSheet());
+  $$('.sns04-sheet button').forEach((b) => b.addEventListener('click', () => closeSheet(b.dataset.msg)));
+  $('.sns04-close').addEventListener('click', () => close());
+
+  const close = () => {
+    if (flags.closed) return;
+    input.blur();
+    viewer.classList.add('is-closed');
+    screen.classList.add('is-closed');
+    $('.sns04-closed').setAttribute('aria-hidden', 'false');
+    $$('.sns04-closed button').forEach((b) => (b.tabIndex = 0));
+    set('closed', true);
+    setTimeout(() => { if (flags.closed) $('.sns04-again').focus({ preventScroll: true }); }, 400);
+  };
+  const reopen = () => {
+    if (!flags.closed) return;
+    go(0);
+    viewer.classList.remove('is-closed');
+    screen.classList.remove('is-closed');
+    $('.sns04-closed').setAttribute('aria-hidden', 'true');
+    $$('.sns04-closed button').forEach((b) => (b.tabIndex = -1));
+    viewer.focus({ preventScroll: true });
+    set('closed', false);
+  };
+  $('.sns04-again').addEventListener('click', reopen);
+  $('.sns04-reopen').addEventListener('click', reopen);
+
+  /* ── Reply, like, reactions ───────────────── */
+  input.addEventListener('focus', () => { viewer.classList.add('is-typing'); set('typing', true); });
+  input.addEventListener('blur', () => { viewer.classList.remove('is-typing'); set('typing', false); });
+  const send = () => {
+    const v = input.value.trim();
+    if (!v) { input.focus(); return; }
+    input.value = '';
+    input.blur();
+    showToast('メッセージを送信しました');
+  };
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); send(); } });
+  $('.sns04-ib--send').addEventListener('click', send);
+  $('.sns04-ib--send').addEventListener('pointerdown', (e) => { if (flags.typing) e.preventDefault(); });
+
+  $$('.sns04-reacts button').forEach((b) => {
+    b.addEventListener('pointerdown', (e) => e.preventDefault()); // keep the field focused until we decide
+    b.addEventListener('click', () => {
+      const fly = document.createElement('span');
+      fly.className = 'sns04-fly';
+      fly.textContent = b.textContent;
+      viewer.append(fly);
+      const r = b.getBoundingClientRect(), v = viewer.getBoundingClientRect();
+      const x = r.left + r.width / 2 - (v.left + v.width / 2), y = r.top + r.height / 2 - (v.top + v.height / 2);
+      const a = fly.animate([
+        { transform: `translate(${x}px, ${y}px) scale(.4)`, opacity: 1 },
+        { transform: 'translate(0, -20px) scale(1.25)', opacity: 1, offset: 0.55 },
+        { transform: 'translate(0, -70px) scale(1)', opacity: 0 },
+      ], { duration: reduced() ? 1 : 900, easing: 'cubic-bezier(.22,1,.36,1)' });
+      a.finished.then(() => fly.remove()).catch(() => fly.remove());
+      input.blur();
+      showToast('リアクションを送信しました');
+    });
+  });
+
+  likeBtn.addEventListener('click', () => {
+    const on = likeBtn.getAttribute('aria-pressed') !== 'true';
+    likeBtn.setAttribute('aria-pressed', String(on));
+    likeBtn.setAttribute('aria-label', on ? 'いいねを取り消す' : 'いいね');
+    likeBtn.querySelector('use').setAttribute('href', on ? '#i-heart-fill' : '#i-heart');
+    if (on && !reduced()) { likeBtn.classList.remove('is-pop'); void likeBtn.offsetWidth; likeBtn.classList.add('is-pop'); }
+  });
+  likeBtn.addEventListener('animationend', () => likeBtn.classList.remove('is-pop'));
+
+  /* ── Lifecycle: run only while on-screen and the tab is visible ── */
+  go(0);
+  if (window.ObjKit) ObjKit.onVisible(root, (v) => set('visible', v));
+  else set('visible', true);
+  document.addEventListener('visibilitychange', () => set('hidden', document.hidden));
+})();
+</script>

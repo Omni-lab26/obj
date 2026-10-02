@@ -1,0 +1,323 @@
+<!-- ═══════════ INP-05 · Slider ═══════════ -->
+<style>
+#INP-05 .inp05-stack { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 22px; width: min(100%, 344px); }
+
+/* — decorative colour behind the glass so the material reads — */
+#INP-05 .inp05-orbs { position: absolute; inset: -8px 0; z-index: -1; pointer-events: none; }
+#INP-05 .inp05-orb { position: absolute; border-radius: 50%; }
+#INP-05 .inp05-orb--a { width: 100px; height: 100px; left: calc(50% - 126px); top: 2px; background: radial-gradient(circle at 34% 30%, #FFC37A 0%, #FF6B6B 58%, #F0458C 100%); opacity: light-dark(.88, .72); }
+#INP-05 .inp05-orb--b { width: 84px; height: 84px; left: calc(50% + 46px); top: 28px; background: radial-gradient(circle at 36% 30%, #8EDBFF 0%, #3D8BFF 55%, #5E5CE6 100%); opacity: light-dark(.85, .75); }
+#INP-05 .inp05-orb--c { width: 40px; height: 40px; left: calc(50% - 20px); top: 18px; background: radial-gradient(circle at 36% 30%, #B8F7D4 0%, #30D158 60%, #00A38C 100%); opacity: light-dark(.8, .65); }
+
+/* ───────── (1) standard slider in a light frosted panel ───────── */
+#INP-05 .inp05-panel {
+  position: relative; padding: 14px 16px 10px; border-radius: 26px;
+  background: light-dark(rgba(255, 255, 255, .62), rgba(44, 44, 50, .55));
+  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+}
+#INP-05 .inp05-panel::before { /* specular sheen */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(165deg, light-dark(rgba(255, 255, 255, .55), rgba(255, 255, 255, .12)) 0%, transparent 38%);
+}
+#INP-05 .inp05-head { position: relative; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 0 2px; }
+#INP-05 .inp05-title { margin: 0; font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: 0; color: var(--label); }
+#INP-05 .inp05-val { font: 500 var(--fs-subhead)/1.2 var(--font-text); color: var(--label-2); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; min-width: 3.2em; text-align: right; }
+#INP-05 .inp05-row { position: relative; display: flex; align-items: center; gap: 10px; height: 44px; }
+#INP-05 .inp05-row + .inp05-head { margin-top: 8px; padding-top: 12px; box-shadow: inset 0 .5px 0 var(--separator); }
+#INP-05 .inp05-end { flex: none; width: 22px; display: grid; place-items: center; color: var(--label-2); font-size: 15px; }
+#INP-05 .inp05-end--max { font-size: 19px; }
+#INP-05 .inp05-a { font: 500 13px/1 var(--font-text); color: var(--label-2); }
+#INP-05 .inp05-a--l { font-size: 21px; }
+
+#INP-05 .inp05-std {
+  --p: .5; --k: 28px;
+  position: relative; flex: 1; min-width: 0; height: 44px; cursor: pointer; outline: none;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+}
+#INP-05 .inp05-track { position: absolute; left: 0; right: 0; top: 50%; height: 4px; margin-top: -2px; border-radius: 2px; background: light-dark(rgba(120, 120, 128, .22), rgba(120, 120, 128, .42)); }
+#INP-05 .inp05-fill-h { position: absolute; left: 0; top: 50%; height: 4px; margin-top: -2px; border-radius: 2px; background: var(--accent); width: calc(var(--k) / 2 + var(--p) * (100% - var(--k))); }
+#INP-05 .inp05-tick { position: absolute; top: 50%; width: 2px; height: 12px; margin: -6px 0 0 -1px; border-radius: 1px; background: light-dark(rgba(120, 120, 128, .42), rgba(150, 150, 160, .5)); left: calc(var(--k) / 2 + var(--t) * (100% - var(--k))); }
+#INP-05 .inp05-std--step .inp05-fill-h { display: none; }
+#INP-05 .inp05-knob {
+  position: absolute; top: 50%; width: var(--k); height: var(--k); margin-top: calc(var(--k) / -2);
+  left: calc(var(--p) * (100% - var(--k)));
+  border-radius: 50%; background: #fff;
+  box-shadow: 0 0 0 .5px rgba(0, 0, 0, .04), 0 3px 8px rgba(0, 0, 0, .15), 0 3px 1px rgba(0, 0, 0, .06);
+  transition: transform var(--dur-3) var(--ease-spring), background var(--dur-2) ease, box-shadow var(--dur-2) ease;
+}
+#INP-05 .inp05-std.is-snap .inp05-knob { transition: left var(--dur-2) var(--ease-out), transform var(--dur-3) var(--ease-spring), background var(--dur-2) ease, box-shadow var(--dur-2) ease; }
+#INP-05 .inp05-std.is-snap .inp05-fill-h { transition: width var(--dur-2) var(--ease-out); }
+/* while dragging, the knob turns into a Liquid-Glass lens that magnifies the track under it */
+#INP-05 .inp05-lens { position: absolute; left: -1px; right: -1px; top: 50%; height: 6px; margin-top: -3px; opacity: 0; transition: opacity var(--dur-1) ease;
+  background: linear-gradient(90deg, var(--accent) 50%, light-dark(rgba(120, 120, 128, .3), rgba(150, 150, 160, .5)) 50%); }
+#INP-05 .inp05-std--step .inp05-lens { background: light-dark(rgba(120, 120, 128, .3), rgba(150, 150, 160, .5)); }
+#INP-05 .inp05-knob { overflow: hidden; }
+#INP-05 .inp05-std.is-drag .inp05-knob {
+  transform: scale(1.55, 1.3); background: light-dark(rgba(255, 255, 255, .22), rgba(255, 255, 255, .08));
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .75), inset 0 1px 1px rgba(255, 255, 255, .9), inset 0 -1px 2px rgba(0, 0, 0, .06), 0 5px 14px rgba(0, 0, 0, .14);
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease, box-shadow var(--dur-1) ease;
+}
+#INP-05 .inp05-std.is-drag.is-snap .inp05-knob { transition: left var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease, box-shadow var(--dur-1) ease; }
+#INP-05 .inp05-std.is-drag .inp05-lens { opacity: 1; }
+#INP-05 .inp05-std:focus-visible .inp05-knob { box-shadow: 0 0 0 .5px rgba(0, 0, 0, .04), 0 3px 8px rgba(0, 0, 0, .15), 0 0 0 4px color-mix(in srgb, var(--accent) 45%, transparent); }
+
+/* ───────── (2) Control-Center sliders ───────── */
+#INP-05 .inp05-cc-row { position: relative; display: flex; justify-content: center; align-items: flex-end; gap: 18px; padding: 4px 0; }
+#INP-05 .inp05-cc-col { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+#INP-05 .inp05-cap { font: 500 var(--fs-caption1)/1 var(--font-text); color: light-dark(rgba(40, 30, 60, .66), rgba(255, 255, 255, .7)); letter-spacing: 0; display: flex; gap: 5px; }
+#INP-05 .inp05-cap b { font-weight: 600; font-variant-numeric: tabular-nums; color: light-dark(rgba(30, 20, 50, .86), #fff); min-width: 2.4em; text-align: left; }
+
+#INP-05 .inp05-cc, #INP-05 .inp05-hz {
+  --p: .5;
+  position: relative; overflow: hidden; cursor: grab; outline: none;
+  background: light-dark(rgba(46, 40, 72, .2), rgba(255, 255, 255, .1));
+  -webkit-backdrop-filter: blur(22px) saturate(190%); backdrop-filter: blur(22px) saturate(190%);
+  box-shadow: 0 10px 28px light-dark(rgba(60, 30, 90, .16), rgba(0, 0, 0, .45)), 0 1px 3px rgba(0, 0, 0, .08),
+    inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .5), rgba(255, 255, 255, .2)), inset 0 1px 0 light-dark(rgba(255, 255, 255, .55), rgba(255, 255, 255, .22));
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  transform: translateZ(0) scale(var(--sx, 1), var(--sy, 1));
+  transition: transform var(--dur-3) var(--ease-spring), box-shadow var(--dur-2) ease;
+}
+#INP-05 .inp05-cc { width: 64px; height: 150px; border-radius: 20px; }
+#INP-05 .inp05-cc.is-drag, #INP-05 .inp05-hz.is-drag { cursor: grabbing; transition: transform 90ms var(--ease-out), box-shadow var(--dur-2) ease; }
+#INP-05 .inp05-cc:focus-visible, #INP-05 .inp05-hz:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 60%, transparent), 0 10px 28px rgba(0, 0, 0, .18), inset 0 0 0 .5px rgba(255, 255, 255, .5); }
+
+#INP-05 .inp05-cc-fill, #INP-05 .inp05-hz-fill {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, #fff 0%, #F4F4F7 100%);
+  box-shadow: 0 -.5px 0 rgba(0, 0, 0, .06), inset 0 1px 0 #fff;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+#INP-05 .inp05-cc-fill { transform: translateY(calc((1 - var(--p)) * 100%)); }
+#INP-05 .inp05-hz-fill { transform: translateX(calc((var(--p) - 1) * 100%)); background: linear-gradient(90deg, #F4F4F7 0%, #fff 100%); }
+#INP-05 .inp05-sheen { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(160deg, rgba(255, 255, 255, .28) 0%, transparent 34%, transparent 70%, rgba(255, 255, 255, .08) 100%); }
+
+/* icon layers: white on glass, gray where the fill covers (pixel-exact split) */
+#INP-05 .inp05-cc-ic { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 19px; color: #fff; pointer-events: none; font-size: 26px; }
+#INP-05 .inp05-cc-ic--on { color: #6E6E73; clip-path: inset(calc((1 - var(--p)) * 100%) 0 0 0); transition: clip-path var(--dur-2) var(--ease-out); }
+#INP-05 .inp05-cc-ic .i { filter: drop-shadow(0 .5px 1px rgba(0, 0, 0, .12)); transform: scale(var(--ics, 1)); transition: transform var(--dur-2) var(--ease-spring); }
+#INP-05 .inp05-cc-ic--on .i { filter: none; }
+#INP-05 .is-drag .inp05-cc-fill, #INP-05 .is-drag .inp05-cc-ic--on, #INP-05 .is-drag .inp05-hz-fill, #INP-05 .is-drag .inp05-hz-on { transition: none; }
+
+/* ───────── (3) horizontal thick glass slider ───────── */
+#INP-05 .inp05-hz { height: 44px; border-radius: 22px; }
+#INP-05 .inp05-hz-lay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px 0 14px; color: #fff; pointer-events: none; }
+#INP-05 .inp05-hz-lay .i { font-size: 20px; filter: drop-shadow(0 .5px 1px rgba(0, 0, 0, .12)); }
+#INP-05 .inp05-hz-on { color: #6E6E73; clip-path: inset(0 calc((1 - var(--p)) * 100%) 0 0); transition: clip-path var(--dur-2) var(--ease-out); }
+#INP-05 .inp05-hz-on .i { filter: none; }
+#INP-05 .inp05-pct { font: 600 var(--fs-subhead)/1 var(--font-text); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; min-width: 3ch; text-align: right; }
+#INP-05 .inp05-hz-lab { flex: 1; margin-left: 9px; font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  #INP-05 .inp05-cc, #INP-05 .inp05-hz, #INP-05 .inp05-knob, #INP-05 .inp05-cc-fill, #INP-05 .inp05-hz-fill, #INP-05 .inp05-cc-ic--on, #INP-05 .inp05-hz-on { transition: none; }
+}
+</style>
+<article class="obj" id="INP-05" data-name="Slider" data-ja="スライダー" data-vector="Glass" data-size="m" data-desc="標準の細いスライダーと、コントロールセンター風の太いスライダー。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="inp05-stack">
+      <!-- (1) standard -->
+      <div class="inp05-panel">
+        <div class="inp05-head"><p class="inp05-title" id="INP-05-vol-l">音量</p><span class="inp05-val" data-out="vol">50%</span></div>
+        <div class="inp05-row">
+          <span class="inp05-end" aria-hidden="true"><svg class="i"><use href="#i-speaker-fill"/></svg></span>
+          <div class="inp05-std" data-key="vol" role="slider" tabindex="0" aria-labelledby="INP-05-vol-l" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+            <div class="inp05-track"></div><div class="inp05-fill-h"></div><div class="inp05-knob"><i class="inp05-lens"></i></div>
+          </div>
+          <span class="inp05-end inp05-end--max" aria-hidden="true"><svg class="i"><use href="#i-speaker-wave-2-fill"/></svg></span>
+        </div>
+        <div class="inp05-head"><p class="inp05-title" id="INP-05-size-l">文字サイズ</p><span class="inp05-val" data-out="size">標準</span></div>
+        <div class="inp05-row">
+          <span class="inp05-end" aria-hidden="true"><span class="inp05-a">A</span></span>
+          <div class="inp05-std inp05-std--step" data-key="size" data-steps="6" role="slider" tabindex="0" aria-labelledby="INP-05-size-l" aria-valuemin="0" aria-valuemax="6" aria-valuenow="3" aria-valuetext="標準">
+            <div class="inp05-track"></div><div class="inp05-fill-h"></div>
+            <i class="inp05-tick" style="--t:0"></i><i class="inp05-tick" style="--t:.16667"></i><i class="inp05-tick" style="--t:.33333"></i><i class="inp05-tick" style="--t:.5"></i><i class="inp05-tick" style="--t:.66667"></i><i class="inp05-tick" style="--t:.83333"></i><i class="inp05-tick" style="--t:1"></i>
+            <div class="inp05-knob"><i class="inp05-lens"></i></div>
+          </div>
+          <span class="inp05-end inp05-end--max" aria-hidden="true"><span class="inp05-a inp05-a--l">A</span></span>
+        </div>
+      </div>
+
+      <!-- (2) Control Center -->
+      <div class="inp05-cc-row">
+        <div class="inp05-orbs" aria-hidden="true"><i class="inp05-orb inp05-orb--a"></i><i class="inp05-orb inp05-orb--b"></i><i class="inp05-orb inp05-orb--c"></i></div>
+        <div class="inp05-cc-col">
+          <div class="inp05-cc" data-key="bri" role="slider" tabindex="0" aria-label="明るさ" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62">
+            <div class="inp05-cc-fill"></div>
+            <div class="inp05-cc-ic" aria-hidden="true"><svg class="i"><use href="#i-sun-max-fill"/></svg></div>
+            <div class="inp05-cc-ic inp05-cc-ic--on" aria-hidden="true"><svg class="i"><use href="#i-sun-max-fill"/></svg></div>
+            <div class="inp05-sheen"></div>
+          </div>
+          <span class="inp05-cap">明るさ<b data-out="bri">62%</b></span>
+        </div>
+        <div class="inp05-cc-col">
+          <div class="inp05-cc" data-key="vol" role="slider" tabindex="0" aria-label="音量" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+            <div class="inp05-cc-fill"></div>
+            <div class="inp05-cc-ic" aria-hidden="true"><svg class="i"><use href="#i-speaker-wave-2-fill"/></svg></div>
+            <div class="inp05-cc-ic inp05-cc-ic--on" aria-hidden="true"><svg class="i"><use href="#i-speaker-wave-2-fill"/></svg></div>
+            <div class="inp05-sheen"></div>
+          </div>
+          <span class="inp05-cap">音量<b data-out="vol">50%</b></span>
+        </div>
+      </div>
+
+      <!-- (3) horizontal thick -->
+      <div class="inp05-hz" data-key="bri" role="slider" tabindex="0" aria-label="明るさ" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62">
+        <div class="inp05-hz-fill"></div>
+        <div class="inp05-hz-lay" aria-hidden="true"><svg class="i"><use href="#i-sun-max-fill"/></svg><span class="inp05-hz-lab">明るさ</span><span class="inp05-pct" data-out="bri">62%</span></div>
+        <div class="inp05-hz-lay inp05-hz-on" aria-hidden="true"><svg class="i"><use href="#i-sun-max-fill"/></svg><span class="inp05-hz-lab">明るさ</span><span class="inp05-pct" data-out="bri">62%</span></div>
+        <div class="inp05-sheen"></div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>つまみ・帯をドラッグ</li><li>端を越えて引くとゴムのように伸びる</li><li>矢印キーで微調整</li><li>同じ値は全スライダーで連動</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('INP-05');
+  const reduced = () => window.ObjKit && ObjKit.reducedMotion;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  /* iOS-style rubber band: diminishing return, asymptote at `max` px */
+  const rubber = (x, max) => (1 - 1 / ((x * 0.55) / max + 1)) * max;
+  const SIZES = ['極小', '小', 'やや小', '標準', 'やや大', '大', '特大'];
+
+  /* ── shared model: the same key drives every slider bound to it ── */
+  const state = { vol: 0.5, bri: 0.62, size: 3 };
+  const views = { vol: [], bri: [], size: [] };
+  const fmt = (k, v) => (k === 'size' ? SIZES[v] : Math.round(v * 100) + '%');
+  function set(k, v) {
+    state[k] = v;
+    for (const fn of views[k]) fn(v);
+    root.querySelectorAll(`[data-out="${k}"]`).forEach((el) => { el.textContent = fmt(k, v); });
+  }
+
+  /* ───── (1) standard thin sliders ───── */
+  root.querySelectorAll('.inp05-std').forEach((el) => {
+    const k = el.dataset.key;
+    const steps = +el.dataset.steps || 0;
+    const ticks = [...el.querySelectorAll('.inp05-tick')];
+    const knob = el.querySelector('.inp05-knob');
+    const toP = (v) => (steps ? v / steps : v);
+    views[k].push((v) => {
+      const p = toP(v);
+      el.style.setProperty('--p', p.toFixed(4));
+      el.setAttribute('aria-valuenow', steps ? v : Math.round(v * 100));
+      if (!steps) el.setAttribute('aria-valuetext', Math.round(v * 100) + '%');
+      if (steps) { el.setAttribute('aria-valuetext', SIZES[v]); ticks.forEach((t, i) => t.classList.toggle('is-on', i <= v)); }
+    });
+    let grab = 0, drag = false;
+    const pFromX = (x) => {
+      const r = el.getBoundingClientRect(); const kw = knob.offsetWidth;
+      return clamp((x - r.left - kw / 2 - grab) / (r.width - kw), 0, 1);
+    };
+    const apply = (p) => (steps ? Math.round(p * steps) : p);
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      /* no preventDefault: native mousedown focus keeps :focus-visible for keyboard only */
+      const kr = knob.getBoundingClientRect();
+      const onKnob = Math.abs(e.clientX - (kr.left + kr.width / 2)) < kr.width * 0.8;
+      grab = onKnob ? e.clientX - (kr.left + kr.width / 2) : 0;
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('is-drag');
+      el.classList.toggle('is-snap', !onKnob || !!steps);  /* tap on track → animate to the spot */
+      if (!onKnob) set(k, apply(pFromX(e.clientX)));
+      drag = true;
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      if (!steps && el.classList.contains('is-snap')) setTimeout(() => el.classList.remove('is-snap'), 120);
+      const nv = apply(pFromX(e.clientX));
+      if (nv !== state[k]) set(k, nv);
+    });
+    const end = () => { if (!drag) return; drag = false; el.classList.remove('is-drag'); if (!steps) el.classList.remove('is-snap'); };
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+    el.addEventListener('keydown', (e) => {
+      const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 5, PageDown: -5 }[e.key];
+      let v = state[k];
+      if (d) v = steps ? clamp(v + Math.sign(d), 0, steps) : clamp(Math.round(v * 100 + d * (e.shiftKey ? 10 : 2)) / 100, 0, 1);
+      else if (e.key === 'Home') v = 0;
+      else if (e.key === 'End') v = steps || 1;
+      else return;
+      e.preventDefault(); el.classList.add('is-snap'); set(k, v);
+    });
+  });
+
+  /* ───── (2)(3) thick glass sliders: relative drag + rubber-band stretch ───── */
+  root.querySelectorAll('.inp05-cc, .inp05-hz').forEach((el) => {
+    const k = el.dataset.key;
+    const vertical = el.classList.contains('inp05-cc');
+    const uses = [...el.querySelectorAll('use')];
+    const icons = [...el.querySelectorAll('.inp05-cc-ic .i')];
+    views[k].push((v) => {
+      el.style.setProperty('--p', v.toFixed(4));
+      el.setAttribute('aria-valuenow', Math.round(v * 100));
+      el.setAttribute('aria-valuetext', Math.round(v * 100) + '%');
+      if (k === 'vol') uses.forEach((u) => u.setAttribute('href', v <= 0.001 ? '#i-speaker-fill' : '#i-speaker-wave-2-fill'));
+      if (k === 'bri') icons.forEach((i) => i.style.setProperty('--ics', (0.86 + v * 0.22).toFixed(3)));
+    });
+    let s = null;
+    const stretch = (over) => {
+      /* over < 0: pulled past the start, > 0: past the end */
+      const size = vertical ? el.offsetHeight : el.offsetWidth;
+      const st = rubber(Math.abs(over), size * 0.07);
+      const main = 1 + st / size, cross = 1 - (st / size) * 0.32;
+      if (vertical) { el.style.transformOrigin = over > 0 ? '50% 100%' : '50% 0%'; el.style.setProperty('--sy', (main * 1.03).toFixed(4)); el.style.setProperty('--sx', (cross * 0.985).toFixed(4)); }
+      else { el.style.transformOrigin = over > 0 ? '0% 50%' : '100% 50%'; el.style.setProperty('--sx', (main * 1.012).toFixed(4)); el.style.setProperty('--sy', (cross * 1.03).toFixed(4)); }
+    };
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      /* no preventDefault: native mousedown focus keeps :focus-visible for keyboard only */
+      el.setPointerCapture(e.pointerId);
+      s = { x: e.clientX, y: e.clientY, v: state[k], moved: false, id: e.pointerId };
+      el.classList.add('is-drag');
+      el.style.transformOrigin = '50% 50%';
+      if (vertical) { el.style.setProperty('--sy', '1.03'); el.style.setProperty('--sx', '.985'); }
+      else { el.style.setProperty('--sx', '1.012'); el.style.setProperty('--sy', '1.03'); }
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!s || e.pointerId !== s.id) return;
+      const size = vertical ? el.offsetHeight : el.offsetWidth;
+      const delta = vertical ? s.y - e.clientY : e.clientX - s.x;
+      if (Math.abs(delta) > 3) s.moved = true;
+      const raw = s.v + delta / size;
+      const v = clamp(raw, 0, 1);
+      if (Math.abs(v - state[k]) > 0.0005) set(k, v);
+      const over = raw > 1 ? (raw - 1) * size : raw < 0 ? raw * size : 0;
+      if (over) stretch(over);
+      else if (vertical) { el.style.setProperty('--sy', '1.03'); el.style.setProperty('--sx', '.985'); }
+      else { el.style.setProperty('--sx', '1.012'); el.style.setProperty('--sy', '1.03'); }
+    });
+    const end = (e) => {
+      if (!s || e.pointerId !== s.id) return;
+      el.classList.remove('is-drag');
+      if (!s.moved) {
+        /* a tap jumps (animated) to the tapped level */
+        const r = el.getBoundingClientRect();
+        set(k, clamp(vertical ? (r.bottom - e.clientY) / r.height : (e.clientX - r.left) / r.width, 0, 1));
+      }
+      el.style.setProperty('--sx', '1'); el.style.setProperty('--sy', '1');
+      s = null;
+    };
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+    let kbT = 0;
+    el.addEventListener('keydown', (e) => {
+      const stepV = k === 'vol' ? 1 / 16 : 0.05; /* iOS volume has 16 steps */
+      const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 3, PageDown: -3 }[e.key];
+      let v = state[k];
+      if (d) {
+        const raw = v + d * stepV;
+        v = clamp(k === 'vol' ? Math.round(raw * 16) / 16 : Math.round(raw * 20) / 20, 0, 1);
+        if (raw > 1.0001 || raw < -0.0001) { /* bump against the limit */
+          stretch((raw > 1 ? 1 : -1) * 14); clearTimeout(kbT);
+          kbT = setTimeout(() => { el.style.setProperty('--sx', '1'); el.style.setProperty('--sy', '1'); }, 140);
+        }
+      } else if (e.key === 'Home') v = 0;
+      else if (e.key === 'End') v = 1;
+      else return;
+      e.preventDefault(); set(k, v);
+    });
+  });
+
+  set('vol', state.vol); set('bri', state.bri); set('size', state.size);
+})();
+</script>

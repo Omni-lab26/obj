@@ -1,0 +1,621 @@
+<!-- ═══════════ SNS-05 · Short Video ═══════════ -->
+<style>
+#SNS-05 .sns05-screen { --tab-h: calc(50px + var(--phone-safe-bottom)); background: #000; color: #fff; font-family: var(--font-text); letter-spacing: 0; -webkit-tap-highlight-color: transparent; }
+#SNS-05 button { -webkit-tap-highlight-color: transparent; font: inherit; color: inherit; }
+#SNS-05 .sns05-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* — Video layer — */
+#SNS-05 .sns05-feed { position: absolute; inset: 0 0 var(--tab-h) 0; overflow: hidden; }
+#SNS-05 .sns05-video { position: absolute; inset: 0; overflow: hidden; background: #05070c; cursor: pointer; outline: none; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+#SNS-05 .sns05-video:focus-visible::after { content: ""; position: absolute; inset: 0; z-index: 3; box-shadow: inset 0 0 0 3px rgba(100, 210, 255, .7); pointer-events: none; }
+#SNS-05 .sns05-scene { position: absolute; inset: -4%; transform-origin: 42% 45%; animation: sns05-kb 16s ease-in-out infinite alternate; }
+#SNS-05 .sns05-art { position: absolute; inset: 0; }
+#SNS-05 .sns05-feed[data-v="0"] .sns05-art { /* aurora sky without the baked-in stars (our own crisp starfield sits on top) */
+  background-image:
+    radial-gradient(55% 22% at 28% 34%, rgba(48, 209, 88, .7), transparent 72%),
+    radial-gradient(40% 30% at 58% 26%, rgba(100, 210, 255, .5), transparent 72%),
+    radial-gradient(40% 26% at 82% 42%, rgba(191, 90, 242, .55), transparent 72%),
+    linear-gradient(180deg, #030914 0%, #071b2d 55%, #0b2c36 100%);
+}
+#SNS-05 .sns05-stars {
+  position: absolute; inset: 0 0 35% 0; pointer-events: none; opacity: .85;
+  background-image:
+    radial-gradient(1.3px 1.3px at 23px 31px, #fff 45%, transparent 100%),
+    radial-gradient(1px 1px at 71px 83px, rgba(255, 255, 255, .85) 45%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 118px 17px, #fff 45%, transparent 100%),
+    radial-gradient(1px 1px at 47px 140px, rgba(220, 235, 255, .8) 45%, transparent 100%);
+  background-size: 137px 97px, 89px 113px, 173px 151px, 109px 167px;
+  -webkit-mask: linear-gradient(180deg, #000 30%, transparent); mask: linear-gradient(180deg, #000 30%, transparent);
+  animation: sns05-twinkle 2.6s ease-in-out infinite alternate;
+}
+@keyframes sns05-twinkle { from { opacity: .55; } to { opacity: .95; } }
+#SNS-05 .sns05-land { position: absolute; inset: 0; pointer-events: none; }
+#SNS-05 .sns05-ridge {
+  position: absolute; left: -4%; right: -4%; bottom: 27%; height: 20%;
+  background: linear-gradient(180deg, #24434a 0%, #0f1d27 45%, #08111a 100%);
+  clip-path: polygon(0 74%, 7% 56%, 13% 63%, 21% 34%, 28% 47%, 36% 18%, 44% 44%, 52% 31%, 61% 57%, 70% 37%, 78% 55%, 87% 33%, 94% 50%, 100% 44%, 100% 100%, 0 100%);
+}
+#SNS-05 .sns05-ground { position: absolute; left: -10%; right: -10%; bottom: 0; height: 30%; border-radius: 50% 50% 0 0 / 14% 14% 0 0; background: linear-gradient(180deg, #34585a 0%, #1a2c36 22%, #0d1820 70%); box-shadow: inset 0 1px 0 rgba(140, 255, 200, .18); }
+#SNS-05 .sns05-person { position: absolute; left: 41%; bottom: 29.4%; width: 7px; height: 17px; border-radius: 3px 3px 1.5px 1.5px; background: #04070b; }
+#SNS-05 .sns05-person::before { content: ""; position: absolute; left: 50%; top: -6.5px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: #04070b; }
+#SNS-05 .sns05-person::after { content: ""; position: absolute; left: 13px; bottom: 0; width: 9px; height: 12px; border-top: 1.5px solid #04070b; background: linear-gradient(90deg, transparent 0 3.8px, #04070b 3.8px 5.2px, transparent 5.2px), linear-gradient(60deg, transparent 0 45%, #04070b 45% 58%, transparent 58%), linear-gradient(-60deg, transparent 0 45%, #04070b 45% 58%, transparent 58%); }
+#SNS-05 .sns05-feed[data-v="1"] .sns05-stars, #SNS-05 .sns05-feed[data-v="1"] .sns05-land { display: none; }
+@keyframes sns05-kb { 0% { transform: scale(1.06) translate3d(0, 0, 0); } 100% { transform: scale(1.2) translate3d(-3.5%, 2.5%, 0); } }
+#SNS-05 .sns05-aurora {
+  position: absolute; inset: -10% -20%; pointer-events: none; mix-blend-mode: screen; opacity: .7;
+  background:
+    radial-gradient(30% 14% at 34% 30%, rgba(80, 255, 170, .55), transparent 70%),
+    radial-gradient(26% 10% at 58% 22%, rgba(120, 220, 255, .35), transparent 70%),
+    radial-gradient(22% 12% at 72% 34%, rgba(200, 120, 255, .35), transparent 70%);
+  animation: sns05-aur 7s ease-in-out infinite alternate;
+}
+@keyframes sns05-aur { 0% { transform: translate3d(-5%, 0, 0) skewX(-6deg); opacity: .5; } 100% { transform: translate3d(5%, -2%, 0) skewX(6deg); opacity: .95; } }
+#SNS-05 .sns05-feed[data-v="1"] .sns05-aurora { opacity: 0; animation: none; }
+#SNS-05 .sns05-vignette {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .45) 0%, transparent 22%),
+    linear-gradient(0deg, rgba(0, 0, 0, .62) 0%, rgba(0, 0, 0, .2) 30%, transparent 48%),
+    radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0, 0, 0, .45) 100%);
+  transition: opacity var(--dur-3) ease;
+}
+#SNS-05 .sns05-feed.is-expanded .sns05-vignette { background: linear-gradient(180deg, rgba(0, 0, 0, .45) 0%, transparent 22%), linear-gradient(0deg, rgba(0, 0, 0, .85) 0%, rgba(0, 0, 0, .5) 40%, transparent 70%); }
+
+/* pause glyph */
+#SNS-05 .sns05-playicon { position: absolute; left: 50%; top: 46%; width: 84px; height: 84px; margin: -42px 0 0 -42px; color: #fff; pointer-events: none; opacity: 0; transform: scale(1.5); filter: drop-shadow(0 6px 22px rgba(0, 0, 0, .35)); transition: opacity 200ms ease, transform 420ms var(--ease-spring); }
+#SNS-05 .sns05-playicon .i { width: 100%; height: 100%; }
+#SNS-05 .sns05-screen.is-paused .sns05-playicon { opacity: .58; transform: none; }
+
+/* double-tap hearts */
+#SNS-05 .sns05-burst { position: absolute; z-index: 6; width: 0; height: 0; pointer-events: none; }
+#SNS-05 .sns05-burst svg { position: absolute; left: -48px; top: -48px; width: 96px; height: 96px; color: #FF2D55; fill: url(#SNS-05-heart); filter: drop-shadow(0 8px 20px rgba(255, 30, 80, .45)); animation: sns05-heart 950ms both; }
+@keyframes sns05-heart {
+  0% { opacity: 0; transform: rotate(var(--rot)) scale(.2); animation-timing-function: cubic-bezier(.3, 1.6, .5, 1); }
+  22% { opacity: 1; transform: rotate(var(--rot)) scale(1.15); animation-timing-function: ease-out; }
+  36% { opacity: 1; transform: rotate(var(--rot)) scale(1); animation-timing-function: cubic-bezier(.5, 0, .75, 0); }
+  100% { opacity: 0; transform: rotate(var(--rot)) translateY(-120px) scale(1.25); }
+}
+#SNS-05 .sns05-burst i { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--c); animation: sns05-spark 700ms 80ms cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes sns05-spark { 0% { opacity: 0; transform: rotate(var(--a)) translateX(10px) scale(.4); } 25% { opacity: 1; } 100% { opacity: 0; transform: rotate(var(--a)) translateX(76px) scale(.2); } }
+
+/* — Top tabs — */
+#SNS-05 .sns05-top { position: absolute; z-index: 5; left: 0; right: 0; top: calc(var(--phone-safe-top) - 4px); display: flex; align-items: center; height: 44px; padding: 0 6px; }
+#SNS-05 .sns05-tb { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #fff; cursor: pointer; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .35)); }
+#SNS-05 .sns05-tb .i, #SNS-05 .sns05-tb svg { width: 24px; height: 24px; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-05 .sns05-tb:active svg { transform: scale(.85); transition-duration: 90ms; }
+#SNS-05 .sns05-tabs { position: relative; display: flex; align-items: center; gap: 2px; margin: 0 auto; }
+#SNS-05 .sns05-tab { height: 40px; padding: 0 9px; border: 0; background: none; cursor: pointer; color: rgba(255, 255, 255, .62); font: 600 16.5px/1 var(--font-text); letter-spacing: 0; text-shadow: 0 1px 4px rgba(0, 0, 0, .3); transition: color var(--dur-2) ease, transform var(--dur-2) var(--ease-spring); }
+#SNS-05 .sns05-tab[aria-selected="true"] { color: #fff; font-weight: 700; }
+#SNS-05 .sns05-tab:active { transform: scale(.95); transition-duration: 90ms; }
+#SNS-05 .sns05-sep { width: 1px; height: 12px; background: rgba(255, 255, 255, .3); }
+#SNS-05 .sns05-ul { position: absolute; left: 0; bottom: 3px; width: 22px; height: 2.5px; margin-left: -11px; border-radius: 2px; background: #fff; transition: transform 420ms var(--ease-spring); }
+#SNS-05 .sns05-tb:focus-visible, #SNS-05 .sns05-tab:focus-visible { outline: none; border-radius: 10px; box-shadow: 0 0 0 2px rgba(255, 255, 255, .7); }
+
+/* — Right rail — */
+#SNS-05 .sns05-rail { position: absolute; z-index: 4; right: 6px; bottom: 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; width: 60px; pointer-events: none; }
+#SNS-05 .sns05-rail button { pointer-events: auto; }
+#SNS-05 .sns05-creator { position: relative; width: 50px; height: 50px; margin-bottom: 10px; }
+#SNS-05 .sns05-avatar { display: block; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 50%; background: #fff; cursor: pointer; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-05 .sns05-avatar .av { width: 47px; height: 47px; margin: 1.5px; font-size: 19px; }
+#SNS-05 .sns05-avatar:active { transform: scale(.92); transition-duration: 90ms; }
+#SNS-05 .sns05-follow {
+  position: absolute; left: 50%; bottom: -10px; display: grid; place-items: center; width: 22px; height: 22px; margin-left: -11px; padding: 0; border: 0; border-radius: 50%;
+  background: #FF2D55; color: #fff; cursor: pointer; box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+  transition: transform 380ms var(--ease-spring), opacity 260ms ease, background 200ms ease, color 200ms ease;
+}
+#SNS-05 .sns05-follow .i { font-size: 15px; transition: transform 380ms var(--ease-spring); }
+#SNS-05 .sns05-follow:active { transform: scale(.85); transition-duration: 90ms; }
+#SNS-05 .sns05-follow.is-done { background: #fff; color: #FF2D55; }
+#SNS-05 .sns05-follow.is-done .i { transform: rotate(360deg); }
+#SNS-05 .sns05-follow.is-gone { transform: scale(0); opacity: 0; pointer-events: none; }
+#SNS-05 .sns05-act { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 60px; padding: 0; border: 0; background: none; color: #fff; cursor: pointer; }
+#SNS-05 .sns05-ico { position: relative; display: grid; place-items: center; width: 40px; height: 36px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .3)); }
+#SNS-05 .sns05-ico svg { width: 34px; height: 34px; transition: transform var(--dur-2) var(--ease-spring), color var(--dur-2) ease; }
+#SNS-05 .sns05-act:active .sns05-ico svg { transform: scale(.82); transition-duration: 90ms; }
+#SNS-05 .sns05-act b { font: 600 12.5px/1.2 var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; text-shadow: 0 1px 3px rgba(0, 0, 0, .45); }
+#SNS-05 .sns05-act:focus-visible, #SNS-05 .sns05-avatar:focus-visible, #SNS-05 .sns05-follow:focus-visible, #SNS-05 .sns05-disc:focus-visible { outline: none; border-radius: 12px; box-shadow: 0 0 0 2px rgba(255, 255, 255, .75); }
+#SNS-05 .sns05-like[aria-pressed="true"] svg { color: #FF2D55; }
+#SNS-05 .sns05-save[aria-pressed="true"] svg { color: #FFC93C; }
+#SNS-05 .sns05-act.is-pop svg { animation: sns05-pop 520ms both; }
+@keyframes sns05-pop {
+  0% { transform: scale(1); animation-timing-function: ease-out; }
+  20% { transform: scale(.7); animation-timing-function: cubic-bezier(.3, 1.6, .5, 1); }
+  60% { transform: scale(1.25); animation-timing-function: ease-in-out; }
+  100% { transform: scale(1); }
+}
+#SNS-05 .sns05-ring { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; box-shadow: 0 0 0 2px #FF2D55; opacity: 0; pointer-events: none; }
+#SNS-05 .sns05-act.is-pop .sns05-ring { animation: sns05-ringout 520ms ease-out both; }
+@keyframes sns05-ringout { 0% { opacity: .9; transform: scale(.4); } 100% { opacity: 0; transform: scale(1.5); } }
+
+/* record disc + notes */
+#SNS-05 .sns05-discwrap { position: relative; width: 48px; height: 48px; margin-top: 10px; }
+#SNS-05 .sns05-disc {
+  display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  background:
+    radial-gradient(circle, transparent 0 13px, rgba(255, 255, 255, .08) 13.5px, transparent 14.5px),
+    repeating-radial-gradient(circle, #1a1a1d 0 1.2px, #2a2a2e 1.6px 2.6px),
+    #1c1c1f;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .2), 0 4px 12px rgba(0, 0, 0, .4);
+  animation: sns05-spin 6s linear infinite;
+}
+#SNS-05 .sns05-disc .art { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 2px #0e0e10; }
+@keyframes sns05-spin { to { transform: rotate(360deg); } }
+#SNS-05 .sns05-note { position: absolute; left: 0; top: 4px; width: 16px; height: 16px; color: #fff; opacity: 0; pointer-events: none; animation: sns05-note 2.8s cubic-bezier(.25, .6, .4, 1) infinite; }
+#SNS-05 .sns05-note:nth-child(2) { animation-delay: 1.4s; width: 13px; height: 13px; }
+@keyframes sns05-note {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0) scale(.6); }
+  15% { opacity: .95; }
+  60% { opacity: .8; }
+  100% { opacity: 0; transform: translate(-24px, -48px) rotate(-24deg) scale(1.1); }
+}
+
+/* — Caption block — */
+#SNS-05 .sns05-info { position: absolute; z-index: 4; left: 12px; right: 78px; bottom: 16px; pointer-events: none; text-shadow: 0 1px 3px rgba(0, 0, 0, .4); }
+#SNS-05 .sns05-info button { pointer-events: auto; }
+#SNS-05 .sns05-user { display: flex; align-items: baseline; gap: 6px; margin: 0 0 6px; }
+#SNS-05 .sns05-user b { font: 700 16px/1.2 var(--font-text); letter-spacing: -0.01em; }
+#SNS-05 .sns05-user span { font-size: 13px; color: rgba(255, 255, 255, .72); }
+#SNS-05 .sns05-cap { margin: 0; font-size: 14px; line-height: 20px; word-break: auto-phrase; overflow-wrap: anywhere; }
+#SNS-05 .sns05-cap .sns05-tag { font-weight: 700; white-space: nowrap; }
+#SNS-05 .sns05-more { padding: 0; border: 0; background: none; color: #fff; font-weight: 700; cursor: pointer; text-shadow: inherit; }
+#SNS-05 .sns05-more:focus-visible { outline: none; border-radius: 4px; box-shadow: 0 0 0 2px rgba(255, 255, 255, .7); }
+#SNS-05 .sns05-music { display: flex; align-items: center; gap: 6px; margin-top: 9px; font-size: 13px; line-height: 18px; }
+#SNS-05 .sns05-music .i { font-size: 14px; flex: none; }
+#SNS-05 .sns05-marquee { width: min(170px, 100%); overflow: hidden; white-space: nowrap; -webkit-mask: linear-gradient(90deg, transparent, #000 8px, #000 calc(100% - 16px), transparent); mask: linear-gradient(90deg, transparent, #000 8px, #000 calc(100% - 16px), transparent); }
+#SNS-05 .sns05-mq { display: inline-flex; animation: sns05-mq 9s linear infinite; }
+#SNS-05 .sns05-mq span { padding: 0 32px 0 8px; }
+@keyframes sns05-mq { to { transform: translate3d(-50%, 0, 0); } }
+
+/* — Progress / scrubber — */
+#SNS-05 .sns05-progress { position: absolute; z-index: 5; left: 0; right: 0; bottom: var(--tab-h); height: 16px; cursor: pointer; touch-action: none; }
+#SNS-05 .sns05-track { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(255, 255, 255, .2); transition: height 220ms var(--ease-out); }
+#SNS-05 .sns05-fill { position: absolute; inset: 0; background: rgba(255, 255, 255, .9); transform: scaleX(0); transform-origin: left; }
+#SNS-05 .sns05-knob { position: absolute; bottom: -3px; left: 0; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .4); transform: scale(0); transition: transform 260ms var(--ease-spring); }
+#SNS-05 .sns05-screen.is-paused .sns05-track, #SNS-05 .sns05-screen.is-scrub .sns05-track { height: 4px; }
+#SNS-05 .sns05-screen.is-paused .sns05-knob, #SNS-05 .sns05-screen.is-scrub .sns05-knob { transform: scale(1); }
+#SNS-05 .sns05-screen.is-scrub .sns05-knob { transform: scale(1.4); }
+#SNS-05 .sns05-timelabel { position: absolute; z-index: 6; left: 0; right: 0; bottom: calc(var(--tab-h) + 70px); text-align: center; font: 700 28px/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; text-shadow: 0 2px 12px rgba(0, 0, 0, .5); opacity: 0; transform: translateY(8px); transition: opacity 200ms ease, transform 300ms var(--ease-spring); pointer-events: none; }
+#SNS-05 .sns05-timelabel span { color: rgba(255, 255, 255, .6); }
+#SNS-05 .sns05-screen.is-scrub .sns05-timelabel { opacity: 1; transform: none; }
+#SNS-05 .sns05-screen.is-scrub .sns05-info, #SNS-05 .sns05-screen.is-scrub .sns05-rail { opacity: 0; }
+#SNS-05 .sns05-info, #SNS-05 .sns05-rail { transition: opacity var(--dur-2) ease; }
+
+/* — Tab bar — */
+#SNS-05 .sns05-tabbar { position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: var(--tab-h); display: grid; grid-template-columns: repeat(5, 1fr); align-items: start; padding: 6px 4px 0; background: #000; box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .12); }
+#SNS-05 .sns05-ti { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 40px; padding: 0; border: 0; background: none; color: rgba(255, 255, 255, .58); cursor: pointer; font: 500 10px/1 var(--font-text); letter-spacing: -0.01em; white-space: nowrap; transition: color var(--dur-2) ease; }
+#SNS-05 .sns05-ti .i { font-size: 25px; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-05 .sns05-ti:active .i { transform: scale(.86); transition-duration: 90ms; }
+#SNS-05 .sns05-ti[aria-current="page"] { color: #fff; }
+#SNS-05 .sns05-ti:focus-visible { outline: none; border-radius: 10px; box-shadow: 0 0 0 2px rgba(255, 255, 255, .6); }
+#SNS-05 .sns05-badge { position: absolute; top: -3px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #FF2D55; color: #fff; font: 700 11px/18px var(--font-rounded); box-shadow: 0 0 0 2px #000; }
+#SNS-05 .sns05-create { display: grid; place-items: center; align-self: center; justify-self: center; width: 46px; height: 31px; margin-top: 2px; padding: 0; border: 0; border-radius: 10px; background: var(--grad-vivid); color: #fff; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 4px 14px -4px rgba(255, 55, 95, .7); transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-05 .sns05-create .i { font-size: 20px; stroke-width: 2.4; }
+#SNS-05 .sns05-create:active { transform: scale(.9); transition-duration: 90ms; }
+#SNS-05 .sns05-create:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff; }
+
+/* — Comments sheet — */
+#SNS-05 .sns05-scrim { position: absolute; inset: 0; z-index: 7; background: rgba(0, 0, 0, .35); opacity: 0; pointer-events: none; transition: opacity var(--dur-3) ease; }
+#SNS-05 .sns05-sheet {
+  position: absolute; z-index: 8; left: 0; right: 0; bottom: 0; height: 66%; display: flex; flex-direction: column;
+  border-radius: 18px 18px 0 0; background: rgba(28, 28, 30, .94); -webkit-backdrop-filter: blur(24px) saturate(170%); backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .14), 0 -10px 40px rgba(0, 0, 0, .4);
+  transform: translateY(104%); transition: transform 480ms var(--ease-ios); visibility: hidden;
+}
+#SNS-05 .sns05-screen.is-sheet .sns05-scrim { opacity: 1; pointer-events: auto; }
+#SNS-05 .sns05-screen.is-sheet .sns05-sheet { transform: none; visibility: visible; }
+#SNS-05 .sns05-sheet header { position: relative; display: grid; place-items: center; height: 46px; flex: none; font: 600 14px/1 var(--font-text); }
+#SNS-05 .sns05-sheet header::before { content: ""; position: absolute; top: 6px; left: 50%; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: rgba(235, 235, 245, .3); }
+#SNS-05 .sns05-x { position: absolute; right: 6px; top: 6px; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: none; color: rgba(235, 235, 245, .7); cursor: pointer; }
+#SNS-05 .sns05-x .i { font-size: 18px; }
+#SNS-05 .sns05-x:active { background: rgba(255, 255, 255, .1); }
+#SNS-05 .sns05-list { flex: 1; min-height: 0; overflow: auto; margin: 0; padding: 4px 0 8px; list-style: none; overscroll-behavior: contain; scrollbar-width: none; }
+#SNS-05 .sns05-c { display: grid; grid-template-columns: 32px minmax(0, 1fr) 32px; gap: 10px; padding: 9px 12px 9px 14px; }
+#SNS-05 .sns05-c .av { width: 32px; height: 32px; font-size: 13px; }
+#SNS-05 .sns05-c small { display: block; font-size: 12px; color: rgba(235, 235, 245, .6); }
+#SNS-05 .sns05-c p { margin: 3px 0 4px; font-size: 14px; line-height: 1.4; }
+#SNS-05 .sns05-c em { font-style: normal; font-size: 12px; color: rgba(235, 235, 245, .5); }
+#SNS-05 .sns05-c em b { margin-left: 12px; font-weight: 600; color: rgba(235, 235, 245, .7); }
+#SNS-05 .sns05-clike { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0 0; border: 0; background: none; color: rgba(235, 235, 245, .55); cursor: pointer; font: 500 11px/1 var(--font-text); font-variant-numeric: tabular-nums; }
+#SNS-05 .sns05-clike .i { font-size: 16px; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-05 .sns05-clike:active .i { transform: scale(.8); }
+#SNS-05 .sns05-clike[aria-pressed="true"] { color: #FF2D55; }
+#SNS-05 .sns05-compose { display: flex; align-items: center; gap: 10px; flex: none; padding: 8px 12px calc(var(--phone-safe-bottom) + 4px); box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .1); }
+#SNS-05 .sns05-compose .av { width: 32px; height: 32px; font-size: 11px; }
+#SNS-05 .sns05-compose input { flex: 1; min-width: 0; height: 38px; padding: 0 14px; border: 0; border-radius: 19px; outline: none; background: rgba(118, 118, 128, .24); color: #fff; font: 400 16px/1 var(--font-text); letter-spacing: 0; }
+#SNS-05 .sns05-compose input::placeholder { color: rgba(235, 235, 245, .55); }
+#SNS-05 .sns05-compose input:focus { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+
+/* paused / off-screen: freeze every loop */
+#SNS-05 .sns05-screen.is-stopped .sns05-scene, #SNS-05 .sns05-screen.is-stopped .sns05-stars, #SNS-05 .sns05-screen.is-stopped .sns05-aurora, #SNS-05 .sns05-screen.is-stopped .sns05-disc,
+#SNS-05 .sns05-screen.is-stopped .sns05-note, #SNS-05 .sns05-screen.is-stopped .sns05-mq { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-05 .sns05-scene, #SNS-05 .sns05-stars, #SNS-05 .sns05-aurora, #SNS-05 .sns05-disc, #SNS-05 .sns05-note, #SNS-05 .sns05-mq { animation: none; }
+  #SNS-05 .sns05-marquee { text-overflow: ellipsis; }
+}
+</style>
+<article class="obj" id="SNS-05" data-name="Short Video" data-ja="ショート動画" data-vector="Immersive" data-size="m" data-desc="縦型ショート動画のUI。右側のアクション列と回るディスク。">
+  <div class="obj-stage" data-bg="dark">
+    <svg class="sns05-defs" aria-hidden="true" focusable="false"><defs><linearGradient id="SNS-05-heart" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6A88"/><stop offset=".55" stop-color="#FF2D55"/><stop offset="1" stop-color="#E8125C"/></linearGradient></defs></svg>
+    <div class="phone" data-status="light" style="--phone-h: 700px">
+      <div class="phone-screen sns05-screen">
+        <div class="sns05-feed" data-v="0">
+          <div class="sns05-video" tabindex="0" role="group" aria-roledescription="動画" aria-label="sora_travel の動画。タップで一時停止、ダブルタップでいいね">
+            <div class="sns05-scene">
+              <div class="art art-6 sns05-art"></div>
+              <div class="sns05-stars"></div>
+              <div class="sns05-aurora"></div>
+              <div class="sns05-land"><i class="sns05-ridge"></i><i class="sns05-ground"></i><i class="sns05-person"></i></div>
+            </div>
+            <div class="sns05-vignette"></div>
+            <div class="sns05-playicon" aria-hidden="true"><svg class="i"><use href="#i-play-fill"/></svg></div>
+          </div>
+
+          <aside class="sns05-rail" aria-label="アクション">
+            <div class="sns05-creator">
+              <button class="sns05-avatar" type="button" aria-label="sora_travel のプロフィール"><span class="av av-5 sns05-av">S</span></button>
+              <button class="sns05-follow" type="button" aria-label="sora_travel をフォロー"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            </div>
+            <button class="sns05-act sns05-like" type="button" aria-pressed="false" aria-label="いいね"><span class="sns05-ico"><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg><i class="sns05-ring"></i></span><b>12.4万</b></button>
+            <button class="sns05-act sns05-cmt" type="button" aria-label="コメント"><span class="sns05-ico"><svg class="i" aria-hidden="true"><use href="#i-message-fill"/></svg></span><b>1,024</b></button>
+            <button class="sns05-act sns05-save" type="button" aria-pressed="false" aria-label="保存"><span class="sns05-ico"><svg class="i" aria-hidden="true"><use href="#i-bookmark-fill"/></svg></span><b>8,210</b></button>
+            <button class="sns05-act sns05-share" type="button" aria-label="シェア"><span class="sns05-ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M13.6 4.3c0-.75.9-1.13 1.44-.6l6.5 6.42c.6.6.6 1.56 0 2.15l-6.5 6.42c-.54.53-1.44.15-1.44-.6v-3.36c-4.45.06-7.6 1.42-9.66 4.47-.33.49-1.08.24-1.03-.35.6-6.17 4.55-10.36 10.69-11.06V4.3Z"/></svg></span><b>3,301</b></button>
+            <div class="sns05-discwrap">
+              <svg class="i sns05-note" aria-hidden="true"><use href="#i-music-note"/></svg><svg class="i sns05-note" aria-hidden="true"><use href="#i-music-note"/></svg>
+              <button class="sns05-disc" type="button" aria-label="この楽曲を使う"><span class="art art-6 sns05-cover"></span></button>
+            </div>
+          </aside>
+
+          <div class="sns05-info">
+            <p class="sns05-user"><b>@sora_travel</b><span>2日前</span></p>
+            <p class="sns05-cap"></p>
+            <div class="sns05-music"><svg class="i" aria-hidden="true"><use href="#i-music-note"/></svg><span class="sns05-marquee"><span class="sns05-mq"><span>オリジナル楽曲 - sora_travel</span><span aria-hidden="true">オリジナル楽曲 - sora_travel</span></span></span></div>
+          </div>
+        </div>
+
+        <header class="sns05-top">
+          <button class="sns05-tb" type="button" aria-label="LIVE"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.2" y="7" width="17.6" height="12.8" rx="3.4"/><path d="m8.4 3.2 3.6 3.6 3.6-3.6"/><circle cx="12" cy="13.4" r="2.1" fill="currentColor" stroke="none"/></svg></button>
+          <div class="sns05-tabs" role="tablist" aria-label="フィード">
+            <button class="sns05-tab" type="button" role="tab" aria-selected="false" data-v="1">フォロー中</button>
+            <i class="sns05-sep" aria-hidden="true"></i>
+            <button class="sns05-tab" type="button" role="tab" aria-selected="true" data-v="0">おすすめ</button>
+            <span class="sns05-ul" aria-hidden="true"></span>
+          </div>
+          <button class="sns05-tb" type="button" aria-label="検索"><svg class="i" aria-hidden="true"><use href="#i-magnifyingglass"/></svg></button>
+        </header>
+
+        <div class="sns05-timelabel" aria-hidden="true">0:00 <span>/ 0:18</span></div>
+        <div class="sns05-progress" role="slider" tabindex="-1" aria-label="再生位置" aria-valuemin="0" aria-valuemax="18" aria-valuenow="0">
+          <div class="sns05-track"><div class="sns05-fill"></div><div class="sns05-knob"></div></div>
+        </div>
+
+        <nav class="sns05-tabbar" aria-label="タブ">
+          <button class="sns05-ti" type="button" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-house-fill"/></svg>ホーム</button>
+          <button class="sns05-ti" type="button"><svg class="i" aria-hidden="true"><use href="#i-person-2-fill"/></svg>友達</button>
+          <button class="sns05-create" type="button" aria-label="作成"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+          <button class="sns05-ti" type="button" aria-label="受信箱 未読5件"><svg class="i" aria-hidden="true"><use href="#i-tray-fill"/></svg>受信箱<b class="sns05-badge" aria-hidden="true">5</b></button>
+          <button class="sns05-ti" type="button"><svg class="i" aria-hidden="true"><use href="#i-person-fill"/></svg>プロフィール</button>
+        </nav>
+
+        <div class="sns05-scrim" aria-hidden="true"></div>
+        <section class="sns05-sheet" role="dialog" aria-label="コメント" aria-hidden="true">
+          <header><span class="sns05-ctitle">コメント 1,024件</span><button class="sns05-x" type="button" aria-label="閉じる" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button></header>
+          <ul class="sns05-list">
+            <li class="sns05-c"><span class="av av-2">M</span><div><small>mio_k</small><p>色がきれいすぎる…！これ肉眼でもこんなに見えるの？</p><em>1時間<b>返信</b></em></div><button class="sns05-clike" type="button" aria-pressed="false" aria-label="いいね 842"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg>842</button></li>
+            <li class="sns05-c"><span class="av av-1">H</span><div><small>haru.photo</small><p>露出どれくらいで撮りました？参考にしたい📷</p><em>45分<b>返信</b></em></div><button class="sns05-clike" type="button" aria-pressed="false" aria-label="いいね 316"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg>316</button></li>
+            <li class="sns05-c"><span class="av av-7">A</span><div><small>aoi</small><p>来年の冬、絶対行く。保存しました！</p><em>12分<b>返信</b></em></div><button class="sns05-clike" type="button" aria-pressed="false" aria-label="いいね 58"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg>58</button></li>
+          </ul>
+          <div class="sns05-compose"><span class="av av-8">Me</span><input type="text" placeholder="コメントを追加…" aria-label="コメントを追加" tabindex="-1" autocomplete="off"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>タップで一時停止</li><li>ダブルタップでハート</li><li>バーをドラッグでシーク</li><li>コメント・フォロー</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-05');
+  if (!root) return;
+  const $ = (s) => root.querySelector(s);
+  const $$ = (s) => [...root.querySelectorAll(s)];
+  const reduced = () => !!(window.ObjKit && ObjKit.reducedMotion);
+
+  const screen = $('.sns05-screen');
+  const feed = $('.sns05-feed');
+  const video = $('.sns05-video');
+  const fill = $('.sns05-fill');
+  const knob = $('.sns05-knob');
+  const progress = $('.sns05-progress');
+  const timeLabel = $('.sns05-timelabel');
+  const cap = $('.sns05-cap');
+  const likeBtn = $('.sns05-like');
+  const saveBtn = $('.sns05-save');
+  const followBtn = $('.sns05-follow');
+
+  /* ── Two feeds (おすすめ / フォロー中) ───────── */
+  const VIDEOS = [
+    { art: 'art-6', user: 'sora_travel', av: 'av-5', ini: 'S', when: '2日前', dur: 18,
+      cap: 'オーロラが出た瞬間、時間が止まった。マイナス18℃でも見に行く価値あり🌌 #アイスランド #オーロラ #ひとり旅 #絶景',
+      music: 'オリジナル楽曲 - sora_travel', likes: 124000, cmts: 1024, saves: 8210, shares: 3301, following: false, liked: false, saved: false },
+    { art: 'art-2', user: 'mio_k', av: 'av-2', ini: 'M', when: '5時間前', dur: 12,
+      cap: '朝イチの由比ヶ浜。波の音しか聞こえない、この時間がいちばん好き。 #鎌倉 #朝活 #海のある暮らし',
+      music: 'Morning Tide - Lo-fi Cafe', likes: 8214, cmts: 96, saves: 412, shares: 58, following: true, liked: false, saved: false },
+  ];
+  let cur = 0;
+  const V = () => VIDEOS[cur];
+  const fmt = (n) => (n >= 10000 ? (Math.floor(n / 1000) / 10).toFixed(1).replace(/\.0$/, '') + '万' : n.toLocaleString('ja-JP'));
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const richText = (s) => esc(s).replace(/#[^\s#]+/g, (t) => `<span class="sns05-tag">${t}</span>`);
+
+  /* caption: clamp to 2 lines with an inline 「もっと見る」 (binary search, measured lazily) */
+  let expanded = false;
+  const MORE = '<button class="sns05-more" type="button" aria-expanded="false">もっと見る</button>';
+  const layoutCaption = () => {
+    const text = V().cap;
+    if (expanded) { cap.innerHTML = richText(text) + ' <button class="sns05-more" type="button" aria-expanded="true">閉じる</button>'; return; }
+    cap.innerHTML = richText(text);
+    const max = 20 * 2 + 2;
+    if (cap.offsetHeight <= max) return;
+    let lo = 0, hi = text.length;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      cap.innerHTML = richText(text.slice(0, mid).trimEnd()) + '… ' + MORE;
+      if (cap.offsetHeight <= max) lo = mid; else hi = mid - 1;
+    }
+    cap.innerHTML = richText(text.slice(0, lo).trimEnd()) + '… ' + MORE;
+  };
+  cap.addEventListener('click', (e) => {
+    if (!e.target.closest('.sns05-more')) return;
+    const h0 = cap.offsetHeight;
+    expanded = !expanded;
+    feed.classList.toggle('is-expanded', expanded);
+    layoutCaption();
+    cap.querySelector('.sns05-more').focus({ preventScroll: true });
+    if (!reduced()) cap.animate([{ height: h0 + 'px', overflow: 'hidden' }, { height: cap.offsetHeight + 'px', overflow: 'hidden' }], { duration: 380, easing: 'cubic-bezier(.32,.72,0,1)' });
+  });
+
+  const apply = () => {
+    const v = V();
+    feed.dataset.v = String(cur);
+    $('.sns05-art').className = `art ${v.art} sns05-art`;
+    $('.sns05-cover').className = `art ${v.art} sns05-cover`;
+    const av = $('.sns05-av');
+    av.className = `av ${v.av} sns05-av`;
+    av.textContent = v.ini;
+    $('.sns05-user b').textContent = '@' + v.user;
+    $('.sns05-user span').textContent = v.when;
+    $$('.sns05-mq span').forEach((s) => (s.textContent = v.music));
+    $('.sns05-avatar').setAttribute('aria-label', `${v.user} のプロフィール`);
+    video.setAttribute('aria-label', `${v.user} の動画。タップで一時停止、ダブルタップでいいね`);
+    followBtn.classList.toggle('is-gone', v.following);
+    followBtn.classList.remove('is-done');
+    followBtn.setAttribute('aria-label', `${v.user} をフォロー`);
+    followBtn.tabIndex = v.following ? -1 : 0;
+    setCounts();
+    $('.sns05-timelabel span').textContent = `/ 0:${String(v.dur).padStart(2, '0')}`;
+    progress.setAttribute('aria-valuemax', String(v.dur));
+    expanded = false;
+    feed.classList.remove('is-expanded');
+    layoutCaption();
+  };
+  const setCounts = () => {
+    const v = V();
+    likeBtn.setAttribute('aria-pressed', String(v.liked));
+    likeBtn.querySelector('b').textContent = fmt(v.likes + (v.liked ? 1 : 0));
+    likeBtn.setAttribute('aria-label', `いいね ${fmt(v.likes + (v.liked ? 1 : 0))}件`);
+    saveBtn.setAttribute('aria-pressed', String(v.saved));
+    saveBtn.querySelector('b').textContent = fmt(v.saves + (v.saved ? 1 : 0));
+    saveBtn.setAttribute('aria-label', `保存 ${fmt(v.saves + (v.saved ? 1 : 0))}件`);
+    $('.sns05-cmt b').textContent = fmt(v.cmts);
+    $('.sns05-cmt').setAttribute('aria-label', `コメント ${fmt(v.cmts)}件`);
+    $('.sns05-share b').textContent = fmt(v.shares);
+    $('.sns05-ctitle').textContent = `コメント ${fmt(v.cmts)}件`;
+  };
+
+  /* ── Playback clock (elapsed wall time, rAF only while visible) ── */
+  let elapsed = 0, last = 0, raf = 0;
+  const flags = { playing: true, visible: false, hidden: document.hidden, scrub: false };
+  const running = () => flags.playing && flags.visible && !flags.hidden && !flags.scrub;
+  const fmtT = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  const render = () => {
+    const d = V().dur * 1000;
+    const p = Math.min(1, elapsed / d);
+    fill.style.transform = `scaleX(${p})`;
+    knob.style.left = `${p * 100}%`;
+    progress.setAttribute('aria-valuenow', String(Math.floor(elapsed / 1000)));
+    if (flags.scrub) timeLabel.firstChild.textContent = fmtT(elapsed / 1000) + ' ';
+  };
+  const tick = (now) => {
+    raf = 0;
+    if (!running()) { last = 0; return; }
+    const dt = last ? Math.min(now - last, 100) : 0;
+    last = now;
+    elapsed = (elapsed + dt) % (V().dur * 1000);
+    render();
+    raf = requestAnimationFrame(tick);
+  };
+  const sync = () => {
+    screen.classList.toggle('is-stopped', !running());
+    screen.classList.toggle('is-paused', !flags.playing);
+    if (running()) { if (!raf) { last = 0; raf = requestAnimationFrame(tick); } }
+    else if (raf) { cancelAnimationFrame(raf); raf = 0; last = 0; }
+  };
+  const set = (k, v) => { flags[k] = v; sync(); };
+
+  /* ── Tap = pause, double-tap = hearts at the pointer ── */
+  let tapT = 0, lastTap = null, down = null;
+  const burst = (x, y) => {
+    const r = screen.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'sns05-burst';
+    el.style.left = `${x - r.left}px`;
+    el.style.top = `${y - r.top}px`;
+    const rot = (Math.random() * 40 - 20).toFixed(1);
+    const colors = ['#FF2D55', '#FF6A88', '#FFC93C', '#FF9F0A', '#BF5AF2', '#FF375F'];
+    let sparks = '';
+    if (!reduced()) for (let i = 0; i < 6; i++) sparks += `<i style="--a:${i * 60 + 15}deg;--c:${colors[i]}"></i>`;
+    el.innerHTML = `<svg class="i" style="--rot:${rot}deg" aria-hidden="true"><use href="#i-heart-fill"/></svg>${sparks}`;
+    screen.append(el);
+    setTimeout(() => el.remove(), 1000);
+  };
+  const like = (on, pop = true) => {
+    const v = V();
+    if (v.liked !== on) { v.liked = on; setCounts(); }
+    if (on && pop && !reduced()) { likeBtn.classList.remove('is-pop'); void likeBtn.offsetWidth; likeBtn.classList.add('is-pop'); }
+  };
+  video.addEventListener('pointerdown', (e) => { if (e.button === 0) down = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
+  video.addEventListener('pointerup', (e) => {
+    if (!down || e.pointerId !== down.id) return;
+    const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y) > 10;
+    down = null;
+    if (moved) return;
+    const now = performance.now();
+    if (lastTap && now - lastTap.t < 300 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 60) {
+      clearTimeout(tapT);
+      burst(e.clientX, e.clientY);
+      like(true);
+      lastTap = { t: now, x: e.clientX, y: e.clientY }; // keep chaining hearts on rapid taps
+      return;
+    }
+    lastTap = { t: now, x: e.clientX, y: e.clientY };
+    clearTimeout(tapT);
+    tapT = setTimeout(() => { lastTap = null; set('playing', !flags.playing); }, 280);
+  });
+  video.addEventListener('pointercancel', () => { down = null; });
+  video.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter' || e.key === 'k') { e.preventDefault(); set('playing', !flags.playing); }
+    else if (e.key === 'l') { const r = video.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height * 0.45); like(true); }
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const d = V().dur * 1000;
+      elapsed = Math.max(0, Math.min(d - 1, elapsed + (e.key === 'ArrowRight' ? 3000 : -3000)));
+      render();
+    }
+  });
+
+  /* ── Scrubbing ─────────────────────────────── */
+  let scrubId = null;
+  const seek = (x) => {
+    const r = progress.getBoundingClientRect();
+    elapsed = Math.max(0, Math.min(1, (x - r.left) / r.width)) * V().dur * 1000;
+    render();
+  };
+  progress.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    scrubId = e.pointerId;
+    progress.setPointerCapture(e.pointerId);
+    screen.classList.add('is-scrub');
+    set('scrub', true);
+    seek(e.clientX);
+  });
+  progress.addEventListener('pointermove', (e) => { if (e.pointerId === scrubId) seek(e.clientX); });
+  const endScrub = (e) => {
+    if (e.pointerId !== scrubId) return;
+    scrubId = null;
+    screen.classList.remove('is-scrub');
+    set('scrub', false);
+  };
+  progress.addEventListener('pointerup', endScrub);
+  progress.addEventListener('pointercancel', endScrub);
+
+  /* ── Rail actions ──────────────────────────── */
+  likeBtn.addEventListener('click', () => like(!V().liked));
+  root.addEventListener('animationend', (e) => {
+    const b = e.target.closest('.sns05-act');
+    if (b && e.animationName === 'sns05-pop') b.classList.remove('is-pop');
+  });
+  saveBtn.addEventListener('click', () => {
+    const v = V();
+    v.saved = !v.saved;
+    setCounts();
+    if (v.saved && !reduced()) { saveBtn.classList.remove('is-pop'); void saveBtn.offsetWidth; saveBtn.classList.add('is-pop'); }
+  });
+  followBtn.addEventListener('click', () => {
+    const v = V();
+    if (v.following) return;
+    v.following = true;
+    followBtn.classList.add('is-done');
+    followBtn.querySelector('use').setAttribute('href', '#i-checkmark');
+    followBtn.setAttribute('aria-label', `${v.user} をフォロー中`);
+    setTimeout(() => {
+      followBtn.classList.add('is-gone');
+      followBtn.tabIndex = -1;
+      setTimeout(() => followBtn.querySelector('use').setAttribute('href', '#i-plus'), 400);
+    }, 750);
+  });
+
+  /* comments sheet */
+  const sheet = $('.sns05-sheet');
+  const openSheet = (on) => {
+    screen.classList.toggle('is-sheet', on);
+    sheet.setAttribute('aria-hidden', String(!on));
+    $$('.sns05-sheet button, .sns05-sheet input').forEach((b) => (b.tabIndex = on ? 0 : -1));
+    if (on) setTimeout(() => $('.sns05-x').focus({ preventScroll: true }), 80);
+    else $('.sns05-cmt').focus({ preventScroll: true });
+  };
+  $('.sns05-cmt').addEventListener('click', () => openSheet(true));
+  $('.sns05-x').addEventListener('click', () => openSheet(false));
+  $('.sns05-scrim').addEventListener('click', () => openSheet(false));
+  sheet.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); openSheet(false); } });
+  $$('.sns05-clike').forEach((b) => b.addEventListener('click', () => {
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', String(on));
+    b.querySelector('use').setAttribute('href', on ? '#i-heart-fill' : '#i-heart');
+    const n = parseInt(b.lastChild.textContent, 10) + (on ? 1 : -1);
+    b.lastChild.textContent = String(n);
+  }));
+  $('.sns05-compose input').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.isComposing || !e.target.value.trim()) return;
+    const li = document.createElement('li');
+    li.className = 'sns05-c';
+    li.innerHTML = `<span class="av av-8">Me</span><div><small>あなた</small><p></p><em>たった今</em></div><span></span>`;
+    li.querySelector('p').textContent = e.target.value.trim();
+    $('.sns05-list').prepend(li);
+    if (!reduced()) li.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.22,1,.36,1)' });
+    e.target.value = '';
+  });
+
+  /* ── Feed tabs ─────────────────────────────── */
+  const tabs = $$('.sns05-tab');
+  const ul = $('.sns05-ul');
+  const placeUl = () => {
+    const t = tabs.find((b) => b.getAttribute('aria-selected') === 'true');
+    if (t && t.offsetWidth) ul.style.transform = `translateX(${t.offsetLeft + t.offsetWidth / 2}px)`;
+  };
+  tabs.forEach((t) => t.addEventListener('click', () => {
+    const v = +t.dataset.v;
+    if (v === cur) return;
+    tabs.forEach((b) => b.setAttribute('aria-selected', String(b === t)));
+    placeUl();
+    const dir = v === 1 ? 1 : -1;
+    const swap = () => { cur = v; elapsed = 0; apply(); render(); set('playing', true); };
+    if (reduced()) { swap(); return; }
+    feed.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${dir * 24}px)` }], { duration: 160, easing: 'ease-in' })
+      .finished.then(() => {
+        swap();
+        feed.animate([{ opacity: 0, transform: `translateX(${-dir * 24}px)` }, { opacity: 1, transform: 'none' }], { duration: 340, easing: 'cubic-bezier(.22,1,.36,1)' });
+      }).catch(swap);
+  }));
+
+  /* ── Lifecycle ─────────────────────────────── */
+  let laidOut = false;
+  apply();
+  render();
+  sync();
+  if (window.ObjKit) {
+    ObjKit.onVisible(root, (v) => {
+      if (v && !laidOut) { laidOut = true; layoutCaption(); placeUl(); }
+      set('visible', v);
+    });
+  } else set('visible', true);
+  document.addEventListener('visibilitychange', () => set('hidden', document.hidden));
+  if (window.ResizeObserver) {
+    let w = 0;
+    new ResizeObserver(([e]) => {
+      const nw = Math.round(e.contentRect.width);
+      if (nw && nw !== w) { w = nw; layoutCaption(); placeUl(); }
+    }).observe(cap);
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layoutCaption(); placeUl(); });
+})();
+</script>

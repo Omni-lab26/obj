@@ -1,0 +1,335 @@
+<!-- ═══════════ FB-08 · Badge ═══════════ -->
+<style>
+#FB-08 {
+  --fb08-red: light-dark(#FF3B30, #FF453A);
+  --fb08-ring: var(--bg-grouped-2);
+}
+#FB-08 .fb08-wrap { width: min(100%, 360px); display: flex; flex-direction: column; gap: 14px; }
+#FB-08 .fb08-card { position: relative; background: var(--bg-grouped-2); border-radius: 22px; padding: 16px; }
+#FB-08 .fb08-cap { margin: 0 0 12px; font: 600 12px/16px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+
+/* ── Badge (shared) ── */
+#FB-08 .fb08-badge {
+  position: absolute; z-index: 2; display: inline-grid; place-items: center; height: 22px; min-width: 22px; padding: 0 6.5px; border-radius: 11px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fb08-red) 88%, #fff), var(--fb08-red) 60%);
+  color: #fff; font: 600 13.5px/1 var(--font-text); letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(255, 40, 30, .35), inset 0 .5px 0 rgba(255, 255, 255, .35);
+  overflow: hidden; pointer-events: none;
+  transition: transform 420ms var(--ease-spring), opacity 220ms ease;
+}
+#FB-08 .fb08-badge > span { grid-area: 1 / 1; display: block; transition: transform 360ms cubic-bezier(.3, 1.3, .5, 1), opacity 220ms ease; }
+#FB-08 .fb08-badge > span.is-in { transform: translateY(85%); opacity: 0; }
+#FB-08 .fb08-badge > span.is-out { position: absolute; left: 0; right: 0; text-align: center; transform: translateY(-85%); opacity: 0; transition-timing-function: var(--ease-ios); }
+#FB-08 .fb08-badge.is-off { transform: scale(0); opacity: 0; transition: transform 300ms var(--ease-ios), opacity 220ms ease 60ms; }
+
+/* ── (1) Home screen icons ── */
+#FB-08 .fb08-home {
+  position: relative; border-radius: 26px; padding: 24px 10px 12px; overflow: hidden; isolation: isolate;
+  background:
+    radial-gradient(90% 80% at 0% 0%, #FF7AB8 0%, rgba(255, 122, 184, 0) 60%),
+    radial-gradient(80% 90% at 100% 100%, #3D86FF 0%, rgba(61, 134, 255, 0) 62%),
+    radial-gradient(60% 60% at 85% 10%, #FFB36B 0%, rgba(255, 179, 107, 0) 60%),
+    linear-gradient(140deg, #8A3FF0 0%, #4A2BB8 55%, #231A6E 100%);
+  box-shadow: 0 10px 28px -14px rgba(90, 40, 200, .6);
+}
+#FB-08 .fb08-home::after { content: ""; position: absolute; inset: 0; z-index: -1; background: light-dark(rgba(0, 0, 0, 0), rgba(0, 0, 0, .3)); pointer-events: none; }
+#FB-08 .fb08-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 10px; }
+#FB-08 .fb08-app {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0; border: 0; background: none; cursor: pointer; color: #fff;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; min-width: 0;
+}
+#FB-08 .fb08-app:focus-visible { outline: none; }
+#FB-08 .fb08-app:focus-visible .fb08-sq { box-shadow: 0 0 0 3px rgba(255, 255, 255, .9); }
+#FB-08 .fb08-iw { position: relative; width: 60px; height: 60px; transition: transform 360ms var(--ease-spring), filter 200ms ease; }
+#FB-08 .fb08-app:active .fb08-iw { transform: scale(.88); filter: brightness(.82); transition-duration: 120ms; }
+#FB-08 .fb08-sq {
+  position: absolute; inset: 0; display: grid; place-items: center; font-size: 32px;
+  clip-path: path('M38.4 0c7.561 0 11.341 0 14.229 1.471a13.5 13.5 0 0 1 5.9 5.9c1.471 2.888 1.471 6.668 1.471 14.229L60 38.4c0 7.561 0 11.341 -1.471 14.229a13.5 13.5 0 0 1 -5.9 5.9c-2.888 1.471 -6.668 1.471 -14.229 1.471L21.6 60c-7.561 0 -11.341 0 -14.229 -1.471a13.5 13.5 0 0 1 -5.9 -5.9c-1.471 -2.888 -1.471 -6.668 -1.471 -14.229L0 21.6c0 -7.561 0 -11.341 1.471 -14.229a13.5 13.5 0 0 1 5.9 -5.9c2.888 -1.471 6.668 -1.471 14.229 -1.471Z');
+  border-radius: 13.5px;
+}
+#FB-08 .fb08-sq::before { /* glossy top light (light) / dark-icon rim (dark) */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, light-dark(rgba(255, 255, 255, .28), rgba(255, 255, 255, .1)) 0%, rgba(255, 255, 255, 0) 45%);
+}
+#FB-08 .fb08-sq .i { position: relative; }
+/* iOS 18: dark-mode icons swap to a near-black plate with a tinted glyph */
+#FB-08 .fb08-sq--msg { background: linear-gradient(180deg, light-dark(#67F27E, #2C2C2F), light-dark(#13C13A, #121214)); color: light-dark(#fff, #3EE05C); }
+#FB-08 .fb08-sq--mail { background: linear-gradient(180deg, light-dark(#4DB4FF, #2C2C2F), light-dark(#0A5CF0, #121214)); color: light-dark(#fff, #3D9BFF); }
+#FB-08 .fb08-sq--bell { background: linear-gradient(180deg, light-dark(#FF7A6B, #2C2C2F), light-dark(#F0182E, #121214)); color: light-dark(#fff, #FF5A50); font-size: 30px; }
+#FB-08 .fb08-sq--cal { background: linear-gradient(180deg, light-dark(#FFFFFF, #2C2C2F), light-dark(#F4F4F6, #121214)); display: flex; flex-direction: column; justify-content: flex-start; padding-top: 8px; gap: 0; }
+#FB-08 .fb08-sq--cal small { font: 600 10px/12px var(--font-text); color: #FF3B30; letter-spacing: 0; }
+#FB-08 .fb08-sq--cal b { font: 300 33px/34px var(--font-display); color: light-dark(#1C1C1E, #fff); letter-spacing: -.02em; }
+#FB-08 .fb08-app .fb08-badge { top: -8px; right: -9px; }
+#FB-08 .fb08-lbl { max-width: 100%; font: 500 12px/14px var(--font-text); letter-spacing: 0; color: #fff; text-shadow: 0 1px 3px rgba(20, 0, 60, .45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-08 .fb08-dots { display: flex; justify-content: center; gap: 7px; margin-top: 14px; }
+#FB-08 .fb08-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .4); }
+#FB-08 .fb08-dots i:first-child { background: #fff; }
+
+/* ── (2) Dots + status ── */
+#FB-08 .fb08-dotrow { display: flex; align-items: flex-start; gap: 14px; }
+#FB-08 .fb08-bellbtn { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
+#FB-08 .fb08-bellbtn i.fb08-circ { position: relative; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: var(--fill-3); color: var(--label); font-size: 22px; }
+#FB-08 .fb08-dot { position: absolute; top: 9px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--fb08-red); box-shadow: 0 0 0 2px var(--fb08-ring); }
+#FB-08 .fb08-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--fb08-red); animation: fb08-ping 2.2s cubic-bezier(.2, .6, .4, 1) infinite; }
+@keyframes fb08-ping { 0% { transform: scale(1); opacity: .55; } 60%, 100% { transform: scale(2.6); opacity: 0; } }
+#FB-08 .fb08-vr { width: .5px; align-self: stretch; margin: 4px 0 18px; background: var(--separator); flex: none; }
+#FB-08 .fb08-people { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+#FB-08 .fb08-person { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+#FB-08 .fb08-pav { position: relative; width: 46px; height: 46px; }
+#FB-08 .fb08-pav .av { width: 46px; height: 46px; font-size: 18px; }
+#FB-08 .fb08-st { position: absolute; right: -1px; bottom: -1px; width: 15px; height: 15px; border-radius: 50%; box-shadow: 0 0 0 2.5px var(--fb08-ring); }
+#FB-08 .fb08-st--on { background: radial-gradient(circle at 35% 30%, #7DF59A, var(--green) 60%); }
+#FB-08 .fb08-st--away { background: radial-gradient(circle at 28% 28%, var(--fb08-ring) 0 3.9px, var(--yellow) 4.5px); }
+#FB-08 .fb08-st--busy { background: var(--fb08-red); }
+#FB-08 .fb08-st--busy::before { content: ""; position: absolute; left: 3.5px; right: 3.5px; top: 50%; height: 2.4px; margin-top: -1.2px; border-radius: 2px; background: #fff; }
+#FB-08 .fb08-person > span:last-child, #FB-08 .fb08-bellbtn > span { font: 500 11px/13px var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; }
+
+/* ── (3) Tags ── */
+#FB-08 .fb08-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+#FB-08 .fb08-tag { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px; border-radius: 7px; font: 700 12px/1 var(--font-text); letter-spacing: 0; white-space: nowrap; }
+#FB-08 .fb08-tag .i { font-size: 13px; }
+#FB-08 .fb08-tag--new { position: relative; overflow: hidden; background: var(--grad-vivid); color: #fff; font-family: var(--font-rounded); font-weight: 800; letter-spacing: .06em; box-shadow: 0 3px 10px -2px rgba(255, 55, 95, .5), inset 0 .5px 0 rgba(255, 255, 255, .4); }
+#FB-08 .fb08-tag--new::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 26px; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .65), transparent); transform: translateX(-30px) skewX(-12deg); animation: fb08-glint 3.2s ease-in-out infinite; }
+@keyframes fb08-glint { 0%, 55% { transform: translateX(-30px) skewX(-12deg); } 80%, 100% { transform: translateX(70px) skewX(-12deg); } }
+#FB-08 .fb08-tag--live { background: linear-gradient(180deg, #FF4A5E, #F0142F); color: #fff; font-family: var(--font-rounded); font-weight: 800; letter-spacing: .06em; gap: 5px; box-shadow: 0 3px 10px -3px rgba(240, 20, 47, .6); }
+#FB-08 .fb08-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: fb08-blink 1.4s ease-in-out infinite; }
+@keyframes fb08-blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+#FB-08 .fb08-tag--ltd { background: color-mix(in srgb, var(--orange) 16%, transparent); color: light-dark(#C46300, #FFB340); }
+#FB-08 .fb08-tag--beta { background: var(--fill-3); color: var(--label-2); font-family: var(--font-rounded); min-width: 26px; justify-content: center; padding: 0 7px; }
+#FB-08 .fb08-tag--rec { background: color-mix(in srgb, var(--purple) 15%, transparent); color: light-dark(#8A2DBF, #D696FF); }
+#FB-08 .fb08-tag--ver { background: color-mix(in srgb, var(--blue) 13%, transparent); color: light-dark(#0062D6, #5AB0FF); }
+#FB-08 .fb08-tag--ver .i { font-size: 14px; }
+#FB-08 .fb08-ctx { display: flex; gap: 12px; align-items: center; margin-top: 14px; padding-top: 14px; box-shadow: inset 0 .5px 0 var(--separator); }
+#FB-08 .fb08-thumb { position: relative; width: 120px; height: 76px; border-radius: 12px; overflow: hidden; flex: none; }
+#FB-08 .fb08-thumb .art { position: absolute; inset: 0; background-size: 160% 160%; background-position: 40% 70%; }
+#FB-08 .fb08-thumb .fb08-tag { position: absolute; left: 6px; top: 6px; height: 19px; padding: 0 6px; border-radius: 5px; font-size: 10px; }
+#FB-08 .fb08-thumb .fb08-live-dot { width: 5px; height: 5px; }
+#FB-08 .fb08-view { position: absolute; left: 6px; bottom: 6px; display: inline-flex; align-items: center; gap: 3px; height: 18px; padding: 0 6px; border-radius: 5px;
+  background: rgba(0, 0, 0, .45); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: #fff; font: 600 10.5px/1 var(--font-rounded); font-variant-numeric: tabular-nums; }
+#FB-08 .fb08-view .i { font-size: 11px; }
+#FB-08 .fb08-ctxt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+#FB-08 .fb08-ctxt b { font: 600 15px/20px var(--font-text); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-08 .fb08-ctxt > span { display: inline-flex; align-items: center; gap: 3px; font: 400 13px/16px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#FB-08 .fb08-ctxt > span .i { color: var(--blue); font-size: 14px; }
+#FB-08 .fb08-ctxt div { display: flex; gap: 6px; margin-top: 2px; }
+#FB-08 .fb08-ctxt div .fb08-tag { height: 20px; padding: 0 7px; font-size: 11px; border-radius: 6px; }
+
+/* ── (4) Segmented + tab bar ── */
+#FB-08 .fb08-screen { padding: 0; overflow: hidden; }
+#FB-08 .fb08-seg { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); height: 32px; margin: 14px 14px 16px; padding: 2px; border-radius: 9px; background: var(--segment-bg); }
+#FB-08 .fb08-thumbx { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 3); border-radius: 7px; background: var(--segment-thumb);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04), 0 0 0 .5px rgba(0, 0, 0, .04); transform: translateX(calc(var(--i, 0) * 100%)); transition: transform 380ms var(--ease-ios); }
+#FB-08 .fb08-seg button { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 0; padding: 0 4px; background: none; cursor: pointer; color: var(--label);
+  font: 500 13px/1 var(--font-text); letter-spacing: 0; white-space: nowrap; -webkit-tap-highlight-color: transparent; transition: opacity var(--dur-1) ease; }
+#FB-08 .fb08-seg button[aria-selected="true"] { font-weight: 600; }
+#FB-08 .fb08-seg button:active { opacity: .6; }
+#FB-08 .fb08-seg button:focus-visible { outline: none; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 7px; }
+#FB-08 .fb08-seg .fb08-badge { position: relative; height: 17px; min-width: 17px; padding: 0 5px; border-radius: 9px; font-size: 11px; font-weight: 700; box-shadow: none; }
+#FB-08 .fb08-seg .fb08-badge { max-width: 40px; transition: transform 420ms var(--ease-spring), opacity 220ms ease, max-width 300ms var(--ease-ios), padding 300ms var(--ease-ios), margin 300ms var(--ease-ios); }
+#FB-08 .fb08-seg .fb08-badge.is-off { max-width: 0; min-width: 0; padding: 0; margin-left: -5px; }
+#FB-08 .fb08-seg .fb08-badge--soft { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+#FB-08 .fb08-ph { display: grid; gap: 8px; padding: 0 16px 16px; }
+#FB-08 .fb08-ph i { display: block; height: 10px; border-radius: 5px; background: var(--fill-4); }
+#FB-08 .fb08-ph i:nth-child(2) { width: 72%; }
+#FB-08 .fb08-tabbar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); height: 54px; padding-top: 6px; background: var(--mat-chrome); box-shadow: inset 0 .5px 0 var(--separator); }
+#FB-08 .fb08-tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; padding: 0; background: none; cursor: pointer; color: var(--gray);
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; transition: color var(--dur-2) ease; }
+#FB-08 .fb08-tab[aria-selected="true"] { color: var(--accent); }
+#FB-08 .fb08-tab:focus-visible { outline: none; }
+#FB-08 .fb08-tab:focus-visible .fb08-ti { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 8px; }
+#FB-08 .fb08-ti { position: relative; display: grid; place-items: center; width: 30px; height: 26px; font-size: 25px; }
+#FB-08 .fb08-tab.is-bounce .fb08-ti .i { animation: fb08-bounce 520ms var(--ease-out); }
+@keyframes fb08-bounce { 0% { transform: scale(1); } 30% { transform: scale(.82); } 65% { transform: scale(1.12); } 100% { transform: scale(1); } }
+#FB-08 .fb08-tab > span:last-child { font: 500 10px/12px var(--font-text); letter-spacing: 0; }
+#FB-08 .fb08-tab .fb08-badge { top: -4px; left: 19px; height: 18px; min-width: 18px; padding: 0 5px; border-radius: 9px; font-size: 12px; box-shadow: 0 0 0 2px var(--bg-grouped-2); }
+#FB-08 .fb08-tab .fb08-tdot { position: absolute; top: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--fb08-red); box-shadow: 0 0 0 2px var(--bg-grouped-2); transition: transform 300ms var(--ease-spring), opacity 200ms ease; }
+#FB-08 .fb08-tab .fb08-tdot.is-off { transform: scale(0); opacity: 0; }
+
+#FB-08 .fb08-all {
+  align-self: center; display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 18px 0 15px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--grad-berry); color: #fff; font: 600 15px/1 var(--font-text); letter-spacing: 0;
+  box-shadow: 0 6px 18px -6px rgba(191, 90, 242, .7), inset 0 .5px 0 rgba(255, 255, 255, .35);
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; transition: transform var(--dur-2) var(--ease-spring), filter var(--dur-1) ease;
+}
+#FB-08 .fb08-all .i { font-size: 17px; }
+@media (hover: hover) { #FB-08 .fb08-all:hover { filter: brightness(1.08); } }
+#FB-08 .fb08-all:active { transform: scale(.95); transition-duration: 90ms; }
+#FB-08 .fb08-all:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg-grouped), 0 0 0 4.5px rgba(191, 90, 242, .6); }
+
+#FB-08.fb08-off .fb08-dot::after, #FB-08.fb08-off .fb08-live-dot, #FB-08.fb08-off .fb08-tag--new::after { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  #FB-08 .fb08-dot::after, #FB-08 .fb08-tag--new::after { animation: none; opacity: 0; }
+  #FB-08 .fb08-live-dot { animation-duration: 3s; }
+}
+</style>
+<article class="obj" id="FB-08" data-name="Badge" data-ja="バッジ" data-vector="Vivid" data-size="m" data-desc="アプリアイコンの赤い数字、ドット、NEW・LIVEなどのラベル。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="fb08-wrap">
+
+      <div class="fb08-home">
+        <div class="fb08-grid">
+          <button class="fb08-app" type="button" data-n="1" aria-label="メッセージ、未読1件">
+            <span class="fb08-iw"><span class="fb08-sq fb08-sq--msg"><svg class="i" aria-hidden="true"><use href="#i-message-fill"/></svg></span><span class="fb08-badge" aria-hidden="true"><span>1</span></span></span>
+            <span class="fb08-lbl">メッセージ</span>
+          </button>
+          <button class="fb08-app" type="button" data-n="12" aria-label="メール、未読12件">
+            <span class="fb08-iw"><span class="fb08-sq fb08-sq--mail"><svg class="i" aria-hidden="true"><use href="#i-envelope-fill"/></svg></span><span class="fb08-badge" aria-hidden="true"><span>12</span></span></span>
+            <span class="fb08-lbl">メール</span>
+          </button>
+          <button class="fb08-app" type="button" data-n="128" aria-label="お知らせ、未読128件">
+            <span class="fb08-iw"><span class="fb08-sq fb08-sq--bell"><svg class="i" aria-hidden="true"><use href="#i-bell-fill"/></svg></span><span class="fb08-badge" aria-hidden="true"><span>99+</span></span></span>
+            <span class="fb08-lbl">お知らせ</span>
+          </button>
+          <button class="fb08-app" type="button" data-n="0" aria-label="カレンダー">
+            <span class="fb08-iw"><span class="fb08-sq fb08-sq--cal" aria-hidden="true"><small>金曜日</small><b>2</b></span><span class="fb08-badge is-off" aria-hidden="true"><span>0</span></span></span>
+            <span class="fb08-lbl">カレンダー</span>
+          </button>
+        </div>
+        <div class="fb08-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      </div>
+
+      <div class="fb08-card">
+        <p class="fb08-cap">ドット・ステータス</p>
+        <div class="fb08-dotrow">
+          <div class="fb08-bellbtn"><i class="fb08-circ" role="img" aria-label="新しいお知らせあり"><svg class="i" aria-hidden="true"><use href="#i-bell-fill"/></svg><span class="fb08-dot"></span></i><span>新着</span></div>
+          <span class="fb08-vr" aria-hidden="true"></span>
+          <div class="fb08-people">
+            <div class="fb08-person"><span class="fb08-pav"><span class="av av-1">H</span><span class="fb08-st fb08-st--on" role="img" aria-label="オンライン"></span></span><span>オンライン</span></div>
+            <div class="fb08-person"><span class="fb08-pav"><span class="av av-2">M</span><span class="fb08-st fb08-st--away" role="img" aria-label="離席中"></span></span><span>離席中</span></div>
+            <div class="fb08-person"><span class="fb08-pav"><span class="av av-3">K</span><span class="fb08-st fb08-st--busy" role="img" aria-label="取り込み中"></span></span><span>取り込み中</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fb08-card">
+        <p class="fb08-cap">ラベル</p>
+        <div class="fb08-tags">
+          <span class="fb08-tag fb08-tag--new">NEW</span>
+          <span class="fb08-tag fb08-tag--live"><i class="fb08-live-dot" aria-hidden="true"></i>LIVE</span>
+          <span class="fb08-tag fb08-tag--ltd">限定</span>
+          <span class="fb08-tag fb08-tag--beta">β</span>
+          <span class="fb08-tag fb08-tag--rec"><svg class="i" aria-hidden="true"><use href="#i-sparkles"/></svg>おすすめ</span>
+          <span class="fb08-tag fb08-tag--ver"><svg class="i" aria-hidden="true"><use href="#i-checkmark-seal-fill"/></svg>認証済み</span>
+        </div>
+        <div class="fb08-ctx">
+          <div class="fb08-thumb"><div class="art art-4"></div><span class="fb08-tag fb08-tag--live"><i class="fb08-live-dot" aria-hidden="true"></i>LIVE</span><span class="fb08-view"><svg class="i" aria-hidden="true"><use href="#i-eye-fill"/></svg>1.2万</span></div>
+          <div class="fb08-ctxt">
+            <b>夜の渋谷をおさんぽ配信</b>
+            <span>佐藤 春<svg class="i" aria-label="認証済み"><use href="#i-checkmark-seal-fill"/></svg></span>
+            <div><span class="fb08-tag fb08-tag--ltd">限定</span><span class="fb08-tag fb08-tag--new">NEW</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fb08-card fb08-screen">
+        <div class="fb08-seg" role="tablist" aria-label="表示">
+          <span class="fb08-thumbx" aria-hidden="true"></span>
+          <button type="button" role="tab" aria-selected="true">すべて</button>
+          <button type="button" role="tab" aria-selected="false">未読<span class="fb08-badge" aria-label="5件"><span>5</span></span></button>
+          <button type="button" role="tab" aria-selected="false">メンション<span class="fb08-badge fb08-badge--soft" aria-label="2件"><span>2</span></span></button>
+        </div>
+        <div class="fb08-ph" aria-hidden="true"><i></i><i></i></div>
+        <div class="fb08-tabbar" role="tablist" aria-label="タブ">
+          <button class="fb08-tab" type="button" role="tab" aria-selected="true"><span class="fb08-ti"><svg class="i" aria-hidden="true"><use href="#i-house-fill"/></svg></span><span>ホーム</span></button>
+          <button class="fb08-tab" type="button" role="tab" aria-selected="false"><span class="fb08-ti"><svg class="i" aria-hidden="true"><use href="#i-magnifyingglass"/></svg></span><span>検索</span></button>
+          <button class="fb08-tab fb08-tab--note" type="button" role="tab" aria-selected="false" aria-label="通知、3件"><span class="fb08-ti"><svg class="i" aria-hidden="true"><use href="#i-bell-fill"/></svg><span class="fb08-badge" aria-hidden="true"><span>3</span></span></span><span>通知</span></button>
+          <button class="fb08-tab fb08-tab--me" type="button" role="tab" aria-selected="false" aria-label="プロフィール、新着あり"><span class="fb08-ti"><svg class="i" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg><span class="fb08-tdot"></span></span><span>プロフィール</span></button>
+        </div>
+      </div>
+
+      <button class="fb08-all" type="button"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg><span>すべて既読にする</span></button>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>アイコンをタップで +1</li><li>タブを開くとバッジが消える</li><li>『すべて既読』で消去・復元</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('FB-08');
+  if (!root) return;
+  const q = (s) => root.querySelector(s);
+  const qa = (s) => [...root.querySelectorAll(s)];
+  const RM = () => !!(window.ObjKit && window.ObjKit.reducedMotion);
+  const fmt = (n) => (n > 99 ? '99+' : String(n));
+
+  /* — Badge engine: number roll + width morph + spring pop — */
+  const pop = (b, big) => { if (!RM()) b.animate([{ transform: 'scale(1)' }, { transform: `scale(${big ? 1.38 : 1.25})`, offset: .32 }, { transform: 'scale(.92)', offset: .62 }, { transform: 'scale(1.03)', offset: .82 }, { transform: 'scale(1)' }], { duration: 560, easing: 'ease-out' }); };
+  function setBadge(b, n) {
+    const off = b.classList.contains('is-off');
+    const cur = b.querySelector(':scope > span:not(.is-out)');
+    const txt = fmt(n);
+    if (n <= 0) { b.classList.add('is-off'); return; }
+    if (off) { cur.textContent = txt; b.classList.remove('is-off'); pop(b, true); return; }
+    if (cur.textContent === txt) { pop(b); return; }
+    const w0 = b.offsetWidth;
+    const nx = document.createElement('span'); nx.textContent = txt; nx.className = 'is-in';
+    cur.classList.add('is-out');
+    b.appendChild(nx);
+    const w1 = b.offsetWidth;
+    requestAnimationFrame(() => nx.classList.remove('is-in'));
+    setTimeout(() => cur.remove(), 380);
+    if (w0 !== w1 && !RM()) b.animate([{ width: w0 + 'px' }, { width: w1 + 'px' }], { duration: 380, easing: 'cubic-bezier(.3, 1.3, .5, 1)' });
+    pop(b);
+  }
+
+  /* — Home screen: tap → +1 — */
+  const NAMES = ['メッセージ', 'メール', 'お知らせ', 'カレンダー'];
+  const apps = qa('.fb08-app');
+  const state = apps.map((a) => +a.dataset.n);
+  const INIT = state.slice();
+  apps.forEach((a, i) => a.addEventListener('click', () => {
+    state[i]++;
+    setBadge(a.querySelector('.fb08-badge'), state[i]);
+    a.setAttribute('aria-label', `${NAMES[i]}、未読${state[i]}件`);
+    syncAll();
+  }));
+
+  /* — Segmented — */
+  const seg = q('.fb08-seg'), segBtns = qa('.fb08-seg button');
+  segBtns.forEach((b, i) => b.addEventListener('click', () => {
+    segBtns.forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    seg.style.setProperty('--i', i);
+  }));
+  seg.addEventListener('keydown', (e) => {
+    const i = segBtns.indexOf(document.activeElement); if (i < 0) return;
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return;
+    e.preventDefault(); const n = segBtns[(i + d + 3) % 3]; n.focus(); n.click();
+  });
+
+  /* — Tab bar: opening a tab reads its badge — */
+  const tabs = qa('.fb08-tab'), noteBadge = q('.fb08-tab--note .fb08-badge'), meDot = q('.fb08-tdot');
+  let tabT = 0;
+  tabs.forEach((t) => t.addEventListener('click', () => {
+    tabs.forEach((x) => x.setAttribute('aria-selected', String(x === t)));
+    t.classList.remove('is-bounce'); void t.offsetWidth; t.classList.add('is-bounce');
+    clearTimeout(tabT);
+    if (t.classList.contains('fb08-tab--note')) tabT = setTimeout(() => { setBadge(noteBadge, 0); t.setAttribute('aria-label', '通知'); syncAll(); }, 320);
+    if (t.classList.contains('fb08-tab--me')) tabT = setTimeout(() => { meDot.classList.add('is-off'); t.setAttribute('aria-label', 'プロフィール'); syncAll(); }, 320);
+  }));
+  root.addEventListener('animationend', (e) => { const t = e.target.closest && e.target.closest('.fb08-tab'); if (t) t.classList.remove('is-bounce'); });
+
+  /* — Mark all read / restore — */
+  const all = q('.fb08-all'), allT = all.querySelector('span'), allI = all.querySelector('use');
+  const anyOn = () => qa('.fb08-badge').some((b) => !b.classList.contains('is-off')) || !meDot.classList.contains('is-off');
+  function syncAll() {
+    const on = anyOn();
+    allT.textContent = on ? 'すべて既読にする' : 'バッジを戻す';
+    allI.setAttribute('href', on ? '#i-checkmark-circle-fill' : '#i-arrow-clockwise');
+  }
+  all.addEventListener('click', () => {
+    const badges = qa('.fb08-badge');
+    if (anyOn()) {
+      badges.forEach((b, i) => setTimeout(() => setBadge(b, 0), i * 45));
+      meDot.classList.add('is-off');
+      apps.forEach((a, i) => { state[i] = 0; a.setAttribute('aria-label', NAMES[i]); });
+    } else {
+      apps.forEach((a, i) => { state[i] = INIT[i]; setTimeout(() => setBadge(a.querySelector('.fb08-badge'), state[i]), i * 70); a.setAttribute('aria-label', state[i] ? `${NAMES[i]}、未読${state[i]}件` : NAMES[i]); });
+      setTimeout(() => setBadge(noteBadge, 3), 300);
+      qa('.fb08-seg .fb08-badge').forEach((b, i) => setTimeout(() => setBadge(b, [5, 2][i]), 360 + i * 60));
+      setTimeout(() => meDot.classList.remove('is-off'), 480);
+    }
+    setTimeout(syncAll, 520);
+  });
+
+  if (window.ObjKit) window.ObjKit.onVisible(root, (v) => root.classList.toggle('fb08-off', !v));
+})();
+</script>

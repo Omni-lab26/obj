@@ -1,0 +1,342 @@
+<!-- ═══════════ NAV-04 · Page Control ═══════════ -->
+<style>
+#NAV-04 .nav04-screen { background: #1b1f3b; color: #fff; }
+#NAV-04 .nav04-screen button { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; font-family: var(--font-text); }
+
+/* — Backdrops: stacked gradients cross-faded by scroll progress — */
+#NAV-04 .nav04-bg { position: absolute; inset: 0; will-change: opacity; }
+#NAV-04 .nav04-bg:nth-child(1) { background: var(--grad-vivid); }
+#NAV-04 .nav04-bg:nth-child(2) { background: var(--grad-berry); opacity: 0; }
+#NAV-04 .nav04-bg:nth-child(3) { background: var(--grad-ocean); opacity: 0; }
+#NAV-04 .nav04-bg:nth-child(4) { background: var(--grad-mint); opacity: 0; }
+#NAV-04 .nav04-blob { position: absolute; border-radius: 50%; pointer-events: none; will-change: transform; }
+#NAV-04 .nav04-blob--a { width: 340px; height: 340px; left: -120px; top: 40px; background: radial-gradient(closest-side, rgba(255, 255, 255, .34), transparent); }
+#NAV-04 .nav04-blob--b { width: 300px; height: 300px; right: -140px; top: 300px; background: radial-gradient(closest-side, rgba(255, 255, 255, .22), transparent); }
+#NAV-04 .nav04-scrim { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 38%, rgba(10, 6, 40, .2) 70%, rgba(10, 6, 40, .32) 100%); }
+
+/* — Carousel — */
+#NAV-04 .nav04-track {
+  position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; outline: none;
+  scroll-snap-type: x mandatory; overscroll-behavior-x: contain; touch-action: pan-x; cursor: grab;
+}
+#NAV-04 .nav04-track::-webkit-scrollbar { display: none; }
+#NAV-04 .nav04-track.is-drag { scroll-snap-type: none; cursor: grabbing; }
+#NAV-04 .nav04-track:focus-visible { box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .6); border-radius: 45px; }
+#NAV-04 .nav04-page {
+  flex: 0 0 100%; min-width: 0; display: flex; flex-direction: column; align-items: center;
+  padding: calc(var(--phone-safe-top) + 58px) 20px 0; scroll-snap-align: start; container-type: inline-size; scroll-snap-stop: always; user-select: none; -webkit-user-select: none;
+}
+
+/* glyph composition */
+#NAV-04 .nav04-art { position: relative; width: 232px; height: 232px; flex: none; }
+#NAV-04 .nav04-orb, #NAV-04 .nav04-sat { position: absolute; will-change: transform; }
+#NAV-04 .nav04-orb { left: 41px; top: 41px; width: 150px; height: 150px; }
+#NAV-04 .nav04-ball {
+  position: relative; display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%;
+  background: radial-gradient(circle at 32% 24%, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, .2) 38%, rgba(255, 255, 255, .1) 70%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .45), inset 0 2px 1px rgba(255, 255, 255, .6), inset 0 -10px 24px rgba(255, 255, 255, .16),
+    0 24px 50px -12px rgba(30, 10, 60, .35), 0 0 70px rgba(255, 255, 255, .35);
+}
+#NAV-04 .nav04-ball::before { content: ""; position: absolute; left: 18%; top: 7%; width: 46%; height: 24%; border-radius: 50%; background: linear-gradient(rgba(255, 255, 255, .55), rgba(255, 255, 255, 0)); transform: rotate(-18deg); }
+#NAV-04 .nav04-ball::after { content: ""; position: absolute; inset: -14px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .35); animation: nav04-halo 3.2s var(--ease-out) infinite; }
+#NAV-04 .nav04-orb .i { position: relative; font-size: 68px; color: #fff; filter: drop-shadow(0 6px 14px rgba(40, 0, 80, .25)); }
+#NAV-04 .nav04-sat .nav04-ball { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5), inset 0 1.5px 1px rgba(255, 255, 255, .6), 0 12px 26px -8px rgba(30, 10, 60, .35), 0 0 30px rgba(255, 255, 255, .25); animation: nav04-bob 3.4s ease-in-out infinite alternate; }
+#NAV-04 .nav04-sat .nav04-ball::after { display: none; }
+#NAV-04 .nav04-sat--1 { right: -2px; top: 6px; width: 58px; height: 58px; }
+#NAV-04 .nav04-sat--1 .i { font-size: 26px; color: #fff; }
+#NAV-04 .nav04-sat--2 { left: 2px; bottom: 14px; width: 44px; height: 44px; }
+#NAV-04 .nav04-sat--2 .nav04-ball { animation-duration: 2.8s; animation-delay: -1.2s; }
+#NAV-04 .nav04-sat--2 .i { font-size: 19px; color: #fff; }
+#NAV-04 .nav04-page.is-pop .nav04-orb .nav04-ball { animation: nav04-pop 620ms var(--ease-spring); }
+#NAV-04 .nav04-page.is-pop .nav04-sat--1 .nav04-ball { animation: nav04-pop 620ms 70ms var(--ease-spring) backwards, nav04-bob 3.4s 690ms ease-in-out infinite alternate; }
+#NAV-04 .nav04-page.is-pop .nav04-sat--2 .nav04-ball { animation: nav04-pop 620ms 130ms var(--ease-spring) backwards, nav04-bob 2.8s 750ms ease-in-out infinite alternate; }
+@keyframes nav04-bob { from { transform: translateY(-4px); } to { transform: translateY(5px); } }
+@keyframes nav04-halo { 0% { transform: scale(.92); opacity: 0; } 30% { opacity: .9; } 100% { transform: scale(1.22); opacity: 0; } }
+@keyframes nav04-pop { 0% { transform: scale(.82); } 55% { transform: scale(1.06); } 100% { transform: scale(1); } }
+
+#NAV-04 .nav04-copy { width: min(100%, 290px); margin-top: 22px; text-align: center; will-change: transform, opacity; }
+#NAV-04 .nav04-copy h3 { margin: 0; font: 700 clamp(24px, 9cqw, var(--fs-title1))/34px var(--font-display); white-space: nowrap; letter-spacing: 0; text-shadow: 0 2px 16px rgba(30, 0, 60, .18); }
+#NAV-04 .nav04-copy p { margin: 10px 0 0; font: 400 var(--fs-body)/1.5 var(--font-text); letter-spacing: 0; color: rgba(255, 255, 255, .9); word-break: auto-phrase; text-wrap: balance; text-shadow: 0 1px 10px rgba(30, 0, 60, .14); }
+
+/* — Fixed chrome: skip, dots, button — */
+#NAV-04 .nav04-skip {
+  position: absolute; z-index: 5; top: calc(var(--phone-safe-top) + 4px); right: 16px; height: 32px; padding: 0 14px; border: 0; border-radius: 16px;
+  background: rgba(255, 255, 255, .18); color: #fff; font-size: 15px; font-weight: 600; letter-spacing: 0; cursor: pointer;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .35), inset 0 1px 0 rgba(255, 255, 255, .3);
+  transition: opacity var(--dur-2) ease, transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#NAV-04 .nav04-skip:active { transform: scale(.92); background: rgba(255, 255, 255, .28); transition-duration: 80ms; }
+#NAV-04 .nav04-skip.is-hidden { opacity: 0; transform: scale(.8); pointer-events: none; }
+#NAV-04 .nav04-skip:focus-visible, #NAV-04 .nav04-dot:focus-visible { outline: 2px solid rgba(255, 255, 255, .85); outline-offset: 3px; }
+#NAV-04 .nav04-foot { position: absolute; z-index: 5; left: 24px; right: 24px; bottom: calc(var(--phone-safe-bottom) + 14px); display: flex; flex-direction: column; align-items: center; gap: 22px; pointer-events: none; }
+#NAV-04 .nav04-dots {
+  display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 999px; pointer-events: auto;
+  background: rgba(255, 255, 255, .16); -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .38), inset 0 1px 0 rgba(255, 255, 255, .3), 0 6px 18px rgba(30, 0, 60, .12);
+}
+#NAV-04 .nav04-dot {
+  position: relative; flex: none; width: 8px; height: 8px; padding: 0; border: 0; border-radius: 4px; background: #fff; opacity: .45; cursor: pointer;
+}
+#NAV-04 .nav04-dot::before { content: ""; position: absolute; inset: -8px -4px; }
+#NAV-04 .nav04-cta {
+  position: relative; width: 100%; height: 54px; border: 0; border-radius: 27px; overflow: hidden; pointer-events: auto; cursor: pointer;
+  background: #fff; color: #1c1c1e; font: 600 var(--fs-headline)/54px var(--font-text); letter-spacing: 0;
+  box-shadow: 0 12px 30px -8px rgba(30, 0, 60, .35), inset 0 -1px 0 rgba(0, 0, 0, .06);
+  transition: transform var(--dur-2) var(--ease-spring), box-shadow var(--dur-2) ease;
+}
+#NAV-04 .nav04-cta:active { transform: scale(.96); box-shadow: 0 6px 16px -6px rgba(30, 0, 60, .35); transition-duration: 90ms; }
+#NAV-04 .nav04-cta:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255, 255, 255, .5), 0 12px 30px -8px rgba(30, 0, 60, .35); }
+#NAV-04 .nav04-cta span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6px; transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring); }
+#NAV-04 .nav04-cta .i { font-size: 17px; }
+#NAV-04 .nav04-cta .nav04-l2, #NAV-04 .nav04-cta .nav04-l3 { opacity: 0; transform: translateY(16px); }
+#NAV-04 .nav04-cta.is-last .nav04-l1 { opacity: 0; transform: translateY(-16px); }
+#NAV-04 .nav04-cta.is-last .nav04-l2 { opacity: 1; transform: none; }
+#NAV-04 .nav04-cta.is-done .nav04-l1, #NAV-04 .nav04-cta.is-done .nav04-l2 { opacity: 0; transform: translateY(-16px); }
+#NAV-04 .nav04-cta.is-done .nav04-l3 { opacity: 1; transform: none; color: #1f9d55; }
+#NAV-04 .nav04-fx { position: absolute; z-index: 6; inset: 0; pointer-events: none; overflow: hidden; border-radius: 45px; }
+#NAV-04 .nav04-bit { position: absolute; left: -4px; top: -6px; width: 8px; height: 13px; border-radius: 2.5px; box-shadow: 0 2px 6px rgba(40, 0, 80, .18); }
+
+#NAV-04 .nav04-screen.is-paused .nav04-ball, #NAV-04 .nav04-screen.is-paused .nav04-ball::after { animation-play-state: paused; }
+@media (hover: hover) { #NAV-04 .nav04-skip:hover { background: rgba(255, 255, 255, .26); } #NAV-04 .nav04-dot:hover { opacity: .8 !important; } }
+@media (prefers-reduced-motion: reduce) {
+  #NAV-04 .nav04-ball, #NAV-04 .nav04-ball::after, #NAV-04 .nav04-page.is-pop .nav04-ball { animation: none !important; }
+}
+</style>
+<article class="obj" id="NAV-04" data-name="Page Control" data-ja="ページコントロール" data-vector="Vivid" data-size="m" data-desc="オンボーディング用のスワイプ画面とページ位置のドット。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="phone" data-status="light" style="--phone-h: 660px">
+      <div class="phone-screen nav04-screen force-dark">
+        <div class="nav04-bg"></div><div class="nav04-bg"></div><div class="nav04-bg"></div><div class="nav04-bg"></div>
+        <div class="nav04-blob nav04-blob--a"></div><div class="nav04-blob nav04-blob--b"></div>
+        <div class="nav04-scrim"></div>
+
+        <div class="nav04-track" tabindex="0" role="region" aria-roledescription="カルーセル" aria-label="はじめに">
+          <section class="nav04-page is-pop" role="group" aria-roledescription="スライド" aria-label="1 / 4">
+            <div class="nav04-art" aria-hidden="true">
+              <div class="nav04-orb"><div class="nav04-ball"><svg class="i"><use href="#i-sparkles"/></svg></div></div>
+              <div class="nav04-sat nav04-sat--1"><div class="nav04-ball"><svg class="i"><use href="#i-heart-fill"/></svg></div></div>
+              <div class="nav04-sat nav04-sat--2"><div class="nav04-ball"><svg class="i"><use href="#i-star-fill"/></svg></div></div>
+            </div>
+            <div class="nav04-copy"><h3>Momentsへようこそ</h3><p>毎日のささやかな瞬間を、写真と言葉で美しいストーリーに。</p></div>
+          </section>
+          <section class="nav04-page" role="group" aria-roledescription="スライド" aria-label="2 / 4">
+            <div class="nav04-art" aria-hidden="true">
+              <div class="nav04-orb"><div class="nav04-ball"><svg class="i"><use href="#i-camera-fill"/></svg></div></div>
+              <div class="nav04-sat nav04-sat--1"><div class="nav04-ball"><svg class="i"><use href="#i-location-fill"/></svg></div></div>
+              <div class="nav04-sat nav04-sat--2"><div class="nav04-ball"><svg class="i"><use href="#i-cloud-sun-fill"/></svg></div></div>
+            </div>
+            <div class="nav04-copy"><h3>撮って、残すだけ</h3><p>写真に短いメモを添えるだけ。場所や天気は自動で記録されます。</p></div>
+          </section>
+          <section class="nav04-page" role="group" aria-roledescription="スライド" aria-label="3 / 4">
+            <div class="nav04-art" aria-hidden="true">
+              <div class="nav04-orb"><div class="nav04-ball"><svg class="i"><use href="#i-person-2-fill"/></svg></div></div>
+              <div class="nav04-sat nav04-sat--1"><div class="nav04-ball"><svg class="i"><use href="#i-message-fill"/></svg></div></div>
+              <div class="nav04-sat nav04-sat--2"><div class="nav04-ball"><svg class="i"><use href="#i-hand-thumbsup-fill"/></svg></div></div>
+            </div>
+            <div class="nav04-copy"><h3>大切な人と共有</h3><p>家族や友だちを招待して、思い出のアルバムを一緒に作りましょう。</p></div>
+          </section>
+          <section class="nav04-page" role="group" aria-roledescription="スライド" aria-label="4 / 4">
+            <div class="nav04-art" aria-hidden="true">
+              <div class="nav04-orb"><div class="nav04-ball"><svg class="i"><use href="#i-bell-fill"/></svg></div></div>
+              <div class="nav04-sat nav04-sat--1"><div class="nav04-ball"><svg class="i"><use href="#i-moon-fill"/></svg></div></div>
+              <div class="nav04-sat nav04-sat--2"><div class="nav04-ball"><svg class="i"><use href="#i-clock-fill"/></svg></div></div>
+            </div>
+            <div class="nav04-copy"><h3>そっとリマインド</h3><p>夜9時に、やさしくお知らせ。毎日続けるコツはここから。</p></div>
+          </section>
+        </div>
+
+        <button class="nav04-skip" type="button">スキップ</button>
+        <div class="nav04-foot">
+          <div class="nav04-dots" role="group" aria-label="ページ">
+            <button class="nav04-dot" type="button" aria-label="ページ 1" aria-current="true" style="width:22px;opacity:1"></button>
+            <button class="nav04-dot" type="button" aria-label="ページ 2"></button>
+            <button class="nav04-dot" type="button" aria-label="ページ 3"></button>
+            <button class="nav04-dot" type="button" aria-label="ページ 4"></button>
+          </div>
+          <button class="nav04-cta" type="button"><span class="nav04-l1">続ける</span><span class="nav04-l2" aria-hidden="true">はじめる</span><span class="nav04-l3" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg>準備完了</span></button>
+        </div>
+        <div class="nav04-fx" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>横にスワイプ・ドラッグ</li><li>ドットをタップ</li><li>←→キーでも移動</li><li>最後は「はじめる」</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('NAV-04');
+  if (!root) return;
+  const $ = (s) => root.querySelector(s);
+  const $$ = (s) => [...root.querySelectorAll(s)];
+  const screen = $('.nav04-screen');
+  const track = $('.nav04-track');
+  const pages = $$('.nav04-page');
+  const bgs = $$('.nav04-bg');
+  const blobA = $('.nav04-blob--a'), blobB = $('.nav04-blob--b');
+  const dots = $$('.nav04-dot');
+  const cta = $('.nav04-cta');
+  const skip = $('.nav04-skip');
+  const fx = $('.nav04-fx');
+  const last = pages.length - 1;
+  const parts = pages.map((p) => ({ orb: p.querySelector('.nav04-orb'), s1: p.querySelector('.nav04-sat--1'), s2: p.querySelector('.nav04-sat--2'), copy: p.querySelector('.nav04-copy') }));
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const reduced = () => ObjKit.reducedMotion;
+  let cur = 0;
+
+  /* — Scroll-linked render: parallax, backdrop cross-fade, dot morph (passive + rAF) — */
+  let raf = 0;
+  const render = () => {
+    raf = 0;
+    const w = track.clientWidth || 1;
+    const p = track.scrollLeft / w;
+    const rm = reduced();
+    parts.forEach((o, i) => {
+      const d = p - i;
+      if (Math.abs(d) > 1.25) return;
+      const ad = Math.min(1, Math.abs(d));
+      if (rm) { o.copy.style.opacity = String(1 - ad * 0.6); return; }
+      o.orb.style.transform = `translate3d(${(-d * w * 0.36).toFixed(1)}px,${(ad * 10).toFixed(1)}px,0) scale(${(1 - ad * 0.16).toFixed(3)}) rotate(${(-d * 14).toFixed(1)}deg)`;
+      o.s1.style.transform = `translate3d(${(-d * w * 0.72).toFixed(1)}px,${(-ad * 26).toFixed(1)}px,0) scale(${(1 - ad * 0.3).toFixed(3)})`;
+      o.s2.style.transform = `translate3d(${(-d * w * 0.12).toFixed(1)}px,${(ad * 20).toFixed(1)}px,0)`;
+      o.copy.style.transform = `translate3d(${(d * w * 0.16).toFixed(1)}px,0,0)`;
+      o.copy.style.opacity = String(clamp(1 - ad * 1.35));
+    });
+    bgs.forEach((b, i) => { if (i) b.style.opacity = String(clamp(p - (i - 1))); });
+    if (!rm) {
+      blobA.style.transform = `translate3d(${(-p * 46).toFixed(1)}px,${(Math.sin(p * 1.7) * 30).toFixed(1)}px,0)`;
+      blobB.style.transform = `translate3d(${(-p * 80).toFixed(1)}px,${(Math.cos(p * 1.3) * -40).toFixed(1)}px,0)`;
+    }
+    dots.forEach((dot, i) => {
+      const k = clamp(1 - Math.abs(p - i));
+      dot.style.width = (8 + 14 * k).toFixed(2) + 'px';
+      dot.style.opacity = (0.42 + 0.58 * k).toFixed(3);
+    });
+    const idx = clamp(Math.round(p), 0, last);
+    if (idx !== cur) setCurrent(idx);
+  };
+  const onScroll = () => { if (!raf) raf = requestAnimationFrame(render); };
+  track.addEventListener('scroll', onScroll, { passive: true });
+
+  function setCurrent(i) {
+    cur = i;
+    dots.forEach((d, j) => { if (j === i) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
+    const isLast = i === last;
+    cta.classList.toggle('is-last', isLast);
+    cta.querySelector('.nav04-l1').setAttribute('aria-hidden', String(isLast));
+    cta.querySelector('.nav04-l2').setAttribute('aria-hidden', String(!isLast));
+    skip.classList.toggle('is-hidden', isLast);
+    skip.tabIndex = isLast ? -1 : 0;
+  }
+  /* playful pop when a page settles */
+  let popped = 0;
+  const settle = () => {
+    if (drag) return;
+    const w = track.clientWidth || 1;
+    const i = clamp(Math.round(track.scrollLeft / w), 0, last);
+    if (i === popped || Math.abs(track.scrollLeft - i * w) > 2) return;
+    popped = i;
+    pages.forEach((p) => p.classList.remove('is-pop'));
+    if (!reduced()) { void pages[i].offsetWidth; pages[i].classList.add('is-pop'); }
+  };
+  if ('onscrollend' in window) track.addEventListener('scrollend', settle);
+  else { let t = 0; track.addEventListener('scroll', () => { clearTimeout(t); t = setTimeout(settle, 140); }, { passive: true }); }
+
+  const goTo = (i) => {
+    i = clamp(i, 0, last);
+    track.scrollTo({ left: i * track.clientWidth, behavior: reduced() ? 'auto' : 'smooth' });
+  };
+  dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+  skip.addEventListener('click', () => goTo(last));
+  track.addEventListener('keydown', (e) => {
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); goTo(e.key === 'Home' ? 0 : last); return; }
+    if (!d) return;
+    e.preventDefault();
+    goTo(cur + d);
+  });
+
+  /* — Mouse drag (touch & trackpad use native scroll-snap) — */
+  let drag = null;
+  track.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    drag = { id: e.pointerId, x: e.clientX, left: track.scrollLeft, moved: false, hist: [[performance.now(), e.clientX]] };
+  });
+  track.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) > 4) { drag.moved = true; track.classList.add('is-drag'); track.setPointerCapture(e.pointerId); }
+    if (!drag.moved) return;
+    const w = track.clientWidth, max = last * w;
+    let left = drag.left - dx;
+    if (left < 0) left = left / 3; else if (left > max) left = max + (left - max) / 3; // rubber band feel at the ends
+    track.scrollLeft = left;
+    drag.hist.push([performance.now(), e.clientX]);
+    if (drag.hist.length > 6) drag.hist.shift();
+  });
+  const endDrag = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag;
+    drag = null;
+    if (!d.moved) return;
+    const w = track.clientWidth;
+    const [t0, x0] = d.hist[0];
+    const v = (e.clientX - x0) / Math.max(1, performance.now() - t0); // px/ms, + = rightwards
+    const base = Math.round(d.left / w);
+    const delta = (d.left - track.scrollLeft) / w; // + when dragged right (towards previous)
+    let target = base;
+    if (v < -0.35 || delta < -0.2) target = base + 1;
+    else if (v > 0.35 || delta > 0.2) target = base - 1;
+    goTo(target);
+    const done = () => track.classList.remove('is-drag');
+    if ('onscrollend' in window) track.addEventListener('scrollend', done, { once: true });
+    setTimeout(done, 700);
+  };
+  track.addEventListener('pointerup', endDrag);
+  track.addEventListener('pointercancel', endDrag);
+  track.addEventListener('dragstart', (e) => e.preventDefault());
+
+  /* — CTA: 続ける → next page, はじめる → celebrate, then loop back for the demo — */
+  let finishing = false;
+  const burst = () => {
+    if (reduced()) return;
+    const sr = screen.getBoundingClientRect(), br = cta.getBoundingClientRect();
+    const ox = br.left - sr.left + br.width / 2, oy = br.top - sr.top + 8;
+    const colors = ['#FFFFFF', '#FFD60A', '#64D2FF', '#FF6FD8', '#30D158', '#FF9F0A'];
+    for (let n = 0; n < 34; n++) {
+      const b = document.createElement('i');
+      b.className = 'nav04-bit';
+      b.style.background = colors[n % colors.length];
+      if (n % 3 === 0) { b.style.width = b.style.height = '9px'; b.style.borderRadius = '50%'; }
+      fx.appendChild(b);
+      const ang = (-90 + (Math.random() * 2 - 1) * 72) * Math.PI / 180;
+      const sp = 190 + Math.random() * 200;
+      const dx = Math.cos(ang) * sp, dy = Math.sin(ang) * sp;
+      const rot = (Math.random() * 2 - 1) * 420;
+      const at = (x, y, r, f, k = 1) => `translate(${(ox + x).toFixed(1)}px, ${(oy + y).toFixed(1)}px) rotate(${(r).toFixed(0)}deg) rotateY(${(r * f).toFixed(0)}deg) scale(${k})`;
+      b.animate([
+        { transform: at(0, 0, 0, 0, 0.5), opacity: 1, easing: 'cubic-bezier(.12,.62,.32,1)' },
+        { transform: at(dx * 0.7, dy, rot * 0.4, 2), opacity: 1, offset: 0.36, easing: 'cubic-bezier(.5,0,.85,.55)' },
+        { transform: at(dx * 1.05, dy + 300, rot * 0.85, 3), opacity: 1, offset: 0.86 },
+        { transform: at(dx * 1.1, dy + 350, rot, 3.5), opacity: 0 },
+      ], { duration: 1500 + Math.random() * 600, easing: 'linear' }).onfinish = () => b.remove();
+    }
+  };
+  cta.addEventListener('click', () => {
+    if (finishing) return;
+    if (cur < last) { goTo(cur + 1); return; }
+    finishing = true;
+    cta.classList.add('is-done');
+    cta.querySelector('.nav04-l3').setAttribute('aria-hidden', 'false');
+    burst();
+    setTimeout(() => {
+      goTo(0);
+      setTimeout(() => { cta.classList.remove('is-done'); cta.querySelector('.nav04-l3').setAttribute('aria-hidden', 'true'); finishing = false; }, 500);
+    }, 1700);
+  });
+
+  /* pause idle loops off-screen */
+  ObjKit.onVisible(root, (v) => screen.classList.toggle('is-paused', !v));
+  new ResizeObserver(() => { const w = track.clientWidth; if (w) { track.scrollLeft = cur * w; render(); } }).observe(track);
+  requestAnimationFrame(render);
+})();
+</script>

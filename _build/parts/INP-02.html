@@ -1,0 +1,514 @@
+<!-- ═══════════ INP-02 · Search Bar ═══════════ -->
+<style>
+#INP-02 .inp02-col { width: min(100%, 380px); display: flex; flex-direction: column; gap: 22px; }
+
+/* ───────── (1) Standard search — mini Settings screen ───────── */
+#INP-02 .inp02-panel {
+  position: relative; display: flex; flex-direction: column; height: 378px; padding: 18px 0 0; border-radius: 28px; overflow: hidden;
+  /* a thick frosted sheet — opaque enough for a standard grouped list, but the wallpaper still tints through */
+  background: light-dark(rgba(242, 242, 247, .84), rgba(8, 8, 10, .74));
+  -webkit-backdrop-filter: blur(30px) saturate(180%); backdrop-filter: blur(30px) saturate(180%);
+  box-shadow: 0 24px 48px -18px rgba(40, 20, 80, .28), 0 2px 8px rgba(0, 0, 0, .06),
+    inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .7), rgba(255, 255, 255, .12)), inset 0 1px 0 light-dark(rgba(255, 255, 255, .9), rgba(255, 255, 255, .08));
+}
+#INP-02 .inp02-titlewrap { display: grid; grid-template-rows: 1fr; transition: grid-template-rows var(--dur-3) var(--ease-ios); }
+#INP-02 .inp02-titlewrap > div { min-height: 0; overflow: hidden; }
+#INP-02 .inp02-title {
+  margin: 0; padding: 0 16px 8px; font: 700 30px/38px var(--font-display); letter-spacing: 0; color: var(--label);
+  transform-origin: left center; transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios);
+}
+#INP-02 .inp02-panel.is-active .inp02-titlewrap { grid-template-rows: 0fr; }
+#INP-02 .inp02-panel.is-active .inp02-title { opacity: 0; transform: translateY(-10px) scale(.96); }
+
+#INP-02 .inp02-bar { display: flex; align-items: center; padding: 0 16px; }
+#INP-02 .inp02-field {
+  position: relative; flex: 1; min-width: 0; display: flex; align-items: center; height: 36px; padding: 0 4px 0 8px; gap: 6px;
+  border-radius: 10px; background: var(--fill-3); cursor: text; -webkit-tap-highlight-color: transparent;
+}
+#INP-02 .inp02-mag { flex: none; font-size: 17px; color: var(--label-2); }
+#INP-02 .inp02-input {
+  flex: 1; min-width: 0; height: 36px; margin: 0; padding: 0; border: 0; outline: 0; background: transparent;
+  font-size: var(--fs-body); letter-spacing: -0.01em; color: var(--label); caret-color: var(--accent);
+  -webkit-appearance: none; appearance: none;
+}
+#INP-02 .inp02-input::placeholder { color: var(--label-2); opacity: 1; letter-spacing: 0; }
+#INP-02 .inp02-input::-webkit-search-cancel-button, #INP-02 .inp02-input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
+#INP-02 .inp02-input::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+
+#INP-02 .inp02-trail { position: relative; flex: none; width: 28px; height: 28px; }
+#INP-02 .inp02-ib {
+  position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--label-2); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--dur-1) ease, transform var(--dur-2) var(--ease-spring), color var(--dur-1) ease;
+}
+#INP-02 .inp02-ib .i { font-size: 17px; }
+#INP-02 .inp02-ib:active { transform: scale(.82); }
+#INP-02 .inp02-ib:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
+#INP-02 .inp02-clear { opacity: 0; transform: scale(.4); pointer-events: none; }
+#INP-02 .has-text .inp02-clear { opacity: 1; transform: none; pointer-events: auto; }
+#INP-02 .has-text .inp02-mic { opacity: 0; transform: scale(.4); pointer-events: none; }
+#INP-02 .inp02-clear { color: var(--label-3); }
+#INP-02 .is-listening .inp02-mic { color: var(--red); }
+#INP-02 .is-listening .inp02-mic .i { animation: inp02-pulse 900ms var(--ease-in-out) infinite; }
+@keyframes inp02-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+
+#INP-02 .inp02-cancelwrap {
+  flex: none; width: 0; overflow: hidden; display: flex; justify-content: flex-end;
+  transition: width var(--dur-3) var(--ease-ios);
+}
+#INP-02 .inp02-cancel {
+  flex: none; height: 36px; margin: 0; padding: 0 0 0 12px; border: 0; background: transparent; color: var(--accent);
+  font-size: var(--fs-body); letter-spacing: 0; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  opacity: 0; transform: translateX(16px); transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios);
+}
+#INP-02 .inp02-panel.is-active .inp02-cancelwrap { width: var(--inp02-cw, 98px); }
+#INP-02 .inp02-panel.is-active .inp02-cancel { opacity: 1; transform: none; }
+#INP-02 .inp02-cancel:active { opacity: .45 !important; transition-duration: 60ms; }
+#INP-02 .inp02-cancel:focus-visible { outline: none; text-decoration: underline; text-underline-offset: 3px; }
+
+/* results */
+#INP-02 .inp02-results { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 14px 16px 0; }
+#INP-02 .inp02-rhead { flex: none; display: flex; justify-content: space-between; margin: 0 16px 6px; font-size: var(--fs-footnote); line-height: 18px; color: var(--label-2); letter-spacing: 0; }
+#INP-02 .inp02-rhead span:last-child { font-variant-numeric: tabular-nums; }
+#INP-02 .inp02-scroll {
+  min-height: 0; overflow-y: auto; scrollbar-width: none; padding-bottom: 16px;
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 22px), transparent); mask-image: linear-gradient(#000 calc(100% - 22px), transparent);
+}
+#INP-02 .inp02-scroll::-webkit-scrollbar { display: none; }
+#INP-02 .inp02-list { margin: 0; padding: 0; list-style: none; border-radius: 12px; background: var(--bg-grouped-2); overflow: hidden; }
+#INP-02 .inp02-opt {
+  position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 7px 14px 7px 16px;
+  border: 0; background: transparent; color: var(--label); text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background var(--dur-1) ease;
+}
+#INP-02 .inp02-opt + .inp02-opt::before { content: ""; position: absolute; top: 0; right: 0; left: 57px; height: .5px; background: var(--separator); }
+#INP-02 .inp02-opt:active, #INP-02 .inp02-opt.is-active { background: var(--fill-4); }
+#INP-02 .inp02-opt:active { background: var(--fill-3); transition-duration: 0ms; }
+#INP-02 .inp02-opt:focus-visible { outline: none; background: color-mix(in srgb, var(--accent) 12%, transparent); }
+#INP-02 .inp02-sq {
+  flex: none; display: grid; place-items: center; width: 29px; height: 29px; border-radius: 7px; color: #fff;
+  background: var(--c); background-image: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 70%);
+  box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .04);
+}
+#INP-02 .inp02-sq .i { font-size: 18px; }
+#INP-02 .inp02-otext { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+#INP-02 .inp02-oname { font-size: var(--fs-body); line-height: 22px; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--label-2); }
+#INP-02 .inp02-oname b { font-weight: 600; color: var(--label); }
+#INP-02 .inp02-results.is-idle .inp02-oname { color: var(--label); }
+#INP-02 .inp02-opath { font-size: var(--fs-caption1); line-height: 15px; color: var(--label-2); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#INP-02 .inp02-opath b { font-weight: 600; color: var(--label); }
+#INP-02 .inp02-chev { flex: none; font-size: 13px; color: var(--label-3); }
+
+#INP-02 .inp02-empty {
+  position: absolute; inset: 40px 24px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  text-align: center; pointer-events: none; opacity: 0; transform: translateY(6px);
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios);
+}
+#INP-02 .inp02-empty .i { font-size: 46px; color: var(--label-3); margin-bottom: 8px; }
+#INP-02 .inp02-empty b { max-width: 100%; font: 700 var(--fs-title3)/1.3 var(--font-display); color: var(--label); letter-spacing: 0; overflow-wrap: anywhere; }
+#INP-02 .inp02-empty span { font-size: var(--fs-subhead); color: var(--label-2); letter-spacing: 0; }
+#INP-02 .inp02-results.is-empty .inp02-empty { opacity: 1; transform: none; }
+#INP-02 .inp02-results.is-empty .inp02-scroll, #INP-02 .inp02-results.is-empty .inp02-rhead { visibility: hidden; }
+
+/* ───────── (2) Floating Liquid-Glass search ───────── */
+#INP-02 .inp02-scene {
+  position: relative; height: 236px; border-radius: 28px; overflow: hidden; isolation: isolate; transform: translateZ(0);
+  background: light-dark(#fff, #000);
+  box-shadow: 0 24px 48px -18px rgba(40, 20, 80, .32), 0 2px 8px rgba(0, 0, 0, .06);
+}
+#INP-02 .inp02-photos {
+  position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: auto; gap: 2px; align-content: start;
+  overflow-y: auto; scrollbar-width: none; padding-bottom: 2px;
+}
+#INP-02 .inp02-photos::-webkit-scrollbar { display: none; }
+#INP-02 .inp02-ph { aspect-ratio: 1; transition: opacity var(--dur-3) var(--ease-ios), transform var(--dur-3) var(--ease-ios), filter var(--dur-3) ease; }
+#INP-02 .inp02-ph:nth-child(1) { background-size: 150% 120%; background-position: 50% 80%; }
+#INP-02 .inp02-ph:nth-child(3) { background-size: 180% 140%; background-position: 40% 60%; }
+#INP-02 .inp02-ph:nth-child(4) { background-size: 130% 110%; background-position: 60% 30%; }
+#INP-02 .inp02-ph:nth-child(5) { background-size: 150% 150%; }
+#INP-02 .inp02-ph:nth-child(6) { background-size: 140% 100%; background-position: 30% 0; }
+#INP-02 .inp02-ph:nth-child(7) { background-size: 200% 200%; background-position: 70% 30%; }
+#INP-02 .inp02-ph:nth-child(8) { background-size: 160% 130%; }
+#INP-02 .inp02-ph:nth-child(9) { background-size: 220% 160%; background-position: 20% 100%; filter: hue-rotate(-28deg) saturate(1.2); }
+#INP-02 .inp02-scene.is-filtering .inp02-ph.is-hit { order: -1; }
+#INP-02 .inp02-scene.is-filtering .inp02-ph:not(.is-hit) { opacity: .34; transform: scale(.94); filter: saturate(.35); }
+/* iOS 26 "scroll edge effect": a soft fade behind floating glass keeps it legible over busy content */
+#INP-02 .inp02-edge {
+  position: absolute; inset: 0 0 auto; height: 132px; pointer-events: none;
+  background: linear-gradient(180deg, light-dark(rgba(255, 255, 255, .55), rgba(0, 0, 0, .5)) 0%, light-dark(rgba(255, 255, 255, .22), rgba(0, 0, 0, .2)) 55%, transparent);
+}
+#INP-02 .inp02-float { position: absolute; inset: 14px 0 auto; pointer-events: none; }
+#INP-02 .inp02-float .inp02-gfield, #INP-02 .inp02-float .inp02-gx, #INP-02 .inp02-float .inp02-chips { pointer-events: auto; }
+
+#INP-02 .inp02-gbar { display: flex; align-items: center; padding: 0 14px; }
+
+/* the Liquid-Glass recipe: tinted translucent body + blur/saturate + specular rim + inner light + soft drop */
+#INP-02 .inp02-glass {
+  position: relative; isolation: isolate;
+  background:
+    radial-gradient(120% 140% at 15% -20%, light-dark(rgba(255, 255, 255, .55), rgba(255, 255, 255, .16)), transparent 55%),
+    light-dark(rgba(255, 255, 255, .34), rgba(36, 36, 42, .36));
+  -webkit-backdrop-filter: blur(16px) saturate(190%);
+  backdrop-filter: blur(16px) saturate(190%);
+  box-shadow:
+    0 10px 26px -6px rgba(0, 0, 0, .22), 0 1px 3px rgba(0, 0, 0, .10),
+    inset 0 1px 1px light-dark(rgba(255, 255, 255, .85), rgba(255, 255, 255, .28)),
+    inset 0 -1px 1px light-dark(rgba(255, 255, 255, .35), rgba(255, 255, 255, .08)),
+    inset 0 0 14px light-dark(rgba(255, 255, 255, .28), rgba(255, 255, 255, .05));
+  transition: transform var(--dur-3) var(--ease-spring), box-shadow var(--dur-2) ease, background var(--dur-2) ease;
+}
+#INP-02 .inp02-glass::before {
+  /* specular rim — bright top-left & bottom-right like light caught in a lens */
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(135deg,
+    light-dark(rgba(255, 255, 255, .95), rgba(255, 255, 255, .55)) 0%,
+    light-dark(rgba(255, 255, 255, .25), rgba(255, 255, 255, .06)) 30%,
+    light-dark(rgba(255, 255, 255, .08), rgba(255, 255, 255, .02)) 55%,
+    light-dark(rgba(255, 255, 255, .7), rgba(255, 255, 255, .3)) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+#INP-02 .inp02-gfield {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 8px 0 16px; border-radius: 24px; cursor: text;
+  color: var(--label); -webkit-tap-highlight-color: transparent;
+}
+#INP-02 .inp02-gfield .inp02-mag { font-size: 18px; color: light-dark(rgba(0, 0, 0, .62), rgba(255, 255, 255, .72)); }
+#INP-02 .inp02-gfield .inp02-input { height: 48px; font-weight: 500; }
+#INP-02 .inp02-gfield .inp02-input::placeholder { color: light-dark(rgba(0, 0, 0, .5), rgba(255, 255, 255, .6)); }
+#INP-02 .inp02-gfield .inp02-trail { width: 32px; height: 32px; }
+#INP-02 .inp02-gfield .inp02-ib { color: light-dark(rgba(0, 0, 0, .62), rgba(255, 255, 255, .78)); }
+#INP-02 .inp02-gfield .inp02-ib .i { font-size: 18px; }
+#INP-02 .inp02-gfield .inp02-clear { color: light-dark(rgba(0, 0, 0, .38), rgba(255, 255, 255, .5)); }
+#INP-02 .inp02-gfield.is-listening .inp02-mic { color: var(--red); }
+#INP-02 .inp02-gfield:focus-within { transform: scale(1.015); background:
+    radial-gradient(120% 140% at 15% -20%, light-dark(rgba(255, 255, 255, .7), rgba(255, 255, 255, .2)), transparent 55%),
+    light-dark(rgba(255, 255, 255, .42), rgba(30, 30, 36, .46)); }
+#INP-02 .inp02-gfield:active:not(:focus-within) { transform: scale(.98); transition-duration: 120ms; }
+
+#INP-02 .inp02-gx {
+  flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin: 0 0 0 -48px; padding: 0; border: 0; border-radius: 50%;
+  color: var(--label); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  opacity: 0; transform: translateX(-24px) scale(.5); pointer-events: none;
+  transition: margin var(--dur-3) var(--ease-ios), opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring), box-shadow var(--dur-2) ease;
+}
+#INP-02 .inp02-gx .i { font-size: 17px; }
+#INP-02 .inp02-gbar.is-active .inp02-gx { margin-left: 10px; opacity: 1; transform: none; pointer-events: auto; }
+#INP-02 .inp02-gbar.is-active .inp02-gx:active { transform: scale(.9); transition-duration: 120ms; }
+#INP-02 .inp02-gx:focus-visible, #INP-02 .inp02-chip:focus-visible { outline: none; box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--accent) 70%, transparent), 0 10px 26px -6px rgba(0, 0, 0, .22); }
+
+#INP-02 .inp02-chips {
+  display: flex; gap: 8px; margin-top: 8px; padding: 4px 14px 14px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 24px), transparent);
+}
+#INP-02 .inp02-chips::-webkit-scrollbar { display: none; }
+#INP-02 .inp02-chip {
+  flex: none; display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 13px 0 10px; border: 0; border-radius: 16px;
+  font-size: var(--fs-subhead); font-weight: 500; letter-spacing: 0; color: var(--label); cursor: pointer; white-space: nowrap;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+#INP-02 .inp02-chip .i { font-size: 14px; color: light-dark(rgba(0, 0, 0, .5), rgba(255, 255, 255, .62)); }
+#INP-02 .inp02-chip:active { transform: scale(.94); transition-duration: 100ms; }
+#INP-02 .inp02-chip.is-current { color: var(--accent); }
+#INP-02 .inp02-chip.is-current .i { color: currentColor; }
+
+@media (hover: hover) {
+  #INP-02 .inp02-opt:hover { background: var(--fill-4); }
+  #INP-02 .inp02-cancel:hover { opacity: .75; }
+  #INP-02 .inp02-chip:hover, #INP-02 .inp02-gx:hover { background:
+    radial-gradient(120% 140% at 15% -20%, light-dark(rgba(255, 255, 255, .7), rgba(255, 255, 255, .2)), transparent 55%),
+    light-dark(rgba(255, 255, 255, .4), rgba(40, 40, 46, .44)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #INP-02 *, #INP-02 *::before { transition-duration: 1ms !important; animation: none !important; }
+}
+</style>
+<article class="obj" id="INP-02" data-name="Search Bar" data-ja="検索バー" data-vector="Glass" data-size="m" data-desc="虫眼鏡・音声入力・キャンセル付き。ガラスの浮遊タイプも。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="inp02-col">
+      <!-- (1) iOS standard search field -->
+      <section class="inp02-panel" aria-label="標準の検索バー">
+        <div class="inp02-titlewrap"><div><p class="inp02-title" aria-hidden="true">設定</p></div></div>
+        <div class="inp02-bar">
+          <div class="inp02-field">
+            <svg class="i inp02-mag" aria-hidden="true"><use href="#i-magnifyingglass"/></svg>
+            <input class="inp02-input" id="INP-02-q" type="search" placeholder="検索" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"
+              role="combobox" aria-expanded="true" aria-controls="INP-02-list" aria-autocomplete="list" aria-label="設定を検索">
+            <span class="inp02-trail">
+              <button class="inp02-ib inp02-mic" type="button" aria-label="音声入力"><svg class="i" aria-hidden="true"><use href="#i-mic-fill"/></svg></button>
+              <button class="inp02-ib inp02-clear" type="button" tabindex="-1" aria-label="検索語を消去"><svg class="i" aria-hidden="true"><use href="#i-xmark-circle-fill"/></svg></button>
+            </span>
+          </div>
+          <div class="inp02-cancelwrap"><button class="inp02-cancel" type="button" tabindex="-1">キャンセル</button></div>
+        </div>
+        <div class="inp02-results is-idle" aria-live="polite">
+          <p class="inp02-rhead"><span class="inp02-rlabel">よく使う項目</span><span class="inp02-rcount"></span></p>
+          <div class="inp02-scroll"><ul class="inp02-list" id="INP-02-list" role="listbox" aria-label="検索結果"></ul></div>
+          <div class="inp02-empty"><svg class="i" aria-hidden="true"><use href="#i-magnifyingglass"/></svg><b></b><span>別のキーワードで検索してください。</span></div>
+        </div>
+      </section>
+
+      <!-- (2) Floating Liquid-Glass search over a photo library -->
+      <section class="inp02-scene" aria-label="ガラスの浮遊検索バー">
+        <div class="inp02-photos" aria-hidden="true">
+          <div class="inp02-ph art art-1" data-tags="夕焼け 山 空"></div>
+          <div class="inp02-ph art art-2" data-tags="海 空 ビーチ 旅行"></div>
+          <div class="inp02-ph art art-4" data-tags="夜景 東京 街"></div>
+          <div class="inp02-ph art art-6" data-tags="オーロラ 夜空 旅行"></div>
+          <div class="inp02-ph art art-8" data-tags="カフェ ラテ"></div>
+          <div class="inp02-ph art art-3" data-tags="山 森 霧"></div>
+          <div class="inp02-ph art art-7" data-tags="アート"></div>
+          <div class="inp02-ph art art-5" data-tags="砂丘 旅行 夕焼け"></div>
+          <div class="inp02-ph art art-2" data-tags="海 夕焼け ビーチ"></div>
+        </div>
+        <div class="inp02-edge" aria-hidden="true"></div>
+        <div class="inp02-float">
+          <div class="inp02-gbar">
+            <div class="inp02-glass inp02-gfield">
+              <svg class="i inp02-mag" aria-hidden="true"><use href="#i-magnifyingglass"/></svg>
+              <input class="inp02-input" id="INP-02-g" type="search" placeholder="写真を検索" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-label="写真を検索">
+              <span class="inp02-trail">
+                <button class="inp02-ib inp02-mic" type="button" aria-label="音声入力"><svg class="i" aria-hidden="true"><use href="#i-mic-fill"/></svg></button>
+                <button class="inp02-ib inp02-clear" type="button" tabindex="-1" aria-label="検索語を消去"><svg class="i" aria-hidden="true"><use href="#i-xmark-circle-fill"/></svg></button>
+              </span>
+            </div>
+            <button class="inp02-glass inp02-gx" type="button" aria-label="検索を閉じる" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>
+          </div>
+          <div class="inp02-chips" role="list" aria-label="最近の検索">
+            <button class="inp02-glass inp02-chip" type="button" role="listitem"><svg class="i" aria-hidden="true"><use href="#i-clock-fill"/></svg><span>夕焼け</span></button>
+            <button class="inp02-glass inp02-chip" type="button" role="listitem"><svg class="i" aria-hidden="true"><use href="#i-clock-fill"/></svg><span>海</span></button>
+            <button class="inp02-glass inp02-chip" type="button" role="listitem"><svg class="i" aria-hidden="true"><use href="#i-clock-fill"/></svg><span>カフェ</span></button>
+            <button class="inp02-glass inp02-chip" type="button" role="listitem"><svg class="i" aria-hidden="true"><use href="#i-clock-fill"/></svg><span>夜景</span></button>
+            <button class="inp02-glass inp02-chip" type="button" role="listitem"><svg class="i" aria-hidden="true"><use href="#i-clock-fill"/></svg><span>旅行</span></button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>タップでキャンセルが出現</li><li>入力で結果を絞り込み</li><li>↑↓キーで候補を選択・Escで閉じる</li><li>履歴チップで再検索</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('INP-02');
+  if (!root) return;
+  const $ = (s, r = root) => r.querySelector(s);
+  const $$ = (s, r = root) => [...r.querySelectorAll(s)];
+  const reduced = () => window.ObjKit && ObjKit.reducedMotion;
+
+  /* ── text normalisation: NFKC + lower + hiragana→katakana, per char (keeps an index map for highlighting) ── */
+  const normChar = (c) => c.normalize('NFKC').toLowerCase().replace(/[ぁ-ゖ]/g, (h) => String.fromCharCode(h.charCodeAt(0) + 0x60));
+  const norm = (s) => { let out = '', map = []; [...s].forEach((c, i) => { const n = normChar(c); for (const ch of n) { out += ch; map.push(i); } }); return { out, map }; };
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const mark = (text, q) => {
+    if (!q) return esc(text);
+    const { out, map } = norm(text); const chars = [...text];
+    const k = out.indexOf(q); if (k < 0) return esc(text);
+    const a = map[k], b = map[k + q.length - 1] + 1;
+    return esc(chars.slice(0, a).join('')) + '<b>' + esc(chars.slice(a, b).join('')) + '</b>' + esc(chars.slice(b).join(''));
+  };
+
+  /* ───────── (1) Standard search ───────── */
+  const ITEMS = [
+    ['機内モード', '', 'airplane', 'orange', 'フライト 飛行機'],
+    ['Wi-Fi', '', 'wifi', 'blue', 'wifi ワイファイ ネットワーク インターネット'],
+    ['モバイル通信', '', 'antenna-radiowaves', 'green', 'データ 回線 SIM'],
+    ['通知', '', 'bell-fill', 'red', 'アラート バッジ'],
+    ['サウンドと触覚', '', 'speaker-wave-2-fill', 'pink', '音 着信音 バイブ 音量'],
+    ['集中モード', '', 'moon-fill', 'indigo', 'おやすみモード 睡眠'],
+    ['画面表示と明るさ', '', 'sun-max-fill', 'blue', 'ダークモード ライト 文字サイズ'],
+    ['壁紙', '', 'photo', 'cyan', 'ロック画面 ホーム画面'],
+    ['バッテリー', '', 'bolt-fill', 'green', '電池 充電 省電力'],
+    ['位置情報サービス', 'プライバシーとセキュリティ', 'location-fill', 'blue', 'GPS 地図'],
+    ['ソフトウェアアップデート', '一般', 'gearshape-fill', 'gray', 'iOS 更新'],
+    ['スクリーンタイム', '', 'timer', 'indigo', '使用時間 制限'],
+  ].map(([name, path, icon, color, kw]) => ({ name, path, icon, color, n: norm(name).out, kws: kw.split(' ').map((w) => ({ w, n: norm(w).out })) }));
+  const FAV = [0, 1, 3, 5, 6];
+
+  const panel = $('.inp02-panel'), field = $('.inp02-field'), q = $('#INP-02-q');
+  const results = $('.inp02-results'), list = $('#INP-02-list'), scroller = $('.inp02-scroll');
+  const rlabel = $('.inp02-rlabel'), rcount = $('.inp02-rcount'), emptyB = $('.inp02-empty b');
+  const cancel = $('.inp02-cancel'), cwrap = $('.inp02-cancelwrap');
+  let active = -1, shown = [];
+
+  /* a hit is either the setting itself or one of its sub-settings (keyword) — the latter shows its location underneath */
+  const row = ({ it, kw }, i, nq) => `<li role="presentation"><button class="inp02-opt" type="button" role="option" tabindex="-1" id="INP-02-o${i}" aria-selected="false">
+      <span class="inp02-sq" style="--c: var(--${it.color})"><svg class="i" aria-hidden="true"><use href="#i-${it.icon}"/></svg></span>
+      <span class="inp02-otext"><span class="inp02-oname">${mark(kw ? kw.w : it.name, nq)}</span>${kw || it.path ? `<span class="inp02-opath">${esc([it.path, kw ? it.name : ''].filter(Boolean).join(' › '))}</span>` : ''}</span>
+      <svg class="i inp02-chev" aria-hidden="true"><use href="#i-chevron-right"/></svg></button></li>`;
+
+  const render = () => {
+    const raw = q.value.trim();
+    const nq = norm(raw).out;
+    field.classList.toggle('has-text', q.value.length > 0);
+    if (!nq) {
+      shown = (panel.classList.contains('is-active') ? ITEMS : FAV.map((i) => ITEMS[i])).map((it) => ({ it }));
+      rlabel.textContent = panel.classList.contains('is-active') ? 'すべての設定' : 'よく使う項目';
+      rcount.textContent = '';
+    } else {
+      shown = [];
+      ITEMS.forEach((it) => {
+        if (it.n.includes(nq)) shown.push({ it, s: it.n.startsWith(nq) ? 0 : 1 });
+        else { const kw = it.kws.find((k) => k.n.includes(nq)); if (kw) shown.push({ it, kw, s: 2 }); }
+      });
+      shown.sort((a, b) => a.s - b.s);
+      rlabel.textContent = '検索結果';
+      rcount.textContent = shown.length ? `${shown.length}件` : '';
+    }
+    results.classList.toggle('is-idle', !nq);
+    results.classList.toggle('is-empty', !!nq && !shown.length);
+    emptyB.textContent = `“${raw}”の結果はありません`;
+    list.innerHTML = shown.map((it, i) => row(it, i, nq)).join('');
+    active = -1; q.removeAttribute('aria-activedescendant');
+    scroller.scrollTop = 0;
+  };
+
+  const setActive = (i) => {
+    const opts = $$('.inp02-opt', list);
+    if (!opts.length) return;
+    active = (i + opts.length) % opts.length;
+    opts.forEach((o, k) => { o.classList.toggle('is-active', k === active); o.setAttribute('aria-selected', String(k === active)); });
+    const o = opts[active]; q.setAttribute('aria-activedescendant', o.id);
+    const top = o.offsetTop, bot = top + o.offsetHeight;
+    if (top < scroller.scrollTop) scroller.scrollTop = top - 4;
+    else if (bot > scroller.scrollTop + scroller.clientHeight - 22) scroller.scrollTop = bot - scroller.clientHeight + 26;
+  };
+  const choose = (o) => {
+    if (!o) return;
+    o.classList.add('is-active');
+    o.animate([{ background: 'var(--fill-2)' }, { background: 'transparent' }], { duration: 600, easing: 'ease-out' });
+  };
+
+  const open = () => {
+    if (panel.classList.contains('is-active')) return;
+    cwrap.style.setProperty('--inp02-cw', cancel.scrollWidth + 'px'); /* measure lazily: font may have changed */
+    panel.classList.add('is-active');
+    cancel.tabIndex = 0;
+    render();
+  };
+  const close = () => {
+    q.value = '';
+    panel.classList.remove('is-active');
+    cancel.tabIndex = -1;
+    q.blur();
+    render();
+  };
+  q.addEventListener('focus', open);
+  q.addEventListener('input', render);
+  q.addEventListener('keydown', (e) => {
+    if (e.isComposing) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active < 0 ? -1 : active - 1); }
+    else if (e.key === 'Enter') { e.preventDefault(); choose($$('.inp02-opt', list)[Math.max(0, active)]); }
+    else if (e.key === 'Escape') { e.preventDefault(); if (q.value) { q.value = ''; render(); } else close(); }
+  });
+  cancel.addEventListener('click', close);
+  list.addEventListener('pointerdown', (e) => { if (e.target.closest('.inp02-opt') && document.activeElement === q) e.preventDefault(); });
+  list.addEventListener('click', (e) => { const o = e.target.closest('.inp02-opt'); if (o) { $$('.inp02-opt', list).forEach((x) => x.classList.remove('is-active')); choose(o); } });
+  field.addEventListener('pointerdown', (e) => { if (!e.target.closest('button, input')) { e.preventDefault(); q.focus(); } });
+
+  /* ── shared: clear + dictation for both fields ── */
+  const wire = (wrap, input, onChange) => {
+    const clear = $('.inp02-clear', wrap), mic = $('.inp02-mic', wrap);
+    clear.addEventListener('pointerdown', (e) => e.preventDefault());
+    clear.addEventListener('mousedown', (e) => e.preventDefault());
+    clear.addEventListener('click', () => { input.value = ''; onChange(); input.focus(); });
+    let timer = 0;
+    mic.addEventListener('click', () => {
+      if (wrap.classList.contains('is-listening')) return;
+      input.focus();
+      wrap.classList.add('is-listening');
+      mic.setAttribute('aria-label', '聞き取り中…');
+      const ph = input.placeholder; input.placeholder = '聞き取り中…';
+      const text = mic.dataset.say || '';
+      let i = 0;
+      clearTimeout(timer);
+      const step = () => {
+        if (!wrap.isConnected) return;
+        if (i === 0) { input.value = ''; onChange(); }
+        if (i < text.length) { input.value = text.slice(0, ++i); onChange(); timer = setTimeout(step, reduced() ? 0 : 120); }
+        else { wrap.classList.remove('is-listening'); mic.setAttribute('aria-label', '音声入力'); input.placeholder = ph; }
+      };
+      timer = setTimeout(step, reduced() ? 0 : 900);
+    });
+  };
+  $('.inp02-mic', field).dataset.say = 'モード';
+  wire(field, q, render);
+
+  /* ───────── (2) Liquid-Glass search ───────── */
+  const scene = $('.inp02-scene'), gbar = $('.inp02-gbar'), gfield = $('.inp02-gfield'), g = $('#INP-02-g'), gx = $('.inp02-gx');
+  const chipsEl = $('.inp02-chips');
+  const grid = $('.inp02-photos');
+  const photos = $$('.inp02-ph').map((el) => ({ el, tags: norm(el.dataset.tags).out }));
+  let lastQ = '';
+  const filter = () => {
+    const nq = norm(g.value.trim()).out;
+    gfield.classList.toggle('has-text', g.value.length > 0);
+    if (nq !== lastQ) {
+      lastQ = nq;
+      /* hits move to the top (CSS order) — FLIP so they glide under the glass */
+      const first = photos.map((p) => p.el.getBoundingClientRect());
+      scene.classList.toggle('is-filtering', !!nq);
+      photos.forEach((p) => p.el.classList.toggle('is-hit', !!nq && p.tags.includes(nq)));
+      grid.scrollTop = 0;
+      if (!reduced()) photos.forEach((p, i) => {
+        const r = p.el.getBoundingClientRect();
+        const dx = first[i].left - r.left, dy = first[i].top - r.top;
+        if (Math.abs(dx) + Math.abs(dy) > 1) p.el.animate([{ translate: `${dx}px ${dy}px` }, { translate: '0 0' }], { duration: 520, easing: 'cubic-bezier(.32,.72,0,1)' });
+      });
+    }
+    $$('.inp02-chip', chipsEl).forEach((c) => c.classList.toggle('is-current', !!nq && norm(c.textContent.trim()).out === nq));
+  };
+  const gopen = () => { gbar.classList.add('is-active'); gx.tabIndex = 0; };
+  const gclose = () => { g.value = ''; filter(); gbar.classList.remove('is-active'); gx.tabIndex = -1; g.blur(); };
+  g.addEventListener('focus', gopen);
+  g.addEventListener('blur', () => { if (!g.value) { gbar.classList.remove('is-active'); gx.tabIndex = -1; } });
+  g.addEventListener('input', filter);
+  gx.addEventListener('pointerdown', (e) => e.preventDefault());
+  gx.addEventListener('click', gclose);
+  gfield.addEventListener('pointerdown', (e) => { if (!e.target.closest('button, input')) { e.preventDefault(); g.focus(); } });
+  $('.inp02-mic', gfield).dataset.say = '夕焼け';
+  wire(gfield, g, filter);
+
+  /* recent chips: tap → fill search; Enter → add to history (FLIP reorder) */
+  const flip = (mutate) => {
+    const chips = $$('.inp02-chip', chipsEl);
+    const before = new Map(chips.map((c) => [c, c.getBoundingClientRect().left]));
+    mutate();
+    if (reduced()) return;
+    $$('.inp02-chip', chipsEl).forEach((c) => {
+      const b = before.get(c);
+      if (b === undefined) { c.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' }); return; }
+      const dx = b - c.getBoundingClientRect().left;
+      if (Math.abs(dx) > .5) c.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 450, easing: 'cubic-bezier(.32,.72,0,1)' });
+    });
+  };
+  const remember = (text) => {
+    const t = text.trim(); if (!t) return;
+    flip(() => {
+      let c = $$('.inp02-chip', chipsEl).find((x) => x.textContent.trim() === t);
+      if (!c) {
+        c = $('.inp02-chip', chipsEl).cloneNode(true);
+        c.querySelector('span').textContent = t;
+        const all = $$('.inp02-chip', chipsEl); if (all.length >= 5) all[all.length - 1].remove();
+      }
+      chipsEl.prepend(c);
+    });
+    chipsEl.scrollTo({ left: 0, behavior: reduced() ? 'auto' : 'smooth' });
+    filter();
+  };
+  chipsEl.addEventListener('click', (e) => {
+    const c = e.target.closest('.inp02-chip'); if (!c) return;
+    g.value = c.textContent.trim();
+    g.focus();
+    filter();
+    remember(g.value);
+  });
+  g.addEventListener('keydown', (e) => {
+    if (e.isComposing) return;
+    if (e.key === 'Enter') { e.preventDefault(); remember(g.value); g.blur(); }
+    else if (e.key === 'Escape') { e.preventDefault(); gclose(); }
+  });
+
+  render();
+})();
+</script>

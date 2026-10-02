@@ -1,0 +1,369 @@
+<!-- ═══════════ FB-06 · Activity Indicator ═══════════ -->
+<style>
+#FB-06 {
+  --fb06-spoke: light-dark(#7A7A80, #D1D1D6);
+  --fb06-sk: light-dark(rgba(116, 116, 128, .13), rgba(120, 120, 128, .22));
+  --fb06-shine: light-dark(rgba(255, 255, 255, .78), rgba(255, 255, 255, .09));
+}
+#FB-06 .fb06-wrap { width: min(100%, 360px); display: flex; flex-direction: column; gap: 22px; }
+#FB-06 .fb06-sec { display: flex; flex-direction: column; min-width: 0; }
+#FB-06 .fb06-h { margin: 0 16px 7px; font: 400 13px/18px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#FB-06 .fb06-f { margin: 7px 16px 0; font: 400 13px/18px var(--font-text); color: var(--label-2); letter-spacing: 0; display: flex; align-items: center; gap: 6px; min-height: 18px; }
+#FB-06 .fb06-card { position: relative; background: var(--bg-grouped-2); border-radius: var(--r-m); overflow: hidden; }
+
+/* ── iOS activity indicator: 8 rounded spokes, stepped rotation (1 rev / s) ── */
+#FB-06 .fb06-spin {
+  --s: 20px; --w: 2.6px; --l: 6.2px;
+  position: relative; display: inline-block; flex: none; width: var(--s); height: var(--s); color: var(--fb06-spoke);
+  animation: fb06-rot 1s steps(8, end) infinite;
+}
+#FB-06 .fb06-spin i {
+  position: absolute; left: 50%; top: 0; width: var(--w); height: var(--l); margin-left: calc(var(--w) / -2);
+  border-radius: var(--w); background: currentColor; transform-origin: 50% calc(var(--s) / 2);
+}
+#FB-06 .fb06-spin i:nth-child(1) { transform: rotate(0deg); opacity: 1; }
+#FB-06 .fb06-spin i:nth-child(2) { transform: rotate(45deg); opacity: .27; }
+#FB-06 .fb06-spin i:nth-child(3) { transform: rotate(90deg); opacity: .29; }
+#FB-06 .fb06-spin i:nth-child(4) { transform: rotate(135deg); opacity: .32; }
+#FB-06 .fb06-spin i:nth-child(5) { transform: rotate(180deg); opacity: .38; }
+#FB-06 .fb06-spin i:nth-child(6) { transform: rotate(225deg); opacity: .48; }
+#FB-06 .fb06-spin i:nth-child(7) { transform: rotate(270deg); opacity: .62; }
+#FB-06 .fb06-spin i:nth-child(8) { transform: rotate(315deg); opacity: .8; }
+#FB-06 .fb06-spin--l { --s: 37px; --w: 4.2px; --l: 10.6px; }
+#FB-06 .fb06-spin--w { color: #fff; }
+@keyframes fb06-rot { to { transform: rotate(360deg); } }
+#FB-06.fb06-off .fb06-spin, #FB-06.fb06-off .fb06-skb::after { animation-play-state: paused; }
+
+/* ── (1) Sizes ── */
+#FB-06 .fb06-demo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#FB-06 .fb06-cell { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 12px; height: 118px; padding: 0 6px 14px; }
+#FB-06 .fb06-cell + .fb06-cell::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: .5px; background: var(--separator); }
+#FB-06 .fb06-slot { flex: 1; display: grid; place-items: center; }
+#FB-06 .fb06-chip { width: 66px; height: 66px; border-radius: 16px; display: grid; place-items: center;
+  background: light-dark(rgba(28, 28, 30, .88), #3A3A3C); box-shadow: 0 6px 16px rgba(0, 0, 0, .16), inset 0 .5px 0 rgba(255, 255, 255, .12); }
+#FB-06 .fb06-cap { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+#FB-06 .fb06-cap b { font: 600 13px/16px var(--font-text); color: var(--label); letter-spacing: 0; }
+#FB-06 .fb06-cap span { font: 400 11px/13px var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+
+/* ── (2) Inline rows ── */
+#FB-06 .fb06-row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px; font: 400 17px/22px var(--font-text); letter-spacing: 0; color: var(--label); }
+#FB-06 .fb06-row + .fb06-row::before { content: ""; position: absolute; top: 0; right: 0; left: 57px; height: .5px; background: var(--separator); }
+#FB-06 .fb06-row--center { justify-content: center; gap: 10px; color: var(--label-2); font-size: 15px; }
+#FB-06 .fb06-row--center + .fb06-row::before { left: 16px; }
+#FB-06 .fb06-ico { width: 29px; height: 29px; border-radius: 7px; flex: none; display: grid; place-items: center; color: #fff; font-size: 17px; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .06); }
+#FB-06 .fb06-ico--photo { background: linear-gradient(180deg, #5AC8FA, #0A7AFF); }
+#FB-06 .fb06-ico--gear { background: linear-gradient(180deg, #A2A2A8, #7C7C82); }
+#FB-06 .fb06-row .fb06-lbl { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-06 .fb06-acc { display: inline-flex; align-items: center; gap: 8px; color: var(--label-2); font-size: 17px; white-space: nowrap; }
+#FB-06 .fb06-acc .fb06-spin { --s: 18px; --w: 2.2px; --l: 5.2px; }
+#FB-06 button.fb06-row { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; transition: background var(--dur-1) ease; }
+#FB-06 button.fb06-row:active { background: var(--fill-4); transition-duration: 0s; }
+#FB-06 button.fb06-row:focus-visible { outline: none; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent); border-radius: var(--r-m); }
+#FB-06 .fb06-upd { display: grid; justify-items: end; min-width: 92px; }
+#FB-06 .fb06-upd > span { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 7px; transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring); }
+#FB-06 .fb06-upd > span:not(.is-on) { opacity: 0; transform: scale(.85); pointer-events: none; }
+#FB-06 .fb06-upd .fb06-go { color: var(--accent); }
+#FB-06 .fb06-upd .fb06-ok { color: var(--label-2); }
+#FB-06 .fb06-upd .fb06-ok .i { color: var(--green); font-size: 19px; }
+
+/* ── (3) Pull to refresh ── */
+#FB-06 .fb06-ptr { height: 218px; cursor: grab; touch-action: pan-x pan-down; user-select: none; -webkit-user-select: none; outline: none; }
+#FB-06 .fb06-ptr:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+#FB-06 .fb06-ptr.is-drag { cursor: grabbing; }
+#FB-06 .fb06-ptop { position: absolute; z-index: 0; top: 0; left: 0; right: 0; height: 56px; display: grid; place-items: center; pointer-events: none; }
+#FB-06 .fb06-pspin { --p: 0; transform: translateY(calc((var(--pull, 0px) - 56px) / 2)) scale(calc(.55 + var(--p) * .45)); animation: none; }
+#FB-06 .fb06-pspin.is-run { animation: fb06-rot 1s steps(8, end) infinite; }
+#FB-06 .fb06-pspin.is-out { opacity: 0; transform: scale(.4); transition: opacity 200ms ease, transform 300ms var(--ease-ios); }
+#FB-06 .fb06-plist { position: relative; z-index: 1; margin: 0; padding: 0; list-style: none; background: var(--bg-grouped-2); transform: translateY(var(--pull, 0px)); }
+#FB-06 .fb06-plist.is-settle { transition: transform 520ms var(--ease-ios); }
+#FB-06 .fb06-pr { position: relative; display: grid; grid-template-columns: 38px minmax(0, 1fr); align-items: center; column-gap: 12px; height: 62px; padding: 0 16px; overflow: hidden;
+  transition: height 520ms var(--ease-ios), opacity 360ms ease, background 1.6s ease; }
+#FB-06 .fb06-pr + .fb06-pr::before { content: ""; position: absolute; top: 0; right: 0; left: 66px; height: .5px; background: var(--separator); }
+#FB-06 .fb06-pr .av { width: 38px; height: 38px; font-size: 15px; }
+#FB-06 .fb06-pr div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#FB-06 .fb06-pr p { margin: 0; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+#FB-06 .fb06-pr b { flex: 1; min-width: 0; font: 600 15px/20px var(--font-text); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-06 .fb06-pr time { flex: none; font: 400 13px/18px var(--font-text); color: var(--label-2); font-variant-numeric: tabular-nums; }
+#FB-06 .fb06-pr div > span { font: 400 14px/18px var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-06 .fb06-pr.is-unread::after { content: ""; position: absolute; left: 5px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: var(--accent); }
+#FB-06 .fb06-pr.is-new { height: 0; opacity: 0; }
+#FB-06 .fb06-pr.is-flash { background: color-mix(in srgb, var(--accent) 9%, transparent); transition: height 520ms var(--ease-ios), opacity 360ms ease 120ms, background 0s; }
+#FB-06 .fb06-stamp { transition: opacity var(--dur-2) ease; }
+#FB-06 .fb06-stamp.is-swap { opacity: 0; }
+#FB-06 .fb06-newc { display: inline-flex; align-items: center; height: 18px; padding: 0 7px; border-radius: 9px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font: 600 11px/1 var(--font-text); font-variant-numeric: tabular-nums;
+  transform: scale(.6); opacity: 0; transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-2) ease; }
+#FB-06 .fb06-newc.is-on { transform: none; opacity: 1; }
+
+/* ── (4) Skeleton ── */
+#FB-06 .fb06-post { padding: 14px 16px 12px; }
+#FB-06 .fb06-stack { display: grid; }
+#FB-06 .fb06-stack > * { grid-area: 1 / 1; min-width: 0; transition: opacity 420ms ease, filter 420ms ease, transform 520ms var(--ease-out); }
+#FB-06 .fb06-real { opacity: 0; transform: translateY(4px); filter: blur(3px); pointer-events: none; }
+#FB-06 .fb06-stack.is-loaded .fb06-real { opacity: 1; transform: none; filter: none; pointer-events: auto; transition-delay: 60ms; }
+#FB-06 .fb06-stack.is-loaded .fb06-sk { opacity: 0; filter: blur(2px); }
+#FB-06 .fb06-ph { display: flex; align-items: center; gap: 10px; height: 40px; }
+#FB-06 .fb06-ph .av { width: 40px; height: 40px; font-size: 16px; }
+#FB-06 .fb06-who { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; flex: 1; }
+#FB-06 .fb06-who b { display: flex; align-items: center; gap: 4px; font: 600 15px/20px var(--font-text); letter-spacing: 0; }
+#FB-06 .fb06-who b .i { color: var(--accent); font-size: 15px; }
+#FB-06 .fb06-who span { font: 400 13px/16px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#FB-06 .fb06-txt { margin: 10px 0 0; height: 40px; font: 400 15px/20px var(--font-text); letter-spacing: 0; color: var(--label); }
+#FB-06 .fb06-img { position: relative; margin-top: 10px; aspect-ratio: 2 / 1; border-radius: 12px; overflow: hidden; }
+#FB-06 .fb06-img .art { position: absolute; inset: 0; background-size: 100% 140%; background-position: 50% 70%; transform: scale(1.04); transition: transform 1.2s var(--ease-out); }
+#FB-06 .fb06-stack.is-loaded .fb06-img .art { transform: none; }
+#FB-06 .fb06-acts { display: flex; align-items: center; gap: 18px; height: 22px; margin-top: 10px; font: 500 14px/1 var(--font-text); color: var(--label-2); font-variant-numeric: tabular-nums; }
+#FB-06 .fb06-acts span { display: inline-flex; align-items: center; gap: 5px; }
+#FB-06 .fb06-acts .i { font-size: 18px; }
+#FB-06 .fb06-acts .fb06-heart { color: var(--pink); }
+/* skeleton blocks — one sweep travels across the whole card: each block offsets the band by its own x (--x) */
+#FB-06 .fb06-skb { position: relative; overflow: hidden; background: var(--fb06-sk); border-radius: 6px; }
+#FB-06 .fb06-skb::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 180px;
+  background: linear-gradient(100deg, transparent 0%, var(--fb06-shine) 50%, transparent 100%);
+  transform: translateX(calc(-180px - var(--x, 0px)));
+  animation: fb06-shim 1.7s cubic-bezier(.4, 0, .3, 1) infinite;
+}
+@keyframes fb06-shim { 0% { transform: translateX(calc(-180px - var(--x, 0px))); } 62%, 100% { transform: translateX(calc(400px - var(--x, 0px))); } }
+#FB-06 .fb06-sk-av { width: 40px; height: 40px; border-radius: 50%; flex: none; }
+#FB-06 .fb06-sk-ln { height: 20px; display: flex; align-items: center; }
+#FB-06 .fb06-sk-ln .fb06-skb { height: 11px; }
+#FB-06 .fb06-who .fb06-sk-ln { height: 18px; }
+#FB-06 .fb06-sk .fb06-txt { display: flex; flex-direction: column; }
+#FB-06 .fb06-sk .fb06-img { background: var(--fb06-sk); }
+#FB-06 .fb06-sk .fb06-acts .fb06-skb { height: 14px; border-radius: 7px; }
+
+#FB-06 .fb06-btnrow { display: flex; justify-content: center; margin-top: 14px; }
+#FB-06 .fb06-load {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 132px; height: 36px; padding: 0 18px;
+  border: 0; border-radius: 999px; cursor: pointer; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent);
+  font: 600 15px/1 var(--font-text); letter-spacing: 0; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease, opacity var(--dur-1) ease;
+}
+#FB-06 .fb06-load .i { font-size: 16px; }
+#FB-06 .fb06-load .fb06-spin { --s: 16px; --w: 2px; --l: 4.6px; color: var(--accent); display: none; }
+#FB-06 .fb06-load.is-busy .fb06-spin { display: inline-block; }
+#FB-06 .fb06-load .i { display: none; }
+#FB-06 .fb06-load.is-reset .i { display: inline-block; }
+#FB-06 .fb06-load:active { transform: scale(.95); transition-duration: 90ms; }
+#FB-06 .fb06-load:disabled { cursor: default; }
+@media (hover: hover) { #FB-06 .fb06-load:not(:disabled):hover { background: color-mix(in srgb, var(--accent) 20%, transparent); } }
+#FB-06 .fb06-load:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg-grouped), 0 0 0 4.5px color-mix(in srgb, var(--accent) 50%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  #FB-06 .fb06-skb::after { animation: none; opacity: 0; }
+  #FB-06 .fb06-spin { animation-duration: 2s; }
+  #FB-06 .fb06-stack > *, #FB-06 .fb06-pr, #FB-06 .fb06-plist.is-settle { transition-duration: 1ms !important; }
+}
+</style>
+<article class="obj" id="FB-06" data-name="Activity Indicator" data-ja="インジケーター／スケルトン" data-vector="Clean" data-size="m" data-desc="くるくる回る読み込み表示と、骨組みのスケルトン表示。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="fb06-wrap">
+
+      <section class="fb06-sec">
+        <h4 class="fb06-h">インジケーター</h4>
+        <div class="fb06-card fb06-demo">
+          <div class="fb06-cell">
+            <div class="fb06-slot"><span class="fb06-spin" role="progressbar" aria-label="読み込み中"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+            <p class="fb06-cap"><b>標準</b><span>Medium · 20pt</span></p>
+          </div>
+          <div class="fb06-cell">
+            <div class="fb06-slot"><span class="fb06-spin fb06-spin--l" role="progressbar" aria-label="読み込み中"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+            <p class="fb06-cap"><b>大</b><span>Large · 37pt</span></p>
+          </div>
+          <div class="fb06-cell">
+            <div class="fb06-slot"><span class="fb06-chip"><span class="fb06-spin fb06-spin--l fb06-spin--w" role="progressbar" aria-label="読み込み中"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></div>
+            <p class="fb06-cap"><b>ダーク</b><span>HUD · 白</span></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="fb06-sec">
+        <h4 class="fb06-h">インライン</h4>
+        <div class="fb06-card">
+          <div class="fb06-row fb06-row--center" role="status"><span class="fb06-spin" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>読み込み中…</div>
+          <div class="fb06-row">
+            <span class="fb06-ico fb06-ico--photo" aria-hidden="true"><svg class="i"><use href="#i-photo"/></svg></span>
+            <span class="fb06-lbl">iCloud 写真</span>
+            <span class="fb06-acc">同期中<span class="fb06-spin" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+          </div>
+          <button class="fb06-row fb06-check" type="button">
+            <span class="fb06-ico fb06-ico--gear" aria-hidden="true"><svg class="i"><use href="#i-gearshape-fill"/></svg></span>
+            <span class="fb06-lbl">アップデート</span>
+            <span class="fb06-acc fb06-upd" aria-live="polite">
+              <span class="fb06-go is-on">確認</span>
+              <span class="fb06-wait">確認中<span class="fb06-spin" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+              <span class="fb06-ok"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg>最新です</span>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section class="fb06-sec">
+        <h4 class="fb06-h">引っ張って更新</h4>
+        <div class="fb06-card fb06-ptr" tabindex="0" role="region" aria-label="受信。下に引っ張って更新（Enterキーでも更新）">
+          <div class="fb06-ptop" aria-hidden="true"><span class="fb06-spin fb06-pspin"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          <ul class="fb06-plist">
+            <li class="fb06-pr"><span class="av av-6">R</span><div><p><b>伊藤 蓮</b><time>9:12</time></p><span>デザインレビューの資料を共有しました</span></div></li>
+            <li class="fb06-pr"><span class="av av-5">S</span><div><p><b>中村 空</b><time>8:47</time></p><span>週末の旅行プラン、行き先の候補を送ります</span></div></li>
+            <li class="fb06-pr"><span class="av av-7">A</span><div><p><b>渡辺 葵</b><time>昨日</time></p><span>写真展のチケット、2枚取れたよ！</span></div></li>
+            <li class="fb06-pr"><span class="av av-2">M</span><div><p><b>小林 美緒</b><time>昨日</time></p><span>来週の打ち合わせ、木曜でも大丈夫です</span></div></li>
+          </ul>
+        </div>
+        <p class="fb06-f"><span class="fb06-stamp">9:12にアップデート</span><span class="fb06-newc" aria-hidden="true">新着 0</span></p>
+      </section>
+
+      <section class="fb06-sec">
+        <h4 class="fb06-h">スケルトン</h4>
+        <div class="fb06-card fb06-post">
+          <div class="fb06-stack" aria-busy="true">
+            <div class="fb06-sk" aria-hidden="true">
+              <div class="fb06-ph">
+                <span class="fb06-skb fb06-sk-av"></span>
+                <div class="fb06-who">
+                  <div class="fb06-sk-ln"><span class="fb06-skb" style="--x:50px;width:46%"></span></div>
+                  <div class="fb06-sk-ln"><span class="fb06-skb" style="--x:50px;width:26%;height:9px"></span></div>
+                </div>
+              </div>
+              <div class="fb06-txt">
+                <div class="fb06-sk-ln"><span class="fb06-skb" style="width:100%"></span></div>
+                <div class="fb06-sk-ln"><span class="fb06-skb" style="width:68%"></span></div>
+              </div>
+              <div class="fb06-img fb06-skb"></div>
+              <div class="fb06-acts"><span class="fb06-skb" style="width:52px"></span><span class="fb06-skb" style="--x:70px;width:40px"></span></div>
+            </div>
+            <div class="fb06-real" aria-hidden="true">
+              <div class="fb06-ph">
+                <span class="av av-1">H</span>
+                <div class="fb06-who"><b>佐藤 春<svg class="i" aria-label="認証済み"><use href="#i-checkmark-seal-fill"/></svg></b><span>haru.photo · 2時間前</span></div>
+              </div>
+              <p class="fb06-txt">夕暮れの丘で。風がやわらかくて、いつまでも見ていたくなる空でした。</p>
+              <div class="fb06-img"><div class="art art-1"></div></div>
+              <div class="fb06-acts"><span><svg class="i fb06-heart" aria-hidden="true"><use href="#i-heart-fill"/></svg>128</span><span><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg>12</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="fb06-btnrow">
+          <button class="fb06-load" type="button"><span class="fb06-spin" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><svg class="i" aria-hidden="true"><use href="#i-arrow-clockwise"/></svg><span class="fb06-load-t">読み込む</span></button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+  <ul class="obj-notes"><li>リストを下に引っ張って更新</li><li>『読み込む』でスケルトン⇄本文</li><li>アップデート行をタップ</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('FB-06');
+  if (!root) return;
+  const q = (s) => root.querySelector(s);
+  const RM = () => !!(window.ObjKit && window.ObjKit.reducedMotion);
+  const timers = new Set();
+  const later = (fn, ms) => { const t = setTimeout(() => { timers.delete(t); fn(); }, ms); timers.add(t); return t; };
+
+  /* — Inline: software update check — */
+  const check = q('.fb06-check'), upd = q('.fb06-upd');
+  let checking = false;
+  const showUpd = (cls) => upd.querySelectorAll(':scope > span').forEach((s) => s.classList.toggle('is-on', s.classList.contains(cls)));
+  check.addEventListener('click', () => {
+    if (checking) return;
+    checking = true; check.setAttribute('aria-busy', 'true');
+    showUpd('fb06-wait');
+    later(() => { checking = false; check.removeAttribute('aria-busy'); showUpd('fb06-ok'); }, 1600);
+  });
+
+  /* — Pull to refresh — */
+  const ptr = q('.fb06-ptr'), plist = q('.fb06-plist'), pspin = q('.fb06-pspin'), spokes = [...pspin.children];
+  const stamp = q('.fb06-stamp'), newc = q('.fb06-newc');
+  const TH = 56, DMAX = 220;
+  const BASE = [1, .27, .29, .32, .38, .48, .62, .8];
+  let drag = null, refreshing = false, armed = false, added = 0;
+  const FRESH = [
+    ['av-1', 'H', '佐藤 春', '新作の写真をアップしました📷 夕焼けシリーズです'],
+    ['av-3', 'K', '高橋 海斗', 'リリースノートの確認をお願いします'],
+    ['av-4', 'Y', '山本 結菜', '明日のランチ、12時でどう？'],
+    ['av-2', 'M', '小林 美緒', '資料ありがとう！すごく見やすかったです'],
+  ];
+  const setPull = (px) => {
+    ptr.style.setProperty('--pull', px.toFixed(1) + 'px');
+    const p = Math.min(1, px / TH);
+    pspin.style.setProperty('--p', p.toFixed(3));
+    if (!refreshing) spokes.forEach((s, k) => { s.style.opacity = (Math.max(0, Math.min(1, p * 8 - k)) * BASE[k]).toFixed(3); });
+    if (p >= 1 && !armed && drag) { armed = true; pspin.animate([{ scale: '1' }, { scale: '1.18' }, { scale: '1' }], { duration: 260, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }
+    if (p < 1 && armed && drag) armed = false;
+  };
+  const rubber = (dy) => (1 - 1 / ((dy * 0.7) / DMAX + 1)) * DMAX;
+  const settle = (px) => { plist.classList.add('is-settle'); setPull(px); };
+  plist.addEventListener('transitionend', (e) => { if (e.target === plist) plist.classList.remove('is-settle'); });
+
+  function refresh() {
+    refreshing = true; armed = false;
+    ptr.setAttribute('aria-busy', 'true');
+    spokes.forEach((s) => { s.style.opacity = ''; });
+    pspin.classList.remove('is-out'); pspin.classList.add('is-run');
+    settle(TH);
+    later(finish, 1200);
+  }
+  function finish() {
+    const [av, ini, name, text] = FRESH[added % FRESH.length];
+    added++;
+    const li = document.createElement('li');
+    li.className = 'fb06-pr is-unread is-new';
+    li.innerHTML = `<span class="av ${av}">${ini}</span><div><p><b></b><time>今</time></p><span></span></div>`;
+    li.querySelector('b').textContent = name; li.querySelector('div > span').textContent = text;
+    plist.prepend(li);
+    pspin.classList.add('is-out');
+    settle(0);
+    void li.offsetHeight;
+    li.classList.remove('is-new'); li.classList.add('is-flash');
+    later(() => li.classList.remove('is-flash'), 700);
+    const rows = plist.children; while (rows.length > 6) rows[rows.length - 1].remove();
+    stamp.classList.add('is-swap');
+    later(() => { stamp.textContent = 'たった今アップデート'; stamp.classList.remove('is-swap'); newc.textContent = `新着 ${added}`; newc.classList.add('is-on'); }, 200);
+    later(() => { refreshing = false; pspin.classList.remove('is-run', 'is-out'); ptr.removeAttribute('aria-busy'); setPull(0); }, 560);
+  }
+  ptr.addEventListener('pointerdown', (e) => {
+    if (refreshing || e.button > 0) return;
+    drag = { id: e.pointerId, y0: e.clientY, captured: false };
+    plist.classList.remove('is-settle');
+  });
+  ptr.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dy = e.clientY - drag.y0;
+    if (!drag.captured) { if (dy < 4) return; ptr.setPointerCapture(e.pointerId); drag.captured = true; ptr.classList.add('is-drag'); }
+    setPull(rubber(Math.max(0, dy)));
+  });
+  const end = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const was = drag.captured; drag = null; ptr.classList.remove('is-drag');
+    if (!was) return;
+    if (armed) refresh(); else settle(0);
+  };
+  ptr.addEventListener('pointerup', end);
+  ptr.addEventListener('pointercancel', end);
+  ptr.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && !refreshing) { e.preventDefault(); spokes.forEach((s, k) => { s.style.opacity = BASE[k]; }); refresh(); }
+  });
+
+  /* — Skeleton ⇄ content — */
+  const stack = q('.fb06-stack'), load = q('.fb06-load'), loadT = q('.fb06-load-t');
+  const real = q('.fb06-real'), sk = q('.fb06-sk');
+  load.addEventListener('click', () => {
+    if (stack.classList.contains('is-loaded')) {
+      stack.classList.remove('is-loaded'); stack.setAttribute('aria-busy', 'true');
+      real.setAttribute('aria-hidden', 'true');
+      loadT.textContent = '読み込む'; load.classList.remove('is-reset');
+      return;
+    }
+    load.classList.add('is-busy'); load.disabled = true; loadT.textContent = '読み込み中…';
+    later(() => {
+      stack.classList.add('is-loaded'); stack.setAttribute('aria-busy', 'false');
+      real.removeAttribute('aria-hidden');
+      load.classList.remove('is-busy'); load.disabled = false;
+      loadT.textContent = 'リセット'; load.classList.add('is-reset');
+      load.focus({ preventScroll: true });
+    }, RM() ? 300 : 900);
+  });
+
+  if (window.ObjKit) window.ObjKit.onVisible(root, (v) => root.classList.toggle('fb06-off', !v));
+})();
+</script>

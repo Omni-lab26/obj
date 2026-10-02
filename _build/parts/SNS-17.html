@@ -1,0 +1,262 @@
+<!-- ═══════════ SNS-17 · Trends ═══════════ -->
+<style>
+#SNS-17 .sns17 { container-type: inline-size; width: min(100%, 380px); color: var(--label); font-family: var(--font-text); -webkit-tap-highlight-color: transparent; }
+
+/* — Masthead — */
+#SNS-17 .sns17-eyebrow { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font: 700 11px/1 var(--font-text); letter-spacing: .16em; text-transform: uppercase; color: var(--label); }
+#SNS-17 .sns17-eyebrow::before { content: ""; width: 18px; height: 2px; background: var(--red); border-radius: 1px; }
+#SNS-17 .sns17-eyebrow span { margin-left: auto; font-weight: 600; letter-spacing: .08em; color: var(--label-2); font-variant-numeric: tabular-nums; }
+#SNS-17 .sns17-title { margin: 0; font: 800 28px/1.08 var(--font-display); letter-spacing: 0; }
+#SNS-17 .sns17-sub { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font: 400 15px/20px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#SNS-17 .sns17-sub i { width: 3px; height: 3px; border-radius: 50%; background: var(--label-3); }
+#SNS-17 .sns17-sub b { font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* — Filter chips (horizontal scroll) — */
+#SNS-17 .sns17-chips {
+  display: flex; gap: 8px; margin: 18px -20px 0; padding: 2px 20px 2px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; scroll-padding: 0 20px;
+  --fl: 18px; --fr: 30px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
+}
+#SNS-17 .sns17-chips.is-start { --fl: 0px; }
+#SNS-17 .sns17-chips.is-end { --fr: 0px; }
+#SNS-17 .sns17-chips::-webkit-scrollbar { display: none; }
+#SNS-17 .sns17-chip {
+  flex: none; display: inline-flex; align-items: center; gap: 2px; height: 32px; padding: 0 14px; border: 0; border-radius: var(--r-full); cursor: pointer;
+  background: transparent; box-shadow: inset 0 0 0 1px var(--fill); color: var(--label);
+  font: 600 14px/1 var(--font-text); letter-spacing: 0; white-space: nowrap; user-select: none; -webkit-user-select: none;
+  transition: background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) ease, transform var(--dur-2) var(--ease-spring);
+}
+#SNS-17 .sns17-chip em { font-style: normal; font-weight: 500; color: var(--label-3); transition: color var(--dur-2) ease; }
+#SNS-17 .sns17-chip[aria-selected="true"] { background: var(--label); color: var(--bg); box-shadow: inset 0 0 0 1px var(--label); }
+#SNS-17 .sns17-chip[aria-selected="true"] em { color: color-mix(in srgb, var(--bg) 55%, transparent); }
+#SNS-17 .sns17-chip:active { transform: scale(.95); transition-duration: 90ms; }
+@media (hover: hover) { #SNS-17 .sns17-chip[aria-selected="false"]:hover { background: var(--fill-4); } }
+#SNS-17 .sns17-chip:focus-visible, #SNS-17 .sns17-row:focus-visible, #SNS-17 .sns17-more:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+/* — List — */
+#SNS-17 .sns17-rule { height: 2px; margin: 16px 0 0; background: var(--label); border: 0; }
+#SNS-17 .sns17-list { margin: 0; padding: 0; list-style: none; }
+#SNS-17 .sns17-list > li { position: relative; }
+#SNS-17 .sns17-list > li + li::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: .5px; background: var(--separator); }
+#SNS-17 .sns17-list > li.sns17-li--2::before { height: 1px; background: var(--label); opacity: .85; }
+#SNS-17 .sns17-row {
+  position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: start; column-gap: 12px;
+  width: calc(100% + 16px); margin: 0 -8px; padding: 14px 8px 15px; border: 0; border-radius: 12px; background: transparent; text-align: left; cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  transition: background var(--dur-1) ease, opacity var(--dur-3) var(--ease-out), transform var(--dur-3) var(--ease-out);
+}
+#SNS-17 .sns17-row:active { background: var(--fill-3); transition-duration: 60ms; }
+@media (hover: hover) { #SNS-17 .sns17-row:hover { background: var(--fill-4); } }
+#SNS-17 .sns17-num {
+  display: block; font: 300 40px/.9 var(--font-display); letter-spacing: -.04em; font-variant-numeric: tabular-nums; color: var(--label);
+  margin-top: 1px; transition: transform var(--dur-4) var(--ease-out), opacity var(--dur-3) ease;
+}
+#SNS-17 .sns17-body { display: flex; flex-direction: column; min-width: 0; }
+#SNS-17 .sns17-cat { font: 400 12px/16px var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#SNS-17 .sns17-topic { margin-top: 2px; font: 600 17px/22px var(--font-text); letter-spacing: 0; overflow-wrap: anywhere; text-wrap: pretty; }
+#SNS-17 .sns17-meta { margin-top: 3px; font: 400 13px/18px var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-17 .sns17-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 4px; min-width: 62px; }
+#SNS-17 .sns17-spark { width: 62px; height: 26px; overflow: visible; }
+#SNS-17 .sns17-spark polyline { fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 900ms var(--ease-out); }
+#SNS-17 .sns17-spark path { fill: currentColor; opacity: .12; transition: opacity 700ms ease; }
+#SNS-17 .sns17-spark circle { fill: currentColor; stroke: var(--bg); stroke-width: 1.5; transition: transform 500ms var(--ease-spring), opacity 300ms ease; transform-box: fill-box; transform-origin: center; }
+#SNS-17 .sns17-up { color: var(--green); }
+#SNS-17 .sns17-flat { color: var(--label-3); }
+#SNS-17 .sns17-delta { display: inline-flex; align-items: center; gap: 1px; font: 600 11px/1 var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-17 .sns17-delta .i { font-size: 12px; }
+#SNS-17 .sns17-new {
+  margin-top: 2px; padding: 3px 6px 3px 7px; border-radius: 5px; box-shadow: inset 0 0 0 1px currentColor; color: var(--red);
+  font: 800 10px/1 var(--font-text); letter-spacing: .12em;
+}
+
+/* — Featured #1 — */
+#SNS-17 .sns17-row--feat { grid-template-columns: 52px minmax(0, 1fr) 84px; padding-top: 16px; padding-bottom: 18px; }
+#SNS-17 .sns17-row--feat .sns17-num { font-size: 76px; line-height: .78; font-weight: 200; letter-spacing: -.06em; margin-top: 2px; }
+#SNS-17 .sns17-row--feat .sns17-topic { font: 700 22px/27px var(--font-display); letter-spacing: 0; margin-top: 3px; }
+#SNS-17 .sns17-lede { margin-top: 6px; font: 400 13px/19px var(--font-text); color: var(--label-2); letter-spacing: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#SNS-17 .sns17-feat-meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+#SNS-17 .sns17-feat-meta .sns17-meta { margin: 0; }
+#SNS-17 .sns17-pill { display: inline-flex; align-items: center; gap: 2px; height: 20px; padding: 0 7px 0 5px; border-radius: var(--r-full); background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); font: 700 11px/1 var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-17 .sns17-pill .i { font-size: 12px; }
+#SNS-17 .sns17-thumb {
+  position: relative; width: 84px; height: 106px; border-radius: 12px; overflow: hidden; margin-top: 2px;
+  box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .08); background-size: 170% 150%;
+}
+#SNS-17 .sns17-thumb { transition: transform var(--dur-3) var(--ease-spring); }
+#SNS-17 .sns17-row--feat:active .sns17-thumb { transform: scale(.97); transition-duration: 120ms; }
+@container (max-width: 352px) {
+  #SNS-17 .sns17-row--feat { grid-template-columns: 44px minmax(0, 1fr) 72px; column-gap: 10px; }
+  #SNS-17 .sns17-row--feat .sns17-num { font-size: 66px; }
+  #SNS-17 .sns17-row--feat .sns17-topic { font-size: 20px; line-height: 25px; }
+  #SNS-17 .sns17-thumb { width: 72px; height: 92px; }
+  #SNS-17 .sns17-row { grid-template-columns: 38px minmax(0, 1fr) auto; column-gap: 10px; }
+  #SNS-17 .sns17-num { font-size: 36px; }
+}
+#SNS-17 .sns17-thumb::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--label) 12%, transparent); }
+#SNS-17 .sns17-thumb span { position: absolute; left: 6px; bottom: 6px; padding: 3px 6px; border-radius: 6px; background: rgba(0, 0, 0, .42); color: #fff; font: 600 10px/1 var(--font-text); letter-spacing: 0; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+
+/* — Footer link — */
+#SNS-17 .sns17-foot { position: relative; padding-top: 4px; }
+#SNS-17 .sns17-foot::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: .5px; background: var(--separator); }
+#SNS-17 .sns17-more { display: flex; align-items: center; justify-content: space-between; width: calc(100% + 16px); margin: 0 -8px; height: 44px; padding: 0 8px; border: 0; border-radius: 12px; background: transparent; cursor: pointer; font: 600 15px/1 var(--font-text); letter-spacing: 0; color: var(--label); transition: background var(--dur-1) ease; }
+#SNS-17 .sns17-more .i { font-size: 13px; color: var(--label-3); }
+#SNS-17 .sns17-more:active { background: var(--fill-3); }
+@media (hover: hover) { #SNS-17 .sns17-more:hover { background: var(--fill-4); } }
+
+/* — Enter / exit — */
+#SNS-17 .sns17-list.is-out .sns17-row { opacity: 0; transform: translate3d(0, -6px, 0); transition: opacity 140ms ease, transform 160ms ease; }
+#SNS-17 .sns17-list .sns17-row { transition-delay: 0ms, calc(var(--i, 0) * 50ms), calc(var(--i, 0) * 50ms); }
+#SNS-17 .sns17-list .sns17-num { transition-delay: calc(var(--i, 0) * 50ms); }
+#SNS-17 .sns17-list.is-in .sns17-row { opacity: 0; transform: translate3d(0, 12px, 0); transition: none; }
+#SNS-17 .sns17-list.is-in .sns17-num { opacity: 0; transform: translate3d(0, 22px, 0); transition: none; }
+#SNS-17 .sns17-list.is-in .sns17-spark polyline { stroke-dashoffset: 1; transition: none; }
+#SNS-17 .sns17-list.is-in .sns17-spark path, #SNS-17 .sns17-list.is-in .sns17-spark circle { opacity: 0; transform: scale(.2); transition: none; }
+#SNS-17 .sns17-list .sns17-spark polyline, #SNS-17 .sns17-list .sns17-spark path, #SNS-17 .sns17-list .sns17-spark circle { transition-delay: calc(var(--i, 0) * 50ms + 120ms); }
+#SNS-17 .sns17-list .sns17-spark circle { transition-delay: calc(var(--i, 0) * 50ms + 700ms); }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-17 .sns17-row, #SNS-17 .sns17-num, #SNS-17 .sns17-spark polyline, #SNS-17 .sns17-spark path, #SNS-17 .sns17-spark circle { transition: none !important; }
+}
+</style>
+<article class="obj" id="SNS-17" data-name="Trends" data-ja="トレンド" data-vector="Editorial" data-size="m" data-desc="大きな順位数字が主役のトレンドランキングとハッシュタグ。">
+  <div class="obj-stage" data-bg="plain">
+    <section class="sns17" aria-labelledby="SNS-17-title">
+      <p class="sns17-eyebrow">Trending<span>10.02 FRI</span></p>
+      <h4 class="sns17-title" id="SNS-17-title">トレンド</h4>
+      <p class="sns17-sub">いま話題<i></i>10月2日(金) <b>9:41</b> 更新</p>
+      <div class="sns17-chips" role="tablist" aria-label="カテゴリ">
+        <button class="sns17-chip" type="button" role="tab" aria-selected="true" data-k="all">すべて</button>
+        <button class="sns17-chip" type="button" role="tab" aria-selected="false" tabindex="-1" data-k="tech"><em>#</em>テクノロジー</button>
+        <button class="sns17-chip" type="button" role="tab" aria-selected="false" tabindex="-1" data-k="ent"><em>#</em>エンタメ</button>
+        <button class="sns17-chip" type="button" role="tab" aria-selected="false" tabindex="-1" data-k="sports"><em>#</em>スポーツ</button>
+        <button class="sns17-chip" type="button" role="tab" aria-selected="false" tabindex="-1" data-k="food"><em>#</em>グルメ</button>
+      </div>
+      <hr class="sns17-rule">
+      <ol class="sns17-list" role="tabpanel" aria-label="すべてのトレンド"></ol>
+      <div class="sns17-foot"><button class="sns17-more" type="button">トレンドをもっと見る<svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button></div>
+    </section>
+  </div>
+  <ul class="obj-notes"><li>カテゴリで絞り込み</li><li>← → キーで切り替え</li><li>行を押すとハイライト</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-17');
+  if (!root) return;
+  const list = root.querySelector('.sns17-list');
+  const chips = [...root.querySelectorAll('.sns17-chip')];
+  const reduced = () => window.ObjKit && ObjKit.reducedMotion;
+  const CAT = { tech: 'テクノロジー', ent: 'エンタメ', sports: 'スポーツ', food: 'グルメ', news: 'ニュース' };
+  /* [category, topic, posts, kind ('up'|'new'|'flat'), delta] — first item = featured */
+  const DATA = {
+    all: {
+      art: 'art-4', pos: '30% 60%', tag: '発表会', lede: '新モデルの発表から一夜。カメラとバッテリーの進化に注目が集まっています。',
+      items: [['tech', '#新しいiPhone', '3.2万', 'up', 248], ['ent', '#秋ドラマ', '1.8万', 'up', 62], ['sports', '#日本代表', '1.5万', 'new'], ['food', '#秋限定スイーツ', '9,840', 'up', 35], ['news', '#金曜日', '8,215', 'flat'], ['tech', '#生成AI', '7,302', 'up', 18]],
+    },
+    tech: {
+      art: 'art-4', pos: '30% 60%', tag: '発表会', lede: '新モデルの発表から一夜。カメラとバッテリーの進化に注目が集まっています。',
+      items: [['tech', '#新しいiPhone', '3.2万', 'up', 248], ['tech', '#生成AI', '7,302', 'up', 18], ['tech', '#ワイヤレスイヤホン', '5,410', 'flat'], ['tech', '#OSアップデート', '4,980', 'new'], ['tech', '#スマートウォッチ', '3,120', 'up', 12], ['tech', '#自作キーボード', '2,045', 'new']],
+    },
+    ent: {
+      art: 'art-1', pos: '50% 40%', tag: '初回放送', lede: '今夜スタートの新ドラマ。主題歌の先行配信もあわせて話題に。',
+      items: [['ent', '#秋ドラマ', '1.8万', 'up', 62], ['ent', '#新曲MV', '1.1万', 'up', 41], ['ent', '#週末なに観る', '8,760', 'new'], ['ent', '#ライブ参戦', '6,230', 'flat'], ['ent', '#深夜ラジオ', '4,105', 'up', 9], ['ent', '#推し活', '3,870', 'flat']],
+    },
+    sports: {
+      art: 'art-3', pos: '50% 80%', tag: '速報', lede: '代表メンバーが発表。初招集の若手に期待の声が広がっています。',
+      items: [['sports', '#日本代表', '1.5万', 'new'], ['sports', '#ドラフト会議', '9,820', 'up', 77], ['sports', '#Bリーグ開幕', '6,410', 'new'], ['sports', '#マラソン', '5,320', 'flat'], ['sports', '#朝ラン', '2,970', 'up', 14], ['sports', '#ゴルフ', '2,410', 'flat']],
+    },
+    food: {
+      art: 'art-8', pos: '50% 50%', tag: '期間限定', lede: '栗とさつまいもの新作が続々。週末のカフェ巡りの投稿が増えています。',
+      items: [['food', '#秋限定スイーツ', '9,840', 'up', 35], ['food', '#新米', '7,650', 'up', 22], ['food', '#栗スイーツ', '6,020', 'new'], ['food', '#ラテアート', '4,410', 'flat'], ['food', '#おうちカフェ', '3,990', 'up', 8], ['food', '#さつまいも', '2,870', 'new']],
+    },
+  };
+  const icon = (id) => `<svg class="i" aria-hidden="true"><use href="#${id}"/></svg>`;
+  const hash = (s) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+  function spark(topic, kind) {
+    let s = hash(topic) % 233280 || 1;
+    const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+    const n = 12, ys = [];
+    let v = .3;
+    for (let i = 0; i < n; i++) { v += (kind === 'up' ? .07 + i * .006 : 0) + (r() - .5) * (kind === 'up' ? .2 : .26); ys.push(v); }
+    if (kind === 'up') ys[n - 1] = Math.max(...ys) + .12;
+    const lo = Math.min(...ys), hi = Math.max(...ys), span = hi - lo || 1;
+    const pts = ys.map((y, i) => [+(i * 62 / (n - 1)).toFixed(1), +(23 - ((y - lo) / span) * (kind === 'up' ? 20 : 12) - (kind === 'up' ? 0 : 4)).toFixed(1)]);
+    const line = pts.map((p) => p.join(',')).join(' ');
+    const area = `M${pts.map((p) => p.join(' ')).join('L')}L62 26L0 26Z`;
+    const [ex, ey] = pts[n - 1];
+    return `<svg class="sns17-spark" viewBox="0 0 62 26" aria-hidden="true"><path d="${area}"/><polyline pathLength="1" points="${line}"/><circle cx="${ex}" cy="${ey}" r="2.6"/></svg>`;
+  }
+  function render(k) {
+    const d = DATA[k];
+    list.innerHTML = d.items.map(([cat, topic, posts, kind, delta], i) => {
+      const catLine = `${CAT[cat]} · トレンド`;
+      const label = `${i + 1}位 ${topic}、${posts}件のポスト${kind === 'new' ? '、新着' : kind === 'up' ? `、${delta}%上昇` : ''}`;
+      if (i === 0) {
+        return `<li><button class="sns17-row sns17-row--feat" type="button" style="--i:0" aria-label="${label}">
+          <span class="sns17-num" aria-hidden="true">1</span>
+          <span class="sns17-body">
+            <span class="sns17-cat">${catLine}</span>
+            <span class="sns17-topic">${topic}</span>
+            <span class="sns17-lede">${d.lede}</span>
+            <span class="sns17-feat-meta"><span class="sns17-meta">${posts}件のポスト</span>${kind === 'new' ? '<span class="sns17-new">NEW</span>' : `<span class="sns17-pill">${icon('i-arrow-up-right')}${delta}%</span>`}</span>
+          </span>
+          <span class="sns17-thumb art ${d.art}" style="background-position:${d.pos}"><span>${d.tag}</span></span>
+        </button></li>`;
+      }
+      const side = kind === 'new'
+        ? '<span class="sns17-new">NEW</span>'
+        : `<span class="${kind === 'up' ? 'sns17-up' : 'sns17-flat'}">${spark(topic, kind)}</span>${kind === 'up' ? `<span class="sns17-delta sns17-up">${icon('i-arrow-up-right')}${delta}%</span>` : ''}`;
+      return `<li class="sns17-li--${i + 1}"><button class="sns17-row" type="button" style="--i:${i}" aria-label="${label}">
+        <span class="sns17-num" aria-hidden="true">${i + 1}</span>
+        <span class="sns17-body"><span class="sns17-cat">${catLine}</span><span class="sns17-topic">${topic}</span><span class="sns17-meta">${posts}件のポスト</span></span>
+        <span class="sns17-side" aria-hidden="true">${side}</span>
+      </button></li>`;
+    }).join('');
+    list.setAttribute('aria-label', `${k === 'all' ? 'すべて' : CAT[k]}のトレンド`);
+  }
+
+  let current = 'all', swapT = 0;
+  function enter() {
+    list.classList.add('is-in');
+    void list.offsetHeight;
+    requestAnimationFrame(() => list.classList.remove('is-in'));
+  }
+  function select(chip, focus) {
+    const k = chip.dataset.k;
+    chips.forEach((c) => { const on = c === chip; c.setAttribute('aria-selected', String(on)); c.tabIndex = on ? 0 : -1; });
+    if (focus) chip.focus({ preventScroll: true });
+    const strip = chip.parentElement;
+    const target = chip.offsetLeft - (strip.clientWidth - chip.offsetWidth) / 2;
+    strip.scrollTo({ left: Math.max(0, target), behavior: reduced() ? 'auto' : 'smooth' });
+    if (k === current) return;
+    current = k;
+    clearTimeout(swapT);
+    if (reduced()) { render(k); return; }
+    list.classList.add('is-out');
+    swapT = setTimeout(() => { list.classList.remove('is-out'); render(k); enter(); }, 170);
+  }
+  chips.forEach((c) => c.addEventListener('click', () => select(c)));
+  const strip = root.querySelector('.sns17-chips');
+  const edges = () => {
+    const max = strip.scrollWidth - strip.clientWidth;
+    strip.classList.toggle('is-start', strip.scrollLeft <= 2);
+    strip.classList.toggle('is-end', strip.scrollLeft >= max - 2);
+  };
+  strip.addEventListener('scroll', edges, { passive: true });
+  root.querySelector('.sns17-chips').addEventListener('keydown', (e) => {
+    const i = chips.findIndex((c) => c.getAttribute('aria-selected') === 'true');
+    let j = -1;
+    if (e.key === 'ArrowRight') j = Math.min(chips.length - 1, i + 1);
+    else if (e.key === 'ArrowLeft') j = Math.max(0, i - 1);
+    else if (e.key === 'Home') j = 0;
+    else if (e.key === 'End') j = chips.length - 1;
+    if (j < 0) return;
+    e.preventDefault();
+    select(chips[j], true);
+  });
+  render('all');
+  let first = true;
+  edges();
+  if (window.ObjKit) ObjKit.onVisible(root, (v) => { if (v) edges(); if (v && first) { first = false; if (!reduced()) enter(); } });
+})();
+</script>

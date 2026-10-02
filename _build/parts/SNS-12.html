@@ -1,0 +1,423 @@
+<!-- ═══════════ SNS-12 · Activity Feed ═══════════ -->
+<style>
+@property --sns12-rowbg { syntax: '<color>'; inherits: true; initial-value: transparent; }
+#SNS-12 .sns12-panel {
+  --sns12-panel: var(--bg-grouped-2);
+  --sns12-unread: color-mix(in srgb, var(--accent) 10%, var(--sns12-panel));
+  position: relative; width: min(100%, 375px); height: 600px; container-type: inline-size;
+  border-radius: 30px; overflow: hidden; isolation: isolate;
+  background: var(--sns12-panel); color: var(--label);
+  box-shadow:
+    0 0 0 .5px light-dark(rgba(88, 86, 214, .10), rgba(255, 255, 255, .07)),
+    0 2px 6px light-dark(rgba(60, 50, 140, .05), rgba(0, 0, 0, .3)),
+    0 28px 60px -22px light-dark(rgba(88, 70, 200, .28), rgba(0, 0, 0, .7));
+  -webkit-tap-highlight-color: transparent;
+}
+#SNS-12 .sns12-scroll {
+  height: 100%; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent);
+}
+#SNS-12 .sns12-scroll::-webkit-scrollbar { display: none; }
+
+/* — Header (sticky, soft pastel wash + material) — */
+#SNS-12 .sns12-head {
+  position: sticky; top: 0; z-index: 3; padding: 18px 0 10px;
+  background:
+    radial-gradient(75% 85% at 0% 0%, color-mix(in srgb, var(--pink) 14%, transparent), transparent 72%),
+    radial-gradient(70% 85% at 100% 0%, color-mix(in srgb, var(--indigo) 16%, transparent), transparent 72%),
+    color-mix(in srgb, var(--sns12-panel) 92%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  transition: box-shadow var(--dur-2) ease;
+}
+#SNS-12 .sns12-head.is-scrolled { box-shadow: 0 .5px 0 var(--separator), 0 10px 24px -18px light-dark(rgba(60, 50, 140, .35), rgba(0, 0, 0, .8)); }
+#SNS-12 .sns12-titlebar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px 0 20px; }
+#SNS-12 .sns12-title { margin: 0; font: 700 26px/1.15 var(--font-display); letter-spacing: 0; white-space: nowrap; }
+#SNS-12 .sns12-readall {
+  display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 12px 0 10px; flex: none;
+  border: 0; border-radius: var(--r-full); cursor: pointer;
+  background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent);
+  font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0;
+  transition: transform var(--dur-2) var(--ease-spring), opacity var(--dur-2) ease, background var(--dur-1) ease;
+}
+#SNS-12 .sns12-readall .i { font-size: 14px; }
+#SNS-12 .sns12-readall:active:not(:disabled) { transform: scale(.94); transition-duration: 80ms; }
+#SNS-12 .sns12-readall:disabled { opacity: .4; cursor: default; }
+
+#SNS-12 .sns12-chips {
+  display: flex; gap: 7px; margin-top: 8px; padding: 8px 16px 4px; overflow-x: auto; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent);
+}
+#SNS-12 .sns12-chips::-webkit-scrollbar { display: none; }
+#SNS-12 .sns12-chip {
+  --sns12-hue: var(--indigo);
+  position: relative; display: inline-flex; align-items: center; height: 34px; padding: 0 13px; flex: none;
+  border: 0; border-radius: var(--r-full); cursor: pointer; white-space: nowrap;
+  background: var(--fill-4); color: var(--label-2);
+  font: 600 14px/1 var(--font-text); letter-spacing: 0;
+  user-select: none; -webkit-user-select: none;
+  transition: background var(--dur-2) ease, color var(--dur-2) ease, transform var(--dur-2) var(--ease-spring), box-shadow var(--dur-2) ease;
+}
+#SNS-12 .sns12-chip[data-f="mention"] { --sns12-hue: var(--purple); }
+#SNS-12 .sns12-chip[data-f="follow"] { --sns12-hue: var(--blue); }
+#SNS-12 .sns12-chip[data-f="like"] { --sns12-hue: var(--pink); }
+#SNS-12 .sns12-chip:active { transform: scale(.95); transition-duration: 80ms; }
+#SNS-12 .sns12-chip[aria-selected="true"] {
+  background: color-mix(in srgb, var(--sns12-hue) 17%, var(--sns12-panel));
+  color: color-mix(in srgb, var(--sns12-hue) 82%, var(--label));
+  box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--sns12-hue) 22%, transparent), 0 6px 14px -8px color-mix(in srgb, var(--sns12-hue) 55%, transparent);
+}
+#SNS-12 .sns12-cnt {
+  position: absolute; top: -5px; right: -4px; display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  font: 700 11px/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0;
+  background: var(--sns12-hue); color: #fff; box-shadow: 0 0 0 2px var(--sns12-panel);
+  transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-2) ease;
+}
+#SNS-12 .sns12-cnt.is-zero { display: none; }
+#SNS-12 .sns12-chip:focus-visible, #SNS-12 .sns12-readall:focus-visible, #SNS-12 .sns12-follow:focus-visible,
+#SNS-12 .sns12-link:focus-visible, #SNS-12 .sns12-like:focus-visible, #SNS-12 .sns12-send:focus-visible {
+  outline: none; box-shadow: 0 0 0 2px var(--sns12-panel), 0 0 0 4.5px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* — Sections & rows — */
+#SNS-12 .sns12-list { padding: 2px 0 34px; }
+#SNS-12 .sns12-sec[hidden] { display: none; }
+#SNS-12 .sns12-sec-h { margin: 0; padding: 16px 20px 6px; font: 700 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: 0; }
+#SNS-12 .sns12-row {
+  --sns12-rowbg: var(--sns12-panel);
+  position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; column-gap: 12px;
+  margin: 2px 8px; padding: 10px 12px; border-radius: 20px;
+  background: var(--sns12-rowbg); outline: none; cursor: default;
+  transition: --sns12-rowbg 700ms var(--ease-out), transform var(--dur-2) var(--ease-spring);
+}
+#SNS-12 .sns12-row[hidden] { display: none; }
+#SNS-12 .sns12-row.is-unread { --sns12-rowbg: var(--sns12-unread); }
+#SNS-12 .sns12-row.is-tall { align-items: start; }
+#SNS-12 .sns12-row.is-tall .sns12-thumb { margin-top: 2px; }
+#SNS-12 .sns12-row:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+#SNS-12 .sns12-row.is-press { transform: scale(.985); }
+
+#SNS-12 .sns12-avw { position: relative; width: 44px; height: 44px; align-self: start; }
+#SNS-12 .sns12-av { width: 44px; height: 44px; font-size: 17px; }
+#SNS-12 .sns12-avw.is-stack .sns12-av { position: absolute; width: 32px; height: 32px; font-size: 13px; }
+#SNS-12 .sns12-avw.is-stack .sns12-av:first-child { left: 0; top: 0; }
+#SNS-12 .sns12-avw.is-stack .sns12-av:nth-child(2) { right: 0; bottom: 0; box-shadow: 0 0 0 2px var(--sns12-rowbg); }
+#SNS-12 .sns12-badge {
+  position: absolute; right: -3px; bottom: -3px; z-index: 1; display: grid; place-items: center;
+  width: 18px; height: 18px; border-radius: 50%; color: #fff; font-size: 10px;
+  box-shadow: 0 0 0 2px var(--sns12-rowbg);
+}
+#SNS-12 .sns12-badge .i { vertical-align: 0; }
+#SNS-12 .sns12-badge.is-like { background: var(--red); }
+#SNS-12 .sns12-badge.is-follow { background: var(--blue); }
+#SNS-12 .sns12-badge.is-mention { background: var(--purple); }
+#SNS-12 .sns12-badge.is-comment { background: var(--green); }
+#SNS-12 .sns12-tile {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 15px; font-size: 22px; color: #fff;
+  background: linear-gradient(145deg, #FFC27A 0%, #FF7EB3 52%, #B98BFF 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 8px 16px -8px rgba(255, 110, 170, .7);
+}
+
+#SNS-12 .sns12-body { min-width: 0; }
+#SNS-12 .sns12-text { margin: 0; font: 400 14px/1.43 var(--font-text); letter-spacing: 0; color: var(--label); overflow-wrap: anywhere; }
+#SNS-12 .sns12-text b { font-weight: 600; }
+#SNS-12 .sns12-time { margin-left: 4px; font-family: var(--font-rounded); font-size: 13px; font-weight: 500; color: var(--label-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+#SNS-12 .sns12-num { font-family: var(--font-rounded); font-weight: 600; font-variant-numeric: tabular-nums; }
+#SNS-12 .sns12-quote {
+  margin: 6px 0 0; padding: 8px 12px; border-radius: 4px 16px 16px 16px;
+  background: color-mix(in srgb, var(--label) 5.5%, transparent);
+  font: 400 14px/1.45 var(--font-text); letter-spacing: 0; color: var(--label-2);
+}
+#SNS-12 .sns12-acts { display: flex; align-items: center; gap: 2px; margin: 4px 0 -4px -6px; }
+#SNS-12 .sns12-link {
+  display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 8px; border: 0; border-radius: var(--r-full);
+  background: none; cursor: pointer; color: var(--label-2); font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0;
+  transition: background var(--dur-1) ease, color var(--dur-1) ease, transform var(--dur-2) var(--ease-spring);
+}
+#SNS-12 .sns12-link:active { transform: scale(.94); background: var(--fill-3); transition-duration: 80ms; }
+#SNS-12 .sns12-link .i { font-size: 15px; }
+#SNS-12 .sns12-like.is-on { color: var(--red); }
+#SNS-12 .sns12-like.is-on .i { animation: sns12-pop .5s var(--ease-spring); }
+
+#SNS-12 .sns12-thumb { width: 44px; height: 44px; border-radius: 10px; flex: none; position: relative; overflow: hidden; }
+#SNS-12 .sns12-thumb::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 .5px light-dark(rgba(0, 0, 0, .08), rgba(255, 255, 255, .12)); }
+
+#SNS-12 .sns12-follow {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  height: 30px; padding: 0 13px; border: 0; border-radius: var(--r-full); cursor: pointer; overflow: hidden; white-space: nowrap;
+  font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0;
+  background: var(--accent); color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 6px 14px -7px color-mix(in srgb, var(--accent) 80%, transparent);
+  user-select: none; -webkit-user-select: none;
+  transition: background var(--dur-2) ease, color var(--dur-2) ease, box-shadow var(--dur-2) ease, transform var(--dur-2) var(--ease-spring);
+}
+#SNS-12 .sns12-follow .i { font-size: 12px; display: none; }
+#SNS-12 .sns12-follow[aria-pressed="true"] { background: var(--fill-3); color: var(--label); box-shadow: none; }
+#SNS-12 .sns12-follow[aria-pressed="true"] .i { display: inline-block; }
+#SNS-12 .sns12-follow:active { transform: scale(.94); transition-duration: 80ms; }
+
+/* inline reply */
+#SNS-12 .sns12-reply { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 4px 4px 4px 12px; border-radius: var(--r-full); background: var(--fill-4); box-shadow: inset 0 0 0 .5px var(--separator); }
+#SNS-12 .sns12-reply[hidden] { display: none; }
+#SNS-12 .sns12-reply input { flex: 1; min-width: 0; height: 28px; border: 0; outline: 0; background: none; font: 400 14px/1 var(--font-text); letter-spacing: 0; color: var(--label); caret-color: var(--accent); }
+#SNS-12 .sns12-reply input::placeholder { color: var(--label-3); }
+#SNS-12 .sns12-send { display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 50%; background: var(--accent); color: #fff; font-size: 14px; cursor: pointer; transition: opacity var(--dur-2) ease, transform var(--dur-2) var(--ease-spring); }
+#SNS-12 .sns12-send:disabled { opacity: .35; cursor: default; }
+#SNS-12 .sns12-send:active:not(:disabled) { transform: scale(.88); transition-duration: 80ms; }
+#SNS-12 .sns12-sent { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; color: var(--green); }
+#SNS-12 .sns12-sent[hidden] { display: none; }
+
+@media (hover: hover) {
+  #SNS-12 .sns12-chip:not([aria-selected="true"]):hover { background: var(--fill-3); color: var(--label); }
+  #SNS-12 .sns12-link:hover { background: var(--fill-4); color: var(--label); }
+  #SNS-12 .sns12-like.is-on:hover { color: var(--red); }
+  #SNS-12 .sns12-follow:not([aria-pressed="true"]):hover { filter: brightness(1.07); }
+  #SNS-12 .sns12-readall:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+}
+@container (max-width: 350px) {
+  #SNS-12 .sns12-title { font-size: 23px; }
+  #SNS-12 .sns12-titlebar { padding-left: 18px; }
+  #SNS-12 .sns12-row:has(> .sns12-follow) { grid-template-columns: 44px minmax(0, 1fr); }
+  #SNS-12 .sns12-row:has(> .sns12-follow) .sns12-follow { grid-column: 2; justify-self: start; margin-top: 8px; }
+}
+@keyframes sns12-pop { 0% { transform: scale(.6); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  #SNS-12 *, #SNS-12 *::before { transition-duration: 1ms !important; animation: none !important; }
+  #SNS-12 .sns12-row { transition-duration: 1ms !important; }
+}
+</style>
+<article class="obj" id="SNS-12" data-name="Activity Feed" data-ja="アクティビティ通知" data-vector="Soft" data-size="m" data-desc="いいね・フォロー・メンションのお知らせ一覧。">
+  <div class="obj-stage" data-bg="plain">
+    <section class="sns12-panel" aria-label="アクティビティ">
+      <div class="sns12-scroll">
+        <header class="sns12-head">
+          <div class="sns12-titlebar">
+            <h3 class="sns12-title">アクティビティ</h3>
+            <button class="sns12-readall" type="button"><svg class="i" aria-hidden="true"><use href="#i-checkmark"/></svg>すべて既読</button>
+          </div>
+          <div class="sns12-chips" role="tablist" aria-label="通知の種類">
+            <button class="sns12-chip" role="tab" type="button" data-f="all" aria-selected="true">すべて<span class="sns12-cnt"></span></button>
+            <button class="sns12-chip" role="tab" type="button" data-f="mention" aria-selected="false" tabindex="-1">メンション<span class="sns12-cnt"></span></button>
+            <button class="sns12-chip" role="tab" type="button" data-f="follow" aria-selected="false" tabindex="-1">フォロー<span class="sns12-cnt"></span></button>
+            <button class="sns12-chip" role="tab" type="button" data-f="like" aria-selected="false" tabindex="-1">いいね<span class="sns12-cnt"></span></button>
+          </div>
+        </header>
+
+        <div class="sns12-list" role="tabpanel" aria-label="通知一覧">
+          <section class="sns12-sec">
+            <h4 class="sns12-sec-h">今日</h4>
+            <div class="sns12-row is-unread" data-type="like" tabindex="0">
+              <div class="sns12-avw is-stack"><span class="av av-1 sns12-av" aria-hidden="true">H</span><span class="av av-4 sns12-av" aria-hidden="true">Y</span><span class="sns12-badge is-like"><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg></span></div>
+              <div class="sns12-body"><p class="sns12-text"><b>haru.photo</b>、<b>yuna</b>、他<span class="sns12-num">12</span>人があなたの投稿に「いいね！」しました。<time class="sns12-time">2時間</time></p></div>
+              <span class="sns12-thumb art art-4" role="img" aria-label="投稿の写真"></span>
+            </div>
+            <div class="sns12-row is-unread" data-type="follow" tabindex="0">
+              <div class="sns12-avw"><span class="av av-3 sns12-av" aria-hidden="true">K</span><span class="sns12-badge is-follow"><svg class="i" aria-hidden="true"><use href="#i-person-badge-plus"/></svg></span></div>
+              <div class="sns12-body"><p class="sns12-text"><b>kaito.dev</b>さんがあなたをフォローしました。<time class="sns12-time">3時間</time></p></div>
+              <button class="sns12-follow" type="button" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-checkmark"/></svg><span>フォローバック</span></button>
+            </div>
+            <div class="sns12-row is-unread is-tall" data-type="mention" tabindex="0">
+              <div class="sns12-avw"><span class="av av-2 sns12-av" aria-hidden="true">M</span><span class="sns12-badge is-mention"><svg class="i" aria-hidden="true"><use href="#i-at"/></svg></span></div>
+              <div class="sns12-body">
+                <p class="sns12-text"><b>mio_k</b>さんがコメントであなたをメンションしました。<time class="sns12-time">5時間</time></p>
+                <p class="sns12-quote">この前のラテアートの写真、どこのカフェ？今度いっしょに行きたい☕️</p>
+                <div class="sns12-acts">
+                  <button class="sns12-link sns12-replybtn" type="button" aria-expanded="false"><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg>返信</button>
+                  <button class="sns12-link sns12-like" type="button" aria-pressed="false" aria-label="コメントにいいね"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg></button>
+                </div>
+                <div class="sns12-reply" hidden><input type="text" placeholder="mio_kさんに返信…" aria-label="mio_kさんに返信"><button class="sns12-send" type="button" aria-label="送信" disabled><svg class="i" aria-hidden="true"><use href="#i-arrow-up"/></svg></button></div>
+                <p class="sns12-sent" hidden><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg>返信しました</p>
+              </div>
+              <span class="sns12-thumb art art-8" role="img" aria-label="投稿の写真"></span>
+            </div>
+          </section>
+
+          <section class="sns12-sec">
+            <h4 class="sns12-sec-h">今週</h4>
+            <div class="sns12-row is-unread" data-type="comment" tabindex="0">
+              <div class="sns12-avw"><span class="av av-6 sns12-av" aria-hidden="true">R</span><span class="sns12-badge is-comment"><svg class="i" aria-hidden="true"><use href="#i-message-fill"/></svg></span></div>
+              <div class="sns12-body"><p class="sns12-text"><b>ren.design</b>さんがコメントしました：「構図の参考にさせてください🙏」<time class="sns12-time">2日</time></p></div>
+              <span class="sns12-thumb art art-1" role="img" aria-label="投稿の写真"></span>
+            </div>
+            <div class="sns12-row" data-type="like" tabindex="0">
+              <div class="sns12-avw"><span class="av av-5 sns12-av" aria-hidden="true">S</span><span class="sns12-badge is-like"><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg></span></div>
+              <div class="sns12-body"><p class="sns12-text"><b>sora_travel</b>さんがあなたのコメント「夕焼けの色がすごい…！」に「いいね！」しました。<time class="sns12-time">3日</time></p></div>
+              <span class="sns12-thumb art art-2" role="img" aria-label="投稿の写真"></span>
+            </div>
+            <div class="sns12-row" data-type="follow" tabindex="0">
+              <div class="sns12-avw"><span class="av av-7 sns12-av" aria-hidden="true">A</span><span class="sns12-badge is-follow"><svg class="i" aria-hidden="true"><use href="#i-person-badge-plus"/></svg></span></div>
+              <div class="sns12-body"><p class="sns12-text"><b>aoi</b>さんがあなたをフォローしました。<time class="sns12-time">4日</time></p></div>
+              <button class="sns12-follow" type="button" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-checkmark"/></svg><span>フォロー中</span></button>
+            </div>
+          </section>
+
+          <section class="sns12-sec">
+            <h4 class="sns12-sec-h">今月</h4>
+            <div class="sns12-row" data-type="like" tabindex="0">
+              <div class="sns12-avw"><span class="sns12-tile" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-sparkles"/></svg></span></div>
+              <div class="sns12-body"><p class="sns12-text">あなたの投稿が<span class="sns12-num">1,000</span>いいね！を達成しました🎉<time class="sns12-time">9月14日</time></p></div>
+              <span class="sns12-thumb art art-3" role="img" aria-label="投稿の写真"></span>
+            </div>
+            <div class="sns12-row" data-type="mention" tabindex="0">
+              <div class="sns12-avw"><span class="av av-4 sns12-av" aria-hidden="true">Y</span><span class="sns12-badge is-mention"><svg class="i" aria-hidden="true"><use href="#i-at"/></svg></span></div>
+              <div class="sns12-body"><p class="sns12-text"><b>yuna</b>さんがストーリーであなたをメンションしました。<time class="sns12-time">9月8日</time></p></div>
+              <span class="sns12-thumb art art-6" role="img" aria-label="ストーリー"></span>
+            </div>
+            <div class="sns12-row" data-type="follow" tabindex="0">
+              <div class="sns12-avw"><span class="av av-1 sns12-av" aria-hidden="true">H</span><span class="sns12-badge is-follow"><svg class="i" aria-hidden="true"><use href="#i-person-badge-plus"/></svg></span></div>
+              <div class="sns12-body"><p class="sns12-text"><b>haru.photo</b>さんがあなたをフォローしました。<time class="sns12-time">9月3日</time></p></div>
+              <button class="sns12-follow" type="button" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-checkmark"/></svg><span>フォロー中</span></button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </div>
+  <ul class="obj-notes"><li>チップで種類を絞り込み</li><li>未読はなぞる・タップで既読に</li><li>フォローバックを切替</li><li>返信・いいねも可能</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-12');
+  if (!root) return;
+  const $ = (s, el = root) => el.querySelector(s);
+  const $$ = (s, el = root) => Array.from(el.querySelectorAll(s));
+  const EASE = 'cubic-bezier(.32,.72,0,1)', OUT = 'cubic-bezier(.22,1,.36,1)', SPRING = 'cubic-bezier(.34,1.56,.64,1)';
+  const rm = () => !!(window.ObjKit && ObjKit.reducedMotion);
+
+  const scroller = $('.sns12-scroll'), head = $('.sns12-head'), list = $('.sns12-list');
+  const chips = $$('.sns12-chip'), rows = $$('.sns12-row'), secs = $$('.sns12-sec');
+  const readAll = $('.sns12-readall');
+  const GROUP = { all: null, mention: ['mention', 'comment'], follow: ['follow'], like: ['like'] };
+  const match = (f, r) => !GROUP[f] || GROUP[f].includes(r.dataset.type);
+
+  /* ---------- unread counts ---------- */
+  function counts() {
+    const unread = rows.filter((r) => r.classList.contains('is-unread'));
+    chips.forEach((c) => {
+      const n = unread.filter((r) => match(c.dataset.f, r)).length;
+      const b = $('.sns12-cnt', c);
+      const prev = b.textContent;
+      b.textContent = n ? String(n) : '';
+      b.classList.toggle('is-zero', !n);
+      if (prev && n && prev !== String(n) && !rm()) b.animate([{ transform: 'scale(.6)' }, { transform: 'scale(1)' }], { duration: 380, easing: SPRING });
+    });
+    readAll.disabled = !unread.length;
+  }
+
+  function markRead(r) {
+    if (!r.classList.contains('is-unread')) return;
+    r.classList.remove('is-unread');
+    counts();
+  }
+
+  /* ---------- rows: hover dwell / tap marks read ---------- */
+  rows.forEach((r) => {
+    let t = 0;
+    r.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') t = setTimeout(() => markRead(r), 450); });
+    r.addEventListener('pointerleave', () => { clearTimeout(t); r.classList.remove('is-press'); });
+    r.addEventListener('pointerdown', (e) => { if (!e.target.closest('button, input')) r.classList.add('is-press'); });
+    r.addEventListener('pointerup', () => r.classList.remove('is-press'));
+    r.addEventListener('pointercancel', () => r.classList.remove('is-press'));
+    r.addEventListener('click', () => markRead(r));
+    r.addEventListener('focusin', () => setTimeout(() => r.contains(document.activeElement) && markRead(r), 600));
+    r.addEventListener('keydown', (e) => { if (e.target === r && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); markRead(r); } });
+  });
+
+  readAll.addEventListener('click', () => {
+    rows.filter((r) => r.classList.contains('is-unread')).forEach((r, i) => setTimeout(() => markRead(r), rm() ? 0 : i * 90));
+  });
+
+  /* ---------- filter chips ---------- */
+  let current = 'all', busy = null;
+  function applyFilter(f) {
+    rows.forEach((r) => { r.hidden = !match(f, r); });
+    secs.forEach((s) => { s.hidden = !s.querySelector('.sns12-row:not([hidden])'); });
+  }
+  function select(chip, focus) {
+    const f = chip.dataset.f;
+    chips.forEach((c) => { const on = c === chip; c.setAttribute('aria-selected', String(on)); c.tabIndex = on ? 0 : -1; });
+    if (focus) chip.focus();
+    chip.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: rm() ? 'auto' : 'smooth' });
+    if (f === current) return;
+    current = f;
+    if (rm()) { applyFilter(f); scroller.scrollTop = 0; return; }
+    if (busy) busy.cancel();
+    const out = list.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(4px)' }], { duration: 140, easing: 'ease-in', fill: 'forwards' });
+    busy = out;
+    out.onfinish = () => {
+      if (busy !== out) return;
+      busy = null;
+      applyFilter(f);
+      scroller.scrollTop = 0;
+      out.cancel();
+      const vis = [...secs.filter((s) => !s.hidden).map((s) => s.firstElementChild), ...rows.filter((r) => !r.hidden)]
+        .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+      vis.forEach((el, i) => el.animate([{ opacity: 0, transform: 'translateY(10px) scale(.98)' }, { opacity: 1, transform: 'none' }],
+        { duration: 420, delay: Math.min(i, 8) * 35, easing: OUT, fill: 'backwards' }));
+    };
+  }
+  chips.forEach((c) => c.addEventListener('click', () => select(c, false)));
+  $('.sns12-chips').addEventListener('keydown', (e) => {
+    const i = chips.indexOf(document.activeElement);
+    if (i < 0) return;
+    let j = null;
+    if (e.key === 'ArrowRight') j = (i + 1) % chips.length;
+    if (e.key === 'ArrowLeft') j = (i - 1 + chips.length) % chips.length;
+    if (j !== null) { e.preventDefault(); select(chips[j], true); }
+  });
+
+  /* ---------- sticky header hairline ---------- */
+  scroller.addEventListener('scroll', () => head.classList.toggle('is-scrolled', scroller.scrollTop > 2), { passive: true });
+
+  /* ---------- follow back ---------- */
+  $$('.sns12-follow').forEach((b) => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      markRead(b.closest('.sns12-row'));
+      const on = b.getAttribute('aria-pressed') !== 'true';
+      const w0 = b.offsetWidth;
+      b.setAttribute('aria-pressed', String(on));
+      b.lastElementChild.textContent = on ? 'フォロー中' : 'フォローバック';
+      if (rm()) return;
+      const w1 = b.offsetWidth;
+      b.animate([{ width: w0 + 'px' }, { width: w1 + 'px' }], { duration: 420, easing: EASE });
+      b.lastElementChild.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: OUT });
+      if (on) b.firstElementChild.animate([{ transform: 'scale(0)' }, { transform: 'scale(1)' }], { duration: 420, easing: SPRING });
+    });
+  });
+
+  /* ---------- like / reply on mention ---------- */
+  $$('.sns12-like').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const on = !b.classList.contains('is-on');
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-pressed', String(on));
+    $('use', b).setAttribute('href', on ? '#i-heart-fill' : '#i-heart');
+  }));
+  $$('.sns12-replybtn').forEach((b) => {
+    const body = b.closest('.sns12-body');
+    const box = $('.sns12-reply', body), inp = $('input', box), send = $('.sns12-send', box), sent = $('.sns12-sent', body);
+    const open = (v) => {
+      b.setAttribute('aria-expanded', String(v));
+      if (v) {
+        sent.hidden = true; box.hidden = false;
+        if (!rm()) box.animate([{ opacity: 0, transform: 'translateY(-6px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: OUT });
+        inp.focus({ preventScroll: true });
+        const r = box.getBoundingClientRect(), s = scroller.getBoundingClientRect();
+        if (r.bottom > s.bottom - 30) scroller.scrollBy({ top: r.bottom - s.bottom + 40, behavior: rm() ? 'auto' : 'smooth' });
+      } else box.hidden = true;
+    };
+    b.addEventListener('click', (e) => { e.stopPropagation(); markRead(b.closest('.sns12-row')); open(b.getAttribute('aria-expanded') !== 'true'); });
+    inp.addEventListener('input', () => { send.disabled = !inp.value.trim(); });
+    const submit = () => {
+      if (!inp.value.trim()) return;
+      inp.value = ''; send.disabled = true; open(false); sent.hidden = false;
+      if (!rm()) sent.animate([{ opacity: 0, transform: 'scale(.9)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: SPRING });
+    };
+    send.addEventListener('click', (e) => { e.stopPropagation(); submit(); });
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); submit(); } if (e.key === 'Escape') { e.stopPropagation(); open(false); b.focus(); } });
+  });
+
+  counts();
+})();
+</script>

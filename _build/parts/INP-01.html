@@ -1,0 +1,366 @@
+<!-- ═══════════ INP-01 · Text Field ═══════════ -->
+<style>
+#INP-01 .inp01-wrap { width: min(100%, 360px); display: flex; flex-direction: column; gap: 26px; container-type: inline-size; }
+#INP-01 .inp01-sec { display: flex; flex-direction: column; }
+#INP-01 .inp01-head { margin: 0 16px 7px; font-size: var(--fs-footnote); line-height: 18px; color: var(--label-2); letter-spacing: 0; }
+
+/* — Inset grouped form — */
+#INP-01 .inp01-group { position: relative; border-radius: 12px; background: var(--bg-grouped-2); overflow: hidden; }
+#INP-01 .inp01-row {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  min-height: 44px; padding: 0 10px 0 16px;
+  -webkit-tap-highlight-color: transparent;
+}
+#INP-01 .inp01-row + .inp01-row::before {
+  content: ""; position: absolute; left: 16px; right: 0; top: 0; height: .5px; background: var(--separator); pointer-events: none;
+}
+#INP-01 .inp01-label {
+  flex: none; width: 7em; font-size: var(--fs-body); line-height: 22px; letter-spacing: 0; color: var(--label);
+  cursor: text; user-select: none; -webkit-user-select: none;
+  transition: color var(--dur-2) ease;
+}
+#INP-01 .inp01-ctl { flex: 1; min-width: 0; display: flex; align-items: center; gap: 2px; align-self: stretch; }
+#INP-01 .inp01-input {
+  flex: 1; min-width: 0; height: 44px; margin: 0; padding: 0 2px 0 0; border: 0; outline: 0; background: transparent;
+  font-size: var(--fs-body); line-height: 22px; letter-spacing: -0.01em; color: var(--label); caret-color: var(--accent);
+  border-radius: 0; -webkit-appearance: none; appearance: none;
+}
+#INP-01 .inp01-input::placeholder { color: var(--label-3); opacity: 1; letter-spacing: 0; }
+/* text inputs ignore line-height and grow their line box for CJK fallback glyphs → re-center (shift measured at runtime) */
+#INP-01 .inp01-input.is-cjk { transform: translateY(var(--inp01-cjk, 0px)); }
+#INP-01 .inp01-input::-ms-reveal { display: none; }
+#INP-01 .inp01-input::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+
+/* icon buttons inside rows */
+#INP-01 .inp01-ib {
+  position: relative; flex: none; display: grid; place-items: center; width: 30px; height: 30px; margin: 0; padding: 0;
+  border: 0; border-radius: 50%; background: transparent; color: var(--label-3); cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+#INP-01 .inp01-ib .i { font-size: 17px; }
+#INP-01 .inp01-ib:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+#INP-01 .inp01-clear {
+  opacity: 0; transform: scale(.5); pointer-events: none; width: 0; margin-left: -2px; overflow: visible;
+  transition: opacity var(--dur-1) ease, transform var(--dur-2) var(--ease-spring), width var(--dur-2) var(--ease-ios);
+}
+#INP-01 .inp01-row:focus-within .inp01-input:not(:placeholder-shown) ~ .inp01-clear {
+  opacity: 1; transform: none; pointer-events: auto; width: 30px;
+}
+#INP-01 .inp01-clear:active { color: var(--label-2); }
+
+#INP-01 .inp01-ok { color: var(--green); width: 0; opacity: 0; transform: scale(.4); pointer-events: none; transition: opacity var(--dur-1) ease, transform var(--dur-3) var(--ease-spring), width var(--dur-2) var(--ease-ios); }
+#INP-01 .inp01-row.is-valid:not(:focus-within) .inp01-ok { width: 30px; opacity: 1; transform: none; }
+
+#INP-01 .inp01-eye { color: var(--label-2); }
+#INP-01 .inp01-eye .i { font-size: 20px; position: absolute; left: 5px; top: 5px; transition: opacity var(--dur-1) ease, transform var(--dur-2) var(--ease-spring); }
+#INP-01 .inp01-eye .inp01-eye-on { opacity: 0; transform: scale(.6); }
+#INP-01 .inp01-eye[aria-pressed="true"] .inp01-eye-on { opacity: 1; transform: none; }
+#INP-01 .inp01-eye[aria-pressed="true"] .inp01-eye-off { opacity: 0; transform: scale(.6); }
+#INP-01 .inp01-eye:active .i { transform: scale(.86); }
+#INP-01 .inp01-eye[aria-pressed="true"] { color: var(--accent); }
+
+/* invalid row */
+#INP-01 .inp01-row.is-invalid .inp01-label { color: var(--red); }
+#INP-01 .inp01-row.is-invalid { background: color-mix(in srgb, var(--red) 5%, transparent); }
+#INP-01 .inp01-row { transition: background var(--dur-2) ease; }
+
+/* — Footer: error + strength — */
+#INP-01 .inp01-reveal { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-3) var(--ease-ios); }
+#INP-01 .inp01-reveal > div { min-height: 0; overflow: hidden; }
+#INP-01 .inp01-reveal.is-shown { grid-template-rows: 1fr; }
+#INP-01 .inp01-err {
+  display: flex; align-items: flex-start; gap: 6px; margin: 0; padding: 8px 16px 0;
+  font-size: var(--fs-footnote); line-height: 18px; color: var(--red); letter-spacing: 0;
+  opacity: 0; transform: translateY(-6px); transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios);
+}
+#INP-01 .inp01-err .i { font-size: 14px; margin-top: 2px; }
+#INP-01 .is-shown > div > .inp01-err, #INP-01 .is-shown > div > .inp01-meter { opacity: 1; transform: none; }
+
+#INP-01 .inp01-meter {
+  display: flex; align-items: center; gap: 10px; padding: 9px 16px 0;
+  opacity: 0; transform: translateY(-6px); transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios);
+}
+#INP-01 .inp01-bars { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+#INP-01 .inp01-bars i { height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; position: relative; }
+#INP-01 .inp01-bars i::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--c, var(--green));
+  transform: scaleX(0); transform-origin: left center; transition: transform var(--dur-3) var(--ease-ios), background var(--dur-2) ease;
+}
+#INP-01 .inp01-bars i.is-on::after { transform: none; }
+#INP-01 .inp01-bars i:nth-child(2)::after { transition-delay: 40ms; }
+#INP-01 .inp01-bars i:nth-child(3)::after { transition-delay: 80ms; }
+#INP-01 .inp01-bars i:nth-child(4)::after { transition-delay: 120ms; }
+#INP-01 .inp01-mlabel { flex: none; min-width: 5.6em; text-align: right; font-size: var(--fs-footnote); line-height: 18px; color: var(--c, var(--label-2)); font-weight: 600; letter-spacing: 0; transition: color var(--dur-2) ease; }
+#INP-01 .inp01-hint { margin: 0; padding: 7px 16px 0; font-size: var(--fs-footnote); line-height: 18px; color: var(--label-2); letter-spacing: 0; text-wrap: pretty; word-break: auto-phrase; }
+
+/* — Floating label fields — */
+#INP-01 .inp01-floats { display: flex; flex-direction: column; gap: 10px; }
+#INP-01 .inp01-float {
+  position: relative; display: flex; align-items: center; height: 56px; padding: 0 8px 0 16px; border-radius: 12px;
+  background: var(--fill-3); cursor: text;
+  box-shadow: 0 0 0 0 transparent, inset 0 0 0 .5px transparent;
+  transition: background var(--dur-2) ease, box-shadow var(--dur-2) var(--ease-ios);
+}
+#INP-01 .inp01-float:focus-within {
+  background: var(--bg-grouped-2);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent), inset 0 0 0 1.5px var(--accent);
+}
+#INP-01 .inp01-float.is-invalid { box-shadow: 0 0 0 4px color-mix(in srgb, var(--red) 14%, transparent), inset 0 0 0 1.5px var(--red); }
+#INP-01 .inp01-float .inp01-input { height: 56px; padding-top: 19px; font-size: var(--fs-body); }
+#INP-01 .inp01-float .inp01-input::placeholder { color: transparent; }
+#INP-01 .inp01-flabel {
+  position: absolute; left: 16px; top: 17px; max-width: calc(100% - 64px);
+  font-size: var(--fs-body); line-height: 22px; color: var(--label-2); letter-spacing: 0; white-space: nowrap;
+  transform-origin: left top; pointer-events: none;
+  transition: transform var(--dur-2) var(--ease-ios), color var(--dur-2) ease;
+}
+#INP-01 .inp01-float .inp01-input:focus ~ .inp01-flabel,
+#INP-01 .inp01-float .inp01-input:not(:placeholder-shown) ~ .inp01-flabel { transform: translateY(-9px) scale(.706); }
+#INP-01 .inp01-float .inp01-input:focus ~ .inp01-flabel { color: var(--accent); }
+#INP-01 .inp01-float.is-invalid .inp01-flabel { color: var(--red); }
+#INP-01 .inp01-float .inp01-ok { order: 3; }
+#INP-01 .inp01-float.is-valid .inp01-ok { width: 30px; opacity: 1; transform: none; }
+#INP-01 .inp01-count {
+  flex: none; order: 3; padding: 19px 8px 0 4px; font-size: var(--fs-footnote); line-height: 22px; color: var(--label-3); letter-spacing: 0;
+  font-variant-numeric: tabular-nums; user-select: none; -webkit-user-select: none;
+  opacity: 0; transform: translateY(3px); transition: color var(--dur-2) ease, opacity var(--dur-2) ease, transform var(--dur-2) var(--ease-ios);
+}
+#INP-01 .inp01-float:focus-within .inp01-count, #INP-01 .inp01-input:not(:placeholder-shown) ~ .inp01-count { opacity: 1; transform: none; }
+#INP-01 .inp01-count.is-near { color: var(--orange); }
+#INP-01 .inp01-count.is-max { color: var(--red); }
+#INP-01 .inp01-float .inp01-err { padding-left: 16px; }
+
+@container (max-width: 340px) {
+  #INP-01 .inp01-label, #INP-01 .inp01-row .inp01-input { font-size: var(--fs-callout); }
+  #INP-01 .inp01-row { gap: 8px; padding-right: 6px; }
+}
+@media (hover: hover) {
+  #INP-01 .inp01-float:not(:focus-within):hover { background: var(--fill-2); }
+  #INP-01 .inp01-ib:hover { color: var(--label-2); }
+  #INP-01 .inp01-eye:hover { color: var(--label); }
+  #INP-01 .inp01-eye[aria-pressed="true"]:hover { color: var(--accent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #INP-01 *, #INP-01 *::before, #INP-01 *::after { transition-duration: 1ms !important; transition-delay: 0ms !important; }
+}
+</style>
+<article class="obj" id="INP-01" data-name="Text Field" data-ja="テキストフィールド" data-vector="Clean" data-size="m" data-desc="ラベル・消去ボタン・パスワード表示・エラー表示付きの入力欄。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="inp01-wrap">
+      <div class="inp01-sec">
+        <p class="inp01-head" id="INP-01-h1">アカウント</p>
+        <form class="inp01-group" role="group" aria-labelledby="INP-01-h1" autocomplete="off" novalidate>
+          <div class="inp01-row">
+            <label class="inp01-label" for="INP-01-name">名前</label>
+            <div class="inp01-ctl">
+              <input class="inp01-input" id="INP-01-name" type="text" value="佐藤 春" placeholder="例：佐藤 春" autocomplete="off" spellcheck="false" enterkeyhint="next">
+              <button class="inp01-ib inp01-clear" type="button" tabindex="-1" aria-label="名前を消去"><svg class="i" aria-hidden="true"><use href="#i-xmark-circle-fill"/></svg></button>
+            </div>
+          </div>
+          <div class="inp01-row" data-kind="email">
+            <label class="inp01-label" for="INP-01-mail">メールアドレス</label>
+            <div class="inp01-ctl">
+              <input class="inp01-input" id="INP-01-mail" type="email" inputmode="email" placeholder="例：haru@icloud.com" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-describedby="INP-01-err" aria-invalid="false">
+              <button class="inp01-ib inp01-clear" type="button" tabindex="-1" aria-label="メールアドレスを消去"><svg class="i" aria-hidden="true"><use href="#i-xmark-circle-fill"/></svg></button>
+              <span class="inp01-ib inp01-ok" aria-hidden="true"><svg class="i"><use href="#i-checkmark-circle-fill"/></svg></span>
+            </div>
+          </div>
+          <div class="inp01-row" data-kind="password">
+            <label class="inp01-label" for="INP-01-pass">パスワード</label>
+            <div class="inp01-ctl">
+              <input class="inp01-input" id="INP-01-pass" type="password" placeholder="8文字以上" autocomplete="new-password" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-describedby="INP-01-meter">
+              <button class="inp01-ib inp01-clear" type="button" tabindex="-1" aria-label="パスワードを消去"><svg class="i" aria-hidden="true"><use href="#i-xmark-circle-fill"/></svg></button>
+              <button class="inp01-ib inp01-eye" type="button" aria-pressed="false" aria-label="パスワードを表示" aria-controls="INP-01-pass">
+                <svg class="i inp01-eye-off" aria-hidden="true"><use href="#i-eye-slash"/></svg>
+                <svg class="i inp01-eye-on" aria-hidden="true"><use href="#i-eye"/></svg>
+              </button>
+            </div>
+          </div>
+        </form>
+        <div class="inp01-reveal" data-r="err"><div>
+          <p class="inp01-err" id="INP-01-err" role="alert"><svg class="i" aria-hidden="true"><use href="#i-exclamationmark-triangle-fill"/></svg><span>有効なメールアドレスを入力してください</span></p>
+        </div></div>
+        <div class="inp01-reveal" data-r="meter"><div>
+          <div class="inp01-meter" id="INP-01-meter" aria-live="polite">
+            <span class="inp01-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="inp01-mlabel">弱い</span>
+          </div>
+        </div></div>
+        <p class="inp01-hint">英字と数字を含む8文字以上にしてください。</p>
+      </div>
+
+      <div class="inp01-sec">
+        <p class="inp01-head">フローティングラベル</p>
+        <div class="inp01-floats">
+          <div>
+            <div class="inp01-float is-valid" data-kind="user">
+              <input class="inp01-input" id="INP-01-user" type="text" value="haru.photo" placeholder=" " autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="24" aria-describedby="INP-01-uerr">
+              <label class="inp01-flabel" for="INP-01-user">ユーザー名</label>
+              <span class="inp01-ib inp01-ok" aria-hidden="true"><svg class="i"><use href="#i-checkmark-circle-fill"/></svg></span>
+            </div>
+            <div class="inp01-reveal" data-r="uerr"><div>
+              <p class="inp01-err" id="INP-01-uerr"><svg class="i" aria-hidden="true"><use href="#i-exclamationmark-triangle-fill"/></svg><span>英小文字・数字・「.」「_」のみ使用できます</span></p>
+            </div></div>
+          </div>
+          <div class="inp01-float" data-kind="bio">
+            <input class="inp01-input" id="INP-01-bio" type="text" placeholder=" " autocomplete="off" maxlength="40" aria-describedby="INP-01-count">
+            <label class="inp01-flabel" for="INP-01-bio">ひとこと</label>
+            <span class="inp01-count" id="INP-01-count" aria-label="文字数">0/40</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>入力中だけ消去ボタン</li><li>目のアイコンで表示切替</li><li>不正なメールで離れるとエラー</li><li>Enterで次の欄へ</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('INP-01');
+  if (!root) return;
+  const $ = (s, r = root) => r.querySelector(s);
+  const form = $('.inp01-group');
+  const name = $('#INP-01-name'), mail = $('#INP-01-mail'), pass = $('#INP-01-pass');
+  const user = $('#INP-01-user'), bio = $('#INP-01-bio');
+  const reveal = (k, on) => $(`.inp01-reveal[data-r="${k}"]`).classList.toggle('is-shown', on);
+
+  form.addEventListener('submit', (e) => e.preventDefault());
+
+  /* Baseline fix: measure how far a CJK line box drops the baseline vs. a Latin one (font-dependent), lazily. */
+  const inputs = [...root.querySelectorAll('.inp01-input')];
+  let shift = null;
+  const measure = () => {
+    const stage = root.querySelector('.obj-stage');
+    if (!stage || !stage.offsetWidth) return null;
+    const fs = getComputedStyle(name).fontSize;
+    const box = (t) => {
+      const d = document.createElement('div');
+      d.style.cssText = `position:absolute;left:0;top:0;visibility:hidden;white-space:nowrap;line-height:normal;font-size:${fs};pointer-events:none`;
+      d.textContent = t;
+      const m = document.createElement('span'); m.style.cssText = 'display:inline-block;width:0;height:0';
+      d.append(m); stage.append(d);
+      const r = m.offsetTop - d.offsetHeight / 2; d.remove(); return r;
+    };
+    return Math.round((box('Ag') - box('あ漢')) * 2) / 2;
+  };
+  const sync = (el) => {
+    if (shift === null) { shift = measure(); if (shift !== null) root.style.setProperty('--inp01-cjk', shift + 'px'); }
+    el.classList.toggle('is-cjk', /[^\u0000-\u024f\u2000-\u206f]/.test(el.value));
+  };
+  inputs.forEach((el) => el.addEventListener('input', () => sync(el)));
+  const syncAll = () => { shift = null; inputs.forEach(sync); };
+  ObjKit.onVisible(root, (v) => { if (v && shift === null) syncAll(); });
+  if (document.fonts) document.fonts.addEventListener('loadingdone', () => { if (root.offsetWidth) syncAll(); });
+
+  /* clear buttons: keep focus in the field, clear, notify */
+  root.querySelectorAll('.inp01-clear').forEach((b) => {
+    const input = b.parentElement.querySelector('input');
+    b.addEventListener('pointerdown', (e) => e.preventDefault());
+    b.addEventListener('mousedown', (e) => e.preventDefault());
+    b.addEventListener('click', () => {
+      input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.focus();
+    });
+  });
+
+  /* tap anywhere on a row focuses its field */
+  root.querySelectorAll('.inp01-row, .inp01-float').forEach((row) => {
+    row.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button, input')) return;
+      e.preventDefault();
+      const input = row.querySelector('input');
+      input.focus();
+      const n = input.value.length;
+      try { input.setSelectionRange(n, n); } catch (_) {}
+    });
+  });
+
+  /* Enter → next field */
+  const order = [name, mail, pass];
+  order.forEach((el, i) => el.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    if (order[i + 1]) order[i + 1].focus(); else el.blur();
+  }));
+
+  /* email validation — on blur, then live while invalid */
+  const mailRow = mail.closest('.inp01-row');
+  const re = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[A-Za-z]{2,}$/;
+  let mailDirty = false;
+  const checkMail = () => {
+    const v = mail.value.trim();
+    const bad = v.length > 0 && !re.test(v);
+    mailRow.classList.toggle('is-invalid', bad);
+    mailRow.classList.toggle('is-valid', v.length > 0 && !bad);
+    mail.setAttribute('aria-invalid', String(bad));
+    reveal('err', bad);
+  };
+  mail.addEventListener('blur', () => { mailDirty = true; checkMail(); });
+  mail.addEventListener('input', () => {
+    mailRow.classList.remove('is-valid');
+    if (mailDirty && mailRow.classList.contains('is-invalid')) checkMail();
+    if (!mail.value) { mailRow.classList.remove('is-invalid'); reveal('err', false); }
+  });
+
+  /* password: reveal toggle + strength meter */
+  const eye = $('.inp01-eye');
+  eye.addEventListener('pointerdown', (e) => { if (document.activeElement === pass) e.preventDefault(); });
+  eye.addEventListener('mousedown', (e) => { if (document.activeElement === pass) e.preventDefault(); });
+  eye.addEventListener('click', () => {
+    const show = pass.type === 'password';
+    const s = pass.selectionStart, en = pass.selectionEnd;
+    pass.type = show ? 'text' : 'password';
+    eye.setAttribute('aria-pressed', String(show));
+    eye.setAttribute('aria-label', show ? 'パスワードを隠す' : 'パスワードを表示');
+    if (document.activeElement === pass) { try { pass.setSelectionRange(s, en); } catch (_) {} }
+  });
+  const bars = [...root.querySelectorAll('.inp01-bars i')];
+  const mlabel = $('.inp01-mlabel');
+  const meter = $('.inp01-meter');
+  const LEVELS = [
+    ['とても弱い', 'var(--red)'], ['弱い', 'var(--red)'], ['普通', 'var(--orange)'], ['強い', 'var(--green)'], ['とても強い', 'var(--green)'],
+  ];
+  const strength = (v) => {
+    let s = 0;
+    if (v.length >= 8) s++;
+    if (/[A-Za-z]/.test(v) && /\d/.test(v)) s++;
+    if ((/[a-z]/.test(v) && /[A-Z]/.test(v)) || /[^A-Za-z0-9]/.test(v)) s++;
+    if (v.length >= 12) s++;
+    if (v.length > 0 && v.length < 8) s = Math.min(s, 1);
+    return s;
+  };
+  pass.addEventListener('input', () => {
+    const v = pass.value;
+    reveal('meter', v.length > 0);
+    const s = strength(v);
+    const [txt, col] = LEVELS[s];
+    meter.style.setProperty('--c', col);
+    mlabel.textContent = txt;
+    bars.forEach((b, i) => b.classList.toggle('is-on', i < Math.max(1, s)));
+  });
+
+  /* floating: username validation */
+  const uf = user.closest('.inp01-float');
+  const ure = /^[a-z0-9._]+$/;
+  const checkUser = () => {
+    const v = user.value;
+    const bad = v.length > 0 && !ure.test(v);
+    uf.classList.toggle('is-invalid', bad);
+    uf.classList.toggle('is-valid', !bad && v.length >= 3);
+    user.setAttribute('aria-invalid', String(bad));
+    reveal('uerr', bad);
+  };
+  user.addEventListener('input', checkUser);
+
+  /* floating: counter */
+  const count = $('.inp01-count');
+  const max = +bio.maxLength || 40;
+  bio.addEventListener('input', () => {
+    const n = [...bio.value].length;
+    count.textContent = `${n}/${max}`;
+    count.classList.toggle('is-near', n >= max - 5 && n < max);
+    count.classList.toggle('is-max', n >= max);
+  });
+})();
+</script>

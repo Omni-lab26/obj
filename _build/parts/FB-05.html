@@ -1,0 +1,539 @@
+<!-- ═══════════ FB-05 · Notification Banner ═══════════ -->
+<style>
+#FB-05 {
+  --fb05-spring: cubic-bezier(.2, 1.18, .32, 1); --fb05-spring-d: 640ms;
+  --fb05-bounce: cubic-bezier(.3, 1.32, .4, 1); --fb05-bounce-d: 620ms;
+}
+#FB-05 .obj-stage { gap: 18px; }
+#FB-05 .fb05-phone { --phone-h: 700px; }
+
+/* ── Screen + wallpaper ── */
+#FB-05 .fb05-screen {
+  --fb05-mat: light-dark(rgba(255, 255, 255, .5), rgba(28, 28, 32, .44));
+  --fb05-mat-peek: light-dark(rgba(255, 255, 255, .3), rgba(44, 44, 50, .4));
+  --fb05-rim: light-dark(rgba(255, 255, 255, .85), rgba(255, 255, 255, .3));
+  --fb05-rim-lo: light-dark(rgba(255, 255, 255, .3), rgba(255, 255, 255, .06));
+  --fb05-sh: light-dark(rgba(36, 10, 80, .16), rgba(0, 0, 0, .38));
+  --fb05-sheen: light-dark(rgba(255, 255, 255, .34), rgba(255, 255, 255, .07));
+  --fb05-t2: light-dark(rgba(40, 40, 52, .62), rgba(235, 235, 245, .6));
+  background: #120c36; color: var(--label);
+  user-select: none; -webkit-user-select: none;
+}
+#FB-05 .fb05-wall {
+  position: absolute; inset: 0; z-index: 0; overflow: hidden;
+  background:
+    radial-gradient(120% 55% at 50% 0%, #0D1035 0%, rgba(13, 16, 53, 0) 75%),
+    radial-gradient(90% 50% at 50% 100%, rgba(255, 92, 160, .55) 0%, rgba(255, 92, 160, 0) 70%),
+    linear-gradient(180deg, #11143D 0%, #241C70 36%, #4E2BA0 62%, #8A35A8 84%, #3C1B80 100%);
+}
+#FB-05 .fb05-orb { position: absolute; border-radius: 50%; }
+#FB-05 .fb05-orb--a { width: 250px; height: 250px; left: -26%; top: 452px;
+  background: radial-gradient(circle at 62% 30%, #FFE0B8 0%, #FFA062 22%, #FF4E7A 56%, #D21E79 82%, #9E136F 100%);
+  box-shadow: 0 0 60px rgba(255, 80, 130, .45); }
+#FB-05 .fb05-orb--b { width: 210px; height: 210px; right: -30%; top: 352px;
+  background: radial-gradient(circle at 28% 30%, #C8F8FF 0%, #5CD2FF 24%, #2D8BFF 58%, #3047D8 86%, #2A2696 100%);
+  box-shadow: 0 0 50px rgba(60, 160, 255, .4); }
+#FB-05 .fb05-orb--c { width: 340px; height: 340px; left: 22%; top: 540px;
+  background: radial-gradient(circle at 40% 18%, #E2B8FF 0%, #A46BFF 26%, #6B33EC 58%, #3F1AB0 100%);
+  box-shadow: 0 -10px 60px rgba(150, 90, 255, .35); }
+#FB-05 .fb05-orb--d { width: 76px; height: 76px; left: 56%; top: 296px;
+  background: radial-gradient(circle at 34% 30%, #FFF4C8 0%, #FFC65A 40%, #FF8B3D 100%);
+  box-shadow: 0 0 40px rgba(255, 170, 80, .55); }
+#FB-05 .fb05-wall::after { /* dark appearance dims the wallpaper + legibility scrims */
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(8, 6, 30, .34) 0%, rgba(8, 6, 30, 0) 34%),
+    linear-gradient(0deg, rgba(8, 6, 30, .3) 0%, rgba(8, 6, 30, 0) 22%),
+    light-dark(rgba(0, 0, 0, 0), rgba(0, 0, 0, .3));
+}
+
+/* ── Lock / date / clock ── */
+#FB-05 .fb05-head { position: absolute; z-index: 1; top: 47px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; color: #fff; pointer-events: none;
+  transition: opacity var(--dur-3) var(--ease-ios), transform var(--dur-3) var(--ease-ios); }
+#FB-05 .fb05-lock { font-size: 13px; opacity: .92; margin-bottom: 5px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .2)); }
+#FB-05 .fb05-date { margin: 0; font: 600 17px/22px var(--font-text); letter-spacing: 0; color: rgba(255, 255, 255, .9); text-shadow: 0 1px 10px rgba(10, 6, 40, .25); }
+#FB-05 .fb05-clock {
+  margin: -2px 0 0; font: 700 86px/1 var(--font-display); letter-spacing: -.045em; font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .97) 10%, rgba(255, 240, 252, .8) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 18px rgba(20, 8, 70, .28));
+  padding-right: .04em;
+}
+
+/* ── Lock-screen widgets (monochrome vibrancy) ── */
+#FB-05 .fb05-widgets { display: flex; align-items: center; gap: 10px; margin-top: 12px; width: min(100% - 28px, 286px); }
+#FB-05 .fb05-wg { position: relative; flex: none; height: 54px; color: #fff; background: rgba(255, 255, 255, .15); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .22), inset 0 1px 0 rgba(255, 255, 255, .14); }
+#FB-05 .fb05-wg--c { width: 54px; border-radius: 50%; display: grid; place-items: center; align-content: center; gap: 1px; }
+#FB-05 .fb05-wg--c .i { font-size: 15px; }
+#FB-05 .fb05-wg b { font: 600 15px/1 var(--font-rounded); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+#FB-05 .fb05-gauge svg.fb05-arc { position: absolute; inset: 4px; width: 46px; height: 46px; }
+#FB-05 .fb05-gauge .i { font-size: 12px; }
+#FB-05 .fb05-wg--r { flex: 1; min-width: 0; border-radius: 18px; display: flex; align-items: center; gap: 9px; padding: 0 12px 0 9px; }
+#FB-05 .fb05-wg--r svg { width: 38px; height: 38px; flex: none; }
+#FB-05 .fb05-wg--r div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+#FB-05 .fb05-wg--r b small { font: 600 10px/1 var(--font-text); opacity: .7; margin-left: 2px; letter-spacing: 0; }
+#FB-05 .fb05-wg--r span { font-size: 11px; line-height: 1; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0; }
+#FB-05 .fb05-wg--r b { white-space: nowrap; }
+
+/* ── Notification list (scrolls up under the clock like iOS) ── */
+#FB-05 .fb05-list {
+  position: absolute; z-index: 2; top: 252px; bottom: 104px; left: 0; right: 0;
+  transition: top var(--fb05-spring-d) var(--fb05-spring);
+  display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; padding: 0 8px;
+  scrollbar-width: none; overscroll-behavior: contain;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 26px); mask-image: linear-gradient(180deg, transparent 0, #000 26px);
+}
+#FB-05 .fb05-list::-webkit-scrollbar { display: none; }
+#FB-05 .fb05-screen.is-open .fb05-list { top: 180px; }
+#FB-05 .fb05-widgets { transition: opacity var(--dur-2) ease, transform var(--fb05-spring-d) var(--fb05-spring); }
+#FB-05 .fb05-screen.is-open .fb05-widgets { opacity: 0; transform: translateY(-10px) scale(.94); }
+#FB-05 .fb05-inner { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding: 20px 0 2px; }
+
+/* ── Notification card (shared by list + banner) ── */
+#FB-05 .fb05-note {
+  position: relative; display: grid; grid-template-columns: 38px minmax(0, 1fr); column-gap: 11px; align-items: center;
+  height: 94px; padding: 0 14px 0 12px; border-radius: 22px; color: var(--label);
+  background: var(--fb05-mat);
+  -webkit-backdrop-filter: blur(26px) saturate(190%); backdrop-filter: blur(26px) saturate(190%);
+  box-shadow: 0 8px 24px var(--fb05-sh), 0 1px 2px rgba(0, 0, 0, .06);
+  isolation: isolate;
+}
+#FB-05 .fb05-note::before { /* specular sheen */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  background: linear-gradient(172deg, var(--fb05-sheen) 0%, transparent 42%);
+}
+#FB-05 .fb05-note::after { /* liquid-glass rim light */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; padding: 1px;
+  background: linear-gradient(150deg, var(--fb05-rim) 0%, var(--fb05-rim-lo) 30%, transparent 55%, var(--fb05-rim-lo) 80%, var(--fb05-rim) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+#FB-05 .fb05-ic { position: relative; width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-size: 21px; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .08); }
+#FB-05 .fb05-ic.av { border-radius: 50%; font-size: 15px; box-shadow: none; }
+#FB-05 .fb05-ic .fb05-badge { position: absolute; right: -4px; bottom: -3px; width: 17px; height: 17px; border-radius: 5px; display: grid; place-items: center; font-size: 11px; color: #fff;
+  background: linear-gradient(180deg, #67E26F, #22C03C); box-shadow: 0 1px 3px rgba(0, 0, 0, .22), inset 0 0 0 .5px rgba(0, 0, 0, .08); }
+#FB-05 .fb05-ic--cal { background: #fff; display: flex; flex-direction: column; justify-content: center; gap: 1px; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .14); }
+#FB-05 .fb05-ic--cal small { font: 600 8px/1 var(--font-text); color: #FF3B30; letter-spacing: 0; }
+#FB-05 .fb05-ic--cal b { font: 300 21px/.9 var(--font-display); color: #1c1c1e; letter-spacing: -.02em; }
+#FB-05 .fb05-ic--wx { background: linear-gradient(180deg, #49B6FF, #1A6EF0); font-size: 22px; }
+#FB-05 .fb05-ic--fit { background: #000; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .16); }
+#FB-05 .fb05-ic--fit svg { width: 30px; height: 30px; }
+#FB-05 .fb05-tx { min-width: 0; display: flex; flex-direction: column; }
+#FB-05 .fb05-meta { margin: 0 0 1px; display: flex; align-items: baseline; gap: 8px; font: 600 12px/15px var(--font-text); letter-spacing: .02em; color: var(--fb05-t2); }
+#FB-05 .fb05-meta span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-05 .fb05-meta time { flex: none; font-weight: 400; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#FB-05 .fb05-t { margin: 0; font: 600 15px/19px var(--font-text); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-05 .fb05-b { margin: 0; font: 400 15px/19px var(--font-text); letter-spacing: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 38px; }
+
+/* ── Grouped stack ── */
+#FB-05 .fb05-group { position: relative; height: 112px; transition: height var(--fb05-spring-d) var(--fb05-spring); }
+#FB-05 .fb05-group > .fb05-note { position: absolute; top: 0; left: 0; right: 0; transform-origin: 50% 100%;
+  transition: transform var(--fb05-spring-d) var(--fb05-spring), clip-path var(--fb05-spring-d) var(--fb05-spring), background var(--dur-2) ease, box-shadow var(--dur-2) ease; }
+#FB-05 .fb05-group > .fb05-n2 { clip-path: inset(calc(100% - 12px) -30px -30px -30px); }
+#FB-05 .fb05-group > .fb05-n3 { clip-path: inset(calc(100% - 12.5px) -30px -30px -30px); } /* only the peeking lip renders behind the translucent top card */
+#FB-05 .fb05-group.is-expanded > .fb05-peek { clip-path: inset(-30px -30px -30px -30px); }
+#FB-05 .fb05-group > .fb05-n1 { z-index: 3; }
+#FB-05 .fb05-group > .fb05-n2 { z-index: 2; transform: translateY(9px) scale(.94); background: var(--fb05-mat-peek); box-shadow: 0 6px 16px var(--fb05-sh); }
+#FB-05 .fb05-group > .fb05-n3 { z-index: 1; transform: translateY(18px) scale(.88); background: var(--fb05-mat-peek); box-shadow: 0 6px 16px var(--fb05-sh); }
+#FB-05 .fb05-group > .fb05-peek > * { opacity: 0; transition: opacity var(--dur-1) ease; }
+#FB-05 .fb05-group.is-expanded { height: 352px; }
+#FB-05 .fb05-group.is-expanded > .fb05-n1 { transform: translateY(46px); }
+#FB-05 .fb05-group.is-expanded > .fb05-n2 { transform: translateY(148px); background: var(--fb05-mat); box-shadow: 0 8px 24px var(--fb05-sh); transition-delay: 25ms; }
+#FB-05 .fb05-group.is-expanded > .fb05-n3 { transform: translateY(250px); background: var(--fb05-mat); box-shadow: 0 8px 24px var(--fb05-sh); transition-delay: 50ms; }
+#FB-05 .fb05-group.is-expanded > .fb05-peek > * { opacity: 1; transition: opacity var(--dur-2) ease 200ms; }
+#FB-05 .fb05-gbtn { position: absolute; inset: 0; z-index: 5; border: 0; padding: 0; margin: 0; background: transparent; border-radius: 22px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#FB-05 .fb05-gbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255, 255, 255, .85); }
+#FB-05 .fb05-group:not(.is-expanded):has(.fb05-gbtn:active) > .fb05-n1 { transform: scale(.975); transition-duration: 120ms; }
+#FB-05 .fb05-group.is-expanded .fb05-gbtn { visibility: hidden; }
+#FB-05 .fb05-ghead {
+  position: absolute; top: 0; left: 6px; right: 0; height: 36px; display: flex; align-items: center; gap: 8px;
+  opacity: 0; transform: translateY(14px); pointer-events: none;
+  transition: opacity var(--dur-1) ease, transform var(--fb05-spring-d) var(--fb05-spring);
+}
+#FB-05 .fb05-group.is-expanded .fb05-ghead { opacity: 1; transform: none; pointer-events: auto; transition: opacity var(--dur-2) ease 90ms, transform var(--fb05-spring-d) var(--fb05-spring); }
+#FB-05 .fb05-ghead h4 { flex: 1; margin: 0; font: 700 21px/1 var(--font-display); letter-spacing: 0; color: #fff; text-shadow: 0 1px 12px rgba(20, 6, 60, .3); }
+#FB-05 .fb05-less, #FB-05 .fb05-clear {
+  height: 30px; border: 0; border-radius: 999px; cursor: pointer; color: var(--label);
+  background: var(--fb05-mat); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 0 0 .5px var(--fb05-rim-lo), 0 2px 8px var(--fb05-sh);
+  font: 600 13px/1 var(--font-text); letter-spacing: 0; -webkit-tap-highlight-color: transparent;
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+#FB-05 .fb05-less { padding: 0 13px; }
+#FB-05 .fb05-clear { width: 30px; display: grid; place-items: center; font-size: 12px; padding: 0; }
+#FB-05 .fb05-less:active, #FB-05 .fb05-clear:active { transform: scale(.92); transition-duration: 90ms; }
+#FB-05 .fb05-less:focus-visible, #FB-05 .fb05-clear:focus-visible { outline: none; box-shadow: 0 0 0 2.5px rgba(255, 255, 255, .9); }
+
+/* ── Quick actions ── */
+#FB-05 .fb05-qa {
+  position: absolute; z-index: 3; bottom: 40px; width: 50px; height: 50px; border-radius: 50%; border: 0; padding: 0;
+  display: grid; place-items: center; font-size: 21px; color: #fff; cursor: pointer;
+  background: rgba(16, 10, 40, .34); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .2), inset 0 1px 0 rgba(255, 255, 255, .14);
+  transition: transform var(--dur-3) var(--ease-spring), background var(--dur-2) ease, color var(--dur-2) ease;
+  -webkit-tap-highlight-color: transparent;
+}
+#FB-05 .fb05-qa--l { left: 38px; }
+#FB-05 .fb05-qa--r { right: 38px; }
+#FB-05 .fb05-qa:active { transform: scale(1.14); transition-duration: 200ms; }
+#FB-05 .fb05-qa[aria-pressed="true"] { background: #fff; color: #1c1c1e; box-shadow: 0 0 22px rgba(255, 255, 255, .45); }
+#FB-05 .fb05-qa:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255, 255, 255, .8); }
+
+/* ── Incoming banner ── */
+#FB-05 .fb05-banner {
+  position: absolute; z-index: 30; top: 50px; left: 8px; right: 8px; height: 104px; padding-bottom: 10px; cursor: grab; touch-action: none;
+  --fb05-mat: light-dark(rgba(250, 250, 252, .74), rgba(30, 30, 34, .72));
+  -webkit-backdrop-filter: blur(30px) saturate(200%); backdrop-filter: blur(30px) saturate(200%);
+  transform: translateY(-150px) scale(.92); opacity: 0; visibility: hidden;
+  transition: transform 360ms cubic-bezier(.45, 0, .7, .3), opacity 240ms ease 80ms, visibility 0s 380ms;
+  box-shadow: 0 14px 36px var(--fb05-sh), 0 2px 6px rgba(0, 0, 0, .08);
+}
+#FB-05 .fb05-banner.is-shown { transform: none; opacity: 1; visibility: visible; transition: transform var(--fb05-spring-d) var(--fb05-spring), opacity 160ms ease, visibility 0s; }
+#FB-05 .fb05-banner.is-drag { transition: none; cursor: grabbing; }
+#FB-05 .fb05-banner.is-fling { transition: transform 300ms cubic-bezier(.2, .7, .3, 1), opacity 220ms ease 60ms, visibility 0s 320ms; }
+#FB-05 .fb05-banner:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255, 255, 255, .9), 0 14px 36px var(--fb05-sh); }
+#FB-05 .fb05-grab { position: absolute; left: 50%; bottom: 7px; width: 34px; height: 4px; margin-left: -17px; border-radius: 2px; background: var(--label-3); }
+
+/* ── Dynamic Island morph (drawn above the injected island) ── */
+#FB-05 .fb05-di {
+  position: absolute; z-index: 1001; top: 10px; left: 50%; width: 98px; height: 29px; border-radius: 20px;
+  background: #000; color: #fff; overflow: hidden; transform: translateX(-50%); pointer-events: none;
+  transition: width var(--fb05-bounce-d) var(--fb05-bounce), height var(--fb05-bounce-d) var(--fb05-bounce), border-radius var(--fb05-bounce-d) var(--fb05-bounce), box-shadow var(--dur-3) ease, transform var(--dur-3) var(--ease-spring);
+}
+#FB-05 .fb05-di[data-state="compact"] { width: min(180px, 100% - 142px); pointer-events: auto; cursor: pointer; }
+#FB-05 .fb05-screen .phone-status__icons svg { transition: opacity var(--dur-2) ease; }
+#FB-05 .fb05-screen.is-live .phone-status__icons svg:not(:last-child) { opacity: 0; } /* iOS drops signal/Wi-Fi to make room for the island */
+#FB-05 .fb05-di[data-state="expanded"] { width: calc(100% - 18px); height: 80px; border-radius: 40px; pointer-events: auto; box-shadow: 0 14px 34px rgba(0, 0, 0, .38); }
+#FB-05 .fb05-di[data-state="compact"]:active { transform: translateX(-50%) scale(.95); transition-duration: 120ms; }
+#FB-05 .fb05-di-c, #FB-05 .fb05-di-x { position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; pointer-events: none; }
+#FB-05 .fb05-di-c { justify-content: space-between; padding: 0 10px 0 8px; margin: 0; border: 0; background: transparent; color: inherit; border-radius: inherit; cursor: pointer; transition: opacity 120ms ease; -webkit-tap-highlight-color: transparent; }
+#FB-05 .fb05-di-c:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(255, 159, 10, .8); }
+#FB-05 .fb05-di-c .i { font-size: 17px; color: #FF9F0A; }
+#FB-05 .fb05-di-c b { font: 600 13.5px/1 var(--font-text); color: #FF9F0A; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+#FB-05 .fb05-di[data-state="compact"] .fb05-di-c { opacity: 1; pointer-events: auto; transition: opacity 260ms ease 200ms; }
+#FB-05 .fb05-di-x { gap: 8px; padding: 0 24px 0 18px; transform: scale(.86); filter: blur(5px); transform-origin: 50% 0;
+  transition: opacity 120ms ease, transform 200ms ease, filter 120ms ease; }
+#FB-05 .fb05-di[data-state="expanded"] .fb05-di-x { opacity: 1; transform: none; filter: none; pointer-events: auto;
+  transition: opacity 300ms ease 150ms, transform 520ms var(--ease-out) 110ms, filter 300ms ease 150ms; }
+#FB-05 .fb05-di-x button {
+  width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center; cursor: pointer; flex: none;
+  font-size: 18px; -webkit-tap-highlight-color: transparent; transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#FB-05 .fb05-di-x button:active { transform: scale(.9); transition-duration: 90ms; }
+#FB-05 .fb05-di-x button:focus-visible { outline: none; box-shadow: 0 0 0 2px #000, 0 0 0 4px rgba(255, 255, 255, .8); }
+#FB-05 .fb05-di-pause { background: rgba(255, 159, 10, .26); color: #FF9F0A; }
+#FB-05 .fb05-di-stop { background: rgba(255, 255, 255, .17); color: #fff; }
+#FB-05 .fb05-di-x .fb05-di-info { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+#FB-05 .fb05-di-info span { font: 600 12px/1 var(--font-text); color: rgba(255, 159, 10, .9); letter-spacing: 0; }
+#FB-05 .fb05-di-info b { font: 500 38px/1 var(--font-display); color: #FF9F0A; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+#FB-05 .fb05-di.is-paused .fb05-di-c b, #FB-05 .fb05-di.is-paused .fb05-di-info b { color: rgba(255, 159, 10, .55); }
+
+/* ── Controls under the phone ── */
+#FB-05 .fb05-ctrls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: min(100%, 420px); }
+#FB-05 .fb05-ctl {
+  position: relative; display: inline-flex; align-items: center; gap: 7px; height: 42px; padding: 0 17px 0 14px; border: 0; border-radius: 999px; cursor: pointer;
+  color: var(--label); font: 600 15px/1 var(--font-text); letter-spacing: 0;
+  background: var(--glass-bg-strong); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  -webkit-tap-highlight-color: transparent; transition: transform var(--dur-2) var(--ease-spring), background var(--dur-2) ease, color var(--dur-2) ease;
+}
+#FB-05 .fb05-ctl .i { font-size: 17px; }
+#FB-05 .fb05-ctl .fb05-ctl-ic { color: var(--pink); }
+#FB-05 .fb05-ctl[aria-pressed] .fb05-ctl-ic { color: var(--orange); }
+#FB-05 .fb05-ctl[aria-pressed="true"] { background: color-mix(in srgb, var(--orange) 22%, var(--glass-bg-strong)); color: light-dark(#9A4A00, #FFC56B); }
+@media (hover: hover) { #FB-05 .fb05-ctl:hover { background: color-mix(in srgb, var(--glass-bg-strong) 70%, var(--bg)); } }
+#FB-05 .fb05-ctl:active { transform: scale(.95); transition-duration: 90ms; }
+#FB-05 .fb05-ctl:focus-visible { outline: none; box-shadow: var(--glass-shadow), 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  #FB-05 .fb05-group, #FB-05 .fb05-group > .fb05-note, #FB-05 .fb05-ghead, #FB-05 .fb05-di, #FB-05 .fb05-di-x { transition-duration: 1ms !important; transition-delay: 0s !important; }
+  #FB-05 .fb05-banner, #FB-05 .fb05-banner.is-shown { transform: none; transition: opacity 200ms ease, visibility 0s 200ms; }
+  #FB-05 .fb05-banner.is-shown { transition: opacity 200ms ease, visibility 0s; }
+}
+</style>
+<article class="obj" id="FB-05" data-name="Notification Banner" data-ja="通知バナー" data-vector="Glass" data-size="m" data-desc="上から降りてくる通知と、ロック画面の通知スタック。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="phone fb05-phone" data-status="light">
+      <div class="phone-screen fb05-screen">
+        <div class="fb05-wall" aria-hidden="true"><span class="fb05-orb fb05-orb--c"></span><span class="fb05-orb fb05-orb--a"></span><span class="fb05-orb fb05-orb--b"></span><span class="fb05-orb fb05-orb--d"></span></div>
+
+        <div class="fb05-head">
+          <svg class="i fb05-lock" aria-hidden="true"><use href="#i-lock-fill"/></svg>
+          <p class="fb05-date">10月2日 金曜日</p>
+          <p class="fb05-clock" aria-label="9時41分">9:41</p>
+          <div class="fb05-widgets" aria-hidden="true">
+            <div class="fb05-wg fb05-wg--c"><svg class="i"><use href="#i-cloud-sun-fill"/></svg><b>22°</b></div>
+            <div class="fb05-wg fb05-wg--c fb05-gauge">
+              <svg class="fb05-arc" viewBox="0 0 46 46" fill="none" stroke-linecap="round" stroke-width="3.5"><circle cx="23" cy="23" r="20" stroke="rgba(255,255,255,.26)" stroke-dasharray="94.25 31.42" transform="rotate(135 23 23)"/><circle cx="23" cy="23" r="20" stroke="#fff" stroke-dasharray="77.3 48.4" transform="rotate(135 23 23)"/></svg>
+              <svg class="i"><use href="#i-bolt-fill"/></svg><b>82</b>
+            </div>
+            <div class="fb05-wg fb05-wg--r">
+              <svg viewBox="0 0 38 38" fill="none" stroke-linecap="round" stroke-width="4.2">
+                <circle cx="19" cy="19" r="16.5" stroke="rgba(255,255,255,.22)"/><circle cx="19" cy="19" r="16.5" stroke="#fff" stroke-dasharray="83 104" transform="rotate(-90 19 19)"/>
+                <circle cx="19" cy="19" r="11.5" stroke="rgba(255,255,255,.22)"/><circle cx="19" cy="19" r="11.5" stroke="rgba(255,255,255,.88)" stroke-dasharray="57.8 72.3" transform="rotate(-90 19 19)"/>
+                <circle cx="19" cy="19" r="6.5" stroke="rgba(255,255,255,.22)"/><circle cx="19" cy="19" r="6.5" stroke="rgba(255,255,255,.76)" stroke-dasharray="30.6 40.8" transform="rotate(-90 19 19)"/>
+              </svg>
+              <div><b>320/400<small>kcal</small></b><span>24分 · 9時間</span></div>
+            </div>
+          </div>
+        </div>
+
+        <section class="fb05-list" aria-label="通知">
+          <div class="fb05-inner">
+            <div class="fb05-note" role="group" aria-label="カレンダー：デザインレビュー">
+              <span class="fb05-ic fb05-ic--cal" aria-hidden="true"><small>金曜日</small><b>2</b></span>
+              <div class="fb05-tx">
+                <p class="fb05-meta"><span>カレンダー</span><time>5分前</time></p>
+                <p class="fb05-t">デザインレビュー</p>
+                <p class="fb05-b">10:30〜11:00 · 会議室 B<br>伊藤 蓮さんほか2人が参加予定</p>
+              </div>
+            </div>
+
+            <div class="fb05-group">
+              <div class="fb05-ghead">
+                <h4>メッセージ</h4>
+                <button class="fb05-less" type="button">表示を減らす</button>
+                <button class="fb05-clear" type="button" aria-label="グループを閉じる"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>
+              </div>
+              <div class="fb05-note fb05-n1" role="group" aria-label="小林 美緒">
+                <span class="fb05-ic av av-2" aria-hidden="true">M<span class="fb05-badge"><svg class="i"><use href="#i-message-fill"/></svg></span></span>
+                <div class="fb05-tx">
+                  <p class="fb05-meta"><span>メッセージ</span><time>今</time></p>
+                  <p class="fb05-t">小林 美緒</p>
+                  <p class="fb05-b">今夜のごはん、どこにする？駅前に新しくできたラーメン屋さんが気になってる🍜</p>
+                </div>
+              </div>
+              <div class="fb05-note fb05-n2 fb05-peek" role="group" aria-label="佐藤 春">
+                <span class="fb05-ic av av-1" aria-hidden="true">H<span class="fb05-badge"><svg class="i"><use href="#i-message-fill"/></svg></span></span>
+                <div class="fb05-tx">
+                  <p class="fb05-meta"><span>メッセージ</span><time>3分前</time></p>
+                  <p class="fb05-t">佐藤 春</p>
+                  <p class="fb05-b">夕焼けの写真、あとでまとめて送るね。今日の空ほんとにきれいだった</p>
+                </div>
+              </div>
+              <div class="fb05-note fb05-n3 fb05-peek" role="group" aria-label="高橋 海斗">
+                <span class="fb05-ic av av-3" aria-hidden="true">K<span class="fb05-badge"><svg class="i"><use href="#i-message-fill"/></svg></span></span>
+                <div class="fb05-tx">
+                  <p class="fb05-meta"><span>メッセージ</span><time>12分前</time></p>
+                  <p class="fb05-t">高橋 海斗</p>
+                  <p class="fb05-b">PR のレビューお願いします！午前中に見てもらえると助かります🙏</p>
+                </div>
+              </div>
+              <button class="fb05-gbtn" type="button" aria-expanded="false" aria-label="メッセージの通知3件を展開"></button>
+            </div>
+          </div>
+        </section>
+
+        <button class="fb05-qa fb05-qa--l" type="button" aria-pressed="false" aria-label="懐中電灯"><svg class="i" aria-hidden="true"><use href="#i-flashlight-on-fill"/></svg></button>
+        <span class="fb05-qa fb05-qa--r" aria-hidden="true"><svg class="i"><use href="#i-camera-fill"/></svg></span>
+
+        <div class="fb05-note fb05-banner" tabindex="-1" role="group" aria-roledescription="通知バナー" aria-label="新着通知（上にスワイプで閉じる）">
+          <span class="fb05-ic" aria-hidden="true"></span>
+          <div class="fb05-tx">
+            <p class="fb05-meta"><span></span><time>今</time></p>
+            <p class="fb05-t"></p>
+            <p class="fb05-b"></p>
+          </div>
+          <span class="fb05-grab" aria-hidden="true"></span>
+        </div>
+        <p class="sr-only fb05-live" aria-live="polite"></p>
+
+        <div class="fb05-di" data-state="idle">
+          <button class="fb05-di-c" type="button" tabindex="-1" aria-label="タイマーを展開">
+            <svg class="i" aria-hidden="true"><use href="#i-timer"/></svg><b class="fb05-cd fb05-cd--s">4:59</b>
+          </button>
+          <div class="fb05-di-x">
+            <button class="fb05-di-pause" type="button" aria-label="一時停止" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-pause-fill"/></svg></button>
+            <button class="fb05-di-stop" type="button" aria-label="タイマーを終了" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>
+            <div class="fb05-di-info"><span>タイマー</span><b class="fb05-cd">04:59</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fb05-ctrls">
+      <button class="fb05-ctl fb05-notify" type="button"><svg class="i fb05-ctl-ic" aria-hidden="true"><use href="#i-bell-fill"/></svg>通知を受け取る</button>
+      <button class="fb05-ctl fb05-live-btn" type="button" aria-pressed="false"><svg class="i fb05-ctl-ic" aria-hidden="true"><use href="#i-timer"/></svg>ライブアクティビティ</button>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>通知スタックをタップで展開</li><li>バナーは上にスワイプで閉じる</li><li>アイランドをタップで再展開</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('FB-05');
+  if (!root) return;
+  const q = (s) => root.querySelector(s);
+  const RM = () => !!(window.ObjKit && window.ObjKit.reducedMotion);
+
+  /* — Real damped springs, expressed as CSS linear() easings — */
+  const spring = (k, c) => {
+    let x = 0, v = 0, t = 0; const dt = 1 / 240, pts = [0];
+    while (t < 2.5) { v += (-k * (x - 1) - c * v) * dt; x += v * dt; t += dt; pts.push(x); if (Math.abs(x - 1) < 6e-4 && Math.abs(v) < 6e-3) break; }
+    const n = 48, out = [];
+    for (let i = 0; i <= n; i++) out.push(+pts[Math.round((i / n) * (pts.length - 1))].toFixed(4));
+    out[n] = 1;
+    return { e: `linear(${out.join(', ')})`, ms: Math.round(t * 1000) };
+  };
+  if (window.CSS && CSS.supports && CSS.supports('transition-timing-function', 'linear(0, 1)')) {
+    const a = spring(230, 25), b = spring(260, 20);
+    root.style.setProperty('--fb05-spring', a.e); root.style.setProperty('--fb05-spring-d', a.ms + 'ms');
+    root.style.setProperty('--fb05-bounce', b.e); root.style.setProperty('--fb05-bounce-d', b.ms + 'ms');
+  }
+
+  /* — Notification stack — */
+  const list = q('.fb05-list'), group = q('.fb05-group'), gbtn = q('.fb05-gbtn'), scr = q('.fb05-screen');
+  let follow = 0;
+  const setExpanded = (on, focus) => {
+    group.classList.toggle('is-expanded', on);
+    scr.classList.toggle('is-open', on);
+    gbtn.setAttribute('aria-expanded', String(on));
+    cancelAnimationFrame(follow);
+    const t0 = performance.now();
+    const from = list.scrollTop;
+    const step = (t) => { // keep the stack anchored to the bottom while it grows (iOS: list scrolls under the clock)
+      const max = list.scrollHeight - list.clientHeight;
+      list.scrollTop = on ? Math.min(max, group.offsetTop - 16) : Math.min(from, max);
+      if (t - t0 < 900) follow = requestAnimationFrame(step);
+    };
+    follow = requestAnimationFrame(step);
+    if (focus) (on ? q('.fb05-less') : gbtn).focus({ preventScroll: true });
+  };
+  gbtn.addEventListener('click', () => setExpanded(true, true));
+  q('.fb05-less').addEventListener('click', () => setExpanded(false, true));
+  q('.fb05-clear').addEventListener('click', () => setExpanded(false, true));
+  group.addEventListener('keydown', (e) => { if (e.key === 'Escape' && group.classList.contains('is-expanded')) { e.stopPropagation(); setExpanded(false, true); } });
+
+  /* — Flashlight — */
+  const torch = q('.fb05-qa--l');
+  torch.addEventListener('click', () => torch.setAttribute('aria-pressed', String(torch.getAttribute('aria-pressed') !== 'true')));
+
+  /* — Incoming banner — */
+  const badge = '<span class="fb05-badge"><svg class="i"><use href="#i-message-fill"/></svg></span>';
+  const rings = '<svg viewBox="0 0 30 30" fill="none" stroke-linecap="round" stroke-width="3.6"><circle cx="15" cy="15" r="12.5" stroke="#4a0c1d"/><circle cx="15" cy="15" r="12.5" stroke="#FA114F" stroke-dasharray="62 79" transform="rotate(-90 15 15)"/><circle cx="15" cy="15" r="8.4" stroke="#1d3d06"/><circle cx="15" cy="15" r="8.4" stroke="#9BF00B" stroke-dasharray="40 53" transform="rotate(-90 15 15)"/><circle cx="15" cy="15" r="4.3" stroke="#063a40"/><circle cx="15" cy="15" r="4.3" stroke="#18E6F2" stroke-dasharray="20 27" transform="rotate(-90 15 15)"/></svg>';
+  const NOTES = [
+    { cls: 'fb05-ic av av-4', icon: 'Y' + badge, app: 'メッセージ', title: '山本 結菜', body: '明日の集合、10時に渋谷駅のハチ公前でいい？☕️ 着いたら連絡するね' },
+    { cls: 'fb05-ic fb05-ic--fit', icon: rings, app: 'フィットネス', title: 'ムーブリングを完成させましょう', body: 'あと 80 kcal で今日のムーブゴールを達成できます。少し歩いてみませんか？' },
+    { cls: 'fb05-ic fb05-ic--wx', icon: '<svg class="i"><use href="#i-cloud-sun-fill"/></svg>', app: '天気', title: 'まもなく雨が降り出します', body: '渋谷区 · 10:15ごろから弱い雨が1時間ほど続く見込みです。傘をお忘れなく。' },
+  ];
+  const banner = q('.fb05-banner'), bIc = banner.querySelector('.fb05-ic'), live = q('.fb05-live');
+  let idx = 0, shown = false, hideT = 0, swapT = 0;
+  const armHide = (ms) => { clearTimeout(hideT); hideT = setTimeout(() => hide(false), ms); };
+  const fill = (n) => {
+    bIc.className = n.cls; bIc.innerHTML = n.icon;
+    banner.querySelector('.fb05-meta span').textContent = n.app;
+    banner.querySelector('.fb05-t').textContent = n.title;
+    banner.querySelector('.fb05-b').textContent = n.body;
+    banner.setAttribute('aria-label', `${n.app}：${n.title}（上にスワイプで閉じる）`);
+    live.textContent = `${n.app}、${n.title}。${n.body}`;
+  };
+  function show() {
+    clearTimeout(swapT);
+    if (shown) { hide(true); swapT = setTimeout(show, 300); return; }
+    fill(NOTES[idx++ % NOTES.length]);
+    banner.classList.remove('is-fling', 'is-drag');
+    banner.style.transform = ''; banner.style.opacity = '';
+    void banner.offsetWidth;
+    banner.classList.add('is-shown');
+    shown = true;
+    armHide(3000);
+  }
+  function hide(fast, fromY) {
+    clearTimeout(hideT);
+    if (!shown) return;
+    shown = false;
+    if (fromY !== undefined) { // continue the fling from where the finger left it
+      banner.classList.remove('is-drag'); banner.classList.add('is-fling');
+      void banner.offsetWidth;
+      banner.style.transform = 'translateY(-170px)'; banner.style.opacity = '0';
+      banner.classList.remove('is-shown');
+      return;
+    }
+    banner.classList.toggle('is-fling', !!fast);
+    banner.style.transform = ''; banner.style.opacity = '';
+    banner.classList.remove('is-shown');
+  }
+  banner.addEventListener('transitionend', (e) => {
+    if (e.target === banner && e.propertyName === 'visibility' && !shown) { banner.classList.remove('is-fling'); banner.style.transform = ''; banner.style.opacity = ''; }
+  });
+  q('.fb05-notify').addEventListener('click', show);
+
+  /* drag up to dismiss — rubber-band when pulled down */
+  let drag = null;
+  banner.addEventListener('pointerdown', (e) => {
+    if (!shown || e.button > 0) return;
+    banner.setPointerCapture(e.pointerId);
+    clearTimeout(hideT);
+    drag = { id: e.pointerId, y0: e.clientY, dy: 0, moved: false, hist: [[e.timeStamp, e.clientY]] };
+    banner.classList.add('is-drag');
+  });
+  banner.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dy = e.clientY - drag.y0;
+    if (Math.abs(dy) > 3) drag.moved = true;
+    drag.dy = dy;
+    drag.hist.push([e.timeStamp, e.clientY]); if (drag.hist.length > 6) drag.hist.shift();
+    const ty = dy < 0 ? dy : 22 * Math.log1p(dy / 22); // iOS-like resistance downwards
+    const sc = dy < 0 ? 1 + Math.max(dy, -120) / 1600 : 1;
+    banner.style.transform = `translateY(${ty.toFixed(1)}px) scale(${sc.toFixed(3)})`;
+  });
+  const endDrag = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const h = drag.hist, a = h[0], b = h[h.length - 1];
+    const v = (b[1] - a[1]) / Math.max(1, b[0] - a[0]); // px/ms
+    const { dy, moved } = drag; drag = null;
+    if (!moved) { banner.classList.remove('is-drag'); banner.style.transform = ''; hide(true); return; } // tap = open → banner leaves
+    if (dy < -36 || v < -0.35) { hide(true, dy); return; }
+    banner.classList.remove('is-drag');
+    banner.style.transform = '';
+    armHide(2200);
+  };
+  banner.addEventListener('pointerup', endDrag);
+  banner.addEventListener('pointercancel', endDrag);
+  root.addEventListener('keydown', (e) => { if (e.key === 'Escape' && shown) hide(true); });
+
+  /* — Dynamic Island: Live Activity (timer) — */
+  const di = q('.fb05-di'), liveBtn = q('.fb05-live-btn'), pauseBtn = q('.fb05-di-pause');
+  const cds = [...root.querySelectorAll('.fb05-cd')];
+  const diBtns = [...di.querySelectorAll('button')];
+  let state = 'idle', endAt = 0, left = 0, paused = false, tick = 0, compactT = 0, visible = true;
+  const fmt = (ms, short) => { const s = Math.max(0, Math.floor(ms / 1000)); return `${short ? Math.floor(s / 60) : String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+  const remaining = () => (paused ? left : endAt - performance.now());
+  const render = () => {
+    const r = remaining();
+    cds.forEach((c) => { const txt = fmt(r, c.classList.contains('fb05-cd--s')); if (c.textContent !== txt) c.textContent = txt; });
+    if (r <= 0 && state !== 'idle') { stopTick(); setTimeout(() => setState('idle'), 900); }
+  };
+  const startTick = () => { stopTick(); if (visible && state !== 'idle' && !paused) tick = setInterval(render, 250); };
+  const stopTick = () => { clearInterval(tick); tick = 0; };
+  function setState(s) {
+    state = s; di.dataset.state = s;
+    scr.classList.toggle('is-live', s !== 'idle');
+    clearTimeout(compactT);
+    liveBtn.setAttribute('aria-pressed', String(s !== 'idle'));
+    diBtns.forEach((b) => { b.tabIndex = (s === 'expanded' && !b.classList.contains('fb05-di-c')) || (s === 'compact' && b.classList.contains('fb05-di-c')) ? 0 : -1; });
+    if (s === 'expanded') compactT = setTimeout(() => setState('compact'), 3200);
+    if (s === 'idle') { stopTick(); paused = false; di.classList.remove('is-paused'); }
+    else startTick();
+  }
+  liveBtn.addEventListener('click', () => {
+    if (state === 'idle') { paused = false; endAt = performance.now() + 299999; render(); setState('expanded'); }
+    else setState('idle');
+  });
+  q('.fb05-di-c').addEventListener('click', () => { if (state === 'compact') setState('expanded'); });
+  q('.fb05-di-stop').addEventListener('click', () => setState('idle'));
+  pauseBtn.addEventListener('click', () => {
+    if (paused) { endAt = performance.now() + left; paused = false; } else { left = endAt - performance.now(); paused = true; }
+    di.classList.toggle('is-paused', paused);
+    pauseBtn.setAttribute('aria-label', paused ? '再開' : '一時停止');
+    pauseBtn.querySelector('use').setAttribute('href', paused ? '#i-play-fill' : '#i-pause-fill');
+    render(); startTick();
+    setState('expanded'); // keep it open a little longer after interacting
+  });
+
+  if (window.ObjKit) window.ObjKit.onVisible(root, (v) => {
+    visible = v;
+    if (!v) { stopTick(); clearTimeout(hideT); if (shown) hide(true); }
+    else if (state !== 'idle') { render(); startTick(); }
+  });
+})();
+</script>

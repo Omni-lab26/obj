@@ -1,0 +1,278 @@
+<!-- ═══════════ MSC-02 · Avatar ═══════════ -->
+<style>
+#MSC-02 .obj-stage { padding-top: 28px; padding-bottom: 28px; }
+#MSC-02 .msc02-wash {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(48% 38% at 8% 4%, light-dark(rgba(255, 183, 206, .55), rgba(255, 120, 170, .13)), transparent 70%),
+    radial-gradient(46% 36% at 96% 18%, light-dark(rgba(176, 214, 255, .6), rgba(90, 150, 255, .12)), transparent 70%),
+    radial-gradient(50% 40% at 30% 100%, light-dark(rgba(190, 240, 220, .55), rgba(60, 200, 160, .1)), transparent 70%),
+    radial-gradient(40% 34% at 100% 92%, light-dark(rgba(214, 200, 255, .55), rgba(140, 110, 255, .12)), transparent 70%);
+}
+#MSC-02 .msc02-wrap {
+  --card: var(--bg-grouped-2);
+  position: relative; z-index: 1; width: min(100%, 480px); container-type: inline-size;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px;
+}
+@container (min-width: 452px) {
+  #MSC-02 .msc02-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+}
+#MSC-02 .msc02-duo { display: grid; gap: 12px; }
+#MSC-02 .msc02-card {
+  position: relative; padding: 14px 16px 16px; border-radius: 26px; background: var(--card);
+  box-shadow: 0 12px 32px -14px light-dark(rgba(110, 80, 190, .26), rgba(0, 0, 0, .7)), 0 2px 6px light-dark(rgba(110, 80, 190, .06), rgba(0, 0, 0, .3)),
+    inset 0 0 0 .5px light-dark(rgba(110, 80, 190, .06), rgba(255, 255, 255, .06));
+}
+#MSC-02 .msc02-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 26px; margin: 0 0 12px; }
+#MSC-02 .msc02-cap { margin: 0; font: 600 var(--fs-footnote)/1.2 var(--font-rounded); color: var(--label-2); letter-spacing: 0; }
+#MSC-02 .msc02-lbl { font: 500 var(--fs-caption2)/1.2 var(--font-rounded); color: var(--label-3); letter-spacing: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* — Avatar unit: --s drives initials, status dot, ring and badge so everything scales together — */
+#MSC-02 .msc02-u { --s: 48px; --ring: var(--card); position: relative; width: var(--s); height: var(--s); flex: none; display: block; }
+#MSC-02 .msc02-u > .av, #MSC-02 .msc02-u > .msc02-ph { width: 100%; height: 100%; font-size: calc(var(--s) * .42); letter-spacing: 0; }
+#MSC-02 .msc02-u > .av { box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .06); }
+#MSC-02 .msc02-glow { border-radius: 50%; box-shadow: 0 calc(var(--s) * .14) calc(var(--s) * .32) calc(var(--s) * -.14) color-mix(in srgb, var(--g, #8E8E93) light-dark(60%, 45%), transparent); }
+#MSC-02 .msc02-dot {
+  position: absolute; left: calc(var(--s) * .714); top: calc(var(--s) * .714); width: calc(var(--s) * .28); height: calc(var(--s) * .28);
+  border-radius: 50%; background: var(--green); box-shadow: 0 0 0 max(1.5px, calc(var(--s) * .055)) var(--ring);
+  transform: scale(0); transition: transform 360ms var(--ease-spring), background var(--dur-2) ease;
+}
+#MSC-02 .is-online .msc02-dot { transform: scale(1); }
+#MSC-02 .msc02-moon {
+  position: absolute; left: calc(var(--s) * .66); top: calc(var(--s) * .66); width: calc(var(--s) * .38); height: calc(var(--s) * .38);
+  display: grid; place-items: center; border-radius: 50%; background: var(--indigo); color: #fff; font-size: calc(var(--s) * .23);
+  box-shadow: 0 0 0 max(1.5px, calc(var(--s) * .055)) var(--ring); transform: scale(0) rotate(-40deg); transition: transform 420ms var(--ease-spring);
+}
+#MSC-02 .is-dnd .msc02-moon { transform: none; }
+#MSC-02 .msc02-badge {
+  position: absolute; right: calc(var(--s) * -.1); top: calc(var(--s) * -.08); min-width: calc(var(--s) * .4); height: calc(var(--s) * .4); padding: 0 calc(var(--s) * .1);
+  display: grid; place-items: center; border-radius: 999px; background: var(--red); color: #fff;
+  font: 700 calc(var(--s) * .25)/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0;
+  box-shadow: 0 0 0 max(1.5px, calc(var(--s) * .055)) var(--ring); transform: scale(0); transition: transform 380ms var(--ease-spring);
+}
+#MSC-02 .is-unread .msc02-badge { transform: none; }
+
+/* — (1) size scale — */
+#MSC-02 .msc02-scale { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
+#MSC-02 .msc02-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#MSC-02 .msc02-scale .msc02-dot { transition-delay: calc(var(--i, 0) * 45ms); }
+#MSC-02 .msc02-sep { height: .5px; margin: 16px 0 14px; background: var(--separator); opacity: .7; }
+#MSC-02 .msc02-kinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+#MSC-02 .msc02-kind { display: flex; align-items: center; gap: 10px; min-width: 0; }
+#MSC-02 .msc02-kind .msc02-lbl { color: var(--label-2); font-size: var(--fs-caption1); overflow: hidden; text-overflow: ellipsis; }
+#MSC-02 .msc02-photo { border-radius: 50%; overflow: hidden; background-size: 130% 130%; background-position: 60% 50%; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .1); }
+#MSC-02 .msc02-ph { display: block; border-radius: 50%; overflow: hidden; background: linear-gradient(180deg, light-dark(#A9AEBA, #707077), light-dark(#858996, #4A4A50)); }
+#MSC-02 .msc02-ph svg { width: 100%; height: 100%; fill: rgba(255, 255, 255, .94); }
+#MSC-02 .msc02-kanji { font-weight: 700; }
+
+#MSC-02 .msc02-pill {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; border: 0; border-radius: 999px;
+  background: var(--fill-4); color: var(--label-2); font: 600 var(--fs-caption1)/1 var(--font-rounded); letter-spacing: 0; cursor: pointer;
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  transition: background var(--dur-2) ease, color var(--dur-2) ease, transform var(--dur-2) var(--ease-spring);
+}
+#MSC-02 .msc02-pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--label-3); transition: background var(--dur-2) ease, box-shadow var(--dur-2) ease; }
+#MSC-02 .msc02-pill[aria-pressed="true"] { background: color-mix(in srgb, var(--green) 16%, transparent); color: light-dark(#1E8E3E, var(--green)); }
+#MSC-02 .msc02-pill[aria-pressed="true"]::before { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 22%, transparent); }
+#MSC-02 .msc02-pill:active { transform: scale(.94); transition-duration: 90ms; }
+
+/* — (2) status — */
+#MSC-02 .msc02-status { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+#MSC-02 .msc02-st {
+  display: flex; flex-direction: column; align-items: center; gap: 9px; padding: 4px 0 0; border: 0; background: none; color: inherit; cursor: pointer; min-width: 0;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+#MSC-02 .msc02-st .msc02-u { transition: transform var(--dur-2) var(--ease-spring); }
+#MSC-02 .msc02-st:active .msc02-u { transform: scale(.92); transition-duration: 90ms; }
+#MSC-02 .msc02-st .msc02-lbl { color: var(--label-2); font-size: var(--fs-caption2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+#MSC-02 .msc02-st:focus-visible { outline: none; }
+#MSC-02 .msc02-st:focus-visible .msc02-u { border-radius: 50%; box-shadow: 0 0 0 3px var(--card), 0 0 0 5px color-mix(in srgb, var(--accent) 60%, transparent); }
+
+/* — (3) stacked group — */
+#MSC-02 .msc02-stack {
+  display: flex; align-items: center; padding: 4px 0 2px; border: 0; background: none; color: inherit; cursor: pointer; width: 100%;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+#MSC-02 .msc02-stack .msc02-u { --s: 34px; position: relative; border-radius: 50%; box-shadow: 0 0 0 2.5px var(--card), 0 3px 8px -2px light-dark(rgba(110, 80, 190, .25), rgba(0, 0, 0, .5)); transition: margin 520ms var(--ease-spring), transform 520ms var(--ease-spring); }
+#MSC-02 .msc02-stack .msc02-u + .msc02-u, #MSC-02 .msc02-more { margin-left: -8px; }
+#MSC-02 .msc02-stack .msc02-u:nth-child(1) { z-index: 4; }
+#MSC-02 .msc02-stack .msc02-u:nth-child(2) { z-index: 3; }
+#MSC-02 .msc02-stack .msc02-u:nth-child(3) { z-index: 2; }
+#MSC-02 .msc02-stack .msc02-u:nth-child(4) { z-index: 1; }
+#MSC-02 .msc02-more {
+  position: relative; display: grid; place-items: center; height: 34px; min-width: 42px; padding: 0 9px; border-radius: 999px;
+  background: color-mix(in srgb, var(--indigo) 13%, var(--card)); color: var(--indigo); box-shadow: 0 0 0 2.5px var(--card);
+  font: 700 var(--fs-footnote)/1 var(--font-rounded); letter-spacing: 0; font-variant-numeric: tabular-nums;
+  transition: margin 520ms var(--ease-spring);
+}
+#MSC-02 .msc02-stack.is-spread .msc02-u + .msc02-u, #MSC-02 .msc02-stack.is-spread .msc02-more { margin-left: 3px; }
+#MSC-02 .msc02-stack.is-spread .msc02-u { transform: translateY(-2px); }
+@media (hover: hover) {
+  #MSC-02 .msc02-stack:hover .msc02-u + .msc02-u, #MSC-02 .msc02-stack:hover .msc02-more { margin-left: 3px; }
+  #MSC-02 .msc02-stack:hover .msc02-u { transform: translateY(-2px); }
+}
+#MSC-02 .msc02-stack .msc02-u:nth-child(2) { transition-delay: 20ms; }
+#MSC-02 .msc02-stack .msc02-u:nth-child(3) { transition-delay: 40ms; }
+#MSC-02 .msc02-stack .msc02-u:nth-child(4) { transition-delay: 60ms; }
+#MSC-02 .msc02-stack .msc02-more { transition-delay: 80ms; }
+#MSC-02 .msc02-stack:focus-visible { outline: none; border-radius: 12px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+#MSC-02 .msc02-who { margin: 10px 0 0; font: 500 var(--fs-caption1)/1.35 var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#MSC-02 .msc02-who b { color: var(--label); font-weight: 600; }
+
+/* — (4) contact card — */
+#MSC-02 .msc02-contact { padding: 18px 16px 16px; background: linear-gradient(180deg, light-dark(rgba(255, 168, 178, .2), rgba(255, 106, 136, .12)) 0%, transparent 62%), var(--card); }
+#MSC-02 .msc02-person { display: flex; align-items: center; gap: 14px; }
+#MSC-02 .msc02-person .msc02-u { --s: 64px; box-shadow: 0 8px 20px -8px rgba(255, 106, 136, .55); border-radius: 50%; }
+#MSC-02 .msc02-names { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#MSC-02 .msc02-name { display: flex; align-items: center; gap: 5px; margin: 0; font: 700 var(--fs-title3)/1.2 var(--font-display); letter-spacing: 0; }
+#MSC-02 .msc02-name .i { font-size: 18px; color: var(--blue); }
+#MSC-02 .msc02-handle { font: 400 var(--fs-subhead)/1.3 var(--font-text); color: var(--label-2); letter-spacing: -0.01em; }
+#MSC-02 .msc02-meta { display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; font: 500 var(--fs-caption1)/1.2 var(--font-rounded); color: light-dark(#1E8E3E, var(--green)); letter-spacing: 0; }
+#MSC-02 .msc02-meta::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+#MSC-02 .msc02-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 18px; }
+#MSC-02 .msc02-act {
+  display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 0; border: 0; background: none; color: var(--label-2); cursor: pointer; min-width: 0;
+  font: 500 var(--fs-caption1)/1.2 var(--font-text); letter-spacing: 0; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+#MSC-02 .msc02-act span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#MSC-02 .msc02-ic {
+  --t: var(--accent);
+  display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; font-size: 21px; color: var(--t);
+  background: light-dark(color-mix(in srgb, var(--t) 12%, var(--card)), color-mix(in srgb, var(--t) 22%, var(--card)));
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--t) 55%, transparent);
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#MSC-02 .msc02-act:nth-child(1) .msc02-ic, #MSC-02 .msc02-act:nth-child(2) .msc02-ic, #MSC-02 .msc02-act:nth-child(3) .msc02-ic { --t: var(--green); }
+#MSC-02 .msc02-act:active .msc02-ic { transform: scale(.9); transition-duration: 90ms; background: light-dark(color-mix(in srgb, var(--t) 20%, var(--card)), color-mix(in srgb, var(--t) 32%, var(--card))); }
+@media (hover: hover) { #MSC-02 .msc02-act:hover .msc02-ic { background: light-dark(color-mix(in srgb, var(--t) 16%, var(--card)), color-mix(in srgb, var(--t) 27%, var(--card))); } }
+#MSC-02 .msc02-act:focus-visible { outline: none; }
+#MSC-02 .msc02-act:focus-visible .msc02-ic { box-shadow: 0 0 0 3px var(--card), 0 0 0 5px color-mix(in srgb, var(--accent) 55%, transparent); }
+#MSC-02 .msc02-act.is-done .msc02-ic { animation: msc02-ping 700ms var(--ease-out); }
+@keyframes msc02-ping {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--t) 45%, transparent); }
+  100% { box-shadow: 0 0 0 12px color-mix(in srgb, var(--t) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #MSC-02 .msc02-dot, #MSC-02 .msc02-moon, #MSC-02 .msc02-badge, #MSC-02 .msc02-stack .msc02-u, #MSC-02 .msc02-more { transition-duration: 1ms; transition-delay: 0ms; }
+  #MSC-02 .msc02-act.is-done .msc02-ic { animation: none; }
+}
+</style>
+<article class="obj" id="MSC-02" data-name="Avatar" data-ja="アバター" data-vector="Soft" data-size="m" data-desc="サイズ違いのプロフィール画像、オンライン表示、重ね表示。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="msc02-wash" aria-hidden="true"></div>
+    <div class="msc02-wrap">
+
+      <section class="msc02-card" aria-label="サイズと種類">
+        <div class="msc02-head">
+          <p class="msc02-cap">サイズ</p>
+          <button class="msc02-pill" type="button" aria-pressed="false" data-role="scale-dots">オンライン表示</button>
+        </div>
+        <div class="msc02-scale">
+          <div class="msc02-col"><span class="msc02-u msc02-glow" style="--s:24px;--i:0;--g:#FF6A88"><span class="av av-1">H</span><i class="msc02-dot"></i></span><span class="msc02-lbl">24</span></div>
+          <div class="msc02-col"><span class="msc02-u msc02-glow" style="--s:32px;--i:1;--g:#3A7BD5"><span class="av av-2">M</span><i class="msc02-dot"></i></span><span class="msc02-lbl">32</span></div>
+          <div class="msc02-col"><span class="msc02-u msc02-glow" style="--s:44px;--i:2;--g:#3FA63A"><span class="av av-3">K</span><i class="msc02-dot"></i></span><span class="msc02-lbl">44</span></div>
+          <div class="msc02-col"><span class="msc02-u msc02-glow" style="--s:64px;--i:3;--g:#7F5AF0"><span class="av av-4">Y</span><i class="msc02-dot"></i></span><span class="msc02-lbl">64</span></div>
+          <div class="msc02-col"><span class="msc02-u msc02-glow" style="--s:88px;--i:4;--g:#FC7F4E"><span class="av av-5">S</span><i class="msc02-dot"></i></span><span class="msc02-lbl">88</span></div>
+        </div>
+        <div class="msc02-sep"></div>
+        <div class="msc02-kinds">
+          <div class="msc02-kind"><span class="msc02-u" style="--s:40px"><span class="av art art-2 msc02-photo" role="img" aria-label="写真のアバター"></span></span><span class="msc02-lbl">写真</span></div>
+          <div class="msc02-kind"><span class="msc02-u" style="--s:40px"><span class="msc02-ph" role="img" aria-label="未設定のアバター"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="15.6" r="7.1"/><path d="M5.6 37.4c1.6-7.2 7.4-12.2 14.4-12.2s12.8 5 14.4 12.2A19.9 19.9 0 0 1 20 40a19.9 19.9 0 0 1-14.4-2.6Z"/></svg></span></span><span class="msc02-lbl">未設定</span></div>
+          <div class="msc02-kind"><span class="msc02-u msc02-glow" style="--s:40px;--g:#A18CD1"><span class="av av-7 msc02-kanji">葵</span></span><span class="msc02-lbl">漢字</span></div>
+        </div>
+      </section>
+
+      <div class="msc02-duo">
+        <section class="msc02-card" aria-label="ステータス">
+          <div class="msc02-head"><p class="msc02-cap">ステータス</p><span class="msc02-lbl">タップで切替</span></div>
+          <div class="msc02-status">
+            <button class="msc02-st is-online" type="button" data-on="オンライン" data-off="オフライン" data-cls="is-online" aria-pressed="true">
+              <span class="msc02-u msc02-glow" style="--g:#3A7BD5"><span class="av av-2">M</span><i class="msc02-dot"></i></span><span class="msc02-lbl">オンライン</span>
+            </button>
+            <button class="msc02-st is-dnd" type="button" data-on="おやすみ" data-off="通知オン" data-cls="is-dnd" aria-pressed="true">
+              <span class="msc02-u msc02-glow" style="--g:#22A79A"><span class="av av-6">R</span><span class="msc02-moon"><svg class="i" aria-hidden="true"><use href="#i-moon-fill"/></svg></span></span><span class="msc02-lbl">おやすみ</span>
+            </button>
+            <button class="msc02-st is-unread" type="button" data-on="未読 3件" data-off="既読" data-cls="is-unread" aria-pressed="true">
+              <span class="msc02-u msc02-glow" style="--g:#3FA63A"><span class="av av-3">K</span><span class="msc02-badge">3</span></span><span class="msc02-lbl">未読 3件</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="msc02-card" aria-label="グループ">
+          <div class="msc02-head"><p class="msc02-cap">グループ</p><span class="msc02-lbl">9人</span></div>
+          <button class="msc02-stack" type="button" aria-expanded="false" aria-label="グループのメンバー 9人。タップで広げる">
+            <span class="msc02-u"><span class="av av-2">M</span></span>
+            <span class="msc02-u"><span class="av av-3">K</span></span>
+            <span class="msc02-u"><span class="av av-4">Y</span></span>
+            <span class="msc02-u"><span class="av art art-1 msc02-photo"></span></span>
+            <span class="msc02-more">+5</span>
+          </button>
+          <p class="msc02-who"><b>ミオ</b>、<b>海斗</b>、<b>結菜</b>ほか6人</p>
+        </section>
+      </div>
+
+      <section class="msc02-card msc02-contact" aria-label="連絡先">
+        <div class="msc02-person">
+          <span class="msc02-u is-online"><span class="av av-1">H</span><i class="msc02-dot"></i></span>
+          <div class="msc02-names">
+            <p class="msc02-name">佐藤 春<svg class="i" role="img" aria-label="認証済み"><use href="#i-checkmark-seal-fill"/></svg></p>
+            <span class="msc02-handle">@haru.photo</span>
+            <span class="msc02-meta">オンライン</span>
+          </div>
+        </div>
+        <div class="msc02-actions">
+          <button class="msc02-act" type="button"><span class="msc02-ic"><svg class="i" aria-hidden="true"><use href="#i-message-fill"/></svg></span><span>メッセージ</span></button>
+          <button class="msc02-act" type="button"><span class="msc02-ic"><svg class="i" aria-hidden="true"><use href="#i-phone-fill"/></svg></span><span>発信</span></button>
+          <button class="msc02-act" type="button"><span class="msc02-ic"><svg class="i" aria-hidden="true"><use href="#i-video-fill"/></svg></span><span>ビデオ</span></button>
+          <button class="msc02-act" type="button"><span class="msc02-ic"><svg class="i" aria-hidden="true"><use href="#i-envelope-fill"/></svg></span><span>メール</span></button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+  <ul class="obj-notes"><li>アバターをタップで状態切替</li><li>重ね表示はホバー・タップで広がる</li><li>オンライン表示で全サイズに</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('MSC-02');
+  if (!root) return;
+
+  /* size scale: show the online dot on every size (dot + ring scale with --s) */
+  const pill = root.querySelector('[data-role="scale-dots"]');
+  const scaleUnits = [...root.querySelectorAll('.msc02-scale .msc02-u')];
+  pill.addEventListener('click', () => {
+    const on = pill.getAttribute('aria-pressed') !== 'true';
+    pill.setAttribute('aria-pressed', String(on));
+    scaleUnits.forEach((u) => u.classList.toggle('is-online', on));
+  });
+
+  /* status avatars: tap toggles their indicator */
+  root.querySelectorAll('.msc02-st').forEach((b) => {
+    const lbl = b.querySelector('.msc02-lbl');
+    const cls = b.dataset.cls;
+    b.addEventListener('click', () => {
+      const on = !b.classList.contains(cls);
+      b.classList.toggle(cls, on);
+      b.setAttribute('aria-pressed', String(on));
+      lbl.textContent = on ? b.dataset.on : b.dataset.off;
+    });
+  });
+
+  /* stacked group: hover spreads (CSS); tap/keyboard toggles */
+  const stack = root.querySelector('.msc02-stack');
+  stack.addEventListener('click', () => {
+    const on = stack.classList.toggle('is-spread');
+    stack.setAttribute('aria-expanded', String(on));
+  });
+
+  /* contact quick actions: soft ping feedback */
+  root.querySelectorAll('.msc02-act').forEach((b) => {
+    b.addEventListener('click', () => {
+      b.classList.remove('is-done');
+      void b.offsetWidth;
+      b.classList.add('is-done');
+    });
+    b.addEventListener('animationend', () => b.classList.remove('is-done'));
+  });
+})();
+</script>

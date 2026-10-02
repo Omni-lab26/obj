@@ -1,0 +1,378 @@
+<!-- ═══════════ SNS-06 · Like Burst ═══════════ -->
+<style>
+#SNS-06 .sns06-defs { position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none; }
+#SNS-06 .sns06-wrap { width: min(100%, 268px); display: flex; flex-direction: column; gap: 18px; }
+
+/* — Double-tap photo tile — */
+#SNS-06 .sns06-tile {
+  position: relative; width: 100%; aspect-ratio: 4 / 5; border-radius: 26px; overflow: hidden; isolation: isolate;
+  cursor: pointer; outline: none; touch-action: manipulation;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+  background-size: 135% 112%; background-position: 50% 100%;
+  box-shadow: 0 22px 44px -22px light-dark(rgba(122, 40, 110, .55), rgba(0, 0, 0, .9)), 0 2px 6px rgba(0, 0, 0, .08), inset 0 0 0 .5px rgba(255, 255, 255, .12);
+}
+#SNS-06 .sns06-tile::before { content: ""; position: absolute; inset: 0 0 auto; height: 92px; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(10, 4, 24, .42), rgba(10, 4, 24, 0)); }
+#SNS-06 .sns06-tile:focus-visible { box-shadow: 0 0 0 3px var(--bg-grouped), 0 0 0 6px color-mix(in srgb, var(--pink) 55%, transparent); }
+#SNS-06 .sns06-by { position: absolute; z-index: 2; left: 14px; right: 14px; top: 14px; display: flex; align-items: center; gap: 8px; color: #fff; pointer-events: none; }
+#SNS-06 .sns06-by .av { width: 30px; height: 30px; font-size: 13px; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .9); }
+#SNS-06 .sns06-by b { font: 600 13px/1.15 var(--font-text); letter-spacing: -0.01em; display: flex; align-items: center; gap: 3px; text-shadow: 0 1px 6px rgba(0, 0, 0, .25); }
+#SNS-06 .sns06-by b .sns06-seal { width: 13px; height: 13px; fill: #fff; }
+#SNS-06 .sns06-by small { display: block; font-size: 11px; color: rgba(255, 255, 255, .78); letter-spacing: 0; margin-top: 2px; }
+#SNS-06 .sns06-hint {
+  position: absolute; z-index: 2; left: 50%; bottom: 14px; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 13px 0 11px;
+  border-radius: 999px; white-space: nowrap; color: #fff; font: 600 12px/1 var(--font-text); letter-spacing: 0;
+  background: rgba(24, 14, 34, .30); -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .28), inset 0 1px 0 rgba(255, 255, 255, .18), 0 6px 16px rgba(0, 0, 0, .14);
+  transform: translateX(-50%); transition: opacity var(--dur-3) var(--ease-out), transform var(--dur-3) var(--ease-out); pointer-events: none;
+}
+#SNS-06 .sns06-hint svg { width: 14px; height: 14px; fill: #fff; }
+#SNS-06 .sns06-hint.is-gone { opacity: 0; transform: translate(-50%, 10px) scale(.94); }
+#SNS-06 .sns06-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+#SNS-06 .sns06-big { position: absolute; width: 104px; height: 104px; margin: -56px 0 0 -52px; fill: url(#SNS-06-g-big); overflow: visible; filter: drop-shadow(0 10px 22px rgba(255, 45, 110, .45)); will-change: transform, opacity; }
+#SNS-06 .sns06-spot { position: absolute; width: 0; height: 0; }
+
+/* — Reaction cards — */
+#SNS-06 .sns06-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+#SNS-06 .sns06-btn {
+  --c1: var(--pink);
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0;
+  padding: 14px 0 11px; border: 0; border-radius: 24px; background: var(--bg-grouped-2); color: var(--label);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 6px 16px -10px rgba(0, 0, 0, .14);
+  cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  transition: transform 420ms var(--ease-spring), background-color var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out);
+}
+#SNS-06 .sns06-btn[data-kind="star"] { --c1: var(--orange); }
+#SNS-06 .sns06-btn[data-kind="flame"] { --c1: light-dark(#FF5A1F, #FF6A2B); }
+#SNS-06 .sns06-btn:active { transform: scale(.94); transition-duration: 120ms; transition-timing-function: var(--ease-out); }
+#SNS-06 .sns06-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--bg-grouped), 0 0 0 6px color-mix(in srgb, var(--c1) 50%, transparent); }
+#SNS-06 .sns06-btn.is-on {
+  background: color-mix(in srgb, var(--c1) 10%, var(--bg-grouped-2));
+  box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--c1) 26%, transparent), 0 10px 24px -14px color-mix(in srgb, var(--c1) 70%, transparent);
+}
+#SNS-06 .sns06-icowrap { position: relative; width: 56px; height: 56px; margin-bottom: 4px; }
+#SNS-06 .sns06-fx { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+#SNS-06 .sns06-ico { position: absolute; inset: 0; will-change: transform; }
+#SNS-06 .sns06-btn[data-kind="flame"] .sns06-ico { transform-origin: 50% 88%; }
+#SNS-06 .sns06-ico svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#SNS-06 .sns06-o { fill: none; stroke: var(--label-2); stroke-width: 1.55; stroke-linejoin: round; stroke-linecap: round; }
+#SNS-06 .sns06-f { opacity: 0; transform: scale(.4); stroke-width: 1.55; stroke-linejoin: round; filter: drop-shadow(0 5px 9px color-mix(in srgb, var(--c1) 38%, transparent)); }
+#SNS-06 .sns06-btn[data-kind="heart"] .sns06-f { fill: url(#SNS-06-g-heart); stroke: url(#SNS-06-g-heart); }
+#SNS-06 .sns06-btn[data-kind="star"] .sns06-f { fill: url(#SNS-06-g-star); stroke: url(#SNS-06-g-star); }
+#SNS-06 .sns06-btn[data-kind="flame"] .sns06-f { fill: url(#SNS-06-g-flame); stroke: url(#SNS-06-g-flame); }
+#SNS-06 .sns06-btn.is-on .sns06-f { opacity: 1; transform: none; }
+#SNS-06 .sns06-btn.is-on .sns06-o { stroke: transparent; }
+@media (hover: hover) {
+  #SNS-06 .sns06-btn:hover { background: color-mix(in srgb, var(--c1) 5%, var(--bg-grouped-2)); }
+  #SNS-06 .sns06-btn.is-on:hover { background: color-mix(in srgb, var(--c1) 13%, var(--bg-grouped-2)); }
+}
+
+#SNS-06 .sns06-count {
+  display: inline-flex; height: 22px; overflow: hidden; color: var(--label);
+  font: 650 17px/22px var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+  transition: color var(--dur-3) var(--ease-out);
+}
+#SNS-06 .sns06-btn.is-on .sns06-count { color: var(--c1); }
+#SNS-06 .sns06-d { display: inline-block; height: 22px; white-space: pre; }
+#SNS-06 .sns06-d--roll { overflow: hidden; -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 24%, #000 76%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 24%, #000 76%, transparent 100%); }
+#SNS-06 .sns06-col { display: flex; flex-direction: column; will-change: transform; }
+#SNS-06 .sns06-col > span { display: block; height: 22px; text-align: center; }
+#SNS-06 .sns06-count, #SNS-06 .sns06-lbl { position: relative; z-index: 1; }
+#SNS-06 .sns06-lbl { font-size: var(--fs-caption2); font-weight: 500; color: var(--label-2); letter-spacing: 0; white-space: nowrap; }
+
+/* — burst pieces (created by JS) — */
+#SNS-06 .sns06-p { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+#SNS-06 .sns06-ring { position: absolute; left: -28px; top: -28px; width: 56px; height: 56px; border-radius: 50%; box-shadow: inset 0 0 0 2.5px var(--c); will-change: transform, opacity; }
+#SNS-06 .sns06-bloom { position: absolute; left: -30px; top: -30px; width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--c) 55%, transparent) 0%, color-mix(in srgb, var(--c) 18%, transparent) 55%, transparent 72%); will-change: transform, opacity; }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-06 .sns06-f { transform: none; transition: opacity var(--dur-2) ease; }
+  #SNS-06 .sns06-o { transition: stroke var(--dur-2) ease; }
+  #SNS-06 .sns06-btn, #SNS-06 .sns06-btn:active { transform: none; }
+  #SNS-06 .sns06-hint.is-gone { transform: translateX(-50%); }
+}
+</style>
+<article class="obj" id="SNS-06" data-name="Like Burst" data-ja="いいねアニメーション" data-vector="Vivid" data-size="m" data-desc="押すとはじけるハート・スター・炎のリアクション。">
+  <div class="obj-stage" data-bg="grouped">
+    <svg class="sns06-defs" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="SNS-06-g-heart" x1="0" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#FF7A9A"/><stop offset=".55" stop-color="#FF2D55"/><stop offset="1" stop-color="#E8125C"/></linearGradient>
+        <linearGradient id="SNS-06-g-star" x1="0" y1="0" x2=".6" y2="1"><stop offset="0" stop-color="#FFE14D"/><stop offset=".5" stop-color="#FFC300"/><stop offset="1" stop-color="#FF8A00"/></linearGradient>
+        <linearGradient id="SNS-06-g-flame" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0" stop-color="#FF3B30"/><stop offset=".55" stop-color="#FF7A1A"/><stop offset="1" stop-color="#FFB340"/></linearGradient>
+        <linearGradient id="SNS-06-g-big" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB03A"/><stop offset=".45" stop-color="#FF375F"/><stop offset="1" stop-color="#C042F5"/></linearGradient>
+        <symbol id="SNS-06-heart" viewBox="0 0 24 24"><path d="M12 20.4c-.28 0-.55-.09-.78-.27C6.3 16.38 3 13.4 3 9.33 3 6.4 5.15 4.2 7.92 4.2c1.68 0 3.15.82 4.08 2.16.93-1.34 2.4-2.16 4.08-2.16C18.85 4.2 21 6.4 21 9.33c0 4.07-3.3 7.05-8.22 10.8-.23.18-.5.27-.78.27Z"/></symbol>
+        <symbol id="SNS-06-star" viewBox="0 0 24 24"><path d="M12 3.1 14.55 8.6l5.95.72-4.4 4.08 1.16 5.88L12 16.33l-5.26 2.95 1.16-5.88-4.4-4.08 5.95-.72L12 3.1Z"/></symbol>
+        <symbol id="SNS-06-flame" viewBox="0 0 24 24"><path d="M12.7 2.6c.45 3.05 2.25 4.75 3.75 6.55 1.25 1.5 2.15 3.1 2.15 5.4 0 3.85-2.9 6.85-6.6 6.85s-6.6-2.8-6.6-6.5c0-2.35 1-4.1 2.35-5.55.25 1.45.9 2.5 1.95 3.05-.25-3.85.95-7.25 3-9.8Z"/></symbol>
+        <symbol id="SNS-06-spark" viewBox="0 0 24 24"><path d="M12 1.5c.7 5.4 3.1 7.8 10.5 10.5-7.4 2.7-9.8 5.1-10.5 10.5C11.3 17.1 8.9 14.7 1.5 12 8.9 9.3 11.3 6.9 12 1.5Z"/></symbol>
+        <symbol id="SNS-06-seal" viewBox="0 0 24 24"><path d="M12 1.8 14.5 3.6 17.6 3.5 18.6 6.4 21.1 8.2 20.2 11.2 21.1 14.2 18.6 16 17.6 18.9 14.5 18.8 12 20.6 9.5 18.8 6.4 18.9 5.4 16 2.9 14.2 3.8 11.2 2.9 8.2 5.4 6.4 6.4 3.5 9.5 3.6Z"/><path d="m8 11.3 2.7 2.7L16.2 8.5" fill="none" stroke="#FF375F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      </defs>
+    </svg>
+
+    <div class="sns06-wrap">
+      <div class="sns06-tile art art-1" role="button" tabindex="0" aria-label="haru.photo の写真。ダブルタップでいいね">
+        <div class="sns06-by" aria-hidden="true">
+          <span class="av av-1">H</span>
+          <div><b>haru.photo<svg class="sns06-seal" viewBox="0 0 24 24"><use href="#SNS-06-seal"/></svg></b><small>夕暮れの丘 · 2時間前</small></div>
+        </div>
+        <span class="sns06-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#SNS-06-heart"/></svg>ダブルタップでいいね</span>
+        <div class="sns06-layer" aria-hidden="true"></div>
+      </div>
+
+      <div class="sns06-row" role="group" aria-label="リアクション">
+        <button class="sns06-btn" type="button" data-kind="heart" data-n="1284" data-label="いいね" aria-pressed="false">
+          <span class="sns06-icowrap" aria-hidden="true"><span class="sns06-fx"></span><span class="sns06-ico"><svg class="sns06-o" viewBox="0 0 24 24"><use href="#SNS-06-heart"/></svg><svg class="sns06-f" viewBox="0 0 24 24"><use href="#SNS-06-heart"/></svg></span></span>
+          <span class="sns06-count" aria-hidden="true">1,284</span>
+          <span class="sns06-lbl" aria-hidden="true">いいね</span>
+        </button>
+        <button class="sns06-btn" type="button" data-kind="star" data-n="326" data-label="お気に入り" aria-pressed="false">
+          <span class="sns06-icowrap" aria-hidden="true"><span class="sns06-fx"></span><span class="sns06-ico"><svg class="sns06-o" viewBox="0 0 24 24"><use href="#SNS-06-star"/></svg><svg class="sns06-f" viewBox="0 0 24 24"><use href="#SNS-06-star"/></svg></span></span>
+          <span class="sns06-count" aria-hidden="true">326</span>
+          <span class="sns06-lbl" aria-hidden="true">お気に入り</span>
+        </button>
+        <button class="sns06-btn" type="button" data-kind="flame" data-n="89" data-label="アツい" aria-pressed="false">
+          <span class="sns06-icowrap" aria-hidden="true"><span class="sns06-fx"></span><span class="sns06-ico"><svg class="sns06-o" viewBox="0 0 24 24"><use href="#SNS-06-flame"/></svg><svg class="sns06-f" viewBox="0 0 24 24"><use href="#SNS-06-flame"/></svg></span></span>
+          <span class="sns06-count" aria-hidden="true">89</span>
+          <span class="sns06-lbl" aria-hidden="true">アツい</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>タップでリアクション</li><li>写真をダブルタップ</li><li>もう一度押すと取り消し</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-06');
+  if (!root) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const reduced = () => !!(window.ObjKit && window.ObjKit.reducedMotion);
+  const nf = new Intl.NumberFormat('ja-JP');
+  const OUT = 'cubic-bezier(.22,1,.36,1)';
+  const SPRING = 'cubic-bezier(.3,1.32,.5,1)';
+  const KIND = {
+    heart: { colors: ['#FF2D55', '#FF7A9A', '#C25BFF'], mini: 'heart' },
+    star: { colors: ['#FFC300', '#FF9500', '#FF6A3D'], mini: 'spark' },
+    flame: { colors: ['#FF9F0A', '#FF453A', '#FFC93C'], mini: null, rise: true },
+  };
+  const play = (el, kf, o) => (el && el.animate ? el.animate(kf, o) : null);
+  const after = (a, fn) => (a ? a.finished.then(fn, fn) : fn());
+
+  /* — burst: soft bloom + expanding ring + radial particles — */
+  function piece(kind, i, big) {
+    const k = KIND[kind];
+    const color = k.colors[i % k.colors.length];
+    if (big && k.mini) {
+      const size = k.mini === 'spark' ? 11 : 10;
+      const s = document.createElementNS(NS, 'svg');
+      s.setAttribute('viewBox', '0 0 24 24');
+      s.setAttribute('class', 'sns06-p');
+      s.style.cssText = `width:${size}px;height:${size}px;margin:${-size / 2}px 0 0 ${-size / 2}px;fill:${color}`;
+      const u = document.createElementNS(NS, 'use');
+      u.setAttribute('href', '#SNS-06-' + k.mini);
+      s.append(u);
+      return s;
+    }
+    const size = big ? 6.5 : 4.5;
+    const d = document.createElement('span');
+    d.className = 'sns06-p';
+    d.style.cssText = `width:${size}px;height:${size}px;margin:${-size / 2}px 0 0 ${-size / 2}px;border-radius:50%;background:${color}`;
+    return d;
+  }
+  function burst(host, kind, { scale = 1, n = 10, delay = 70 } = {}) {
+    const k = KIND[kind];
+    const bloom = document.createElement('span');
+    bloom.className = 'sns06-bloom';
+    bloom.style.setProperty('--c', k.colors[0]);
+    const ring = document.createElement('span');
+    ring.className = 'sns06-ring';
+    ring.style.setProperty('--c', k.colors[1]);
+    host.append(bloom, ring);
+    after(play(bloom, [{ transform: `scale(${0.25 * scale})`, opacity: 0.9 }, { transform: `scale(${1.15 * scale})`, opacity: 0 }], { duration: 520, delay, easing: OUT, fill: 'both' }), () => bloom.remove());
+    after(play(ring, [
+      { transform: `scale(${0.4 * scale})`, opacity: 0 },
+      { transform: `scale(${0.75 * scale})`, opacity: 1, offset: 0.18 },
+      { transform: `scale(${1.55 * scale})`, opacity: 0 },
+    ], { duration: 600, delay, easing: OUT, fill: 'both' }), () => ring.remove());
+
+    const base = Math.random() * 360;
+    for (let i = 0; i < n; i++) {
+      const big = i % 2 === 0;
+      let ang = base + (i / n) * 360 + (Math.random() * 14 - 7);
+      if (k.rise) ang = -90 + ((i + 0.5) / n - 0.5) * 230 + (Math.random() * 12 - 6);
+      const rad = (ang * Math.PI) / 180;
+      const r0 = 20 * scale;
+      const r1 = (big ? 50 : 36) * scale * (0.9 + Math.random() * 0.22);
+      const x0 = Math.cos(rad) * r0, y0 = Math.sin(rad) * r0;
+      const x1 = Math.cos(rad) * r1, y1 = Math.sin(rad) * r1 - (k.rise ? 12 * scale : 0);
+      const rot = Math.random() * 90 - 45;
+      const p = piece(kind, i, big);
+      host.append(p);
+      after(play(p, [
+        { transform: `translate(${x0}px,${y0}px) scale(.3) rotate(0deg)`, opacity: 0, easing: 'cubic-bezier(.15,.85,.35,1)' },
+        { transform: `translate(${x0 + (x1 - x0) * 0.78}px,${y0 + (y1 - y0) * 0.78}px) scale(1) rotate(${rot * 0.6}deg)`, opacity: 1, offset: 0.36, easing: 'cubic-bezier(.3,.6,.45,1)' },
+        { transform: `translate(${x1}px,${y1}px) scale(.2) rotate(${rot}deg)`, opacity: 0 },
+      ], { duration: 720 + Math.random() * 160, delay: delay + (big ? 0 : 35), fill: 'both' }), () => p.remove());
+    }
+  }
+
+  /* — vertical digit roll — */
+  function roll(el, from, to, dir) {
+    const a = nf.format(from), b = nf.format(to);
+    const token = (el._t = (el._t || 0) + 1);
+    if (reduced() || !el.animate) {
+      el.textContent = b;
+      play(el, [{ opacity: 0.2 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' });
+      return;
+    }
+    const len = Math.max(a.length, b.length);
+    const A = a.padStart(len, ' '), B = b.padStart(len, ' ');
+    el.textContent = '';
+    const anims = [];
+    let k = 0;
+    const cells = [];
+    for (let i = 0; i < len; i++) {
+      const cell = document.createElement('span');
+      cell.className = 'sns06-d';
+      if (A[i] === B[i]) cell.textContent = B[i];
+      else {
+        cell.classList.add('sns06-d--roll');
+        const col = document.createElement('span');
+        col.className = 'sns06-col';
+        const o = document.createElement('span'); o.textContent = A[i];
+        const nw = document.createElement('span'); nw.textContent = B[i];
+        if (dir > 0) col.append(o, nw); else col.append(nw, o);
+        cell.append(col);
+        cells.push(col);
+      }
+      el.append(cell);
+    }
+    for (let j = cells.length - 1; j >= 0; j--) {
+      const col = cells[j];
+      const kf = dir > 0 ? [{ transform: 'translateY(0)' }, { transform: 'translateY(-22px)' }] : [{ transform: 'translateY(-22px)' }, { transform: 'translateY(0)' }];
+      anims.push(play(col, kf, { duration: 520, delay: 40 + k * 45, easing: SPRING, fill: 'both' }));
+      k++;
+    }
+    Promise.all(anims.map((x) => x.finished)).then(() => { if (el._t === token) el.textContent = b; }, () => {});
+  }
+
+  /* — reaction buttons — */
+  const POP = {
+    heart: [
+      { transform: 'scale(1)', easing: 'cubic-bezier(.4,0,.7,1)' },
+      { transform: 'scale(.6)', offset: 0.16, easing: 'cubic-bezier(.2,.9,.35,1)' },
+      { transform: 'scale(1.25)', offset: 0.5, easing: 'cubic-bezier(.45,0,.4,1)' },
+      { transform: 'scale(.95)', offset: 0.76, easing: 'ease-in-out' },
+      { transform: 'scale(1)' },
+    ],
+    star: [
+      { transform: 'scale(1) rotate(0deg)', easing: 'cubic-bezier(.4,0,.7,1)' },
+      { transform: 'scale(.6) rotate(-28deg)', offset: 0.16, easing: 'cubic-bezier(.2,.9,.35,1)' },
+      { transform: 'scale(1.25) rotate(10deg)', offset: 0.5, easing: 'cubic-bezier(.45,0,.4,1)' },
+      { transform: 'scale(.95) rotate(-3deg)', offset: 0.76, easing: 'ease-in-out' },
+      { transform: 'scale(1) rotate(0deg)' },
+    ],
+    flame: [
+      { transform: 'scale(1, 1)', easing: 'cubic-bezier(.4,0,.7,1)' },
+      { transform: 'scale(.66, .55)', offset: 0.16, easing: 'cubic-bezier(.2,.9,.35,1)' },
+      { transform: 'scale(1.12, 1.3)', offset: 0.48, easing: 'cubic-bezier(.45,0,.4,1)' },
+      { transform: 'scale(.97, .93)', offset: 0.72, easing: 'ease-in-out' },
+      { transform: 'scale(1.01, 1.03)', offset: 0.88 },
+      { transform: 'scale(1, 1)' },
+    ],
+  };
+  const btns = [...root.querySelectorAll('.sns06-btn')];
+  const state = new Map();
+  btns.forEach((b) => {
+    const st = { on: false, n: +b.dataset.n, label: b.dataset.label, kind: b.dataset.kind, count: b.querySelector('.sns06-count') };
+    state.set(b, st);
+    b.setAttribute('aria-label', `${st.label} ${nf.format(st.n)}件`);
+    b.addEventListener('click', () => setOn(b, !st.on));
+  });
+
+  function setOn(b, on) {
+    const st = state.get(b);
+    if (st.on === on) return false;
+    st.on = on;
+    const from = st.n;
+    st.n += on ? 1 : -1;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-pressed', String(on));
+    b.setAttribute('aria-label', `${st.label} ${nf.format(st.n)}件`);
+    roll(st.count, from, st.n, on ? 1 : -1);
+    if (reduced()) return true;
+    const ico = b.querySelector('.sns06-ico');
+    const fill = b.querySelector('.sns06-f');
+    ico.getAnimations().forEach((x) => x.cancel());
+    fill.getAnimations().forEach((x) => x.cancel());
+    if (on) {
+      play(ico, POP[st.kind], { duration: 700 });
+      play(fill, [
+        { transform: 'scale(.35)', opacity: 0 },
+        { transform: 'scale(.6)', opacity: 1, offset: 0.16 },
+        { transform: 'scale(1)', opacity: 1 },
+      ], { duration: 420, easing: OUT });
+      burst(b.querySelector('.sns06-fx'), st.kind);
+    } else {
+      play(ico, [{ transform: 'scale(1)' }, { transform: 'scale(.84)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: 420, easing: 'cubic-bezier(.3,.7,.4,1)' });
+      play(fill, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(.45)', opacity: 0 }], { duration: 240, easing: 'cubic-bezier(.4,0,1,1)' });
+    }
+    return true;
+  }
+
+  /* — double-tap photo — */
+  const tile = root.querySelector('.sns06-tile');
+  const layer = root.querySelector('.sns06-layer');
+  const hint = root.querySelector('.sns06-hint');
+  const heartBtn = root.querySelector('.sns06-btn[data-kind="heart"]');
+  let lastT = -1e9, lx = 0, ly = 0;
+
+  function bigHeart(x, y) {
+    hint.classList.add('is-gone');
+    setOn(heartBtn, true);
+    const s = document.createElementNS(NS, 'svg');
+    s.setAttribute('viewBox', '0 0 24 24');
+    s.setAttribute('class', 'sns06-big');
+    const u = document.createElementNS(NS, 'use');
+    u.setAttribute('href', '#SNS-06-heart');
+    s.append(u);
+    s.style.left = x + 'px';
+    s.style.top = y + 'px';
+    layer.append(s);
+    if (reduced() || !s.animate) {
+      after(play(s, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.7 }, { opacity: 0 }], { duration: 900, fill: 'both' }), () => s.remove());
+      return;
+    }
+    const r = Math.random() * 26 - 13;
+    after(play(s, [
+      { transform: `rotate(${r}deg) scale(0)`, opacity: 0, easing: 'cubic-bezier(.2,.9,.3,1)' },
+      { transform: `rotate(${r}deg) scale(1.22)`, opacity: 1, offset: 0.14, easing: 'ease-in-out' },
+      { transform: `rotate(${r}deg) scale(.9)`, offset: 0.25, easing: 'ease-in-out' },
+      { transform: `rotate(${r}deg) scale(1.03)`, offset: 0.36, easing: 'ease-in-out' },
+      { transform: `rotate(${r}deg) scale(1)`, opacity: 1, offset: 0.66, easing: 'cubic-bezier(.5,0,.75,0)' },
+      { transform: `translateY(-96px) rotate(${r * 1.6}deg) scale(.7)`, opacity: 0 },
+    ], { duration: 1200, fill: 'both' }), () => s.remove());
+    const spot = document.createElement('span');
+    spot.className = 'sns06-spot';
+    spot.style.left = x + 'px';
+    spot.style.top = y + 'px';
+    layer.append(spot);
+    burst(spot, 'heart', { scale: 1.75, n: 8, delay: 90 });
+    setTimeout(() => spot.remove(), 1200);
+  }
+
+  tile.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const r = tile.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (e.timeStamp - lastT < 340 && Math.hypot(x - lx, y - ly) < 48) bigHeart(x, y);
+    lastT = e.timeStamp; lx = x; ly = y;
+  });
+  tile.addEventListener('dblclick', (e) => e.preventDefault());
+  tile.addEventListener('contextmenu', (e) => { if (e.pointerType !== 'mouse') e.preventDefault(); });
+  tile.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    if (e.repeat) return;
+    const r = tile.getBoundingClientRect();
+    bigHeart(r.width / 2, r.height / 2);
+  });
+})();
+</script>

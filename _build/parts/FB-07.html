@@ -1,0 +1,347 @@
+<!-- ═══════════ FB-07 · Progress ═══════════ -->
+<style>
+#FB-07 {
+  --fb07-pill: light-dark(#EEF0F6, rgba(118, 118, 128, .26));
+  --fb07-mv1: #F0114C; --fb07-mv2: #FF5FB4;
+  --fb07-ex1: #2FD84A; --fb07-ex2: #C7FF3A;
+  --fb07-st1: #1FE6F5; --fb07-st2: #2F6DFF;
+}
+#FB-07 .fb07-wrap { width: min(100%, 360px); display: flex; flex-direction: column; gap: 16px; }
+#FB-07 .fb07-card { position: relative; background: var(--bg-grouped-2); border-radius: 22px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(0, 0, 0, .03); }
+
+/* ── (1) Linear ── */
+#FB-07 .fb07-lin { display: flex; flex-direction: column; gap: 18px; }
+#FB-07 .fb07-lrow { display: flex; flex-direction: column; gap: 8px; }
+#FB-07 .fb07-lhead { display: flex; align-items: baseline; gap: 8px; }
+#FB-07 .fb07-lt { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 6px; font: 600 15px/20px var(--font-text); letter-spacing: 0; color: var(--label); white-space: nowrap; }
+#FB-07 .fb07-lt .i { font-size: 17px; color: var(--green); transform: scale(0); transition: transform var(--dur-3) var(--ease-spring), margin var(--dur-2) var(--ease-ios); margin-right: -23px; }
+#FB-07 .fb07-lrow.is-done .fb07-lt .i { transform: none; margin-right: 0; }
+#FB-07 .fb07-lv { font: 600 15px/20px var(--font-rounded); color: var(--label-2); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+#FB-07 .fb07-lsub { margin: 0; font: 400 12px/16px var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#FB-07 .fb07-ios { height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
+#FB-07 .fb07-ios i { display: block; height: 100%; width: 64%; border-radius: 2px; background: var(--accent); transition: width 360ms var(--ease-out), background var(--dur-2) ease; }
+#FB-07 .fb07-lrow.is-done .fb07-ios i { background: var(--green); }
+#FB-07 .fb07-viv { position: relative; height: 8px; border-radius: 4px; background: var(--fill-3); }
+#FB-07 .fb07-viv i {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 4px; overflow: hidden;
+  background: var(--grad-vivid); background-size: 300px 100%;
+  box-shadow: 0 2px 10px -1px rgba(255, 55, 95, .5), 0 0 0 .5px rgba(255, 255, 255, .15) inset;
+  transition: width 1.1s cubic-bezier(.3, 1.25, .45, 1);
+}
+#FB-07 .fb07-viv i::after { /* moving sheen */
+  content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 70px;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, .7) 50%, transparent 100%);
+  transform: translateX(-80px); animation: fb07-sheen 2.4s cubic-bezier(.45, 0, .25, 1) infinite;
+}
+#FB-07 .fb07-viv i::before { /* soft top highlight */
+  content: ""; position: absolute; inset: 0 0 50% 0; background: linear-gradient(180deg, rgba(255, 255, 255, .35), transparent); }
+@keyframes fb07-sheen { 0% { transform: translateX(-80px); } 55%, 100% { transform: translateX(340px); } }
+#FB-07 .fb07-vv { font: 700 15px/20px var(--font-rounded); letter-spacing: 0; font-variant-numeric: tabular-nums;
+  background: var(--grad-vivid); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ── (2) App Store download ── */
+#FB-07 .fb07-app { display: flex; align-items: center; gap: 14px; }
+#FB-07 .fb07-icon { width: 60px; height: 60px; border-radius: 13.5px; flex: none; display: grid; place-items: center; color: #fff; font-size: 30px; position: relative; overflow: hidden;
+  background: var(--grad-berry); box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .1), 0 4px 12px -4px rgba(191, 90, 242, .55); }
+#FB-07 .fb07-icon::before { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 80% at 30% 0%, rgba(255, 255, 255, .45), transparent 55%); }
+#FB-07 .fb07-icon .i { position: relative; filter: drop-shadow(0 1px 2px rgba(60, 0, 90, .3)); }
+#FB-07 .fb07-icon.is-launch { animation: fb07-launch 700ms var(--ease-ios); }
+@keyframes fb07-launch { 0% { transform: none; } 35% { transform: scale(1.12); filter: brightness(1.15); } 100% { transform: none; } }
+#FB-07 .fb07-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#FB-07 .fb07-meta b { font: 600 17px/22px var(--font-text); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-07 .fb07-meta span { font: 400 13px/17px var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-07 .fb07-meta small { display: inline-flex; align-items: center; gap: 3px; font: 600 12px/16px var(--font-rounded); color: var(--label-2); font-variant-numeric: tabular-nums; }
+#FB-07 .fb07-meta small .i { color: var(--orange); font-size: 11px; }
+#FB-07 .fb07-getcol { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; width: 76px; }
+#FB-07 .fb07-get {
+  position: relative; width: 74px; height: 30px; border: 0; padding: 0; border-radius: 15px; cursor: pointer;
+  background: var(--fb07-pill); color: var(--accent); -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: width 460ms cubic-bezier(.3, 1.3, .45, 1), background var(--dur-2) ease, transform var(--dur-2) var(--ease-spring);
+}
+#FB-07 .fb07-get:active { transform: scale(.92); transition-duration: 90ms; }
+#FB-07 .fb07-get:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg-grouped-2), 0 0 0 4.5px color-mix(in srgb, var(--accent) 50%, transparent); }
+#FB-07 .fb07-get-l { position: absolute; inset: 0; display: grid; place-items: center; font: 700 15px/1 var(--font-text); letter-spacing: 0; transition: opacity 160ms ease, transform 300ms var(--ease-spring); }
+#FB-07 .fb07-get svg { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; opacity: 0; transform: scale(.7); transition: opacity 200ms ease, transform 360ms var(--ease-spring); overflow: visible; }
+#FB-07 .fb07-get[data-state="wait"], #FB-07 .fb07-get[data-state="load"] { width: 30px; background: transparent; }
+#FB-07 .fb07-get[data-state="wait"] .fb07-get-l, #FB-07 .fb07-get[data-state="load"] .fb07-get-l { opacity: 0; transform: scale(.6); }
+#FB-07 .fb07-get[data-state="wait"] .fb07-wait, #FB-07 .fb07-get[data-state="load"] .fb07-prog { opacity: 1; transform: none; transition-delay: 120ms; }
+#FB-07 .fb07-wait { animation: fb07-spin 900ms linear infinite; }
+#FB-07 .fb07-get[data-state="wait"] .fb07-wait { transform: none; }
+@keyframes fb07-spin { to { rotate: 360deg; } }
+#FB-07 .fb07-prog circle:last-of-type { transition: stroke-dashoffset 120ms linear; }
+#FB-07 .fb07-iap { font: 400 9.5px/1 var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; transition: opacity var(--dur-2) ease; }
+#FB-07 .fb07-get[data-state="load"] + .fb07-iap, #FB-07 .fb07-get[data-state="wait"] + .fb07-iap { opacity: 0; }
+
+/* ── (3) Activity rings ── */
+#FB-07 .fb07-act { padding: 16px 18px 14px; background: light-dark(#0C0C10, #121216); color: #fff; box-shadow: 0 10px 30px -14px rgba(0, 0, 0, .5), inset 0 0 0 .5px rgba(255, 255, 255, .08); overflow: hidden; }
+#FB-07 .fb07-acthead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+#FB-07 .fb07-acthead b { font: 700 17px/22px var(--font-text); letter-spacing: 0; }
+#FB-07 .fb07-acthead span { font: 400 13px/18px var(--font-text); color: rgba(235, 235, 245, .6); letter-spacing: 0; }
+#FB-07 .fb07-actbody { display: flex; align-items: center; gap: 18px; }
+#FB-07 .fb07-rings { position: relative; width: 148px; height: 148px; flex: none; }
+#FB-07 .fb07-rings::before { /* coloured bloom */
+  content: ""; position: absolute; inset: -26px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, transparent 58%, rgba(255, 40, 110, .2) 74%, rgba(255, 40, 110, .06) 88%, transparent 100%);
+  opacity: var(--fb07-bloom, 0); transition: opacity 1.2s ease;
+}
+#FB-07 .fb07-ring {
+  --a: 0deg; --sh: 0;
+  position: absolute; left: 50%; top: 50%; width: var(--d); height: var(--d); margin: calc(var(--d) / -2) 0 0 calc(var(--d) / -2); border-radius: 50%;
+  background: var(--trk);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--sw) - .7px), #000 calc(100% - var(--sw) + .1px), #000 calc(100% - .7px), transparent 100%);
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--sw) - .7px), #000 calc(100% - var(--sw) + .1px), #000 calc(100% - .7px), transparent 100%);
+}
+#FB-07 .fb07-ring--mv { --d: 148px; --sw: 18px; --c1: var(--fb07-mv1); --c2: var(--fb07-mv2); --trk: rgba(240, 17, 76, .2); }
+#FB-07 .fb07-ring--ex { --d: 106px; --sw: 18px; --c1: var(--fb07-ex1); --c2: var(--fb07-ex2); --trk: rgba(80, 230, 60, .17); }
+#FB-07 .fb07-ring--st { --d: 64px; --sw: 18px; --c1: var(--fb07-st1); --c2: var(--fb07-st2); --trk: rgba(30, 200, 245, .18); }
+#FB-07 .fb07-arc { position: absolute; inset: 0; border-radius: 50%; }
+#FB-07 .fb07-c0, #FB-07 .fb07-cw i { position: absolute; left: 50%; top: 0; width: var(--sw); height: var(--sw); margin-left: calc(var(--sw) / -2); border-radius: 50%; }
+#FB-07 .fb07-c0 { background: var(--c1); opacity: 0; }
+#FB-07 .fb07-cw { position: absolute; inset: 0; transform: rotate(var(--a)); opacity: 0; }
+#FB-07 .fb07-cw i { background: var(--c2); box-shadow: 2.5px 0 5px rgba(0, 0, 0, calc(var(--sh) * .75)), 1px 0 1.5px rgba(0, 0, 0, calc(var(--sh) * .5)); }
+#FB-07 .fb07-legend { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; margin: 0; padding: 0; list-style: none; }
+#FB-07 .fb07-legend li { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+#FB-07 .fb07-legend li > span { display: flex; align-items: center; gap: 6px; font: 600 13px/16px var(--font-text); letter-spacing: 0; color: rgba(255, 255, 255, .92); }
+#FB-07 .fb07-legend b { display: flex; align-items: baseline; font: 700 22px/24px var(--font-rounded); letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#FB-07 .fb07-legend b small { margin-left: 3px; font: 700 12px/1 var(--font-rounded); letter-spacing: .02em; opacity: .95; }
+#FB-07 .fb07-lg--mv b { color: #FF3D78; }
+#FB-07 .fb07-lg--ex b { color: #A6FF3A; }
+#FB-07 .fb07-lg--st b { color: #3DE4FF; }
+#FB-07 .fb07-pct { padding: 2px 6px; border-radius: 7px; font: 700 11px/1 var(--font-rounded); font-style: normal; background: rgba(255, 61, 120, .22); color: #FF7AA6; letter-spacing: 0; opacity: 0; transform: scale(.6); transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring); }
+#FB-07 .fb07-pct.is-on { opacity: 1; transform: none; }
+
+#FB-07 .fb07-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-top: 16px; padding-top: 12px; box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .12); }
+#FB-07 .fb07-day { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+#FB-07 .fb07-day svg { width: 28px; height: 28px; overflow: visible; }
+#FB-07 .fb07-day circle { fill: none; stroke-width: 3.4; stroke-linecap: round; }
+#FB-07 .fb07-day .t1 { stroke: rgba(240, 17, 76, .24); } #FB-07 .fb07-day .t2 { stroke: rgba(80, 230, 60, .2); } #FB-07 .fb07-day .t3 { stroke: rgba(30, 200, 245, .22); }
+#FB-07 .fb07-day .a1 { stroke: #FA1A5A; } #FB-07 .fb07-day .a2 { stroke: #8CF23A; } #FB-07 .fb07-day .a3 { stroke: #2EDCF7; }
+#FB-07 .fb07-day .a1, #FB-07 .fb07-day .a2, #FB-07 .fb07-day .a3 { stroke-dasharray: 100 100; stroke-dashoffset: 100; transition: stroke-dashoffset 900ms cubic-bezier(.22, 1, .36, 1); }
+#FB-07 .fb07-week.is-run .a1, #FB-07 .fb07-week.is-run .a2, #FB-07 .fb07-week.is-run .a3 { stroke-dashoffset: calc(100 - var(--v)); }
+#FB-07 .fb07-day span { font: 600 11px/1 var(--font-text); color: rgba(235, 235, 245, .5); letter-spacing: 0; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; }
+#FB-07 .fb07-day.is-today span { background: #fff; color: #000; }
+#FB-07 .fb07-replay {
+  display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 40px; margin-top: 14px; border: 0; border-radius: 12px; cursor: pointer;
+  background: rgba(255, 255, 255, .1); color: #fff; font: 600 15px/1 var(--font-text); letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#FB-07 .fb07-replay .i { font-size: 16px; color: #FF5FB4; }
+@media (hover: hover) { #FB-07 .fb07-replay:hover { background: rgba(255, 255, 255, .15); } }
+#FB-07 .fb07-replay:active { transform: scale(.97); transition-duration: 90ms; }
+#FB-07 .fb07-replay:focus-visible { outline: none; box-shadow: 0 0 0 2.5px rgba(255, 95, 180, .8); }
+#FB-07 .fb07-replay.is-spin .i { animation: fb07-turn 600ms var(--ease-ios); }
+@keyframes fb07-turn { from { rotate: 0deg; } to { rotate: 360deg; } }
+
+@media (max-width: 420px) {
+  #FB-07 .fb07-actbody { gap: 14px; }
+  #FB-07 .fb07-legend b { font-size: 20px; }
+}
+#FB-07.fb07-off .fb07-viv i::after, #FB-07.fb07-off .fb07-wait { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  #FB-07 .fb07-viv i::after { animation: none; opacity: 0; }
+  #FB-07 .fb07-get, #FB-07 .fb07-viv i { transition-duration: 1ms; }
+}
+</style>
+<article class="obj" id="FB-07" data-name="Progress" data-ja="プログレス（バー／リング）" data-vector="Vivid" data-size="m" data-desc="進捗バー、ダウンロードリング、アクティビティリング風の円。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="fb07-wrap">
+
+      <div class="fb07-card fb07-lin">
+        <div class="fb07-lrow fb07-dl">
+          <div class="fb07-lhead"><span class="fb07-lt"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg><span class="fb07-dlt">ダウンロード中…</span></span><span class="fb07-lv fb07-dlv">64%</span></div>
+          <div class="fb07-ios" role="progressbar" aria-label="ダウンロード" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64"><i></i></div>
+          <p class="fb07-lsub fb07-dls">128.0 MB / 200 MB · 残り約12秒</p>
+        </div>
+        <div class="fb07-lrow">
+          <div class="fb07-lhead"><span class="fb07-lt">写真をアップロード中</span><span class="fb07-vv">18 / 25</span></div>
+          <div class="fb07-viv" role="progressbar" aria-label="写真をアップロード" aria-valuemin="0" aria-valuemax="100" aria-valuenow="72"><i></i></div>
+          <p class="fb07-lsub">72% · iCloud 共有アルバム「夏の旅」</p>
+        </div>
+      </div>
+
+      <div class="fb07-card fb07-app">
+        <span class="fb07-icon" aria-hidden="true"><svg class="i"><use href="#i-sparkles"/></svg></span>
+        <div class="fb07-meta">
+          <b>Objects</b>
+          <span>UI オブジェクト図鑑</span>
+          <small><svg class="i" aria-hidden="true"><use href="#i-star-fill"/></svg>4.9 · デザイン</small>
+        </div>
+        <div class="fb07-getcol">
+          <button class="fb07-get" type="button" data-state="idle" aria-label="入手">
+            <span class="fb07-get-l">入手</span>
+            <svg class="fb07-wait" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="none" stroke="var(--fill)" stroke-width="2.4"/><circle cx="15" cy="15" r="13" fill="none" stroke="var(--label-3)" stroke-width="2.4" stroke-linecap="round" pathLength="100" stroke-dasharray="26 74"/></svg>
+            <svg class="fb07-prog" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="none" stroke="var(--fill)" stroke-width="2.4"/><rect x="11" y="11" width="8" height="8" rx="1.8" fill="var(--accent)"/><circle cx="15" cy="15" r="13" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" pathLength="100" stroke-dasharray="100 100" stroke-dashoffset="100" transform="rotate(-90 15 15)"/></svg>
+          </button>
+          <span class="fb07-iap">App内課金あり</span>
+        </div>
+      </div>
+
+      <div class="fb07-card fb07-act">
+        <div class="fb07-acthead"><b>アクティビティ</b><span>10月2日(金)</span></div>
+        <div class="fb07-actbody">
+          <div class="fb07-rings" role="img" aria-label="ムーブ 486/400キロカロリー、エクササイズ 24/30分、スタンド 9/12時間">
+            <div class="fb07-ring fb07-ring--mv"><i class="fb07-arc"></i><i class="fb07-c0"></i><span class="fb07-cw"><i></i></span></div>
+            <div class="fb07-ring fb07-ring--ex"><i class="fb07-arc"></i><i class="fb07-c0"></i><span class="fb07-cw"><i></i></span></div>
+            <div class="fb07-ring fb07-ring--st"><i class="fb07-arc"></i><i class="fb07-c0"></i><span class="fb07-cw"><i></i></span></div>
+          </div>
+          <ul class="fb07-legend" aria-hidden="true">
+            <li class="fb07-lg--mv"><span>ムーブ<em class="fb07-pct">121%</em></span><b><span class="fb07-n">0</span>/400<small>KCAL</small></b></li>
+            <li class="fb07-lg--ex"><span>エクササイズ</span><b><span class="fb07-n">0</span>/30<small>分</small></b></li>
+            <li class="fb07-lg--st"><span>スタンド</span><b><span class="fb07-n">0</span>/12<small>時間</small></b></li>
+          </ul>
+        </div>
+        <div class="fb07-week" aria-hidden="true"></div>
+        <button class="fb07-replay" type="button"><svg class="i" aria-hidden="true"><use href="#i-arrow-clockwise"/></svg>もう一度</button>
+      </div>
+
+    </div>
+  </div>
+  <ul class="obj-notes"><li>『入手』→ リング → 『開く』</li><li>『もう一度』でリングを再生</li><li>ムーブは目標の121%</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('FB-07');
+  if (!root) return;
+  const q = (s) => root.querySelector(s);
+  const RM = () => !!(window.ObjKit && window.ObjKit.reducedMotion);
+  let visible = false;
+
+  /* — (1) iOS progress view: simulated download that loops — */
+  const dl = q('.fb07-dl'), dlBar = q('.fb07-ios'), dlFill = dlBar.firstElementChild, dlV = q('.fb07-dlv'), dlT = q('.fb07-dlt'), dlS = q('.fb07-dls');
+  let pct = 64, dlTimer = 0;
+  const TOTAL = 200;
+  const paint = () => {
+    dlFill.style.width = pct + '%';
+    dlV.textContent = Math.round(pct) + '%';
+    dlBar.setAttribute('aria-valuenow', String(Math.round(pct)));
+    const mb = (TOTAL * pct / 100).toFixed(1), left = Math.max(1, Math.round((100 - pct) * 0.34));
+    dlS.textContent = pct >= 100 ? `${TOTAL}.0 MB · 完了` : `${mb} MB / ${TOTAL} MB · 残り約${left}秒`;
+  };
+  const stepDl = () => {
+    if (!visible) return;
+    if (pct >= 100) {
+      dl.classList.remove('is-done'); dlT.textContent = 'ダウンロード中…';
+      dlFill.style.transition = 'none'; pct = 0; paint(); void dlFill.offsetWidth; dlFill.style.transition = '';
+      dlTimer = setTimeout(stepDl, 500); return;
+    }
+    pct = Math.min(100, pct + 1 + Math.random() * 3.4);
+    paint();
+    if (pct >= 100) { dl.classList.add('is-done'); dlT.textContent = 'ダウンロード完了'; dlTimer = setTimeout(stepDl, 2200); }
+    else dlTimer = setTimeout(stepDl, 220 + Math.random() * 380);
+  };
+
+  /* — (1b) Vivid bar fills on first view — */
+  const viv = q('.fb07-viv i');
+
+  /* — (2) App Store button — */
+  const get = q('.fb07-get'), label = q('.fb07-get-l'), arc = q('.fb07-prog circle:last-of-type'), icon = q('.fb07-icon');
+  const KEYS = [[0, 0], [.12, .06], [.2, .1], [.36, .34], [.46, .4], [.62, .66], [.7, .72], [.86, .93], [1, 1]];
+  let gState = 'idle', gRaf = 0, gT = 0;
+  const setG = (s) => {
+    gState = s; get.dataset.state = s;
+    const L = { idle: '入手', wait: 'ダウンロードを待機中。タップで停止', load: 'ダウンロード中。タップで停止', done: '開く' }[s];
+    get.setAttribute('aria-label', L);
+    if (s === 'idle') label.textContent = '入手';
+    if (s === 'done') label.textContent = '開く';
+  };
+  const progAt = (t) => { for (let i = 1; i < KEYS.length; i++) if (t <= KEYS[i][0]) { const [t0, v0] = KEYS[i - 1], [t1, v1] = KEYS[i]; return v0 + (v1 - v0) * ((t - t0) / (t1 - t0)); } return 1; };
+  const startLoad = () => {
+    setG('load');
+    const t0 = performance.now(), D = RM() ? 900 : 3000;
+    const tick = (now) => {
+      const t = Math.min(1, (now - t0) / D);
+      arc.setAttribute('stroke-dashoffset', (100 - progAt(t) * 100).toFixed(2));
+      if (t < 1) gRaf = requestAnimationFrame(tick);
+      else gT = setTimeout(() => { setG('done'); arc.setAttribute('stroke-dashoffset', '100'); }, 260);
+    };
+    gRaf = requestAnimationFrame(tick);
+  };
+  get.addEventListener('click', () => {
+    cancelAnimationFrame(gRaf); clearTimeout(gT);
+    if (gState === 'idle') { setG('wait'); gT = setTimeout(startLoad, RM() ? 200 : 900); }
+    else if (gState === 'wait' || gState === 'load') { arc.setAttribute('stroke-dashoffset', '100'); setG('idle'); }
+    else { // 開く → launch, then rewind the demo
+      icon.classList.remove('is-launch'); void icon.offsetWidth; icon.classList.add('is-launch');
+      gT = setTimeout(() => setG('idle'), 1100);
+    }
+  });
+  icon.addEventListener('animationend', () => icon.classList.remove('is-launch'));
+
+  /* — (3) Activity rings: conic gradient that follows the stroke, round caps, shadowed head when > 100% — */
+  const ringEls = [...root.querySelectorAll('.fb07-ring')];
+  const nums = [...root.querySelectorAll('.fb07-n')];
+  const RINGS = [
+    { v: 486 / 400, n: 486, c1: '#F0114C', c2: '#FF5FB4' },
+    { v: 24 / 30, n: 24, c1: '#2FD84A', c2: '#C7FF3A' },
+    { v: 9 / 12, n: 9, c1: '#1FE6F5', c2: '#2F6DFF' },
+  ].map((r, i) => ({ ...r, el: ringEls[i], arc: ringEls[i].querySelector('.fb07-arc'), c0: ringEls[i].querySelector('.fb07-c0'), cw: ringEls[i].querySelector('.fb07-cw'), num: nums[i] }));
+  const pctTag = q('.fb07-pct'), rings = q('.fb07-rings');
+  const draw = (r, p) => {
+    const a = p * 360;
+    r.arc.style.background = p <= 1
+      ? `conic-gradient(${r.c1} 0deg, ${r.c2} ${a.toFixed(2)}deg, transparent ${a.toFixed(2)}deg)`
+      : `conic-gradient(from ${(a - 360).toFixed(2)}deg, ${r.c1}, ${r.c2})`;
+    r.el.style.setProperty('--a', a.toFixed(2) + 'deg');
+    r.el.style.setProperty('--sh', Math.max(0, Math.min(1, (p - 0.86) / 0.14)).toFixed(3));
+    r.c0.style.opacity = p > 0.002 && p <= 1 ? '1' : '0';
+    r.cw.style.opacity = p > 0.002 ? '1' : '0';
+  };
+  const ease = (t) => 1 - Math.pow(1 - t, 3.2);
+  let rRaf = 0;
+  const playRings = () => {
+    cancelAnimationFrame(rRaf);
+    pctTag.classList.remove('is-on');
+    rings.style.setProperty('--fb07-bloom', '0');
+    const t0 = performance.now(), D = 1700, STAG = 140;
+    if (RM()) { RINGS.forEach((r) => { draw(r, r.v); r.num.textContent = r.n; }); pctTag.classList.add('is-on'); rings.style.setProperty('--fb07-bloom', '1'); return; }
+    const frame = (now) => {
+      let busy = false;
+      RINGS.forEach((r, i) => {
+        const t = Math.max(0, Math.min(1, (now - t0 - i * STAG) / D));
+        if (t < 1) busy = true;
+        const k = ease(t);
+        draw(r, r.v * k);
+        r.num.textContent = Math.round(r.n * k);
+      });
+      if (now - t0 > 900) { rings.style.setProperty('--fb07-bloom', '1'); pctTag.classList.add('is-on'); }
+      if (busy) rRaf = requestAnimationFrame(frame);
+    };
+    RINGS.forEach((r) => draw(r, 0));
+    rRaf = requestAnimationFrame(frame);
+  };
+
+  /* weekly mini rings */
+  const week = q('.fb07-week');
+  const DAYS = [['月', 92, 100, 83], ['火', 100, 70, 100], ['水', 64, 47, 58], ['木', 100, 100, 92], ['金', 100, 80, 75], ['土', 0, 0, 0], ['日', 0, 0, 0]];
+  week.innerHTML = DAYS.map(([d, a, b, c], i) => `<div class="fb07-day${i === 4 ? ' is-today' : ''}"><svg viewBox="0 0 28 28">`
+    + `<circle class="t1" cx="14" cy="14" r="12.3"/><circle class="t2" cx="14" cy="14" r="8.3"/><circle class="t3" cx="14" cy="14" r="4.3"/>`
+    + `<circle class="a1" cx="14" cy="14" r="12.3" pathLength="100" transform="rotate(-90 14 14)" style="--v:${a};transition-delay:${i * 50}ms"/>`
+    + `<circle class="a2" cx="14" cy="14" r="8.3" pathLength="100" transform="rotate(-90 14 14)" style="--v:${b};transition-delay:${i * 50 + 60}ms"/>`
+    + `<circle class="a3" cx="14" cy="14" r="4.3" pathLength="100" transform="rotate(-90 14 14)" style="--v:${c};transition-delay:${i * 50 + 120}ms"/>`
+    + `</svg><span>${d}</span></div>`).join('');
+  week.querySelectorAll('circle[class^="a"]').forEach((c) => { if (c.style.getPropertyValue('--v').trim() === '0') c.style.display = 'none'; });
+  const playWeek = () => { week.classList.remove('is-run'); void week.offsetWidth; week.classList.add('is-run'); };
+
+  const replay = q('.fb07-replay');
+  replay.addEventListener('click', () => {
+    replay.classList.remove('is-spin'); void replay.offsetWidth; replay.classList.add('is-spin');
+    playRings(); playWeek();
+  });
+  replay.addEventListener('animationend', () => replay.classList.remove('is-spin'));
+
+  RINGS.forEach((r) => draw(r, 0));
+  let played = false;
+  const onShow = (v) => {
+    visible = v;
+    root.classList.toggle('fb07-off', !v);
+    clearTimeout(dlTimer);
+    if (v) {
+      dlTimer = setTimeout(stepDl, 700);
+      if (!played) { played = true; viv.style.width = '72%'; setTimeout(() => { playRings(); playWeek(); }, 150); }
+    }
+  };
+  paint();
+  if (window.ObjKit) window.ObjKit.onVisible(root, onShow); else onShow(true);
+})();
+</script>

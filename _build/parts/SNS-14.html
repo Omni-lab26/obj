@@ -1,0 +1,373 @@
+<!-- ═══════════ SNS-14 · Poll ═══════════ -->
+<style>
+#SNS-14 .sns14-wrap { position: relative; display: flex; flex-direction: column; gap: 20px; width: min(100%, 360px); }
+#SNS-14 .sns14-halo {
+  position: absolute; z-index: -1; inset: 8% -18% auto -18%; height: 70%; pointer-events: none;
+  background:
+    radial-gradient(40% 50% at 20% 30%, color-mix(in srgb, #FF9F0A 30%, transparent), transparent 70%),
+    radial-gradient(40% 50% at 80% 40%, color-mix(in srgb, #BF5AF2 26%, transparent), transparent 70%),
+    radial-gradient(40% 40% at 50% 80%, color-mix(in srgb, #FF375F 22%, transparent), transparent 70%);
+  filter: blur(24px); opacity: .85;
+}
+#SNS-14 .sns14-card {
+  position: relative; padding: 16px; border-radius: 24px;
+  background: var(--bg-grouped-2); color: var(--label);
+  box-shadow: 0 0 0 .5px light-dark(rgba(0, 0, 0, .05), rgba(255, 255, 255, .08)), 0 2px 6px rgba(0, 0, 0, .04), 0 24px 44px -26px rgba(255, 55, 95, .45);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* — Author — */
+#SNS-14 .sns14-author { display: flex; align-items: center; gap: 10px; }
+#SNS-14 .sns14-author .av { width: 40px; height: 40px; font-size: 16px; }
+#SNS-14 .sns14-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+#SNS-14 .sns14-name { display: inline-flex; align-items: center; gap: 4px; font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: -0.2px; }
+#SNS-14 .sns14-name .i { font-size: 15px; color: var(--blue); }
+#SNS-14 .sns14-meta { font: 400 var(--fs-footnote)/1.2 var(--font-text); letter-spacing: 0; color: var(--label-2); }
+#SNS-14 .sns14-tag {
+  display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px 0 8px; border-radius: var(--r-full);
+  background: var(--grad-vivid); color: #fff; font: 700 12px/1 var(--font-rounded); letter-spacing: .02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 6px 14px -6px rgba(255, 55, 95, .7);
+}
+#SNS-14 .sns14-tag .i { font-size: 13px; }
+#SNS-14 .sns14-q { margin: 14px 0 12px; font: 600 var(--fs-headline)/1.35 var(--font-text); letter-spacing: 0; }
+#SNS-14 .sns14-q small { display: block; margin-top: 2px; font: 400 var(--fs-subhead)/1.4 var(--font-text); color: var(--label-2); }
+
+/* — Options → result bars — */
+#SNS-14 .sns14-opts { display: flex; flex-direction: column; gap: 8px; }
+#SNS-14 .sns14-opt {
+  --sns14-p: 0%;
+  position: relative; display: block; width: 100%; height: 44px; padding: 0;
+  border: 0; border-radius: 12px; background: transparent; color: var(--label); cursor: pointer; text-align: left;
+  font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0;
+  user-select: none; -webkit-user-select: none; isolation: isolate;
+  transition: transform var(--dur-3) var(--ease-spring), background var(--dur-2) ease;
+}
+#SNS-14 .sns14-opt::before {
+  content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: var(--grad-vivid);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  transition: opacity var(--dur-3) ease;
+}
+#SNS-14 .sns14-opt:active { transform: scale(.97); background: color-mix(in srgb, var(--pink) 8%, transparent); transition-duration: 90ms; }
+#SNS-14 .sns14-opt:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--pink) 35%, transparent); }
+#SNS-14 .sns14-row { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: inherit; }
+#SNS-14 .sns14-row--on { z-index: 2; display: none; color: #fff; text-shadow: 0 1px 2px rgba(120, 0, 40, .28); clip-path: inset(0 calc(100% - var(--sns14-p)) 0 0); }
+#SNS-14 .sns14-opt.is-win .sns14-row--on { display: flex; }
+#SNS-14 .sns14-opt.is-win .sns14-row:not(.sns14-row--on) { clip-path: inset(0 0 0 var(--sns14-p)); }
+#SNS-14 .sns14-lab { flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; }
+#SNS-14 .sns14-em { font-family: var(--font-emoji); font-size: 16px; line-height: 1; }
+#SNS-14 .sns14-ck { font-size: 17px; flex: none; opacity: 0; transform: scale(.3); transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring); }
+#SNS-14 .sns14-pct {
+  flex: none; min-width: 42px; text-align: right;
+  font: 700 var(--fs-subhead)/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0;
+  opacity: 0; transform: translateX(6px); transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-out);
+}
+#SNS-14 .sns14-fill {
+  position: absolute; z-index: 0; left: 0; top: 0; bottom: 0; width: var(--sns14-p); border-radius: 12px;
+  background: var(--fill-3); pointer-events: none;
+}
+#SNS-14 .is-voted .sns14-opt { cursor: default; font-weight: 400; }
+#SNS-14 .is-voted .sns14-opt:active { transform: none; background: transparent; }
+#SNS-14 .is-voted .sns14-opt::before { opacity: 0; }
+#SNS-14 .is-voted .sns14-pct { opacity: 1; transform: none; color: var(--label-2); }
+#SNS-14 .is-voted .sns14-opt.is-win .sns14-pct, #SNS-14 .is-voted .sns14-opt.is-mine .sns14-pct { color: var(--label); }
+#SNS-14 .is-voted .sns14-opt .sns14-row--on .sns14-pct { color: #fff; }
+#SNS-14 .sns14-opt.is-mine { font-weight: 700; }
+#SNS-14 .sns14-opt.is-mine .sns14-ck { opacity: 1; transform: none; color: var(--pink); }
+#SNS-14 .sns14-opt.is-mine .sns14-row--on .sns14-ck { color: #fff; }
+#SNS-14 .sns14-opt.is-win .sns14-fill { background: var(--grad-vivid); }
+#SNS-14 .sns14-opt.is-mine .sns14-fill {
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--pink) 70%, transparent), 0 6px 18px -4px color-mix(in srgb, var(--pink) 55%, transparent), 0 0 24px -6px color-mix(in srgb, #BF5AF2 50%, transparent);
+}
+#SNS-14 .sns14-opt.is-mine.is-win .sns14-fill { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 8px 22px -4px rgba(255, 55, 95, .6), 0 0 28px -4px rgba(191, 90, 242, .45); }
+
+/* — Footer — */
+#SNS-14 .sns14-foot { display: flex; align-items: center; gap: 6px; min-height: 30px; margin-top: 12px; font: 400 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; color: var(--label-2); }
+#SNS-14 .sns14-total { display: inline-block; font-family: var(--font-rounded); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--label-2); }
+#SNS-14 .sns14-undo {
+  margin-left: auto; height: 30px; padding: 0 10px; border: 0; border-radius: var(--r-full); background: none; cursor: pointer;
+  font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; color: var(--label-2);
+  opacity: 0; visibility: hidden; transform: translateX(6px);
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-out), visibility 0s linear var(--dur-2), background var(--dur-1) ease;
+}
+#SNS-14 .is-voted .sns14-undo { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+#SNS-14 .sns14-undo:active { background: var(--fill-3); }
+#SNS-14 .sns14-undo:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--pink) 45%, transparent); }
+
+/* — Burst particles — */
+#SNS-14 .sns14-p { position: absolute; z-index: 5; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; pointer-events: none; }
+
+/* — This or that — */
+#SNS-14 .sns14-vs { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#SNS-14 .sns14-tile {
+  position: relative; display: block; aspect-ratio: 4 / 5; padding: 0; border: 0; border-radius: 18px; cursor: pointer;
+  background: none; color: #fff; isolation: isolate; text-align: left;
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+#SNS-14 .sns14-tile:active { transform: scale(.97); transition-duration: 90ms; }
+#SNS-14 .sns14-tile:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--bg-grouped-2), 0 0 0 5.5px color-mix(in srgb, var(--pink) 60%, transparent); }
+#SNS-14 .sns14-clip { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
+#SNS-14 .sns14-img { position: absolute; inset: 0; transition: filter var(--dur-4) ease, transform var(--dur-4) var(--ease-out); }
+#SNS-14 .sns14-clip::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0, 0, 0, .5)); transition: background var(--dur-3) ease; }
+#SNS-14 .sns14-rise {
+  position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; height: 0;
+  background: linear-gradient(0deg, rgba(255, 255, 255, .32), rgba(255, 255, 255, .14));
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .6);
+}
+#SNS-14 .sns14-tile.is-mine .sns14-rise {
+  background: linear-gradient(0deg, rgba(191, 90, 242, .78) 0%, rgba(255, 55, 95, .72) 55%, rgba(255, 159, 10, .62) 100%);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .7);
+}
+#SNS-14 .sns14-big {
+  position: absolute; z-index: 2; left: 0; right: 0; top: 50%; text-align: center;
+  font: 800 44px/1 var(--font-rounded); letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .35);
+  opacity: 0; transform: translateY(-50%) scale(.6);
+  transition: opacity var(--dur-2) ease, transform var(--dur-4) var(--ease-spring);
+}
+#SNS-14 .sns14-big small { font-size: 22px; font-weight: 700; margin-left: 1px; }
+#SNS-14 .sns14-tl { position: absolute; z-index: 3; left: 12px; bottom: 11px; display: flex; flex-direction: column; gap: 3px; text-shadow: 0 1px 6px rgba(0, 0, 0, .3); }
+#SNS-14 .sns14-tl b { font: 700 var(--fs-callout)/1.1 var(--font-text); letter-spacing: 0; }
+#SNS-14 .sns14-tl span { font: 500 var(--fs-caption1)/1 var(--font-rounded); opacity: .85; font-variant-numeric: tabular-nums; }
+#SNS-14 .sns14-badge {
+  position: absolute; z-index: 3; top: 10px; right: 10px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: #fff; color: #FF375F; font-size: 28px; box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+  opacity: 0; transform: scale(.2) rotate(-30deg); transition: opacity var(--dur-2) ease, transform var(--dur-4) var(--ease-spring);
+}
+#SNS-14 .sns14-ring {
+  position: absolute; inset: -4px; z-index: -1; border-radius: 22px; padding: 2.5px; pointer-events: none;
+  background: var(--grad-vivid); opacity: 0; transform: scale(.96);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  transition: opacity var(--dur-3) ease, transform var(--dur-4) var(--ease-spring);
+}
+#SNS-14 .sns14-or {
+  position: absolute; z-index: 4; left: 50%; top: 50%; display: grid; place-items: center; width: 40px; height: 40px; margin: -20px 0 0 -20px;
+  border-radius: 50%; background: var(--bg-grouped-2); pointer-events: none;
+  box-shadow: 0 6px 16px -4px rgba(255, 55, 95, .45), 0 0 0 4px var(--bg-grouped-2);
+  font: 800 14px/1 var(--font-rounded); letter-spacing: .02em;
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring);
+}
+#SNS-14 .sns14-or span { background: var(--grad-vivid); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#SNS-14 .is-voted .sns14-or { opacity: 0; transform: scale(.4); }
+#SNS-14 .is-voted .sns14-tile { cursor: default; }
+#SNS-14 .is-voted .sns14-tile:active { transform: none; }
+#SNS-14 .is-voted .sns14-big { opacity: 1; transform: translateY(-50%) scale(1); }
+#SNS-14 .is-voted .sns14-clip::after { background: linear-gradient(180deg, rgba(0, 0, 0, .18), rgba(0, 0, 0, .5)); }
+#SNS-14 .is-voted .sns14-tile:not(.is-mine) .sns14-img { filter: saturate(.55) brightness(.8); }
+#SNS-14 .sns14-tile.is-mine .sns14-badge { opacity: 1; transform: none; }
+#SNS-14 .sns14-tile.is-mine .sns14-ring { opacity: 1; transform: none; }
+#SNS-14 .sns14-tile.is-mine .sns14-img { transform: scale(1.04); }
+
+@media (hover: hover) {
+  #SNS-14 .sns14-cardpoll:not(.is-voted) .sns14-opt:hover { background: color-mix(in srgb, var(--pink) 6%, transparent); }
+  #SNS-14 .sns14-cardvs:not(.is-voted) .sns14-tile:hover .sns14-img { transform: scale(1.03); }
+  #SNS-14 .sns14-undo:hover { background: var(--fill-4); color: var(--label); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #SNS-14 *, #SNS-14 *::before { transition-duration: 1ms !important; }
+}
+</style>
+<article class="obj" id="SNS-14" data-name="Poll" data-ja="投票" data-vector="Vivid" data-size="m" data-desc="タップで投票すると結果バーがアニメーションで伸びる。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="sns14-wrap">
+      <i class="sns14-halo" aria-hidden="true"></i>
+
+      <section class="sns14-card sns14-cardpoll" aria-label="haru.photoの投票" data-total-fmt="票">
+        <header class="sns14-author">
+          <span class="av av-1" aria-hidden="true">H</span>
+          <div class="sns14-who"><span class="sns14-name">haru.photo<svg class="i" aria-label="認証済み"><use href="#i-checkmark-seal-fill"/></svg></span><span class="sns14-meta">2時間前</span></div>
+          <span class="sns14-tag"><svg class="i" aria-hidden="true"><use href="#i-chart-bar-fill"/></svg>投票</span>
+        </header>
+        <p class="sns14-q">週末どこ行く？<small>みんなのおすすめ教えて〜🙌</small></p>
+        <div class="sns14-opts" role="group" aria-label="選択肢">
+          <button class="sns14-opt" type="button" data-v="312"><span class="sns14-fill" aria-hidden="true"></span><span class="sns14-row"><span class="sns14-lab"><span class="sns14-em">🌊</span>鎌倉で海さんぽ<svg class="i sns14-ck" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg></span><span class="sns14-pct">0%</span></span></button>
+          <button class="sns14-opt" type="button" data-v="198"><span class="sns14-fill" aria-hidden="true"></span><span class="sns14-row"><span class="sns14-lab"><span class="sns14-em">♨️</span>箱根で温泉<svg class="i sns14-ck" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg></span><span class="sns14-pct">0%</span></span></button>
+          <button class="sns14-opt" type="button" data-v="401"><span class="sns14-fill" aria-hidden="true"></span><span class="sns14-row"><span class="sns14-lab"><span class="sns14-em">☕️</span>清澄白河でカフェ巡り<svg class="i sns14-ck" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg></span><span class="sns14-pct">0%</span></span></button>
+          <button class="sns14-opt" type="button" data-v="114"><span class="sns14-fill" aria-hidden="true"></span><span class="sns14-row"><span class="sns14-lab"><span class="sns14-em">🛋️</span>おうちでのんびり<svg class="i sns14-ck" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg></span><span class="sns14-pct">0%</span></span></button>
+        </div>
+        <footer class="sns14-foot"><span class="sns14-total" data-n="1025">1,025票</span><span aria-hidden="true">·</span><span>残り2日</span><button class="sns14-undo" type="button">投票を取り消す</button></footer>
+      </section>
+
+      <section class="sns14-card sns14-cardvs" aria-label="sora_travelの投票">
+        <header class="sns14-author">
+          <span class="av av-5" aria-hidden="true">S</span>
+          <div class="sns14-who"><span class="sns14-name">sora_travel</span><span class="sns14-meta">15分前</span></div>
+          <span class="sns14-tag"><svg class="i" aria-hidden="true"><use href="#i-sparkles"/></svg>どっち派</span>
+        </header>
+        <p class="sns14-q">夕焼けと夜景、撮るならどっち？</p>
+        <div class="sns14-vs" role="group" aria-label="2択">
+          <button class="sns14-tile" type="button" data-v="2103" aria-label="夕焼けに投票">
+            <i class="sns14-ring" aria-hidden="true"></i>
+            <span class="sns14-clip"><span class="art art-1 sns14-img"></span><span class="sns14-rise"></span></span>
+            <span class="sns14-big" aria-hidden="true">0<small>%</small></span>
+            <span class="sns14-tl"><b>夕焼け</b><span class="sns14-cnt"></span></span>
+            <span class="sns14-badge" aria-hidden="true"><svg class="i"><use href="#i-checkmark-circle-fill"/></svg></span>
+          </button>
+          <button class="sns14-tile" type="button" data-v="1379" aria-label="夜景に投票">
+            <i class="sns14-ring" aria-hidden="true"></i>
+            <span class="sns14-clip"><span class="art art-4 sns14-img"></span><span class="sns14-rise"></span></span>
+            <span class="sns14-big" aria-hidden="true">0<small>%</small></span>
+            <span class="sns14-tl"><b>夜景</b><span class="sns14-cnt"></span></span>
+            <span class="sns14-badge" aria-hidden="true"><svg class="i"><use href="#i-checkmark-circle-fill"/></svg></span>
+          </button>
+          <span class="sns14-or" aria-hidden="true"><span>VS</span></span>
+        </div>
+        <footer class="sns14-foot"><span class="sns14-total" data-n="3482">3,482票</span><span aria-hidden="true">·</span><span>残り5時間</span><button class="sns14-undo" type="button">投票を取り消す</button></footer>
+      </section>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>タップで投票→結果バー</li><li>数字が一緒にカウントアップ</li><li>投票を取り消せます</li><li>画像の2択投票も</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-14');
+  if (!root) return;
+  const $ = (s, el = root) => el.querySelector(s);
+  const $$ = (s, el = root) => Array.from(el.querySelectorAll(s));
+  const rm = () => !!(window.ObjKit && ObjKit.reducedMotion);
+  const fmt = (n) => n.toLocaleString('ja-JP');
+
+  /* cubic-bezier → easing fn (same curve drives bars AND numbers so they stay in lock-step) */
+  function bezier(x1, y1, x2, y2) {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+    return (x) => { let t = x; for (let i = 0; i < 8; i++) { const e = sx(t) - x; if (Math.abs(e) < 1e-5) break; const d = dx(t); if (Math.abs(d) < 1e-6) break; t -= e / d; } return sy(Math.min(1, Math.max(0, t))); };
+  }
+  const easeGrow = bezier(.2, .9, .25, 1.06);   // a touch of overshoot — playful
+  const easeBack = bezier(.4, 0, .2, 1);
+
+  /* largest-remainder rounding so percentages always sum to 100 */
+  function percents(vals) {
+    const tot = vals.reduce((a, b) => a + b, 0) || 1;
+    const raw = vals.map((v) => (v / tot) * 100), fl = raw.map(Math.floor);
+    let left = 100 - fl.reduce((a, b) => a + b, 0);
+    raw.map((r, i) => [r - fl[i], i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (left > 0) { fl[i]++; left--; } });
+    return fl;
+  }
+
+  /* tween runner: drives several (setter, from, to) pairs from ONE rAF clock */
+  function tween(items, dur, ease, done) {
+    if (rm()) { items.forEach((it) => it.set(it.to)); done && done(); return () => {}; }
+    let raf = 0; const t0 = performance.now();
+    const step = (now) => {
+      let allDone = true;
+      items.forEach((it) => {
+        const t = Math.min(1, Math.max(0, (now - t0 - (it.delay || 0)) / dur));
+        if (t < 1) allDone = false;
+        const e = ease(t);
+        it.set(it.from + (it.to - it.from) * e, t);
+      });
+      if (!allDone) raf = requestAnimationFrame(step); else done && done();
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }
+
+  function bumpTotal(el, delta) {
+    const n = +el.dataset.n + delta; el.dataset.n = String(n);
+    el.textContent = fmt(n) + '票';
+    if (!rm()) el.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-5px) scale(1.08)', color: 'var(--pink)' }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+  }
+
+  function burst(host, x, y) {
+    if (rm()) return;
+    const cols = ['#FF9F0A', '#FF375F', '#BF5AF2', '#FFD60A', '#FF6FD8'];
+    for (let i = 0; i < 12; i++) {
+      const p = document.createElement('i'); p.className = 'sns14-p';
+      p.style.left = x + 'px'; p.style.top = y + 'px'; p.style.background = cols[i % cols.length];
+      host.append(p);
+      const a = (i / 12) * Math.PI * 2 + Math.random() * .4, r = 26 + Math.random() * 22;
+      p.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${Math.cos(a) * r}px, ${Math.sin(a) * r}px) scale(.2)`, opacity: 0 }], { duration: 560 + Math.random() * 200, easing: 'cubic-bezier(.22,1,.36,1)' }).onfinish = () => p.remove();
+    }
+  }
+
+  /* ---------------- Poll (bars) ---------------- */
+  (() => {
+    const card = $('.sns14-cardpoll'), opts = $$('.sns14-opt', card), total = $('.sns14-total', card), undo = $('.sns14-undo', card);
+    const base = opts.map((o) => +o.dataset.v);
+    let mine = -1, stop = () => {}, shown = opts.map(() => 0);
+    // white copy of each row, clipped to the bar width → text turns white exactly where the gradient is
+    opts.forEach((o) => { const on = $('.sns14-row', o).cloneNode(true); on.classList.add('sns14-row--on'); on.setAttribute('aria-hidden', 'true'); o.append(on); });
+    const setP = (o, v, cap) => { o.style.setProperty('--sns14-p', Math.max(0, v).toFixed(2) + '%'); const n = Math.round(Math.min(Math.max(v, 0), cap)) + '%'; $$('.sns14-pct', o).forEach((e) => { e.textContent = n; }); };
+
+    function render(pcts) {
+      opts.forEach((o, i) => {
+        o.setAttribute('aria-label', `${$('.sns14-lab', o).textContent.trim()} ${pcts ? pcts[i] + '%' : ''}${i === mine ? '（投票済み）' : ''}`);
+      });
+    }
+    function vote(i) {
+      if (mine >= 0) return;
+      mine = i; stop();
+      const vals = base.map((v, k) => v + (k === i ? 1 : 0));
+      const pcts = percents(vals), max = Math.max(...vals);
+      card.classList.add('is-voted');
+      opts.forEach((o, k) => { o.classList.toggle('is-mine', k === i); o.classList.toggle('is-win', vals[k] === max); o.setAttribute('aria-disabled', 'true'); });
+      bumpTotal(total, 1);
+      const items = opts.map((o, k) => ({ from: shown[k], to: pcts[k], delay: k * 45, set: (v) => { shown[k] = v; setP(o, v, pcts[k]); } }));
+      stop = tween(items, 1050, easeGrow);
+      const ck = $('.sns14-ck', opts[i]), cr = card.getBoundingClientRect(), r = ck.getBoundingClientRect();
+      setTimeout(() => burst(card, r.left - cr.left + r.width / 2, r.top - cr.top + r.height / 2), 120);
+      render(pcts);
+    }
+    function reset() {
+      if (mine < 0) return;
+      stop();
+      const items = opts.map((o, k) => ({ from: shown[k], to: 0, set: (v) => { shown[k] = v; setP(o, v, 100); } }));
+      bumpTotal(total, -1);
+      card.classList.remove('is-voted');
+      opts.forEach((o) => { o.classList.remove('is-mine'); o.removeAttribute('aria-disabled'); });
+      mine = -1;
+      stop = tween(items, 420, easeBack, () => opts.forEach((o) => o.classList.remove('is-win')));
+      render(null);
+      opts[0].focus({ preventScroll: true });
+    }
+    opts.forEach((o, i) => o.addEventListener('click', () => vote(i)));
+    undo.addEventListener('click', reset);
+    render(null);
+  })();
+
+  /* ---------------- This or that (image tiles) ---------------- */
+  (() => {
+    const card = $('.sns14-cardvs'), tiles = $$('.sns14-tile', card), total = $('.sns14-total', card), undo = $('.sns14-undo', card);
+    const base = tiles.map((t) => +t.dataset.v);
+    let mine = -1, stop = () => {}, shown = tiles.map(() => 0);
+    function vote(i) {
+      if (mine >= 0) return;
+      mine = i; stop();
+      const vals = base.map((v, k) => v + (k === i ? 1 : 0)), pcts = percents(vals);
+      card.classList.add('is-voted');
+      tiles.forEach((t, k) => {
+        t.classList.toggle('is-mine', k === i); t.setAttribute('aria-disabled', 'true');
+        t.setAttribute('aria-label', `${$('.sns14-tl b', t).textContent} ${pcts[k]}%${k === i ? '（投票済み）' : ''}`);
+        $('.sns14-cnt', t).textContent = fmt(vals[k]) + '票';
+      });
+      bumpTotal(total, 1);
+      const items = tiles.map((t, k) => {
+        const rise = $('.sns14-rise', t), big = $('.sns14-big', t);
+        return { from: shown[k], to: pcts[k], delay: k * 60, set: (v) => { shown[k] = v; rise.style.height = Math.max(0, v) + '%'; big.firstChild.nodeValue = String(Math.round(Math.min(Math.max(v, 0), pcts[k]))); } };
+      });
+      stop = tween(items, 1150, easeGrow);
+      const b = $('.sns14-badge', tiles[i]), cr = card.getBoundingClientRect(), r = b.getBoundingClientRect();
+      setTimeout(() => burst(card, r.left - cr.left + r.width / 2, r.top - cr.top + r.height / 2), 160);
+    }
+    function reset() {
+      if (mine < 0) return;
+      stop();
+      card.classList.remove('is-voted');
+      tiles.forEach((t) => { t.classList.remove('is-mine'); t.removeAttribute('aria-disabled'); t.setAttribute('aria-label', `${$('.sns14-tl b', t).textContent}に投票`); $('.sns14-cnt', t).textContent = ''; });
+      bumpTotal(total, -1);
+      const items = tiles.map((t, k) => {
+        const rise = $('.sns14-rise', t), big = $('.sns14-big', t);
+        return { from: shown[k], to: 0, set: (v) => { shown[k] = v; rise.style.height = Math.max(0, v) + '%'; big.firstChild.nodeValue = String(Math.round(Math.max(0, v))); } };
+      });
+      mine = -1;
+      stop = tween(items, 420, easeBack);
+      tiles[0].focus({ preventScroll: true });
+    }
+    tiles.forEach((t, i) => t.addEventListener('click', () => vote(i)));
+    undo.addEventListener('click', reset);
+  })();
+})();
+</script>

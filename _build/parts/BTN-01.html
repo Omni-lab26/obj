@@ -1,0 +1,130 @@
+<!-- ═══════════ BTN-01 · Filled Button ═══════════ -->
+<style>
+#BTN-01 .btn01-stack { display: flex; flex-direction: column; align-items: stretch; gap: 24px; width: min(100%, 296px); }
+#BTN-01 .btn01-group { display: flex; flex-direction: column; gap: 8px; }
+#BTN-01 .btn01-cap {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 4px;
+  font: 500 var(--fs-caption1)/16px var(--font-text); color: var(--label-2); letter-spacing: 0;
+}
+#BTN-01 .btn01-meta { font: 500 10.5px/16px var(--font-mono); color: var(--label-3); letter-spacing: .02em; }
+#BTN-01 .btn01-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* — Button — */
+#BTN-01 .btn01 {
+  --h: 50px; --r: 14px; --bg: var(--accent);
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: var(--h); min-width: 64px; padding: 0 22px; border: 0; border-radius: var(--r);
+  background: var(--bg); color: var(--on-accent);
+  font: 600 var(--fs-headline)/1 var(--font-text); letter-spacing: 0; white-space: nowrap;
+  box-shadow:
+    inset 0 .5px 0 rgba(255, 255, 255, .28),
+    inset 0 0 0 .5px rgba(0, 0, 0, .04),
+    0 1px 2px color-mix(in srgb, var(--bg) 22%, transparent);
+  cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  outline: 3px solid transparent; outline-offset: 5px;
+  transition:
+    transform var(--dur-3) var(--ease-spring),
+    background-color var(--dur-2) ease, color var(--dur-2) ease, box-shadow var(--dur-2) ease,
+    outline-color var(--dur-1) ease, outline-offset var(--dur-2) var(--ease-out);
+}
+/* soft top sheen — keeps the flat iOS look but gives the fill a hint of material */
+#BTN-01 .btn01::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0) 55%);
+  transition: opacity var(--dur-2) ease;
+}
+/* state layer: hover lightens, press lightens more (light) / dims (dark) */
+#BTN-01 .btn01::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: light-dark(#fff, #000); opacity: 0;
+  transition: opacity var(--dur-2) ease, background-color 0s;
+}
+@media (hover: hover) {
+  #BTN-01 .btn01:hover::after { background: #fff; opacity: .08; }
+}
+#BTN-01 .btn01:active {
+  transform: scale(.97);
+  transition: transform 110ms var(--ease-out), background-color var(--dur-2) ease, box-shadow var(--dur-2) ease;
+}
+#BTN-01 .btn01:active::after { background: light-dark(#fff, #000); opacity: .18; transition-duration: 60ms; }
+#BTN-01 .btn01:focus-visible { outline-color: light-dark(color-mix(in srgb, var(--accent) 35%, transparent), color-mix(in srgb, var(--accent) 60%, transparent)); outline-offset: 2px; }
+
+#BTN-01 .btn01 .i { font-size: 18px; margin-left: -2px; }
+#BTN-01 .btn01-ico { display: inline-flex; }
+#BTN-01 .btn01-ico.is-bounce { animation: btn01-bounce 420ms var(--ease-out); }
+
+/* sizes */
+#BTN-01 .btn01--l { width: 100%; }
+#BTN-01 .btn01--m { --h: 44px; --r: 12px; min-width: 88px; padding: 0 20px; font-size: var(--fs-callout); }
+#BTN-01 .btn01--m .i { font-size: 17px; }
+#BTN-01 .btn01--s { --h: 34px; --r: 17px; min-width: 64px; padding: 0 16px; font-size: var(--fs-subhead); gap: 5px; }
+#BTN-01 .btn01--s .i { font-size: 14px; margin-left: -3px; }
+
+/* disabled */
+#BTN-01 .btn01:disabled { --bg: var(--fill-3); color: var(--label-3); box-shadow: none; cursor: default; }
+#BTN-01 .btn01:disabled::before, #BTN-01 .btn01:disabled::after { opacity: 0; }
+#BTN-01 .btn01:disabled:active { transform: none; }
+
+@keyframes btn01-bounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(.78); }
+  65% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #BTN-01 .btn01, #BTN-01 .btn01:active { transition: background-color var(--dur-2) ease, outline-color var(--dur-1) ease; }
+  #BTN-01 .btn01:active { transform: none; }
+  #BTN-01 .btn01-ico.is-bounce { animation: none; }
+}
+</style>
+<article class="obj" id="BTN-01" data-name="Filled Button" data-ja="塗りボタン" data-vector="Clean" data-size="m" data-desc="最も強調したい主要アクション用。サイズ違い・アイコン付き・無効状態。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="btn01-stack">
+      <div class="btn01-group">
+        <p class="btn01-cap"><span>Large</span><span class="btn01-meta">50pt · R14</span></p>
+        <button class="btn01 btn01--l" type="button">続ける</button>
+      </div>
+      <div class="btn01-group">
+        <p class="btn01-cap"><span>Medium・アイコン付き</span><span class="btn01-meta">44pt · R12</span></p>
+        <div class="btn01-row">
+          <button class="btn01 btn01--m" type="button">保存</button>
+          <button class="btn01 btn01--m" type="button"><span class="btn01-ico"><svg class="i" aria-hidden="true"><use href="#i-paperplane-fill"/></svg></span>送信</button>
+        </div>
+      </div>
+      <div class="btn01-group">
+        <p class="btn01-cap"><span>Small</span><span class="btn01-meta">34pt · Capsule</span></p>
+        <div class="btn01-row">
+          <button class="btn01 btn01--s" type="button"><span class="btn01-ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>追加</button>
+          <button class="btn01 btn01--s" type="button">入手</button>
+        </div>
+      </div>
+      <div class="btn01-group">
+        <p class="btn01-cap"><span>無効</span><span class="btn01-meta">fill-3 · label-3</span></p>
+        <div class="btn01-row">
+          <button class="btn01 btn01--m" type="button" disabled><span class="btn01-ico"><svg class="i" aria-hidden="true"><use href="#i-paperplane-fill"/></svg></span>送信</button>
+          <button class="btn01 btn01--s" type="button" disabled>入手</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>押すと縮んで弾み戻る</li><li>アイコンがバウンス</li><li>Tabでフォーカスリング</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('BTN-01');
+  // An (empty) touchstart listener lets iOS Safari apply :active pressed styles.
+  root.addEventListener('touchstart', () => {}, { passive: true });
+  // SF-Symbols-style bounce on the glyph when an icon button is tapped.
+  root.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn01');
+    const ico = btn && btn.querySelector('.btn01-ico');
+    if (!ico || btn.disabled || ObjKit.reducedMotion) return;
+    ico.classList.remove('is-bounce');
+    void ico.offsetWidth;
+    ico.classList.add('is-bounce');
+  });
+  root.addEventListener('animationend', (e) => {
+    if (e.target.classList && e.target.classList.contains('btn01-ico')) e.target.classList.remove('is-bounce');
+  });
+})();
+</script>

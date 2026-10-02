@@ -1,0 +1,524 @@
+<!-- ═══════════ SNS-19 · Mention & Verified ═══════════ -->
+<style>
+#SNS-19 .sns19 { width: min(100%, 380px); display: flex; flex-direction: column; gap: 26px; font-family: var(--font-text); color: var(--label); }
+#SNS-19 .sns19-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+#SNS-19 .sns19-g1 { stop-color: light-dark(#F8CF4E, #FFDA6A); }
+#SNS-19 .sns19-g2 { stop-color: light-dark(#E09A12, #E9A321); }
+#SNS-19 .sns19-sec-h { margin: 0 16px 7px; font: 400 13px/18px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#SNS-19 .sns19-sec-f { margin: 7px 16px 0; font: 400 13px/18px var(--font-text); color: var(--label-2); letter-spacing: 0; text-wrap: pretty; }
+#SNS-19 .sns19-card { position: relative; background: var(--bg-grouped-2); border-radius: 12px; }
+
+/* — Seal badge — */
+#SNS-19 .sns19-seal { --sz: 18px; display: inline-grid; place-items: center; flex: none; width: var(--sz); height: var(--sz); padding: 0; margin: 0; border: 0; background: none; color: var(--blue); }
+#SNS-19 .sns19-seal .i { display: block; width: var(--sz); height: var(--sz); vertical-align: 0; }
+#SNS-19 .sns19-seal--blue { color: var(--blue); }
+#SNS-19 .sns19-seal--gray { color: light-dark(#8A8F98, #A1A6AE); }
+#SNS-19 button.sns19-seal { width: 26px; height: 26px; margin: -4px -4px -4px -2px; padding: 4px; border-radius: 50%; cursor: pointer; transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease; -webkit-tap-highlight-color: transparent; }
+#SNS-19 button.sns19-seal:active { transform: scale(.86); transition-duration: 90ms; }
+@media (hover: hover) { #SNS-19 button.sns19-seal:hover { background: var(--fill-4); } }
+#SNS-19 button.sns19-seal[aria-expanded="true"] { background: var(--fill-3); }
+#SNS-19 button.sns19-seal:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent); }
+
+/* — Verified list — */
+#SNS-19 .sns19-list { margin: 0; padding: 0; list-style: none; }
+#SNS-19 .sns19-row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 62px; padding: 10px 16px; }
+#SNS-19 .sns19-row + .sns19-row::before { content: ""; position: absolute; top: 0; left: 68px; right: 0; height: .5px; background: var(--separator); }
+#SNS-19 .sns19-row > .av { width: 40px; height: 40px; font-size: 16px; }
+#SNS-19 .av.sns19-org { border-radius: 10px; }
+#SNS-19 .sns19-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+#SNS-19 .sns19-name { display: flex; align-items: center; gap: 3px; font: 600 16px/21px var(--font-text); letter-spacing: 0; white-space: nowrap; }
+#SNS-19 .sns19-handle { font: 400 13px/18px var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#SNS-19 .sns19-kind { flex: none; font: 400 15px/20px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+
+/* — Badge explainer popover — */
+#SNS-19 .sns19-tip {
+  position: absolute; z-index: 40; top: 0; left: 0; width: min(272px, calc(100% - 24px)); padding: 14px 16px 14px; border-radius: 14px;
+  background: light-dark(rgba(255, 255, 255, .95), rgba(44, 44, 46, .96));
+  -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--shadow-3), 0 0 0 .5px var(--separator);
+  opacity: 0; visibility: hidden; transform: translate3d(0, -4px, 0) scale(.96); transform-origin: var(--ox, 50%) 0;
+  transition: opacity var(--dur-1) ease, transform var(--dur-2) var(--ease-ios), visibility 0s linear var(--dur-2);
+}
+#SNS-19 .sns19-tip.is-up { transform-origin: var(--ox, 50%) 100%; transform: translate3d(0, 4px, 0) scale(.96); }
+#SNS-19 .sns19-tip.is-on { opacity: 1; visibility: visible; transform: none; transition: opacity var(--dur-1) ease, transform var(--dur-3) var(--ease-spring); }
+#SNS-19 .sns19-tip::before { content: ""; position: absolute; left: var(--ax, 50%); top: -6px; width: 12px; height: 12px; margin-left: -6px; border-radius: 2px; background: inherit; transform: rotate(45deg); box-shadow: -.5px -.5px 0 var(--separator); }
+#SNS-19 .sns19-tip.is-up::before { top: auto; bottom: -6px; box-shadow: .5px .5px 0 var(--separator); }
+#SNS-19 .sns19-tip-h { display: flex; align-items: center; gap: 10px; }
+#SNS-19 .sns19-tip-h .sns19-seal { --sz: 30px; }
+#SNS-19 .sns19-tip-t { font: 600 15px/20px var(--font-text); letter-spacing: 0; }
+#SNS-19 .sns19-tip-k { font: 400 12px/16px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#SNS-19 .sns19-tip-b { margin: 10px 0 0; font: 400 13px/19px var(--font-text); color: var(--label); letter-spacing: 0; }
+#SNS-19 .sns19-tip-m { display: flex; align-items: center; gap: 5px; margin: 10px 0 0; padding-top: 10px; box-shadow: inset 0 .5px 0 var(--separator); font: 400 12px/16px var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-19 .sns19-tip-m .i { font-size: 13px; }
+
+/* — Composer — */
+#SNS-19 .sns19-composer { padding: 14px 14px 10px; }
+#SNS-19 .sns19-c-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+#SNS-19 .sns19-c-head .av { width: 36px; height: 36px; font-size: 13px; }
+#SNS-19 .sns19-c-me { display: flex; flex-direction: column; }
+#SNS-19 .sns19-c-me b { font: 600 15px/20px var(--font-text); letter-spacing: 0; }
+#SNS-19 .sns19-aud { display: inline-flex; align-items: center; gap: 4px; font: 600 12px/16px var(--font-text); color: var(--accent); letter-spacing: 0; }
+#SNS-19 .sns19-aud .i { font-size: 12px; }
+#SNS-19 .sns19-field { position: relative; margin: 0 -2px; }
+#SNS-19 .sns19-mirror, #SNS-19 .sns19-ta {
+  margin: 0; padding: 4px 2px; border: 0; width: 100%;
+  font: 400 16px/24px var(--font-text); letter-spacing: 0; tab-size: 4;
+  white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; line-break: auto;
+}
+#SNS-19 .sns19-mirror { min-height: 80px; color: var(--label); pointer-events: none; }
+#SNS-19 .sns19-ta {
+  position: absolute; inset: 0; height: 100%; resize: none; overflow: hidden; outline: none; background: transparent;
+  color: transparent; -webkit-text-fill-color: transparent; caret-color: var(--accent);
+}
+#SNS-19 .sns19-ta::placeholder { color: var(--label-3); -webkit-text-fill-color: var(--label-3); }
+#SNS-19 .sns19-ta::selection { background: color-mix(in srgb, var(--accent) 26%, transparent); -webkit-text-fill-color: transparent; }
+#SNS-19 .sns19-tok-m { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 4px; }
+#SNS-19 .sns19-tok-m.is-new { animation: sns19-flash 900ms var(--ease-out); }
+@keyframes sns19-flash { 0% { background: color-mix(in srgb, var(--accent) 38%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent); } }
+#SNS-19 .sns19-tok-d, #SNS-19 .sns19-tok-h { color: var(--accent); }
+#SNS-19 .sns19-mark { display: inline; }
+#SNS-19 .sns19-tools { display: flex; align-items: center; gap: 2px; margin: 6px -6px 0; padding-top: 8px; box-shadow: inset 0 .5px 0 var(--separator); }
+#SNS-19 .sns19-tool { width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; background: transparent; color: var(--accent); font-size: 20px; cursor: pointer; transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease; -webkit-tap-highlight-color: transparent; }
+#SNS-19 .sns19-tool:active { transform: scale(.88); background: var(--fill-3); transition-duration: 90ms; }
+@media (hover: hover) { #SNS-19 .sns19-tool:hover { background: var(--fill-4); } }
+#SNS-19 .sns19-count { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--label-2); }
+#SNS-19 .sns19-count.is-warn { color: var(--orange); }
+#SNS-19 .sns19-count.is-over { color: var(--red); }
+#SNS-19 .sns19-ring { width: 22px; height: 22px; transform: rotate(-90deg); }
+#SNS-19 .sns19-ring circle { fill: none; stroke-width: 2.5; }
+#SNS-19 .sns19-ring .sns19-ring-bg { stroke: var(--fill); }
+#SNS-19 .sns19-ring .sns19-ring-fg { stroke: currentColor; stroke-linecap: round; stroke-dasharray: 1; transition: stroke-dashoffset var(--dur-2) var(--ease-out); }
+#SNS-19 .sns19-count:not(.is-warn):not(.is-over) .sns19-ring-fg { stroke: var(--accent); }
+#SNS-19 .sns19-post {
+  position: relative; height: 32px; min-width: 64px; margin-left: 10px; margin-right: 6px; padding: 0 16px; border: 0; border-radius: var(--r-full); cursor: pointer;
+  background: var(--accent); color: var(--on-accent); font: 600 15px/1 var(--font-text); letter-spacing: 0;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-2) ease, color var(--dur-2) ease, opacity var(--dur-2) ease;
+}
+#SNS-19 .sns19-post:active { transform: scale(.95); transition-duration: 90ms; }
+#SNS-19 .sns19-post:disabled { background: var(--fill-3); color: var(--label-3); cursor: default; }
+#SNS-19 .sns19-post:disabled:active { transform: none; }
+#SNS-19 .sns19-post.is-done { background: var(--green); }
+#SNS-19 .sns19-post:focus-visible, #SNS-19 .sns19-tool:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg-grouped-2), 0 0 0 4px color-mix(in srgb, var(--accent) 50%, transparent); }
+
+/* — Suggestion popover — */
+#SNS-19 .sns19-pop {
+  position: absolute; z-index: 50; top: 0; left: 0; width: min(292px, calc(100% - 24px)); padding: 6px; border-radius: 14px;
+  background: light-dark(rgba(255, 255, 255, .95), rgba(44, 44, 46, .96));
+  -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--shadow-3), 0 0 0 .5px var(--separator);
+  opacity: 0; visibility: hidden; transform: translate3d(0, 6px, 0) scale(.97); transform-origin: var(--ox, 20px) 100%;
+  transition: opacity var(--dur-1) ease, transform var(--dur-2) var(--ease-ios), visibility 0s linear var(--dur-2), top var(--dur-2) var(--ease-ios), left var(--dur-2) var(--ease-ios);
+}
+#SNS-19 .sns19-pop.is-below { transform-origin: var(--ox, 20px) 0; transform: translate3d(0, -6px, 0) scale(.97); }
+#SNS-19 .sns19-pop.is-on { opacity: 1; visibility: visible; transform: none; transition: opacity var(--dur-1) ease, transform var(--dur-3) var(--ease-spring), top var(--dur-2) var(--ease-ios), left var(--dur-2) var(--ease-ios); }
+#SNS-19 .sns19-pop-h { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px 6px; font: 600 12px/16px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#SNS-19 .sns19-pop-h kbd { font: 500 11px/1 var(--font-text); color: var(--label-3); letter-spacing: 0; }
+@media (hover: none) { #SNS-19 .sns19-pop-h kbd { display: none; } }
+#SNS-19 .sns19-opt-n > span:first-child { overflow: hidden; text-overflow: ellipsis; }
+#SNS-19 .sns19-opts { max-height: 208px; margin: 0; padding: 0; list-style: none; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+#SNS-19 .sns19-opt { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 10px; border-radius: 9px; cursor: pointer; user-select: none; -webkit-user-select: none; transition: background 80ms ease; }
+#SNS-19 .sns19-opt.is-active { background: var(--fill-3); }
+#SNS-19 .sns19-opt:active { background: var(--fill-2); }
+#SNS-19 .sns19-opt > .av { width: 32px; height: 32px; font-size: 13px; }
+#SNS-19 .sns19-opt > .av.sns19-org { border-radius: 8px; }
+#SNS-19 .sns19-opt-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#SNS-19 .sns19-opt-n { display: flex; align-items: center; gap: 3px; font: 600 15px/20px var(--font-text); letter-spacing: 0; white-space: nowrap; }
+#SNS-19 .sns19-opt-n .sns19-seal { --sz: 15px; }
+#SNS-19 .sns19-opt-s { font: 400 13px/17px var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+#SNS-19 .sns19-opt mark { background: none; color: var(--label); font-weight: 600; }
+#SNS-19 .sns19-opt-s mark { color: var(--label); }
+#SNS-19 .sns19-fol { flex: none; padding: 3px 7px; border-radius: 6px; background: var(--fill-3); font: 600 11px/14px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#SNS-19 .sns19-hash { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font-size: 16px; }
+#SNS-19 .sns19-hot { flex: none; display: inline-flex; align-items: center; gap: 2px; font: 600 11px/1 var(--font-text); color: var(--orange); letter-spacing: 0; }
+#SNS-19 .sns19-hot .i { font-size: 12px; }
+#SNS-19 .sns19-empty { padding: 14px 10px 12px; font: 400 13px/18px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-19 .sns19-pop, #SNS-19 .sns19-tip { transition: opacity var(--dur-1) ease, visibility 0s linear var(--dur-1) !important; transform: none !important; }
+  #SNS-19 .sns19-tok-m.is-new { animation: none; }
+}
+</style>
+<article class="obj" id="SNS-19" data-name="Mention &amp; Verified" data-ja="メンション・認証バッジ" data-vector="Clean" data-size="m" data-desc="@で候補が出る入力欄と、認証バッジの種類。">
+  <div class="obj-stage" data-bg="grouped">
+    <svg class="sns19-defs" aria-hidden="true" focusable="false">
+      <defs><linearGradient id="SNS-19-gold" x1="0" y1="0" x2="1" y2="1"><stop class="sns19-g1" offset="0"/><stop class="sns19-g2" offset="1"/></linearGradient></defs>
+    </svg>
+    <div class="sns19">
+      <section>
+        <h4 class="sns19-sec-h">認証バッジ</h4>
+        <div class="sns19-card">
+          <ul class="sns19-list">
+            <li class="sns19-row">
+              <span class="av av-1">H</span>
+              <span class="sns19-who">
+                <span class="sns19-name">佐藤 春<button class="sns19-seal sns19-seal--blue" type="button" data-kind="blue" aria-label="認証済み（個人）" aria-expanded="false" aria-controls="SNS-19-tip"><svg class="i" aria-hidden="true"><use href="#i-checkmark-seal-fill"/></svg></button></span>
+                <span class="sns19-handle">@haru.photo</span>
+              </span>
+              <span class="sns19-kind">個人</span>
+            </li>
+            <li class="sns19-row">
+              <span class="av av-5 sns19-org">ひ</span>
+              <span class="sns19-who">
+                <span class="sns19-name">ひだまり珈琲<button class="sns19-seal" type="button" data-kind="gold" aria-label="認証済み（企業）" aria-expanded="false" aria-controls="SNS-19-tip"><svg class="i" aria-hidden="true"><use href="#i-checkmark-seal-fill" fill="url(#SNS-19-gold)"/></svg></button></span>
+                <span class="sns19-handle">@hidamari.coffee</span>
+              </span>
+              <span class="sns19-kind">企業</span>
+            </li>
+            <li class="sns19-row">
+              <span class="av av-8 sns19-org">あ</span>
+              <span class="sns19-who">
+                <span class="sns19-name">あおぞら市<button class="sns19-seal sns19-seal--gray" type="button" data-kind="gray" aria-label="認証済み（公的機関）" aria-expanded="false" aria-controls="SNS-19-tip"><svg class="i" aria-hidden="true"><use href="#i-checkmark-seal-fill"/></svg></button></span>
+                <span class="sns19-handle">@aozora_city</span>
+              </span>
+              <span class="sns19-kind">公的機関</span>
+            </li>
+          </ul>
+        </div>
+        <p class="sns19-sec-f">バッジを押すと、認証の種類を確認できます。</p>
+      </section>
+
+      <section>
+        <h4 class="sns19-sec-h">新規投稿</h4>
+        <div class="sns19-card sns19-composer">
+          <div class="sns19-c-head">
+            <span class="av av-8">Me</span>
+            <span class="sns19-c-me"><b>あなた</b><span class="sns19-aud"><svg class="i" aria-hidden="true"><use href="#i-globe"/></svg>全員が返信できます</span></span>
+          </div>
+          <div class="sns19-field">
+            <div class="sns19-mirror" aria-hidden="true"></div>
+            <textarea class="sns19-ta" rows="3" spellcheck="false" placeholder="いまどうしてる？" aria-label="投稿の本文" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="SNS-19-opts" aria-haspopup="listbox">週末は @haru.photo さんと江ノ島で撮影会でした。夕焼けが最高だった #夕焼け </textarea>
+          </div>
+          <div class="sns19-tools">
+            <button class="sns19-tool" type="button" data-ins="@" aria-label="メンションを追加"><svg class="i" aria-hidden="true"><use href="#i-at"/></svg></button>
+            <button class="sns19-tool" type="button" data-ins="#" aria-label="ハッシュタグを追加"><svg class="i" aria-hidden="true"><use href="#i-number"/></svg></button>
+            <button class="sns19-tool" type="button" aria-label="写真を追加"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg></button>
+            <span class="sns19-count" aria-live="polite">
+              <span class="sns19-left"></span>
+              <svg class="sns19-ring" viewBox="0 0 22 22" aria-hidden="true"><circle class="sns19-ring-bg" cx="11" cy="11" r="9"/><circle class="sns19-ring-fg" cx="11" cy="11" r="9" pathLength="1"/></svg>
+            </span>
+            <button class="sns19-post" type="button">投稿</button>
+          </div>
+        </div>
+        <p class="sns19-sec-f">@ でユーザー、# でタグを提案します。</p>
+      </section>
+    </div>
+
+    <div class="sns19-tip" id="SNS-19-tip" role="tooltip">
+      <div class="sns19-tip-h">
+        <span class="sns19-seal sns19-tip-seal"><svg class="i" aria-hidden="true"><use href="#i-checkmark-seal-fill"/></svg></span>
+        <span><span class="sns19-tip-t">認証済みアカウント</span><br><span class="sns19-tip-k"></span></span>
+      </div>
+      <p class="sns19-tip-b"></p>
+      <p class="sns19-tip-m"><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg><span class="sns19-tip-d"></span></p>
+    </div>
+
+    <div class="sns19-pop" aria-hidden="true">
+      <div class="sns19-pop-h"><span class="sns19-pop-title">ユーザー</span><kbd>↑↓ で選択 · ⏎ で決定</kbd></div>
+      <ul class="sns19-opts" id="SNS-19-opts" role="listbox" aria-label="候補"></ul>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>「@h」と入力</li><li>「#」でハッシュタグ</li><li>↑↓ Enter で選択</li><li>バッジを押すと説明</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-19');
+  if (!root) return;
+  const $ = (s, r = root) => r.querySelector(s);
+  const $$ = (s, r = root) => [...r.querySelectorAll(s)];
+  const stage = $('.obj-stage');
+  const reduced = () => window.ObjKit && ObjKit.reducedMotion;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const icon = (id, attrs = '') => `<svg class="i" aria-hidden="true"><use href="#${id}"${attrs}/></svg>`;
+  const seal = (k) => k ? `<span class="sns19-seal sns19-seal--${k}">${icon('i-checkmark-seal-fill', k === 'gold' ? ' fill="url(#SNS-19-gold)"' : '')}</span>` : '';
+
+  /* ————— Verified badge explainer ————— */
+  const KINDS = {
+    blue: ['個人', 'このアカウントは、本人確認を経て認証された個人のアカウントです。', '2024年3月から認証済み'],
+    gold: ['企業・ブランド', '公式に認証された企業・ブランドのアカウントです。正規の情報源として表示されます。', '2023年11月から認証済み'],
+    gray: ['公的機関', '政府機関・自治体など、公的機関の公式アカウントです。', '2022年6月から認証済み'],
+  };
+  const tip = $('.sns19-tip');
+  const tipSeal = $('.sns19-tip-seal');
+  let tipFor = null, pinned = false, hoverT = 0, leaveT = 0;
+  function showTip(btn, pin) {
+    clearTimeout(hoverT); clearTimeout(leaveT);
+    const k = btn.dataset.kind;
+    const [kind, body, since] = KINDS[k];
+    tipSeal.className = `sns19-seal sns19-tip-seal sns19-seal--${k}`;
+    tipSeal.innerHTML = icon('i-checkmark-seal-fill', k === 'gold' ? ' fill="url(#SNS-19-gold)"' : '');
+    $('.sns19-tip-k').textContent = kind;
+    $('.sns19-tip-b').textContent = body;
+    $('.sns19-tip-d').textContent = since;
+    if (tipFor && tipFor !== btn) tipFor.setAttribute('aria-expanded', 'false');
+    tipFor = btn; pinned = !!pin;
+    btn.setAttribute('aria-expanded', 'true');
+    // position under (or above) the badge, clamped inside the stage
+    const S = stage.getBoundingClientRect(), B = btn.getBoundingClientRect();
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    const cx = B.left - S.left + B.width / 2;
+    const x = Math.max(12, Math.min(S.width - w - 12, cx - w / 2));
+    let y = B.bottom - S.top + 8;
+    const up = y + h > S.height - 8;
+    if (up) y = B.top - S.top - h - 8;
+    tip.classList.toggle('is-up', up);
+    tip.style.left = `${x}px`; tip.style.top = `${y}px`;
+    tip.style.setProperty('--ax', `${cx - x}px`);
+    tip.style.setProperty('--ox', `${cx - x}px`);
+    tip.classList.add('is-on');
+  }
+  function hideTip() {
+    clearTimeout(hoverT); clearTimeout(leaveT);
+    tip.classList.remove('is-on');
+    if (tipFor) tipFor.setAttribute('aria-expanded', 'false');
+    tipFor = null; pinned = false;
+  }
+  $$('button.sns19-seal').forEach((b) => {
+    b.addEventListener('click', (e) => { e.stopPropagation(); (tipFor === b && pinned) ? hideTip() : showTip(b, true); });
+    b.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'mouse' || pinned) return; clearTimeout(leaveT); hoverT = setTimeout(() => showTip(b, false), 260); });
+    b.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'mouse' || pinned) return; clearTimeout(hoverT); leaveT = setTimeout(hideTip, 140); });
+    b.addEventListener('focus', () => { if (b.matches(':focus-visible')) showTip(b, false); });
+    b.addEventListener('blur', () => { if (!pinned) hideTip(); });
+  });
+  tip.addEventListener('pointerenter', () => clearTimeout(leaveT));
+  tip.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && !pinned) leaveT = setTimeout(hideTip, 140); });
+
+  /* ————— Composer with @ / # suggestions ————— */
+  const USERS = [
+    { h: 'haru.photo', n: '佐藤 春', av: 'av-1', i: 'H', v: 'blue', f: 1 },
+    { h: 'hidamari.coffee', n: 'ひだまり珈琲', av: 'av-5', i: 'ひ', v: 'gold', org: 1 },
+    { h: 'mio_k', n: '小林 美緒', av: 'av-2', i: 'M', f: 1 },
+    { h: 'kaito.dev', n: '高橋 海斗', av: 'av-3', i: 'K', f: 1 },
+    { h: 'yuna', n: '山本 結菜', av: 'av-4', i: 'Y' },
+    { h: 'sora_travel', n: '中村 空', av: 'av-5', i: 'S', f: 1 },
+    { h: 'ren.design', n: '伊藤 蓮', av: 'av-6', i: 'R', v: 'blue' },
+    { h: 'aoi', n: '渡辺 葵', av: 'av-7', i: 'A', f: 1 },
+    { h: 'aozora_city', n: 'あおぞら市', av: 'av-8', i: 'あ', v: 'gray', org: 1 },
+  ];
+  const TAGS = [
+    ['京都', '12.3万', 1], ['江ノ島', '4.1万'], ['夕焼け', '28.6万'], ['紅葉', '33.9万', 1], ['カフェ巡り', '18.2万'],
+    ['写真好きな人と繋がりたい', '96.4万'], ['秋', '52.1万'], ['京都カフェ', '3.2万'], ['フィルム写真', '7.8万'], ['週末の過ごし方', '1.4万'],
+  ];
+  const byHandle = new Map(USERS.map((u) => [u.h, u]));
+  const ta = $('.sns19-ta');
+  const mirror = $('.sns19-mirror');
+  const pop = $('.sns19-pop');
+  const opts = $('.sns19-opts');
+  const RE = /@[A-Za-z0-9_.]*[A-Za-z0-9_]|@|#[^\s#@、。，．！？!?「」]+/g;
+  const MARK = '<span class="sns19-mark"></span>';
+  let freshToken = -1;
+
+  function render(marker = -1) {
+    const v = ta.value;
+    const toks = [];
+    let m;
+    RE.lastIndex = 0;
+    while ((m = RE.exec(v))) {
+      const t = m[0];
+      if (t === '@') continue;
+      const prev = v[m.index - 1];
+      if (prev && !/[\s　、。（(「]/.test(prev)) continue;
+      const cls = t[0] === '#' ? 'sns19-tok-h' : byHandle.has(t.slice(1)) ? 'sns19-tok-m' : 'sns19-tok-d';
+      toks.push([m.index, m.index + t.length, cls]);
+    }
+    const pieces = [];
+    let p = 0;
+    for (const [a, b, c] of toks) { if (a > p) pieces.push([p, a, '']); pieces.push([a, b, c]); p = b; }
+    if (p < v.length || !pieces.length) pieces.push([p, v.length, '']);
+    const span = (s, c, a) => c ? `<span class="${c}${c === 'sns19-tok-m' && a === freshToken ? ' is-new' : ''}">${esc(s)}</span>` : esc(s);
+    let html = '', placed = marker < 0;
+    if (!placed && marker === 0) { html += MARK; placed = true; }
+    for (const [a, b, c] of pieces) {
+      if (!placed && marker > a && marker < b) { html += span(v.slice(a, marker), c, a) + MARK + span(v.slice(marker, b), c, -2); placed = true; }
+      else { html += span(v.slice(a, b), c, a); if (!placed && marker === b) { html += MARK; placed = true; } }
+    }
+    mirror.innerHTML = html + ' ';
+  }
+
+  /* counter */
+  const MAX = 280;
+  const countEl = $('.sns19-count'), leftEl = $('.sns19-left'), ring = $('.sns19-ring-fg'), postBtn = $('.sns19-post');
+  function count() {
+    const n = [...ta.value.trim()].length;
+    const left = MAX - n;
+    ring.style.strokeDashoffset = String(1 - Math.min(1, n / MAX));
+    countEl.classList.toggle('is-warn', left <= 20 && left >= 0);
+    countEl.classList.toggle('is-over', left < 0);
+    leftEl.textContent = left <= 20 ? String(left) : '';
+    countEl.setAttribute('aria-label', `残り${left}文字`);
+    postBtn.disabled = n === 0 || left < 0;
+  }
+
+  /* suggestion state */
+  let state = null; // { trig, q, start, items, idx }
+  let dismissed = -1;
+  function match(trig, q) {
+    const ql = q.toLowerCase();
+    if (trig === '@') {
+      return USERS.map((u) => {
+        const hp = u.h.startsWith(ql), hi = u.h.includes(ql), ni = q && u.n.includes(q);
+        return { u, s: !q ? (u.f ? 2 : 1) : hp ? 4 + (u.f ? 1 : 0) : (hi || ni) ? 2 + (u.f ? 1 : 0) : 0 };
+      }).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).map((x) => x.u);
+    }
+    return TAGS.filter(([t]) => !q || t.toLowerCase().includes(ql)).sort((a, b) => (b[0].startsWith(q) ? 1 : 0) - (a[0].startsWith(q) ? 1 : 0));
+  }
+  const hl = (s, q) => {
+    if (!q) return esc(s);
+    const i = s.toLowerCase().indexOf(q.toLowerCase());
+    return i < 0 ? esc(s) : `${esc(s.slice(0, i))}<mark>${esc(s.slice(i, i + q.length))}</mark>${esc(s.slice(i + q.length))}`;
+  };
+  function paint() {
+    const { trig, q, items, idx } = state;
+    $('.sns19-pop-title').textContent = trig === '@' ? 'ユーザー' : 'ハッシュタグ';
+    if (!items.length) {
+      opts.innerHTML = `<li class="sns19-empty" role="presentation">${trig === '@' ? '該当するユーザーがいません' : `「#${esc(q)}」を新しいハッシュタグとして使う`}</li>`;
+      ta.removeAttribute('aria-activedescendant');
+      return;
+    }
+    opts.innerHTML = items.map((it, i) => {
+      if (trig === '@') {
+        return `<li class="sns19-opt${i === idx ? ' is-active' : ''}" id="SNS-19-o${i}" role="option" aria-selected="${i === idx}" data-i="${i}">
+          <span class="av ${it.av}${it.org ? ' sns19-org' : ''}">${it.i}</span>
+          <span class="sns19-opt-t"><span class="sns19-opt-n"><span>${hl(it.n, q)}</span>${seal(it.v)}</span><span class="sns19-opt-s">@${hl(it.h, q)}</span></span>
+          ${it.f ? '<span class="sns19-fol">フォロー中</span>' : ''}</li>`;
+      }
+      const [t, c, hot] = it;
+      return `<li class="sns19-opt${i === idx ? ' is-active' : ''}" id="SNS-19-o${i}" role="option" aria-selected="${i === idx}" data-i="${i}">
+        <span class="sns19-hash">${icon('i-number')}</span>
+        <span class="sns19-opt-t"><span class="sns19-opt-n"><span>#${hl(t, q)}</span></span><span class="sns19-opt-s">${c}件のポスト</span></span>
+        ${hot ? `<span class="sns19-hot">${icon('i-arrow-up-right')}急上昇</span>` : ''}</li>`;
+    }).join('');
+    ta.setAttribute('aria-activedescendant', `SNS-19-o${idx}`);
+  }
+  function place() {
+    render(state.start);
+    const mk = $('.sns19-mark', mirror);
+    const S = stage.getBoundingClientRect(), r = mk.getBoundingClientRect();
+    const lh = 24, top = r.top - S.top - (lh - r.height) / 2, bottom = top + lh;
+    const w = pop.offsetWidth, h = pop.offsetHeight;
+    const cx = r.left - S.left;
+    const x = Math.max(12, Math.min(S.width - w - 12, cx - 22));
+    let y = top - h - 6;
+    const below = y < 10;
+    if (below) y = Math.min(S.height - h - 10, bottom + 6);
+    pop.classList.toggle('is-below', below);
+    pop.style.left = `${x}px`; pop.style.top = `${y}px`;
+    pop.style.setProperty('--ox', `${Math.max(16, cx - x)}px`);
+    render();
+  }
+  function openPop(trig, q, start) {
+    const items = match(trig, q);
+    const same = state && state.trig === trig && state.start === start;
+    const prevId = same && state.items[state.idx] ? (trig === '@' ? state.items[state.idx].h : state.items[state.idx][0]) : null;
+    let idx = 0;
+    if (prevId) { const j = items.findIndex((it) => (trig === '@' ? it.h : it[0]) === prevId); if (j >= 0) idx = j; }
+    const wasOpen = !!state;
+    state = { trig, q, start, items, idx };
+    paint();
+    if (!same || !prevId) opts.scrollTop = 0;
+    if (!wasOpen) { pop.style.transition = 'none'; place(); void pop.offsetWidth; pop.style.transition = ''; }
+    else place();
+    pop.classList.add('is-on');
+    pop.setAttribute('aria-hidden', 'false');
+    ta.setAttribute('aria-expanded', 'true');
+  }
+  function closePop() {
+    if (!state) return;
+    state = null;
+    pop.classList.remove('is-on');
+    pop.setAttribute('aria-hidden', 'true');
+    ta.setAttribute('aria-expanded', 'false');
+    ta.removeAttribute('aria-activedescendant');
+  }
+  function detect() {
+    const pos = ta.selectionStart;
+    if (pos !== ta.selectionEnd || document.activeElement !== ta) return closePop();
+    const m = ta.value.slice(0, pos).match(/(^|[\s　、。（(「])([@#])([^\s@#、。，．！？!?「」]*)$/);
+    if (!m) { dismissed = -1; return closePop(); }
+    const start = pos - m[3].length - 1;
+    if (start === dismissed) return closePop();
+    openPop(m[2], m[3], start);
+  }
+  function move(d) {
+    if (!state || !state.items.length) return;
+    state.idx = (state.idx + d + state.items.length) % state.items.length;
+    $$('.sns19-opt', opts).forEach((o, i) => { o.classList.toggle('is-active', i === state.idx); o.setAttribute('aria-selected', String(i === state.idx)); });
+    ta.setAttribute('aria-activedescendant', `SNS-19-o${state.idx}`);
+    const o = $$('.sns19-opt', opts)[state.idx];
+    if (o) {
+      const top = o.offsetTop - 6, bot = o.offsetTop + o.offsetHeight - opts.clientHeight + 6;
+      if (opts.scrollTop > top) opts.scrollTop = top; else if (opts.scrollTop < bot) opts.scrollTop = bot;
+    }
+  }
+  function insertText(text, a, b) {
+    ta.focus();
+    ta.setSelectionRange(a, b);
+    let ok = false;
+    try { ok = document.execCommand('insertText', false, text); } catch (e) {}
+    if (!ok || ta.value.slice(a, a + text.length) !== text) ta.setRangeText(text, a, b, 'end');
+  }
+  function choose(i) {
+    if (!state) return;
+    const it = state.items[i];
+    if (!it) return;
+    const text = (state.trig === '@' ? '@' + it.h : '#' + it[0]) + ' ';
+    const start = state.start;
+    if (state.trig === '@') freshToken = start;
+    closePop();
+    insertText(text, start, ta.selectionStart);
+    render(); count();
+    setTimeout(() => { freshToken = -1; }, 950);
+  }
+
+  ta.addEventListener('input', () => { render(); count(); detect(); });
+  ta.addEventListener('keydown', (e) => {
+    if (e.isComposing || e.keyCode === 229) return;
+    if (state) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); move(1); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); return; }
+      if ((e.key === 'Enter' || e.key === 'Tab') && state.items.length) { e.preventDefault(); choose(state.idx); return; }
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dismissed = state.start; closePop(); return; }
+    }
+    if (e.key === 'Backspace' && ta.selectionStart === ta.selectionEnd) {
+      // delete a whole mention as one token
+      const pos = ta.selectionStart, before = ta.value.slice(0, pos);
+      const m = before.match(/(^|[\s　])@([A-Za-z0-9_.]+)$/);
+      if (m && byHandle.has(m[2])) { e.preventDefault(); insertText('', pos - m[2].length - 1, pos); render(); count(); }
+    }
+  });
+  ['click', 'keyup'].forEach((t) => ta.addEventListener(t, (e) => { if (t === 'keyup' && /^(Arrow(Up|Down)|Enter|Tab|Escape)$/.test(e.key) && state) return; if (t === 'keyup' && !/^Arrow|Home|End/.test(e.key)) return; detect(); }));
+  ta.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== ta) closePop(); }, 120));
+  opts.addEventListener('pointerdown', (e) => e.preventDefault());
+  opts.addEventListener('click', (e) => { const o = e.target.closest('.sns19-opt'); if (o) choose(+o.dataset.i); });
+  opts.addEventListener('pointermove', (e) => {
+    const o = e.target.closest('.sns19-opt');
+    if (!o || !state || +o.dataset.i === state.idx || e.pointerType !== 'mouse') return;
+    move(+o.dataset.i - state.idx);
+  });
+
+  /* toolbar */
+  $$('.sns19-tool[data-ins]').forEach((b) => b.addEventListener('click', () => {
+    const pos = ta.selectionStart ?? ta.value.length;
+    const end = document.activeElement === ta ? ta.selectionEnd : ta.value.length;
+    const at = document.activeElement === ta ? pos : ta.value.length;
+    const pre = at > 0 && !/\s/.test(ta.value[at - 1]) ? ' ' : '';
+    dismissed = -1;
+    insertText(pre + b.dataset.ins, at, document.activeElement === ta ? end : at);
+    render(); count(); detect();
+  }));
+  const PREFILL = ta.value;
+  postBtn.addEventListener('click', () => {
+    if (postBtn.disabled) return;
+    postBtn.classList.add('is-done');
+    postBtn.textContent = '投稿済み';
+    closePop();
+    setTimeout(() => { postBtn.classList.remove('is-done'); postBtn.textContent = '投稿'; ta.value = PREFILL; render(); count(); }, 1600);
+  });
+
+  /* outside click / escape for the badge tip */
+  document.addEventListener('pointerdown', (e) => { if (tipFor && !root.contains(e.target)) hideTip(); }, { passive: true });
+  root.addEventListener('pointerdown', (e) => { if (tipFor && !e.target.closest('.sns19-tip, button.sns19-seal')) hideTip(); });
+  root.addEventListener('keydown', (e) => { if (e.key === 'Escape' && tipFor) { const b = tipFor; hideTip(); b.focus(); } });
+
+  render(); count();
+})();
+</script>

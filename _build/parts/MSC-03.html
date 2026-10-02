@@ -1,0 +1,317 @@
+<!-- ═══════════ MSC-03 · Chat Bubbles ═══════════ -->
+<style>
+#MSC-03 .msc03-chat {
+  position: relative; width: min(100%, 360px); height: 520px; border-radius: 30px; overflow: hidden; isolation: isolate;
+  background: var(--bg); color: var(--label);
+  box-shadow: 0 0 0 .5px var(--separator), 0 20px 50px -24px light-dark(rgba(0, 0, 0, .28), rgba(0, 0, 0, .9)), 0 2px 6px light-dark(rgba(0, 0, 0, .04), rgba(0, 0, 0, .4));
+}
+
+/* — Header (material, content scrolls beneath) — */
+#MSC-03 .msc03-head {
+  position: absolute; inset: 0 0 auto 0; z-index: 3; height: 84px; display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 10px 10px 0 6px; border-radius: 30px 30px 0 0;
+  background: linear-gradient(180deg, light-dark(rgb(250, 250, 250), rgb(22, 22, 24)) 0%, light-dark(rgba(250, 250, 250, .97), rgba(22, 22, 24, .97)) 22%, var(--mat-chrome) 62%);
+  -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+  box-shadow: inset 0 -.5px 0 var(--separator);
+}
+#MSC-03 .msc03-hbtn {
+  display: inline-flex; align-items: center; gap: 2px; height: 44px; min-width: 44px; padding: 0 6px; border: 0; background: none; color: var(--accent); cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; transition: opacity var(--dur-1) ease;
+}
+#MSC-03 .msc03-hbtn:active { opacity: .35; transition-duration: 0s; }
+#MSC-03 .msc03-hbtn .i { font-size: 24px; }
+#MSC-03 .msc03-back .i { font-size: 22px; margin-right: -1px; }
+#MSC-03 .msc03-count { display: grid; place-items: center; min-width: 22px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent); color: #fff; font: 600 var(--fs-footnote)/1 var(--font-rounded); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#MSC-03 .msc03-who {
+  position: absolute; left: 50%; top: 8px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 0; padding: 0; background: none; color: var(--label); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+#MSC-03 .msc03-who .av { width: 46px; height: 46px; font-size: 20px; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .06); transition: transform var(--dur-2) var(--ease-spring); }
+#MSC-03 .msc03-who:active .av { transform: scale(.94); transition-duration: 90ms; }
+#MSC-03 .msc03-name { display: inline-flex; align-items: center; gap: 1px; font: 500 var(--fs-caption2)/1.15 var(--font-text); letter-spacing: 0; }
+#MSC-03 .msc03-name .i { font-size: 10px; color: var(--label-3); }
+#MSC-03 .msc03-hbtn:focus-visible, #MSC-03 .msc03-who:focus-visible { outline: none; border-radius: 12px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+/* — Thread — */
+#MSC-03 .msc03-list {
+  position: absolute; inset: 0; z-index: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+  padding: 92px 16px 66px;
+}
+#MSC-03 .msc03-list::-webkit-scrollbar { display: none; }
+#MSC-03 .msc03-thread { display: flex; flex-direction: column; }
+#MSC-03 .msc03-stamp { margin: 2px 0 10px; text-align: center; font: 400 var(--fs-caption2)/1.3 var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#MSC-03 .msc03-stamp b { font-weight: 600; }
+
+#MSC-03 .msc03-m { position: relative; margin-top: 10px; max-width: 75%; transition: margin-top var(--dur-2) var(--ease-out); }
+#MSC-03 .msc03-stamp + .msc03-m { margin-top: 0; }
+#MSC-03 .msc03-in + .msc03-in, #MSC-03 .msc03-out + .msc03-out { margin-top: 2px; }
+#MSC-03 .msc03-in { align-self: flex-start; transform-origin: 0 100%; }
+#MSC-03 .msc03-out { align-self: flex-end; transform-origin: 100% 100%; }
+#MSC-03 .msc03-b {
+  padding: 7px 12px; border-radius: 18px; font: 400 var(--fs-body)/22px var(--font-text); letter-spacing: -0.01em;
+  overflow-wrap: anywhere; white-space: pre-wrap;
+}
+#MSC-03 .msc03-b.msc03-in { background: var(--bubble-in); color: var(--label); }
+#MSC-03 .msc03-b.msc03-out { background: var(--accent); color: #fff; }
+/* authentic iMessage tail — only on the last bubble of a consecutive group (updates itself as messages arrive) */
+#MSC-03 .msc03-b.msc03-out:not(:has(+ .msc03-out))::after,
+#MSC-03 .msc03-b.msc03-in:not(:has(+ .msc03-in))::after {
+  content: ""; position: absolute; bottom: 0; width: 21px; height: 18px; background: inherit; pointer-events: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 21 18'%3E%3Cpath d='M15 0v6c0 6.5 1.8 10.6 6 12-3.5 0-8-3-11.5-3-3 0-6.5 3-9.5 3V0z'/%3E%3C/svg%3E") no-repeat 0 0 / 100% 100%;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 21 18'%3E%3Cpath d='M15 0v6c0 6.5 1.8 10.6 6 12-3.5 0-8-3-11.5-3-3 0-6.5 3-9.5 3V0z'/%3E%3C/svg%3E") no-repeat 0 0 / 100% 100%;
+}
+#MSC-03 .msc03-b.msc03-out::after { right: -6px; }
+#MSC-03 .msc03-b.msc03-in::after { left: -6px; transform: scaleX(-1); }
+
+#MSC-03 .msc03-img { width: 216px; max-width: 100%; aspect-ratio: 4 / 3; border-radius: 18px; overflow: hidden; }
+#MSC-03 .msc03-img .art { width: 100%; height: 100%; background-size: 110% 125%; background-position: 50% 80%; }
+#MSC-03 .msc03-img::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 .5px light-dark(rgba(0, 0, 0, .08), rgba(255, 255, 255, .1)); pointer-events: none; }
+#MSC-03 .msc03-jumbo { font: 400 46px/1.08 var(--font-emoji); letter-spacing: 2px; padding: 2px 0 0; }
+
+/* tapback badge (my ♥ on a received bubble) */
+#MSC-03 .msc03-thread .msc03-has-tb { margin-top: 22px; }
+#MSC-03 .msc03-tb {
+  position: absolute; z-index: 2; right: -24px; top: -22px; width: 30px; height: 30px; pointer-events: none;
+  transform: scale(0); transform-origin: 30% 80%; transition: transform 420ms var(--ease-spring);
+}
+#MSC-03 .msc03-tb.is-on { transform: none; }
+#MSC-03 .msc03-tb::before, #MSC-03 .msc03-tb::after, #MSC-03 .msc03-tb-c { position: absolute; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); }
+#MSC-03 .msc03-tb::before { content: ""; width: 9px; height: 9px; left: 3px; bottom: -3px; }
+#MSC-03 .msc03-tb::after { content: ""; width: 4px; height: 4px; left: 0; bottom: -7.5px; }
+#MSC-03 .msc03-tb-c { inset: 0; display: grid; place-items: center; color: #fff; font-size: 15px; }
+#MSC-03 .msc03-receipt { align-self: flex-end; margin: 3px 4px 0 0; font: 400 var(--fs-caption2)/1.3 var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#MSC-03 .msc03-receipt b { font-weight: 600; }
+
+/* typing indicator — bubble + two trailing circles */
+#MSC-03 .msc03-typing {
+  position: relative; align-self: flex-start; margin: 12px 0 2px 2px; display: flex; align-items: center; gap: 4px;
+  height: 36px; padding: 0 13px; border-radius: 18px; background: var(--bubble-in); transform-origin: 0 100%;
+  animation: msc03-pop 380ms var(--ease-spring) both;
+}
+#MSC-03 .msc03-typing::before, #MSC-03 .msc03-typing::after { content: ""; position: absolute; border-radius: 50%; background: inherit; }
+#MSC-03 .msc03-typing::before { width: 13px; height: 13px; left: -2px; bottom: -2px; }
+#MSC-03 .msc03-typing::after { width: 6px; height: 6px; left: -7px; bottom: -7px; }
+#MSC-03 .msc03-typing i { width: 8px; height: 8px; border-radius: 50%; background: light-dark(#8E8E93, #8D8D93); animation: msc03-dot 1.25s ease-in-out infinite; }
+#MSC-03 .msc03-typing i:nth-child(2) { animation-delay: .16s; }
+#MSC-03 .msc03-typing i:nth-child(3) { animation-delay: .32s; }
+#MSC-03 .msc03-typing.is-out { animation: msc03-out 200ms ease-in both; }
+#MSC-03 .msc03-chat.is-paused .msc03-typing i { animation-play-state: paused; }
+@keyframes msc03-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: .38; }
+  28% { transform: translateY(-3.5px); opacity: 1; }
+}
+@keyframes msc03-pop { from { transform: scale(.4); opacity: 0; } }
+@keyframes msc03-out { to { transform: scale(.5); opacity: 0; } }
+@keyframes msc03-send { from { transform: translateY(30px) scale(.9); opacity: 0; } 40% { opacity: 1; } }
+@keyframes msc03-recv { from { transform: translateY(10px) scale(.86); opacity: 0; } }
+#MSC-03 .msc03-out.is-new { animation: msc03-send 460ms cubic-bezier(.2, .9, .3, 1.12) both; }
+#MSC-03 .msc03-in.is-new { animation: msc03-recv 420ms var(--ease-spring) both; }
+#MSC-03 .msc03-receipt.is-new { animation: msc03-recv 300ms var(--ease-out) both; }
+
+/* — Composer — */
+#MSC-03 .msc03-bar {
+  position: absolute; inset: auto 0 0 0; z-index: 3; display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px 12px; border-radius: 0 0 30px 30px;
+  background: var(--mat-chrome); -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+}
+#MSC-03 .msc03-plus {
+  flex: none; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--fill-3); color: var(--label-2);
+  cursor: pointer; font-size: 18px; -webkit-tap-highlight-color: transparent; transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#MSC-03 .msc03-plus:active { transform: scale(.9); background: var(--fill-2); transition-duration: 90ms; }
+#MSC-03 .msc03-field {
+  position: relative; flex: 1; min-width: 0; display: flex; align-items: center; height: 36px; padding: 0 3px 0 14px; border-radius: 18px;
+  box-shadow: inset 0 0 0 1px light-dark(rgba(60, 60, 67, .2), rgba(235, 235, 245, .16)); background: light-dark(rgba(255, 255, 255, .6), rgba(0, 0, 0, .2));
+  transition: box-shadow var(--dur-2) ease;
+}
+#MSC-03 .msc03-field:focus-within { box-shadow: inset 0 0 0 1px light-dark(rgba(60, 60, 67, .32), rgba(235, 235, 245, .26)); }
+#MSC-03 .msc03-input {
+  flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: transparent; color: var(--label);
+  font: 400 var(--fs-body)/22px var(--font-text); letter-spacing: -0.01em; caret-color: var(--accent);
+}
+#MSC-03 .msc03-input::placeholder { color: var(--label-3); }
+#MSC-03 .msc03-mic, #MSC-03 .msc03-send { position: relative; flex: none; display: grid; place-items: center; width: 30px; height: 30px; margin-left: 4px; }
+#MSC-03 .msc03-mic { color: var(--label-3); font-size: 19px; transition: opacity var(--dur-1) ease, transform var(--dur-2) var(--ease-out); }
+#MSC-03 .msc03-send {
+  position: absolute; right: 3px; top: 3px; margin: 0; border: 0; border-radius: 50%; background: var(--accent); color: #fff; font-size: 16px; cursor: pointer;
+  opacity: 0; transform: scale(.4); pointer-events: none; -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--dur-1) ease, transform 340ms var(--ease-spring);
+}
+#MSC-03 .msc03-send svg { width: 1em; height: 1em; }
+#MSC-03 .msc03-field.has-text .msc03-mic { opacity: 0; transform: scale(.6); }
+#MSC-03 .msc03-field.has-text .msc03-send { opacity: 1; transform: none; pointer-events: auto; }
+#MSC-03 .msc03-field.has-text .msc03-send:active { transform: scale(.88); transition-duration: 90ms; }
+#MSC-03 .msc03-plus:focus-visible, #MSC-03 .msc03-send:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  #MSC-03 .msc03-out.is-new, #MSC-03 .msc03-in.is-new, #MSC-03 .msc03-receipt.is-new, #MSC-03 .msc03-typing, #MSC-03 .msc03-typing.is-out { animation-duration: 1ms; }
+  #MSC-03 .msc03-typing i { animation: none; opacity: .6; }
+}
+</style>
+<article class="obj" id="MSC-03" data-name="Chat Bubbles" data-ja="チャット吹き出し" data-vector="Clean" data-size="m" data-desc="iMessage風の吹き出し。入力して送信もできる。">
+  <div class="obj-stage" data-bg="plain">
+    <div class="msc03-chat">
+      <header class="msc03-head">
+        <button class="msc03-hbtn msc03-back" type="button" aria-label="戻る（未読12件）"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg><span class="msc03-count">12</span></button>
+        <button class="msc03-who" type="button" aria-label="ミオの連絡先"><span class="av av-2">M</span><span class="msc03-name">ミオ<svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></span></button>
+        <button class="msc03-hbtn msc03-video" type="button" aria-label="FaceTime"><svg class="i" aria-hidden="true"><use href="#i-video-fill"/></svg></button>
+      </header>
+
+      <div class="msc03-list">
+        <div class="msc03-thread" role="log" aria-live="polite" aria-label="ミオとのメッセージ">
+          <p class="msc03-stamp"><b>今日</b> 9:41</p>
+          <div class="msc03-m msc03-b msc03-in">おはよう！</div>
+          <div class="msc03-m msc03-b msc03-in">週末の写真、見せて〜</div>
+          <div class="msc03-m msc03-out msc03-img"><div class="art art-1" role="img" aria-label="写真：夕焼けの丘"></div></div>
+          <div class="msc03-m msc03-b msc03-out">江の島の夕焼け🌅</div>
+          <div class="msc03-m msc03-b msc03-in msc03-has-tb">えっ、すごくきれい…！<span class="msc03-tb is-on" role="img" aria-label="ハートのリアクション"><span class="msc03-tb-c"><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg></span></span></div>
+          <div class="msc03-m msc03-out msc03-jumbo" aria-label="絵文字">📸✨</div>
+          <div class="msc03-m msc03-b msc03-out">今度いっしょに行こう！</div>
+          <p class="msc03-receipt"><b>既読</b> 9:42</p>
+        </div>
+      </div>
+
+      <div class="msc03-bar">
+        <button class="msc03-plus" type="button" aria-label="添付"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+        <div class="msc03-field">
+          <input class="msc03-input" type="text" placeholder="メッセージ" enterkeyhint="send" autocomplete="off" aria-label="メッセージ">
+          <span class="msc03-mic" aria-hidden="true"><svg class="i"><use href="#i-waveform"/></svg></span>
+          <button class="msc03-send" type="button" aria-label="送信" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.2V5.6M6.1 11.4 12 5.5l5.9 5.9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>入力してEnterで送信</li><li>少し待つと返信が届く</li><li>吹き出しをダブルタップで♥</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('MSC-03');
+  if (!root) return;
+  const chat = root.querySelector('.msc03-chat');
+  const list = root.querySelector('.msc03-list');
+  const thread = root.querySelector('.msc03-thread');
+  const input = root.querySelector('.msc03-input');
+  const field = root.querySelector('.msc03-field');
+  const sendBtn = root.querySelector('.msc03-send');
+  const rm = () => !!(window.ObjKit && ObjKit.reducedMotion);
+  const REPLIES = ['いいね！楽しみにしてる😊', '了解〜！また連絡するね', 'それ最高👍', 'ほんとに？😆', 'あとで写真送るね📷', 'うんうん、わかる！'];
+  const st = { timers: [], typing: null, stick: true, started: false, replyIdx: 0, minute: 42, receipt: root.querySelector('.msc03-receipt') };
+
+  /* — scrolling: stay pinned to the newest message unless the user scrolled up — */
+  const toBottom = (smooth) => list.scrollTo({ top: list.scrollHeight, behavior: smooth && !rm() ? 'smooth' : 'auto' });
+  list.addEventListener('scroll', () => { st.stick = list.scrollHeight - list.scrollTop - list.clientHeight < 28; }, { passive: true });
+  new ResizeObserver(() => { if (st.stick) toBottom(false); }).observe(thread);
+
+  const later = (fn, ms) => { const t = setTimeout(() => { st.timers = st.timers.filter((x) => x !== t); fn(); }, ms); st.timers.push(t); };
+  const clearTimers = () => { st.timers.forEach(clearTimeout); st.timers = []; };
+  const mark = (el) => { el.classList.add('is-new'); el.addEventListener('animationend', () => el.classList.remove('is-new'), { once: true }); return el; };
+
+  function bubble(from, text) {
+    const el = document.createElement('div');
+    el.className = `msc03-m msc03-b msc03-${from}`;
+    el.textContent = text;
+    return el;
+  }
+  function showTyping() {
+    if (st.typing) return;
+    const t = document.createElement('div');
+    t.className = 'msc03-typing';
+    t.setAttribute('role', 'status');
+    t.setAttribute('aria-label', 'ミオが入力中');
+    t.innerHTML = '<i></i><i></i><i></i>';
+    thread.append(t);
+    st.typing = t;
+    st.stick = true; toBottom(true);
+  }
+  function hideTyping(instant) {
+    const t = st.typing;
+    if (!t) return;
+    st.typing = null;
+    if (instant || rm()) { t.remove(); return; }
+    t.classList.add('is-out');
+    setTimeout(() => t.remove(), 200);
+  }
+  function receive(text) {
+    hideTyping(true);
+    const b = mark(bubble('in', text));
+    thread.append(b);
+    st.stick = true; toBottom(true);
+  }
+  function setReceipt(read) {
+    const r = st.receipt;
+    r.innerHTML = read ? `<b>既読</b> 9:${st.minute}` : '配信済み';
+  }
+
+  function send() {
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    syncField();
+    /* a new message cancels any pending auto-reply */
+    clearTimers();
+    hideTyping(true);
+    const b = mark(bubble('out', text));
+    thread.append(b);
+    st.receipt.remove();
+    setReceipt(false);
+    thread.append(mark(st.receipt));
+    st.stick = true;
+    requestAnimationFrame(() => toBottom(true));
+    later(() => setReceipt(true), 650);
+    later(showTyping, 1000);
+    later(() => { receive(REPLIES[st.replyIdx++ % REPLIES.length]); }, 2200);
+  }
+
+  function syncField() {
+    const has = input.value.trim().length > 0;
+    field.classList.toggle('has-text', has);
+    sendBtn.tabIndex = has ? 0 : -1;
+  }
+  input.addEventListener('input', syncField);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); send(); }
+  });
+  sendBtn.addEventListener('pointerdown', (e) => e.preventDefault()); /* keep the keyboard up */
+  sendBtn.addEventListener('click', () => { send(); input.focus({ preventScroll: true }); });
+
+  /* — double-tap a received bubble to toggle a ♥ tapback — */
+  let lastTap = { el: null, t: 0, x: 0, y: 0 };
+  thread.addEventListener('pointerup', (e) => {
+    const b = e.target.closest('.msc03-b.msc03-in');
+    if (!b) return;
+    const now = performance.now();
+    if (lastTap.el === b && now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 20) {
+      let tb = b.querySelector('.msc03-tb');
+      if (!tb) {
+        tb = document.createElement('span');
+        tb.className = 'msc03-tb';
+        tb.setAttribute('role', 'img');
+        tb.setAttribute('aria-label', 'ハートのリアクション');
+        tb.innerHTML = '<span class="msc03-tb-c"><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg></span>';
+        b.append(tb);
+        b.classList.add('msc03-has-tb');
+        void tb.offsetWidth;
+      }
+      const on = !tb.classList.contains('is-on');
+      tb.classList.toggle('is-on', on);
+      if (!on) setTimeout(() => { if (!tb.classList.contains('is-on')) { tb.remove(); b.classList.remove('msc03-has-tb'); } }, 260);
+      lastTap.el = null;
+      return;
+    }
+    lastTap = { el: b, t: now, x: e.clientX, y: e.clientY };
+  });
+
+  /* — on first view: Mio is typing… then answers. Pause the dots while off-screen. — */
+  const onVis = (v) => {
+    chat.classList.toggle('is-paused', !v);
+    if (v) {
+      if (st.stick) toBottom(false);
+      if (!st.started) {
+        st.started = true;
+        showTyping();
+        later(() => receive('うん、行こう！来週の土曜はどう？'), 2800);
+      }
+    }
+  };
+  if (window.ObjKit) ObjKit.onVisible(root, onVis); else onVis(true);
+})();
+</script>

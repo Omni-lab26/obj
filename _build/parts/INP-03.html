@@ -1,0 +1,201 @@
+<!-- ═══════════ INP-03 · Toggle Switch ═══════════ -->
+<style>
+#INP-03 .inp03-wrap { width: min(100%, 360px); display: flex; flex-direction: column; container-type: inline-size; }
+#INP-03 .inp03-head { margin: 0 16px 7px; font-size: var(--fs-footnote); line-height: 18px; color: var(--label-2); letter-spacing: 0; }
+#INP-03 .inp03-foot { margin: 7px 16px 0; font-size: var(--fs-footnote); line-height: 18px; color: var(--label-2); letter-spacing: 0; text-wrap: pretty; word-break: auto-phrase; }
+#INP-03 .inp03-gap { height: 30px; }
+#INP-03 .inp03-group { border-radius: 12px; background: var(--bg-grouped-2); overflow: hidden; }
+
+/* ── rows ── */
+#INP-03 .inp03-row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 6px 16px; }
+#INP-03 .inp03-row + .inp03-row::before { content: ""; position: absolute; top: 0; right: 0; left: 57px; height: .5px; background: var(--separator); }
+#INP-03 .inp03-sq {
+  position: relative; flex: none; display: grid; place-items: center; width: 29px; height: 29px; border-radius: 7px; color: #fff;
+  background: var(--c); background-image: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 70%);
+  transition: opacity var(--dur-2) ease, filter var(--dur-2) ease;
+}
+#INP-03 .inp03-sq .i { position: absolute; font-size: 18px; transition: opacity var(--dur-1) ease, transform var(--dur-3) var(--ease-spring); }
+#INP-03 .inp03-sq .inp03-alt { opacity: 0; transform: scale(.5) rotate(-12deg); }
+#INP-03 .inp03-row.is-off-alt .inp03-sq .inp03-alt { opacity: 1; transform: none; }
+#INP-03 .inp03-row.is-off-alt .inp03-sq .inp03-main { opacity: 0; transform: scale(.5) rotate(12deg); }
+#INP-03 .inp03-text { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+#INP-03 .inp03-title { font-size: var(--fs-body); line-height: 22px; color: var(--label); letter-spacing: 0; transition: color var(--dur-2) ease; }
+#INP-03 .inp03-sub {
+  display: grid; grid-template-rows: 0fr; opacity: 0;
+  transition: grid-template-rows var(--dur-3) var(--ease-ios), opacity var(--dur-2) ease;
+}
+#INP-03 .inp03-sub > span { min-height: 0; overflow: hidden; font-size: var(--fs-footnote); line-height: 18px; color: var(--label-2); letter-spacing: 0; white-space: nowrap; text-overflow: ellipsis; }
+#INP-03 .inp03-sub.is-shown { grid-template-rows: 1fr; opacity: 1; }
+#INP-03 .inp03-row.is-disabled .inp03-title { color: var(--label-3); }
+#INP-03 .inp03-row.is-disabled .inp03-sq { opacity: .45; filter: saturate(.6); }
+
+/* ── the switch: 51×31 track, 27pt knob, 2pt inset ── */
+#INP-03 .inp03-sw {
+  --on: var(--green);
+  --spring: cubic-bezier(.34, 1.36, .64, 1);
+  position: relative; flex: none; display: block; width: 51px; height: 31px; border-radius: 16px; cursor: pointer;
+  touch-action: pan-y; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  #INP-03 .inp03-sw { --spring: linear(0, 0.047, 0.16, 0.304, 0.455, 0.598, 0.722, 0.825, 0.905, 0.963, 1.003, 1.028, 1.041, 1.046, 1.045, 1.04, 1.034, 1.027, 1.02, 1.014, 1.009, 1.005, 1.002, 1, 0.999, 0.998, 0.998, 0.998, 1); }
+}
+#INP-03 .inp03-in { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; opacity: 0; }
+#INP-03 .inp03-track {
+  position: absolute; inset: 0; border-radius: inherit; background: var(--fill-2);
+  transition: background-color 250ms ease, box-shadow var(--dur-2) ease;
+}
+#INP-03 .inp03-knob {
+  position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 13.5px; background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .15), 0 3px 1px rgba(0, 0, 0, .06), 0 0 0 .5px rgba(0, 0, 0, .04);
+  transition: transform 414ms var(--spring), width 300ms var(--spring);
+  will-change: transform;
+}
+#INP-03 .inp03-sw.is-on .inp03-track { background-color: var(--on); }
+#INP-03 .inp03-sw.is-on .inp03-knob { transform: translateX(20px); }
+/* pressed: knob stretches to 33pt, anchored to the side it rests on */
+#INP-03 .inp03-sw.is-press .inp03-knob { width: 33px; }
+#INP-03 .inp03-sw.is-press.is-on .inp03-knob { transform: translateX(14px); }
+#INP-03 .inp03-in:focus-visible + .inp03-track { box-shadow: 0 0 0 2px var(--bg-grouped-2), 0 0 0 4.5px color-mix(in srgb, var(--accent) 60%, transparent); }
+#INP-03 .inp03-sw.is-disabled { opacity: .5; cursor: default; }
+
+/* ── variants card ── */
+#INP-03 .inp03-variants { display: flex; justify-content: space-between; gap: 4px; padding: 16px 14px 13px; }
+#INP-03 .inp03-cell { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+#INP-03 .inp03-cell small { font-size: var(--fs-caption2); line-height: 13px; color: var(--label-2); letter-spacing: 0; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  #INP-03 .inp03-knob, #INP-03 .inp03-track, #INP-03 .inp03-sub, #INP-03 .inp03-sq .i { transition-duration: 1ms !important; }
+}
+</style>
+<article class="obj" id="INP-03" data-name="Toggle Switch" data-ja="トグルスイッチ" data-vector="Clean" data-size="m" data-desc="iOS標準のオン/オフスイッチ。押下時にノブが伸びる。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="inp03-wrap">
+      <div class="inp03-group">
+        <div class="inp03-row" data-k="airplane">
+          <span class="inp03-sq" style="--c: var(--orange)"><svg class="i" aria-hidden="true"><use href="#i-airplane"/></svg></span>
+          <span class="inp03-text"><span class="inp03-title" id="INP-03-t1">機内モード</span></span>
+          <label class="inp03-sw" style="--on: var(--green)"><input class="inp03-in" type="checkbox" role="switch" aria-labelledby="INP-03-t1"><span class="inp03-track"><span class="inp03-knob"></span></span></label>
+        </div>
+        <div class="inp03-row" data-k="wifi">
+          <span class="inp03-sq" style="--c: var(--blue)"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg></span>
+          <span class="inp03-text">
+            <span class="inp03-title" id="INP-03-t2">Wi-Fi</span>
+            <span class="inp03-sub is-shown"><span id="INP-03-s2">Haru-Home-5G に接続済み</span></span>
+          </span>
+          <label class="inp03-sw"><input class="inp03-in" type="checkbox" role="switch" checked aria-labelledby="INP-03-t2" aria-describedby="INP-03-s2"><span class="inp03-track"><span class="inp03-knob"></span></span></label>
+        </div>
+        <div class="inp03-row" data-k="dnd">
+          <span class="inp03-sq" style="--c: var(--indigo)"><svg class="i" aria-hidden="true"><use href="#i-moon-fill"/></svg></span>
+          <span class="inp03-text">
+            <span class="inp03-title" id="INP-03-t3">おやすみモード</span>
+            <span class="inp03-sub"><span id="INP-03-s3">オン · 明日 7:00 まで</span></span>
+          </span>
+          <label class="inp03-sw"><input class="inp03-in" type="checkbox" role="switch" aria-labelledby="INP-03-t3"><span class="inp03-track"><span class="inp03-knob"></span></span></label>
+        </div>
+        <div class="inp03-row" data-k="notify">
+          <span class="inp03-sq" style="--c: var(--red)"><svg class="i inp03-main" aria-hidden="true"><use href="#i-bell-fill"/></svg><svg class="i inp03-alt" aria-hidden="true"><use href="#i-bell-slash-fill"/></svg></span>
+          <span class="inp03-text"><span class="inp03-title" id="INP-03-t4">通知</span></span>
+          <label class="inp03-sw"><input class="inp03-in" type="checkbox" role="switch" checked aria-labelledby="INP-03-t4"><span class="inp03-track"><span class="inp03-knob"></span></span></label>
+        </div>
+      </div>
+      <p class="inp03-foot">機内モード中は、Wi-Fi が自動的にオフになります。</p>
+
+      <div class="inp03-gap"></div>
+      <p class="inp03-head">カラーと無効状態</p>
+      <div class="inp03-group inp03-variants">
+        <div class="inp03-cell"><label class="inp03-sw" style="--on: var(--blue)"><input class="inp03-in" type="checkbox" role="switch" checked aria-label="ブルー"><span class="inp03-track"><span class="inp03-knob"></span></span></label><small>ブルー</small></div>
+        <div class="inp03-cell"><label class="inp03-sw" style="--on: var(--orange)"><input class="inp03-in" type="checkbox" role="switch" checked aria-label="オレンジ"><span class="inp03-track"><span class="inp03-knob"></span></span></label><small>オレンジ</small></div>
+        <div class="inp03-cell"><label class="inp03-sw" style="--on: var(--pink)"><input class="inp03-in" type="checkbox" role="switch" checked aria-label="ピンク"><span class="inp03-track"><span class="inp03-knob"></span></span></label><small>ピンク</small></div>
+        <div class="inp03-cell"><label class="inp03-sw"><input class="inp03-in" type="checkbox" role="switch" checked disabled aria-label="無効（オン）"><span class="inp03-track"><span class="inp03-knob"></span></span></label><small>無効・オン</small></div>
+        <div class="inp03-cell"><label class="inp03-sw"><input class="inp03-in" type="checkbox" role="switch" disabled aria-label="無効（オフ）"><span class="inp03-track"><span class="inp03-knob"></span></span></label><small>無効・オフ</small></div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>押している間ノブが伸びる</li><li>左右にドラッグでも切替</li><li>Spaceキーで切替</li><li>機内モードでWi-Fiが無効に</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('INP-03');
+  if (!root) return;
+  const $ = (s, r = root) => r.querySelector(s);
+  const switches = [...root.querySelectorAll('.inp03-sw')];
+  const inputOf = (sw) => sw.querySelector('.inp03-in');
+
+  /* visual state lives on the label (.is-on) so a drag can preview it before committing */
+  const paint = (sw, on = inputOf(sw).checked) => sw.classList.toggle('is-on', on);
+  const setOn = (sw, on, fire = true) => {
+    const inp = inputOf(sw);
+    paint(sw, on);
+    if (inp.checked === on) return;
+    inp.checked = on;
+    if (fire) inp.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+
+  switches.forEach((sw) => {
+    const inp = inputOf(sw);
+    sw.classList.toggle('is-disabled', inp.disabled);
+    paint(sw);
+    inp.addEventListener('change', () => paint(sw));
+
+    let start = null, dragging = false, suppress = false, vis = false;
+    const release = () => { sw.classList.remove('is-press'); start = null; };
+    sw.addEventListener('pointerdown', (e) => {
+      if (inp.disabled || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      start = { x: e.clientX, y: e.clientY, id: e.pointerId };
+      dragging = false; vis = inp.checked;
+      sw.classList.add('is-press');
+      try { sw.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    sw.addEventListener('pointermove', (e) => {
+      if (!start || e.pointerId !== start.id) return;
+      const dx = e.clientX - start.x;
+      if (!dragging && Math.abs(dx) > 4 && Math.abs(dx) > Math.abs(e.clientY - start.y)) dragging = true;
+      if (dragging) {
+        const r = sw.getBoundingClientRect();
+        vis = e.clientX > r.left + r.width / 2;
+        paint(sw, vis);
+      }
+    });
+    sw.addEventListener('pointerup', (e) => {
+      if (!start || e.pointerId !== start.id) return;
+      if (dragging) { suppress = true; setOn(sw, vis); }
+      release();
+    });
+    sw.addEventListener('pointercancel', () => { release(); paint(sw); });
+    sw.addEventListener('lostpointercapture', () => { if (start) { release(); paint(sw); } });
+    sw.addEventListener('click', (e) => { if (suppress) { e.preventDefault(); suppress = false; } });
+    /* keyboard: Space presses (knob stretches) and toggles on release, like a finger */
+    inp.addEventListener('keydown', (e) => { if (e.key === ' ' && !inp.disabled) sw.classList.add('is-press'); });
+    inp.addEventListener('keyup', (e) => { if (e.key === ' ') sw.classList.remove('is-press'); });
+    inp.addEventListener('blur', () => sw.classList.remove('is-press'));
+  });
+
+  /* ── realistic dependencies ── */
+  const row = (k) => $(`.inp03-row[data-k="${k}"]`);
+  const swOf = (k) => $('.inp03-sw', row(k));
+  const sub = (k, text, show) => { const s = $('.inp03-sub', row(k)); if (text) s.firstElementChild.textContent = text; s.classList.toggle('is-shown', show); };
+
+  let wifiBefore = true;
+  const wifiSw = swOf('wifi'), wifiIn = inputOf(wifiSw);
+  const syncWifi = () => sub('wifi', wifiIn.checked ? 'Haru-Home-5G に接続済み' : 'オフ', true);
+  wifiIn.addEventListener('change', syncWifi);
+
+  inputOf(swOf('airplane')).addEventListener('change', (e) => {
+    const on = e.target.checked;
+    if (on) {
+      wifiBefore = wifiIn.checked;
+      setOn(wifiSw, false, false);
+      wifiIn.disabled = true;
+      sub('wifi', '機内モード中はオフ', true);
+    } else {
+      wifiIn.disabled = false;
+      setOn(wifiSw, wifiBefore, false);
+      syncWifi();
+    }
+    wifiSw.classList.toggle('is-disabled', on);
+    row('wifi').classList.toggle('is-disabled', on);
+  });
+  inputOf(swOf('dnd')).addEventListener('change', (e) => sub('dnd', null, e.target.checked));
+  inputOf(swOf('notify')).addEventListener('change', (e) => row('notify').classList.toggle('is-off-alt', !e.target.checked));
+})();
+</script>

@@ -1,0 +1,538 @@
+<!-- ═══════════ SNS-07 · Reaction Picker ═══════════ -->
+<style>
+#SNS-07 .obj-stage { justify-content: flex-start; }
+#SNS-07 .sns07-chat { position: relative; width: min(100%, 340px); display: flex; flex-direction: column; gap: 10px; padding-top: 2px; }
+
+/* — group header — */
+#SNS-07 .sns07-head {
+  align-self: center; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 6px; margin-bottom: 6px;
+  border-radius: 999px; background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), 0 6px 18px rgba(30, 20, 60, .08);
+}
+#SNS-07 .sns07-stack { display: flex; }
+#SNS-07 .sns07-stack .av { width: 24px; height: 24px; font-size: 10px; box-shadow: 0 0 0 1.5px light-dark(rgba(255, 255, 255, .9), rgba(40, 40, 46, .9)); }
+#SNS-07 .sns07-stack .av + .av { margin-left: -7px; }
+#SNS-07 .sns07-head b { font: 600 13px/1 var(--font-text); letter-spacing: 0; }
+#SNS-07 .sns07-head span:last-child { font-size: 12px; color: var(--label-2); letter-spacing: 0; }
+#SNS-07 .sns07-day { align-self: center; font-size: var(--fs-caption2); font-weight: 500; color: var(--label-2); letter-spacing: 0; margin-bottom: 2px; }
+
+/* — messages — */
+#SNS-07 .sns07-msg { display: flex; align-items: flex-end; gap: 8px; transition: margin-bottom var(--dur-3) var(--ease-ios); }
+#SNS-07 .sns07-msg.has-chip { margin-bottom: 12px; }
+#SNS-07 .sns07-msg--out { flex-direction: column; align-items: flex-end; gap: 3px; }
+#SNS-07 .sns07-msg > .av { width: 28px; height: 28px; font-size: 12px; margin-bottom: 1px; }
+#SNS-07 .sns07-col { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; max-width: 78%; }
+#SNS-07 .sns07-msg--out .sns07-col { align-items: flex-end; }
+#SNS-07 .sns07-name { margin-left: 12px; font-size: var(--fs-caption2); color: var(--label-2); letter-spacing: 0; }
+#SNS-07 .sns07-read { margin-right: 6px; font-size: var(--fs-caption2); color: var(--label-2); letter-spacing: 0; }
+#SNS-07 .sns07-bwrap { position: relative; max-width: 100%; }
+#SNS-07 .sns07-bubble {
+  position: relative; display: block; padding: 9px 14px 10px; border-radius: 20px 20px 20px 7px;
+  font-size: 15.5px; line-height: 1.38; letter-spacing: 0; color: var(--label); cursor: default;
+  background: var(--glass-bg-strong); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), 0 6px 16px rgba(30, 20, 60, .07);
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: pan-y;
+  transition: transform 450ms var(--ease-out), box-shadow var(--dur-3) var(--ease-out);
+  outline: none;
+}
+#SNS-07 .sns07-bubble::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(180deg, rgba(255, 255, 255, .32), rgba(255, 255, 255, 0) 55%); opacity: light-dark(.9, .35); }
+#SNS-07 .sns07-msg--out .sns07-bubble {
+  border-radius: 20px 20px 7px 20px; color: #fff;
+  background: linear-gradient(180deg, color-mix(in srgb, #3D9BFF 86%, transparent), color-mix(in srgb, var(--blue) 90%, transparent));
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .28), inset 0 1px 0 rgba(255, 255, 255, .3), 0 8px 18px -6px color-mix(in srgb, var(--blue) 45%, transparent);
+}
+#SNS-07 .sns07-bubble:focus-visible { box-shadow: var(--glass-edge), 0 0 0 3px color-mix(in srgb, var(--blue) 55%, transparent); }
+#SNS-07 .sns07-bubble.is-holding { transform: scale(.955); transition: transform 450ms cubic-bezier(.2, .6, .3, 1); }
+#SNS-07 .sns07-bwrap.is-lifted { z-index: 9; }
+#SNS-07 .sns07-bwrap.is-lifted .sns07-bubble { transform: scale(1.025); transition: transform 520ms var(--ease-spring), box-shadow var(--dur-3) ease; box-shadow: var(--glass-edge), 0 14px 32px rgba(20, 10, 40, .18); }
+#SNS-07 .sns07-msg--out .sns07-bwrap.is-lifted .sns07-bubble { box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .28), inset 0 1px 0 rgba(255, 255, 255, .3), 0 16px 34px -8px color-mix(in srgb, var(--blue) 55%, transparent); }
+
+/* — reaction chip on the bubble corner — */
+#SNS-07 .sns07-chip {
+  position: absolute; z-index: 2; right: -6px; bottom: -15px; display: inline-flex; align-items: center; gap: 3px; height: 25px; padding: 0 8px 0 5px;
+  border-radius: 999px; background: color-mix(in srgb, var(--bg-elevated) 84%, transparent);
+  box-shadow: var(--glass-edge), 0 0 0 .5px var(--separator), 0 4px 12px rgba(20, 10, 40, .12);
+  font: 600 12px/1 var(--font-rounded); font-variant-numeric: tabular-nums; color: var(--label-2); white-space: nowrap; pointer-events: none;
+  transition: box-shadow var(--dur-2) ease, color var(--dur-2) ease;
+}
+#SNS-07 .sns07-msg--out .sns07-chip { right: auto; left: -6px; }
+#SNS-07 .sns07-chip.is-mine { color: var(--blue); box-shadow: var(--glass-edge), inset 0 0 0 1px color-mix(in srgb, var(--blue) 50%, transparent), 0 4px 12px color-mix(in srgb, var(--blue) 22%, transparent); }
+#SNS-07 .sns07-chip-emos { display: inline-flex; }
+#SNS-07 .sns07-chip-emo { display: inline-block; width: 17px; text-align: center; font: 15px/1 var(--font-emoji); color: #000; }
+#SNS-07 .sns07-chip-emo + .sns07-chip-emo { margin-left: -3px; }
+#SNS-07 .sns07-chip b { font-weight: 700; margin-left: 1px; }
+
+/* — hint button — */
+#SNS-07 .sns07-hint {
+  align-self: center; margin-top: 14px; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 15px 0 12px; border: 0;
+  border-radius: 999px; color: var(--label); font: 600 14px/1 var(--font-text); letter-spacing: 0; cursor: pointer;
+  background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), 0 6px 18px rgba(30, 20, 60, .1);
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  transition: transform 380ms var(--ease-spring), background var(--dur-2) ease;
+}
+#SNS-07 .sns07-hint .i { font-size: 18px; color: var(--blue); }
+#SNS-07 .sns07-hint:active { transform: scale(.95); transition-duration: 100ms; }
+#SNS-07 .sns07-hint:focus-visible { outline: none; box-shadow: var(--glass-edge), 0 0 0 3px color-mix(in srgb, var(--blue) 55%, transparent); }
+@media (hover: hover) { #SNS-07 .sns07-hint:hover { background: var(--glass-bg-strong); } }
+
+/* — scrim + bar — */
+#SNS-07 .sns07-scrim { position: absolute; inset: 0; z-index: 8; background: light-dark(rgba(40, 20, 70, .12), rgba(0, 0, 0, .38)); opacity: 0; pointer-events: none; transition: opacity var(--dur-3) var(--ease-out); }
+#SNS-07 .sns07-scrim.is-on { opacity: 1; pointer-events: auto; }
+#SNS-07 .sns07-bar { position: absolute; z-index: 10; left: 0; top: 0; display: flex; gap: 2px; padding: 6px; height: 52px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+#SNS-07 .sns07-bar[hidden] { display: none; }
+#SNS-07 .sns07-bar-bg {
+  position: absolute; inset: 0; border-radius: 999px; pointer-events: none;
+  background: light-dark(rgba(255, 255, 255, .7), rgba(54, 54, 60, .66)); -webkit-backdrop-filter: blur(30px) saturate(190%); backdrop-filter: blur(30px) saturate(190%);
+  box-shadow: var(--glass-edge), 0 14px 36px light-dark(rgba(40, 20, 80, .18), rgba(0, 0, 0, .5)), 0 2px 6px rgba(0, 0, 0, .06);
+}
+#SNS-07 .sns07-bar-bg::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(255, 255, 255, .45), rgba(255, 255, 255, 0) 50%); opacity: light-dark(.8, .25); }
+#SNS-07 .sns07-item {
+  position: relative; width: 40px; height: 40px; flex: none; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; outline: none; color: var(--label-2);
+}
+#SNS-07 .sns07-emo {
+  position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%;
+  font: 30px/1 var(--font-emoji); color: #000; transform-origin: 50% 100%; will-change: transform;
+}
+#SNS-07 .sns07-emo > span { display: block; transition: transform 160ms var(--ease-out), opacity 160ms ease; }
+#SNS-07 .sns07-item.is-mine .sns07-emo { background: radial-gradient(circle, color-mix(in srgb, var(--blue) 30%, transparent) 0 62%, transparent 64%); }
+#SNS-07 .sns07-item.is-mine .sns07-emo::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--blue); }
+#SNS-07 .sns07-item:focus-visible .sns07-emo { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--blue) 75%, transparent); }
+#SNS-07 .sns07-more .sns07-emo > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: light-dark(rgba(118, 118, 128, .16), rgba(255, 255, 255, .14)); transition: transform var(--dur-3) var(--ease-spring); }
+#SNS-07 .sns07-more .i { font-size: 18px; color: var(--label-2); }
+#SNS-07 .sns07-bar.is-page2 .sns07-more .sns07-emo > span { transform: rotate(45deg); }
+#SNS-07 .sns07-tip {
+  position: absolute; left: 0; top: 0; z-index: 3; height: 24px; padding: 0 10px; border-radius: 999px; display: grid; place-items: center;
+  background: light-dark(rgba(28, 28, 32, .82), rgba(250, 250, 255, .92)); color: light-dark(#fff, #000);
+  font: 600 12px/1 var(--font-text); letter-spacing: 0; white-space: nowrap; pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .18); opacity: 0; transition: opacity 140ms ease;
+}
+#SNS-07 .sns07-tip.is-on { opacity: 1; }
+#SNS-07 .sns07-fly { position: absolute; z-index: 12; width: 30px; height: 30px; margin: -15px 0 0 -15px; pointer-events: none; will-change: transform; }
+#SNS-07 .sns07-fly > span { display: grid; place-items: center; width: 100%; height: 100%; font: 30px/1 var(--font-emoji); color: #000; will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  #SNS-07 .sns07-bubble, #SNS-07 .sns07-bubble.is-holding, #SNS-07 .sns07-bwrap.is-lifted .sns07-bubble { transform: none; transition: box-shadow var(--dur-2) ease; }
+  #SNS-07 .sns07-msg { transition: none; }
+}
+</style>
+<article class="obj" id="SNS-07" data-name="Reaction Picker" data-ja="リアクションピッカー" data-vector="Glass" data-size="m" data-desc="長押しで絵文字リアクションのバーが出現。なぞって選択。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="sns07-chat">
+      <div class="sns07-head" aria-hidden="true">
+        <span class="sns07-stack"><span class="av av-2">M</span><span class="av av-3">K</span><span class="av av-4">Y</span></span>
+        <b>週末旅行の計画</b><span>4人</span>
+      </div>
+      <p class="sns07-day">今日 9:41</p>
+      <div class="sns07-msg sns07-msg--in">
+        <span class="av av-3" aria-hidden="true">K</span>
+        <div class="sns07-col">
+          <span class="sns07-name">kaito.dev</span>
+          <div class="sns07-bwrap"><div class="sns07-bubble" tabindex="0" role="button" aria-haspopup="true" aria-label="kaito.dev: アルバムに写真あげたよ📸。長押しでリアクション">アルバムに写真あげたよ📸</div></div>
+        </div>
+      </div>
+      <div class="sns07-msg sns07-msg--in has-chip" data-base="❤️:1">
+        <span class="av av-2" aria-hidden="true">M</span>
+        <div class="sns07-col">
+          <span class="sns07-name">mio_k</span>
+          <div class="sns07-bwrap"><div class="sns07-bubble" tabindex="0" role="button" aria-haspopup="true" aria-label="mio_k: どれも最高すぎる…！次はみんなで海に行こう。長押しでリアクション">どれも最高すぎる…！✨<br>次はみんなで海に行こう</div></div>
+        </div>
+      </div>
+      <div class="sns07-msg sns07-msg--out">
+        <div class="sns07-col">
+          <div class="sns07-bwrap"><div class="sns07-bubble" tabindex="0" role="button" aria-haspopup="true" aria-label="あなた: 賛成！来月の連休はどう？。長押しでリアクション">賛成！来月の連休はどう？🌊</div></div>
+        </div>
+        <span class="sns07-read">既読 3</span>
+      </div>
+      <button class="sns07-hint" type="button" aria-haspopup="true"><svg class="i" aria-hidden="true"><use href="#i-face-smiling"/></svg>リアクション</button>
+    </div>
+
+    <div class="sns07-scrim" aria-hidden="true"></div>
+    <div class="sns07-bar" role="toolbar" aria-label="リアクションを選択" hidden>
+      <span class="sns07-bar-bg" aria-hidden="true"></span>
+      <button class="sns07-item" type="button" tabindex="-1"><span class="sns07-emo"><span>❤️</span></span></button>
+      <button class="sns07-item" type="button" tabindex="-1"><span class="sns07-emo"><span>😂</span></span></button>
+      <button class="sns07-item" type="button" tabindex="-1"><span class="sns07-emo"><span>😮</span></span></button>
+      <button class="sns07-item" type="button" tabindex="-1"><span class="sns07-emo"><span>😢</span></span></button>
+      <button class="sns07-item" type="button" tabindex="-1"><span class="sns07-emo"><span>😡</span></span></button>
+      <button class="sns07-item" type="button" tabindex="-1"><span class="sns07-emo"><span>👍</span></span></button>
+      <button class="sns07-item sns07-more" type="button" tabindex="-1" aria-label="その他のリアクション"><span class="sns07-emo"><span><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span></span></button>
+      <span class="sns07-tip" aria-hidden="true"></span>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>メッセージを長押し</li><li>なぞって指を離すと選択</li><li>もう一度選ぶと取り消し</li><li>Esc・外側で閉じる</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-07');
+  if (!root) return;
+  const stage = root.querySelector('.obj-stage');
+  const bar = root.querySelector('.sns07-bar');
+  const scrim = root.querySelector('.sns07-scrim');
+  const tip = root.querySelector('.sns07-tip');
+  const hint = root.querySelector('.sns07-hint');
+  const items = [...bar.querySelectorAll('.sns07-item')];
+  const emos = items.map((it) => it.querySelector('.sns07-emo'));
+  const reduced = () => !!(window.ObjKit && window.ObjKit.reducedMotion);
+  const SPRING = 'cubic-bezier(.34,1.56,.64,1)';
+  const SETS = [
+    { e: ['❤️', '😂', '😮', '😢', '😡', '👍'], l: ['大好き', 'ウケる', 'びっくり', '悲しい', '怒り', 'いいね'], more: 'その他' },
+    { e: ['🎉', '🔥', '🙏', '👀', '💯', '🥹'], l: ['おめでとう', 'アツい', 'ありがとう', '気になる', '完璧', '感動'], more: '戻る' },
+  ];
+  const N = items.length, W = 40, GAP = 2, PAD = 6, AMP = 0.95, SIG = 40, LIFT = 13;
+  const C = items.map((_, i) => PAD + i * (W + GAP) + W / 2);
+  const cur = items.map(() => 1), lift = items.map(() => 0), shift = items.map(() => 0);
+  let page = 0, openWrap = null, px = null, active = -1, raf = 0, tipIdx = -1, closing = null;
+
+  const play = (el, kf, o) => (el && el.animate ? el.animate(kf, o) : null);
+  const after = (a, fn) => (a ? a.finished.then(fn, fn) : fn());
+
+  /* — per-message reaction state — */
+  const msgs = [...root.querySelectorAll('.sns07-msg')];
+  const state = new Map();
+  msgs.forEach((m) => {
+    const base = {};
+    (m.dataset.base || '').split(',').filter(Boolean).forEach((p) => { const [e, n] = p.split(':'); base[e] = +n; });
+    state.set(m, { base, mine: null });
+    renderChip(m, null, true);
+  });
+
+  function chipList(st) {
+    const list = Object.keys(st.base).filter((e) => st.base[e] > 0);
+    if (st.mine && !list.includes(st.mine)) list.push(st.mine);
+    const total = Object.values(st.base).reduce((a, b) => a + b, 0) + (st.mine ? 1 : 0);
+    return { list, total };
+  }
+  /* sync the chip DOM; returns the span of `focusEmoji` (hidden until landing when `hideFocus`) */
+  function renderChip(m, focusEmoji, instant, hideFocus) {
+    const st = state.get(m);
+    const { list, total } = chipList(st);
+    const wrap = m.querySelector('.sns07-bwrap');
+    let chip = wrap.querySelector('.sns07-chip');
+    if (!list.length) {
+      m.classList.remove('has-chip');
+      if (chip) {
+        const c = chip;
+        after(instant || reduced() ? null : play(c, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(.4)', opacity: 0 }], { duration: 200, easing: 'ease-in', fill: 'forwards' }), () => c.remove());
+      }
+      return null;
+    }
+    let fresh = false;
+    if (!chip) {
+      chip = document.createElement('span');
+      chip.className = 'sns07-chip';
+      chip.setAttribute('aria-hidden', 'true');
+      chip.innerHTML = '<span class="sns07-chip-emos"></span><b></b>';
+      wrap.append(chip);
+      fresh = true;
+    }
+    m.classList.add('has-chip');
+    chip.classList.toggle('is-mine', !!st.mine);
+    const box = chip.querySelector('.sns07-chip-emos');
+    [...box.children].forEach((s) => { if (!list.includes(s.dataset.e)) s.remove(); });
+    let focus = null;
+    list.slice(0, 3).forEach((e) => {
+      let s = box.querySelector(`[data-e="${e}"]`);
+      if (!s) { s = document.createElement('span'); s.className = 'sns07-chip-emo'; s.dataset.e = e; s.textContent = e; box.append(s); if (e === focusEmoji && hideFocus) s.style.opacity = '0'; }
+      if (e === focusEmoji) focus = s;
+    });
+    const label = chip.querySelector('b');
+    if (!hideFocus) label.textContent = total;
+    chip._total = total;
+    if (fresh && !instant) chip.style.opacity = hideFocus ? '0' : '';
+    const bub = m.querySelector('.sns07-bubble');
+    const desc = list.join('') + ' ' + total + '件' + (st.mine ? '（あなた: ' + st.mine + '）' : '');
+    bub.dataset.reactions = desc;
+    return { chip, focus, fresh };
+  }
+
+  /* — magnification loop — */
+  function frame() {
+    raf = 0;
+    const smooth = reduced() ? 1 : 0.32;
+    const w = C.map((c) => (px == null ? 0 : Math.exp(-(((px - c) / SIG) ** 2))));
+    const raw = w.map((x) => 1 + AMP * x);
+    const T = raw.reduce((a, b) => a + b, 0);
+    const norm = px == null ? 1 : N / T;
+    let busy = false, x = PAD;
+    for (let i = 0; i < N; i++) {
+      const tgt = raw[i] * norm, tl = -LIFT * w[i];
+      cur[i] += (tgt - cur[i]) * smooth;
+      lift[i] += (tl - lift[i]) * smooth;
+      if (Math.abs(tgt - cur[i]) > 0.002 || Math.abs(tl - lift[i]) > 0.05) busy = true;
+      const wi = W * cur[i];
+      shift[i] = x + wi / 2 - C[i];
+      x += wi + GAP;
+      emos[i].style.transform = `translate(${shift[i].toFixed(2)}px, ${lift[i].toFixed(2)}px) scale(${cur[i].toFixed(4)})`;
+    }
+    let a = -1;
+    if (px != null) { let best = 0; w.forEach((v, i) => { if (v > best) { best = v; a = i; } }); }
+    active = a;
+    placeTip();
+    if (busy) raf = requestAnimationFrame(frame);
+  }
+  const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  function placeTip() {
+    if (active < 0) { tip.classList.remove('is-on'); tipIdx = -1; return; }
+    const i = active;
+    const label = i === N - 1 ? SETS[page].more : SETS[page].l[i];
+    if (tipIdx !== i) {
+      tip.textContent = label;
+      tipIdx = i;
+      if (!reduced()) play(tip, [{ scale: '.86' }, { scale: '1' }], { duration: 260, easing: SPRING });
+    }
+    const cx = C[i] + shift[i];
+    const top = PAD + W - W * cur[i] + lift[i] - 8;
+    tip.style.transform = `translate(${cx.toFixed(1)}px, ${top.toFixed(1)}px) translate(-50%, -100%)`;
+    tip.classList.add('is-on');
+  }
+  function track(cx, cy) {
+    const sr = stage.getBoundingClientRect();
+    const x = cx - sr.left - bar.offsetLeft, y = cy - sr.top - bar.offsetTop;
+    const inside = x >= -12 && x <= bar.offsetWidth + 12 && y >= -64 && y <= bar.offsetHeight + 40;
+    px = inside ? Math.min(Math.max(x, C[0]), C[N - 1]) : null;
+    kick();
+  }
+  function rest() { px = null; kick(); }
+
+  /* — open / close — */
+  function syncMine() {
+    if (!openWrap) return;
+    const st = state.get(openWrap.closest('.sns07-msg'));
+    items.forEach((it, i) => {
+      const e = i < N - 1 ? SETS[page].e[i] : null;
+      it.classList.toggle('is-mine', !!e && st.mine === e);
+      it.setAttribute('aria-pressed', String(!!e && st.mine === e));
+      if (e) it.setAttribute('aria-label', `${SETS[page].l[i]} ${e}`);
+    });
+  }
+  function openBar(wrap, { focus = false } = {}) {
+    if (openWrap === wrap) return;
+    if (openWrap) closeBar(true);
+    if (closing) { closing.cancel(); closing = null; }
+    openWrap = wrap;
+    const isOut = !!wrap.closest('.sns07-msg--out');
+    bar.hidden = false;
+    syncMine();
+    const sr = stage.getBoundingClientRect();
+    const br = wrap.getBoundingClientRect();
+    const bw = bar.offsetWidth, bh = bar.offsetHeight;
+    let left = isOut ? br.right - sr.left - bw + 6 : br.left - sr.left - 6;
+    left = Math.max(8, Math.min(left, sr.width - bw - 8));
+    const anchorTop = isOut ? br.top : wrap.closest('.sns07-col').getBoundingClientRect().top;
+    let top = anchorTop - sr.top - bh - 8;
+    if (top < 74) top = br.bottom - sr.top + (wrap.querySelector('.sns07-chip') ? 22 : 10);
+    bar.style.left = left + 'px';
+    bar.style.top = top + 'px';
+    const ox = Math.max(20, Math.min(bw - 20, (isOut ? br.right - 24 : br.left + 24) - sr.left - left));
+    bar.style.transformOrigin = `${ox}px ${top < br.top - sr.top ? bh : 0}px`;
+    scrim.classList.add('is-on');
+    wrap.classList.add('is-lifted');
+    wrap.querySelector('.sns07-bubble').setAttribute('aria-expanded', 'true');
+    px = null; cur.fill(1); lift.fill(0); frame();
+    if (!reduced()) {
+      play(bar, [{ transform: 'scale(.3)', opacity: 0 }, { transform: 'scale(1.04)', opacity: 1, offset: 0.62 }, { transform: 'scale(1)', opacity: 1 }], { duration: 440, easing: 'cubic-bezier(.25,.9,.35,1)' });
+      items.forEach((it, i) => play(it, [{ transform: 'translateY(14px) scale(.3)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 460, delay: 50 + i * 30, easing: SPRING, fill: 'backwards' }));
+    } else play(bar, [{ opacity: 0 }, { opacity: 1 }], { duration: 160 });
+    if (focus) {
+      const mi = items.findIndex((it) => it.classList.contains('is-mine'));
+      setFocus(mi >= 0 ? mi : 0);
+    }
+  }
+  function closeBar(instant, restoreFocus) {
+    if (!openWrap) return;
+    const wrap = openWrap;
+    openWrap = null;
+    wrap.classList.remove('is-lifted');
+    const bub = wrap.querySelector('.sns07-bubble');
+    bub.setAttribute('aria-expanded', 'false');
+    scrim.classList.remove('is-on');
+    px = null; active = -1;
+    tip.classList.remove('is-on');
+    items.forEach((it) => it.setAttribute('tabindex', '-1'));
+    const fin = () => {
+      if (closing) { closing.cancel(); closing = null; }
+      if (openWrap) return;
+      bar.hidden = true;
+      if (page) setPage(0, true);
+      cur.fill(1); lift.fill(0); frame();
+    };
+    if (instant || reduced()) fin();
+    else {
+      closing = play(bar, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(.82)', opacity: 0 }], { duration: 180, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+      after(closing, fin);
+    }
+    if (restoreFocus) restoreFocus.focus({ preventScroll: true });
+  }
+
+  /* — page swap via the plus button — */
+  function setPage(p, instant) {
+    page = p;
+    bar.classList.toggle('is-page2', p === 1);
+    items.forEach((it, i) => {
+      if (i === N - 1) { it.setAttribute('aria-label', p ? 'もとのリアクションに戻る' : 'その他のリアクション'); return; }
+      const g = emos[i].firstElementChild;
+      const swap = () => { g.textContent = SETS[p].e[i]; };
+      g.getAnimations().forEach((x) => x.cancel());
+      if (instant || reduced()) { swap(); return; }
+      const out = play(g, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(.2) rotate(-20deg)', opacity: 0 }], { duration: 130, delay: i * 22, easing: 'ease-in', fill: 'forwards' });
+      after(out, () => {
+        if (out && out.playState === 'idle') return;
+        swap();
+        play(g, [{ transform: 'scale(.2) rotate(20deg)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 380, easing: SPRING });
+        if (out) out.cancel();
+      });
+    });
+    tipIdx = -1;
+    syncMine();
+    if (!instant) placeTip();
+  }
+
+  /* — selection + flight to the chip — */
+  function select(i) {
+    if (!openWrap || i < 0) return;
+    if (i === N - 1) { setPage(page ? 0 : 1); return; }
+    const wrap = openWrap;
+    const m = wrap.closest('.sns07-msg');
+    const st = state.get(m);
+    const e = SETS[page].e[i];
+    const from = emos[i].getBoundingClientRect();
+    const bub = wrap.querySelector('.sns07-bubble');
+    if (st.mine === e) {
+      st.mine = null;
+      renderChip(m, null, false, false);
+      closeBar(false, document.activeElement && bar.contains(document.activeElement) ? bub : null);
+      return;
+    }
+    st.mine = e;
+    const res = renderChip(m, e, false, true);
+    closeBar(false, document.activeElement && bar.contains(document.activeElement) ? bub : null);
+    const land = () => {
+      if (!res) return;
+      res.chip.style.opacity = '';
+      if (res.focus) res.focus.style.opacity = '';
+      res.chip.querySelector('b').textContent = res.chip._total;
+      if (reduced()) return;
+      if (res.fresh) play(res.chip, [{ transform: 'scale(.4)' }, { transform: 'scale(1)' }], { duration: 420, easing: SPRING });
+      else play(res.chip, [{ transform: 'scale(1)' }, { transform: 'scale(1.12)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: 380, easing: 'ease-out' });
+      if (res.focus) play(res.focus, [{ transform: 'scale(.3)' }, { transform: 'scale(1.35)', offset: 0.5 }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
+    };
+    if (reduced() || !res || !res.focus) { land(); return; }
+    const to = res.focus.getBoundingClientRect();
+    const sr = stage.getBoundingClientRect();
+    const f = document.createElement('span');
+    f.className = 'sns07-fly';
+    f.setAttribute('aria-hidden', 'true');
+    const g = document.createElement('span');
+    g.textContent = e;
+    f.append(g);
+    const x0 = from.left + from.width / 2 - sr.left, y0 = from.top + from.height / 2 - sr.top;
+    const x1 = to.left + to.width / 2 - sr.left, y1 = to.top + to.height / 2 - sr.top;
+    f.style.left = x0 + 'px';
+    f.style.top = y0 + 'px';
+    stage.append(f);
+    const s0 = from.width / 30, s1 = 15 / 30;
+    const dur = 560;
+    play(f, [{ transform: `translateX(0) scale(${s0})` }, { transform: `translateX(${x1 - x0}px) scale(${s1})` }], { duration: dur, easing: 'cubic-bezier(.4,0,.3,1)', fill: 'forwards' });
+    const hop = Math.min(-26, (y1 - y0) * -0.35);
+    after(play(g, [
+      { transform: 'translateY(0)', easing: 'cubic-bezier(.2,.7,.4,1)' },
+      { transform: `translateY(${hop}px)`, offset: 0.3, easing: 'cubic-bezier(.55,0,.8,.4)' },
+      { transform: `translateY(${y1 - y0}px)` },
+    ], { duration: dur, fill: 'forwards' }), () => { f.remove(); land(); });
+  }
+
+  /* — focus management in the bar (roving) — */
+  function setFocus(i) {
+    items.forEach((it, j) => it.setAttribute('tabindex', j === i ? '0' : '-1'));
+    items[i].focus({ preventScroll: true });
+    px = C[i];
+    kick();
+  }
+  bar.addEventListener('keydown', (e) => {
+    const i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setFocus((i + (e.key === 'ArrowRight' ? 1 : -1) + N) % N);
+    } else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); setFocus(e.key === 'Home' ? 0 : N - 1); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeBar(false, openWrap && openWrap.querySelector('.sns07-bubble')); }
+    else if (e.key === 'Tab') { closeBar(false, openWrap && openWrap.querySelector('.sns07-bubble')); }
+  });
+  items.forEach((it, i) => it.addEventListener('click', (e) => { if (e.detail === 0) select(i); }));
+
+  /* — pointer on the bar (hover = magnify, press/drag/release = select) — */
+  let barPtr = null;
+  bar.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    barPtr = e.pointerId;
+    bar.setPointerCapture(e.pointerId);
+    track(e.clientX, e.clientY);
+  });
+  bar.addEventListener('pointermove', (e) => { if (barPtr == null && e.pointerType !== 'mouse') return; track(e.clientX, e.clientY); });
+  bar.addEventListener('pointerup', (e) => {
+    if (e.pointerId !== barPtr) return;
+    barPtr = null;
+    track(e.clientX, e.clientY);
+    frame();
+    if (active >= 0) select(active);
+  });
+  bar.addEventListener('pointercancel', () => { barPtr = null; rest(); });
+  bar.addEventListener('pointerleave', (e) => { if (barPtr == null) rest(); });
+
+  /* — long-press on bubbles — */
+  let press = null;
+  const cancelPress = () => {
+    if (!press) return;
+    clearTimeout(press.timer);
+    press.bub.classList.remove('is-holding');
+    press = null;
+  };
+  root.querySelectorAll('.sns07-bubble').forEach((bub) => {
+    const wrap = bub.parentElement;
+    bub.addEventListener('contextmenu', (e) => e.preventDefault());
+    bub.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (openWrap) return;
+      cancelPress();
+      press = { bub, id: e.pointerId, x: e.clientX, y: e.clientY, fired: false };
+      try { bub.setPointerCapture(e.pointerId); } catch (_) {}
+      bub.classList.add('is-holding');
+      press.timer = setTimeout(() => {
+        if (!press) return;
+        press.fired = true;
+        bub.classList.remove('is-holding');
+        openBar(wrap);
+      }, 450);
+    });
+    bub.addEventListener('pointermove', (e) => {
+      if (!press || e.pointerId !== press.id) return;
+      if (!press.fired) { if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10) cancelPress(); return; }
+      track(e.clientX, e.clientY);
+    });
+    const end = (e) => {
+      if (!press || e.pointerId !== press.id) return;
+      const fired = press.fired;
+      cancelPress();
+      if (!fired) return;
+      if (e.type === 'pointerup') { frame(); if (active >= 0) select(active); } else rest();
+    };
+    /* once the long-press has fired, keep the finger for the bar instead of scrolling the page */
+    bub.addEventListener('touchmove', (e) => { if (press && press.fired && e.cancelable) e.preventDefault(); }, { passive: false });
+    bub.addEventListener('pointerup', end);
+    bub.addEventListener('pointercancel', end);
+    bub.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) { e.preventDefault(); openBar(wrap, { focus: true }); }
+    });
+  });
+
+  hint.addEventListener('click', (e) => {
+    const wrap = msgs[1].querySelector('.sns07-bwrap');
+    if (openWrap === wrap) { closeBar(); return; }
+    openBar(wrap, { focus: e.detail === 0 });
+  });
+  scrim.addEventListener('pointerdown', (e) => { e.preventDefault(); closeBar(); });
+  document.addEventListener('pointerdown', (e) => { if (openWrap && !root.contains(e.target)) closeBar(); });
+  document.addEventListener('keydown', (e) => { if (openWrap && e.key === 'Escape' && !bar.contains(document.activeElement)) closeBar(); });
+})();
+</script>

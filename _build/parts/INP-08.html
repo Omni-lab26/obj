@@ -1,0 +1,386 @@
+<!-- ═══════════ INP-08 · Wheel Picker ═══════════ -->
+<style>
+#INP-08 .inp08-wrap { display: flex; flex-direction: column; gap: 8px; width: min(100%, 384px); }
+#INP-08 .inp08-card { container-type: inline-size; border-radius: 12px; background: var(--bg-grouped-2); overflow: hidden; }
+
+/* — compact pill row — */
+#INP-08 .inp08-top { display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 9px 10px 9px 16px; }
+#INP-08 .inp08-lab { position: relative; top: 1px; flex: 1; min-width: 0; font: 400 var(--fs-body)/1.29 var(--font-text); letter-spacing: 0; white-space: nowrap; }
+#INP-08 .inp08-pills { display: flex; gap: 6px; flex: none; }
+#INP-08 .inp08-pill {
+  position: relative; height: 34px; padding: 0 11px; border: 0; border-radius: 8px; cursor: pointer;
+  background: var(--fill-3); color: var(--label); white-space: nowrap;
+  font: 400 var(--fs-body)/34px var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: color var(--dur-2) ease, background var(--dur-2) ease, transform var(--dur-3) var(--ease-spring);
+}
+#INP-08 .inp08-pill[data-pill="time"] { min-width: 114px; }
+#INP-08 .inp08-pill[aria-expanded="true"] { color: var(--accent); }
+#INP-08 .inp08-pill:active { transform: scale(.95); background: var(--fill); transition-duration: 90ms; }
+#INP-08 .inp08-pill:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg-grouped-2), 0 0 0 4px color-mix(in srgb, var(--accent) 55%, transparent); }
+@container (max-width: 370px) {
+  #INP-08 .inp08-top { padding: 9px 8px 9px 14px; gap: 6px; }
+  #INP-08 .inp08-pills { gap: 5px; }
+  #INP-08 .inp08-pill { padding: 0 8px; font-size: 16px; }
+  #INP-08 .inp08-pill[data-pill="time"] { min-width: 103px; }
+  #INP-08 .inp08-yr { display: none; }   /* narrow: drop the year, like iOS compact dates */
+}
+
+/* — expanding wheel area — */
+#INP-08 .inp08-exp { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-3) var(--ease-ios); }
+#INP-08 .inp08-card.is-open .inp08-exp { grid-template-rows: 1fr; }
+#INP-08 .inp08-exp-in { min-height: 0; overflow: hidden; }
+#INP-08 .inp08-sep { height: .5px; margin-left: 16px; background: var(--separator); }
+
+#INP-08 .inp08-wheel {
+  position: relative; height: 196px; margin: 6px 8px 8px; display: flex; justify-content: center; gap: 2px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, .55) 14%, #000 34%, #000 66%, rgba(0, 0, 0, .55) 86%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, .55) 14%, #000 34%, #000 66%, rgba(0, 0, 0, .55) 86%, transparent 100%);
+  transition: opacity var(--dur-2) ease, filter var(--dur-2) ease, transform var(--dur-3) var(--ease-ios);
+}
+#INP-08 .inp08-card:not(.is-open) .inp08-wheel { opacity: 0; transform: scale(.96); }
+#INP-08 .inp08-wheel.is-swap { opacity: 0; filter: blur(6px); transform: scale(.97); transition-duration: 140ms; }
+#INP-08 .inp08-band { position: absolute; left: 0; right: 0; top: 50%; height: 34px; margin-top: -17px; border-radius: 8px; background: var(--fill-3); pointer-events: none; }
+
+#INP-08 .inp08-col { position: relative; flex: none; height: 100%; }
+#INP-08 .inp08-vis { position: absolute; inset: 0; perspective: 560px; pointer-events: none; }
+#INP-08 .inp08-r {
+  position: absolute; left: 0; right: 0; top: 50%; height: 34px; margin-top: -17px; padding: 0 6px;
+  font: 400 22px/34px var(--font-display); letter-spacing: 0; color: var(--label); font-variant-numeric: tabular-nums;
+  text-align: center; white-space: nowrap; transform-origin: 50% 50% -98px; backface-visibility: hidden; will-change: transform, opacity;
+  transition: color var(--dur-2) ease;
+}
+#INP-08 .inp08-col[data-align="right"] .inp08-r { text-align: right; padding-right: 10px; }
+#INP-08 .inp08-col[data-align="left"] .inp08-r { text-align: left; padding-left: 10px; }
+#INP-08 .inp08-r.is-off { color: var(--label-3); }
+
+/* transparent native scroller on top: wheel, touch, momentum and CSS scroll-snap */
+#INP-08 .inp08-sc {
+  position: absolute; inset: 0; overflow-x: hidden; overflow-y: scroll; padding: 81px 0;
+  scroll-snap-type: y mandatory; overscroll-behavior: contain; scrollbar-width: none;
+  touch-action: pan-y; cursor: grab; outline: none;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+#INP-08 .inp08-sc::-webkit-scrollbar { display: none; }
+#INP-08 .inp08-sc.is-drag { cursor: grabbing; }
+#INP-08 .inp08-sc > i { display: block; height: 34px; scroll-snap-align: center; }
+#INP-08 .inp08-col::after {
+  content: ""; position: absolute; left: -1px; right: -1px; top: 50%; height: 34px; margin-top: -17px; border-radius: 8px; pointer-events: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 70%, transparent); opacity: 0; transition: opacity var(--dur-1) ease;
+}
+#INP-08 .inp08-col:has(.inp08-sc:focus-visible)::after { opacity: 1; }
+
+#INP-08 .inp08-foot { display: flex; align-items: center; gap: 6px; margin: 0 16px; min-height: 18px; font: 400 var(--fs-footnote)/1.35 var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#INP-08 .inp08-foot .i { font-size: 13px; color: var(--orange); }
+#INP-08 .inp08-foot b { font-weight: 600; color: var(--label); }
+
+@media (prefers-reduced-motion: reduce) {
+  #INP-08 .inp08-exp, #INP-08 .inp08-wheel, #INP-08 .inp08-pill { transition: none; }
+}
+</style>
+<article class="obj" id="INP-08" data-name="Wheel Picker" data-ja="ホイールピッカー" data-vector="Clean" data-size="m" data-desc="回転式の時刻ピッカー。立体的に回るホイール。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="inp08-wrap">
+      <div class="inp08-card is-open">
+        <div class="inp08-top">
+          <span class="inp08-lab">アラーム</span>
+          <div class="inp08-pills">
+            <button class="inp08-pill" type="button" data-pill="date" aria-expanded="false" aria-controls="INP-08-exp" aria-label="日付 2026年10月2日"><span class="inp08-yr">2026年</span><span data-md>10月2日</span></button>
+            <button class="inp08-pill" type="button" data-pill="time" aria-expanded="true" aria-controls="INP-08-exp">午前 7:30</button>
+          </div>
+        </div>
+        <div class="inp08-exp" id="INP-08-exp">
+          <div class="inp08-exp-in">
+            <div class="inp08-sep"></div>
+            <div class="inp08-wheel" role="group" aria-label="時刻"><div class="inp08-band"></div></div>
+          </div>
+        </div>
+      </div>
+      <p class="inp08-foot" aria-live="polite"><svg class="i" aria-hidden="true"><use href="#i-bell-fill"/></svg><span>アラームは <b data-left>21時間49分</b>後に鳴ります</span></p>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>ホイール・スワイプ・ドラッグで回す</li><li>行をタップでその値へ</li><li>↑↓キーで1つずつ</li><li>日付ピルで年月日に切替</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('INP-08');
+  root.addEventListener('touchstart', () => {}, { passive: true }); /* enables :active pressed states on iOS Safari */
+  const reduced = () => window.ObjKit && ObjKit.reducedMotion;
+  const ROW = 34, H = 196, RAD = 98, POOL = 9;
+  const mod = (a, n) => ((a % n) + n) % n;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+  const easeOutQuint = (t) => 1 - Math.pow(1 - t, 5);
+  const rubber = (x, d) => (1 - 1 / ((x * 0.55) / d + 1)) * d;
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const range = (a, b, f) => Array.from({ length: b - a + 1 }, (_, i) => f(a + i));
+  const NOW = { y: 2026, mo: 10, d: 2, min: 9 * 60 + 41 };   /* demo clock: 2026/10/2 9:41 */
+
+  const MODES = {
+    time: { label: '時刻', cols: [
+      { key: 'ap', label: '午前/午後', items: ['午前', '午後'], loop: false, w: 74, align: 'center' },
+      { key: 'h', label: '時', items: range(1, 12, String), loop: true, copies: 7, w: 54, align: 'right' },
+      { key: 'm', label: '分', items: range(0, 59, pad2), loop: true, copies: 3, w: 56, align: 'left' },
+    ] },
+    date: { label: '日付', cols: [
+      { key: 'y', label: '年', items: range(2024, 2030, (y) => y + '年'), loop: false, w: 96, align: 'right' },
+      { key: 'mo', label: '月', items: range(1, 12, (m) => m + '月'), loop: true, copies: 5, w: 64, align: 'right' },
+      { key: 'd', label: '日', items: range(1, 31, (d) => d + '日'), loop: true, copies: 3, w: 64, align: 'right' },
+    ] },
+  };
+  const state = { time: { ap: 0, h: 6, m: 30 }, date: { y: 2, mo: 9, d: 1 } };
+
+  const card = root.querySelector('.inp08-card');
+  const wheel = root.querySelector('.inp08-wheel');
+  const pills = { date: root.querySelector('[data-pill="date"]'), time: root.querySelector('[data-pill="time"]') };
+  const leftOut = root.querySelector('[data-left]');
+  const yrOut = root.querySelector('.inp08-yr'), mdOut = root.querySelector('[data-md]');
+  let mode = 'time', cols = [];
+
+  const daysIn = () => new Date(2024 + state.date.y, state.date.mo + 1, 0).getDate();
+
+  /* ── readouts (live while the wheel turns) ── */
+  function readout() {
+    const t = state.time, dt = state.date;
+    pills.time.textContent = `${MODES.time.cols[0].items[t.ap]} ${t.h + 1}:${pad2(t.m)}`;
+    const ymd = [`${2024 + dt.y}年`, `${dt.mo + 1}月${Math.min(dt.d + 1, daysIn())}日`];
+    yrOut.textContent = ymd[0]; mdOut.textContent = ymd[1];
+    pills.date.setAttribute('aria-label', '日付 ' + ymd.join(''));
+    const alarm = (t.ap ? 12 * 60 : 0) + ((t.h + 1) % 12) * 60 + t.m;
+    let left = mod(alarm - NOW.min, 1440) || 1440;
+    const hh = Math.floor(left / 60), mm = left % 60;
+    leftOut.textContent = hh && mm ? `${hh}時間${mm}分` : hh ? `${hh}時間` : `${mm}分`;
+  }
+
+  /* ── one column = transparent snap scroller (input) + virtualised 3D rows (output) ── */
+  function makeCol(cfg) {
+    const col = document.createElement('div');
+    col.className = 'inp08-col'; col.style.width = cfg.w + 'px'; col.dataset.align = cfg.align;
+    const vis = document.createElement('div'); vis.className = 'inp08-vis'; vis.setAttribute('aria-hidden', 'true');
+    const rows = [];
+    for (let k = 0; k < POOL; k++) { const r = document.createElement('span'); r.className = 'inp08-r'; r.style.visibility = 'hidden'; vis.appendChild(r); rows.push(r); }
+    const sc = document.createElement('div');
+    sc.className = 'inp08-sc'; sc.tabIndex = 0;
+    sc.setAttribute('role', 'spinbutton'); sc.setAttribute('aria-label', cfg.label);
+    sc.setAttribute('aria-valuemin', '0'); sc.setAttribute('aria-valuemax', String(cfg.items.length - 1));
+    const n = cfg.items.length, copies = cfg.loop ? cfg.copies : 1;
+    sc.innerHTML = '<i></i>'.repeat(n * copies);
+    col.append(vis, sc);
+    const c = { cfg, col, vis, rows, sc, n, total: n * copies, base: cfg.loop ? Math.floor(copies / 2) * n : 0,
+      over: 0, anim: 0, animTarget: null, drag: null, tap: null, sel: -1, raf: 0, settleT: 0 };
+    bind(c);
+    return c;
+  }
+
+  const pos = (c) => c.sc.scrollTop + c.over;
+  function setPos(c, p) {
+    if (c.cfg.loop) { c.over = 0; c.sc.scrollTop = p; return; }
+    const cl = clamp(p, 0, (c.n - 1) * ROW);
+    c.over = p - cl; c.sc.scrollTop = cl;
+  }
+  /* loop columns: silently jump to the equivalent row in the middle copy */
+  function normalize(c) {
+    if (!c.cfg.loop) return 0;
+    const i = Math.round(c.sc.scrollTop / ROW);
+    const shift = (c.base + mod(i, c.n) - i) * ROW;
+    if (shift) c.sc.scrollTop += shift;
+    return shift;
+  }
+
+  function render(c) {
+    const cf = pos(c) / ROW, base = Math.round(cf);
+    const dayCol = c.cfg.key === 'd', dim = dayCol ? daysIn() : 0;
+    for (let k = 0; k < POOL; k++) {
+      const r = c.rows[k], i = base + k - (POOL >> 1), d = i - cf;
+      const th = (d * ROW) / RAD;                       /* angle on the cylinder */
+      const ok = (c.cfg.loop || (i >= 0 && i < c.n)) && Math.abs(th) < 1.52;
+      if (!ok) { if (r._v) { r.style.visibility = 'hidden'; r._v = false; } continue; }
+      if (!r._v) { r.style.visibility = ''; r._v = true; }
+      const idx = mod(i, c.n);
+      if (r._i !== idx) { r._i = idx; r.textContent = c.cfg.items[idx]; }
+      if (dayCol) { const off = idx + 1 > dim; if (r._off !== off) { r._off = off; r.classList.toggle('is-off', off); } }
+      r.style.transform = `rotateX(${(-th).toFixed(4)}rad)`;
+      r.style.opacity = (0.1 + 0.9 * Math.pow(Math.cos(th), 1.5)).toFixed(3);
+    }
+    const sel = c.cfg.loop ? mod(Math.round(cf), c.n) : clamp(Math.round(cf), 0, c.n - 1);
+    if (sel !== c.sel) {
+      c.sel = sel;
+      c.sc.setAttribute('aria-valuenow', String(sel)); c.sc.setAttribute('aria-valuetext', c.cfg.items[sel]);
+      state[mode][c.cfg.key] = sel;
+      if (mode === 'date' && c.cfg.key !== 'd') { const dc = cols[2]; if (dc) render(dc); }
+      readout();
+    }
+  }
+  const schedule = (c) => { if (!c.raf) c.raf = requestAnimationFrame(() => { c.raf = 0; render(c); }); };
+
+  function stopAnim(c) {
+    if (c.anim) { cancelAnimationFrame(c.anim); c.anim = 0; }
+    c.animTarget = null;
+  }
+  function restoreSnap(c) { c.over = 0; c.sc.style.scrollSnapType = ''; }
+
+  function animateTo(c, target, dur, ease = easeOut) {
+    stopAnim(c);
+    let from = pos(c);
+    if (c.cfg.loop) {
+      /* keep the whole travel inside the scrollable range */
+      const span = c.n * ROW, mid = ((from + target) / 2), centre = ((c.total - 1) * ROW) / 2;
+      const k = Math.round((centre - mid) / span) * span;
+      if (k) { c.sc.scrollTop += k; from += k; target += k; }
+    } else target = clamp(target, 0, (c.n - 1) * ROW);
+    if (reduced()) dur = Math.min(dur, 120);
+    c.sc.style.scrollSnapType = 'none';
+    c.animTarget = target;
+    const t0 = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / dur);
+      setPos(c, from + (target - from) * ease(t));
+      render(c);
+      if (t < 1) c.anim = requestAnimationFrame(step);
+      else { c.anim = 0; c.animTarget = null; setPos(c, target); restoreSnap(c); render(c); settle(c); }
+    };
+    c.anim = requestAnimationFrame(step);
+  }
+
+  /* after any scroll comes to rest */
+  function settle(c) {
+    if (c.drag || c.anim) return;
+    normalize(c);
+    if (mode === 'date') {
+      const dc = cols[2], dim = daysIn();
+      if (dc && !dc.anim && !dc.drag && state.date.d + 1 > dim) {
+        /* invalid day (e.g. 2月31日) → roll back to the last day, like iOS */
+        const i = Math.round(dc.sc.scrollTop / ROW);
+        setTimeout(() => animateTo(dc, (i - (state.date.d + 1 - dim)) * ROW, 420), 60);
+      }
+    }
+  }
+
+  function tapAt(c, clientY) {
+    const r = c.col.getBoundingClientRect();
+    const y = clientY - (r.top + r.height / 2);
+    if (Math.abs(y) < ROW / 2) return;
+    const d = (Math.asin(clamp(y / RAD, -0.995, 0.995)) * RAD) / ROW;
+    animateTo(c, Math.round(pos(c) / ROW + d) * ROW, 420, easeOutQuint);
+  }
+
+  function bind(c) {
+    const sc = c.sc;
+    sc.addEventListener('scroll', () => {
+      schedule(c);
+      clearTimeout(c.settleT);
+      c.settleT = setTimeout(() => settle(c), 160);
+    }, { passive: true });
+    if ('onscrollend' in window) sc.addEventListener('scrollend', () => { clearTimeout(c.settleT); c.settleT = setTimeout(() => settle(c), 30); });
+    /* a wheel or touch while we're animating takes over immediately */
+    sc.addEventListener('wheel', () => { if (c.anim) { stopAnim(c); restoreSnap(c); } }, { passive: true });
+
+    sc.addEventListener('pointerdown', (e) => {
+      if (c.anim) { stopAnim(c); if (e.pointerType !== 'mouse') restoreSnap(c); }
+      if (e.pointerType !== 'mouse') { c.tap = { y: e.clientY, t: e.timeStamp, id: e.pointerId }; return; }
+      if (e.button !== 0) return;
+      normalize(c);
+      sc.style.scrollSnapType = 'none';
+      sc.classList.add('is-drag');
+      try { sc.setPointerCapture(e.pointerId); } catch (err) {}
+      const p = pos(c);
+      c.drag = { y0: e.clientY, p0: p, ly: e.clientY, lt: e.timeStamp, v: 0, moved: false, id: e.pointerId };
+    });
+    sc.addEventListener('pointermove', (e) => {
+      const d = c.drag;
+      if (!d || e.pointerId !== d.id) return;
+      const dy = e.clientY - d.y0;
+      if (Math.abs(dy) > 3) d.moved = true;
+      let p = d.p0 - dy;
+      if (c.cfg.loop) {
+        const span = c.n * ROW, lo = span, hi = (c.total - c.n - 1) * ROW;
+        if (p < lo || p > hi) { const k = (p < lo ? 1 : -1) * span * Math.max(1, Math.round(Math.abs(((c.total - 1) * ROW) / 2 - p) / span)); d.p0 += k; p += k; }
+      } else {
+        const max = (c.n - 1) * ROW;
+        if (p < 0) p = -rubber(-p, ROW * 1.4); else if (p > max) p = max + rubber(p - max, ROW * 1.4);
+      }
+      setPos(c, p); render(c);
+      const dt = e.timeStamp - d.lt;
+      if (dt > 0) { const inst = -(e.clientY - d.ly) / dt; d.v = d.v * 0.25 + inst * 0.75; }
+      d.ly = e.clientY; d.lt = e.timeStamp;
+    });
+    const end = (e) => {
+      const d = c.drag;
+      if (!d || e.pointerId !== d.id) return;
+      c.drag = null; sc.classList.remove('is-drag');
+      if (!d.moved) { restoreSnap(c); setPos(c, Math.round(pos(c) / ROW) * ROW); if (e.type === 'pointerup') tapAt(c, e.clientY); return; }
+      const v = e.timeStamp - d.lt > 90 ? 0 : clamp(d.v, -4.5, 4.5);   /* px/ms */
+      let i = Math.round((pos(c) + v * 200) / ROW);
+      if (!c.cfg.loop) i = clamp(i, 0, c.n - 1);
+      const dist = Math.abs(i * ROW - pos(c));
+      animateTo(c, i * ROW, clamp(260 + Math.sqrt(dist) * 26, 300, 1200), v ? easeOut : easeOutQuint);
+    };
+    sc.addEventListener('pointerup', (e) => {
+      if (c.tap && e.pointerId === c.tap.id) {
+        const t = c.tap; c.tap = null;
+        if (Math.abs(e.clientY - t.y) < 8 && e.timeStamp - t.t < 350) tapAt(c, e.clientY);
+        return;
+      }
+      end(e);
+    });
+    sc.addEventListener('pointercancel', (e) => { c.tap = null; end(e); });
+
+    sc.addEventListener('keydown', (e) => {
+      const step = { ArrowDown: 1, ArrowUp: -1, PageDown: 5, PageUp: -5 }[e.key];
+      let i;
+      const cur = c.animTarget != null ? Math.round(c.animTarget / ROW) : Math.round(pos(c) / ROW);
+      if (step) i = cur + step;
+      else if (e.key === 'Home') i = cur - mod(cur, c.n);
+      else if (e.key === 'End') i = cur - mod(cur, c.n) + c.n - 1;
+      else return;
+      e.preventDefault();
+      if (!c.cfg.loop) i = clamp(i, 0, c.n - 1);
+      animateTo(c, i * ROW, Math.abs(step || 3) > 1 ? 380 : 230, easeOut);
+    });
+  }
+
+  function build(m) {
+    cols.forEach((c) => { stopAnim(c); clearTimeout(c.settleT); c.col.remove(); });
+    mode = m;
+    wheel.setAttribute('aria-label', MODES[m].label);
+    cols = MODES[m].cols.map(makeCol);
+    cols.forEach((c) => wheel.appendChild(c.col));
+    cols.forEach((c) => { c.sc.scrollTop = (c.base + state[m][c.cfg.key]) * ROW; });
+    cols.forEach(render);
+  }
+  /* (re)apply positions if the card was laid out while hidden */
+  function ensure() {
+    cols.forEach((c) => {
+      if (c.drag || c.anim) return;
+      const want = (c.base + state[mode][c.cfg.key]) * ROW;
+      if (Math.abs(c.sc.scrollTop - want) > 1 && Math.abs(mod(Math.round(c.sc.scrollTop / ROW), c.n) - state[mode][c.cfg.key]) > 0) c.sc.scrollTop = want;
+      render(c);
+    });
+  }
+
+  /* ── pills: time ⇄ date wheels, tap the active one to collapse ── */
+  let swapT = 0;
+  const expIn = root.querySelector('.inp08-exp-in');
+  Object.entries(pills).forEach(([m, btn]) => btn.addEventListener('click', () => {
+    const open = card.classList.contains('is-open');
+    if (open && m === mode) {
+      card.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+      expIn.inert = true;
+      return;
+    }
+    expIn.inert = false;
+    pills.date.setAttribute('aria-expanded', String(m === 'date'));
+    pills.time.setAttribute('aria-expanded', String(m === 'time'));
+    if (m === mode) { card.classList.add('is-open'); ensure(); return; }
+    if (!open || reduced()) { build(m); card.classList.add('is-open'); return; }
+    clearTimeout(swapT);
+    wheel.classList.add('is-swap');
+    swapT = setTimeout(() => { build(m); requestAnimationFrame(() => wheel.classList.remove('is-swap')); }, 150);
+  }));
+
+  build('time');
+  readout();
+  if (window.ObjKit) ObjKit.onVisible(root, (v) => { if (v) ensure(); });
+})();
+</script>

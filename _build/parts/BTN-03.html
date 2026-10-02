@@ -1,0 +1,153 @@
+<!-- ═══════════ BTN-03 · Gray & Plain Button ═══════════ -->
+<style>
+#BTN-03 .btn03-stack { display: flex; flex-direction: column; align-items: stretch; gap: 24px; width: min(100%, 320px); }
+#BTN-03 .btn03-group { display: flex; flex-direction: column; gap: 8px; }
+#BTN-03 .btn03-cap {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 4px;
+  font: 500 var(--fs-caption1)/16px var(--font-text); color: var(--label-2); letter-spacing: 0;
+}
+#BTN-03 .btn03-meta { font: 500 10.5px/16px var(--font-mono); color: var(--label-3); letter-spacing: .02em; }
+#BTN-03 .btn03-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* — Shared button base — */
+#BTN-03 .btn03 {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 50px; padding: 0 20px; border: 0; border-radius: 14px;
+  background: transparent; color: var(--label);
+  font: 600 var(--fs-headline)/1 var(--font-text); letter-spacing: 0; white-space: nowrap;
+  cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  outline: 3px solid transparent; outline-offset: 5px;
+  transition:
+    transform var(--dur-3) var(--ease-spring), opacity var(--dur-2) ease,
+    background-color var(--dur-2) ease, color var(--dur-2) ease, box-shadow var(--dur-2) ease,
+    outline-color var(--dur-1) ease, outline-offset var(--dur-2) var(--ease-out);
+}
+#BTN-03 .btn03:focus-visible { outline-color: light-dark(color-mix(in srgb, var(--accent) 35%, transparent), color-mix(in srgb, var(--accent) 60%, transparent)); outline-offset: 2px; }
+#BTN-03 .btn03 .i { font-size: 1.05em; }
+
+/* (1) gray filled */
+#BTN-03 .btn03--gray { background-color: var(--fill-3); }
+@media (hover: hover) { #BTN-03 .btn03--gray:hover { background-color: var(--fill-2); } }
+#BTN-03 .btn03--gray:active { background-color: var(--fill); transform: scale(.97); transition: transform 110ms var(--ease-out), background-color 60ms ease; }
+#BTN-03 .btn03--l { width: 100%; }
+#BTN-03 .btn03--s { height: 34px; padding: 0 14px; border-radius: 17px; font-size: var(--fs-subhead); gap: 4px; }
+#BTN-03 .btn03--s .i { font-size: 13px; }
+#BTN-03 .btn03--s .btn03-trail { margin-right: -3px; color: var(--label-2); }
+
+/* follow ⇄ following — width is reserved for the longest label, so nothing shifts */
+#BTN-03 .btn03-swap { display: grid; }
+#BTN-03 .btn03-swap > span { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; transition: opacity var(--dur-1) ease, transform var(--dur-3) var(--ease-spring); }
+#BTN-03 .btn03-follow { background-color: var(--accent); color: var(--on-accent); box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .25); }
+#BTN-03 .btn03-follow > .btn03-swap > span:last-child { opacity: 0; transform: scale(.85); }
+#BTN-03 .btn03-follow[aria-pressed="true"] { background-color: var(--fill-3); color: var(--label); box-shadow: none; }
+#BTN-03 .btn03-follow[aria-pressed="true"] > .btn03-swap > span:first-child { opacity: 0; transform: scale(.85); }
+#BTN-03 .btn03-follow[aria-pressed="true"] > .btn03-swap > span:last-child { opacity: 1; transform: none; }
+@media (hover: hover) {
+  #BTN-03 .btn03-follow:hover { background-color: color-mix(in srgb, var(--accent) 92%, #fff); }
+  #BTN-03 .btn03-follow[aria-pressed="true"]:hover { background-color: var(--fill-2); }
+}
+#BTN-03 .btn03-follow:active { transform: scale(.97); background-color: light-dark(color-mix(in srgb, var(--accent) 82%, #fff), color-mix(in srgb, var(--accent) 82%, #000)); transition: transform 110ms var(--ease-out), background-color 60ms ease, color var(--dur-2) ease; }
+#BTN-03 .btn03-follow[aria-pressed="true"]:active { background-color: var(--fill); }
+
+/* (2) plain text — iOS highlight: dims to .35 instantly, fades back on release */
+#BTN-03 .btn03--plain { height: 44px; padding: 0 8px; border-radius: 10px; color: var(--accent); font-weight: 400; font-size: var(--fs-body); }
+#BTN-03 .btn03--plain.is-strong { font-weight: 600; }
+#BTN-03 .btn03--plain .i { font-size: 13px; margin-left: -1px; transform: translateY(.5px); }
+#BTN-03 .btn03--plain .i.btn03-chev { font-size: 12px; color: var(--accent); }
+@media (hover: hover) { #BTN-03 .btn03--plain:hover { opacity: .75; } }
+#BTN-03 .btn03--plain:active { opacity: .35; transition: opacity 0s; }
+#BTN-03 .btn03-plainrow { display: flex; align-items: center; justify-content: space-between; margin: -6px -4px; }
+
+/* (3) bordered */
+#BTN-03 .btn03--border { width: 100%; height: 44px; border-radius: 12px; font-size: var(--fs-callout); box-shadow: inset 0 0 0 1px var(--separator); }
+#BTN-03 .btn03--border .i { font-size: 19px; color: var(--label-2); }
+@media (hover: hover) { #BTN-03 .btn03--border:hover { background-color: var(--fill-4); } }
+#BTN-03 .btn03--border:active { background-color: var(--fill-3); transform: scale(.97); transition: transform 110ms var(--ease-out), background-color 60ms ease; }
+
+/* (4) dialog-like pairing */
+#BTN-03 .btn03-dialog {
+  display: flex; flex-direction: column; align-items: stretch; padding: 20px 16px 16px; border-radius: 22px;
+  background: var(--bg-grouped-2); text-align: center;
+  box-shadow: 0 0 0 .5px light-dark(rgba(0, 0, 0, .04), rgba(255, 255, 255, .06)), 0 1px 2px rgba(0, 0, 0, .04);
+}
+#BTN-03 .btn03-badge {
+  align-self: center; display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 12px; border-radius: 11px;
+  background: linear-gradient(180deg, #FF6961 0%, #FF3B30 100%); color: #fff; font-size: 26px;
+  box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .08), inset 0 1px 0 rgba(255, 255, 255, .25), 0 2px 6px rgba(255, 59, 48, .25);
+}
+#BTN-03 .btn03-title { margin: 0 0 4px; font: 600 var(--fs-headline)/22px var(--font-text); letter-spacing: 0; color: var(--label); }
+#BTN-03 .btn03-msg { text-wrap: balance; word-break: auto-phrase; margin: 0 8px 20px; font: 400 var(--fs-subhead)/20px var(--font-text); letter-spacing: 0; color: var(--label-2); }
+#BTN-03 .btn03-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#BTN-03 .btn03-foot .btn03 { width: 100%; padding: 0 12px; }
+#BTN-03 .btn03--fill { background-color: var(--accent); color: var(--on-accent); box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .28); }
+@media (hover: hover) { #BTN-03 .btn03--fill:hover { background-color: color-mix(in srgb, var(--accent) 92%, #fff); } }
+#BTN-03 .btn03--fill:active { background-color: light-dark(color-mix(in srgb, var(--accent) 82%, #fff), color-mix(in srgb, var(--accent) 82%, #000)); transform: scale(.97); transition: transform 110ms var(--ease-out), background-color 60ms ease; }
+#BTN-03 .btn03-note { text-wrap: balance; word-break: auto-phrase; margin: 12px 8px 0; font: 400 var(--fs-footnote)/18px var(--font-text); letter-spacing: 0; color: var(--label-2); }
+#BTN-03 .btn03-link {
+  padding: 0; border: 0; background: none; font: inherit; color: var(--link); cursor: pointer; border-radius: 4px;
+  -webkit-tap-highlight-color: transparent; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 2px;
+  transition: opacity var(--dur-2) ease, text-decoration-color var(--dur-1) ease;
+}
+@media (hover: hover) { #BTN-03 .btn03-link:hover { text-decoration-color: color-mix(in srgb, var(--link) 50%, transparent); } }
+#BTN-03 .btn03-link:active { opacity: .35; transition: opacity 0s; }
+#BTN-03 .btn03-link:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  #BTN-03 .btn03, #BTN-03 .btn03:active { transform: none !important; transition: opacity var(--dur-2) ease, background-color var(--dur-2) ease, color var(--dur-2) ease; }
+  #BTN-03 .btn03-swap > span { transform: none !important; }
+}
+</style>
+<article class="obj" id="BTN-03" data-name="Gray &amp; Plain Button" data-ja="グレー／テキストボタン" data-vector="Clean" data-size="m" data-desc="二次アクション用のグレーボタン、文字だけのボタン、枠線ボタン。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="btn03-stack">
+      <div class="btn03-group">
+        <p class="btn03-cap"><span>グレー</span><span class="btn03-meta">fill-3</span></p>
+        <button class="btn03 btn03--gray btn03--l" type="button">あとで設定</button>
+        <div class="btn03-row">
+          <button class="btn03 btn03--s btn03-follow" type="button" aria-pressed="true" aria-label="フォロー">
+            <span class="btn03-swap" aria-hidden="true"><span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg>フォロー</span><span>フォロー中</span></span>
+          </button>
+          <button class="btn03 btn03--gray btn03--s" type="button">編集</button>
+          <button class="btn03 btn03--gray btn03--s" type="button">並べ替え<svg class="i btn03-trail" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 9l6.5 6.5L18.5 9" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+
+      <div class="btn03-group">
+        <p class="btn03-cap"><span>テキスト・枠線</span><span class="btn03-meta">accent · 1px separator</span></p>
+        <div class="btn03-plainrow">
+          <button class="btn03 btn03--plain" type="button">キャンセル</button>
+          <button class="btn03 btn03--plain" type="button">詳細を見る<svg class="i btn03-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <button class="btn03 btn03--border" type="button"><svg class="i" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg>別のアカウントでログイン</button>
+      </div>
+
+      <div class="btn03-group">
+        <p class="btn03-cap"><span>ダイアログの組み合わせ</span><span class="btn03-meta">gray + filled</span></p>
+        <div class="btn03-dialog" role="group" aria-labelledby="BTN-03-title">
+          <span class="btn03-badge" aria-hidden="true"><svg class="i"><use href="#i-bell-fill"/></svg></span>
+          <h4 class="btn03-title" id="BTN-03-title">通知をオンにしますか？</h4>
+          <p class="btn03-msg">新着メッセージやリアクションをお知らせします。</p>
+          <div class="btn03-foot">
+            <button class="btn03 btn03--gray" type="button">キャンセル</button>
+            <button class="btn03 btn03--fill" type="button">続ける</button>
+          </div>
+          <p class="btn03-note">通知の種類は、あとから<button class="btn03-link" type="button">通知設定</button>でいつでも変更できます。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>文字ボタンは押すと薄くなる</li><li>フォロー中⇄フォロー</li><li>グレーは押すと少し濃く</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('BTN-03');
+  root.addEventListener('touchstart', () => {}, { passive: true });
+
+  // Follow ⇄ Following: gray = "already done" secondary state; width stays reserved.
+  const follow = root.querySelector('.btn03-follow');
+  follow.addEventListener('click', () => {
+    const on = follow.getAttribute('aria-pressed') !== 'true';
+    follow.setAttribute('aria-pressed', String(on));
+  });
+})();
+</script>

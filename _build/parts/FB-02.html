@@ -1,0 +1,301 @@
+<!-- ═══════════ FB-02 · Action Sheet ═══════════ -->
+<style>
+#FB-02 {
+  --fb02-mat: light-dark(rgba(250, 250, 252, .66), rgba(36, 36, 40, .62));
+  --fb02-mat-solid: light-dark(rgba(255, 255, 255, .94), rgba(44, 44, 48, .92));
+  --fb02-hair: light-dark(rgba(60, 60, 67, .2), rgba(255, 255, 255, .12));
+  --fb02-hl: light-dark(rgba(110, 110, 128, .2), rgba(255, 255, 255, .12));
+  --fb02-rim-a: light-dark(rgba(255, 255, 255, .95), rgba(255, 255, 255, .4));
+  --fb02-rim-c: light-dark(rgba(255, 255, 255, .55), rgba(255, 255, 255, .16));
+  --fb02-sheen: light-dark(rgba(255, 255, 255, .45), rgba(255, 255, 255, .06));
+  --fb02-scrim: light-dark(rgba(0, 0, 0, .22), rgba(0, 0, 0, .5));
+}
+#FB-02 .fb02-screen { background: var(--bg-grouped); overflow: clip; }
+
+/* ── App screen (profile editor) ── */
+#FB-02 .fb02-app { position: absolute; inset: 0; overflow: hidden; }
+#FB-02 .fb02-backdrop { position: absolute; inset: -40px -40px auto; height: 360px; overflow: hidden; pointer-events: none;
+  -webkit-mask: linear-gradient(180deg, #000 30%, transparent 92%); mask: linear-gradient(180deg, #000 30%, transparent 92%); }
+#FB-02 .fb02-backdrop > i { position: absolute; inset: 0; filter: blur(34px) saturate(150%); opacity: .55; transform: scale(1.1);
+  transition: opacity 700ms ease; }
+#FB-02 .fb02-backdrop > i.is-out { opacity: 0; }
+#FB-02 .fb02-backdrop::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, light-dark(rgba(255, 255, 255, .28), rgba(0, 0, 0, .12)), light-dark(rgba(242, 242, 247, .1), rgba(0, 0, 0, 0))); }
+#FB-02 .fb02-backdrop > i.fb02-noart { background: linear-gradient(140deg, #FFB199 0%, #FF6A88 100%); }
+#FB-02 .fb02-nav { position: relative; display: flex; align-items: center; justify-content: space-between; height: 44px; margin-top: var(--phone-safe-top); padding: 0 16px; }
+#FB-02 .fb02-navbtn { height: 44px; padding: 0; border: 0; background: none; color: var(--accent); font: 400 var(--fs-body)/1 var(--font-text); letter-spacing: 0; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; transition: opacity var(--dur-1) ease; }
+#FB-02 .fb02-navbtn--b { font-weight: 600; }
+#FB-02 .fb02-navbtn:active { opacity: .3; transition-duration: 0s; }
+
+#FB-02 .fb02-hero { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 6px 0 22px; }
+#FB-02 .fb02-avbtn { position: relative; width: 96px; height: 96px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: none;
+  -webkit-tap-highlight-color: transparent; transition: transform var(--dur-2) var(--ease-spring); }
+#FB-02 .fb02-avbtn:active { transform: scale(.95); transition-duration: 100ms; }
+#FB-02 .fb02-av { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; isolation: isolate;
+  box-shadow: 0 0 0 3px light-dark(rgba(255, 255, 255, .9), rgba(28, 28, 30, .9)), 0 10px 24px light-dark(rgba(60, 20, 40, .2), rgba(0, 0, 0, .5)); }
+#FB-02 .fb02-av > i { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; background-size: 135% 135%; background-position: 50% 62%; }
+#FB-02 .fb02-av > i.av { width: 100%; height: 100%; font-size: 40px; border-radius: 0; }
+#FB-02 .fb02-av > i.is-in { animation: fb02-avin 620ms var(--ease-out) both; }
+#FB-02 .fb02-flash { position: absolute; inset: 0; z-index: 2; background: #fff; opacity: 0; pointer-events: none; }
+#FB-02 .fb02-flash.is-on { animation: fb02-flash 420ms ease-out; }
+@keyframes fb02-avin { from { opacity: 0; transform: scale(1.18); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes fb02-flash { 0% { opacity: 0; } 12% { opacity: .95; } 100% { opacity: 0; } }
+#FB-02 .fb02-change {
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px 0 12px; border: 0; border-radius: var(--r-full); cursor: pointer;
+  color: var(--accent); font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0;
+  background: light-dark(rgba(255, 255, 255, .6), rgba(255, 255, 255, .1));
+  -webkit-backdrop-filter: blur(16px) saturate(180%); backdrop-filter: blur(16px) saturate(180%);
+  box-shadow: inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .8), rgba(255, 255, 255, .14)), 0 2px 8px light-dark(rgba(0, 0, 0, .06), rgba(0, 0, 0, .3));
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#FB-02 .fb02-change .i { font-size: 16px; }
+#FB-02 .fb02-change:active { transform: scale(.95); transition-duration: 90ms; }
+#FB-02 .fb02-change:focus-visible, #FB-02 .fb02-avbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+#FB-02 .fb02-list { position: relative; margin: 0 16px; border-radius: 10px; background: var(--bg-grouped-2); overflow: hidden; }
+#FB-02 .fb02-row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px; font-size: var(--fs-body); letter-spacing: 0; }
+#FB-02 .fb02-row + .fb02-row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--separator); }
+#FB-02 .fb02-row dt { width: 96px; flex: none; color: var(--label); }
+#FB-02 .fb02-row dd { margin: 0; min-width: 0; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-02 .fb02-cap { margin: 22px 32px 7px; font-size: var(--fs-footnote); color: var(--label-2); letter-spacing: 0; }
+#FB-02 .fb02-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin: 0 16px; border-radius: 10px; overflow: hidden; }
+#FB-02 .fb02-grid > i { aspect-ratio: 1; }
+
+/* ── Confirmation capsule ── */
+#FB-02 .fb02-toast {
+  position: absolute; z-index: 30; bottom: calc(var(--phone-safe-bottom) + 14px); left: 50%; display: flex; align-items: center; gap: 7px;
+  height: 40px; padding: 0 17px 0 12px; border-radius: var(--r-full); white-space: nowrap; pointer-events: none;
+  font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; color: var(--label);
+  background: var(--fb02-mat-solid);
+  -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 8px 24px light-dark(rgba(0, 0, 0, .14), rgba(0, 0, 0, .5)), inset 0 0 0 .5px light-dark(rgba(0, 0, 0, .06), rgba(255, 255, 255, .12));
+  opacity: 0; transform: translate(-50%, 18px) scale(.92);
+  transition: opacity 220ms ease, transform 300ms var(--ease-ios);
+}
+#FB-02 .fb02-toast.is-on { opacity: 1; transform: translate(-50%, 0) scale(1); transition: opacity 200ms ease, transform 520ms var(--ease-spring); }
+#FB-02 .fb02-toast .i { font-size: 18px; color: var(--green); }
+#FB-02 .fb02-toast[data-tone="red"] .i { color: var(--red); }
+
+/* ── Scrim + action sheet ── */
+#FB-02 .fb02-scrim { position: absolute; inset: 0; z-index: 20; background: var(--fb02-scrim); opacity: 0; pointer-events: none; transition: opacity 300ms ease; }
+#FB-02 .fb02-scrim.is-on { opacity: 1; pointer-events: auto; }
+#FB-02 .fb02-sheet {
+  position: absolute; z-index: 21; left: 8px; right: 8px; bottom: calc(var(--phone-safe-bottom) + 6px);
+  display: flex; flex-direction: column; gap: 8px; outline: none; touch-action: none;
+  transform: translateY(calc(100% + 60px)); visibility: hidden;
+  transition: transform 300ms cubic-bezier(.32, .72, 0, 1), visibility 0s 300ms;
+}
+#FB-02 .fb02-sheet.is-open { transform: none; visibility: visible; transition: transform 560ms cubic-bezier(.2, 1.08, .32, 1), visibility 0s; }
+#FB-02 .fb02-group { position: relative; border-radius: 14px; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; }
+#FB-02 .fb02-group--main { background: var(--fb02-mat); -webkit-backdrop-filter: blur(30px) saturate(200%); backdrop-filter: blur(30px) saturate(200%);
+  box-shadow: 0 -2px 30px light-dark(rgba(0, 0, 0, .08), rgba(0, 0, 0, .3)); }
+#FB-02 .fb02-group--cancel { background: var(--fb02-mat-solid); -webkit-backdrop-filter: blur(30px) saturate(180%); backdrop-filter: blur(30px) saturate(180%); }
+#FB-02 .fb02-group::before {
+  content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(165deg, var(--fb02-rim-a) 0%, rgba(255, 255, 255, .12) 18%, rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, .04) 75%, var(--fb02-rim-c) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+#FB-02 .fb02-group--main::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(130% 50% at 20% -6%, var(--fb02-sheen), rgba(255, 255, 255, 0) 70%); }
+#FB-02 .fb02-head { padding: 14px 18px 13px; text-align: center; }
+#FB-02 .fb02-title { margin: 0; font: 600 var(--fs-footnote)/18px var(--font-text); letter-spacing: 0; color: var(--label-2); }
+#FB-02 .fb02-msg { margin: 2px 0 0; font: 400 var(--fs-footnote)/18px var(--font-text); letter-spacing: 0; color: var(--label-2); word-break: auto-phrase; text-wrap: balance; }
+#FB-02 .fb02-opt {
+  position: relative; display: flex; align-items: center; justify-content: center; height: 57px; padding: 0 56px; border: 0; background: transparent;
+  color: var(--accent); font: 400 var(--fs-title3)/1 var(--font-text); letter-spacing: 0; cursor: pointer; outline: none;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; transition: background 260ms ease;
+}
+#FB-02 .fb02-opt[hidden] { display: none; }
+#FB-02 .fb02-opt::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: .5px; background: var(--fb02-hair); }
+#FB-02 .fb02-group--cancel .fb02-opt::before { display: none; }
+#FB-02 .fb02-opt .i { position: absolute; left: 20px; top: 50%; margin-top: -11px; font-size: 22px; }
+#FB-02 .fb02-opt--red { color: var(--red); }
+#FB-02 .fb02-opt--bold { font-weight: 600; }
+@media (hover: hover) { #FB-02 .fb02-opt:hover { background: color-mix(in srgb, var(--fb02-hl) 45%, transparent); } }
+#FB-02 .fb02-opt:focus-visible { background: color-mix(in srgb, var(--accent) 15%, transparent); }
+#FB-02 .fb02-opt--red:focus-visible { background: color-mix(in srgb, var(--red) 13%, transparent); }
+#FB-02 .fb02-opt.is-hl, #FB-02 .fb02-opt.is-hl:hover, #FB-02 .fb02-opt.is-hl:focus-visible { background: var(--fb02-hl); transition-duration: 0s; }
+
+@media (prefers-reduced-motion: reduce) {
+  #FB-02 .fb02-sheet, #FB-02 .fb02-sheet.is-open { transition: opacity 200ms ease, visibility 0s; transform: none; opacity: 0; }
+  #FB-02 .fb02-sheet.is-open { opacity: 1; }
+  #FB-02 .fb02-av > i.is-in { animation: none; }
+  #FB-02 .fb02-toast, #FB-02 .fb02-toast.is-on { transition: opacity 200ms ease; }
+}
+</style>
+<article class="obj" id="FB-02" data-name="Action Sheet" data-ja="アクションシート" data-vector="Glass" data-size="m" data-desc="下からせり上がる選択肢の一覧。キャンセルは分離。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="phone" style="--phone-h: 620px">
+      <div class="phone-screen fb02-screen">
+        <div class="fb02-app">
+          <div class="fb02-backdrop" aria-hidden="true"><i class="art art-1"></i></div>
+          <nav class="fb02-nav">
+            <button class="fb02-navbtn" type="button">キャンセル</button>
+            <button class="fb02-navbtn fb02-navbtn--b" type="button">完了</button>
+          </nav>
+          <div class="fb02-hero">
+            <button class="fb02-avbtn" type="button" aria-label="プロフィール写真を変更" aria-haspopup="dialog">
+              <span class="fb02-av"><i class="art art-1"></i><span class="fb02-flash"></span></span>
+            </button>
+            <button class="fb02-change" type="button" aria-haspopup="dialog"><svg class="i" aria-hidden="true"><use href="#i-camera-fill"/></svg>写真を変更</button>
+          </div>
+          <dl class="fb02-list">
+            <div class="fb02-row"><dt>名前</dt><dd>佐藤 春</dd></div>
+            <div class="fb02-row"><dt>ユーザ名</dt><dd>haru.photo</dd></div>
+            <div class="fb02-row"><dt>自己紹介</dt><dd>光と影を追いかける写真家。東京</dd></div>
+          </dl>
+          <p class="fb02-cap">最近の投稿</p>
+          <div class="fb02-grid" aria-hidden="true">
+            <i class="art art-2"></i><i class="art art-6"></i><i class="art art-5"></i>
+            <i class="art art-3"></i><i class="art art-4"></i><i class="art art-8"></i>
+          </div>
+        </div>
+
+        <div class="fb02-toast" role="status" aria-live="polite"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg><span></span></div>
+        <div class="fb02-scrim" aria-hidden="true"></div>
+        <div class="fb02-sheet" role="dialog" aria-modal="true" aria-labelledby="FB-02-t" aria-describedby="FB-02-m" tabindex="-1">
+          <div class="fb02-group fb02-group--main">
+            <div class="fb02-head">
+              <p class="fb02-title" id="FB-02-t">プロフィール写真</p>
+              <p class="fb02-msg" id="FB-02-m">新しい写真を撮るか、ライブラリから選べます。</p>
+            </div>
+            <button class="fb02-opt" type="button" data-v="camera"><svg class="i" aria-hidden="true"><use href="#i-camera-fill"/></svg>写真を撮る</button>
+            <button class="fb02-opt" type="button" data-v="library"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg>写真を選択</button>
+            <button class="fb02-opt" type="button" data-v="files"><svg class="i" aria-hidden="true"><use href="#i-folder-fill"/></svg>ファイルを選択</button>
+            <button class="fb02-opt fb02-opt--red" type="button" data-v="remove"><svg class="i" aria-hidden="true"><use href="#i-trash-fill"/></svg>写真を削除</button>
+          </div>
+          <div class="fb02-group fb02-group--cancel">
+            <button class="fb02-opt fb02-opt--bold" type="button" data-v="cancel">キャンセル</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>写真を変更でシートを表示</li><li>選ぶとアイコンが変わる</li><li>背景タップ・Esc で閉じる</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('FB-02');
+  const app = root.querySelector('.fb02-app');
+  const sheet = root.querySelector('.fb02-sheet');
+  const scrim = root.querySelector('.fb02-scrim');
+  const av = root.querySelector('.fb02-av');
+  const flash = root.querySelector('.fb02-flash');
+  const backdrop = root.querySelector('.fb02-backdrop');
+  const toast = root.querySelector('.fb02-toast');
+  const removeOpt = sheet.querySelector('[data-v="remove"]');
+  const rm = () => window.ObjKit && ObjKit.reducedMotion;
+  let isOpen = false, opener = null, hl = null, tracking = null, toastT = 0, hasPhoto = true;
+
+  const opts = () => [...sheet.querySelectorAll('.fb02-opt')].filter((b) => !b.hidden);
+
+  function open(from) {
+    if (isOpen) return;
+    isOpen = true; opener = from || document.activeElement;
+    removeOpt.hidden = !hasPhoto;
+    sheet.classList.add('is-open');
+    scrim.classList.add('is-on');
+    app.inert = true;
+    opts()[0].focus({ preventScroll: true });
+  }
+  function close(v) {
+    if (!isOpen) return;
+    isOpen = false; tracking = null; setHl(null);
+    sheet.classList.remove('is-open');
+    scrim.classList.remove('is-on');
+    app.inert = false;
+    if (opener && root.contains(opener)) opener.focus({ preventScroll: true });
+    if (v && v !== 'cancel') setTimeout(() => apply(v), rm() ? 0 : 180);
+  }
+
+  /* — Result: swap the avatar and confirm with a small capsule — */
+  function setPhoto(cls) {
+    const old = [...av.querySelectorAll(':scope > i')];
+    const n = document.createElement('i');
+    if (cls) { n.className = 'art ' + cls + ' is-in'; }
+    else { n.className = 'av av-1 is-in'; n.textContent = 'H'; }
+    av.insertBefore(n, flash);
+    setTimeout(() => old.forEach((o) => o.remove()), 650);
+    const b = document.createElement('i');
+    b.className = (cls ? 'art ' + cls : 'fb02-noart') + ' is-out';
+    backdrop.appendChild(b);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      b.classList.remove('is-out');
+      [...backdrop.children].forEach((c) => { if (c !== b) c.classList.add('is-out'); });
+    }));
+    setTimeout(() => [...backdrop.children].forEach((c) => { if (c !== b) c.remove(); }), 760);
+    hasPhoto = !!cls;
+  }
+  function showToast(text, tone) {
+    toast.querySelector('span').textContent = text;
+    toast.dataset.tone = tone || '';
+    toast.querySelector('use').setAttribute('href', tone === 'red' ? '#i-trash-fill' : '#i-checkmark-circle-fill');
+    toast.classList.remove('is-on'); void toast.offsetWidth; toast.classList.add('is-on');
+    clearTimeout(toastT);
+    toastT = setTimeout(() => toast.classList.remove('is-on'), 2200);
+  }
+  function apply(v) {
+    if (v === 'camera') {
+      flash.classList.remove('is-on'); void flash.offsetWidth; flash.classList.add('is-on');
+      setTimeout(() => setPhoto('art-2'), 140);
+      showToast('写真を撮影して設定しました');
+    } else if (v === 'library') { setPhoto('art-5'); showToast('プロフィール写真を更新しました'); }
+    else if (v === 'files') { setPhoto('art-7'); showToast('“portrait.png” を設定しました'); }
+    else if (v === 'remove') { setPhoto(null); showToast('写真を削除しました', 'red'); }
+  }
+
+  root.querySelector('.fb02-change').addEventListener('click', (e) => open(e.currentTarget));
+  root.querySelector('.fb02-avbtn').addEventListener('click', (e) => open(e.currentTarget));
+  scrim.addEventListener('pointerdown', (e) => e.preventDefault());
+  scrim.addEventListener('click', () => close('cancel'));
+
+  /* — Press-and-slide across options (also across the separate cancel group) — */
+  function setHl(b) {
+    if (hl === b) return;
+    if (hl) hl.classList.remove('is-hl');
+    hl = b;
+    if (hl) hl.classList.add('is-hl');
+  }
+  const optAt = (x, y) => {
+    const el = document.elementFromPoint(x, y);
+    const b = el && el.closest('.fb02-opt');
+    return b && sheet.contains(b) ? b : null;
+  };
+  sheet.addEventListener('pointerdown', (e) => {
+    if (!isOpen || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const b = optAt(e.clientX, e.clientY);
+    if (!b) return;
+    tracking = e.pointerId;
+    try { sheet.setPointerCapture(e.pointerId); } catch (_) {}
+    setHl(b);
+  });
+  sheet.addEventListener('pointermove', (e) => { if (tracking === e.pointerId) setHl(optAt(e.clientX, e.clientY)); });
+  sheet.addEventListener('pointerup', (e) => {
+    if (tracking !== e.pointerId) return;
+    tracking = null;
+    const b = optAt(e.clientX, e.clientY);
+    setHl(null);
+    if (b) close(b.dataset.v);
+  });
+  sheet.addEventListener('pointercancel', () => { tracking = null; setHl(null); });
+  sheet.addEventListener('click', (e) => {
+    const b = e.target.closest('.fb02-opt');
+    if (b && e.detail === 0 && isOpen) close(b.dataset.v);
+  });
+
+  root.addEventListener('keydown', (e) => {
+    if (!isOpen) return;
+    const list = opts();
+    const i = list.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close('cancel'); }
+    else if (e.key === 'Tab' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const back = e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey);
+      const n = list.length;
+      list[((i < 0 ? -1 : i) + (back ? -1 : 1) + n) % n].focus();
+    }
+  });
+})();
+</script>

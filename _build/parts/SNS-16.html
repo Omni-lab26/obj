@@ -1,0 +1,628 @@
+<!-- ═══════════ SNS-16 · Live Stream ═══════════ -->
+<style>
+#SNS-16 .sns16-screen {
+  background: #05060f; color: #fff; font-family: var(--font-text);
+  touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+}
+#SNS-16 .sns16-screen button { -webkit-tap-highlight-color: transparent; cursor: pointer; }
+
+/* — Scene: slow Ken-Burns pan, drifting bokeh, film grain, scrims — */
+#SNS-16 .sns16-scene { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
+#SNS-16 .sns16-media {
+  position: absolute; inset: -7%;
+  background-size: 135% 120%; background-position: 40% 70%;
+  animation: sns16-pan 28s var(--ease-in-out) infinite alternate; will-change: transform;
+}
+@keyframes sns16-pan {
+  from { transform: scale(1.02) translate3d(-1.6%, 1.2%, 0); }
+  to   { transform: scale(1.13) translate3d(2.4%, -2.2%, 0); }
+}
+#SNS-16 .sns16-city { position: absolute; left: -4%; right: -4%; bottom: -2%; height: 66%; animation: sns16-para 28s var(--ease-in-out) infinite alternate; will-change: transform; }
+#SNS-16 .sns16-city svg { position: relative; width: 100%; height: 100%; }
+#SNS-16 .sns16-city::before { content: ""; position: absolute; inset: 0 0 30%; pointer-events: none;
+  background: radial-gradient(70% 46% at 62% 62%, rgba(255, 98, 146, .34), transparent 72%), radial-gradient(60% 40% at 18% 70%, rgba(255, 160, 90, .2), transparent 70%), linear-gradient(180deg, transparent 20%, rgba(124, 58, 150, .38) 80%); }
+@keyframes sns16-para { from { transform: translate3d(-6px, 2px, 0); } to { transform: translate3d(8px, -4px, 0); } }
+#SNS-16 .sns16-c-beacon { animation: sns16-blink 2.4s steps(1) infinite; filter: drop-shadow(0 0 3px #FF453A); }
+@keyframes sns16-blink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: .15; } }
+#SNS-16 .sns16-bokeh { position: absolute; border-radius: 50%; pointer-events: none; mix-blend-mode: screen; animation: sns16-drift 11s ease-in-out infinite alternate; will-change: transform, opacity; }
+#SNS-16 .sns16-bokeh--1 { width: 86px; height: 86px; left: 6%; top: 27%; background: radial-gradient(circle, rgba(255, 176, 96, .55) 0 38%, rgba(255, 176, 96, .16) 56%, transparent 70%); }
+#SNS-16 .sns16-bokeh--2 { width: 132px; height: 132px; right: -12%; top: 16%; background: radial-gradient(circle, rgba(110, 160, 255, .38) 0 36%, rgba(110, 160, 255, .1) 56%, transparent 70%); animation-duration: 14s; animation-delay: -5s; }
+#SNS-16 .sns16-bokeh--3 { width: 58px; height: 58px; left: 58%; top: 41%; background: radial-gradient(circle, rgba(255, 92, 150, .6) 0 36%, rgba(255, 92, 150, .14) 58%, transparent 70%); animation-duration: 9s; animation-delay: -3s; }
+#SNS-16 .sns16-bokeh--4 { width: 40px; height: 40px; left: 30%; top: 13%; background: radial-gradient(circle, rgba(255, 236, 170, .55) 0 34%, transparent 70%); animation-duration: 12s; animation-delay: -8s; }
+@keyframes sns16-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); opacity: .62; }
+  50%  { opacity: .85; }
+  100% { transform: translate3d(14px, -18px, 0) scale(1.12); opacity: .45; }
+}
+#SNS-16 .sns16-grain {
+  position: absolute; inset: -40px; pointer-events: none; opacity: .16; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  animation: sns16-grain 1s steps(1) infinite;
+}
+@keyframes sns16-grain {
+  0%   { transform: translate3d(0, 0, 0); }
+  17%  { transform: translate3d(-14px, 9px, 0); }
+  34%  { transform: translate3d(11px, -16px, 0); }
+  51%  { transform: translate3d(-7px, -11px, 0); }
+  68%  { transform: translate3d(16px, 7px, 0); }
+  85%  { transform: translate3d(-10px, 15px, 0); }
+}
+#SNS-16 .sns16-scrim-t { position: absolute; inset: 0 0 auto; height: 176px; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .58) 0%, rgba(0, 0, 0, .34) 38%, rgba(0, 0, 0, .12) 70%, transparent 100%); }
+#SNS-16 .sns16-scrim-b { position: absolute; inset: auto 0 0; height: 420px; pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(6, 5, 16, .18) 26%, rgba(6, 5, 16, .5) 56%, rgba(6, 5, 16, .82) 100%); }
+
+/* — Glass material tuned for dark imagery — */
+#SNS-16 .sns16-glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .1));
+  -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .24), inset 0 1px 0 rgba(255, 255, 255, .18), 0 4px 16px rgba(0, 0, 0, .16);
+}
+
+/* — Top: host chip + close — */
+#SNS-16 .sns16-top { position: absolute; z-index: 6; top: calc(var(--phone-safe-top) + 2px); left: 12px; right: 12px; display: flex; align-items: center; gap: 8px; }
+#SNS-16 .sns16-host { display: flex; align-items: center; gap: 8px; height: 40px; padding: 4px; border-radius: var(--r-full); min-width: 0; }
+#SNS-16 .sns16-host-av { position: relative; width: 32px; height: 32px; flex: none; }
+#SNS-16 .sns16-host-av .av { width: 32px; height: 32px; font-size: 14px; }
+#SNS-16 .sns16-host-av::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; box-shadow: 0 0 0 1.5px #FF375F; }
+#SNS-16 .sns16-host-txt { display: flex; flex-direction: column; min-width: 0; }
+#SNS-16 .sns16-host-name { font: 600 13px/16px var(--font-text); letter-spacing: -.08px; white-space: nowrap; }
+#SNS-16 .sns16-host-sub { display: flex; align-items: center; gap: 3px; font: 500 11px/13px var(--font-text); color: rgba(255, 255, 255, .7); letter-spacing: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#SNS-16 .sns16-host-sub .i { font-size: 10px; color: #FF7A9A; }
+#SNS-16 .sns16-follow {
+  position: relative; display: grid; place-items: center; width: 66px; height: 30px; margin-left: 2px; padding: 0; border: 0; border-radius: var(--r-full);
+  background: linear-gradient(180deg, #FF4F78, #FF2D55); color: #fff; overflow: hidden;
+  font: 700 12px/1 var(--font-text); letter-spacing: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 2px 8px rgba(255, 45, 85, .35);
+  transition: width var(--dur-3) var(--ease-ios), background var(--dur-2) ease, box-shadow var(--dur-2) ease, transform var(--dur-2) var(--ease-spring);
+}
+#SNS-16 .sns16-follow > span { grid-area: 1 / 1; display: inline-flex; align-items: center; transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring); }
+#SNS-16 .sns16-follow .sns16-follow-on { opacity: 0; transform: scale(.4); font-size: 14px; }
+#SNS-16 .sns16-follow[aria-pressed="true"] { width: 30px; background: rgba(255, 255, 255, .2); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .3); }
+#SNS-16 .sns16-follow[aria-pressed="true"] .sns16-follow-off { opacity: 0; transform: scale(.6); }
+#SNS-16 .sns16-follow[aria-pressed="true"] .sns16-follow-on { opacity: 1; transform: none; }
+#SNS-16 .sns16-close { flex: none; margin-left: auto; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 15px; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-16 .sns16-close .i { stroke: currentColor; }
+
+/* — Second row: ranking + LIVE + viewers — */
+#SNS-16 .sns16-sub { position: absolute; z-index: 6; top: calc(var(--phone-safe-top) + 50px); left: 12px; right: 12px; display: flex; align-items: center; gap: 6px; }
+#SNS-16 .sns16-rank { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px 0 7px; border-radius: var(--r-full); background: rgba(10, 10, 20, .32); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .14); font: 600 11px/1 var(--font-text); letter-spacing: 0; white-space: nowrap; }
+#SNS-16 .sns16-rank .i { font-size: 12px; color: #FF9F0A; }
+#SNS-16 .sns16-rank b { font-family: var(--font-rounded); font-weight: 700; font-variant-numeric: tabular-nums; }
+#SNS-16 .sns16-live { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px 0 8px; border-radius: var(--r-full);
+  background: linear-gradient(180deg, #FF4A64, #F21D45); font: 800 11px/1 var(--font-text); letter-spacing: .08em; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 2px 10px rgba(242, 29, 69, .45); }
+#SNS-16 .sns16-dot { position: relative; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+#SNS-16 .sns16-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #fff; animation: sns16-ping 1.6s var(--ease-out) infinite; }
+@keyframes sns16-ping { 0% { transform: scale(1); opacity: .8; } 80%, 100% { transform: scale(2.6); opacity: 0; } }
+#SNS-16 .sns16-viewers { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px 0 8px; border-radius: var(--r-full); font: 600 12px/1 var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-16 .sns16-viewers .i { font-size: 13px; opacity: .92; }
+#SNS-16 .sns16-vcount { display: inline-flex; height: 12px; line-height: 12px; }
+#SNS-16 .sns16-slot { display: inline-block; height: 12px; overflow: hidden; }
+#SNS-16 .sns16-strip { display: flex; flex-direction: column; transform: translate3d(0, calc(var(--d) * -12px), 0); transition: transform 720ms var(--ease-ios); }
+#SNS-16 .sns16-strip > span { display: block; height: 12px; line-height: 12px; text-align: center; }
+
+/* — Live chat — */
+#SNS-16 .sns16-chat {
+  position: absolute; z-index: 3; left: 12px; right: 78px; bottom: calc(var(--phone-safe-bottom) + 60px); height: 236px;
+  overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, .35) 16%, #000 42%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, .35) 16%, #000 42%);
+}
+#SNS-16 .sns16-list { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; transition: transform 460ms var(--ease-ios); will-change: transform; }
+#SNS-16 .sns16-row {
+  display: flex; align-items: flex-start; gap: 7px; max-width: 100%; padding: 4px 11px 5px 4px; border-radius: 16px;
+  background: rgba(14, 12, 28, .3); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .06);
+  transform-origin: 0 100%; transition: opacity 380ms var(--ease-out), transform 560ms var(--ease-spring);
+}
+#SNS-16 .sns16-row.is-new { opacity: 0; transform: translate3d(0, 12px, 0) scale(.92); }
+#SNS-16 .sns16-row > .av { width: 24px; height: 24px; font-size: 10px; margin-top: 1px; }
+#SNS-16 .sns16-msg { display: flex; flex-direction: column; min-width: 0; }
+#SNS-16 .sns16-name { display: flex; align-items: center; gap: 3px; font: 600 11.5px/15px var(--font-text); color: rgba(255, 255, 255, .64); letter-spacing: 0; white-space: nowrap; }
+#SNS-16 .sns16-name .i { font-size: 11px; color: #64D2FF; }
+#SNS-16 .sns16-tag { font: 700 9px/1 var(--font-text); font-style: normal; color: #fff; padding: 2px 4px 2px; border-radius: 4px; background: #FF375F; letter-spacing: 0; }
+#SNS-16 .sns16-text { font: 500 13.5px/18px var(--font-text); color: #fff; letter-spacing: 0; overflow-wrap: anywhere; text-shadow: 0 1px 2px rgba(0, 0, 0, .22); }
+#SNS-16 .sns16-row--self { background: rgba(10, 132, 255, .5); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18); }
+#SNS-16 .sns16-row--self .sns16-name { color: rgba(255, 255, 255, .82); }
+#SNS-16 .sns16-row--sys { align-items: center; gap: 6px; padding: 3px 10px 3px 3px; background: rgba(255, 255, 255, .1); font: 500 12px/16px var(--font-text); color: rgba(255, 255, 255, .86); letter-spacing: 0; }
+#SNS-16 .sns16-row--sys > .av { width: 18px; height: 18px; font-size: 8px; margin: 0; }
+#SNS-16 .sns16-row--sys b { font-weight: 700; color: #fff; }
+#SNS-16 .sns16-row--gift {
+  align-items: center; padding: 4px 12px 4px 4px;
+  background: linear-gradient(100deg, rgba(255, 159, 10, .92) 0%, rgba(255, 55, 95, .88) 55%, rgba(191, 90, 242, .82) 100%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .34), inset 0 1px 0 rgba(255, 255, 255, .3), 0 6px 18px -6px rgba(255, 55, 95, .7);
+}
+#SNS-16 .sns16-row--gift .sns16-name { color: rgba(255, 255, 255, .88); }
+#SNS-16 .sns16-row--gift .sns16-text b { font-family: var(--font-rounded); font-weight: 800; font-variant-numeric: tabular-nums; margin-left: 2px; }
+#SNS-16 .sns16-gift-ic { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #FF375F; font-size: 14px; box-shadow: 0 1px 3px rgba(0, 0, 0, .18); }
+
+/* — Floating hearts — */
+#SNS-16 .sns16-hearts { position: absolute; z-index: 4; right: 0; width: 64px; bottom: calc(var(--phone-safe-bottom) + 52px); height: 340px; pointer-events: none; }
+#SNS-16 .sns16-heart { position: absolute; left: 50%; bottom: 0; width: 28px; height: 28px; margin-left: -14px; will-change: transform, opacity; opacity: 0; }
+#SNS-16 .sns16-heart > b, #SNS-16 .sns16-big {
+  display: block; width: 100%; height: 100%; will-change: transform;
+  background: radial-gradient(circle at 30% 26%, rgba(255, 255, 255, .85) 0, rgba(255, 255, 255, 0) 38%), var(--c, #FF6F91);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21c-.32 0-.63-.1-.9-.29C6.06 17.32 2 13.62 2 9.02 2 6.2 4.2 4 7 4c2.1 0 3.9 1.2 5 3 1.1-1.8 2.9-3 5-3 2.8 0 5 2.2 5 5.02 0 4.6-4.06 8.3-9.1 11.69-.27.19-.58.29-.9.29Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21c-.32 0-.63-.1-.9-.29C6.06 17.32 2 13.62 2 9.02 2 6.2 4.2 4 7 4c2.1 0 3.9 1.2 5 3 1.1-1.8 2.9-3 5-3 2.8 0 5 2.2 5 5.02 0 4.6-4.06 8.3-9.1 11.69-.27.19-.58.29-.9.29Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+#SNS-16 .sns16-big { position: absolute; z-index: 7; width: 104px; height: 104px; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at 30% 24%, rgba(255, 255, 255, .7) 0, rgba(255, 255, 255, 0) 34%), linear-gradient(160deg, #FF8FB1 0%, #FF375F 55%, #E0245E 100%); }
+
+/* — Gift combo banner — */
+#SNS-16 .sns16-giftbar {
+  position: absolute; z-index: 5; left: 12px; bottom: calc(var(--phone-safe-bottom) + 318px);
+  display: flex; align-items: center; gap: 8px; height: 42px; padding: 4px 34px 4px 4px; border-radius: var(--r-full);
+  background: linear-gradient(90deg, rgba(255, 55, 95, .92) 0%, rgba(191, 90, 242, .7) 62%, rgba(191, 90, 242, 0) 100%);
+  opacity: 0; transform: translate3d(-110%, 0, 0); pointer-events: none;
+  transition: transform var(--dur-3) var(--ease-ios), opacity var(--dur-2) ease;
+}
+#SNS-16 .sns16-giftbar.is-on { opacity: 1; transform: none; }
+#SNS-16 .sns16-giftbar > .av { width: 34px; height: 34px; font-size: 12px; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .8); }
+#SNS-16 .sns16-gb-txt { display: flex; flex-direction: column; font: 500 11px/14px var(--font-text); letter-spacing: 0; color: rgba(255, 255, 255, .86); white-space: nowrap; }
+#SNS-16 .sns16-gb-txt b { font: 700 13px/16px var(--font-text); color: #fff; }
+#SNS-16 .sns16-gb-ic { width: 40px; height: 40px; margin: -6px 0; display: grid; place-items: center; font-size: 30px; color: #FFD60A; filter: drop-shadow(0 2px 6px rgba(255, 160, 0, .55)); }
+#SNS-16 .sns16-gb-x { position: absolute; left: 100%; margin-left: -26px; font: italic 900 26px/1 var(--font-rounded); color: #FFE27A; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap;
+  text-shadow: 0 0 1px #B8570C, 0 2px 0 #C45A0B, 0 4px 12px rgba(255, 120, 0, .55); }
+#SNS-16 .sns16-gb-x small { font-size: 16px; margin-right: 1px; }
+
+/* — Toast — */
+#SNS-16 .sns16-toast {
+  position: absolute; z-index: 8; top: calc(var(--phone-safe-top) + 92px); left: 50%;
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px 0 12px; border-radius: var(--r-full);
+  font: 600 13px/1 var(--font-text); letter-spacing: 0; white-space: nowrap;
+  opacity: 0; transform: translate3d(-50%, -10px, 0) scale(.94); pointer-events: none;
+  transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-2) ease;
+}
+#SNS-16 .sns16-toast.is-on { opacity: 1; transform: translate3d(-50%, 0, 0) scale(1); }
+#SNS-16 .sns16-toast .i { font-size: 14px; color: #30D158; }
+
+/* — Bottom bar — */
+#SNS-16 .sns16-bar { position: absolute; z-index: 6; left: 12px; right: 12px; bottom: calc(var(--phone-safe-bottom) + 6px); display: flex; align-items: center; gap: 8px; margin: 0; }
+#SNS-16 .sns16-field { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; height: 40px; padding: 0 4px 0 16px; border-radius: var(--r-full); transition: box-shadow var(--dur-2) ease; }
+#SNS-16 .sns16-field:focus-within { box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .45), inset 0 1px 0 rgba(255, 255, 255, .2), 0 4px 16px rgba(0, 0, 0, .2); }
+#SNS-16 .sns16-input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; caret-color: #FF375F; font: 400 16px/1 var(--font-text); letter-spacing: 0; user-select: text; -webkit-user-select: text; }
+#SNS-16 .sns16-input::placeholder { color: rgba(255, 255, 255, .74); }
+#SNS-16 .sns16-send { flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 15px;
+  background: linear-gradient(180deg, #FF4F78, #FF2D55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3);
+  transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-1) ease, width var(--dur-2) var(--ease-ios); }
+#SNS-16 .sns16-input:placeholder-shown + .sns16-send { opacity: 0; transform: scale(.4); width: 0; pointer-events: none; }
+#SNS-16 .sns16-btn {
+  flex: none; position: relative; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 19px;
+  transition: transform var(--dur-2) var(--ease-spring), width var(--dur-3) var(--ease-ios), margin var(--dur-3) var(--ease-ios), opacity var(--dur-2) ease;
+}
+#SNS-16 .sns16-btn--gift .i { color: #FFD60A; }
+#SNS-16 .sns16-btn--heart .i { color: #FF4D79; font-size: 20px; }
+#SNS-16 .sns16-field:focus-within ~ .sns16-collapse { width: 0; margin-left: -8px; opacity: 0; transform: scale(.5); pointer-events: none; }
+#SNS-16 .sns16-screen button:active { transform: scale(.88); transition-duration: 90ms; }
+#SNS-16 .sns16-screen .sns16-follow:active, #SNS-16 .sns16-screen .sns16-left-actions button:active { transform: scale(.96); }
+#SNS-16 .sns16-screen button:focus-visible, #SNS-16 .sns16-input:focus-visible { outline: none; }
+#SNS-16 .sns16-screen button:focus-visible { box-shadow: 0 0 0 2px rgba(255, 255, 255, .9), 0 0 0 4px rgba(255, 55, 95, .6); }
+
+/* — Left-stream overlay — */
+#SNS-16 .sns16-left {
+  position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 28px;
+  background: rgba(6, 6, 14, .5); -webkit-backdrop-filter: blur(26px) saturate(150%); backdrop-filter: blur(26px) saturate(150%);
+  text-align: center; opacity: 0; visibility: hidden; transition: opacity var(--dur-3) var(--ease-out), visibility 0s linear var(--dur-3);
+}
+#SNS-16 .sns16-left.is-on { opacity: 1; visibility: visible; transition: opacity var(--dur-3) var(--ease-out); }
+#SNS-16 .sns16-left > * { transform: translate3d(0, 10px, 0) scale(.98); transition: transform var(--dur-4) var(--ease-ios); }
+#SNS-16 .sns16-left.is-on > * { transform: none; }
+#SNS-16 .sns16-left .av { width: 76px; height: 76px; font-size: 30px; margin-bottom: 10px; box-shadow: 0 0 0 3px rgba(255, 255, 255, .14), 0 10px 30px rgba(0, 0, 0, .4); }
+#SNS-16 .sns16-left-name { font: 600 13px/18px var(--font-text); color: rgba(255, 255, 255, .7); letter-spacing: 0; }
+#SNS-16 .sns16-left-title { font: 700 20px/26px var(--font-display); letter-spacing: 0; }
+#SNS-16 .sns16-left-meta { margin-top: 2px; font: 500 13px/18px var(--font-text); color: rgba(255, 255, 255, .6); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#SNS-16 .sns16-left-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 230px; margin-top: 22px; }
+#SNS-16 .sns16-left-actions button { height: 46px; border: 0; border-radius: var(--r-full); font: 600 15px/1 var(--font-text); letter-spacing: 0; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-16 .sns16-left-primary { background: #fff; color: #000; }
+#SNS-16 .sns16-left-secondary { color: #fff; }
+
+/* Paused when off-screen */
+#SNS-16.sns16-paused .sns16-media, #SNS-16.sns16-paused .sns16-city, #SNS-16.sns16-paused .sns16-c-beacon, #SNS-16.sns16-paused .sns16-bokeh, #SNS-16.sns16-paused .sns16-grain, #SNS-16.sns16-paused .sns16-dot::after { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-16 .sns16-media, #SNS-16 .sns16-city, #SNS-16 .sns16-bokeh, #SNS-16 .sns16-grain, #SNS-16 .sns16-dot::after { animation: none; }
+  #SNS-16 .sns16-list, #SNS-16 .sns16-row, #SNS-16 .sns16-strip { transition: none; }
+}
+</style>
+<article class="obj" id="SNS-16" data-name="Live Stream" data-ja="ライブ配信" data-vector="Immersive" data-size="m" data-desc="ライブ配信画面。視聴者数・流れるコメント・浮き上がるハート。">
+  <div class="obj-stage" data-bg="dark">
+    <div class="phone" data-status="light">
+      <div class="phone-screen sns16-screen force-dark">
+        <div class="sns16-scene" aria-hidden="true">
+          <div class="sns16-media art art-4"></div>
+          <div class="sns16-city">
+            <svg viewBox="0 0 340 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+              <defs>
+                <linearGradient id="SNS-16-bk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1946"/><stop offset="1" stop-color="#100e2e"/></linearGradient>
+                <linearGradient id="SNS-16-fr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0a20"/><stop offset="1" stop-color="#030309"/></linearGradient>
+              </defs>
+              <path class="sns16-c-back" fill="url(#SNS-16-bk)"/>
+              <path class="sns16-c-bw" fill="#FFD9A3" opacity=".5"/>
+              <path class="sns16-c-bc" fill="#A9D6FF" opacity=".34"/>
+              <path class="sns16-c-spire" fill="none" stroke="#0e0c28" stroke-width="2"/>
+              <path class="sns16-c-front" fill="url(#SNS-16-fr)"/>
+              <path class="sns16-c-fw" fill="#FFCF8A" opacity=".8"/>
+              <path class="sns16-c-fc" fill="#9FD4FF" opacity=".62"/>
+              <circle class="sns16-c-beacon" r="2.2" fill="#FF453A"/>
+            </svg>
+          </div>
+          <i class="sns16-bokeh sns16-bokeh--1"></i><i class="sns16-bokeh sns16-bokeh--2"></i><i class="sns16-bokeh sns16-bokeh--3"></i><i class="sns16-bokeh sns16-bokeh--4"></i>
+          <div class="sns16-grain"></div>
+          <div class="sns16-scrim-t"></div><div class="sns16-scrim-b"></div>
+        </div>
+
+        <div class="sns16-top">
+          <div class="sns16-host sns16-glass">
+            <span class="sns16-host-av"><span class="av av-3">K</span></span>
+            <span class="sns16-host-txt">
+              <span class="sns16-host-name">kaito.dev</span>
+              <span class="sns16-host-sub"><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg><span class="sns16-likes">2.4万</span></span>
+            </span>
+            <button class="sns16-follow" type="button" aria-pressed="false" aria-label="kaito.dev をフォロー">
+              <span class="sns16-follow-off">フォロー</span>
+              <span class="sns16-follow-on"><svg class="i" aria-hidden="true"><use href="#i-checkmark"/></svg></span>
+            </button>
+          </div>
+          <button class="sns16-close sns16-glass" type="button" aria-label="ライブ配信を閉じる"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>
+        </div>
+
+        <div class="sns16-sub">
+          <span class="sns16-rank"><svg class="i" aria-hidden="true"><use href="#i-flame-fill"/></svg>急上昇 <b>3</b>位</span>
+          <span class="sns16-live"><i class="sns16-dot"></i>LIVE</span>
+          <span class="sns16-viewers sns16-glass" role="img" aria-label="視聴者 1,284人"><svg class="i" aria-hidden="true"><use href="#i-eye-fill"/></svg><span class="sns16-vcount" aria-hidden="true"></span></span>
+        </div>
+
+        <div class="sns16-chat"><ul class="sns16-list" role="log" aria-live="off" aria-label="ライブコメント"></ul></div>
+        <div class="sns16-hearts" aria-hidden="true"></div>
+
+        <div class="sns16-giftbar" aria-hidden="true">
+          <span class="av av-8">Me</span>
+          <span class="sns16-gb-txt"><b>あなた</b>バラを贈りました</span>
+          <span class="sns16-gb-ic"><svg class="i" aria-hidden="true"><use href="#i-gift-fill"/></svg></span>
+          <span class="sns16-gb-x"><small>×</small><span class="sns16-gb-n">1</span></span>
+        </div>
+
+        <div class="sns16-toast sns16-glass" role="status" aria-live="polite"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg><span>リンクをコピーしました</span></div>
+
+        <form class="sns16-bar" autocomplete="off">
+          <label class="sns16-field sns16-glass">
+            <span class="sr-only">コメント</span>
+            <input class="sns16-input" type="text" placeholder="コメントする…" maxlength="80" enterkeyhint="send">
+            <button class="sns16-send" type="submit" aria-label="送信"><svg class="i" aria-hidden="true"><use href="#i-arrow-up"/></svg></button>
+          </label>
+          <button class="sns16-btn sns16-btn--gift sns16-glass sns16-collapse" type="button" aria-label="ギフトを贈る"><svg class="i" aria-hidden="true"><use href="#i-gift-fill"/></svg></button>
+          <button class="sns16-btn sns16-glass sns16-collapse sns16-btn--share" type="button" aria-label="共有"><svg class="i" aria-hidden="true"><use href="#i-square-and-arrow-up"/></svg></button>
+          <button class="sns16-btn sns16-btn--heart sns16-glass" type="button" aria-label="いいね"><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg></button>
+        </form>
+
+        <div class="sns16-left" role="dialog" aria-modal="false" aria-label="ライブ配信を退出しました" aria-hidden="true">
+          <span class="av av-3">K</span>
+          <span class="sns16-left-name">kaito.dev</span>
+          <span class="sns16-left-title">ライブ配信を退出しました</span>
+          <span class="sns16-left-meta">配信時間 48:12 · <span class="sns16-left-v">1,284</span>人が視聴中</span>
+          <div class="sns16-left-actions">
+            <button class="sns16-left-primary" type="button">もう一度見る</button>
+            <button class="sns16-left-secondary sns16-glass" type="button">プロフィールを見る</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>ダブルタップでハート</li><li>ハートは長押しで連打</li><li>コメントを送信</li><li>ギフトでコンボ</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-16');
+  if (!root) return;
+  const $ = (s) => root.querySelector(s);
+  const screen = $('.sns16-screen');
+  const list = $('.sns16-list');
+  const lane = $('.sns16-hearts');
+  const vcount = $('.sns16-vcount');
+  const vpill = $('.sns16-viewers');
+  const input = $('.sns16-input');
+  const reduced = () => window.ObjKit && ObjKit.reducedMotion;
+  const icon = (id) => `<svg class="i" aria-hidden="true"><use href="#${id}"/></svg>`;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  const CAST = {
+    'haru.photo': ['av-1', 'H', true], mio_k: ['av-2', 'M'], 'kaito.dev': ['av-3', 'K'], yuna: ['av-4', 'Y'],
+    sora_travel: ['av-5', 'S'], 'ren.design': ['av-6', 'R'], aoi: ['av-7', 'A'], 'あなた': ['av-8', 'Me'],
+  };
+  const PRE = [
+    ['m', 'aoi', 'こんばんは〜！'],
+    ['m', 'ren.design', '空気が澄んでて最高の夜景'],
+    ['m', 'kaito.dev', 'あと10分くらいで展望台に着きます'],
+    ['m', 'mio_k', '夜景きれいすぎる…！'],
+  ];
+  const FEED = [
+    ['m', 'haru.photo', '光の滲み方いいね。レンズ何使ってる？'],
+    ['j', 'yuna'],
+    ['m', 'sora_travel', '渋谷？いま近くにいるかも笑'],
+    ['g', 'sora_travel', '花束を贈りました', 3],
+    ['m', 'yuna', '来れた！おつかれさま〜'],
+    ['m', 'ren.design', 'BGMなんて曲ですか？'],
+    ['m', 'kaito.dev', '35mmのF1.4だよ！BGMは概要欄に'],
+    ['m', 'aoi', 'ハート連打しとく♡'],
+    ['f', 'mio_k'],
+    ['m', 'mio_k', '次はどこ行くの？'],
+    ['g', 'haru.photo', 'ライトを贈りました', 1],
+    ['m', 'haru.photo', 'このアングル最高'],
+    ['m', 'sora_travel', '人すごいね'],
+    ['j', 'aoi'],
+  ];
+  const REPLIES = ['コメントありがとう！', 'うれしい〜ありがとう', 'いいね、それ！', 'ゆっくりしていってね'];
+  const COLORS = ['#FF8FB1', '#FF6F91', '#FFB38A', '#FFD66B', '#8FD3FF', '#B9A2FF', '#7FE3C4', '#FFA8E0', '#FF9BA8'];
+
+  /* — Procedural skyline: a handful of <path>s, deterministic — */
+  (() => {
+    let seed = 20261002;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const H = 300, W = 340, d = { back: '', bw: '', bc: '', front: '', fw: '', fc: '' };
+    const win = (x, w, top, p, wk, ck) => {
+      for (let y = top + 7; y < H - 8; y += 7) for (let wx = x + 4; wx < x + w - 5; wx += 5) {
+        if (rnd() < p) d[rnd() < .78 ? wk : ck] += `M${wx.toFixed(1)} ${y}h2.2v3.2h-2.2z`;
+      }
+    };
+    for (let x = -6; x < W;) {
+      const w = 18 + rnd() * 24, h = 150 + rnd() * 112;
+      const tall = x > 205 && x < 245 && !d.spire;
+      const hh = tall ? 262 : h;
+      d.back += `M${x.toFixed(1)} ${H}V${(H - hh).toFixed(1)}h${w.toFixed(1)}V${H}z`;
+      if (tall) { d.spire = `M${(x + w / 2).toFixed(1)} ${H - hh}v-30`; d.beacon = [x + w / 2, H - hh - 31]; }
+      win(x, w, H - hh, .2, 'bw', 'bc');
+      x += w + 1.5 + rnd() * 4;
+    }
+    for (let x = -10; x < W;) {
+      const w = 24 + rnd() * 30, h = 70 + rnd() * 110;
+      const r = rnd() < .3 ? 6 : 0;
+      d.front += r ? `M${x.toFixed(1)} ${H}V${(H - h + r).toFixed(1)}l${r} ${-r}h${(w - 2 * r).toFixed(1)}l${r} ${r}V${H}z` : `M${x.toFixed(1)} ${H}V${(H - h).toFixed(1)}h${w.toFixed(1)}V${H}z`;
+      win(x, w, H - h, .34, 'fw', 'fc');
+      x += w + 2 + rnd() * 6;
+    }
+    const set = (cls, v) => { const el = root.querySelector('.sns16-c-' + cls); if (el && v) el.setAttribute('d', v); };
+    set('back', d.back); set('bw', d.bw); set('bc', d.bc); set('front', d.front); set('fw', d.fw); set('fc', d.fc); set('spire', d.spire);
+    const b = root.querySelector('.sns16-c-beacon');
+    if (d.beacon) { b.setAttribute('cx', d.beacon[0].toFixed(1)); b.setAttribute('cy', d.beacon[1].toFixed(1)); } else b.remove();
+  })();
+
+  /* — Chat — */
+  const av = (name, size) => {
+    const [cls, ini] = CAST[name] || CAST['あなた'];
+    return `<span class="av ${cls}">${ini}</span>`;
+  };
+  function build([type, name, text, n]) {
+    const li = document.createElement('li');
+    if (type === 'j' || type === 'f') {
+      li.className = 'sns16-row sns16-row--sys';
+      li.innerHTML = `${av(name)}<span><b>${esc(name)}</b> ${type === 'j' ? 'が参加しました' : 'がフォローしました'}</span>`;
+    } else if (type === 'g') {
+      li.className = 'sns16-row sns16-row--gift';
+      li.innerHTML = `<span class="sns16-gift-ic">${icon('i-gift-fill')}</span><span class="sns16-msg"><span class="sns16-name">${esc(name)}</span><span class="sns16-text">${esc(text)}<b>×${n}</b></span></span>`;
+    } else {
+      const c = CAST[name] || [];
+      li.className = 'sns16-row' + (name === 'あなた' ? ' sns16-row--self' : '');
+      li.innerHTML = `${av(name)}<span class="sns16-msg"><span class="sns16-name">${esc(name)}${c[2] ? icon('i-checkmark-seal-fill') : ''}${name === 'kaito.dev' ? '<em class="sns16-tag">配信者</em>' : ''}</span><span class="sns16-text">${esc(text)}</span></span>`;
+    }
+    return li;
+  }
+  const trim = () => { while (list.children.length > 9) list.firstElementChild.remove(); };
+  function addRow(item, animate = true) {
+    const li = build(item);
+    if (!animate || reduced()) { list.append(li); trim(); return; }
+    let prev = 0;
+    try { prev = new DOMMatrixReadOnly(getComputedStyle(list).transform).m42 || 0; } catch (e) {}
+    li.classList.add('is-new');
+    list.append(li);
+    const h = li.offsetHeight + 6;
+    list.style.transition = 'none';
+    list.style.transform = `translate3d(0, ${prev + h}px, 0)`;
+    void list.offsetHeight;
+    list.style.transition = '';
+    list.style.transform = '';
+    li.classList.remove('is-new');
+    trim();
+  }
+  PRE.forEach((m) => addRow(m, false));
+
+  /* — Viewer count with digit roll — */
+  let viewers = 1284;
+  function renderCount(n) {
+    const s = n.toLocaleString('en-US');
+    const shape = s.replace(/\d/g, '0');
+    if (vcount.dataset.shape !== shape) {
+      vcount.dataset.shape = shape;
+      vcount.innerHTML = [...s].map((ch) => /\d/.test(ch)
+        ? `<span class="sns16-slot"><span class="sns16-strip" style="--d:${ch}">${'0123456789'.split('').map((d) => `<span>${d}</span>`).join('')}</span></span>`
+        : `<span>${ch}</span>`).join('');
+    } else {
+      const strips = vcount.querySelectorAll('.sns16-strip');
+      [...s.replace(/\D/g, '')].forEach((d, i) => { strips[i].style.transitionDelay = `${i * 45}ms`; strips[i].style.setProperty('--d', d); });
+    }
+    vpill.setAttribute('aria-label', `視聴者 ${s}人`);
+    $('.sns16-left-v').textContent = s;
+  }
+  renderCount(viewers);
+  const nudgeViewers = (d) => { viewers = Math.min(1499, Math.max(1100, viewers + d)); renderCount(viewers); };
+
+  /* — Floating hearts — */
+  function heart(size = 28) {
+    if (lane.childElementCount >= 26) lane.firstElementChild.remove();
+    const h = document.createElement('i');
+    h.className = 'sns16-heart';
+    const inner = document.createElement('b');
+    inner.style.setProperty('--c', COLORS[(Math.random() * COLORS.length) | 0]);
+    h.style.cssText = `width:${size}px;height:${size}px;margin-left:${-size / 2}px`;
+    h.append(inner);
+    lane.append(h);
+    const H = lane.clientHeight - size;
+    const dur = 2300 + Math.random() * 1000;
+    if (reduced()) {
+      h.animate([{ opacity: 0, transform: 'translate3d(0,0,0)' }, { opacity: 1, offset: .2 }, { opacity: 0, transform: `translate3d(0,${-H * .4}px,0)` }], { duration: 1400, easing: 'ease-out' }).onfinish = () => h.remove();
+      return;
+    }
+    const s = (9 + Math.random() * 13) * (Math.random() < .5 ? -1 : 1);
+    const r = Math.random() * 18 - 9;
+    h.animate([
+      { transform: 'translate3d(0,0,0) scale(.25)', opacity: 0 },
+      { transform: `translate3d(0,${-H * .07}px,0) scale(1.14)`, opacity: 1, offset: .09 },
+      { transform: `translate3d(0,${-H * .14}px,0) scale(1)`, opacity: 1, offset: .16 },
+      { transform: `translate3d(0,${-H * .78}px,0) scale(.92)`, opacity: .9, offset: .74 },
+      { transform: `translate3d(0,${-H}px,0) scale(.8)`, opacity: 0 },
+    ], { duration: dur, easing: 'cubic-bezier(.33,.55,.5,1)' }).onfinish = () => h.remove();
+    const ease = 'cubic-bezier(.45,0,.55,1)';
+    inner.animate([
+      { transform: 'translate3d(0,0,0) rotate(0deg)', easing: ease },
+      { transform: `translate3d(${s}px,0,0) rotate(${r}deg)`, easing: ease, offset: .3 },
+      { transform: `translate3d(${-s * .8}px,0,0) rotate(${-r}deg)`, easing: ease, offset: .62 },
+      { transform: `translate3d(${s * .55}px,0,0) rotate(${r * .6}deg)` },
+    ], { duration: dur, fill: 'forwards' });
+  }
+  function burst(x, y) {
+    const olds = screen.querySelectorAll('.sns16-big');
+    if (olds.length > 3) olds[0].remove();
+    const b = document.createElement('i');
+    b.className = 'sns16-big';
+    b.style.left = `${x - 52}px`;
+    b.style.top = `${y - 52}px`;
+    screen.append(b);
+    const rot = Math.random() * 26 - 13;
+    const kf = reduced()
+      ? [{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 0 }]
+      : [
+        { transform: `scale(.2) rotate(${rot}deg)`, opacity: 0 },
+        { transform: `scale(1.2) rotate(${rot}deg)`, opacity: 1, offset: .16 },
+        { transform: `scale(.94) rotate(${rot}deg)`, opacity: 1, offset: .28 },
+        { transform: `scale(1) rotate(${rot}deg)`, opacity: 1, offset: .6 },
+        { transform: `translate3d(0,-70px,0) scale(.55) rotate(${rot}deg)`, opacity: 0 },
+      ];
+    b.animate(kf, { duration: 1100, easing: 'cubic-bezier(.3,.6,.4,1)' }).onfinish = () => b.remove();
+    for (let i = 0; i < 5; i++) setTimeout(() => heart(24 + Math.random() * 8), i * 80);
+  }
+
+  /* — Double-tap the stream — */
+  let lastTap = 0, lx = 0, ly = 0;
+  screen.addEventListener('pointerup', (e) => {
+    if (e.target.closest('button, input, label, form, .sns16-left, .sns16-top, .sns16-sub')) return;
+    const r = screen.getBoundingClientRect();
+    const sc = r.width / screen.offsetWidth || 1;
+    const x = (e.clientX - r.left) / sc, y = (e.clientY - r.top) / sc;
+    const now = performance.now();
+    if (now - lastTap < 320 && Math.hypot(x - lx, y - ly) < 40) { burst(x, y); lastTap = 0; }
+    else { lastTap = now; lx = x; ly = y; }
+  });
+
+  /* — Heart button: tap = 1, hold = stream — */
+  const heartBtn = $('.sns16-btn--heart');
+  let holdT = 0;
+  const pop = (el) => { if (!reduced()) el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.28)' }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(.34,1.56,.64,1)' }); };
+  const endHold = () => { clearInterval(holdT); holdT = 0; };
+  heartBtn.addEventListener('pointerdown', (e) => {
+    if (e.button > 0) return;
+    heart(); pop(heartBtn.firstElementChild);
+    endHold();
+    holdT = setInterval(() => { heart(22 + Math.random() * 10); pop(heartBtn.firstElementChild); }, 140);
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => heartBtn.addEventListener(t, endHold));
+  heartBtn.addEventListener('click', (e) => { if (e.detail === 0) { heart(); pop(heartBtn.firstElementChild); } });
+
+  /* — Comment — */
+  let replyT = 0;
+  $('.sns16-bar').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const t = input.value.trim();
+    if (!t) return;
+    addRow(['m', 'あなた', t.slice(0, 80)]);
+    input.value = '';
+    clearTimeout(replyT);
+    replyT = setTimeout(() => { if (on) addRow(['m', 'kaito.dev', REPLIES[(Math.random() * REPLIES.length) | 0]]); }, 1800);
+  });
+
+  /* — Gift combo — */
+  const giftbar = $('.sns16-giftbar');
+  const giftN = $('.sns16-gb-n');
+  let combo = 0, comboT = 0;
+  $('.sns16-btn--gift').addEventListener('click', () => {
+    combo++;
+    giftN.textContent = combo;
+    giftbar.classList.add('is-on');
+    if (!reduced()) giftN.parentElement.animate([{ transform: 'scale(1.9) rotate(-8deg)', opacity: .2 }, { transform: 'scale(.92)', opacity: 1, offset: .55 }, { transform: 'scale(1)' }], { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    for (let i = 0; i < 3; i++) setTimeout(() => heart(), i * 90);
+    clearTimeout(comboT);
+    comboT = setTimeout(() => {
+      giftbar.classList.remove('is-on');
+      addRow(['g', 'あなた', 'バラを贈りました', combo]);
+      combo = 0;
+    }, 1700);
+  });
+
+  /* — Share toast — */
+  const toast = $('.sns16-toast');
+  let toastT = 0;
+  $('.sns16-btn--share').addEventListener('click', () => {
+    toast.classList.add('is-on');
+    clearTimeout(toastT);
+    toastT = setTimeout(() => toast.classList.remove('is-on'), 1600);
+  });
+
+  /* — Follow — */
+  const follow = $('.sns16-follow');
+  follow.addEventListener('click', () => {
+    const onNow = follow.getAttribute('aria-pressed') !== 'true';
+    follow.setAttribute('aria-pressed', String(onNow));
+    follow.setAttribute('aria-label', onNow ? 'kaito.dev のフォローを解除' : 'kaito.dev をフォロー');
+    if (onNow) addRow(['f', 'あなた']);
+  });
+
+  /* — Leave / rewatch — */
+  const leftEl = $('.sns16-left');
+  let left = false;
+  $('.sns16-close').addEventListener('click', () => {
+    left = true; stop();
+    leftEl.classList.add('is-on'); leftEl.setAttribute('aria-hidden', 'false');
+    setTimeout(() => $('.sns16-left-primary').focus({ preventScroll: true }), 60);
+  });
+  const rewatch = () => {
+    left = false;
+    leftEl.classList.remove('is-on'); leftEl.setAttribute('aria-hidden', 'true');
+    $('.sns16-close').focus({ preventScroll: true });
+    if (visible) start();
+  };
+  $('.sns16-left-primary').addEventListener('click', rewatch);
+  $('.sns16-left-secondary').addEventListener('click', rewatch);
+  leftEl.addEventListener('keydown', (e) => { if (e.key === 'Escape') rewatch(); });
+
+  /* — Loops (paused off-screen) — */
+  let on = false, visible = false, fi = 0, feedT = 0, ambT = 0, viewT = 0;
+  function feed() {
+    const item = FEED[fi++ % FEED.length];
+    addRow(item);
+    if (item[0] === 'j') nudgeViewers(1);
+    feedT = setTimeout(feed, 950 + Math.random() * 550);
+  }
+  function ambient() {
+    heart(20 + Math.random() * 8);
+    if (Math.random() < .35) setTimeout(() => on && heart(18 + Math.random() * 8), 170);
+    ambT = setTimeout(ambient, (reduced() ? 1600 : 520) + Math.random() * 1100);
+  }
+  function tickViewers() {
+    nudgeViewers(Math.round(Math.random() * 26 - 9));
+    viewT = setTimeout(tickViewers, 2600 + Math.random() * 1800);
+  }
+  function start() {
+    if (on || left) return;
+    on = true;
+    root.classList.remove('sns16-paused');
+    feedT = setTimeout(feed, 600);
+    ambT = setTimeout(ambient, 300);
+    viewT = setTimeout(tickViewers, 2000);
+  }
+  function stop() {
+    on = false;
+    clearTimeout(feedT); clearTimeout(ambT); clearTimeout(viewT); endHold();
+    root.classList.add('sns16-paused');
+  }
+  root.classList.add('sns16-paused');
+  if (window.ObjKit) ObjKit.onVisible(root, (v) => { visible = v; v ? start() : stop(); });
+})();
+</script>

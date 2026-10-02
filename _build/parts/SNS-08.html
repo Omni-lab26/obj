@@ -1,0 +1,346 @@
+<!-- ═══════════ SNS-08 · Comment Thread ═══════════ -->
+<style>
+#SNS-08 .sns08-sheet {
+  position: relative; width: min(100%, 375px); height: 560px; display: flex; flex-direction: column; overflow: hidden;
+  border-radius: 22px; background: var(--bg-elevated); color: var(--label);
+  box-shadow: 0 0 0 .5px var(--separator), 0 24px 60px -24px light-dark(rgba(0, 0, 0, .28), rgba(0, 0, 0, .8)), 0 2px 8px light-dark(rgba(0, 0, 0, .05), rgba(0, 0, 0, .4));
+}
+#SNS-08 .sns08-grab { flex: none; width: 36px; height: 5px; margin: 6px auto 0; border-radius: 3px; background: var(--label-3); opacity: .7; }
+#SNS-08 .sns08-head { flex: none; position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; height: 43px; box-shadow: inset 0 -.5px 0 var(--separator); }
+#SNS-08 .sns08-head h4 { margin: 0; font: 600 var(--fs-headline)/1 var(--font-text); letter-spacing: 0; }
+#SNS-08 .sns08-total { font: 400 15px/1 var(--font-text); color: var(--label-2); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; display: inline-block; }
+
+/* — list — */
+#SNS-08 .sns08-list { position: relative; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 6px 0 12px; scrollbar-width: thin; scrollbar-color: var(--fill) transparent; -webkit-overflow-scrolling: touch; }
+#SNS-08 .sns08-c { position: relative; display: grid; grid-template-columns: 32px minmax(0, 1fr) 34px; column-gap: 12px; padding: 10px 10px 10px 16px; }
+#SNS-08 .sns08-c > .av { width: 32px; height: 32px; font-size: 12px; margin-top: 1px; }
+#SNS-08 .sns08-c--reply { grid-template-columns: 24px minmax(0, 1fr) 34px; column-gap: 10px; padding: 8px 10px 8px 60px; }
+#SNS-08 .sns08-c--reply > .av { width: 24px; height: 24px; font-size: 10px; }
+#SNS-08 .sns08-c.is-new { animation: sns08-hl 2.4s var(--ease-out); }
+@keyframes sns08-hl { 0%, 25% { background: color-mix(in srgb, var(--accent) 13%, transparent); } 100% { background: transparent; } }
+#SNS-08 .sns08-body { min-width: 0; }
+#SNS-08 .sns08-pin { margin: 0 0 4px; display: flex; align-items: center; gap: 4px; font-size: var(--fs-caption2); font-weight: 500; color: var(--label-2); letter-spacing: 0; }
+#SNS-08 .sns08-pin .i { font-size: 11px; }
+#SNS-08 .sns08-meta { margin: 0; display: flex; align-items: center; gap: 5px; min-width: 0; font-size: 13px; line-height: 18px; letter-spacing: -0.08px; }
+#SNS-08 .sns08-meta b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#SNS-08 .sns08-meta .sns08-seal { font-size: 13px; color: var(--blue); margin-left: -2px; }
+#SNS-08 .sns08-badge { flex: none; height: 17px; padding: 0 5px; border-radius: 5px; display: inline-grid; place-items: center; font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+#SNS-08 .sns08-meta time { color: var(--label-2); white-space: nowrap; }
+#SNS-08 .sns08-text { margin: 2px 0 0; font-size: 14.5px; line-height: 1.45; letter-spacing: 0; overflow-wrap: anywhere; transition: opacity var(--dur-2) ease; }
+#SNS-08 .sns08-text[lang="en"] { letter-spacing: -0.1px; }
+#SNS-08 .sns08-text.is-fading { opacity: 0; }
+#SNS-08 .sns08-at { color: var(--link); }
+#SNS-08 .sns08-acts { display: flex; gap: 16px; margin-top: 6px; }
+#SNS-08 .sns08-acts button, #SNS-08 .sns08-more {
+  border: 0; padding: 0; background: none; cursor: pointer; font: 600 12px/16px var(--font-text); letter-spacing: 0; color: var(--label-2);
+  border-radius: 4px; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; transition: opacity var(--dur-1) ease;
+}
+#SNS-08 .sns08-acts button:active, #SNS-08 .sns08-more:active { opacity: .45; transition-duration: 60ms; }
+#SNS-08 .sns08-acts button:focus-visible, #SNS-08 .sns08-more:focus-visible, #SNS-08 .sns08-like:focus-visible, #SNS-08 .sns08-quick button:focus-visible, #SNS-08 .sns08-post:focus-visible, #SNS-08 .sns08-cancel:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent); }
+@media (hover: hover) { #SNS-08 .sns08-acts button:hover, #SNS-08 .sns08-more:hover { color: var(--label); } }
+
+#SNS-08 .sns08-like {
+  align-self: start; display: flex; flex-direction: column; align-items: center; gap: 2px; width: 34px; padding: 4px 0; border: 0; background: none; border-radius: 8px;
+  color: color-mix(in srgb, var(--label-2) 85%, transparent); cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+#SNS-08 .sns08-like .i { font-size: 15px; transition: color var(--dur-2) ease; }
+#SNS-08 .sns08-like span { min-height: 13px; font: 500 11px/13px var(--font-text); color: var(--label-2); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+#SNS-08 .sns08-like[aria-pressed="true"] { color: var(--pink); }
+#SNS-08 .sns08-like:active .i { transform: scale(.85); }
+@media (hover: hover) { #SNS-08 .sns08-like:hover { color: var(--label); } #SNS-08 .sns08-like[aria-pressed="true"]:hover { color: var(--pink); } }
+
+/* — replies (collapsed by default) — */
+#SNS-08 .sns08-replies { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 420ms var(--ease-ios); }
+#SNS-08 .sns08-replies.is-open { grid-template-rows: 1fr; }
+#SNS-08 .sns08-rin { min-height: 0; overflow: hidden; }
+#SNS-08 .sns08-rin > * { opacity: 0; transform: translateY(-6px); transition: opacity 260ms ease, transform 420ms var(--ease-ios); }
+#SNS-08 .sns08-replies.is-open .sns08-rin > * { opacity: 1; transform: none; transition-delay: calc(var(--k, 0) * 45ms + 60ms); }
+#SNS-08 .sns08-more { display: flex; align-items: center; gap: 10px; margin: 0 0 6px 60px; height: 26px; }
+#SNS-08 .sns08-more[hidden] { display: none; }
+#SNS-08 .sns08-line { width: 24px; height: .5px; background: var(--label-3); box-shadow: 0 0 0 .25px var(--label-3); }
+
+#SNS-08 .sns08-grow { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 460ms var(--ease-ios); }
+#SNS-08 .sns08-grow.is-in { grid-template-rows: 1fr; }
+#SNS-08 .sns08-grow > * { min-height: 0; overflow: hidden; }
+
+/* — composer — */
+#SNS-08 .sns08-composer { flex: none; background: var(--bg-elevated); box-shadow: inset 0 .5px 0 var(--separator); padding: 2px 0 10px; }
+#SNS-08 .sns08-quick { display: flex; justify-content: space-between; padding: 0 12px; }
+#SNS-08 .sns08-quick button {
+  width: 38px; height: 42px; border: 0; padding: 0; background: none; border-radius: 10px; cursor: pointer;
+  font: 24px/1 var(--font-emoji); color: #000; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform 380ms var(--ease-spring);
+}
+#SNS-08 .sns08-quick button:active { transform: scale(.82); transition-duration: 90ms; }
+#SNS-08 .sns08-replying { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-2) var(--ease-ios); }
+#SNS-08 .sns08-replying.is-on { grid-template-rows: 1fr; }
+#SNS-08 .sns08-replying > div { min-height: 0; overflow: hidden; }
+#SNS-08 .sns08-replying p { margin: 0 16px 6px; height: 30px; padding: 0 4px 0 12px; display: flex; align-items: center; gap: 6px; border-radius: 10px; background: var(--fill-4); font-size: 13px; color: var(--label-2); letter-spacing: 0; }
+#SNS-08 .sns08-replying b { color: var(--label); font-weight: 600; }
+#SNS-08 .sns08-cancel { margin-left: auto; width: 26px; height: 26px; border: 0; padding: 0; border-radius: 50%; background: none; color: var(--label-2); display: grid; place-items: center; cursor: pointer; }
+#SNS-08 .sns08-cancel .i { font-size: 13px; }
+#SNS-08 .sns08-form { display: flex; align-items: flex-end; gap: 10px; padding: 0 12px 0 16px; margin: 0; }
+#SNS-08 .sns08-form > .av { width: 32px; height: 32px; font-size: 11px; margin-bottom: 4px; }
+#SNS-08 .sns08-field {
+  flex: 1; min-width: 0; display: flex; align-items: flex-end; min-height: 40px; padding: 0 6px 0 14px; border-radius: 20px;
+  background: var(--bg-elevated); box-shadow: inset 0 0 0 .5px var(--separator); transition: box-shadow var(--dur-2) ease;
+}
+#SNS-08 .sns08-field:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--label) 28%, transparent); }
+#SNS-08 .sns08-field textarea {
+  flex: 1; min-width: 0; height: 38px; max-height: 92px; margin: 1px 0; padding: 9px 0; border: 0; outline: 0; resize: none; background: transparent;
+  font: 400 15px/20px var(--font-text); letter-spacing: 0; color: var(--label);
+}
+#SNS-08 .sns08-field textarea::placeholder { color: var(--label-3); }
+#SNS-08 .sns08-post {
+  flex: none; height: 38px; padding: 0 8px; border: 0; border-radius: 10px; background: none; cursor: pointer;
+  font: 600 15px/1 var(--font-text); letter-spacing: 0; color: var(--accent); white-space: nowrap;
+  transition: opacity var(--dur-2) ease, transform 300ms var(--ease-spring);
+}
+#SNS-08 .sns08-post:disabled { opacity: .32; cursor: default; }
+#SNS-08 .sns08-post:not(:disabled):active { transform: scale(.94); opacity: .6; transition-duration: 80ms; }
+#SNS-08 .sns08-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  #SNS-08 .sns08-replies, #SNS-08 .sns08-grow, #SNS-08 .sns08-replying { transition: none; }
+  #SNS-08 .sns08-rin > * { transform: none; transition: opacity 160ms ease; }
+  #SNS-08 .sns08-c.is-new { animation-duration: 3s; }
+}
+</style>
+<article class="obj" id="SNS-08" data-name="Comment Thread" data-ja="コメント欄" data-vector="Clean" data-size="m" data-desc="返信がネストするコメント一覧と入力欄。">
+  <div class="obj-stage" data-bg="plain">
+    <section class="sns08-sheet" aria-labelledby="SNS-08-title">
+      <div class="sns08-grab" aria-hidden="true"></div>
+      <header class="sns08-head"><h4 id="SNS-08-title">コメント</h4><span class="sns08-total" aria-label="128件">128</span></header>
+      <div class="sns08-list" tabindex="-1"></div>
+      <div class="sns08-composer">
+        <div class="sns08-quick" role="group" aria-label="絵文字を入力">
+          <button type="button">❤️</button><button type="button">🙌</button><button type="button">🔥</button><button type="button">👏</button><button type="button">😢</button><button type="button">😍</button><button type="button">😮</button><button type="button">😂</button>
+        </div>
+        <div class="sns08-replying" inert><div><p><span><b class="sns08-to">yuna</b>さんに返信中</span><button class="sns08-cancel" type="button" aria-label="返信をキャンセル"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button></p></div></div>
+        <form class="sns08-form">
+          <span class="av av-8" aria-hidden="true">Me</span>
+          <div class="sns08-field">
+            <textarea rows="1" placeholder="コメントを追加…" aria-label="コメントを追加" enterkeyhint="send"></textarea>
+            <button class="sns08-post" type="submit" disabled>投稿する</button>
+          </div>
+        </form>
+      </div>
+      <p class="sns08-live" aria-live="polite"></p>
+    </section>
+  </div>
+  <ul class="obj-notes"><li>♡をタップでいいね</li><li>返信を表示で展開</li><li>返信する → @メンション</li><li>投稿すると先頭に追加</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-08');
+  if (!root) return;
+  const list = root.querySelector('.sns08-list');
+  const ta = root.querySelector('textarea');
+  const post = root.querySelector('.sns08-post');
+  const form = root.querySelector('.sns08-form');
+  const replying = root.querySelector('.sns08-replying');
+  const toEl = root.querySelector('.sns08-to');
+  const totalEl = root.querySelector('.sns08-total');
+  const live = root.querySelector('.sns08-live');
+  const reduced = () => !!(window.ObjKit && window.ObjKit.reducedMotion);
+  const play = (el, kf, o) => (el && el.animate && !reduced() ? el.animate(kf, o) : null);
+
+  const DATA = [
+    { u: 'haru.photo', av: 1, ini: 'H', t: '1日', likes: 2341, creator: true, verified: true, pinned: true,
+      text: 'たくさんのコメントありがとうございます！撮影地は北海道・美瑛の丘です。朝5時、霧が晴れる直前の15分でした📷',
+      replies: [
+        { u: 'mio_k', av: 2, ini: 'M', t: '20時間', likes: 41, text: '早起きした甲斐がありますね…！' },
+        { u: 'kaito.dev', av: 3, ini: 'K', t: '18時間', likes: 17, text: '美瑛いいなあ。来年の夏に行きます' },
+      ] },
+    { u: 'yuna', av: 4, ini: 'Y', t: '2時間', likes: 248,
+      text: '朝霧の層がきれい…！この色味ってどうやって出してるんですか？',
+      replies: [
+        { u: 'haru.photo', av: 1, ini: 'H', t: '2時間', likes: 96, creator: true, verified: true, text: '@yuna ありがとう！RAWで撮って、青を少しだけ持ち上げてます。プリセットも近日公開予定です' },
+        { u: 'mio_k', av: 2, ini: 'M', t: '1時間', likes: 12, text: 'わたしも知りたかった〜！' },
+        { u: 'yuna', av: 4, ini: 'Y', t: '48分', likes: 8, text: '@haru.photo 楽しみにしてます🙏' },
+      ] },
+    { u: 'sora_travel', av: 5, ini: 'S', t: '5時間', likes: 87, lang: 'en',
+      text: 'This light is unreal 🤍 Saving this for my Hokkaido trip next spring!',
+      tr: 'この光、信じられない🤍 来年の春の北海道旅行のために保存しておきます！', replies: [] },
+    { u: 'kaito.dev', av: 3, ini: 'K', t: '6時間', likes: 54, text: '壁紙にしました。ロック画面で毎朝癒されてます', replies: [] },
+    { u: 'ren.design', av: 6, ini: 'R', t: '8時間', likes: 31,
+      text: '構図の余白が本当に気持ちいい。手前の丘のラインが効いてますね',
+      replies: [{ u: 'haru.photo', av: 1, ini: 'H', t: '7時間', likes: 22, creator: true, verified: true, text: '@ren.design 嬉しいです！あえて空を広めに取りました' }] },
+    { u: 'aoi', av: 7, ini: 'A', t: '12時間', likes: 9, text: '保存しました🌿 色の参考にさせてください', replies: [] },
+  ];
+
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const rich = (s) => esc(s).replace(/@[\w.]+/g, '<span class="sns08-at">$&</span>');
+  const fmt = (n) => (n <= 0 ? '' : n < 10000 ? n.toLocaleString('ja-JP') : (Math.floor(n / 1000) / 10).toFixed(1).replace(/\.0$/, '') + '万');
+
+  function rowHTML(c, reply, k) {
+    return `<div class="sns08-c${reply ? ' sns08-c--reply' : ''}" data-u="${esc(c.u)}"${k != null ? ` style="--k:${k}"` : ''}>
+      <span class="av av-${c.av}" aria-hidden="true">${c.ini}</span>
+      <div class="sns08-body">
+        ${c.pinned ? '<p class="sns08-pin"><svg class="i" aria-hidden="true"><use href="#i-pin-fill"/></svg>固定済み</p>' : ''}
+        <p class="sns08-meta"><b>${esc(c.u)}</b>${c.verified ? '<svg class="i sns08-seal" aria-label="認証済み"><use href="#i-checkmark-seal-fill"/></svg>' : ''}${c.creator ? '<span class="sns08-badge">作成者</span>' : ''}<time>${c.t}</time></p>
+        <p class="sns08-text"${c.lang ? ` lang="${c.lang}"` : ''}>${rich(c.text)}</p>
+        <div class="sns08-acts"><button type="button" class="sns08-reply">返信する</button>${c.tr ? '<button type="button" class="sns08-tr" aria-pressed="false">翻訳を見る</button>' : ''}</div>
+      </div>
+      <button type="button" class="sns08-like" aria-pressed="false" data-n="${c.likes}" aria-label="いいね ${c.likes}件"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><span>${fmt(c.likes)}</span></button>
+    </div>`;
+  }
+  function threadHTML(c) {
+    const n = c.replies.length;
+    return `<div class="sns08-thread">
+      ${rowHTML(c, false)}
+      <div class="sns08-replies" inert><div class="sns08-rin">${c.replies.map((r, i) => rowHTML(r, true, i)).join('')}</div></div>
+      <button type="button" class="sns08-more" aria-expanded="false" data-n="${n}"${n ? '' : ' hidden'}><span class="sns08-line" aria-hidden="true"></span><span class="sns08-more-t">返信を表示（${n}件）</span></button>
+    </div>`;
+  }
+  list.innerHTML = DATA.map(threadHTML).join('');
+  const trText = new WeakMap();
+  list.querySelectorAll('.sns08-tr').forEach((b, i) => {
+    const d = DATA.filter((x) => x.tr)[i];
+    trText.set(b, d);
+  });
+
+  /* — replies expand / collapse — */
+  function setOpen(th, open) {
+    const box = th.querySelector('.sns08-replies');
+    const more = th.querySelector('.sns08-more');
+    box.classList.toggle('is-open', open);
+    box.inert = !open;
+    more.setAttribute('aria-expanded', String(open));
+    more.querySelector('.sns08-more-t').textContent = open ? '返信を非表示' : `返信を表示（${more.dataset.n}件）`;
+  }
+
+  /* — like — */
+  function toggleLike(b) {
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    const n = +b.dataset.n + (on ? 1 : -1);
+    b.dataset.n = n;
+    b.setAttribute('aria-pressed', String(on));
+    b.setAttribute('aria-label', `いいね ${n}件`);
+    b.querySelector('use').setAttribute('href', on ? '#i-heart-fill' : '#i-heart');
+    b.querySelector('span').textContent = fmt(n);
+    const ic = b.querySelector('.i');
+    if (on) play(ic, [{ transform: 'scale(.55)' }, { transform: 'scale(1.28)', offset: 0.45 }, { transform: 'scale(.94)', offset: 0.75 }, { transform: 'scale(1)' }], { duration: 520, easing: 'cubic-bezier(.3,.7,.4,1)' });
+    else play(ic, [{ transform: 'scale(.8)' }, { transform: 'scale(1)' }], { duration: 300, easing: 'ease-out' });
+    play(b.querySelector('span'), [{ transform: `translateY(${on ? 5 : -5}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.2,.8,.3,1)' });
+  }
+
+  /* — composer — */
+  let replyTo = null;
+  const sync = () => {
+    post.disabled = !ta.value.trim();
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 92) + 'px';
+  };
+  function startReply(row) {
+    const th = row.closest('.sns08-thread');
+    const user = row.dataset.u;
+    replyTo = { th, user };
+    toEl.textContent = user;
+    replying.classList.add('is-on');
+    replying.inert = false;
+    const rest = ta.value.replace(/^@[\w.]+\s*/, '');
+    ta.value = `@${user} ` + rest;
+    sync();
+    ta.focus({ preventScroll: true });
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+  }
+  function cancelReply(keepText) {
+    if (replyTo && !keepText) ta.value = ta.value.replace(new RegExp('^@' + replyTo.user.replace(/\./g, '\\.') + '\\s*'), '');
+    replyTo = null;
+    replying.classList.remove('is-on');
+    replying.inert = true;
+    sync();
+  }
+  function grow(el) {
+    const g = document.createElement('div');
+    g.className = 'sns08-grow';
+    el.replaceWith(g);
+    g.append(el);
+    if (reduced()) { g.replaceWith(el); return; }
+    requestAnimationFrame(() => requestAnimationFrame(() => g.classList.add('is-in')));
+    setTimeout(() => { if (g.isConnected) g.replaceWith(el); }, 520);
+  }
+  function scrollToEl(el) {
+    const lr = list.getBoundingClientRect(), er = el.getBoundingClientRect();
+    const top = list.scrollTop + (er.top - lr.top) - 12;
+    list.scrollTo({ top: Math.max(0, top), behavior: reduced() ? 'auto' : 'smooth' });
+  }
+  function submit() {
+    const text = ta.value.trim();
+    if (!text) return;
+    const c = { u: 'あなた', av: 8, ini: 'Me', t: '今', likes: 0, text, replies: [] };
+    const tmp = document.createElement('div');
+    let row;
+    if (replyTo && replyTo.th.isConnected) {
+      const th = replyTo.th;
+      tmp.innerHTML = rowHTML(c, true, 0);
+      row = tmp.firstElementChild;
+      th.querySelector('.sns08-rin').append(row);
+      const more = th.querySelector('.sns08-more');
+      more.dataset.n = +more.dataset.n + 1;
+      more.hidden = false;
+      const wasOpen = th.querySelector('.sns08-replies').classList.contains('is-open');
+      setOpen(th, true);
+      if (wasOpen) grow(row);
+      live.textContent = `${replyTo.user}さんに返信しました`;
+    } else {
+      tmp.innerHTML = threadHTML(c);
+      const th = tmp.firstElementChild;
+      const pinned = list.firstElementChild;
+      pinned.after(th);
+      row = th.querySelector('.sns08-c');
+      grow(th);
+      live.textContent = 'コメントを投稿しました';
+    }
+    row.classList.add('is-new');
+    const total = +totalEl.textContent.replace(/\D/g, '') + 1;
+    totalEl.textContent = total;
+    totalEl.setAttribute('aria-label', `${total}件`);
+    play(totalEl, [{ transform: 'translateY(6px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 360, easing: 'cubic-bezier(.2,.8,.3,1)' });
+    ta.value = '';
+    cancelReply(true);
+    setTimeout(() => scrollToEl(row), reduced() ? 0 : 140);
+  }
+
+  list.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b || !list.contains(b)) return;
+    if (b.classList.contains('sns08-like')) toggleLike(b);
+    else if (b.classList.contains('sns08-more')) {
+      const th = b.closest('.sns08-thread');
+      setOpen(th, !th.querySelector('.sns08-replies').classList.contains('is-open'));
+    } else if (b.classList.contains('sns08-reply')) startReply(b.closest('.sns08-c'));
+    else if (b.classList.contains('sns08-tr')) {
+      const d = trText.get(b);
+      const p = b.closest('.sns08-body').querySelector('.sns08-text');
+      const on = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(on));
+      b.textContent = on ? '原文を見る' : '翻訳を見る';
+      const swap = () => {
+        p.innerHTML = rich(on ? d.tr : d.text);
+        if (on) p.removeAttribute('lang'); else p.setAttribute('lang', d.lang);
+        p.classList.remove('is-fading');
+      };
+      if (reduced()) swap(); else { p.classList.add('is-fading'); setTimeout(swap, 180); }
+    }
+  });
+
+  root.querySelectorAll('.sns08-quick button').forEach((b) => {
+    b.setAttribute('aria-label', `${b.textContent}を入力`);
+    b.addEventListener('pointerdown', (e) => { if (document.activeElement === ta) e.preventDefault(); });
+    b.addEventListener('click', () => {
+      const s = ta.selectionStart ?? ta.value.length, en = ta.selectionEnd ?? ta.value.length;
+      ta.setRangeText(b.textContent, s, en, 'end');
+      sync();
+      ta.focus({ preventScroll: true });
+    });
+  });
+  root.querySelector('.sns08-cancel').addEventListener('click', () => { cancelReply(false); ta.focus({ preventScroll: true }); });
+  ta.addEventListener('input', sync);
+  ta.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); submit(); }
+    else if (e.key === 'Escape' && replyTo) { e.preventDefault(); cancelReply(false); }
+  });
+  form.addEventListener('submit', (e) => { e.preventDefault(); submit(); });
+})();
+</script>

@@ -1,0 +1,442 @@
+<!-- ═══════════ SNS-01 · Photo Post ═══════════ -->
+<style>
+#SNS-01 .sns01-post {
+  width: min(100%, 375px); overflow: hidden;
+  background: var(--bg); color: var(--label); border-radius: 22px;
+  box-shadow: 0 0 0 .5px var(--separator), 0 1px 2px rgba(0, 0, 0, .04), 0 22px 44px -26px rgba(0, 0, 0, .32);
+  font: 400 14px/1.42 var(--font-text); letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+#SNS-01 button { -webkit-tap-highlight-color: transparent; }
+
+/* — Header — */
+#SNS-01 .sns01-head { display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 4px 0 12px; }
+#SNS-01 .sns01-who { position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: var(--grad-story); cursor: pointer; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-01 .sns01-who::before { content: ""; position: absolute; inset: 2px; border-radius: 50%; background: var(--bg); }
+#SNS-01 .sns01-who .av { position: relative; width: 32px; height: 32px; font-size: 14px; }
+#SNS-01 .sns01-who:active { transform: scale(.92); transition-duration: 90ms; }
+#SNS-01 .sns01-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+#SNS-01 .sns01-name { display: flex; align-items: center; gap: 4px; font: 600 14px/1.2 var(--font-text); letter-spacing: -0.01em; white-space: nowrap; }
+#SNS-01 .sns01-name .i { font-size: 14px; color: var(--blue); vertical-align: 0; }
+#SNS-01 .sns01-loc { font-size: 12px; line-height: 1.25; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#SNS-01 .sns01-icon-btn {
+  display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--label); cursor: pointer; user-select: none; -webkit-user-select: none;
+}
+#SNS-01 .sns01-icon-btn .i { font-size: 22px; transition: transform var(--dur-2) var(--ease-spring), opacity var(--dur-1) ease; }
+#SNS-01 .sns01-icon-btn:active .i { transform: scale(.84); opacity: .6; transition-duration: 90ms; }
+#SNS-01 .sns01-icon-btn:focus-visible, #SNS-01 .sns01-who:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+/* — Media carousel — */
+#SNS-01 .sns01-media { position: relative; aspect-ratio: 4 / 5; background: var(--fill-4); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+#SNS-01 .sns01-track {
+  position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
+  touch-action: manipulation; cursor: grab; outline: none;
+}
+#SNS-01 .sns01-track::-webkit-scrollbar { display: none; }
+#SNS-01 .sns01-track.is-free { scroll-snap-type: none; }
+#SNS-01 .sns01-track.is-dragging { cursor: grabbing; }
+#SNS-01 .sns01-track:focus-visible + .sns01-ring-focus { opacity: 1; }
+#SNS-01 .sns01-ring-focus { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--accent) 70%, transparent); opacity: 0; transition: opacity var(--dur-1) ease; }
+#SNS-01 .sns01-slide { position: relative; flex: 0 0 100%; height: 100%; scroll-snap-align: center; scroll-snap-stop: always; overflow: hidden; }
+#SNS-01 .sns01-slide > .art { position: absolute; inset: 0; }
+
+/* slide 1 — bamboo grove over misty hills (far → mid → near stalks, nodes via mask, canopy + light shafts) */
+#SNS-01 .sns01-bamboo { filter: saturate(1.08) hue-rotate(-4deg); }
+#SNS-01 .sns01-bamboo::before, #SNS-01 .sns01-bamboo::after, #SNS-01 .sns01-glow { content: ""; position: absolute; inset: 0; }
+#SNS-01 .sns01-bamboo::before { /* far + mid stalks */
+  background:
+    linear-gradient(90deg, transparent 12%, rgba(128, 168, 124, .5) 12% 13.1%, transparent 13.1%),
+    linear-gradient(90deg, transparent 25.2%, rgba(128, 168, 124, .45) 25.2% 26.1%, transparent 26.1%),
+    linear-gradient(90deg, transparent 38.6%, rgba(136, 176, 128, .5) 38.6% 39.6%, transparent 39.6%),
+    linear-gradient(90deg, transparent 54.8%, rgba(128, 168, 124, .5) 54.8% 55.9%, transparent 55.9%),
+    linear-gradient(90deg, transparent 70.6%, rgba(136, 176, 128, .45) 70.6% 71.5%, transparent 71.5%),
+    linear-gradient(90deg, transparent 88.8%, rgba(128, 168, 124, .5) 88.8% 90%, transparent 90%),
+    linear-gradient(90deg, transparent 18%, #5a894c 18%, #8fbb75 19.3%, #6d9c58 20%, #476f3b 21.1%, transparent 21.1%),
+    linear-gradient(90deg, transparent 31.2%, #527c45 31.2%, #88b16d 32.3%, #66945a 33%, #416a37 33.8%, transparent 33.8%),
+    linear-gradient(90deg, transparent 46%, #5a894c 46%, #97c27c 47.2%, #72a15c 48%, #487539 48.9%, transparent 48.9%),
+    linear-gradient(90deg, transparent 62.6%, #527c45 62.6%, #8cb671 63.8%, #69985a 64.5%, #426c37 65.3%, transparent 65.3%),
+    linear-gradient(90deg, transparent 93.2%, #5a894c 93.2%, #8fbb75 94.4%, #6d9c58 95.1%, #476f3b 96%, transparent 96%);
+  -webkit-mask: repeating-linear-gradient(174deg, #000 0 56px, rgba(0, 0, 0, .3) 56px 57.5px, #000 57.5px 58px);
+  mask: repeating-linear-gradient(174deg, #000 0 56px, rgba(0, 0, 0, .3) 56px 57.5px, #000 57.5px 58px);
+}
+#SNS-01 .sns01-bamboo::after { /* near stalks */
+  background:
+    linear-gradient(90deg, transparent 2.6%, #24461f 2.6%, #4a7a38 4.6%, #73a556 5.8%, #3d6a30 7.6%, #1d3a19 9.4%, transparent 9.4%),
+    linear-gradient(90deg, transparent 76.2%, #22431d 76.2%, #477637 78.4%, #6c9e50 79.6%, #3a662e 81.4%, #1b3617 83.2%, transparent 83.2%);
+  -webkit-mask: repeating-linear-gradient(184deg, #000 0 88px, rgba(0, 0, 0, .25) 88px 90px, #000 90px 91px);
+  mask: repeating-linear-gradient(184deg, #000 0 88px, rgba(0, 0, 0, .25) 88px 90px, #000 90px 91px);
+  -webkit-mask-position: 0 -30px; mask-position: 0 -30px;
+}
+#SNS-01 .sns01-glow {
+  background:
+    linear-gradient(104deg, transparent 30%, rgba(255, 250, 220, .34) 41%, transparent 51%),
+    linear-gradient(99deg, transparent 57%, rgba(255, 250, 220, .2) 63%, transparent 70%),
+    linear-gradient(180deg, rgba(26, 56, 24, .6) 0%, rgba(26, 56, 24, .18) 9%, rgba(26, 56, 24, 0) 20%),
+    linear-gradient(180deg, transparent 70%, rgba(36, 64, 34, .35) 88%, rgba(20, 38, 18, .7) 100%);
+}
+#SNS-01 .sns01-dusk { background-size: 130% 120%; background-position: 50% 80%; filter: saturate(1.1); }
+#SNS-01 .sns01-latte { background-size: 118% 106%; background-position: 70% 40%; }
+
+/* counter pill + hover arrows */
+#SNS-01 .sns01-count {
+  position: absolute; top: 12px; right: 12px; display: grid; place-items: center; height: 26px; min-width: 38px; padding: 0 10px;
+  border-radius: 13px; background: rgba(18, 18, 20, .5); color: #fff; pointer-events: none;
+  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .16);
+  font: 600 12px/1 var(--font-text); letter-spacing: .02em; font-variant-numeric: tabular-nums;
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+#SNS-01 .sns01-count.is-bump { transform: scale(1.08); transition-duration: 90ms; }
+#SNS-01 .sns01-nav {
+  position: absolute; top: 50%; width: 30px; height: 30px; margin-top: -15px; padding: 0; border: 0; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(255, 255, 255, .86); color: #1c1c1e; cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .18), inset 0 0 0 .5px rgba(0, 0, 0, .06);
+  opacity: 0; pointer-events: none; transform: scale(.9);
+  transition: opacity var(--dur-2) ease, transform var(--dur-2) var(--ease-spring);
+}
+#SNS-01 .sns01-nav .i { font-size: 15px; }
+#SNS-01 .sns01-nav--prev { left: 10px; }
+#SNS-01 .sns01-nav--next { right: 10px; }
+#SNS-01 .sns01-nav:focus-visible { opacity: 1; pointer-events: auto; transform: none; outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 60%, transparent); }
+@media (hover: hover) {
+  #SNS-01 .sns01-media:hover .sns01-nav { opacity: 1; pointer-events: auto; transform: none; }
+  #SNS-01 .sns01-nav:hover { background: #fff; }
+}
+#SNS-01 .sns01-nav:active { transform: scale(.9); transition-duration: 90ms; }
+#SNS-01 .sns01-media[data-at="start"] .sns01-nav--prev, #SNS-01 .sns01-media[data-at="end"] .sns01-nav--next { opacity: 0; pointer-events: none; }
+
+/* double-tap heart */
+#SNS-01 .sns01-burst { position: absolute; left: 50%; top: 50%; width: 104px; height: 104px; margin: -52px 0 0 -52px; color: #fff; pointer-events: none; opacity: 0; filter: drop-shadow(0 10px 24px rgba(0, 0, 0, .28)); }
+#SNS-01 .sns01-burst .i { width: 100%; height: 100%; }
+#SNS-01 .sns01-burst.is-on { animation: sns01-pop 1000ms both; }
+@keyframes sns01-pop {
+  0%   { opacity: 0; transform: scale(0) rotate(-8deg); animation-timing-function: cubic-bezier(.2, .9, .3, 1.2); }
+  16%  { opacity: 1; transform: scale(1.2) rotate(0deg); animation-timing-function: ease-in-out; }
+  28%  { transform: scale(.94); animation-timing-function: ease-out; }
+  38%  { transform: scale(1); }
+  72%  { opacity: 1; transform: scale(1); animation-timing-function: cubic-bezier(.5, 0, .75, 0); }
+  100% { opacity: 0; transform: scale(.7) translateY(-14px); }
+}
+
+/* saved toast */
+#SNS-01 .sns01-toast {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 14px 0 12px;
+  border-radius: 14px; background: rgba(24, 24, 26, .66); color: #fff; pointer-events: none;
+  -webkit-backdrop-filter: blur(20px) saturate(170%); backdrop-filter: blur(20px) saturate(170%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .14), 0 8px 24px rgba(0, 0, 0, .22);
+  font: 600 14px/1 var(--font-text); letter-spacing: 0;
+  opacity: 0; transform: translateY(14px) scale(.98);
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring);
+}
+#SNS-01 .sns01-toast .i { font-size: 18px; }
+#SNS-01 .sns01-toast span { margin-left: auto; font-weight: 600; color: #7cc4ff; }
+#SNS-01 .sns01-toast.is-on { opacity: 1; transform: none; }
+
+/* — Action row — */
+#SNS-01 .sns01-actions { position: relative; display: flex; align-items: center; height: 46px; padding: 0 6px; }
+#SNS-01 .sns01-actions .sns01-icon-btn { width: 40px; height: 40px; }
+#SNS-01 .sns01-actions .sns01-icon-btn .i { font-size: 24px; }
+#SNS-01 .sns01-save { margin-left: auto; }
+#SNS-01 .sns01-like[aria-pressed="true"] { color: var(--red); }
+#SNS-01 .sns01-is-pop .i { animation: sns01-bounce 520ms both; }
+@keyframes sns01-bounce {
+  0%   { transform: scale(1); animation-timing-function: ease-out; }
+  22%  { transform: scale(.76); animation-timing-function: cubic-bezier(.3, 1.5, .5, 1); }
+  58%  { transform: scale(1.22); animation-timing-function: ease-in-out; }
+  80%  { transform: scale(.96); }
+  100% { transform: scale(1); }
+}
+#SNS-01 .sns01-dots { position: absolute; left: 50%; top: 50%; display: flex; gap: 4px; transform: translate(-50%, -50%); }
+#SNS-01 .sns01-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--label-4); transition: background var(--dur-2) ease, transform var(--dur-2) var(--ease-spring); }
+#SNS-01 .sns01-dots i.is-on { background: var(--accent); transform: scale(1.12); }
+
+/* — Body — */
+#SNS-01 .sns01-body { padding: 0 16px 16px; }
+#SNS-01 .sns01-likes { display: flex; align-items: center; gap: 8px; margin: 0 0 5px; font-weight: 600; }
+#SNS-01 .sns01-faces { display: flex; }
+#SNS-01 .sns01-faces .av { width: 20px; height: 20px; font-size: 9px; box-shadow: 0 0 0 2px var(--bg); }
+#SNS-01 .sns01-faces .av + .av { margin-left: -6px; }
+#SNS-01 .sns01-num { display: inline-flex; font-variant-numeric: tabular-nums; }
+#SNS-01 .sns01-ch { position: relative; display: inline-block; overflow: hidden; vertical-align: top; }
+#SNS-01 .sns01-ch > span { display: block; }
+#SNS-01 .sns01-ch > span + span { position: absolute; inset: 0; }
+#SNS-01 .sns01-cap { margin: 0; overflow: hidden; overflow-wrap: anywhere; text-wrap: pretty; }
+#SNS-01 .sns01-cap b { font-weight: 600; margin-right: 3px; letter-spacing: -0.01em; }
+#SNS-01 .sns01-tag { color: var(--link); text-decoration: none; white-space: nowrap; }
+#SNS-01 .sns01-tag:focus-visible { outline: none; border-radius: 3px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+@media (hover: hover) { #SNS-01 .sns01-tag:hover { text-decoration: underline; text-underline-offset: 2px; } }
+#SNS-01 .sns01-rest { display: none; }
+#SNS-01 .sns01-cap.is-open .sns01-rest { display: inline; }
+#SNS-01 .sns01-cap.is-open .sns01-more { display: none; }
+#SNS-01 .sns01-more { margin-left: 2px; padding: 0; border: 0; background: none; color: var(--label-2); font: inherit; cursor: pointer; }
+#SNS-01 .sns01-more:focus-visible, #SNS-01 .sns01-link:focus-visible { outline: none; border-radius: 4px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+#SNS-01 .sns01-link { display: block; margin: 6px 0 0; padding: 0; border: 0; background: none; color: var(--label-2); font: inherit; cursor: pointer; text-align: left; transition: opacity var(--dur-1) ease; }
+#SNS-01 .sns01-link:active, #SNS-01 .sns01-more:active { opacity: .5; }
+#SNS-01 .sns01-comment { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0 0; }
+#SNS-01 .sns01-comment p { flex: 1; min-width: 0; margin: 0; text-wrap: pretty; }
+#SNS-01 .sns01-comment b { font-weight: 600; margin-right: 3px; letter-spacing: -0.01em; }
+#SNS-01 .sns01-mini { display: grid; place-items: center; width: 24px; height: 20px; margin: 0 -4px 0 0; padding: 0; border: 0; background: none; color: var(--label-2); cursor: pointer; }
+#SNS-01 .sns01-mini .i { font-size: 12px; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-01 .sns01-mini:active .i { transform: scale(.8); transition-duration: 90ms; }
+#SNS-01 .sns01-mini[aria-pressed="true"] { color: var(--red); }
+#SNS-01 .sns01-time { display: block; margin-top: 8px; font-size: var(--fs-caption2); color: var(--label-2); letter-spacing: .01em; }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-01 .sns01-burst.is-on { animation-duration: 1ms; }
+  #SNS-01 .sns01-is-pop .i { animation: none; }
+  #SNS-01 .sns01-toast, #SNS-01 .sns01-nav, #SNS-01 .sns01-dots i { transition: opacity var(--dur-1) ease; }
+}
+</style>
+<article class="obj" id="SNS-01" data-name="Photo Post" data-ja="写真投稿" data-vector="Clean" data-size="m" data-desc="フィードの写真投稿。ダブルタップでいいね、複数枚スワイプ。">
+  <div class="obj-stage" data-bg="plain">
+    <div class="sns01-post">
+      <header class="sns01-head">
+        <button class="sns01-who" type="button" aria-label="haru.photo のストーリーズ"><span class="av av-1">H</span></button>
+        <div class="sns01-meta">
+          <span class="sns01-name">haru.photo<svg class="i" role="img" aria-label="認証済み"><use href="#i-checkmark-seal-fill"/></svg></span>
+          <span class="sns01-loc">京都・嵐山</span>
+        </div>
+        <button class="sns01-icon-btn" type="button" aria-label="その他のオプション"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+      </header>
+
+      <div class="sns01-media" data-at="start">
+        <div class="sns01-track" tabindex="0" role="group" aria-roledescription="カルーセル" aria-label="写真 3枚。ダブルタップでいいね">
+          <div class="sns01-slide" role="group" aria-roledescription="スライド" aria-label="1 / 3 朝の竹林"><div class="art art-3 sns01-bamboo"></div><i class="sns01-glow"></i></div>
+          <div class="sns01-slide" role="group" aria-roledescription="スライド" aria-label="2 / 3 夕暮れの山並み" aria-hidden="true"><div class="art art-1 sns01-dusk"></div></div>
+          <div class="sns01-slide" role="group" aria-roledescription="スライド" aria-label="3 / 3 カフェのラテ" aria-hidden="true"><div class="art art-8 sns01-latte"></div></div>
+        </div>
+        <span class="sns01-ring-focus" aria-hidden="true"></span>
+        <span class="sns01-count" aria-hidden="true">1/3</span>
+        <button class="sns01-nav sns01-nav--prev" type="button" aria-label="前の写真" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+        <button class="sns01-nav sns01-nav--next" type="button" aria-label="次の写真" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
+        <div class="sns01-burst" aria-hidden="true"><svg class="i"><use href="#i-heart-fill"/></svg></div>
+        <div class="sns01-toast" role="status" aria-live="polite"><svg class="i" aria-hidden="true"><use href="#i-bookmark-fill"/></svg>保存済みに追加しました<span>表示</span></div>
+      </div>
+
+      <div class="sns01-actions">
+        <button class="sns01-icon-btn sns01-like" type="button" aria-pressed="false" aria-label="いいね"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg></button>
+        <button class="sns01-icon-btn" type="button" aria-label="コメント"><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg></button>
+        <button class="sns01-icon-btn" type="button" aria-label="シェア"><svg class="i" aria-hidden="true"><use href="#i-paperplane"/></svg></button>
+        <div class="sns01-dots" aria-hidden="true"><i class="is-on"></i><i></i><i></i></div>
+        <button class="sns01-icon-btn sns01-save" type="button" aria-pressed="false" aria-label="保存"><svg class="i" aria-hidden="true"><use href="#i-bookmark"/></svg></button>
+      </div>
+
+      <div class="sns01-body">
+        <p class="sns01-likes">
+          <span class="sns01-faces" aria-hidden="true"><span class="av av-2"></span><span class="av av-3"></span><span class="av av-4"></span></span>
+          <span aria-hidden="true">いいね！<span class="sns01-num" data-v="1,284">1,284</span>件</span><span class="sr-only sns01-sr" aria-live="polite">いいね！1,284件</span>
+        </p>
+        <p class="sns01-cap"><b>haru.photo</b>朝の竹林。光がやわらかかった。<a class="sns01-tag" href="#SNS-01">#京都</a> <a class="sns01-tag" href="#SNS-01">#朝散歩</a><button class="sns01-more" type="button" aria-expanded="false">…続きを読む</button><span class="sns01-rest"><br><br>6時半、まだ人の少ない竹林の小径へ。風が抜けるたびに葉がさらさらと鳴って、光の筋がゆっくり動いていく。2枚目は帰りの渡月橋、3枚目は駅前のカフェで。<br><a class="sns01-tag" href="#SNS-01">#嵐山</a> <a class="sns01-tag" href="#SNS-01">#竹林の小径</a> <a class="sns01-tag" href="#SNS-01">#フィルムっぽい</a></span></p>
+        <button class="sns01-link" type="button">コメント48件をすべて見る</button>
+        <div class="sns01-comment"><p><b>mio_k</b>光の筋がきれい…！行ってみたい</p><button class="sns01-mini" type="button" aria-pressed="false" aria-label="コメントにいいね"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg></button></div>
+        <time class="sns01-time" datetime="2026-10-02T07:41">2時間前</time>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>写真をダブルタップでいいね</li><li>横にスワイプ／ドラッグ</li><li>…続きを読むで展開</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-01');
+  if (!root) return;
+  const $ = (s) => root.querySelector(s);
+  const $$ = (s) => [...root.querySelectorAll(s)];
+  const reduced = () => !!(window.ObjKit && ObjKit.reducedMotion);
+
+  const media = $('.sns01-media');
+  const track = $('.sns01-track');
+  const slides = $$('.sns01-slide');
+  const countEl = $('.sns01-count');
+  const dots = $$('.sns01-dots i');
+  const burst = $('.sns01-burst');
+  const toast = $('.sns01-toast');
+  const likeBtn = $('.sns01-like');
+  const saveBtn = $('.sns01-save');
+  const likeNum = $('.sns01-num');
+  const N = slides.length;
+  let idx = 0;
+
+  /* ── Carousel ─────────────────────────────── */
+  const restart = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+  const setIndex = (i) => {
+    if (i === idx) return;
+    idx = i;
+    countEl.textContent = `${i + 1}/${N}`;
+    countEl.classList.add('is-bump');
+    setTimeout(() => countEl.classList.remove('is-bump'), 120);
+    dots.forEach((d, k) => d.classList.toggle('is-on', k === i));
+    slides.forEach((s, k) => s.setAttribute('aria-hidden', String(k !== i)));
+    media.dataset.at = i === 0 ? 'start' : i === N - 1 ? 'end' : 'mid';
+  };
+  track.addEventListener('scroll', () => {
+    const w = track.clientWidth;
+    if (w) setIndex(Math.max(0, Math.min(N - 1, Math.round(track.scrollLeft / w))));
+  }, { passive: true });
+
+  /* snap animation we drive ourselves (deterministic for mouse drags, buttons and keys; touch keeps native snapping) */
+  let anim = 0;
+  const go = (i) => {
+    i = Math.max(0, Math.min(N - 1, i));
+    cancelAnimationFrame(anim);
+    const from = track.scrollLeft;
+    const to = i * track.clientWidth;
+    if (reduced() || Math.abs(to - from) < 1) { track.scrollLeft = to; track.classList.remove('is-free'); return; }
+    track.classList.add('is-free');
+    const dur = Math.min(520, 260 + Math.abs(to - from) * 0.6);
+    const t0 = performance.now();
+    const ease = (t) => 1 - Math.pow(1 - t, 4);
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / dur);
+      track.scrollLeft = from + (to - from) * ease(t);
+      if (t < 1) anim = requestAnimationFrame(step);
+      else track.classList.remove('is-free');
+    };
+    anim = requestAnimationFrame(step);
+  };
+  $('.sns01-nav--prev').addEventListener('click', () => go(idx - 1));
+  $('.sns01-nav--next').addEventListener('click', () => go(idx + 1));
+  track.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(idx + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(idx - 1); }
+    else if (e.key === 'Enter') { e.preventDefault(); doubleTap(); }
+  });
+
+  /* mouse drag-to-swipe (touch uses native scroll-snap); taps on any pointer feed double-tap detection */
+  let drag = null;
+  let lastTap = { t: 0, x: 0, y: 0 };
+  track.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    const now = performance.now();
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, sl: track.scrollLeft, moved: false, mouse: e.pointerType === 'mouse', vx: 0, lx: e.clientX, lt: now };
+    if (drag.mouse) {
+      track.setPointerCapture(e.pointerId);
+      cancelAnimationFrame(anim);
+      drag.sl = track.scrollLeft;
+      track.classList.add('is-free', 'is-dragging');
+    }
+  });
+  track.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved && (Math.abs(dx) > 6 || Math.abs(e.clientY - drag.y) > 6)) drag.moved = true;
+    if (!drag.mouse) return;
+    const max = track.scrollWidth - track.clientWidth;
+    let sl = drag.sl - dx;
+    if (sl < 0) sl = sl / 3; else if (sl > max) sl = max + (sl - max) / 3;
+    track.scrollLeft = sl;
+    const now = performance.now();
+    if (now > drag.lt) { drag.vx = (e.clientX - drag.lx) / (now - drag.lt); drag.lx = e.clientX; drag.lt = now; }
+  });
+  const endDrag = (e, cancelled) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag;
+    drag = null;
+    if (d.mouse) {
+      track.classList.remove('is-dragging');
+      if (d.moved) {
+        const w = track.clientWidth;
+        const start = Math.round(d.sl / w);
+        const dx = e.clientX - d.x;
+        let target = Math.round(track.scrollLeft / w);
+        if (Math.abs(dx) > w * 0.15 || Math.abs(d.vx) > 0.35) target = start + (dx < 0 ? 1 : -1);
+        go(target);
+      } else go(Math.round(track.scrollLeft / track.clientWidth));
+    }
+    if (cancelled || d.moved) return;
+    const now = performance.now();
+    if (now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40) {
+      lastTap.t = 0;
+      doubleTap();
+    } else lastTap = { t: now, x: e.clientX, y: e.clientY };
+  };
+  track.addEventListener('pointerup', (e) => endDrag(e, false));
+  track.addEventListener('pointercancel', (e) => endDrag(e, true));
+  track.addEventListener('dragstart', (e) => e.preventDefault());
+
+  /* ── Rolling number ───────────────────────── */
+  const roll = (el, next, up) => {
+    const prev = el.dataset.v || el.textContent;
+    if (prev === next) return;
+    el.dataset.v = next;
+    if (reduced() || prev.length !== next.length) { el.textContent = next; return; }
+    el.textContent = '';
+    [...next].forEach((ch, i) => {
+      const s = document.createElement('span');
+      s.className = 'sns01-ch';
+      if (ch === prev[i]) { s.textContent = ch; el.append(s); return; }
+      const a = document.createElement('span'); a.textContent = ch;
+      const b = document.createElement('span'); b.textContent = prev[i];
+      s.append(a, b);
+      el.append(s);
+      const dir = up ? 1 : -1;
+      const opts = { duration: 420, easing: 'cubic-bezier(.34,1.4,.64,1)', fill: 'both' };
+      a.animate([{ transform: `translateY(${dir * 100}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], opts);
+      b.animate([{ transform: 'none', opacity: 1 }, { transform: `translateY(${-dir * 100}%)`, opacity: 0 }], { ...opts, easing: 'cubic-bezier(.22,1,.36,1)' })
+        .finished.then(() => { if (s.isConnected) s.textContent = ch; }).catch(() => {});
+    });
+  };
+
+  /* ── Like / save ──────────────────────────── */
+  let liked = false;
+  let likes = 1284;
+  const fmt = (n) => n.toLocaleString('ja-JP');
+  const setLiked = (v) => {
+    if (v !== liked) {
+      liked = v;
+      likes += v ? 1 : -1;
+      roll(likeNum, fmt(likes), v);
+      $('.sns01-sr').textContent = `いいね！${fmt(likes)}件`;
+      likeBtn.setAttribute('aria-pressed', String(v));
+      likeBtn.setAttribute('aria-label', v ? 'いいねを取り消す' : 'いいね');
+      likeBtn.querySelector('use').setAttribute('href', v ? '#i-heart-fill' : '#i-heart');
+    }
+    if (v && !reduced()) restart(likeBtn, 'sns01-is-pop');
+  };
+  const doubleTap = () => {
+    restart(burst, 'is-on');
+    setLiked(true);
+  };
+  likeBtn.addEventListener('click', () => setLiked(!liked));
+  likeBtn.addEventListener('animationend', () => likeBtn.classList.remove('sns01-is-pop'));
+  burst.addEventListener('animationend', () => burst.classList.remove('is-on'));
+
+  let saved = false;
+  let toastT = 0;
+  saveBtn.addEventListener('click', () => {
+    saved = !saved;
+    saveBtn.setAttribute('aria-pressed', String(saved));
+    saveBtn.setAttribute('aria-label', saved ? '保存を取り消す' : '保存');
+    saveBtn.querySelector('use').setAttribute('href', saved ? '#i-bookmark-fill' : '#i-bookmark');
+    if (!reduced()) restart(saveBtn, 'sns01-is-pop');
+    clearTimeout(toastT);
+    toast.classList.toggle('is-on', saved);
+    if (saved) toastT = setTimeout(() => toast.classList.remove('is-on'), 2200);
+  });
+  saveBtn.addEventListener('animationend', () => saveBtn.classList.remove('sns01-is-pop'));
+
+  const mini = $('.sns01-mini');
+  mini.addEventListener('click', () => {
+    const v = mini.getAttribute('aria-pressed') !== 'true';
+    mini.setAttribute('aria-pressed', String(v));
+    mini.querySelector('use').setAttribute('href', v ? '#i-heart-fill' : '#i-heart');
+    if (v && !reduced()) mini.querySelector('.i').animate([{ transform: 'scale(.6)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+  });
+
+  /* ── Caption expand ───────────────────────── */
+  const cap = $('.sns01-cap');
+  const more = $('.sns01-more');
+  more.addEventListener('click', () => {
+    const h0 = cap.offsetHeight;
+    cap.classList.add('is-open');
+    more.setAttribute('aria-expanded', 'true');
+    const h1 = cap.offsetHeight;
+    if (reduced()) return;
+    cap.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: 460, easing: 'cubic-bezier(.32,.72,0,1)' });
+    $('.sns01-rest').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 380, delay: 60, easing: 'ease-out', fill: 'backwards' });
+  });
+
+  root.addEventListener('click', (e) => { if (e.target.closest('a.sns01-tag')) e.preventDefault(); });
+})();
+</script>

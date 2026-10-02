@@ -1,0 +1,431 @@
+<!-- ═══════════ CRD-01 · Feature Card ═══════════ -->
+<style>
+#CRD-01 .obj-stage { min-height: 540px; }
+#CRD-01 .crd01-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 20px; width: 100%; }
+
+/* — Card shell — */
+#CRD-01 .crd01-card {
+  position: relative; flex: 0 1 340px; width: min(100%, 340px); height: 420px; border-radius: 20px;
+  box-shadow: var(--shadow-2); -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform .55s var(--ease-spring), box-shadow .35s ease;
+}
+#CRD-01 .crd01-card.is-pressed { transform: scale(.97); transition: transform .16s var(--ease-out), box-shadow .2s ease; box-shadow: var(--shadow-1); }
+#CRD-01 .crd01-card.is-hidden { visibility: hidden; }
+@media (hover: hover) { #CRD-01 .crd01-card:hover:not(.is-pressed) { box-shadow: var(--shadow-3); } }
+#CRD-01 .crd01-hit { position: absolute; inset: 0; z-index: 3; margin: 0; padding: 0; border: 0; border-radius: inherit; background: transparent; cursor: pointer; }
+#CRD-01 .crd01-hit:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--bg-grouped), 0 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent); }
+
+/* — Face (shared by card and reader header) — */
+#CRD-01 .crd01-face { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; color: #fff; }
+#CRD-01 .crd01-artwrap { position: absolute; inset: 0; overflow: hidden; }
+#CRD-01 .crd01-art { position: absolute; inset: 0; }
+#CRD-01 .crd01-art.art-4 { background-image:
+    radial-gradient(circle at 74% 26%, rgba(255, 255, 255, .9) 0 .5%, rgba(200, 220, 255, .35) 1.4%, transparent 2.6%),
+    radial-gradient(circle at 30% 18%, rgba(255, 255, 255, .7) 0 .3%, transparent .8%),
+    radial-gradient(circle at 58% 12%, rgba(255, 255, 255, .55) 0 .25%, transparent .7%),
+    radial-gradient(circle at 18% 70%, rgba(255, 184, 108, .95) 0 2.2%, rgba(255, 184, 108, .25) 3.6%, transparent 4.5%),
+    radial-gradient(circle at 33% 57%, rgba(255, 94, 126, .8) 0 3.6%, rgba(255, 94, 126, .2) 5.2%, transparent 6%),
+    radial-gradient(circle at 70% 66%, rgba(100, 210, 255, .75) 0 2.8%, rgba(100, 210, 255, .2) 4.2%, transparent 5%),
+    radial-gradient(circle at 84% 48%, rgba(255, 214, 10, .7) 0 1.8%, rgba(255, 214, 10, .2) 2.8%, transparent 3.4%),
+    radial-gradient(circle at 56% 80%, rgba(191, 90, 242, .65) 0 4.6%, rgba(191, 90, 242, .18) 6.4%, transparent 7.4%),
+    radial-gradient(circle at 46% 38%, rgba(255, 255, 255, .55) 0 1%, transparent 1.8%),
+    radial-gradient(120% 55% at 50% 118%, rgba(227, 108, 140, .6), transparent 62%),
+    linear-gradient(180deg, #070b1f 0%, #141a44 45%, #2e2463 75%, #5a2d6e 100%); }
+#CRD-01 .crd01-art::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 47%; opacity: .94; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 140' preserveAspectRatio='none'><g fill='%23080920'><rect x='0' y='96' width='18' height='44'/><rect x='16' y='72' width='22' height='68'/><rect x='36' y='88' width='16' height='52'/><rect x='50' y='52' width='20' height='88'/><rect x='58' y='40' width='4' height='14'/><rect x='68' y='80' width='24' height='60'/><rect x='90' y='64' width='18' height='76'/><rect x='106' y='94' width='20' height='46'/><rect x='124' y='44' width='26' height='96'/><rect x='135' y='30' width='3' height='16'/><rect x='148' y='76' width='22' height='64'/><rect x='168' y='60' width='18' height='80'/><rect x='184' y='90' width='24' height='50'/><rect x='206' y='68' width='20' height='72'/><rect x='224' y='50' width='22' height='90'/><rect x='244' y='84' width='20' height='56'/><rect x='262' y='62' width='26' height='78'/><rect x='286' y='92' width='18' height='48'/><rect x='302' y='74' width='22' height='66'/><rect x='322' y='88' width='18' height='52'/></g><g fill='%23ffd28a' opacity='.8'><rect x='62' y='70' width='2.4' height='3'/><rect x='55' y='84' width='2.4' height='3'/><rect x='140' y='64' width='2.4' height='3'/><rect x='130' y='80' width='2.4' height='3'/><rect x='228' y='58' width='2.4' height='3'/><rect x='236' y='72' width='2.4' height='3'/><rect x='266' y='70' width='2.4' height='3'/><rect x='274' y='84' width='2.4' height='3'/><rect x='100' y='90' width='2.4' height='3'/><rect x='172' y='68' width='2.4' height='3'/><rect x='210' y='76' width='2.4' height='3'/><rect x='306' y='82' width='2.4' height='3'/><rect x='20' y='80' width='2.4' height='3'/><rect x='28' y='92' width='2.4' height='3'/><rect x='248' y='92' width='2.4' height='3'/><rect x='70' y='90' width='2.4' height='3'/></g><g fill='%23d6e6ff' opacity='.7'><rect x='54' y='60' width='2.4' height='3'/><rect x='128' y='52' width='2.4' height='3'/><rect x='144' y='96' width='2.4' height='3'/><rect x='229' y='90' width='2.4' height='3'/><rect x='94' y='72' width='2.4' height='3'/><rect x='178' y='86' width='2.4' height='3'/><rect x='314' y='96' width='2.4' height='3'/><rect x='152' y='86' width='2.4' height='3'/><rect x='84' y='100' width='2.4' height='3'/></g></svg>") 0 100% / 100% 100% no-repeat; }
+#CRD-01 .crd01-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4, 6, 20, .55) 0%, rgba(4, 6, 20, .12) 34%, rgba(4, 6, 20, 0) 50%, rgba(4, 6, 20, .38) 100%); }
+
+#CRD-01 .crd01-top { position: absolute; top: 20px; left: var(--crd01-padl, 20px); width: var(--crd01-colw, calc(100% - 40px)); transform-origin: 0 0; }
+#CRD-01 .crd01-eyebrow { margin: 0 0 6px; font: 600 var(--fs-footnote)/18px var(--font-text); letter-spacing: .02em; color: rgba(255, 255, 255, .72); }
+#CRD-01 .crd01-title {
+  margin: 0; font: 800 32px/1.12 var(--font-display); letter-spacing: 0; font-feature-settings: "palt"; color: #fff;
+  text-shadow: 0 1px 16px rgba(0, 0, 0, .25); word-break: auto-phrase;
+}
+#CRD-01 .crd01-dek {
+  position: absolute; left: var(--crd01-padl, 20px); bottom: 90px; width: var(--crd01-colw, calc(100% - 40px)); margin: 0; transform-origin: 0 0;
+  font: 500 var(--fs-subhead)/1.45 var(--font-text); letter-spacing: 0; color: rgba(255, 255, 255, .86); word-break: auto-phrase; text-wrap: pretty;
+}
+#CRD-01 .crd01-strip {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 76px; transform-origin: 0 0;
+  background: rgba(22, 20, 44, .34); -webkit-backdrop-filter: blur(24px) saturate(170%); backdrop-filter: blur(24px) saturate(170%);
+  border-radius: 0 0 20px 20px; box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .14);
+}
+#CRD-01 .crd01-head .crd01-strip { border-radius: 0; }
+#CRD-01 .crd01-app { position: absolute; left: calc(var(--crd01-padl, 20px) - 4px); bottom: 14px; display: flex; align-items: center; gap: 12px; width: calc(var(--crd01-colw, calc(100% - 40px)) - 84px); transform-origin: 0 0; }
+#CRD-01 .crd01-icon {
+  position: relative; flex: none; width: 48px; height: 48px; border-radius: 11px; display: grid; place-items: center; overflow: hidden;
+  background: radial-gradient(circle at 70% 28%, #ffe9a8 0 9%, transparent 10%), radial-gradient(120% 90% at 30% 110%, #7b4bd6, transparent 60%), linear-gradient(160deg, #1d2a6b 0%, #0b1030 100%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18), 0 2px 6px rgba(0, 0, 0, .25);
+}
+#CRD-01 .crd01-icon .i { width: 22px; height: 22px; color: #fff; margin: 6px 0 0 -4px; }
+#CRD-01 .crd01-appt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#CRD-01 .crd01-appn { font: 600 var(--fs-subhead)/19px var(--font-text); letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#CRD-01 .crd01-apps { font-size: var(--fs-footnote); line-height: 16px; color: rgba(255, 255, 255, .62); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* — 入手 pill (App Store) — */
+#CRD-01 .crd01-get {
+  --gb: rgba(255, 255, 255, .22); --gc: #fff;
+  position: absolute; right: calc(var(--crd01-padl, 20px) - 4px); bottom: 23px; z-index: 4; height: 30px; width: 74px; padding: 0; border: 0; border-radius: 15px;
+  background: var(--gb); color: var(--gc); display: grid; place-items: center; cursor: pointer; transform-origin: 100% 0;
+  font: 700 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; -webkit-tap-highlight-color: transparent;
+  transition: width .42s var(--ease-ios), background-color .3s ease, transform .4s var(--ease-spring), opacity .2s ease;
+}
+#CRD-01 .crd01-get:active { transform: scale(.92); transition-duration: .1s; opacity: .8; }
+#CRD-01 .crd01-get:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--gc); }
+#CRD-01 .crd01-gl { grid-area: 1 / 1; transition: opacity .2s ease; }
+#CRD-01 .crd01-ring { grid-area: 1 / 1; width: 28px; height: 28px; opacity: 0; transition: opacity .2s ease; }
+#CRD-01 .crd01-ring circle { fill: none; stroke: var(--gc); stroke-width: 2.2; stroke-linecap: round; }
+#CRD-01 .crd01-ring .crd01-rt { opacity: .25; }
+#CRD-01 .crd01-ring .crd01-rp { stroke-dasharray: 69.1; stroke-dashoffset: 69.1; transform: rotate(-90deg); transform-origin: 14px 14px; }
+#CRD-01 .crd01-ring rect { fill: var(--gc); }
+#CRD-01 .crd01-get.is-loading { width: 30px; background-color: transparent; }
+#CRD-01 .crd01-get.is-loading .crd01-gl { opacity: 0; }
+#CRD-01 .crd01-get.is-loading .crd01-ring { opacity: 1; }
+#CRD-01 .crd01-get.is-loading .crd01-rp { animation: crd01-fill 1.5s cubic-bezier(.45, 0, .2, 1) .15s forwards; }
+@keyframes crd01-fill { to { stroke-dashoffset: 0; } }
+
+/* — Card 2: light editorial — */
+#CRD-01 .crd01-face--paper { color: var(--label); }
+#CRD-01 .crd01-paper { position: absolute; inset: 0; background: var(--bg-grouped-2); transform-origin: 0 0; }
+#CRD-01 .crd01-face--paper .crd01-top { top: 22px; left: var(--crd01-padl, 22px); width: var(--crd01-colw, calc(100% - 44px)); }
+#CRD-01 .crd01-kick { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 10px; margin-bottom: 14px; box-shadow: inset 0 -.5px 0 var(--label); }
+#CRD-01 .crd01-kick b { font: 700 var(--fs-footnote)/1 var(--font-text); color: var(--brown); letter-spacing: .02em; }
+#CRD-01 .crd01-kick span { font: 600 11px/1 var(--font-mono); color: var(--label-2); letter-spacing: .06em; }
+#CRD-01 .crd01-title2 { margin: 0; font: 800 34px/1.16 var(--font-display); letter-spacing: 0; font-feature-settings: "palt"; color: var(--label); }
+#CRD-01 .crd01-dek2 { word-break: auto-phrase; margin: 12px 0 0; font: 400 var(--fs-subhead)/1.65 var(--font-text); letter-spacing: 0; color: var(--label-2); text-wrap: pretty; }
+#CRD-01 .crd01-cup {
+  position: absolute; right: -26px; bottom: -26px; width: 156px; height: 156px; border-radius: 50%; transform-origin: 0 0;
+  background-size: 178% 178%; background-position: 50% 50%;
+  box-shadow: 0 18px 40px rgba(70, 40, 20, .28), 0 2px 6px rgba(70, 40, 20, .18);
+}
+#CRD-01 .crd01-by { position: absolute; left: var(--crd01-padl, 22px); bottom: 20px; display: flex; align-items: center; gap: 8px; transform-origin: 0 0; font-size: var(--fs-footnote); letter-spacing: 0; color: var(--label-2); white-space: nowrap; }
+#CRD-01 .crd01-by .av { width: 24px; height: 24px; font-size: 11px; }
+#CRD-01 .crd01-by b { font-weight: 600; color: var(--label); }
+
+/* — Reader (expanded article) — */
+#CRD-01 .crd01-scrim {
+  position: absolute; inset: 0; z-index: 10; opacity: 0; pointer-events: none;
+  background: color-mix(in srgb, var(--bg-grouped) 40%, rgba(0, 0, 0, .35));
+  -webkit-backdrop-filter: blur(10px) saturate(120%); backdrop-filter: blur(10px) saturate(120%);
+  transition: opacity .4s ease;
+}
+#CRD-01 .crd01-scrim.is-on { opacity: 1; pointer-events: auto; }
+#CRD-01 .crd01-reader { position: absolute; z-index: 11; }
+#CRD-01 .crd01-reader[hidden] { display: none; }
+#CRD-01 .crd01-shadow { position: absolute; inset: 0; border-radius: var(--crd01-r, 28px); box-shadow: var(--shadow-3); transform-origin: 0 0; pointer-events: none; }
+#CRD-01 .crd01-clip { position: absolute; inset: 0; border-radius: var(--crd01-r, 28px); overflow: hidden; background: var(--bg-grouped-2); }
+#CRD-01 .crd01-reader.is-anim .crd01-clip { overflow: visible; border-radius: 0; }
+#CRD-01 .crd01-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+#CRD-01 .crd01-scroll::-webkit-scrollbar { display: none; }
+#CRD-01 .crd01-reader.is-anim .crd01-scroll { overflow: visible; }
+#CRD-01 .crd01-head { position: relative; }
+#CRD-01 .crd01-head .crd01-face { border-radius: 0; overflow: visible; }
+#CRD-01 .crd01-reader.is-anim .crd01-artwrap { overflow: visible; }
+#CRD-01 .crd01-head .crd01-art { inset: auto; transform-origin: 0 0; }
+#CRD-01 .crd01-close {
+  position: absolute; top: 14px; right: 14px; z-index: 5; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer; color: #fff;
+  background: rgba(20, 20, 28, .32); -webkit-backdrop-filter: blur(16px) saturate(180%); backdrop-filter: blur(16px) saturate(180%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .28), inset 0 1px 0 rgba(255, 255, 255, .22), 0 4px 14px rgba(0, 0, 0, .18);
+  transition: transform .4s var(--ease-spring), background-color .2s ease;
+}
+#CRD-01 .crd01-close .i { width: 15px; height: 15px; }
+#CRD-01 .crd01-close:active { transform: scale(.88); transition-duration: .1s; }
+#CRD-01 .crd01-close:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4.5px color-mix(in srgb, var(--accent) 60%, transparent); }
+#CRD-01 .crd01-reader[data-tone="paper"] .crd01-close { color: var(--label); background: color-mix(in srgb, var(--bg-grouped-2) 55%, transparent); box-shadow: inset 0 0 0 .5px var(--separator), 0 4px 14px rgba(0, 0, 0, .1); }
+
+/* — Article body — */
+#CRD-01 .crd01-body { padding: 22px var(--crd01-padl, 20px) 40px; color: var(--label); }
+#CRD-01 .crd01-byline { display: flex; align-items: center; gap: 10px; padding-bottom: 16px; margin-bottom: 18px; box-shadow: inset 0 -.5px 0 var(--separator); font-size: var(--fs-footnote); color: var(--label-2); letter-spacing: 0; }
+#CRD-01 .crd01-byline .av { width: 32px; height: 32px; font-size: 13px; }
+#CRD-01 .crd01-byline b { display: block; color: var(--label); font-weight: 600; font-size: var(--fs-subhead); }
+#CRD-01 .crd01-sep { height: .5px; margin: 0 0 22px; box-shadow: inset 0 .5px 0 var(--separator); }
+#CRD-01 .crd01-lead { word-break: auto-phrase; margin: 0 0 22px; font: 600 18px/1.7 var(--font-text); letter-spacing: 0; text-wrap: pretty; }
+#CRD-01 .crd01-body h4 { margin: 28px 0 8px; font: 700 var(--fs-title3)/1.35 var(--font-display); letter-spacing: 0; font-feature-settings: "palt"; }
+#CRD-01 .crd01-body h4 span { display: block; margin-bottom: 4px; font: 600 11px/1 var(--font-mono); letter-spacing: .1em; color: var(--brown); }
+#CRD-01 .crd01-body p.crd01-p { margin: 0; font-size: var(--fs-callout); line-height: 1.85; letter-spacing: 0; color: color-mix(in srgb, var(--label) 82%, transparent); text-wrap: pretty; }
+#CRD-01 .crd01-quote { margin: 30px 0; padding: 18px 0; box-shadow: inset 0 .5px 0 var(--label), inset 0 -.5px 0 var(--label); }
+#CRD-01 .crd01-quote p { word-break: auto-phrase; margin: 0; font: 800 24px/1.4 var(--font-display); letter-spacing: 0; font-feature-settings: "palt"; text-wrap: balance; }
+#CRD-01 .crd01-quote cite { display: block; margin-top: 10px; font: 500 var(--fs-footnote)/1 var(--font-text); font-style: normal; color: var(--label-2); letter-spacing: 0; }
+#CRD-01 .crd01-appcard { position: relative; display: flex; align-items: center; gap: 12px; margin-top: 32px; padding: 14px 106px 14px 14px; border-radius: 16px; background: var(--bg-grouped); }
+#CRD-01 .crd01-appcard .crd01-appn { color: var(--label); }
+#CRD-01 .crd01-appcard .crd01-apps { color: var(--label-2); }
+#CRD-01 .crd01-appcard .crd01-get { --gb: var(--fill-3); --gc: var(--accent); right: 14px; bottom: auto; top: 50%; margin-top: -15px; transform-origin: 100% 50%; }
+#CRD-01 .crd01-appcard .crd01-get.is-loading { background-color: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  #CRD-01 .crd01-card, #CRD-01 .crd01-get { transition: none; }
+}
+</style>
+<article class="obj" id="CRD-01" data-name="Feature Card" data-ja="特集カード" data-vector="Editorial" data-size="l" data-desc="App Store「Today」風の大きな特集カード。タップで記事に展開。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="crd01-row">
+
+      <div class="crd01-card" data-card="night" data-tone="night">
+        <div class="crd01-face">
+          <div class="crd01-artwrap"><div class="crd01-art art art-4" data-flip="cover"></div></div>
+          <div class="crd01-shade" data-flip="scale"></div>
+          <div class="crd01-top" data-flip="move">
+            <p class="crd01-eyebrow">今日のおすすめ</p>
+            <h3 class="crd01-title">夜を撮る、<br>新しい方法</h3>
+          </div>
+          <p class="crd01-dek" data-flip="move">ノイズの少ない夜景を、手持ちで。<br>プロが教える撮影のコツ。</p>
+          <div class="crd01-strip" data-flip="scale"></div>
+          <div class="crd01-app" data-flip="move">
+            <span class="crd01-icon" aria-hidden="true"><svg class="i"><use href="#i-camera-fill"/></svg></span>
+            <span class="crd01-appt"><span class="crd01-appn">Lumen – 夜景カメラ</span><span class="crd01-apps">星空も街明かりも、手持ちで</span></span>
+          </div>
+          <button class="crd01-get" type="button" data-app="lumen" data-flip="move" aria-label="Lumen を入手"><span class="crd01-gl">入手</span><svg class="crd01-ring" viewBox="0 0 28 28" aria-hidden="true"><circle class="crd01-rt" cx="14" cy="14" r="11"/><circle class="crd01-rp" cx="14" cy="14" r="11"/><rect x="10.5" y="10.5" width="7" height="7" rx="1.5"/></svg></button>
+        </div>
+        <button class="crd01-hit" type="button" aria-haspopup="dialog" aria-label="記事を開く：夜を撮る、新しい方法"></button>
+      </div>
+
+      <div class="crd01-card crd01-card--paper" data-card="coffee" data-tone="paper">
+        <div class="crd01-face crd01-face--paper">
+          <div class="crd01-paper" data-flip="scale"></div>
+          <div class="crd01-top" data-flip="move">
+            <div class="crd01-kick"><b>ハウツー</b><span>NO. 12</span></div>
+            <h3 class="crd01-title2">朝の一杯を、<br>もっと丁寧に。</h3>
+            <p class="crd01-dek2">豆の挽き方からお湯の温度まで。バリスタに聞いた、家で淹れるコーヒーの基本。</p>
+          </div>
+          <div class="crd01-cup art art-8" data-flip="move" aria-hidden="true"></div>
+          <div class="crd01-by" data-flip="move"><span class="av av-6" aria-hidden="true">R</span><b>伊藤 蓮</b><span>6分で読める</span></div>
+        </div>
+        <button class="crd01-hit" type="button" aria-haspopup="dialog" aria-label="記事を開く：朝の一杯を、もっと丁寧に。"></button>
+      </div>
+
+    </div>
+
+    <div class="crd01-scrim" aria-hidden="true"></div>
+    <div class="crd01-reader" role="dialog" aria-modal="true" aria-label="記事" hidden>
+      <div class="crd01-shadow"></div>
+      <div class="crd01-clip">
+        <div class="crd01-scroll"><div class="crd01-inner"><div class="crd01-head"></div><div class="crd01-body"></div></div></div>
+        <button class="crd01-close" type="button" aria-label="閉じる"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>
+      </div>
+    </div>
+
+    <template data-article="night">
+      <div class="crd01-byline"><span class="av av-1" aria-hidden="true">H</span><span><b>佐藤 春</b>文・写真 ・ 4分で読める</span></div>
+      <p class="crd01-lead">街の灯り、星空、月明かり。暗い場所での撮影は難しいと思われがちですが、いくつかのコツを押さえるだけで、写真は見違えるほど変わります。</p>
+      <h4><span>01</span>手ぶれは「体」で止める</h4>
+      <p class="crd01-p">夜はシャッタースピードが遅くなり、わずかな揺れが写真全体のぼやけにつながります。壁や手すりに体を預け、息を吐ききった瞬間にシャッターを。2秒のセルフタイマーを使うだけでも、解像感は大きく変わります。</p>
+      <blockquote class="crd01-quote"><p>光が少ないほど、待つ時間が写真をつくる。</p><cite>— 佐藤 春</cite></blockquote>
+      <h4><span>02</span>街の色は、そのまま残す</h4>
+      <p class="crd01-p">ナトリウム灯のオレンジ、ネオンの青。ホワイトバランスを無理に整えず、街が持つ色をそのまま残すと、夜らしい空気感が生まれます。</p>
+      <h4><span>03</span>露出は少しだけ暗めに</h4>
+      <p class="crd01-p">明るく撮ろうとすると、ハイライトが白く飛んでしまいがち。露出をわずかにマイナスへ振ると、光の粒がくっきりと浮かび上がります。</p>
+      <div class="crd01-appcard">
+        <span class="crd01-icon" aria-hidden="true"><svg class="i"><use href="#i-camera-fill"/></svg></span>
+        <span class="crd01-appt"><span class="crd01-appn">Lumen – 夜景カメラ</span><span class="crd01-apps">写真／ビデオ</span></span>
+        <button class="crd01-get" type="button" data-app="lumen" aria-label="Lumen を入手"><span class="crd01-gl">入手</span><svg class="crd01-ring" viewBox="0 0 28 28" aria-hidden="true"><circle class="crd01-rt" cx="14" cy="14" r="11"/><circle class="crd01-rp" cx="14" cy="14" r="11"/><rect x="10.5" y="10.5" width="7" height="7" rx="1.5"/></svg></button>
+      </div>
+    </template>
+    <template data-article="coffee">
+      <div class="crd01-sep" aria-hidden="true"></div>
+      <p class="crd01-lead">特別な道具がなくても、おいしいコーヒーは淹れられます。大切なのは、豆の鮮度と挽き目、そしてお湯の温度。</p>
+      <h4><span>01</span>挽くのは、淹れる直前に</h4>
+      <p class="crd01-p">コーヒーの香りは、挽いた瞬間から少しずつ逃げていきます。ミルがあれば、飲む分だけをその都度挽くのがいちばんの近道です。</p>
+      <blockquote class="crd01-quote"><p>一杯の味は、最初の30秒の蒸らしで決まる。</p><cite>— 伊藤 蓮</cite></blockquote>
+      <h4><span>02</span>お湯は 92℃ 前後</h4>
+      <p class="crd01-p">沸騰したお湯を一度ポットに移すと、ちょうどよい温度に。熱すぎると苦味が、ぬるすぎると酸味が強く出ます。</p>
+    </template>
+  </div>
+  <ul class="obj-notes"><li>押すとカードが沈む</li><li>タップで記事に展開</li><li>× / Esc で元に戻る</li><li>「入手」でダウンロード表示</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('CRD-01');
+  if (!root) return;
+  const stage = root.querySelector('.obj-stage');
+  const reader = root.querySelector('.crd01-reader');
+  const shadow = root.querySelector('.crd01-shadow');
+  const clip = root.querySelector('.crd01-clip');
+  const scroller = root.querySelector('.crd01-scroll');
+  const inner = root.querySelector('.crd01-inner');
+  const head = root.querySelector('.crd01-head');
+  const body = root.querySelector('.crd01-body');
+  const closeBtn = root.querySelector('.crd01-close');
+  const scrim = root.querySelector('.crd01-scrim');
+  const reduce = () => window.ObjKit && ObjKit.reducedMotion;
+
+  /* iOS-like spring sampled into a CSS linear() easing (falls back to the iOS curve) */
+  const springEase = (zeta, w) => {
+    const wd = w * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta)), pts = [];
+    for (let i = 0; i <= 48; i++) {
+      const t = i / 48;
+      const v = zeta >= 1 ? 1 - Math.exp(-w * t) * (1 + w * t) : 1 - Math.exp(-zeta * w * t) * (Math.cos(wd * t) + (zeta * w / wd) * Math.sin(wd * t));
+      pts.push(i === 48 ? 1 : +v.toFixed(4));
+    }
+    return `linear(${pts.join(', ')})`;
+  };
+  const hasLinear = window.CSS && CSS.supports && CSS.supports('transition-timing-function', 'linear(0, 1)');
+  const EASE_OPEN = hasLinear ? springEase(0.8, 9.6) : 'cubic-bezier(.32,.72,0,1)';
+  const EASE_CLOSE = hasLinear ? springEase(1, 8.5) : 'cubic-bezier(.32,.72,0,1)';
+
+  /* ---------- press feedback ---------- */
+  root.querySelectorAll('.crd01-hit').forEach((hit) => {
+    const card = hit.closest('.crd01-card');
+    const up = () => card.classList.remove('is-pressed');
+    hit.addEventListener('pointerdown', (e) => { if (e.button === 0) card.classList.add('is-pressed'); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => hit.addEventListener(t, up));
+    hit.addEventListener('click', () => { up(); open(card); });
+  });
+
+  /* ---------- 入手 → progress ring → 開く (state shared by every copy of the button) ---------- */
+  const apps = {};
+  const syncGet = (app) => root.querySelectorAll(`.crd01-get[data-app="${app}"]`).forEach((b) => {
+    const s = apps[app] || 'get';
+    b.classList.toggle('is-loading', s === 'loading');
+    b.querySelector('.crd01-gl').textContent = s === 'done' ? '開く' : '入手';
+    b.setAttribute('aria-label', s === 'done' ? 'Lumen を開く' : s === 'loading' ? 'ダウンロード中' : 'Lumen を入手');
+  });
+  root.addEventListener('click', (e) => {
+    const b = e.target.closest('.crd01-get');
+    if (!b) return;
+    e.stopPropagation();
+    const app = b.dataset.app;
+    if (apps[app] && apps[app] !== 'get') return;
+    apps[app] = 'loading'; syncGet(app);
+    setTimeout(() => { apps[app] = 'done'; syncGet(app); }, reduce() ? 300 : 1800);
+  });
+
+  /* ---------- FLIP expand / collapse ---------- */
+  let state = 'idle', current = null, anims = [];
+  const rel = (r, o) => ({ x: r.left - o.left, y: r.top - o.top, w: r.width, h: r.height });
+
+  function geometry(card) {
+    const sW = stage.clientWidth, sH = stage.clientHeight;
+    const narrow = sW < 560;
+    const W = narrow ? sW : Math.min(sW - 24, 760);
+    const H = narrow ? sH : sH - 24;
+    const cw = card.offsetWidth, ch = card.offsetHeight;
+    return { W, H, L: Math.round((sW - W) / 2), T: narrow ? 0 : 12, R: narrow ? 18 : 28, cw, ch, Hh: Math.round(Math.min(ch, Math.max(300, H * 0.56))) };
+  }
+  function layout(card) {
+    const g = geometry(card);
+    Object.assign(reader.style, { left: g.L + 'px', top: g.T + 'px', width: g.W + 'px', height: g.H + 'px' });
+    reader.style.setProperty('--crd01-r', g.R + 'px');
+    const pad = card.dataset.tone === 'paper' ? 22 : 20;
+    reader.style.setProperty('--crd01-colw', (g.cw - pad * 2) + 'px');
+    reader.style.setProperty('--crd01-padl', Math.max(pad, Math.round((g.W - 600) / 2)) + 'px');
+    head.style.height = g.Hh + 'px';
+    // art "covers" the header with the card's aspect ratio → uniform scale, never distorted
+    const art = head.querySelector('[data-flip="cover"]');
+    if (art) {
+      const k = Math.max(g.W / g.cw, g.Hh / g.ch);
+      Object.assign(art.style, { width: g.cw * k + 'px', height: g.ch * k + 'px', left: (g.W - g.cw * k) / 2 + 'px', top: (g.Hh - g.ch * k) / 2 + 'px' });
+    }
+    return g;
+  }
+  function flipFrames(card) {
+    const fEls = [...card.querySelectorAll('[data-flip]')];
+    const lEls = [...head.querySelectorAll('[data-flip]')];
+    return lEls.map((el, i) => {
+      const f = fEls[i].getBoundingClientRect(), l = el.getBoundingClientRect();
+      const kind = el.dataset.flip;
+      let sx = f.width / l.width, sy = f.height / l.height;
+      if (kind === 'move') sx = sy = f.height / l.height || 1;
+      if (kind === 'cover') sy = sx;
+      // applied with transform-origin 0 0 → maps the element's final box onto its box in the card
+      return { el, t: `translate(${f.left - l.left}px, ${f.top - l.top}px) scale(${sx}, ${sy})` };
+    });
+  }
+  const clipFor = (r, o, rad) => `inset(${r.top - o.top}px ${o.right - r.right}px ${o.bottom - r.bottom}px ${r.left - o.left}px round ${rad}px)`;
+  const stopAll = () => { anims.forEach((a) => a.cancel()); anims = []; };
+  const run = (el, kf, opt) => { const a = el.animate(kf, opt); anims.push(a); return a; };
+
+  function open(card) {
+    if (state !== 'idle') return;
+    state = 'opening'; current = card;
+    const tone = card.dataset.tone;
+    reader.dataset.tone = tone;
+    head.replaceChildren(card.querySelector('.crd01-face').cloneNode(true));
+    body.replaceChildren(root.querySelector(`template[data-article="${card.dataset.card}"]`).content.cloneNode(true));
+    Object.keys(apps).forEach(syncGet);
+    reader.hidden = false;
+    reader.classList.add('is-anim');
+    const g = layout(card);
+    scroller.scrollTop = 0;
+    const cr = card.getBoundingClientRect();
+    const rr = reader.getBoundingClientRect();
+    const frames = flipFrames(card);
+    card.classList.add('is-hidden');
+    scrim.classList.add('is-on');
+
+    if (reduce()) {
+      run(reader, [{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' }).finished.then(done, () => {});
+      return;
+    }
+    const D = 640, opt = { duration: D, easing: EASE_OPEN, fill: 'backwards' };
+    const artwrap = head.querySelector('.crd01-artwrap');
+    frames.forEach(({ el, t }) => run(el, [{ transform: t, transformOrigin: '0 0' }, { transform: 'none', transformOrigin: '0 0' }], opt));
+    if (artwrap) {
+      const ar = artwrap.getBoundingClientRect();
+      run(artwrap, [{ clipPath: clipFor(cr, ar, 0) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], opt);
+    }
+    run(clip, [{ clipPath: clipFor(cr, rr, 20 * cr.width / g.cw) }, { clipPath: `inset(0px 0px 0px 0px round ${g.R}px)` }], opt);
+    run(shadow, [{ transform: `translate(${cr.left - rr.left}px, ${cr.top - rr.top}px) scale(${cr.width / rr.width}, ${cr.height / rr.height})`, opacity: .6 }, { transform: 'none', opacity: 1 }], opt);
+    run(body, [{ opacity: 0, transform: 'translateY(28px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: 140, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+    run(closeBtn, [{ opacity: 0, transform: 'scale(.5)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 260, easing: 'cubic-bezier(.34,1.56,.64,1)', fill: 'backwards' });
+    anims[0].finished.then(done, () => {});
+    function done() {
+      if (state !== 'opening') return;
+      anims = [];
+      reader.classList.remove('is-anim');
+      state = 'open';
+      closeBtn.focus({ preventScroll: true });
+    }
+  }
+
+  function close() {
+    if (state !== 'open') return;
+    state = 'closing';
+    const card = current;
+    const s = scroller.scrollTop;
+    reader.classList.add('is-anim');
+    scroller.scrollTop = 0;
+    const g = layout(card);
+    const rr = reader.getBoundingClientRect();
+    const cr = card.getBoundingClientRect();
+    const frames = flipFrames(card);
+    scrim.classList.remove('is-on');
+    const finish = () => {
+      if (state !== 'closing') return;
+      stopAll();
+      card.classList.remove('is-hidden');
+      reader.hidden = true; reader.classList.remove('is-anim');
+      head.replaceChildren(); body.replaceChildren();
+      state = 'idle'; current = null;
+      card.querySelector('.crd01-hit').focus({ preventScroll: true });
+    };
+    if (reduce()) { run(reader, [{ opacity: 1 }, { opacity: 0 }], { duration: 180 }).finished.then(finish, () => {}); return; }
+    const D = 520, opt = { duration: D, easing: EASE_CLOSE, fill: 'forwards' };
+    frames.forEach(({ el, t }) => run(el, [{ transform: 'none', transformOrigin: '0 0' }, { transform: t, transformOrigin: '0 0' }], opt));
+    const artwrap = head.querySelector('.crd01-artwrap');
+    if (artwrap) {
+      const ar = artwrap.getBoundingClientRect();
+      run(artwrap, [{ clipPath: 'inset(0px 0px 0px 0px round 0px)' }, { clipPath: clipFor(cr, ar, 0) }], opt);
+    }
+    run(inner, [{ transform: `translateY(${-s}px)` }, { transform: 'none' }], opt);
+    run(clip, [{ clipPath: `inset(0px 0px 0px 0px round ${g.R}px)` }, { clipPath: clipFor(cr, rr, 20) }], opt);
+    run(shadow, [{ transform: 'none', opacity: 1 }, { transform: `translate(${cr.left - rr.left}px, ${cr.top - rr.top}px) scale(${cr.width / rr.width}, ${cr.height / rr.height})`, opacity: .5 }], opt);
+    run(body, [{ opacity: 1 }, { opacity: 0 }], { duration: 130, easing: 'ease-out', fill: 'forwards' });
+    run(closeBtn, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.6)' }], { duration: 160, easing: 'ease-out', fill: 'forwards' });
+    anims[0].finished.then(finish, () => {});
+  }
+
+  closeBtn.addEventListener('click', close);
+  scrim.addEventListener('click', close);
+  reader.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
+    if (e.key === 'Tab') { // keep focus inside the article
+      const f = [...reader.querySelectorAll('button')].filter((b) => !b.disabled && b.offsetParent);
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  addEventListener('resize', () => { if (state === 'open' && current) layout(current); }, { passive: true });
+})();
+</script>

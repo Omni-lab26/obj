@@ -1,0 +1,373 @@
+<!-- ═══════════ INP-04 · Segmented Control ═══════════ -->
+<style>
+#INP-04 .inp04-wrap { width: min(100%, 360px); display: flex; flex-direction: column; }
+#INP-04 .inp04-head { margin: 0 16px 7px; font-size: var(--fs-footnote); line-height: 18px; color: var(--label-2); letter-spacing: 0; }
+#INP-04 .inp04-gap { height: 26px; }
+#INP-04 .inp04-card { border-radius: 12px; background: var(--bg-grouped-2); }
+
+/* ── the control ── */
+#INP-04 .inp04-seg {
+  --spring: cubic-bezier(.32, .72, 0, 1);
+  position: relative; display: flex; height: 32px; padding: 2px; border-radius: 9px; background: var(--segment-bg);
+  touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  #INP-04 .inp04-seg { --spring: linear(0, 0.033, 0.112, 0.216, 0.329, 0.44, 0.545, 0.638, 0.718, 0.786, 0.842, 0.886, 0.921, 0.948, 0.968, 0.982, 0.992, 0.999, 1.004, 1.006, 1.007, 1.008, 1.007, 1.007, 1.006, 1.005, 1.004, 1.003, 1); }
+}
+#INP-04 .inp04-thumb {
+  /* fallback geometry for equal segments until the real one is measured */
+  --w: calc((100% - 4px) / var(--n, 2));
+  --x: calc(100% * var(--i, 0));
+  position: absolute; top: 2px; left: 2px; z-index: 0; height: 28px; width: var(--w); border-radius: 7px;
+  background: var(--segment-thumb);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04), 0 0 0 .5px light-dark(rgba(0, 0, 0, .04), rgba(255, 255, 255, .04));
+  translate: var(--x) 0; scale: 1;
+  transition: translate 420ms var(--spring), width 420ms var(--spring), scale 220ms var(--ease-out);
+  pointer-events: none;
+}
+#INP-04 .inp04-seg.is-press .inp04-thumb { scale: .95; }
+#INP-04 .inp04-opt {
+  position: relative; z-index: 1; flex: 1 1 0; min-width: 0; height: 28px; margin: 0; padding: 0 8px; border: 0; border-radius: 7px;
+  background: transparent; color: var(--label); cursor: pointer;
+  font: 500 13px/28px var(--font-text); letter-spacing: 0; white-space: nowrap; -webkit-tap-highlight-color: transparent;
+}
+#INP-04 .inp04-opt > span { display: block; overflow: hidden; text-overflow: ellipsis; transition: opacity var(--dur-1) ease, scale 220ms var(--ease-out); }
+#INP-04 .inp04-opt[aria-checked="true"], #INP-04 .inp04-opt[aria-selected="true"] { font-weight: 600; }
+#INP-04 .inp04-opt.is-down > span { opacity: .35; }
+#INP-04 .inp04-seg.is-press .inp04-opt.is-cur > span { scale: .95; }
+/* separators: hidden next to (or under) the thumb */
+#INP-04 .inp04-opt + .inp04-opt::before {
+  content: ""; position: absolute; left: -.5px; top: 7px; bottom: 7px; width: 1px; border-radius: 1px;
+  background: light-dark(rgba(60, 60, 67, .2), rgba(235, 235, 245, .16)); transition: opacity 200ms ease;
+}
+#INP-04 .inp04-opt.is-cur::before, #INP-04 .inp04-opt.is-cur + .inp04-opt::before { opacity: 0; }
+#INP-04 .inp04-opt:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 75%, transparent); }
+
+/* ── A: compact control in a settings row ── */
+#INP-04 .inp04-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 6px 8px 6px 16px; }
+#INP-04 .inp04-row > span { font-size: var(--fs-body); line-height: 22px; letter-spacing: 0; }
+#INP-04 .inp04-seg--compact { flex: none; width: 116px; }
+
+/* ── B: mail filter ── */
+#INP-04 .inp04-mail { position: relative; margin-top: 8px; overflow: hidden; transition: height var(--dur-3) var(--ease-ios); }
+#INP-04 .inp04-list { margin: 0; padding: 0; list-style: none; }
+#INP-04 .inp04-list.is-leaving { position: absolute; inset: 0 0 auto; pointer-events: none; }
+#INP-04 .inp04-msg { position: relative; display: flex; align-items: center; gap: 11px; min-height: 58px; padding: 9px 16px 9px 18px; }
+#INP-04 .inp04-msg + .inp04-msg::before { content: ""; position: absolute; top: 0; right: 0; left: 59px; height: .5px; background: var(--separator); }
+#INP-04 .inp04-dot { position: absolute; left: 6px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--blue); }
+#INP-04 .inp04-msg .av { width: 30px; height: 30px; font-size: 13px; }
+#INP-04 .inp04-mtext { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+#INP-04 .inp04-mtop { display: flex; align-items: baseline; gap: 8px; }
+#INP-04 .inp04-from { flex: 1; min-width: 0; font-size: var(--fs-subhead); line-height: 20px; font-weight: 600; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#INP-04 .inp04-time { flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-footnote); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#INP-04 .inp04-time .i { font-size: 12px; color: var(--orange); }
+#INP-04 .inp04-subj { font-size: var(--fs-subhead); line-height: 20px; color: var(--label-2); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── C: steps chart ── */
+#INP-04 .inp04-chartcard { padding: 12px 16px 14px; }
+#INP-04 .inp04-sum { display: flex; flex-direction: column; margin: 14px 0 10px; }
+#INP-04 .inp04-cap { font-size: var(--fs-caption1); line-height: 16px; font-weight: 600; color: var(--label-2); letter-spacing: 0; }
+#INP-04 .inp04-big { display: flex; align-items: baseline; gap: 3px; margin-top: 1px; }
+#INP-04 .inp04-num { font: 700 30px/36px var(--font-display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--label); }
+#INP-04 .inp04-unit { font-size: var(--fs-subhead); font-weight: 600; color: var(--label-2); letter-spacing: 0; }
+#INP-04 .inp04-range { font-size: var(--fs-footnote); line-height: 18px; color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#INP-04 .inp04-swap { transition: opacity 160ms ease; }
+#INP-04 .inp04-swap.is-out { opacity: 0; }
+
+#INP-04 .inp04-chart { position: relative; height: 112px; margin-right: 38px; }
+#INP-04 .inp04-grid { position: absolute; left: 0; right: 0; height: 0; border-top: .5px dashed var(--separator); }
+#INP-04 .inp04-grid.is-base { border-top-style: solid; }
+#INP-04 .inp04-grid span { position: absolute; left: calc(100% + 6px); top: -7px; font-size: var(--fs-caption2); line-height: 14px; color: var(--label-2); letter-spacing: 0; white-space: nowrap; font-variant-numeric: tabular-nums; transition: opacity var(--dur-2) ease; }
+#INP-04 .inp04-grid span.is-hidden { opacity: 0 !important; }
+#INP-04 .inp04-bars { position: absolute; inset: 0; }
+#INP-04 .inp04-bar {
+  position: absolute; bottom: 0; left: var(--l, 100%); width: var(--w, 0); height: var(--h, 0); border-radius: 3px 3px 1px 1px;
+  background: var(--orange); opacity: var(--o, 1);
+  transition: left 520ms var(--ease-ios), width 520ms var(--ease-ios), height 620ms var(--ease-ios), opacity 300ms ease;
+  transition-delay: calc(var(--k, 0) * 9ms);
+}
+#INP-04 .inp04-avg { position: absolute; left: 0; right: 0; bottom: var(--a, 0); height: 0; border-top: 1px dashed color-mix(in srgb, var(--orange) 80%, transparent); transition: bottom 620ms var(--ease-ios), opacity var(--dur-2) ease; }
+#INP-04 .inp04-avg span {
+  position: absolute; left: calc(100% + 4px); top: -8.5px; padding: 0 5px; border-radius: 4px; background: var(--orange); color: #fff; white-space: nowrap;
+  font: 600 10px/16px var(--font-text); letter-spacing: 0;
+}
+#INP-04 .inp04-x { position: relative; height: 16px; margin: 5px 38px 0 0; }
+#INP-04 .inp04-x span { position: absolute; top: 0; transform: translateX(-50%); font-size: var(--fs-caption2); line-height: 14px; color: var(--label-2); letter-spacing: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#INP-04 .inp04-x span.is-pin { transform: none; }
+
+@media (hover: hover) {
+  #INP-04 .inp04-opt:not(.is-cur):hover > span { opacity: .7; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #INP-04 .inp04-thumb, #INP-04 .inp04-bar, #INP-04 .inp04-avg, #INP-04 .inp04-mail { transition-duration: 1ms !important; transition-delay: 0ms !important; }
+}
+</style>
+<article class="obj" id="INP-04" data-name="Segmented Control" data-ja="セグメントコントロール" data-vector="Clean" data-size="m" data-desc="選択した項目へつまみがスライドする切り替え。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="inp04-wrap">
+      <!-- A · 2 segments in a settings row -->
+      <div class="inp04-card inp04-row">
+        <span id="INP-04-la">カレンダー表示</span>
+        <div class="inp04-seg inp04-seg--compact" role="radiogroup" aria-labelledby="INP-04-la" style="--n: 2">
+          <span class="inp04-thumb" aria-hidden="true"></span>
+          <button class="inp04-opt" type="button" role="radio" aria-checked="true"><span>日</span></button>
+          <button class="inp04-opt" type="button" role="radio" aria-checked="false"><span>週</span></button>
+        </div>
+      </div>
+
+      <div class="inp04-gap"></div>
+      <!-- B · 3 segments driving a list -->
+      <p class="inp04-head" id="INP-04-lb">メールボックス</p>
+      <div class="inp04-seg" role="tablist" aria-labelledby="INP-04-lb" data-k="mail" style="--n: 3">
+        <span class="inp04-thumb" aria-hidden="true"></span>
+        <button class="inp04-opt" type="button" role="tab" aria-selected="true" aria-controls="INP-04-mail"><span>すべて</span></button>
+        <button class="inp04-opt" type="button" role="tab" aria-selected="false" aria-controls="INP-04-mail"><span>未読</span></button>
+        <button class="inp04-opt" type="button" role="tab" aria-selected="false" aria-controls="INP-04-mail"><span>フラグ付き</span></button>
+      </div>
+      <div class="inp04-card inp04-mail" id="INP-04-mail" role="tabpanel" aria-live="polite"></div>
+
+      <div class="inp04-gap"></div>
+      <!-- C · 4 segments driving a chart -->
+      <p class="inp04-head" id="INP-04-lc">歩数</p>
+      <div class="inp04-card inp04-chartcard">
+        <div class="inp04-seg" role="radiogroup" aria-labelledby="INP-04-lc" data-k="chart" style="--n: 4">
+          <span class="inp04-thumb" aria-hidden="true"></span>
+          <button class="inp04-opt" type="button" role="radio" aria-checked="false"><span>日</span></button>
+          <button class="inp04-opt" type="button" role="radio" aria-checked="true"><span>週</span></button>
+          <button class="inp04-opt" type="button" role="radio" aria-checked="false"><span>月</span></button>
+          <button class="inp04-opt" type="button" role="radio" aria-checked="false"><span>年</span></button>
+        </div>
+        <div class="inp04-sum">
+          <span class="inp04-cap inp04-swap">1日の平均</span>
+          <span class="inp04-big"><span class="inp04-num">0</span><span class="inp04-unit">歩</span></span>
+          <span class="inp04-range inp04-swap"></span>
+        </div>
+        <div class="inp04-chart" aria-hidden="true">
+          <div class="inp04-grid" style="bottom: 100%"><span></span></div>
+          <div class="inp04-grid" style="bottom: 50%"><span></span></div>
+          <div class="inp04-grid is-base" style="bottom: 0"><span>0</span></div>
+          <div class="inp04-bars"></div>
+          <div class="inp04-avg"><span>平均</span></div>
+        </div>
+        <div class="inp04-x inp04-swap" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>タップでつまみがスライド</li><li>つまみを押して左右にドラッグ</li><li>←→キーで切替</li><li>グラフ・リストが連動</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('INP-04');
+  if (!root) return;
+  const $ = (s, r = root) => r.querySelector(s);
+  const $$ = (s, r = root) => [...r.querySelectorAll(s)];
+  const reduced = () => window.ObjKit && ObjKit.reducedMotion;
+
+  /* ───────── generic segmented control ───────── */
+  const makeSeg = (seg, onChange) => {
+    const thumb = $('.inp04-thumb', seg);
+    const opts = $$('.inp04-opt', seg);
+    const attr = opts[0].getAttribute('role') === 'tab' ? 'aria-selected' : 'aria-checked';
+    let cur = Math.max(0, opts.findIndex((o) => o.getAttribute(attr) === 'true'));
+    let shown = cur; /* index the thumb sits on (may differ from cur while dragging) */
+    let measured = false;
+
+    /* measure the real segment box lazily (handles unequal widths, zoom/transforms, late fonts) */
+    const place = (i, animate = true) => {
+      const cr = seg.getBoundingClientRect();
+      if (!cr.width) return;
+      const k = cr.width / seg.offsetWidth || 1;
+      const r = opts[i].getBoundingClientRect();
+      const x = (r.left - cr.left) / k - 2, w = r.width / k;
+      if (!animate || !measured || reduced()) {
+        const t = thumb.style.transition; thumb.style.transition = 'none';
+        thumb.style.setProperty('--x', x + 'px'); thumb.style.setProperty('--w', w + 'px');
+        thumb.offsetWidth; thumb.style.transition = t;
+      } else {
+        thumb.style.setProperty('--x', x + 'px'); thumb.style.setProperty('--w', w + 'px');
+      }
+      measured = true;
+    };
+    const show = (i, animate = true) => {
+      shown = i;
+      opts.forEach((o, k) => o.classList.toggle('is-cur', k === i));
+      place(i, animate);
+    };
+    const select = (i, focus = false) => {
+      i = Math.max(0, Math.min(opts.length - 1, i));
+      show(i);
+      opts.forEach((o, k) => { o.setAttribute(attr, String(k === i)); o.tabIndex = k === i ? 0 : -1; });
+      if (focus) opts[i].focus();
+      if (i !== cur) { cur = i; onChange && onChange(i); }
+    };
+    opts.forEach((o, k) => { o.tabIndex = k === cur ? 0 : -1; o.classList.toggle('is-cur', k === cur); });
+    thumb.style.setProperty('--i', cur);
+    new ResizeObserver(() => place(shown, false)).observe(seg);
+
+    /* pointer: press thumb → shrink & drag across; press other → dim, commit on release */
+    let p = null;
+    const indexAt = (x) => {
+      let best = 0, d = Infinity;
+      opts.forEach((o, k) => { const r = o.getBoundingClientRect(); const c = r.left + r.width / 2; if (Math.abs(x - c) < d) { d = Math.abs(x - c); best = k; } });
+      return best;
+    };
+    seg.addEventListener('pointerdown', (e) => {
+      const o = e.target.closest('.inp04-opt');
+      if (!o || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      const k = opts.indexOf(o);
+      p = { id: e.pointerId, k, onThumb: k === cur, x: e.clientX, moved: false };
+      if (p.onThumb) seg.classList.add('is-press'); else o.classList.add('is-down');
+      try { seg.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    seg.addEventListener('pointermove', (e) => {
+      if (!p || e.pointerId !== p.id) return;
+      if (Math.abs(e.clientX - p.x) > 3) p.moved = true;
+      const k = indexAt(e.clientX);
+      if (p.onThumb) { if (k !== shown) show(k); }
+      else {
+        const r = seg.getBoundingClientRect();
+        const inside = e.clientY > r.top - 24 && e.clientY < r.bottom + 24;
+        opts[p.k].classList.toggle('is-down', inside && k === p.k);
+      }
+    });
+    const end = (commit) => {
+      if (!p) return;
+      seg.classList.remove('is-press');
+      const down = opts[p.k].classList.contains('is-down');
+      opts.forEach((o) => o.classList.remove('is-down'));
+      if (commit) { if (p.onThumb) select(shown); else if (down) select(p.k); }
+      else show(cur);
+      p = null;
+    };
+    seg.addEventListener('pointerup', (e) => { if (p && e.pointerId === p.id) end(true); });
+    seg.addEventListener('pointercancel', () => end(false));
+    seg.addEventListener('lostpointercapture', () => { if (p) end(true); });
+    seg.addEventListener('click', (e) => { if (e.detail === 0) { const o = e.target.closest('.inp04-opt'); if (o) select(opts.indexOf(o), true); } });
+
+    /* keyboard: roving focus, arrows move the selection */
+    seg.addEventListener('keydown', (e) => {
+      const k = { ArrowRight: cur + 1, ArrowDown: cur + 1, ArrowLeft: cur - 1, ArrowUp: cur - 1, Home: 0, End: opts.length - 1 }[e.key];
+      if (k === undefined) return;
+      e.preventDefault();
+      select((k + opts.length) % opts.length, true);
+    });
+    return { get index() { return cur; } };
+  };
+
+  /* ───────── A ───────── */
+  makeSeg($('.inp04-seg--compact'));
+
+  /* ───────── B · mail ───────── */
+  const MAIL = [
+    { av: 1, i: 'H', from: '佐藤 春', subj: '写真展のお知らせ', time: '9:12', unread: true, flag: true },
+    { av: 2, i: 'M', from: '小林 美緒', subj: '金曜のランチ、予約しました', time: '8:47', unread: true },
+    { av: 3, i: 'K', from: '高橋 海斗', subj: 'PRレビューのお願い', time: '昨日' },
+    { av: 4, i: 'Y', from: '山本 結菜', subj: '京都の写真を共有しました', time: '昨日', flag: true },
+  ];
+  const FILTERS = [() => true, (m) => m.unread, (m) => m.flag];
+  const box = $('.inp04-mail');
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const listHTML = (f) => MAIL.filter(FILTERS[f]).map((m) => `<li class="inp04-msg">${m.unread ? '<span class="inp04-dot" aria-label="未読"></span>' : ''}
+      <span class="av av-${m.av}" aria-hidden="true">${m.i}</span>
+      <span class="inp04-mtext"><span class="inp04-mtop"><span class="inp04-from">${esc(m.from)}</span><span class="inp04-time">${m.flag ? '<svg class="i" aria-label="フラグ付き"><use href="#i-flag-fill"/></svg>' : ''}${m.time}</span></span>
+      <span class="inp04-subj">${esc(m.subj)}</span></span></li>`).join('');
+  const showMail = (f) => {
+    const old = $('.inp04-list:not(.is-leaving)', box);
+    const ul = document.createElement('ul');
+    ul.className = 'inp04-list';
+    ul.innerHTML = listHTML(f);
+    if (!old || reduced()) { box.replaceChildren(ul); box.style.height = ''; return; }
+    const h0 = box.offsetHeight;
+    $$('.inp04-list.is-leaving', box).forEach((n) => n.remove());
+    old.classList.add('is-leaving');
+    box.append(ul);
+    const h1 = ul.offsetHeight;
+    box.style.height = h0 + 'px'; box.offsetHeight; box.style.height = h1 + 'px';
+    old.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-4px)' }], { duration: 180, easing: 'ease-out', fill: 'forwards' }).onfinish = () => old.remove();
+    [...ul.children].forEach((li, k) => li.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 380, delay: 70 + k * 35, easing: 'cubic-bezier(.32,.72,0,1)', fill: 'backwards' }));
+    clearTimeout(showMail.t); showMail.t = setTimeout(() => { box.style.height = ''; }, 520);
+  };
+  box.innerHTML = `<ul class="inp04-list">${listHTML(0)}</ul>`;
+  makeSeg($('.inp04-seg[data-k="mail"]'), showMail);
+
+  /* ───────── C · steps chart ───────── */
+  const MAXN = 31;
+  const barsEl = $('.inp04-bars');
+  barsEl.innerHTML = Array.from({ length: MAXN }, (_, k) => `<i class="inp04-bar" style="--k:${k}"></i>`).join('');
+  const bars = $$('.inp04-bar', barsEl);
+  const rng = (seed) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const r1 = rng(7), r2 = rng(19), r3 = rng(42);
+  const hourly = [0, 0, 0, 0, 0, 0, 120, 860, 1340, 894, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map((v, h) => (h === 9 ? 412 : v));
+  const week = [11240, 6120, 7350, 9020, 8610, 7480, 9204];
+  const month = Array.from({ length: 30 }, (_, d) => Math.round(5200 + r1() * 6200 + (d % 7 === 0 || d % 7 === 1 ? 2400 * r2() : 0)));
+  month.splice(23, 7, ...week);
+  const year = [6820, 6150, 5940, 6480, 7720, 8350, 8920, 9410, 8760, 8030, 8480, 8432].map((v) => Math.round(v + (r3() - .5) * 300));
+  const sum = (a) => a.reduce((s, v) => s + v, 0);
+  const avg = (a) => Math.round(sum(a) / a.filter((v) => v > 0).length);
+  const MODES = [
+    { data: hourly, cap: '合計', value: sum(hourly), range: '今日 · 2026年10月2日(金)', max: 2000, grid: ['2,000', '1,000'], avg: null,
+      x: [[0, '0時'], [6, '6時'], [12, '12時'], [18, '18時']] },
+    { data: week, cap: '1日の平均', value: avg(week), range: '2026年9月26日〜10月2日', max: 12000, grid: ['1.2万', '6,000'],
+      x: ['土', '日', '月', '火', '水', '木', '金'].map((d, i) => [i, d]) },
+    { data: month, cap: '1日の平均', value: avg(month), range: '2026年9月3日〜10月2日', max: 15000, grid: ['1.5万', '7,500'],
+      x: [[0, '9/3'], [7, '9/10'], [14, '9/17'], [21, '9/24'], [28, '10/1']] },
+    { data: year, cap: '1日の平均', value: avg(year), range: '2025年11月〜2026年10月', max: 10000, grid: ['1万', '5,000'],
+      x: [[0, '11月'], [3, '2月'], [6, '5月'], [9, '8月']] },
+  ];
+  const num = $('.inp04-num'), cap = $('.inp04-cap'), range = $('.inp04-range'), xAxis = $('.inp04-x'), avgEl = $('.inp04-avg');
+  const gridLabels = $$('.inp04-grid span');
+  let shownVal = 0, raf = 0;
+  const fmt = (v) => Math.round(v).toLocaleString('ja-JP');
+  const tween = (to) => {
+    cancelAnimationFrame(raf);
+    const from = shownVal, t0 = performance.now(), dur = reduced() ? 0 : 520;
+    const step = (t) => {
+      const p = dur ? Math.min(1, (t - t0) / dur) : 1;
+      shownVal = from + (to - from) * (1 - Math.pow(1 - p, 3));
+      num.textContent = fmt(shownVal);
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  };
+  const swapText = (els, apply) => {
+    if (reduced()) { apply(); return; }
+    els.forEach((e) => e.classList.add('is-out'));
+    setTimeout(() => { apply(); els.forEach((e) => e.classList.remove('is-out')); }, 160);
+  };
+  const showChart = (m, first = false) => {
+    const M = MODES[m], n = M.data.length;
+    const fill = n > 20 ? .7 : n > 10 ? .62 : .54; /* bar share of its slot — thinner bars when there are few */
+    bars.forEach((b, k) => {
+      if (k < n) {
+        const v = M.data[k];
+        b.style.setProperty('--l', `${((k + (1 - fill) / 2) / n) * 100}%`);
+        b.style.setProperty('--w', `${(fill / n) * 100}%`);
+        b.style.setProperty('--h', `${Math.max(v > 0 ? 2 : 0, Math.min(1, v / M.max) * 100)}%`);
+        b.style.setProperty('--o', v > 0 ? 1 : 0);
+      } else {
+        b.style.setProperty('--l', '100%'); b.style.setProperty('--w', '0px'); b.style.setProperty('--h', '0%'); b.style.setProperty('--o', 0);
+      }
+    });
+    const a = M.avg === null ? null : Math.min(1, M.value / M.max);
+    avgEl.style.opacity = a === null ? 0 : 1;
+    if (a !== null) avgEl.style.setProperty('--a', `${a * 100}%`);
+    /* hide the y-label the "平均" badge would sit on */
+    [1, .5, 0].forEach((y, k) => gridLabels[k].classList.toggle('is-hidden', a !== null && Math.abs(a - y) < .13));
+    const apply = () => {
+      cap.textContent = M.cap; range.textContent = M.range;
+      gridLabels[0].textContent = M.grid[0]; gridLabels[1].textContent = M.grid[1];
+      /* dense charts: labels start at their bar's left edge (first one can't overflow); sparse: centred under bars */
+      xAxis.innerHTML = M.x.map(([i, t]) => n > 10
+        ? `<span class="is-pin" style="left:${(i / n) * 100}%">${t}</span>`
+        : `<span style="left:${((i + .5) / n) * 100}%">${t}</span>`).join('');
+    };
+    if (first) apply(); else swapText([cap, range, xAxis, ...gridLabels], apply);
+    tween(M.value);
+  };
+  const chartSeg = makeSeg($('.inp04-seg[data-k="chart"]'), (i) => showChart(i));
+  /* draw the first chart when the card first scrolls into view so the bars grow in */
+  let drawn = false;
+  ObjKit.onVisible(root, (v) => { if (v && !drawn) { drawn = true; requestAnimationFrame(() => showChart(chartSeg.index, true)); } });
+})();
+</script>

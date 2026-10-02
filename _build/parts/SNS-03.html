@@ -1,0 +1,330 @@
+<!-- ═══════════ SNS-03 · Stories Row ═══════════ -->
+<style>
+@property --sns03-p { syntax: '<number>'; inherits: false; initial-value: 0; }
+#SNS-03 .sns03-screen {
+  width: min(100%, 420px); overflow: hidden;
+  background: var(--bg); color: var(--label); border-radius: 22px;
+  box-shadow: 0 0 0 .5px var(--separator), 0 1px 2px rgba(0, 0, 0, .04), 0 22px 44px -26px rgba(0, 0, 0, .32);
+  font-family: var(--font-text); letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+#SNS-03 button { -webkit-tap-highlight-color: transparent; font: inherit; color: inherit; }
+
+/* — App bar — */
+#SNS-03 .sns03-bar { display: flex; align-items: center; height: 52px; padding: 4px 6px 0 16px; }
+#SNS-03 .sns03-title {
+  display: inline-flex; align-items: center; gap: 4px; height: 40px; margin-left: -4px; padding: 0 6px 0 4px; border: 0; border-radius: 12px;
+  background: none; cursor: pointer; transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#SNS-03 .sns03-title b {
+  font: 800 25px/1 var(--font-display); letter-spacing: 0;
+  background: var(--grad-vivid); -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding: 2px 0;
+}
+#SNS-03 .sns03-title .i { font-size: 15px; color: var(--label); margin-top: 3px; }
+#SNS-03 .sns03-title:active { transform: scale(.96); transition-duration: 90ms; }
+#SNS-03 .sns03-tools { display: flex; margin-left: auto; }
+#SNS-03 .sns03-tool {
+  position: relative; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+  background: none; color: var(--label); cursor: pointer;
+}
+#SNS-03 .sns03-tool > .i { font-size: 25px; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-03 .sns03-tool:active > .i { transform: scale(.84); transition-duration: 90ms; }
+#SNS-03 .sns03-dot { position: absolute; top: 9px; right: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--grad-vivid); box-shadow: 0 0 0 2px var(--bg); }
+#SNS-03 .sns03-badge {
+  position: absolute; top: 3px; right: -1px; display: grid; place-items: center; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
+  background: var(--grad-vivid); color: #fff; box-shadow: 0 0 0 2px var(--bg), 0 3px 8px -2px rgba(255, 55, 95, .55);
+  font: 700 11px/1 var(--font-rounded); font-variant-numeric: tabular-nums;
+}
+#SNS-03 .sns03-title:focus-visible, #SNS-03 .sns03-tool:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+/* — Row — */
+#SNS-03 .sns03-row {
+  --fl: 0px; --fr: 28px;
+  display: flex; gap: 12px; overflow-x: auto; overflow-y: hidden; padding: 8px 16px 14px;
+  scroll-snap-type: x proximity; scroll-padding-inline: 16px; scrollbar-width: none; overscroll-behavior-x: contain;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
+  mask: linear-gradient(90deg, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
+  cursor: grab; user-select: none; -webkit-user-select: none; touch-action: pan-x pan-y;
+  box-shadow: inset 0 -.5px 0 var(--separator);
+}
+#SNS-03 .sns03-row::-webkit-scrollbar { display: none; }
+#SNS-03 .sns03-row.is-scrolled { --fl: 20px; }
+#SNS-03 .sns03-row.is-end { --fr: 0px; }
+#SNS-03 .sns03-row.is-free { scroll-snap-type: none; }
+#SNS-03 .sns03-row.is-dragging { cursor: grabbing; }
+#SNS-03 .sns03-item { flex: none; scroll-snap-align: start; }
+
+/* — Story — */
+#SNS-03 .sns03-story {
+  --ring: var(--grad-story);
+  display: flex; flex-direction: column; align-items: center; gap: 5px; width: 76px; padding: 0; border: 0; border-radius: 12px;
+  background: none; cursor: pointer;
+}
+#SNS-03 .sns03-story[data-kind="close"] { --ring: linear-gradient(45deg, #1DBE55 0%, #34C759 45%, #8BE36E 100%); }
+#SNS-03 .sns03-story[data-kind="live"]  { --ring: linear-gradient(45deg, #FF8A00 0%, #FF2D55 50%, #E8128B 100%); }
+#SNS-03 .sns03-ring { position: relative; display: grid; place-items: center; width: 74px; height: 74px; transition: transform var(--dur-2) var(--ease-spring); }
+#SNS-03 .sns03-story:active .sns03-ring { transform: scale(.92); transition-duration: 110ms; }
+#SNS-03 .sns03-grad, #SNS-03 .sns03-glow, #SNS-03 .sns03-seen, #SNS-03 .sns03-prog { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; }
+#SNS-03 .sns03-grad {
+  background: var(--ring);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.1px), #000 calc(100% - 2.6px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3.1px), #000 calc(100% - 2.6px));
+  transition: opacity var(--dur-3) ease, transform var(--dur-3) var(--ease-spring);
+}
+#SNS-03 .sns03-glow {
+  inset: 2px; background: var(--ring); filter: blur(7px); opacity: .3;
+  transition: opacity var(--dur-3) ease;
+}
+#SNS-03 .sns03-seen { box-shadow: inset 0 0 0 1.5px var(--label-4); opacity: 0; transform: scale(.94); transition: opacity var(--dur-3) ease, transform var(--dur-3) var(--ease-spring); }
+#SNS-03 .sns03-prog {
+  background: conic-gradient(var(--blue) calc(var(--sns03-p) * 1%), var(--fill-3) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.1px), #000 calc(100% - 2.6px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3.1px), #000 calc(100% - 2.6px));
+  opacity: 0;
+}
+#SNS-03 .sns03-ring .av { position: relative; width: 64px; height: 64px; font-size: 24px; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .08); transition: transform var(--dur-3) var(--ease-spring); }
+#SNS-03 .sns03-name {
+  max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 12px; line-height: 16px; color: var(--label); letter-spacing: 0;
+  transition: color var(--dur-3) ease;
+}
+
+/* own story: no ring until posted, + badge */
+#SNS-03 .sns03-story[data-kind="own"]:not(.is-posted) .sns03-grad, #SNS-03 .sns03-story[data-kind="own"]:not(.is-posted) .sns03-glow { opacity: 0; transform: scale(.9); }
+#SNS-03 .sns03-story[data-kind="own"] .sns03-name { color: var(--label-2); }
+#SNS-03 .sns03-plus {
+  position: absolute; right: 1px; bottom: 1px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--bg); color: var(--blue);
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+#SNS-03 .sns03-plus::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: #fff; }
+#SNS-03 .sns03-plus .i { position: relative; font-size: 22px; }
+#SNS-03 .sns03-story.is-posting .sns03-prog { opacity: 1; animation: sns03-fill 1500ms cubic-bezier(.45, .05, .25, 1) forwards; }
+#SNS-03 .sns03-story.is-posting .sns03-plus { transform: scale(0); }
+#SNS-03 .sns03-story.is-posting .av { transform: scale(.94); }
+@keyframes sns03-fill { from { --sns03-p: 0; } to { --sns03-p: 100; } }
+
+/* loading → seen */
+#SNS-03 .sns03-story.is-loading .sns03-grad {
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.1px), #000 calc(100% - 2.6px)), repeating-conic-gradient(#000 0 15deg, transparent 15.5deg 22.5deg);
+  -webkit-mask-composite: source-in;
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3.1px), #000 calc(100% - 2.6px)) intersect, repeating-conic-gradient(#000 0 15deg, transparent 15.5deg 22.5deg);
+  animation: sns03-spin 900ms linear infinite;
+}
+#SNS-03 .sns03-story.is-loading .av { transform: scale(.92); }
+@keyframes sns03-spin { to { transform: rotate(360deg); } }
+#SNS-03 .sns03-story.is-seen .sns03-grad { opacity: 0; transform: scale(1.12); }
+#SNS-03 .sns03-story.is-seen .sns03-glow { opacity: 0; }
+#SNS-03 .sns03-story.is-seen .sns03-seen { opacity: 1; transform: none; }
+#SNS-03 .sns03-story.is-seen .sns03-name { color: var(--label-2); }
+#SNS-03 .sns03-story.is-fresh .sns03-ring { animation: sns03-fresh 620ms both; animation-delay: var(--delay, 0ms); }
+@keyframes sns03-fresh {
+  0% { transform: scale(.6); opacity: 0; animation-timing-function: cubic-bezier(.3, 1.6, .5, 1); }
+  60% { opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* live */
+#SNS-03 .sns03-halo { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 2px #FF2D55; opacity: 0; pointer-events: none; animation: sns03-halo 1800ms cubic-bezier(.2, .7, .3, 1) infinite; }
+@keyframes sns03-halo { 0% { transform: scale(.98); opacity: .55; } 80%, 100% { transform: scale(1.22); opacity: 0; } }
+#SNS-03 .sns03-live {
+  position: absolute; left: 50%; bottom: -5px; display: grid; place-items: center; height: 19px; padding: 0 6px; border-radius: 6px;
+  background: linear-gradient(90deg, #FF2D55, #E8128B); color: #fff; box-shadow: 0 0 0 2.5px var(--bg);
+  font: 800 10px/1 var(--font-text); letter-spacing: .06em; transform: translateX(-50%);
+}
+#SNS-03 .sns03-story.is-wiggle .sns03-live { animation: sns03-wiggle 520ms both; }
+@keyframes sns03-wiggle { 0%, 100% { transform: translateX(-50%); } 25% { transform: translateX(-50%) scale(1.18) rotate(-6deg); } 55% { transform: translateX(-50%) scale(1.1) rotate(5deg); } 80% { transform: translateX(-50%) scale(1.02) rotate(-2deg); } }
+#SNS-03.sns03-off .sns03-halo, #SNS-03.sns03-off .sns03-grad { animation-play-state: paused; }
+
+#SNS-03 .sns03-story:focus-visible { outline: none; }
+#SNS-03 .sns03-story:focus-visible .sns03-ring { border-radius: 50%; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-03 .sns03-halo { animation: none; }
+  #SNS-03 .sns03-story.is-loading .sns03-grad { animation-duration: 2400ms; }
+  #SNS-03 .sns03-story.is-fresh .sns03-ring { animation: none; }
+}
+</style>
+<article class="obj" id="SNS-03" data-name="Stories Row" data-ja="ストーリーズ一覧" data-vector="Vivid" data-size="m" data-desc="グラデーションの輪が付いたストーリーのアイコン列。">
+  <div class="obj-stage" data-bg="plain">
+    <div class="sns03-screen">
+      <header class="sns03-bar">
+        <button class="sns03-title" type="button" aria-label="ホーム フィードを切り替え"><b>ホーム</b><svg class="i" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+        <div class="sns03-tools">
+          <button class="sns03-tool" type="button" aria-label="お知らせ（新着あり）"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><i class="sns03-dot" aria-hidden="true"></i></button>
+          <button class="sns03-tool" type="button" aria-label="メッセージ 未読3件"><svg class="i" aria-hidden="true"><use href="#i-paperplane"/></svg><b class="sns03-badge" aria-hidden="true">3</b></button>
+        </div>
+      </header>
+      <div class="sns03-row" role="list" aria-label="ストーリーズ">
+        <div class="sns03-item" role="listitem"><button class="sns03-story" type="button" data-kind="own" aria-label="ストーリーズを追加"><span class="sns03-ring"><i class="sns03-glow"></i><i class="sns03-grad"></i><i class="sns03-seen"></i><i class="sns03-prog"></i><span class="av av-8">Me</span><span class="sns03-plus"><svg class="i" aria-hidden="true"><use href="#i-plus-circle-fill"/></svg></span></span><span class="sns03-name">あなた</span></button></div>
+        <div class="sns03-item" role="listitem"><button class="sns03-story" type="button" data-kind="story" aria-label="mio_k のストーリーズ（未読）"><span class="sns03-ring"><i class="sns03-glow"></i><i class="sns03-grad"></i><i class="sns03-seen"></i><span class="av av-2">M</span></span><span class="sns03-name">mio_k</span></button></div>
+        <div class="sns03-item" role="listitem"><button class="sns03-story" type="button" data-kind="live" aria-label="haru.photo がライブ配信中"><span class="sns03-ring"><i class="sns03-halo"></i><i class="sns03-glow"></i><i class="sns03-grad"></i><span class="av av-1">H</span><b class="sns03-live">LIVE</b></span><span class="sns03-name">haru.photo</span></button></div>
+        <div class="sns03-item" role="listitem"><button class="sns03-story" type="button" data-kind="close" aria-label="kaito.dev のストーリーズ（親しい友達・未読）"><span class="sns03-ring"><i class="sns03-glow"></i><i class="sns03-grad"></i><i class="sns03-seen"></i><span class="av av-3">K</span></span><span class="sns03-name">kaito.dev</span></button></div>
+        <div class="sns03-item" role="listitem"><button class="sns03-story" type="button" data-kind="story" aria-label="yuna のストーリーズ（未読）"><span class="sns03-ring"><i class="sns03-glow"></i><i class="sns03-grad"></i><i class="sns03-seen"></i><span class="av av-4">Y</span></span><span class="sns03-name">yuna</span></button></div>
+        <div class="sns03-item" role="listitem"><button class="sns03-story" type="button" data-kind="story" aria-label="sora_travel のストーリーズ（未読）"><span class="sns03-ring"><i class="sns03-glow"></i><i class="sns03-grad"></i><i class="sns03-seen"></i><span class="av av-5">S</span></span><span class="sns03-name">sora_travel</span></button></div>
+        <div class="sns03-item" role="listitem"><button class="sns03-story is-seen" type="button" data-kind="story" data-init="seen" aria-label="ren.design のストーリーズ（既読）"><span class="sns03-ring"><i class="sns03-glow"></i><i class="sns03-grad"></i><i class="sns03-seen"></i><span class="av av-6">R</span></span><span class="sns03-name">ren.design</span></button></div>
+        <div class="sns03-item" role="listitem"><button class="sns03-story is-seen" type="button" data-kind="story" data-init="seen" aria-label="aoi のストーリーズ（既読）"><span class="sns03-ring"><i class="sns03-glow"></i><i class="sns03-grad"></i><i class="sns03-seen"></i><span class="av av-7">A</span></span><span class="sns03-name">aoi</span></button></div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>タップで読み込み→既読に</li><li>横にドラッグ／スクロール</li><li>「あなた」で投稿</li><li>全部見ると新着が届く</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-03');
+  if (!root) return;
+  const $$ = (s) => [...root.querySelectorAll(s)];
+  const row = root.querySelector('.sns03-row');
+  const stories = $$('.sns03-story');
+  const reduced = () => !!(window.ObjKit && ObjKit.reducedMotion);
+
+  /* ── Edge fades ───────────────────────────── */
+  const edges = () => {
+    const max = row.scrollWidth - row.clientWidth;
+    row.classList.toggle('is-scrolled', row.scrollLeft > 2);
+    row.classList.toggle('is-end', row.scrollLeft >= max - 2);
+  };
+  row.addEventListener('scroll', edges, { passive: true });
+  if (window.ResizeObserver) new ResizeObserver(edges).observe(row);
+
+  /* ── Mouse drag-to-scroll with momentum + snap to an item ───── */
+  let drag = null;
+  let anim = 0;
+  let suppress = false;
+  const pitch = () => {
+    const items = row.children;
+    return items.length > 1 ? items[1].offsetLeft - items[0].offsetLeft : 88;
+  };
+  const glide = (to) => {
+    cancelAnimationFrame(anim);
+    const max = row.scrollWidth - row.clientWidth;
+    to = Math.max(0, Math.min(max, to));
+    const from = row.scrollLeft;
+    if (reduced() || Math.abs(to - from) < 1) { row.scrollLeft = to; row.classList.remove('is-free'); return; }
+    row.classList.add('is-free');
+    const dur = Math.min(700, 320 + Math.abs(to - from) * 0.5);
+    const t0 = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / dur);
+      row.scrollLeft = from + (to - from) * (1 - Math.pow(1 - t, 3));
+      if (t < 1) anim = requestAnimationFrame(step); else row.classList.remove('is-free');
+    };
+    anim = requestAnimationFrame(step);
+  };
+  row.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    cancelAnimationFrame(anim);
+    drag = { id: e.pointerId, x: e.clientX, sl: row.scrollLeft, on: false, v: 0, lx: e.clientX, lt: performance.now() };
+  });
+  row.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.on) {
+      if (Math.abs(dx) < 5) return;
+      drag.on = true;
+      row.setPointerCapture(e.pointerId);
+      row.classList.add('is-free', 'is-dragging');
+    }
+    const max = row.scrollWidth - row.clientWidth;
+    let sl = drag.sl - dx;
+    if (sl < 0) sl /= 3; else if (sl > max) sl = max + (sl - max) / 3;
+    row.scrollLeft = sl;
+    const now = performance.now();
+    if (now > drag.lt) { drag.v = 0.8 * ((e.clientX - drag.lx) / (now - drag.lt)) + 0.2 * drag.v; drag.lx = e.clientX; drag.lt = now; }
+  });
+  const end = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag;
+    drag = null;
+    row.classList.remove('is-dragging');
+    if (!d.on) return;
+    suppress = true;
+    setTimeout(() => { suppress = false; }, 0);
+    const p = pitch();
+    const projected = row.scrollLeft - d.v * 280;
+    glide(Math.round(projected / p) * p);
+  };
+  row.addEventListener('pointerup', end);
+  row.addEventListener('pointercancel', end);
+  row.addEventListener('click', (e) => { if (suppress) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+  /* ── Keyboard: arrows move between stories ── */
+  row.addEventListener('keydown', (e) => {
+    const i = stories.indexOf(document.activeElement);
+    if (i < 0) return;
+    let j = i;
+    if (e.key === 'ArrowRight') j = Math.min(stories.length - 1, i + 1);
+    else if (e.key === 'ArrowLeft') j = Math.max(0, i - 1);
+    else if (e.key === 'Home') j = 0;
+    else if (e.key === 'End') j = stories.length - 1;
+    else return;
+    e.preventDefault();
+    stories[j].focus({ preventScroll: true });
+    const it = stories[j].parentElement;
+    const left = it.offsetLeft - 16, right = it.offsetLeft + it.offsetWidth + 16 - row.clientWidth;
+    if (row.scrollLeft > left) glide(left); else if (row.scrollLeft < right) glide(right);
+  });
+
+  /* ── Story states ─────────────────────────── */
+  const name = (b) => b.querySelector('.sns03-name').textContent;
+  const label = (b) => {
+    const k = b.dataset.kind;
+    if (k === 'own') b.setAttribute('aria-label', b.classList.contains('is-posted') ? `あなたのストーリーズ（${b.classList.contains('is-seen') ? '既読' : '公開中'}）` : 'ストーリーズを追加');
+    else if (k !== 'live') b.setAttribute('aria-label', `${name(b)} のストーリーズ（${k === 'close' ? '親しい友達・' : ''}${b.classList.contains('is-seen') ? '既読' : '未読'}）`);
+  };
+  let refreshT = 0;
+  const checkAllSeen = () => {
+    const pending = stories.filter((b) => b.dataset.kind !== 'live' && b.dataset.kind !== 'own' && !b.classList.contains('is-seen'));
+    clearTimeout(refreshT);
+    if (pending.length) return;
+    refreshT = setTimeout(() => {
+      stories.forEach((b, i) => {
+        b.classList.remove('is-seen', 'is-loading', 'is-posted', 'is-posting', 'is-fresh');
+        if (b.dataset.init === 'seen') b.classList.add('is-seen');
+        label(b);
+        if (reduced()) return;
+        b.style.setProperty('--delay', `${i * 55}ms`);
+        void b.offsetWidth;
+        b.classList.add('is-fresh');
+      });
+    }, 1600);
+  };
+  root.addEventListener('animationend', (e) => { if (e.animationName === 'sns03-fresh') e.target.closest('.sns03-story').classList.remove('is-fresh'); });
+
+  const view = (b) => {
+    b.classList.add('is-loading');
+    b.setAttribute('aria-busy', 'true');
+    setTimeout(() => {
+      b.classList.remove('is-loading');
+      b.classList.add('is-seen');
+      b.removeAttribute('aria-busy');
+      label(b);
+      checkAllSeen();
+    }, 950 + Math.random() * 350);
+  };
+  stories.forEach((b) => b.addEventListener('click', () => {
+    if (b.classList.contains('is-loading') || b.classList.contains('is-posting')) return;
+    const k = b.dataset.kind;
+    if (k === 'live') {
+      b.classList.remove('is-wiggle'); void b.offsetWidth; b.classList.add('is-wiggle');
+      return;
+    }
+    if (k === 'own' && !b.classList.contains('is-posted')) {
+      b.classList.add('is-posting');
+      setTimeout(() => { b.classList.remove('is-posting'); b.classList.add('is-posted'); label(b); }, reduced() ? 300 : 1550);
+      return;
+    }
+    if (b.classList.contains('is-seen')) {
+      const r = b.querySelector('.sns03-ring');
+      if (!reduced()) r.animate([{ transform: 'scale(1)' }, { transform: 'scale(.94)' }, { transform: 'scale(1.03)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
+      return;
+    }
+    view(b);
+  }));
+  root.addEventListener('animationend', (e) => { if (e.animationName === 'sns03-wiggle') e.target.closest('.sns03-story').classList.remove('is-wiggle'); });
+
+  /* pause the LIVE halo / spinners while off-screen */
+  if (window.ObjKit) ObjKit.onVisible(root, (v) => root.classList.toggle('sns03-off', !v));
+})();
+</script>

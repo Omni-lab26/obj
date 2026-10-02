@@ -1,0 +1,170 @@
+<!-- ═══════════ INP-07 · Checkmark List ═══════════ -->
+<style>
+#INP-07 .inp07-stack { display: flex; flex-direction: column; gap: 28px; width: min(100%, 344px); }
+#INP-07 .inp07-sec { margin: 0; padding: 0; border: 0; min-width: 0; }
+#INP-07 .inp07-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; min-height: 22px; margin: 0 0 7px; padding: 0 16px; }
+#INP-07 .inp07-h-t { font: 400 var(--fs-footnote)/1.3 var(--font-text); color: var(--label-2); letter-spacing: 0; padding: 0; }
+#INP-07 .inp07-f { margin: 7px 16px 0; font: 400 var(--fs-footnote)/1.35 var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#INP-07 .inp07-list { margin: 0; padding: 0; list-style: none; border-radius: 12px; background: var(--bg-grouped-2); overflow: hidden; }
+
+#INP-07 .inp07-row {
+  position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 11px 16px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: background-color .45s ease;
+}
+#INP-07 li + li .inp07-row::before { content: ""; position: absolute; top: 0; right: 0; left: var(--sep, 16px); height: .5px; background: var(--separator); }
+#INP-07 .inp07-row:active { background-color: light-dark(#D1D1D6, #3A3A3C); transition: none; }
+#INP-07 .inp07-row:has(input:focus-visible) { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 65%, transparent); border-radius: 12px; }
+#INP-07 .inp07-in { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+
+/* — single select: trailing checkmark that draws in — */
+#INP-07 .inp07-t { flex: 1; min-width: 0; font: 400 var(--fs-body)/1.29 var(--font-text); letter-spacing: 0; color: var(--label); }
+#INP-07 .inp07-sub { font: 400 var(--fs-body)/1.29 var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#INP-07 .inp07-ck { width: 18px; height: 18px; flex: none; color: var(--accent); overflow: visible; }
+#INP-07 .inp07-ck path { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset 120ms ease; }
+#INP-07 .inp07-ck { transform: scale(.6); opacity: 0; transition: transform 160ms ease, opacity 120ms ease; }
+#INP-07 .inp07-in:checked ~ .inp07-ck { transform: none; opacity: 1; transition: transform var(--dur-3) var(--ease-spring), opacity 80ms ease; }
+#INP-07 .inp07-in:checked ~ .inp07-ck path { stroke-dashoffset: 0; transition: stroke-dashoffset 300ms cubic-bezier(.65, 0, .35, 1) 40ms; }
+
+/* — multi select: leading circle, reminders feel — */
+#INP-07 .inp07-hbtn {
+  height: 22px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--accent);
+  font: 400 var(--fs-subhead)/22px var(--font-text); letter-spacing: 0; -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--dur-1) ease;
+}
+#INP-07 .inp07-hbtn:active { opacity: .35; transition-duration: 0s; }
+#INP-07 .inp07-hbtn:focus-visible { outline: none; border-radius: 4px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 50%, transparent); }
+@media (hover: hover) { #INP-07 .inp07-hbtn:hover { opacity: .7; } }
+#INP-07 .inp07-count { display: inline-flex; gap: 0; font-variant-numeric: tabular-nums; }
+#INP-07 .inp07-count b { font-weight: 600; color: var(--label); display: inline-block; }
+
+#INP-07 .inp07-m { --sep: 50px; align-items: flex-start; padding-top: 11px; padding-bottom: 11px; }
+#INP-07 .inp07-box { position: relative; width: 22px; height: 22px; flex: none; margin-top: -1px; }
+#INP-07 .inp07-ring { position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--label-3); transition: box-shadow var(--dur-2) ease; }
+#INP-07 .inp07-dot {
+  position: absolute; inset: 0; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center;
+  transform: scale(.4); opacity: 0; transition: transform 180ms ease, opacity 140ms ease;
+}
+#INP-07 .inp07-dot svg { width: 14px; height: 14px; overflow: visible; }
+#INP-07 .inp07-dot path { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset 100ms ease; }
+#INP-07 .inp07-in:checked ~ .inp07-box .inp07-dot { opacity: 1; transform: none; animation: inp07-pop 420ms var(--ease-spring); transition: opacity 60ms ease; }
+#INP-07 .inp07-in:checked ~ .inp07-box .inp07-dot path { stroke-dashoffset: 0; transition: stroke-dashoffset 260ms cubic-bezier(.65, 0, .35, 1) 90ms; }
+#INP-07 .inp07-in:checked ~ .inp07-box .inp07-ring { box-shadow: inset 0 0 0 1.5px var(--accent); }
+@keyframes inp07-pop { 0% { transform: scale(.45); } 55% { transform: scale(1.14); } 100% { transform: scale(1); } }
+
+#INP-07 .inp07-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#INP-07 .inp07-title { align-self: flex-start; font: 400 var(--fs-body)/1.29 var(--font-text); letter-spacing: 0; color: var(--label);
+  background-image: linear-gradient(currentColor, currentColor); background-repeat: no-repeat; background-position: 0 56%; background-size: 0% 1.25px;
+  transition: color var(--dur-2) ease, background-size 0ms linear;
+}
+#INP-07 .inp07-in:checked ~ .inp07-body .inp07-title { color: var(--label-2); background-size: 100% 1.25px; transition: color var(--dur-2) ease, background-size 340ms cubic-bezier(.65, 0, .35, 1) 120ms; }
+#INP-07 .inp07-meta { display: flex; align-items: center; gap: 0; font: 400 var(--fs-subhead)/1.3 var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; transition: color var(--dur-2) ease; }
+#INP-07 .inp07-meta .i { font-size: 13px; margin-left: 4px; }
+#INP-07 .inp07-meta > * { transition: color var(--dur-2) ease; }
+#INP-07 .inp07-meta .is-red { color: var(--red); }
+#INP-07 .inp07-tag { color: var(--accent); margin-left: 6px; }
+#INP-07 .inp07-in:checked ~ .inp07-body .inp07-meta, #INP-07 .inp07-in:checked ~ .inp07-body .inp07-meta > * { color: var(--label-3); }
+#INP-07 .inp07-flag { flex: none; align-self: center; color: var(--orange); font-size: 16px; transition: color var(--dur-2) ease; }
+#INP-07 .inp07-in:checked ~ .inp07-flag { color: color-mix(in srgb, var(--orange) 45%, var(--label-3)); }
+
+@media (prefers-reduced-motion: reduce) {
+  #INP-07 .inp07-ck, #INP-07 .inp07-ck path, #INP-07 .inp07-dot, #INP-07 .inp07-dot path, #INP-07 .inp07-title { transition: none !important; }
+  #INP-07 .inp07-in:checked ~ .inp07-box .inp07-dot { animation: none; }
+}
+</style>
+<article class="obj" id="INP-07" data-name="Checkmark List" data-ja="チェックリスト選択" data-vector="Clean" data-size="m" data-desc="単一選択（✓）と複数選択（丸チェック）のリスト。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="inp07-stack">
+
+      <!-- (1) single select -->
+      <fieldset class="inp07-sec">
+        <legend class="inp07-h"><span class="inp07-h-t">並べ替え</span></legend>
+        <ul class="inp07-list">
+          <li><label class="inp07-row"><input class="inp07-in" type="radio" name="INP-07-sort" value="date" checked><span class="inp07-t">日付</span><svg class="inp07-ck" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.8l5 5L19.8 6.5"/></svg></label></li>
+          <li><label class="inp07-row"><input class="inp07-in" type="radio" name="INP-07-sort" value="name"><span class="inp07-t">名前</span><svg class="inp07-ck" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.8l5 5L19.8 6.5"/></svg></label></li>
+          <li><label class="inp07-row"><input class="inp07-in" type="radio" name="INP-07-sort" value="size"><span class="inp07-t">サイズ</span><svg class="inp07-ck" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.8l5 5L19.8 6.5"/></svg></label></li>
+          <li><label class="inp07-row"><input class="inp07-in" type="radio" name="INP-07-sort" value="kind"><span class="inp07-t">種類</span><svg class="inp07-ck" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.8l5 5L19.8 6.5"/></svg></label></li>
+        </ul>
+        <p class="inp07-f" aria-live="polite">「<span data-sort>日付</span>」の<span data-order>新しい順</span>に表示します。</p>
+      </fieldset>
+
+      <!-- (2) multi select -->
+      <fieldset class="inp07-sec">
+        <legend class="inp07-h" style="width:100%">
+          <span class="inp07-h-t inp07-count" aria-live="polite"><b data-n>2</b><span data-suf>件選択中</span></span>
+          <button class="inp07-hbtn" type="button">すべて選択</button>
+        </legend>
+        <ul class="inp07-list">
+          <li><label class="inp07-row inp07-m">
+            <input class="inp07-in" type="checkbox" checked>
+            <span class="inp07-box" aria-hidden="true"><i class="inp07-ring"></i><span class="inp07-dot"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2L18.5 7.8"/></svg></span></span>
+            <span class="inp07-body"><span class="inp07-title">牛乳を買う</span><span class="inp07-meta"><span class="is-red">今日</span>・18:00</span></span>
+          </label></li>
+          <li><label class="inp07-row inp07-m">
+            <input class="inp07-in" type="checkbox">
+            <span class="inp07-box" aria-hidden="true"><i class="inp07-ring"></i><span class="inp07-dot"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2L18.5 7.8"/></svg></span></span>
+            <span class="inp07-body"><span class="inp07-title">資料を送る</span><span class="inp07-meta">今日・15:00<span class="inp07-tag">#仕事</span></span></span>
+          </label></li>
+          <li><label class="inp07-row inp07-m">
+            <input class="inp07-in" type="checkbox">
+            <span class="inp07-box" aria-hidden="true"><i class="inp07-ring"></i><span class="inp07-dot"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2L18.5 7.8"/></svg></span></span>
+            <span class="inp07-body"><span class="inp07-title">ジムに行く</span><span class="inp07-meta">毎週金曜<svg class="i" aria-hidden="true"><use href="#i-arrow-2-squarepath"/></svg></span></span>
+          </label></li>
+          <li><label class="inp07-row inp07-m">
+            <input class="inp07-in" type="checkbox" checked>
+            <span class="inp07-box" aria-hidden="true"><i class="inp07-ring"></i><span class="inp07-dot"><svg viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2L18.5 7.8"/></svg></span></span>
+            <span class="inp07-body"><span class="inp07-title">本を返す</span><span class="inp07-meta">10月5日(月)・図書館</span></span>
+            <svg class="i inp07-flag" aria-label="フラグ付き"><use href="#i-flag-fill"/></svg>
+          </label></li>
+        </ul>
+      </fieldset>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>行をタップで選択</li><li>丸をタップで完了（取り消し線）</li><li>Tab・矢印・スペースで操作</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('INP-07');
+  root.addEventListener('touchstart', () => {}, { passive: true }); /* enables :active pressed states on iOS Safari */
+  const reduced = () => window.ObjKit && ObjKit.reducedMotion;
+
+  /* (1) single select → footer reflects the choice */
+  const sortOut = root.querySelector('[data-sort]'), orderOut = root.querySelector('[data-order]');
+  const ORDER = { date: '新しい順', name: '五十音順', size: '大きい順', kind: '種類ごと' };
+  root.querySelectorAll('input[type=radio]').forEach((r) => r.addEventListener('change', () => {
+    sortOut.textContent = r.closest('label').querySelector('.inp07-t').textContent;
+    orderOut.textContent = ORDER[r.value];
+  }));
+
+  /* (2) multi select → live count + すべて選択 / 選択解除 */
+  const boxes = [...root.querySelectorAll('input[type=checkbox]')];
+  const nOut = root.querySelector('[data-n]'), sufOut = root.querySelector('[data-suf]');
+  const btn = root.querySelector('.inp07-hbtn');
+  let last = -1;
+  const sync = () => {
+    const n = boxes.filter((b) => b.checked).length;
+    if (n !== last) {
+      nOut.textContent = n ? n : '';
+      sufOut.textContent = n ? '件選択中' : '項目を選択';
+      if (last >= 0 && !reduced()) {
+        const d = n > last ? 1 : -1;
+        nOut.animate([{ transform: `translateY(${d * 6}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.22,1,.36,1)' });
+      }
+      last = n;
+    }
+    const all = n === boxes.length;
+    btn.textContent = all ? '選択解除' : 'すべて選択';
+    btn.setAttribute('aria-label', all ? 'すべての選択を解除' : 'すべて選択');
+  };
+  boxes.forEach((b) => b.addEventListener('change', sync));
+  btn.addEventListener('click', () => {
+    const all = boxes.every((b) => b.checked);
+    /* stagger the pops like a cascade */
+    boxes.forEach((b, i) => {
+      if (b.checked === !all) return;
+      setTimeout(() => { b.checked = !all; sync(); }, reduced() ? 0 : i * 45);
+    });
+  });
+  sync();
+})();
+</script>

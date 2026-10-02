@@ -1,0 +1,691 @@
+<!-- ═══════════ SNS-11 · Composer ═══════════ -->
+<style>
+#SNS-11 .sns11-card {
+  position: relative; display: flex; flex-direction: column;
+  width: min(100%, 375px); min-height: 420px;
+  background: var(--bg-grouped-2); color: var(--label);
+  border-radius: 16px; overflow: hidden; isolation: isolate;
+  box-shadow: 0 0 0 .5px light-dark(rgba(0, 0, 0, .06), rgba(255, 255, 255, .08)), var(--shadow-2);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* — Header — */
+#SNS-11 .sns11-head {
+  position: relative; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  height: 52px; padding: 0 12px 0 6px; flex: none;
+}
+#SNS-11 .sns11-title { margin: 0; font: 600 var(--fs-headline)/1 var(--font-text); letter-spacing: 0; white-space: nowrap; }
+#SNS-11 .sns11-cancel {
+  justify-self: start; height: 44px; padding: 0 10px; border: 0; background: none; cursor: pointer;
+  font: 400 var(--fs-body)/1 var(--font-text); letter-spacing: 0; color: var(--accent);
+  user-select: none; -webkit-user-select: none; transition: opacity var(--dur-1) ease;
+}
+#SNS-11 .sns11-cancel:active { opacity: .45; transition-duration: 60ms; }
+#SNS-11 .sns11-post {
+  justify-self: end; position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 14px; border: 0; border-radius: var(--r-full); cursor: pointer;
+  background: var(--accent); color: var(--on-accent);
+  font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; white-space: nowrap;
+  user-select: none; -webkit-user-select: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2);
+  transition: opacity var(--dur-2) ease, transform var(--dur-2) var(--ease-spring), filter var(--dur-1) ease;
+}
+#SNS-11 .sns11-post:active:not(:disabled) { transform: scale(.94); filter: brightness(.92); transition-duration: 90ms; }
+#SNS-11 .sns11-post:disabled { opacity: .36; cursor: default; box-shadow: none; }
+#SNS-11 .sns11-post .sns11-spin { display: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .35); border-top-color: #fff; animation: sns11-spin .7s linear infinite; }
+#SNS-11 .is-posting .sns11-post .sns11-spin { display: block; }
+#SNS-11 .sns11-cancel:focus-visible, #SNS-11 .sns11-post:focus-visible, #SNS-11 .sns11-tool:focus-visible, #SNS-11 .sns11-plus:focus-visible,
+#SNS-11 .sns11-aud:focus-visible, #SNS-11 .sns11-addrow:focus-visible, #SNS-11 .sns11-x:focus-visible, #SNS-11 .sns11-loc:focus-visible,
+#SNS-11 .sns11-segx:focus-visible, #SNS-11 .sns11-pbtn:focus-visible, #SNS-11 .sns11-as-btn:focus-visible {
+  outline: none; box-shadow: 0 0 0 2px var(--bg-grouped-2), 0 0 0 4.5px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+#SNS-11 .sns11-progress {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent);
+  transform: scaleX(0); transform-origin: left; opacity: 0; pointer-events: none;
+}
+
+/* — Body / thread — */
+#SNS-11 .sns11-body { flex: 1; padding: 6px 16px 4px; transition: opacity var(--dur-2) ease; }
+#SNS-11 .sns11-body.is-fading { opacity: 0; transition-duration: 160ms; }
+#SNS-11 .sns11-seg { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 12px; }
+#SNS-11 .sns11-rail { display: flex; flex-direction: column; align-items: center; }
+#SNS-11 .sns11-av { width: 40px; height: 40px; font-size: 14px; transition: opacity var(--dur-2) ease; }
+#SNS-11 .sns11-line { flex: 1; width: 2px; min-height: 14px; margin: 6px 0 4px; border-radius: 1px; background: var(--fill); }
+#SNS-11 .sns11-col { position: relative; min-width: 0; padding: 8px 0 18px; transition: opacity var(--dur-2) ease; cursor: text; }
+#SNS-11 .is-multi .sns11-seg:not(.is-active) .sns11-col,
+#SNS-11 .is-multi .sns11-seg:not(.is-active) .sns11-av { opacity: .46; }
+#SNS-11 .sns11-seg + .sns11-seg .sns11-col { padding-right: 26px; }
+
+#SNS-11 .sns11-field { position: relative; font: 400 var(--fs-body)/1.38 var(--font-text); letter-spacing: 0; }
+#SNS-11 .sns11-mirror {
+  min-height: 1.38em; white-space: pre-wrap; overflow-wrap: break-word; word-break: normal;
+  color: var(--label); pointer-events: none;
+}
+#SNS-11 .sns11-mirror b { font-weight: inherit; color: var(--accent); }
+#SNS-11 .sns11-mirror mark { color: var(--red); background: color-mix(in srgb, var(--red) 16%, transparent); border-radius: 3px; }
+#SNS-11 .sns11-ta {
+  position: absolute; inset: 0; display: block; width: 100%; height: 100%; margin: 0; padding: 0;
+  border: 0; outline: 0; background: transparent; resize: none; overflow: hidden;
+  font: inherit; line-height: inherit; letter-spacing: inherit;
+  color: transparent; -webkit-text-fill-color: transparent; caret-color: var(--accent);
+  white-space: pre-wrap; overflow-wrap: break-word;
+}
+#SNS-11 .sns11-ta::placeholder { color: var(--label-3); -webkit-text-fill-color: var(--label-3); opacity: 1; }
+#SNS-11 .sns11-ta::selection { background: color-mix(in srgb, var(--accent) 26%, transparent); }
+#SNS-11 .sns11-segx {
+  position: absolute; top: 6px; right: -6px; width: 28px; height: 28px; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: none; color: var(--label-3); cursor: pointer; font-size: 15px;
+  transition: background var(--dur-1) ease, color var(--dur-1) ease, transform var(--dur-2) var(--ease-spring);
+}
+#SNS-11 .sns11-seg:first-child .sns11-segx { display: none; }
+#SNS-11 .sns11-segx:active { transform: scale(.88); background: var(--fill-3); transition-duration: 80ms; }
+
+/* — Media — */
+#SNS-11 .sns11-media {
+  position: relative; z-index: 1;
+  display: flex; gap: 8px; margin: 12px -16px 0 -68px; padding: 0 16px 2px 68px;
+  overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-padding: 0 16px 0 68px;
+}
+#SNS-11 .sns11-media::-webkit-scrollbar { display: none; }
+#SNS-11 .sns11-media:empty { display: none; }
+#SNS-11 .sns11-thumb { position: relative; flex: none; width: 120px; height: 150px; }
+#SNS-11 .sns11-img {
+  position: absolute; inset: 0; border-radius: 12px; overflow: hidden;
+  box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .08);
+}
+#SNS-11 .sns11-img::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 .5px light-dark(rgba(0, 0, 0, .1), rgba(255, 255, 255, .12)); }
+#SNS-11 .sns11-x {
+  position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; display: grid; place-items: center;
+  border: 0; border-radius: 50%; padding: 0; cursor: pointer; color: #fff; font-size: 13px;
+  background: rgba(20, 20, 24, .42);
+  -webkit-backdrop-filter: blur(12px) saturate(170%); backdrop-filter: blur(12px) saturate(170%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .28), inset 0 1px 0 rgba(255, 255, 255, .22), 0 2px 6px rgba(0, 0, 0, .18);
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#SNS-11 .sns11-x::before { content: ""; position: absolute; inset: -8px; }
+#SNS-11 .sns11-x .i { stroke: currentColor; stroke-width: .6px; }
+#SNS-11 .sns11-x:active { transform: scale(.86); background: rgba(20, 20, 24, .6); transition-duration: 80ms; }
+#SNS-11 .sns11-badge {
+  position: absolute; left: 8px; bottom: 8px; height: 20px; padding: 0 6px; border-radius: 6px;
+  display: inline-flex; align-items: center; font: 700 11px/1 var(--font-text); letter-spacing: .04em; color: #fff;
+  background: rgba(20, 20, 24, .45); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .25);
+}
+
+/* — Extras: poll editor + location chip — */
+#SNS-11 .sns11-extras { display: flex; flex-direction: column; align-items: flex-start; }
+#SNS-11 .sns11-extras:empty { display: none; }
+#SNS-11 .sns11-poll {
+  align-self: stretch; margin-top: 12px; border-radius: 14px; overflow: hidden;
+  box-shadow: inset 0 0 0 .5px var(--separator);
+}
+#SNS-11 .sns11-popts { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+#SNS-11 .sns11-popt { position: relative; display: flex; align-items: center; height: 42px; border-radius: 10px; background: var(--fill-3); transition: box-shadow var(--dur-1) ease, background var(--dur-1) ease; }
+#SNS-11 .sns11-popt:focus-within { background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
+#SNS-11 .sns11-popt input {
+  flex: 1; min-width: 0; height: 100%; padding: 0 0 0 12px; border: 0; outline: 0; background: none;
+  font: 400 var(--fs-callout)/1 var(--font-text); letter-spacing: 0; color: var(--label); caret-color: var(--accent);
+}
+#SNS-11 .sns11-popt input::placeholder { color: var(--label-3); }
+#SNS-11 .sns11-pcount { padding: 0 12px 0 6px; font: 400 var(--fs-footnote)/1 var(--font-text); color: var(--label-3); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity var(--dur-1) ease; }
+#SNS-11 .sns11-popt:focus-within .sns11-pcount { opacity: 1; }
+#SNS-11 .sns11-pbtn {
+  border: 0; background: none; cursor: pointer; color: var(--accent);
+  font: 400 var(--fs-callout)/1 var(--font-text); letter-spacing: 0;
+  user-select: none; -webkit-user-select: none; transition: opacity var(--dur-1) ease;
+}
+#SNS-11 .sns11-pbtn:active { opacity: .45; transition-duration: 60ms; }
+#SNS-11 .sns11-padd { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 4px; margin: -4px 0 0 8px; font-size: var(--fs-subhead); }
+#SNS-11 .sns11-padd[hidden] { display: none; }
+#SNS-11 .sns11-padd .i { font-size: 15px; }
+#SNS-11 .sns11-prow { display: flex; align-items: center; justify-content: space-between; height: 44px; margin-left: 12px; padding-right: 4px; box-shadow: inset 0 .5px 0 var(--separator); font-size: var(--fs-callout); letter-spacing: 0; }
+#SNS-11 .sns11-prow > span { color: var(--label); }
+#SNS-11 .sns11-pdur { display: inline-flex; align-items: center; gap: 3px; height: 44px; padding: 0 8px; color: var(--label-2); font-variant-numeric: tabular-nums; }
+#SNS-11 .sns11-pdur .i { font-size: 13px; color: var(--label-3); }
+#SNS-11 .sns11-pdel { display: block; width: 100%; height: 44px; color: var(--red); box-shadow: inset 0 .5px 0 var(--separator); }
+
+#SNS-11 .sns11-loc {
+  display: inline-flex; align-items: center; gap: 5px; height: 28px; margin-top: 12px; padding: 0 8px 0 9px;
+  border: 0; border-radius: var(--r-full); cursor: pointer;
+  background: color-mix(in srgb, var(--accent) 11%, transparent); color: var(--accent);
+  font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#SNS-11 .sns11-loc .i { font-size: 13px; }
+#SNS-11 .sns11-loc .sns11-locx { font-size: 10px; opacity: .6; margin-left: 1px; }
+#SNS-11 .sns11-loc:active { transform: scale(.94); background: color-mix(in srgb, var(--accent) 18%, transparent); transition-duration: 80ms; }
+
+/* — "Add to thread" ghost row — */
+#SNS-11 .sns11-addrow {
+  display: grid; grid-template-columns: 40px auto; column-gap: 12px; align-items: center;
+  height: 36px; margin: -6px 0 4px; padding: 0; border: 0; background: none; cursor: pointer;
+  font: 400 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; color: var(--label-3);
+  transition: opacity var(--dur-2) ease;
+}
+#SNS-11 .sns11-addrow .av { justify-self: center; width: 20px; height: 20px; font-size: 8px; opacity: .5; }
+#SNS-11 .sns11-addrow:disabled { opacity: .55; cursor: default; }
+#SNS-11 .sns11-addrow:not(:disabled):active { opacity: .5; transition-duration: 60ms; }
+#SNS-11 .sns11-addrow[hidden] { display: none; }
+
+/* — Audience — */
+#SNS-11 .sns11-audrow { flex: none; display: flex; align-items: center; height: 46px; padding: 0 16px; }
+#SNS-11 .sns11-aud {
+  position: relative; display: inline-flex; align-items: center; height: 30px; padding: 0 12px 0 10px; overflow: hidden;
+  border: 0; border-radius: var(--r-full); cursor: pointer;
+  background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent);
+  font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; white-space: nowrap;
+  user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease, width var(--dur-3) var(--ease-ios);
+}
+#SNS-11 .sns11-aud:active { transform: scale(.95); background: color-mix(in srgb, var(--accent) 17%, transparent); transition-duration: 80ms; }
+#SNS-11 .sns11-aud-in { display: inline-flex; align-items: center; gap: 6px; }
+#SNS-11 .sns11-aud .i { font-size: 15px; }
+
+/* — Toolbar — */
+#SNS-11 .sns11-tools {
+  flex: none; display: flex; align-items: center; height: 50px; padding: 0 12px 0 8px;
+  box-shadow: inset 0 .5px 0 var(--separator);
+}
+#SNS-11 .sns11-tool {
+  position: relative; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; flex: none;
+  border: 0; border-radius: 10px; background: none; color: var(--accent); cursor: pointer; font-size: 20px;
+  transition: opacity var(--dur-2) ease, transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#SNS-11 .sns11-tool:active:not(:disabled) { transform: scale(.86); background: color-mix(in srgb, var(--accent) 12%, transparent); transition-duration: 80ms; }
+#SNS-11 .sns11-tool:disabled { opacity: .32; cursor: default; }
+#SNS-11 .sns11-tool[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+#SNS-11 .sns11-gif { display: grid; place-items: center; width: 21px; height: 17px; border-radius: 4.5px; box-shadow: inset 0 0 0 1.6px currentColor; font: 800 8px/1 var(--font-text); letter-spacing: .02em; }
+#SNS-11 .sns11-spacer { flex: 1; min-width: 4px; }
+
+#SNS-11 .sns11-count { position: relative; display: grid; place-items: center; width: 32px; height: 32px; flex: none; }
+#SNS-11 .sns11-ring {
+  width: 22px; height: 22px; transform: rotate(-90deg) scale(1); overflow: visible;
+  transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-2) ease;
+}
+#SNS-11 .sns11-ring circle { fill: none; stroke-width: 2.4; }
+#SNS-11 .sns11-ring .sns11-track { stroke: var(--fill); }
+#SNS-11 .sns11-ring .sns11-prog { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset var(--dur-2) var(--ease-out), stroke var(--dur-2) ease; }
+#SNS-11 .sns11-num {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font: 500 11.5px/1 var(--font-text); letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+  color: var(--orange); opacity: 0; transform: scale(.6);
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring), color var(--dur-2) ease;
+}
+#SNS-11 .sns11-count.is-warn .sns11-ring, #SNS-11 .sns11-count.is-over .sns11-ring { transform: rotate(-90deg) scale(1.36); }
+#SNS-11 .sns11-count.is-warn .sns11-prog { stroke: var(--orange); }
+#SNS-11 .sns11-count.is-over .sns11-prog { stroke: var(--red); }
+#SNS-11 .sns11-count.is-warn .sns11-num, #SNS-11 .sns11-count.is-over .sns11-num { opacity: 1; transform: none; }
+#SNS-11 .sns11-count.is-over .sns11-num { color: var(--red); }
+#SNS-11 .sns11-count.is-far .sns11-ring { opacity: 0; transform: rotate(-90deg) scale(.6); }
+#SNS-11 .sns11-count.is-far .sns11-num { font-size: 13px; font-weight: 600; }
+#SNS-11 .sns11-count.is-empty .sns11-ring { opacity: .9; }
+#SNS-11 .sns11-vsep { width: 1px; height: 26px; margin: 0 10px 0 8px; background: var(--separator); flex: none; }
+#SNS-11 .sns11-plus {
+  display: grid; place-items: center; width: 28px; height: 28px; padding: 0; flex: none; border: 0; border-radius: 50%;
+  background: none; color: var(--accent); cursor: pointer; font-size: 15px;
+  box-shadow: inset 0 0 0 1px var(--separator-op);
+  transition: opacity var(--dur-2) ease, transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#SNS-11 .sns11-plus:active:not(:disabled) { transform: scale(.86); background: color-mix(in srgb, var(--accent) 12%, transparent); transition-duration: 80ms; }
+#SNS-11 .sns11-plus:disabled { opacity: .32; cursor: default; }
+
+/* — Toast (stage level) — */
+#SNS-11 .sns11-toast {
+  position: absolute; z-index: 8; bottom: 110px; left: 50%; display: flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 7px 0 14px; border-radius: var(--r-full); white-space: nowrap;
+  background: light-dark(rgba(255, 255, 255, .92), rgba(58, 58, 60, .92)); -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .14), 0 2px 6px rgba(0, 0, 0, .06), inset 0 0 0 .5px light-dark(rgba(0, 0, 0, .08), rgba(255, 255, 255, .14));
+  font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; color: var(--label);
+  transform: translate(-50%, 24px) scale(.9); opacity: 0; pointer-events: none;
+  transition: transform var(--dur-3) var(--ease-ios), opacity var(--dur-2) ease;
+}
+#SNS-11 .sns11-toast.is-on { transform: translate(-50%, 0) scale(1); opacity: 1; pointer-events: auto; transition: transform var(--dur-4) var(--ease-spring), opacity var(--dur-2) ease; }
+#SNS-11 .sns11-toast > .i { font-size: 20px; color: var(--green); }
+#SNS-11 .sns11-toast button { height: 30px; padding: 0 10px; border: 0; border-radius: var(--r-full); background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font: 600 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; cursor: pointer; margin-left: 4px; }
+#SNS-11 .sns11-toast:not(.has-act) { padding-right: 18px; }
+#SNS-11 .sns11-toast:not(.has-act) button { display: none; }
+
+/* — Action sheet (inside card) — */
+#SNS-11 .sns11-as { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: flex-end; padding: 8px; }
+#SNS-11 .sns11-as[hidden] { display: none; }
+#SNS-11 .sns11-as-scrim { position: absolute; inset: 0; background: var(--scrim); opacity: 0; transition: opacity var(--dur-3) ease; }
+#SNS-11 .sns11-as-panel { position: relative; display: flex; flex-direction: column; gap: 8px; transform: translateY(110%); transition: transform var(--dur-3) var(--ease-ios); }
+#SNS-11 .sns11-as.is-open .sns11-as-scrim { opacity: 1; }
+#SNS-11 .sns11-as.is-open .sns11-as-panel { transform: none; }
+#SNS-11 .sns11-as-group {
+  display: flex; flex-direction: column; border-radius: 14px; overflow: hidden;
+  background: var(--mat-thick); -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+}
+#SNS-11 .sns11-as-msg { margin: 0; padding: 14px 16px 13px; text-align: center; font: 400 var(--fs-footnote)/1.35 var(--font-text); letter-spacing: 0; color: var(--label-2); box-shadow: inset 0 -.5px 0 var(--separator); }
+#SNS-11 .sns11-as-btn {
+  height: 56px; border: 0; background: transparent; cursor: pointer;
+  font: 400 var(--fs-title3)/1 var(--font-text); letter-spacing: 0; color: var(--accent);
+  transition: background var(--dur-1) ease;
+}
+#SNS-11 .sns11-as-btn + .sns11-as-btn { box-shadow: inset 0 .5px 0 var(--separator); }
+#SNS-11 .sns11-as-btn:active { background: var(--fill-3); transition-duration: 40ms; }
+#SNS-11 .sns11-as-btn.is-destructive { color: var(--red); }
+#SNS-11 .sns11-as-btn.is-cancel { font-weight: 600; background: light-dark(#FFFFFF, #2C2C2E); }
+#SNS-11 .sns11-as-btn.is-cancel:active { background: light-dark(#E5E5EA, #3A3A3C); }
+
+@media (hover: hover) {
+  #SNS-11 .sns11-tool:hover:not(:disabled), #SNS-11 .sns11-plus:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  #SNS-11 .sns11-post:hover:not(:disabled) { filter: brightness(1.06); }
+  #SNS-11 .sns11-segx:hover { background: var(--fill-4); color: var(--label-2); }
+  #SNS-11 .sns11-as-btn:hover { background: var(--fill-4); }
+}
+@keyframes sns11-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  #SNS-11 *, #SNS-11 *::before, #SNS-11 *::after { transition-duration: 1ms !important; }
+}
+</style>
+<article class="obj" id="SNS-11" data-name="Composer" data-ja="投稿作成" data-vector="Clean" data-size="m" data-desc="新規投稿の作成画面。文字数リング・画像添付・公開範囲。">
+  <div class="obj-stage" data-bg="grouped">
+    <section class="sns11-card" aria-label="新規ポスト">
+      <header class="sns11-head">
+        <button class="sns11-cancel" type="button">キャンセル</button>
+        <h3 class="sns11-title">新規ポスト</h3>
+        <button class="sns11-post" type="button" disabled><span class="sns11-spin" aria-hidden="true"></span><span class="sns11-post-tx">投稿する</span></button>
+        <i class="sns11-progress" aria-hidden="true"></i>
+      </header>
+
+      <div class="sns11-body">
+        <div class="sns11-thread"></div>
+        <button class="sns11-addrow" type="button"><span class="av av-8" aria-hidden="true">Me</span><span>スレッドに追加</span></button>
+      </div>
+
+      <div class="sns11-audrow">
+        <button class="sns11-aud" type="button" aria-label="返信できるユーザーを変更: 全員が返信できます"><span class="sns11-aud-in"><svg class="i" aria-hidden="true"><use href="#i-globe"/></svg><span>全員が返信できます</span></span></button>
+      </div>
+
+      <div class="sns11-tools" role="toolbar" aria-label="ポストに追加">
+        <button class="sns11-tool" type="button" data-act="photo" aria-label="写真を追加"><svg class="i" aria-hidden="true"><use href="#i-photo"/></svg></button>
+        <button class="sns11-tool" type="button" data-act="gif" aria-label="GIFを追加"><span class="sns11-gif" aria-hidden="true">GIF</span></button>
+        <button class="sns11-tool" type="button" data-act="poll" aria-label="投票を追加"><svg class="i" aria-hidden="true"><use href="#i-chart-bar-fill"/></svg></button>
+        <button class="sns11-tool" type="button" data-act="loc" aria-label="位置情報を追加" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-location-fill"/></svg></button>
+        <button class="sns11-tool" type="button" data-act="at" aria-label="メンションを挿入"><svg class="i" aria-hidden="true"><use href="#i-at"/></svg></button>
+        <button class="sns11-tool" type="button" data-act="tag" aria-label="ハッシュタグを挿入"><svg class="i" aria-hidden="true"><use href="#i-number"/></svg></button>
+        <span class="sns11-spacer"></span>
+        <div class="sns11-count" aria-label="残り140文字">
+          <svg class="sns11-ring" viewBox="0 0 24 24" aria-hidden="true"><circle class="sns11-track" cx="12" cy="12" r="10.5"/><circle class="sns11-prog" cx="12" cy="12" r="10.5" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>
+          <span class="sns11-num" aria-hidden="true"></span>
+        </div>
+        <span class="sns11-vsep" aria-hidden="true"></span>
+        <button class="sns11-plus" type="button" aria-label="スレッドに追加"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+      </div>
+
+      <div class="sns11-toast" role="status" aria-live="polite"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg><span class="sns11-toast-tx">ポストしました</span><button type="button" tabindex="-1">表示</button></div>
+
+      <div class="sns11-as" hidden>
+        <div class="sns11-as-scrim" data-as="cancel"></div>
+        <div class="sns11-as-panel" role="dialog" aria-modal="true" aria-label="下書きの確認">
+          <div class="sns11-as-group">
+            <p class="sns11-as-msg">このポストを下書きとして保存しますか？</p>
+            <button class="sns11-as-btn is-destructive" type="button" data-as="delete">ポストを削除</button>
+            <button class="sns11-as-btn" type="button" data-as="save">下書きを保存</button>
+          </div>
+          <div class="sns11-as-group"><button class="sns11-as-btn is-cancel" type="button" data-as="cancel">キャンセル</button></div>
+        </div>
+      </div>
+    </section>
+
+    <template class="sns11-tpl">
+      <div class="sns11-seg">
+        <div class="sns11-rail"><span class="av av-8 sns11-av" aria-hidden="true">Me</span><i class="sns11-line"></i></div>
+        <div class="sns11-col">
+          <div class="sns11-field">
+            <div class="sns11-mirror" aria-hidden="true"></div>
+            <textarea class="sns11-ta" rows="1" placeholder="いまどうしてる？" aria-label="ポストの本文" spellcheck="false"></textarea>
+          </div>
+          <div class="sns11-media" role="list" aria-label="添付メディア"></div>
+          <div class="sns11-extras"></div>
+          <button class="sns11-segx" type="button" aria-label="このポストを削除"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>
+        </div>
+      </div>
+    </template>
+  </div>
+  <ul class="obj-notes"><li>140字を超えると赤く</li><li>写真は最大4枚・×で削除</li><li>公開範囲をタップで切替</li><li>＋でスレッドを追加</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-11');
+  if (!root) return;
+  const $ = (s, el = root) => el.querySelector(s);
+  const $$ = (s, el = root) => Array.from(el.querySelectorAll(s));
+  const EASE = 'cubic-bezier(.32,.72,0,1)', SPRING = 'cubic-bezier(.34,1.56,.64,1)';
+  const rm = () => !!(window.ObjKit && ObjKit.reducedMotion);
+  const d = (ms) => (rm() ? 1 : ms);
+  const LIMIT = 140, MAX_MEDIA = 4, MAX_SEG = 3;
+
+  const card = $('.sns11-card'), body = $('.sns11-body'), thread = $('.sns11-thread');
+  const tpl = $('.sns11-tpl'), addRow = $('.sns11-addrow');
+  const postBtn = $('.sns11-post'), postTx = $('.sns11-post-tx'), cancelBtn = $('.sns11-cancel');
+  const plusBtn = $('.sns11-plus'), counter = $('.sns11-count'), prog = $('.sns11-prog'), num = $('.sns11-num');
+  const aud = $('.sns11-aud'), toast = $('.sns11-toast'), toastTx = $('.sns11-toast-tx');
+  const sheet = $('.sns11-as');
+  const tool = (a) => $(`.sns11-tool[data-act="${a}"]`);
+
+  const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ja', { granularity: 'grapheme' }) : null;
+  const graphemes = (s) => (segmenter ? Array.from(segmenter.segment(s), (x) => x.segment) : Array.from(s));
+  const esc = (t) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const TAG = /([#＃][\p{L}\p{N}_]+|[@＠][A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)*)/gu;
+  const hl = (t) => esc(t).replace(TAG, '<b>$1</b>');
+
+  /* ---------- height helpers ---------- */
+  function grow(el) {
+    if (rm()) return;
+    const h = el.offsetHeight, mt = getComputedStyle(el).marginTop;
+    const prev = el.style.overflow; el.style.overflow = 'hidden';
+    el.animate([{ height: '0px', marginTop: '0px', opacity: 0 }, { height: h + 'px', marginTop: mt, opacity: 1 }], { duration: 420, easing: EASE })
+      .onfinish = () => { el.style.overflow = prev; };
+  }
+  function shrink(el, done) {
+    const h = el.offsetHeight, mt = getComputedStyle(el).marginTop;
+    el.style.overflow = 'hidden';
+    const a = el.animate([{ height: h + 'px', marginTop: mt, opacity: 1 }, { height: '0px', marginTop: '0px', opacity: 0 }], { duration: d(320), easing: EASE, fill: 'forwards' });
+    a.onfinish = () => { done && done(); a.cancel(); el.style.overflow = ''; };
+  }
+
+  /* ---------- segments ---------- */
+  const segs = [];
+  let active = null;
+
+  function makeSeg(text = '') {
+    const el = tpl.content.firstElementChild.cloneNode(true);
+    const s = { el, ta: $('.sns11-ta', el), mirror: $('.sns11-mirror', el), media: $('.sns11-media', el), extras: $('.sns11-extras', el), poll: null, loc: null, n: 0 };
+    s.ta.value = text;
+    s.ta.addEventListener('input', () => { render(s); update(); });
+    s.ta.addEventListener('focus', () => setActive(s));
+    s.ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); if (!postBtn.disabled) post(); } });
+    $('.sns11-col', el).addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button, input, textarea, .sns11-media')) return;
+      e.preventDefault(); s.ta.focus(); const L = s.ta.value.length; s.ta.setSelectionRange(L, L);
+    });
+    el.addEventListener('focusin', () => setActive(s));
+    $('.sns11-segx', el).addEventListener('click', () => removeSeg(s));
+    s.media.addEventListener('click', (e) => { const x = e.target.closest('.sns11-x'); if (x) removeMedia(s, x.closest('.sns11-thumb')); });
+    return s;
+  }
+
+  function render(s) {
+    const g = graphemes(s.ta.value);
+    s.n = g.length;
+    const ok = g.slice(0, LIMIT).join(''), over = g.slice(LIMIT).join('');
+    s.mirror.innerHTML = hl(ok) + (over ? '<mark>' + hl(over) + '</mark>' : '') + '​';
+  }
+
+  function hasContent(s) { return s.ta.value.trim().length > 0 || s.media.children.length > 0 || !!s.poll; }
+
+  function setActive(s) {
+    if (active === s) return;
+    active = s;
+    segs.forEach((x) => x.el.classList.toggle('is-active', x === s));
+    update();
+  }
+
+  function update() {
+    const s = active || segs[0];
+    if (!s) return;
+    /* counter ring — follows the focused post */
+    const rem = LIMIT - s.n;
+    const p = Math.min(s.n / LIMIT, 1);
+    prog.style.strokeDashoffset = String(100 - p * 100);
+    counter.classList.toggle('is-empty', s.n === 0);
+    counter.classList.toggle('is-warn', rem <= 20 && rem >= 0);
+    counter.classList.toggle('is-over', rem < 0);
+    counter.classList.toggle('is-far', rem <= -10);
+    num.textContent = rem <= 20 ? String(rem).replace('-', '−') : '';
+    counter.setAttribute('aria-label', rem >= 0 ? `残り${rem}文字` : `${-rem}文字オーバー`);
+
+    /* post button */
+    const filled = segs.filter(hasContent);
+    const anyOver = segs.some((x) => x.n > LIMIT);
+    postBtn.disabled = !filled.length || anyOver || card.classList.contains('is-posting');
+    postTx.textContent = filled.length > 1 ? 'すべて投稿' : '投稿する';
+
+    /* toolbar state for the active post */
+    const mediaN = s.media.children.length;
+    const hasGif = !!s.media.querySelector('.sns11-badge');
+    tool('photo').disabled = mediaN >= MAX_MEDIA || !!s.poll || hasGif;
+    tool('gif').disabled = mediaN > 0 || !!s.poll;
+    tool('poll').disabled = mediaN > 0;
+    tool('poll').setAttribute('aria-pressed', String(!!s.poll));
+    tool('loc').setAttribute('aria-pressed', String(!!s.loc));
+    tool('loc').setAttribute('aria-label', s.loc ? '位置情報を削除' : '位置情報を追加');
+
+    /* thread */
+    const canAdd = segs.length < MAX_SEG && hasContent(segs[segs.length - 1]);
+    plusBtn.disabled = !canAdd;
+    addRow.disabled = !canAdd;
+    addRow.hidden = segs.length >= MAX_SEG;
+    card.classList.toggle('is-multi', segs.length > 1);
+  }
+
+  function addSeg(text = '', focus = true) {
+    const s = makeSeg(text);
+    if (segs.length) s.ta.placeholder = 'さらに追加…';
+    segs.push(s);
+    thread.append(s.el);
+    render(s);
+    if (segs.length > 1) grow(s.el);
+    if (focus) s.ta.focus({ preventScroll: true });
+    else if (!active) setActive(s);
+    update();
+    return s;
+  }
+
+  function removeSeg(s) {
+    const i = segs.indexOf(s);
+    if (i <= 0) return;
+    segs.splice(i, 1);
+    if (active === s) { active = null; setActive(segs[i - 1]); segs[i - 1].ta.focus({ preventScroll: true }); }
+    shrink(s.el, () => s.el.remove());
+    update();
+  }
+
+  /* ---------- media ---------- */
+  function addMedia(s, gif = false) {
+    const used = new Set($$('.sns11-thumb', s.media).map((n) => n.dataset.art));
+    const pool = [1, 2, 3, 4, 5, 6, 7, 8].filter((n) => !used.has(String(n)));
+    const n = pool[Math.floor(Math.random() * pool.length)];
+    const item = document.createElement('div');
+    item.className = 'sns11-thumb'; item.dataset.art = String(n); item.setAttribute('role', 'listitem');
+    item.innerHTML = `<div class="art art-${n} sns11-img"></div>${gif ? '<span class="sns11-badge" aria-hidden="true">GIF</span>' : ''}<button class="sns11-x" type="button" aria-label="${gif ? 'GIF' : '写真'}を削除"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>`;
+    const first = !s.media.children.length;
+    s.media.append(item);
+    if (!rm()) {
+      if (first) grow(s.media);
+      else item.animate([{ width: '0px', marginRight: '-8px', opacity: 0 }, { width: '120px', marginRight: '0px', opacity: 1 }], { duration: 420, easing: EASE });
+      item.firstElementChild.animate([{ transform: 'scale(.6)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 520, easing: SPRING });
+    }
+    requestAnimationFrame(() => s.media.scrollTo({ left: s.media.scrollWidth, behavior: rm() ? 'auto' : 'smooth' }));
+    update();
+  }
+
+  function removeMedia(s, item) {
+    if (!item || item.classList.contains('is-out')) return;
+    item.classList.add('is-out');
+    const last = s.media.querySelectorAll('.sns11-thumb:not(.is-out)').length === 0;
+    if (last) { shrink(s.media, () => { item.remove(); update(); }); return; }
+    const a = item.animate([{ width: '120px', marginRight: '0px', opacity: 1, transform: 'scale(1)' }, { width: '0px', marginRight: '-8px', opacity: 0, transform: 'scale(.7)' }], { duration: d(340), easing: EASE, fill: 'forwards' });
+    a.onfinish = () => { item.remove(); update(); };
+  }
+
+  /* ---------- poll editor ---------- */
+  const DUR = ['1日', '3日', '7日'];
+  function addPoll(s) {
+    const el = document.createElement('div');
+    el.className = 'sns11-poll';
+    el.innerHTML = `<div class="sns11-popts"></div>
+      <button class="sns11-pbtn sns11-padd" type="button"><svg class="i" aria-hidden="true"><use href="#i-plus-circle-fill"/></svg>選択肢を追加</button>
+      <div class="sns11-prow"><span>投票期間</span><button class="sns11-pbtn sns11-pdur" type="button" aria-label="投票期間: 1日"><span>1日</span><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button></div>
+      <button class="sns11-pbtn sns11-pdel" type="button">投票を削除</button>`;
+    const opts = $('.sns11-popts', el), add = $('.sns11-padd', el);
+    const addOpt = (animate) => {
+      const k = opts.children.length + 1;
+      const row = document.createElement('label');
+      row.className = 'sns11-popt';
+      row.innerHTML = `<input type="text" maxlength="25" placeholder="選択肢${k}${k > 2 ? '（任意）' : ''}" aria-label="選択肢${k}"><span class="sns11-pcount">25</span>`;
+      const inp = $('input', row), cnt = $('.sns11-pcount', row);
+      inp.addEventListener('input', () => { cnt.textContent = String(25 - graphemes(inp.value).length); });
+      opts.append(row);
+      add.hidden = opts.children.length >= 4;
+      if (animate) { grow(row); inp.focus({ preventScroll: true }); }
+      return inp;
+    };
+    addOpt(false); addOpt(false);
+    add.addEventListener('click', () => addOpt(true));
+    let di = 0;
+    $('.sns11-pdur', el).addEventListener('click', (e) => {
+      di = (di + 1) % DUR.length;
+      const b = e.currentTarget; b.firstElementChild.textContent = DUR[di]; b.setAttribute('aria-label', '投票期間: ' + DUR[di]);
+      if (!rm()) b.firstElementChild.animate([{ transform: 'translateY(6px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: EASE });
+    });
+    $('.sns11-pdel', el).addEventListener('click', () => removePoll(s));
+    s.poll = el;
+    s.extras.prepend(el);
+    grow(el);
+    $('input', el).focus({ preventScroll: true });
+    update();
+  }
+  function removePoll(s) {
+    const el = s.poll; if (!el) return;
+    s.poll = null; update();
+    shrink(el, () => el.remove());
+    s.ta.focus({ preventScroll: true });
+  }
+
+  /* ---------- location ---------- */
+  function toggleLoc(s) {
+    if (s.loc) { const el = s.loc; s.loc = null; shrink(el, () => el.remove()); update(); return; }
+    const el = document.createElement('button');
+    el.type = 'button'; el.className = 'sns11-loc'; el.setAttribute('aria-label', '位置情報を削除: 渋谷区');
+    el.innerHTML = '<svg class="i" aria-hidden="true"><use href="#i-location-fill"/></svg>渋谷区<svg class="i sns11-locx" aria-hidden="true"><use href="#i-xmark"/></svg>';
+    el.addEventListener('click', () => toggleLoc(s));
+    s.loc = el; s.extras.append(el);
+    if (!rm()) el.animate([{ transform: 'scale(.4)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 480, easing: SPRING });
+    update();
+  }
+
+  /* ---------- insert @ / # at caret ---------- */
+  function insert(s, ch) {
+    const ta = s.ta; const v = ta.value;
+    const a = ta.selectionStart ?? v.length, b = ta.selectionEnd ?? v.length;
+    const pre = a > 0 && !/[\s　]$/.test(v.slice(0, a)) ? ' ' : '';
+    ta.focus({ preventScroll: true });
+    ta.setRangeText(pre + ch, a, b, 'end');
+    render(s); update();
+  }
+
+  /* ---------- toolbar ---------- */
+  $('.sns11-tools').addEventListener('click', (e) => {
+    const b = e.target.closest('.sns11-tool'); if (!b || b.disabled) return;
+    const s = active || segs[0];
+    switch (b.dataset.act) {
+      case 'photo': addMedia(s); break;
+      case 'gif': addMedia(s, true); break;
+      case 'poll': s.poll ? removePoll(s) : addPoll(s); break;
+      case 'loc': toggleLoc(s); break;
+      case 'at': insert(s, '@'); break;
+      case 'tag': insert(s, '#'); break;
+    }
+  });
+  const newSeg = () => { if (!plusBtn.disabled) addSeg('', true); };
+  plusBtn.addEventListener('click', newSeg);
+  addRow.addEventListener('click', newSeg);
+
+  /* ---------- audience ---------- */
+  const AUD = [
+    { t: '全員が返信できます', i: 'i-globe' },
+    { t: 'フォロー中のみ返信できます', i: 'i-person-2-fill' },
+    { t: 'メンションのみ返信できます', i: 'i-at' },
+  ];
+  let ai = 0;
+  aud.addEventListener('click', () => {
+    ai = (ai + 1) % AUD.length;
+    const inner = $('.sns11-aud-in', aud);
+    const w0 = aud.offsetWidth;
+    inner.querySelector('use').setAttribute('href', '#' + AUD[ai].i);
+    inner.lastElementChild.textContent = AUD[ai].t;
+    aud.setAttribute('aria-label', '返信できるユーザーを変更: ' + AUD[ai].t);
+    if (rm()) return;
+    const w1 = aud.offsetWidth;
+    aud.animate([{ width: w0 + 'px' }, { width: w1 + 'px' }], { duration: 420, easing: EASE });
+    inner.animate([{ transform: 'translateY(14px)', opacity: 0, filter: 'blur(2px)' }, { transform: 'none', opacity: 1, filter: 'blur(0)' }], { duration: 380, easing: EASE });
+  });
+
+  /* ---------- toast ---------- */
+  let toastT = 0;
+  function showToast(text, withAction) {
+    toastTx.textContent = text;
+    toast.classList.toggle('has-act', !!withAction);
+    toast.classList.add('is-on');
+    clearTimeout(toastT);
+    toastT = setTimeout(() => toast.classList.remove('is-on'), 2600);
+  }
+  $('button', toast).addEventListener('click', () => toast.classList.remove('is-on'));
+
+  /* ---------- reset / post ---------- */
+  function resetAll(after) {
+    body.classList.add('is-fading');
+    setTimeout(() => {
+      segs.splice(0).forEach((s) => s.el.remove());
+      active = null;
+      addSeg('', false);
+      setActive(segs[0]);
+      body.classList.remove('is-fading');
+      update();
+      after && after();
+    }, d(180));
+  }
+
+  function post() {
+    if (postBtn.disabled) return;
+    card.classList.add('is-posting');
+    update();
+    const bar = $('.sns11-progress');
+    const a = bar.animate([{ transform: 'scaleX(0)', opacity: 1 }, { transform: 'scaleX(.7)', opacity: 1, offset: .6 }, { transform: 'scaleX(1)', opacity: 0 }], { duration: d(900), easing: 'cubic-bezier(.4,0,.2,1)' });
+    a.onfinish = () => {
+      card.classList.remove('is-posting');
+      resetAll(() => showToast(postTx.textContent === 'すべて投稿' ? 'スレッドを投稿しました' : 'ポストしました', true));
+    };
+  }
+  postBtn.addEventListener('click', post);
+
+  /* ---------- cancel → action sheet ---------- */
+  let lastFocus = null;
+  function openSheet() {
+    lastFocus = document.activeElement;
+    sheet.hidden = false;
+    sheet.getBoundingClientRect();
+    sheet.classList.add('is-open');
+    setTimeout(() => $('.sns11-as-btn', sheet).focus({ preventScroll: true }), 60);
+  }
+  function closeSheet(cb) {
+    sheet.classList.remove('is-open');
+    setTimeout(() => { sheet.hidden = true; cb && cb(); }, d(360));
+  }
+  cancelBtn.addEventListener('click', () => {
+    if (segs.some(hasContent)) openSheet();
+    else if (!rm()) card.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(-2px)' }, { transform: 'none' }], { duration: 360, easing: 'ease-out' });
+  });
+  sheet.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-as]'); if (!t) return;
+    const act = t.dataset.as;
+    if (act === 'cancel') closeSheet(() => lastFocus && root.contains(lastFocus) && lastFocus.focus({ preventScroll: true }));
+    else closeSheet(() => resetAll(() => { if (act === 'save') showToast('下書きに保存しました', false); }));
+  });
+  sheet.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); closeSheet(() => cancelBtn.focus({ preventScroll: true })); } });
+
+  /* ---------- initial draft ---------- */
+  const s0 = addSeg('週末の渋谷散歩📷 朝は新しいカフェのラテ、夜はスクランブル交差点の灯り。どっちも好きな景色でした。@mio_k また行こう！ #週末フォト', false);
+  setActive(s0);
+  [8, 4].forEach((n) => {
+    const item = document.createElement('div');
+    item.className = 'sns11-thumb'; item.dataset.art = String(n); item.setAttribute('role', 'listitem');
+    item.innerHTML = `<div class="art art-${n} sns11-img"></div><button class="sns11-x" type="button" aria-label="写真を削除"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>`;
+    s0.media.append(item);
+  });
+  update();
+})();
+</script>

@@ -1,0 +1,351 @@
+<!-- ═══════════ INP-06 · Stepper ═══════════ -->
+<style>
+#INP-06 .inp06-stack { display: flex; flex-direction: column; gap: 26px; width: min(100%, 344px); }
+
+/* ───────── (1) iOS UIStepper in an inset grouped list ───────── */
+#INP-06 .inp06-sec-h { margin: 0 0 7px 16px; font: 400 var(--fs-footnote)/1.3 var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#INP-06 .inp06-sec-f { margin: 7px 16px 0; font: 400 var(--fs-footnote)/1.35 var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#INP-06 .inp06-list { margin: 0; padding: 0; list-style: none; border-radius: 12px; background: var(--bg-grouped-2); overflow: hidden; }
+#INP-06 .inp06-row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 6px 16px; }
+#INP-06 .inp06-row + .inp06-row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--separator); }
+#INP-06 .inp06-lab { flex: 1; min-width: 0; font: 400 var(--fs-body)/1.29 var(--font-text); letter-spacing: 0; }
+#INP-06 .inp06-lab small { display: block; font-size: var(--fs-footnote); color: var(--label-2); }
+#INP-06 .inp06-v { font: 400 var(--fs-body)/1.29 var(--font-text); color: var(--label-2); letter-spacing: 0; display: inline-flex; align-items: baseline; }
+#INP-06 .inp06-v .inp06-roll { min-width: 1.3ch; justify-content: flex-end; }
+
+#INP-06 .inp06-ios { position: relative; display: inline-flex; flex: none; width: 94px; height: 32px; border-radius: 8px; background: var(--fill-3); }
+#INP-06 .inp06-ios-sep { position: absolute; left: 50%; top: 8px; bottom: 8px; width: 1px; margin-left: -.5px; background: var(--separator); pointer-events: none; }
+#INP-06 .inp06-ios-b {
+  flex: 1; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--label); cursor: pointer;
+  font-size: 15px; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation;
+  transition: background var(--dur-2) ease, color var(--dur-1) ease;
+}
+#INP-06 .inp06-ios-b:first-child { border-radius: 8px 0 0 8px; }
+#INP-06 .inp06-ios-b:last-of-type { border-radius: 0 8px 8px 0; }
+#INP-06 .inp06-ios-b.is-down { background: var(--fill); transition-duration: 0s; }
+#INP-06 .inp06-ios-b:disabled { color: var(--label-3); cursor: default; }
+#INP-06 .inp06-ios-b:focus-visible { outline: none; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent); }
+#INP-06 .inp06-ios-b .i { stroke: currentColor; stroke-width: .6px; }
+
+/* ───────── rolling numerals (shared) ───────── */
+#INP-06 .inp06-roll { display: inline-flex; font-variant-numeric: tabular-nums; white-space: pre; }
+#INP-06 .inp06-slot { position: relative; display: inline-block; }
+#INP-06 .inp06-g { display: inline-block; }
+#INP-06 .inp06-g--abs { position: absolute; left: 0; top: 0; }
+
+/* ───────── (2)(3) Soft cart card ───────── */
+#INP-06 .inp06-card {
+  --tint: var(--orange);
+  position: relative; padding: 16px; border-radius: 28px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, light-dark(rgba(255, 179, 138, .22), rgba(255, 159, 10, .13)) 0%, transparent 60%),
+    radial-gradient(90% 70% at 100% 0%, light-dark(rgba(255, 214, 230, .3), rgba(255, 55, 95, .08)) 0%, transparent 60%),
+    var(--bg-grouped-2);
+  box-shadow: 0 22px 44px -22px light-dark(rgba(170, 92, 40, .32), rgba(0, 0, 0, .7)), 0 2px 8px light-dark(rgba(120, 70, 30, .06), rgba(0, 0, 0, .3)), inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .8), rgba(255, 255, 255, .06));
+}
+#INP-06 .inp06-prod { display: flex; align-items: center; gap: 14px; }
+#INP-06 .inp06-thumb { position: relative; width: 72px; height: 72px; flex: none; border-radius: 22px; box-shadow: 0 8px 18px -8px rgba(90, 50, 20, .55), inset 0 0 0 .5px rgba(0, 0, 0, .08); background-size: 150% 150%; background-position: 50% 50%; }
+#INP-06 .inp06-thumb::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(160deg, rgba(255, 255, 255, .28), transparent 45%); }
+#INP-06 .inp06-meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+#INP-06 .inp06-name { margin: 0; font: 600 var(--fs-headline)/1.25 var(--font-text); letter-spacing: 0; }
+#INP-06 .inp06-sub { font: 400 var(--fs-footnote)/1.3 var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#INP-06 .inp06-price { font: 600 var(--fs-subhead)/1.2 var(--font-rounded); color: color-mix(in srgb, var(--tint) 80%, var(--label)); font-variant-numeric: tabular-nums; }
+#INP-06 .inp06-price span { font-weight: 500; color: var(--label-3); font-size: var(--fs-footnote); margin-left: 2px; }
+#INP-06 .inp06-chip { align-self: flex-start; height: 20px; padding: 0 8px; border-radius: 10px; display: inline-flex; align-items: center; gap: 3px; font: 600 11px/1 var(--font-text); letter-spacing: 0; color: color-mix(in srgb, var(--pink) 85%, var(--label)); background: color-mix(in srgb, var(--pink) 14%, transparent); }
+#INP-06 .inp06-chip .i { font-size: 11px; }
+
+#INP-06 .inp06-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+#INP-06 .inp06-pill {
+  display: flex; align-items: center; justify-content: space-between; flex: none; width: 172px; height: 52px; padding: 6px; border-radius: 26px;
+  background: light-dark(color-mix(in srgb, var(--tint) 8%, #fff), color-mix(in srgb, var(--tint) 10%, #1C1C1E));
+  box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--tint) 18%, transparent), inset 0 1px 2px color-mix(in srgb, var(--tint) 10%, transparent);
+}
+#INP-06 .inp06-rb {
+  --c: var(--tint);
+  position: relative; width: 40px; height: 40px; flex: none; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; color: color-mix(in srgb, var(--c) 88%, var(--label)); font-size: 18px;
+  background: light-dark(color-mix(in srgb, var(--c) 17%, #fff), color-mix(in srgb, var(--c) 26%, #1C1C1E));
+  box-shadow: 0 4px 10px -4px color-mix(in srgb, var(--c) 45%, transparent), inset 0 1px 0 light-dark(rgba(255, 255, 255, .7), rgba(255, 255, 255, .08));
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation;
+  transition: transform var(--dur-3) var(--ease-spring), background var(--dur-2) ease, color var(--dur-2) ease, box-shadow var(--dur-2) ease, opacity var(--dur-2) ease;
+}
+#INP-06 .inp06-rb .i { grid-area: 1 / 1; stroke: currentColor; stroke-width: .9px; transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-1) ease; }
+#INP-06 .inp06-rb .inp06-trash { opacity: 0; transform: scale(.3) rotate(-30deg); }
+#INP-06 .inp06-rb.is-trash { --c: var(--red); }
+#INP-06 .inp06-rb.is-trash .inp06-minus { opacity: 0; transform: scale(.3) rotate(30deg); }
+#INP-06 .inp06-rb.is-trash .inp06-trash { opacity: 1; transform: none; }
+#INP-06 .inp06-rb.is-down { transform: scale(.88); transition-duration: 110ms; background: light-dark(color-mix(in srgb, var(--c) 28%, #fff), color-mix(in srgb, var(--c) 38%, #1C1C1E)); }
+#INP-06 .inp06-rb:disabled { cursor: default; opacity: .4; box-shadow: none; }
+#INP-06 .inp06-rb:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 45%, transparent); }
+#INP-06 .inp06-qty { flex: 1; display: flex; justify-content: center; font: 700 24px/1 var(--font-rounded); letter-spacing: 0; color: var(--label); }
+#INP-06 .inp06-qty .inp06-roll { justify-content: center; min-width: 2ch; }
+#INP-06 .inp06-qty.is-zero { color: var(--label-3); }
+#INP-06 .inp06-qty.is-bump .inp06-roll { animation: inp06-bump var(--dur-3) var(--ease-spring); }
+@keyframes inp06-bump { 0% { transform: translateX(0); } 30% { transform: translateX(4px); } 60% { transform: translateX(-2px); } 100% { transform: none; } }
+
+#INP-06 .inp06-total { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; min-width: 0; }
+#INP-06 .inp06-total-l { font: 500 var(--fs-caption1)/1 var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#INP-06 .inp06-total-v { font: 700 var(--fs-title2)/1.1 var(--font-rounded); letter-spacing: -0.01em; color: var(--label); display: inline-flex; align-items: baseline; }
+#INP-06 .inp06-yen { font-size: .78em; margin-right: 1px; }
+
+#INP-06 .inp06-cta {
+  width: 100%; height: 50px; margin-top: 16px; border: 0; border-radius: 18px; cursor: pointer;
+  font: 600 var(--fs-headline)/1 var(--font-text); letter-spacing: 0; color: #fff;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 88%, #fff) 0%, var(--tint) 100%);
+  box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--tint) 80%, transparent), inset 0 1px 0 rgba(255, 255, 255, .35);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+  transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-2) ease, filter var(--dur-2) ease, box-shadow var(--dur-2) ease;
+}
+#INP-06 .inp06-cta:active { transform: scale(.97); transition-duration: 90ms; }
+#INP-06 .inp06-cta:disabled { opacity: .45; filter: saturate(.4); box-shadow: none; cursor: default; transform: none; }
+#INP-06 .inp06-cta:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--tint) 45%, transparent); }
+
+/* removed → empty state */
+#INP-06 .inp06-body { transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios), filter var(--dur-2) ease; }
+#INP-06 .inp06-card.is-empty .inp06-body { opacity: 0; transform: scale(.94); filter: blur(4px); pointer-events: none; visibility: hidden; transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios), filter var(--dur-2) ease, visibility 0s var(--dur-3); }
+#INP-06 .inp06-empty {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center;
+  opacity: 0; transform: scale(1.04); pointer-events: none; visibility: hidden;
+  transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios), visibility 0s var(--dur-3);
+}
+#INP-06 .inp06-card.is-empty .inp06-empty { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition: opacity var(--dur-3) ease 80ms, transform var(--dur-3) var(--ease-ios) 80ms, visibility 0s; }
+#INP-06 .inp06-empty-ic { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; color: color-mix(in srgb, var(--tint) 85%, var(--label)); background: color-mix(in srgb, var(--tint) 14%, transparent); }
+#INP-06 .inp06-empty p { margin: 0; font: 600 var(--fs-headline)/1.3 var(--font-text); letter-spacing: 0; }
+#INP-06 .inp06-empty small { display: block; font: 400 var(--fs-footnote)/1.3 var(--font-text); color: var(--label-2); }
+#INP-06 .inp06-undo { height: 34px; padding: 0 16px; border: 0; border-radius: 17px; cursor: pointer; font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; color: color-mix(in srgb, var(--tint) 88%, var(--label)); background: color-mix(in srgb, var(--tint) 14%, transparent); transition: transform var(--dur-3) var(--ease-spring), background var(--dur-1) ease; }
+#INP-06 .inp06-undo:active { transform: scale(.95); transition-duration: 90ms; background: color-mix(in srgb, var(--tint) 22%, transparent); }
+#INP-06 .inp06-undo:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--tint) 45%, transparent); }
+
+@media (hover: hover) {
+  #INP-06 .inp06-rb:not(:disabled):hover { background: light-dark(color-mix(in srgb, var(--c) 22%, #fff), color-mix(in srgb, var(--c) 32%, #1C1C1E)); }
+  #INP-06 .inp06-cta:not(:disabled):hover { filter: brightness(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #INP-06 .inp06-rb, #INP-06 .inp06-rb .i, #INP-06 .inp06-body, #INP-06 .inp06-empty, #INP-06 .inp06-cta { transition: none; }
+  #INP-06 .inp06-qty.is-bump .inp06-roll { animation: none; }
+}
+</style>
+<article class="obj" id="INP-06" data-name="Stepper" data-ja="ステッパー" data-vector="Soft" data-size="m" data-desc="＋／−で数量を増減。数字がロールして変わる。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="inp06-stack">
+
+      <!-- (1) standard UIStepper rows -->
+      <section>
+        <p class="inp06-sec-h">予約内容</p>
+        <ul class="inp06-list">
+          <li class="inp06-row" data-min="1" data-max="10" data-val="2">
+            <span class="inp06-lab" id="INP-06-adult">人数</span>
+            <span class="inp06-v" aria-live="polite"><span class="inp06-roll" data-roll>2</span>人</span>
+            <span class="inp06-ios" role="group" aria-labelledby="INP-06-adult">
+              <button class="inp06-ios-b" type="button" data-d="-1" aria-label="人数を減らす"><svg class="i" aria-hidden="true"><use href="#i-minus"/></svg></button>
+              <i class="inp06-ios-sep"></i>
+              <button class="inp06-ios-b" type="button" data-d="1" aria-label="人数を増やす"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            </span>
+          </li>
+          <li class="inp06-row" data-min="0" data-max="4" data-val="0">
+            <span class="inp06-lab" id="INP-06-kids">子ども<small>6歳未満は無料</small></span>
+            <span class="inp06-v" aria-live="polite"><span class="inp06-roll" data-roll>0</span>人</span>
+            <span class="inp06-ios" role="group" aria-labelledby="INP-06-kids">
+              <button class="inp06-ios-b" type="button" data-d="-1" aria-label="子どもを減らす"><svg class="i" aria-hidden="true"><use href="#i-minus"/></svg></button>
+              <i class="inp06-ios-sep"></i>
+              <button class="inp06-ios-b" type="button" data-d="1" aria-label="子どもを増やす"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            </span>
+          </li>
+        </ul>
+        <p class="inp06-sec-f">長押しで連続して増減します。</p>
+      </section>
+
+      <!-- (2)(3) Soft quantity stepper in a cart card -->
+      <div class="inp06-card">
+        <div class="inp06-body">
+          <div class="inp06-prod">
+            <div class="inp06-thumb art art-8" role="img" aria-label="カフェラテ"></div>
+            <div class="inp06-meta">
+              <span class="inp06-chip"><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg>人気</span>
+              <p class="inp06-name">カフェラテ</p>
+              <span class="inp06-sub">オーツミルク・トール</span>
+            </div>
+            <span class="inp06-price">¥600<span>/杯</span></span>
+          </div>
+          <div class="inp06-foot">
+            <div class="inp06-pill" role="group" aria-label="数量">
+              <button class="inp06-rb" type="button" data-d="-1" aria-label="数量を減らす">
+                <svg class="i inp06-minus" aria-hidden="true"><use href="#i-minus"/></svg>
+                <svg class="i inp06-trash" aria-hidden="true"><use href="#i-trash"/></svg>
+              </button>
+              <span class="inp06-qty" aria-live="polite"><span class="inp06-roll" data-roll>4</span></span>
+              <button class="inp06-rb" type="button" data-d="1" aria-label="数量を増やす"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            </div>
+            <div class="inp06-total">
+              <span class="inp06-total-l">合計</span>
+              <span class="inp06-total-v" aria-live="polite"><span class="inp06-yen">¥</span><span class="inp06-roll" data-roll>2,400</span></span>
+            </div>
+          </div>
+          <button class="inp06-cta" type="button">カートに追加</button>
+        </div>
+        <div class="inp06-empty" aria-hidden="true">
+          <span class="inp06-empty-ic"><svg class="i" aria-hidden="true"><use href="#i-cart-fill"/></svg></span>
+          <p>カートは空です<small>カフェラテを削除しました</small></p>
+          <button class="inp06-undo" type="button" tabindex="-1">元に戻す</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>＋／−をタップ</li><li>長押しで連続増減（0.4秒後）</li><li>0でゴミ箱→削除と元に戻す</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('INP-06');
+  root.addEventListener('touchstart', () => {}, { passive: true }); /* enables :active pressed states on iOS Safari */
+  const reduced = () => window.ObjKit && ObjKit.reducedMotion;
+  const PRICE = 600;
+  const yen = (n) => n.toLocaleString('ja-JP');
+
+  /* ── rolling numerals: only the changed digits roll, like SwiftUI .numericText() ── */
+  function roller(el) {
+    const slots = [];
+    const mk = (ch) => {
+      const wrap = document.createElement('span'); wrap.className = 'inp06-slot';
+      const g = document.createElement('span'); g.className = 'inp06-g'; g.textContent = ch;
+      wrap.appendChild(g);
+      return { wrap, g, ch };
+    };
+    el.textContent = '';
+    const init = el.dataset.init || '';
+    [...init].forEach((c) => { const s = mk(c); slots.push(s); el.appendChild(s.wrap); });
+    const ease = 'cubic-bezier(.3, 1.35, .5, 1)';
+    return (text, dir) => {
+      const chars = [...text];
+      const anim = !reduced();
+      while (slots.length < chars.length) {        /* grow on the most-significant side */
+        const s = mk(''); slots.unshift(s); el.prepend(s.wrap);
+        if (anim) s.wrap.animate([{ width: '0px', opacity: 0 }, { width: '0.62em', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.22,1,.36,1)' });
+      }
+      while (slots.length > chars.length) {
+        const s = slots.shift();
+        if (anim) {
+          s.wrap.style.width = s.wrap.offsetWidth + 'px'; s.wrap.style.overflow = 'visible';
+          const a = s.wrap.animate([{ width: s.wrap.offsetWidth + 'px', opacity: 1 }, { width: '0px', opacity: 0 }], { duration: 260, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
+          a.onfinish = () => s.wrap.remove();
+        } else s.wrap.remove();
+      }
+      chars.forEach((c, i) => {
+        const s = slots[i];
+        if (s.ch === c) return;
+        s.ch = c;
+        /* drop any glyph still on its way out */
+        [...s.wrap.querySelectorAll('.inp06-g--abs')].forEach((n) => n.remove());
+        const old = s.g;
+        const g = document.createElement('span'); g.className = 'inp06-g'; g.textContent = c;
+        s.g = g;
+        if (!anim || !old.textContent) { old.replaceWith(g); return; }
+        old.getAnimations().forEach((a) => a.cancel());
+        old.classList.add('inp06-g--abs');
+        s.wrap.appendChild(g);
+        const d = dir >= 0 ? 1 : -1;
+        g.animate([
+          { transform: `translateY(${d * 62}%) scale(.86)`, opacity: 0, filter: 'blur(2.5px)' },
+          { transform: 'none', opacity: 1, filter: 'blur(0)' },
+        ], { duration: 420, easing: ease });
+        const out = old.animate([
+          { transform: 'none', opacity: 1, filter: 'blur(0)' },
+          { transform: `translateY(${-d * 62}%) scale(.86)`, opacity: 0, filter: 'blur(2.5px)' },
+        ], { duration: 260, easing: 'cubic-bezier(.4, 0, .9, .6)', fill: 'forwards' });
+        out.onfinish = () => old.remove();
+      });
+    };
+  }
+
+  /* ── press & hold auto-repeat (fires once on press, repeats after 400ms, accelerates) ── */
+  function holdRepeat(btn, step) {
+    let t = 0, n = 0, active = false;
+    const stop = () => { active = false; clearTimeout(t); btn.classList.remove('is-down'); };
+    const tick = () => {
+      if (!active || btn.disabled) return stop();
+      step(true); n++;
+      t = setTimeout(tick, n < 4 ? 140 : n < 10 ? 90 : 55);
+    };
+    btn.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || btn.disabled) return;
+      active = true; n = 0;
+      btn.classList.add('is-down');
+      try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+      step(false);
+      t = setTimeout(tick, 400);
+    });
+    btn.addEventListener('pointerup', stop);
+    btn.addEventListener('pointercancel', stop);
+    btn.addEventListener('lostpointercapture', stop);
+    btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    /* keyboard (Enter/Space) produces click with detail 0 */
+    btn.addEventListener('click', (e) => { if (e.detail === 0) step(false); });
+  }
+
+  /* ───── (1) list rows with UIStepper ───── */
+  root.querySelectorAll('.inp06-row').forEach((row) => {
+    const min = +row.dataset.min, max = +row.dataset.max;
+    let v = +row.dataset.val;
+    const r = row.querySelector('[data-roll]'); r.dataset.init = String(v);
+    const roll = roller(r);
+    const [minus, plus] = row.querySelectorAll('.inp06-ios-b');
+    const sync = () => { minus.disabled = v <= min; plus.disabled = v >= max; };
+    const step = (d) => () => {
+      const nv = Math.min(max, Math.max(min, v + d));
+      if (nv === v) return;
+      v = nv; roll(String(v), d); sync();
+    };
+    holdRepeat(minus, step(-1)); holdRepeat(plus, step(1));
+    sync();
+  });
+
+  /* ───── (2)(3) Soft quantity + cart total ───── */
+  const card = root.querySelector('.inp06-card');
+  const [rbMinus, rbPlus] = card.querySelectorAll('.inp06-rb');
+  const qtyBox = card.querySelector('.inp06-qty');
+  const rq = card.querySelector('.inp06-qty [data-roll]'); rq.dataset.init = '4';
+  const rt = card.querySelector('.inp06-total-v [data-roll]'); rt.dataset.init = yen(4 * PRICE);
+  const rollQ = roller(rq), rollT = roller(rt);
+  const cta = card.querySelector('.inp06-cta');
+  const empty = card.querySelector('.inp06-empty');
+  const undo = card.querySelector('.inp06-undo');
+  const MAX = 10;
+  let q = 4;
+  const syncCard = () => {
+    const zero = q === 0;
+    rbMinus.classList.toggle('is-trash', zero);
+    rbMinus.setAttribute('aria-label', zero ? 'カートから削除' : '数量を減らす');
+    rbPlus.disabled = q >= MAX;
+    qtyBox.classList.toggle('is-zero', zero);
+    cta.disabled = zero;
+    cta.textContent = zero ? '数量を選択' : `${q}点をカートに追加`;
+  };
+  const setQ = (nv, d) => {
+    nv = Math.max(0, Math.min(MAX, nv));
+    if (nv === q) return;
+    q = nv; rollQ(String(q), d); rollT(yen(q * PRICE), d); syncCard();
+    if (q === MAX && !reduced()) { qtyBox.classList.remove('is-bump'); void qtyBox.offsetWidth; qtyBox.classList.add('is-bump'); }
+  };
+  holdRepeat(rbMinus, (repeat) => {
+    if (q === 0) { if (!repeat) remove(); return; }
+    setQ(q - 1, -1);
+  });
+  holdRepeat(rbPlus, () => setQ(q + 1, 1));
+  qtyBox.addEventListener('animationend', () => qtyBox.classList.remove('is-bump'));
+
+  function remove() {
+    card.classList.add('is-empty');
+    empty.setAttribute('aria-hidden', 'false'); undo.tabIndex = 0;
+    setTimeout(() => undo.focus({ preventScroll: true }), 50);
+  }
+  undo.addEventListener('click', () => {
+    card.classList.remove('is-empty');
+    empty.setAttribute('aria-hidden', 'true'); undo.tabIndex = -1;
+    setTimeout(() => { setQ(1, 1); rbPlus.focus({ preventScroll: true }); }, 180);
+  });
+  cta.addEventListener('click', () => {
+    if (reduced()) return;
+    cta.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.03)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+  });
+  syncCard();
+})();
+</script>

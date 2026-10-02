@@ -1,0 +1,435 @@
+<!-- ═══════════ NAV-03 · Toolbar ═══════════ -->
+<style>
+#NAV-03 .nav03-screen { background: var(--bg); }
+#NAV-03 .nav03-screen button { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+
+/* — Photo grid — */
+#NAV-03 .nav03-scroll {
+  position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; outline: none;
+  padding: calc(var(--phone-safe-top) + 66px) 0 128px; touch-action: pan-y;
+}
+#NAV-03 .nav03-scroll::-webkit-scrollbar { display: none; }
+#NAV-03 .nav03-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; }
+#NAV-03 .nav03-ph {
+  position: relative; display: block; aspect-ratio: 1; padding: 0; border: 0; border-radius: 0; cursor: pointer; color: #fff;
+  background-color: #888; background-repeat: no-repeat; outline: none; transition: transform var(--dur-2) var(--ease-spring);
+}
+#NAV-03 .nav03-ph::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--bg) 38%, transparent); opacity: 0; transition: opacity var(--dur-1) ease; pointer-events: none; }
+#NAV-03 .nav03-ph:active { transform: scale(.97); transition-duration: 90ms; }
+#NAV-03 .nav03-ph.is-sel::after { opacity: 1; }
+#NAV-03 .nav03-ph:focus-visible { z-index: 1; box-shadow: inset 0 0 0 3px var(--blue); }
+#NAV-03 .nav03-chk {
+  position: absolute; z-index: 2; right: 5px; bottom: 5px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  background: #fff; color: var(--blue); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); transform: scale(0); transition: transform var(--dur-2) var(--ease-ios);
+}
+#NAV-03 .nav03-chk .i { font-size: 23px; }
+#NAV-03 .nav03-ph.is-sel .nav03-chk { transform: scale(1); transition: transform var(--dur-3) var(--ease-spring); }
+#NAV-03 .nav03-dur, #NAV-03 .nav03-fav {
+  position: absolute; z-index: 1; bottom: 5px; font: 600 11px/14px var(--font-text); letter-spacing: 0; font-variant-numeric: tabular-nums;
+  color: #fff; text-shadow: 0 0 6px rgba(0, 0, 0, .45); pointer-events: none; transition: opacity var(--dur-1) ease;
+}
+#NAV-03 .nav03-dur { right: 6px; }
+#NAV-03 .nav03-fav { left: 6px; font-size: 13px; filter: drop-shadow(0 0 3px rgba(0, 0, 0, .4)); }
+#NAV-03 .nav03-fav .i { display: block; }
+#NAV-03 .nav03-ph.is-sel .nav03-dur { opacity: 0; }
+#NAV-03 .nav03-empty { margin: 220px 24px 0; text-align: center; font: 600 var(--fs-title3)/26px var(--font-display); letter-spacing: 0; color: var(--label); }
+#NAV-03 .nav03-empty small { display: block; margin-top: 4px; font: 400 15px/20px var(--font-text); color: var(--label-2); }
+
+/* — Scroll-edge effects (progressive blur + fade) — */
+#NAV-03 .nav03-edge {
+  position: absolute; z-index: 5; left: 0; right: 0; pointer-events: none;
+  -webkit-backdrop-filter: blur(10px) saturate(160%); backdrop-filter: blur(10px) saturate(160%);
+}
+#NAV-03 .nav03-edge--t {
+  top: 0; height: 142px; border-radius: 45px 45px 0 0; opacity: 0; will-change: opacity;
+  background: linear-gradient(var(--bg) 0%, color-mix(in srgb, var(--bg) 86%, transparent) 50%, color-mix(in srgb, var(--bg) 40%, transparent) 78%, transparent 100%);
+  -webkit-mask-image: linear-gradient(#000 64%, transparent); mask-image: linear-gradient(#000 64%, transparent);
+}
+#NAV-03 .nav03-edge--b {
+  bottom: 0; height: 128px; border-radius: 0 0 45px 45px;
+  background: linear-gradient(transparent 0%, color-mix(in srgb, var(--bg) 62%, transparent) 62%, color-mix(in srgb, var(--bg) 78%, transparent) 100%);
+  -webkit-mask-image: linear-gradient(transparent, #000 48%); mask-image: linear-gradient(transparent, #000 48%);
+}
+
+/* — Top bar — */
+#NAV-03 .nav03-top { position: absolute; z-index: 10; left: 0; right: 0; top: var(--phone-safe-top); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 0 16px 0 20px; pointer-events: none; }
+#NAV-03 .nav03-title h2 { margin: 0; font: 700 var(--fs-largetitle)/41px var(--font-display); letter-spacing: -0.4px; color: var(--label); }
+#NAV-03 .nav03-title { min-width: 0; }
+#NAV-03 .nav03-title p { margin: 0; font: 600 13px/16px var(--font-text); letter-spacing: 0; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#NAV-03 .nav03-tbtns { display: flex; gap: 8px; margin-top: 4px; pointer-events: auto; }
+#NAV-03 .nav03-pill {
+  position: relative; height: 34px; min-width: 34px; padding: 0; border: 0; border-radius: 17px; cursor: pointer;
+  color: var(--label); font: 600 15px/34px var(--font-text); letter-spacing: 0;
+  background: light-dark(rgba(255, 255, 255, .66), rgba(70, 70, 76, .55));
+  box-shadow: 0 2px 10px light-dark(rgba(0, 0, 0, .1), rgba(0, 0, 0, .35)), inset 0 0 0 .5px light-dark(rgba(0, 0, 0, .06), rgba(255, 255, 255, .14)), inset 0 1px 0 light-dark(#fff, rgba(255, 255, 255, .18));
+  transition: transform var(--dur-2) var(--ease-spring), width var(--dur-3) var(--ease-ios), opacity var(--dur-2) ease, background var(--dur-2) ease;
+}
+#NAV-03 .nav03-pill:active { transform: scale(.92); transition-duration: 80ms, var(--dur-3), var(--dur-2), var(--dur-2); }
+#NAV-03 .nav03-pill:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 50%, transparent); }
+#NAV-03 .nav03-pill .i { font-size: 17px; vertical-align: -3px; }
+#NAV-03 .nav03-sbtn { width: 34px; }
+#NAV-03 .nav03-selbtn { width: 60px; overflow: hidden; }
+#NAV-03 .nav03-selbtn span { position: absolute; left: 50%; top: 0; white-space: nowrap; transform: translateX(-50%); transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-ios); }
+#NAV-03 .nav03-selbtn .nav03-sl-b { opacity: 0; transform: translate(-50%, 8px); }
+#NAV-03 .nav03-screen.is-select .nav03-selbtn .nav03-sl-a { opacity: 0; transform: translate(-50%, -8px); }
+#NAV-03 .nav03-screen.is-select .nav03-selbtn .nav03-sl-b { opacity: 1; transform: translateX(-50%); }
+#NAV-03 .nav03-screen.is-select .nav03-sbtn { opacity: 0; transform: scale(.6); pointer-events: none; }
+
+/* — Floating glass toolbar — */
+#NAV-03 .nav03-bar { position: absolute; z-index: 12; left: 14px; right: 14px; bottom: 22px; height: 50px; display: flex; align-items: center; gap: 10px; }
+#NAV-03 .nav03-glass {
+  position: relative; display: flex; align-items: center; height: 50px; border-radius: 25px;
+  background: light-dark(rgba(255, 255, 255, .5), rgba(44, 44, 50, .5));
+  -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(1.04); backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
+  box-shadow:
+    0 8px 24px light-dark(rgba(20, 20, 60, .14), rgba(0, 0, 0, .5)), 0 1px 3px light-dark(rgba(0, 0, 0, .07), rgba(0, 0, 0, .3)),
+    inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .75), rgba(255, 255, 255, .16)),
+    inset 0 1px 0 light-dark(rgba(255, 255, 255, .95), rgba(255, 255, 255, .22)),
+    inset 0 -1px 1px light-dark(rgba(255, 255, 255, .35), rgba(255, 255, 255, .06));
+}
+#NAV-03 .nav03-glass::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, light-dark(rgba(255, 255, 255, .5), rgba(255, 255, 255, .12)), transparent 50%), radial-gradient(90% 70% at 50% 130%, light-dark(rgba(255, 255, 255, .3), rgba(255, 255, 255, .06)), transparent 70%);
+}
+#NAV-03 .nav03-tb {
+  position: relative; z-index: 1; display: grid; place-items: center; width: 50px; height: 50px; padding: 0; border: 0; border-radius: 25px;
+  background: none; color: var(--label); cursor: pointer; transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#NAV-03 .nav03-tb .i { font-size: 21px; transition: opacity var(--dur-2) ease, color var(--dur-2) ease; }
+#NAV-03 .nav03-tb:active { transform: scale(.88); background: light-dark(rgba(0, 0, 0, .06), rgba(255, 255, 255, .1)); transition-duration: 80ms; }
+#NAV-03 .nav03-tb:disabled { cursor: default; }
+#NAV-03 .nav03-tb:disabled .i { opacity: .28; }
+#NAV-03 .nav03-tb:disabled:active { transform: none; background: none; }
+#NAV-03 .nav03-tb:focus-visible { outline: none; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--blue) 55%, transparent); }
+#NAV-03 .nav03-tb[aria-expanded="true"] { background: light-dark(rgba(0, 0, 0, .06), rgba(255, 255, 255, .12)); }
+#NAV-03 .nav03-pair { padding: 0 2px; }
+#NAV-03 .nav03-pair .nav03-tb { width: 46px; height: 46px; }
+#NAV-03 .nav03-label { position: relative; flex: 1; min-width: 0; height: 40px; text-align: center; }
+#NAV-03 .nav03-lt { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; white-space: nowrap; }
+#NAV-03 .nav03-lt b { font: 600 15px/19px var(--font-text); letter-spacing: 0; color: var(--label); font-variant-numeric: tabular-nums; }
+#NAV-03 .nav03-lt small { font: 400 12px/15px var(--font-text); letter-spacing: 0; color: var(--label-2); font-variant-numeric: tabular-nums; }
+
+/* — Popovers (menu + delete confirmation) — */
+#NAV-03 .nav03-pop {
+  position: absolute; z-index: 20; right: 14px; bottom: 84px; border-radius: 22px; overflow: hidden;
+  background: light-dark(rgba(250, 250, 252, .84), rgba(44, 44, 50, .82));
+  -webkit-backdrop-filter: blur(24px) saturate(190%); backdrop-filter: blur(24px) saturate(190%);
+  box-shadow: 0 18px 50px light-dark(rgba(0, 0, 0, .2), rgba(0, 0, 0, .6)), inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .8), rgba(255, 255, 255, .14)), inset 0 1px 0 light-dark(#fff, rgba(255, 255, 255, .18));
+  transform-origin: calc(100% - 46px) calc(100% + 30px); transform: scale(.3); opacity: 0; visibility: hidden;
+  transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-1) ease, visibility 0s linear var(--dur-3);
+}
+#NAV-03 .nav03-pop.is-open { transform: none; opacity: 1; visibility: visible; transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-1) ease, visibility 0s; }
+#NAV-03 .nav03-menu { width: 236px; padding: 6px 0; }
+#NAV-03 .nav03-mi {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 0 18px; border: 0; background: none; text-align: left;
+  font-size: var(--fs-body); letter-spacing: 0; color: var(--label); cursor: pointer;
+}
+#NAV-03 .nav03-mi span { flex: 1; }
+#NAV-03 .nav03-mi .i { font-size: 19px; width: 22px; }
+#NAV-03 .nav03-mi:disabled { color: var(--label-3); cursor: default; }
+#NAV-03 .nav03-mi:not(:disabled):active, #NAV-03 .nav03-mi:focus-visible { outline: none; background: var(--fill-3); }
+#NAV-03 .nav03-sep { height: .5px; margin: 5px 18px; background: var(--separator); }
+#NAV-03 .nav03-confirm { width: 252px; text-align: center; transform-origin: calc(100% - 92px) calc(100% + 30px); }
+#NAV-03 .nav03-confirm p { margin: 0; padding: 16px 18px 12px; font-size: 13px; line-height: 18px; color: var(--label-2); letter-spacing: 0; word-break: auto-phrase; }
+#NAV-03 .nav03-del {
+  display: block; width: 100%; height: 50px; border: 0; background: none; box-shadow: inset 0 .5px 0 var(--separator);
+  font: 600 var(--fs-body)/50px var(--font-text); letter-spacing: 0; color: var(--red); cursor: pointer;
+}
+#NAV-03 .nav03-del:active, #NAV-03 .nav03-del:focus-visible { outline: none; background: var(--fill-3); }
+@media (hover: hover) {
+  #NAV-03 .nav03-mi:not(:disabled):hover, #NAV-03 .nav03-del:hover { background: var(--fill-4); }
+  #NAV-03 .nav03-tb:not(:disabled):hover { background: light-dark(rgba(0, 0, 0, .04), rgba(255, 255, 255, .07)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #NAV-03 .nav03-pop, #NAV-03 .nav03-pop.is-open { transform: none; transition: opacity var(--dur-1) ease, visibility 0s; }
+  #NAV-03 .nav03-chk, #NAV-03 .nav03-ph.is-sel .nav03-chk { transition: none; }
+}
+</style>
+<article class="obj" id="NAV-03" data-name="Toolbar" data-ja="ツールバー" data-vector="Glass" data-size="m" data-desc="画面下部のツールボタン列。選択モードで内容が切り替わる。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="phone" style="--phone-h: 640px">
+      <div class="phone-screen nav03-screen">
+        <div class="nav03-scroll" aria-label="写真">
+          <div class="nav03-grid" role="group" aria-label="ライブラリ"></div>
+          <p class="nav03-empty" hidden>写真はありません<small>撮影した写真やビデオがここに表示されます。</small></p>
+        </div>
+        <div class="nav03-edge nav03-edge--t" aria-hidden="true"></div>
+        <div class="nav03-edge nav03-edge--b" aria-hidden="true"></div>
+
+        <header class="nav03-top">
+          <div class="nav03-title"><h2>写真</h2><p>2026年9月〜10月</p></div>
+          <div class="nav03-tbtns">
+            <button class="nav03-pill nav03-sbtn" type="button" aria-label="検索"><svg class="i" aria-hidden="true"><use href="#i-magnifyingglass"/></svg></button>
+            <button class="nav03-pill nav03-selbtn" type="button" aria-pressed="false"><span class="nav03-sl-a">選択</span><span class="nav03-sl-b" aria-hidden="true">キャンセル</span></button>
+          </div>
+        </header>
+
+        <div class="nav03-bar" role="toolbar" aria-label="写真のツール">
+          <div class="nav03-glass"><button class="nav03-tb nav03-share" type="button" aria-label="共有" disabled><svg class="i" aria-hidden="true"><use href="#i-square-and-arrow-up"/></svg></button></div>
+          <div class="nav03-label" aria-live="polite"><span class="nav03-lt"><b>48枚の写真</b><small>iCloudと同期済み</small></span></div>
+          <div class="nav03-glass nav03-pair">
+            <button class="nav03-tb nav03-trash" type="button" aria-label="削除" aria-haspopup="dialog" aria-expanded="false" disabled><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
+            <button class="nav03-tb nav03-more" type="button" aria-label="その他" aria-haspopup="menu" aria-expanded="false"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+          </div>
+        </div>
+
+        <div class="nav03-pop nav03-menu" role="menu" aria-label="その他">
+          <button class="nav03-mi" type="button" role="menuitem" data-act="all"><span>すべて選択</span><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg></button>
+          <button class="nav03-mi" type="button" role="menuitem" data-act="fav"><span>お気に入り</span><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg></button>
+          <div class="nav03-sep" role="separator"></div>
+          <button class="nav03-mi" type="button" role="menuitem" data-act="show"><span>スライドショー</span><svg class="i" aria-hidden="true"><use href="#i-play-rectangle-fill"/></svg></button>
+        </div>
+        <div class="nav03-pop nav03-confirm" role="dialog" aria-label="削除の確認">
+          <p>これらの写真は「最近削除した項目」に30日間保存されたあと、完全に削除されます。</p>
+          <button class="nav03-del" type="button">2項目を削除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>「選択」→ 写真をタップ</li><li>マウスでなぞって複数選択</li><li>ゴミ箱で削除</li><li>…からすべて選択</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('NAV-03');
+  if (!root) return;
+  const $ = (s) => root.querySelector(s);
+  const screen = $('.nav03-screen');
+  const grid = $('.nav03-grid');
+  const empty = $('.nav03-empty');
+  const selBtn = $('.nav03-selbtn');
+  const share = $('.nav03-share');
+  const trash = $('.nav03-trash');
+  const more = $('.nav03-more');
+  const label = $('.nav03-label');
+  const menu = $('.nav03-menu');
+  const confirmPop = $('.nav03-confirm');
+  const delBtn = $('.nav03-del');
+  const reduced = () => ObjKit.reducedMotion;
+  const ease = 'cubic-bezier(.32,.72,0,1)';
+
+  /* — Build 48 "photos" from the shared artwork with varied crops — */
+  const crops = [[100, 50, 50], [180, 30, 70], [220, 70, 40], [160, 50, 90], [240, 20, 30], [200, 80, 80]];
+  const vids = { 4: '0:14', 11: '1:02', 19: '0:31', 30: '0:08', 40: '2:47' };
+  const favs = new Set([1, 15, 26, 37]);
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 48; i++) {
+    const a = ((i * 3 + Math.floor(i / 8)) % 8) + 1;
+    const [sz, x, y] = crops[(i * 5 + Math.floor(i / 3)) % crops.length];
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `nav03-ph art art-${a}`;
+    b.style.backgroundSize = `${sz}% ${sz}%`;
+    b.style.backgroundPosition = `${x}% ${y}%`;
+    if (i % 7 === 3) b.style.filter = `hue-rotate(${i % 2 ? 24 : -28}deg) saturate(1.1)`;
+    b.tabIndex = i === 0 ? 0 : -1;
+    b.setAttribute('aria-label', vids[i] ? `ビデオ ${vids[i]}` : `写真 ${i + 1}`);
+    if (vids[i]) b.insertAdjacentHTML('beforeend', `<span class="nav03-dur">${vids[i]}</span>`);
+    if (favs.has(i)) b.insertAdjacentHTML('beforeend', '<span class="nav03-fav"><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg></span>');
+    frag.appendChild(b);
+  }
+  grid.appendChild(frag);
+  const tiles = () => [...grid.children];
+
+  /* — State — */
+  let selecting = false;
+  const isSel = (t) => t.classList.contains('is-sel');
+  const count = () => grid.querySelectorAll('.nav03-ph.is-sel').length;
+
+  /* toolbar label: cross-fade + slight slide */
+  let labelKey = '';
+  const setLabel = (main, sub, dir = 1) => {
+    const key = main + '|' + sub;
+    if (key === labelKey) return;
+    labelKey = key;
+    const old = [...label.children];
+    const el = document.createElement('span');
+    el.className = 'nav03-lt';
+    el.innerHTML = `<b></b>${sub ? '<small></small>' : ''}`;
+    el.querySelector('b').textContent = main;
+    if (sub) el.querySelector('small').textContent = sub;
+    label.appendChild(el);
+    if (reduced()) { old.forEach((o) => o.remove()); return; }
+    el.animate([{ opacity: 0, transform: `translateY(${9 * dir}px)`, filter: 'blur(2px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 340, easing: ease });
+    old.forEach((o) => o.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateY(${-9 * dir}px)` }], { duration: 220, easing: ease, fill: 'forwards' }).onfinish = () => o.remove());
+  };
+
+  const sync = (dir) => {
+    const n = count();
+    const total = tiles().length;
+    share.disabled = trash.disabled = !(selecting && n > 0);
+    if (selecting) setLabel(n ? `${n}項目を選択中` : '項目を選択', n ? `約${(n * 2.4).toFixed(1)} MB` : '', dir);
+    else setLabel(`${total}枚の写真`, 'iCloudと同期済み', dir);
+    empty.hidden = total > 0;
+    selBtn.disabled = total === 0;
+  };
+
+  const ensureBadge = (t) => {
+    if (!t.querySelector('.nav03-chk')) t.insertAdjacentHTML('beforeend', '<span class="nav03-chk" aria-hidden="true"><svg class="i"><use href="#i-checkmark-circle-fill"/></svg></span>');
+  };
+  const setSel = (t, on) => {
+    if (on === isSel(t)) return false;
+    if (on) ensureBadge(t);
+    t.classList.toggle('is-sel', on);
+    t.setAttribute('aria-pressed', String(on));
+    return true;
+  };
+
+  /* select-button width follows its label (選択 ↔ キャンセル) */
+  const fitSelBtn = () => {
+    const span = selBtn.querySelector(selecting ? '.nav03-sl-b' : '.nav03-sl-a');
+    selBtn.style.width = Math.ceil(span.offsetWidth + 28) + 'px';
+  };
+
+  const setMode = (on) => {
+    if (on === selecting) return;
+    selecting = on;
+    screen.classList.toggle('is-select', on);
+    selBtn.setAttribute('aria-pressed', String(on));
+    selBtn.querySelector('.nav03-sl-a').setAttribute('aria-hidden', String(on));
+    selBtn.querySelector('.nav03-sl-b').setAttribute('aria-hidden', String(!on));
+    if (!on) tiles().forEach((t) => setSel(t, false));
+    tiles().forEach((t) => { if (on) t.setAttribute('aria-pressed', 'false'); else t.removeAttribute('aria-pressed'); });
+    closePops();
+    fitSelBtn();
+    sync(on ? 1 : -1);
+  };
+  selBtn.addEventListener('click', () => setMode(!selecting));
+
+  /* — Tap to toggle; mouse/pen drag paints the selection — */
+  let paint = null;
+  let swallowClick = false;
+  grid.addEventListener('pointerdown', (e) => {
+    if (!selecting || e.pointerType === 'touch' || e.button !== 0) return;
+    const t = e.target.closest('.nav03-ph');
+    if (!t) return;
+    paint = { on: !isSel(t), last: t, id: e.pointerId };
+    setSel(t, paint.on);
+    sync(1);
+    swallowClick = true;
+    grid.setPointerCapture(e.pointerId);
+  });
+  grid.addEventListener('pointermove', (e) => {
+    if (!paint || e.pointerId !== paint.id) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const t = el && el.closest && el.closest('.nav03-ph');
+    if (t && t !== paint.last && grid.contains(t)) { paint.last = t; if (setSel(t, paint.on)) sync(1); }
+  });
+  const endPaint = () => { paint = null; };
+  grid.addEventListener('pointerup', endPaint);
+  grid.addEventListener('pointercancel', endPaint);
+  grid.addEventListener('click', (e) => {
+    const t = e.target.closest('.nav03-ph');
+    if (!t) return;
+    if (swallowClick && e.detail !== 0) { swallowClick = false; return; }
+    swallowClick = false;
+    if (!selecting) return;
+    setSel(t, !isSel(t));
+    sync(1);
+  });
+  /* roving focus across the grid (3 columns) */
+  grid.addEventListener('keydown', (e) => {
+    const list = tiles();
+    const i = list.indexOf(document.activeElement);
+    if (i < 0) return;
+    const d = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 3, ArrowUp: -3 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    const n = Math.min(list.length - 1, Math.max(0, i + d));
+    list[i].tabIndex = -1; list[n].tabIndex = 0; list[n].focus();
+  });
+
+  /* — Popovers — */
+  const pops = [[menu, more], [confirmPop, trash]];
+  const onDoc = (e) => { if (!pops.some(([p, b]) => p.contains(e.target) || b.contains(e.target))) closePops(); };
+  const onKey = (e) => { if (e.key === 'Escape') { const open = pops.find(([p]) => p.classList.contains('is-open')); closePops(); if (open) open[1].focus(); } };
+  function closePops() {
+    pops.forEach(([p, b]) => { p.classList.remove('is-open'); b.setAttribute('aria-expanded', 'false'); });
+    document.removeEventListener('pointerdown', onDoc, true);
+    root.removeEventListener('keydown', onKey);
+  }
+  const openPop = (p, b) => {
+    const wasOpen = p.classList.contains('is-open');
+    closePops();
+    if (wasOpen) return;
+    p.classList.add('is-open');
+    b.setAttribute('aria-expanded', 'true');
+    document.addEventListener('pointerdown', onDoc, true);
+    root.addEventListener('keydown', onKey);
+    if (b.matches(':focus-visible')) requestAnimationFrame(() => { const f = p.querySelector('button:not(:disabled)'); if (f) f.focus(); });
+  };
+  more.addEventListener('click', () => {
+    const all = tiles();
+    const allSel = selecting && all.length && all.every(isSel);
+    menu.querySelector('[data-act="all"] span').textContent = allSel ? '選択を解除' : 'すべて選択';
+    menu.querySelector('[data-act="fav"]').disabled = !(selecting && count() > 0);
+    menu.querySelector('[data-act="all"]').disabled = all.length === 0;
+    openPop(menu, more);
+  });
+  trash.addEventListener('click', () => {
+    const n = count();
+    delBtn.textContent = `${n}項目を削除`;
+    openPop(confirmPop, trash);
+  });
+  menu.addEventListener('click', (e) => {
+    const b = e.target.closest('.nav03-mi');
+    if (!b || b.disabled) return;
+    const act = b.dataset.act;
+    closePops();
+    if (act === 'all') {
+      const all = tiles();
+      const allSel = selecting && all.every(isSel);
+      if (!selecting) setMode(true);
+      all.forEach((t, i) => {
+        if (reduced()) setSel(t, !allSel);
+        else setTimeout(() => setSel(t, !allSel), Math.min(i, 30) * 9);
+      });
+      setTimeout(() => sync(1), reduced() ? 0 : 280);
+    } else if (act === 'fav') {
+      tiles().filter(isSel).forEach((t) => { if (!t.querySelector('.nav03-fav')) t.insertAdjacentHTML('beforeend', '<span class="nav03-fav"><svg class="i" aria-hidden="true"><use href="#i-heart-fill"/></svg></span>'); });
+      setMode(false);
+    }
+  });
+
+  /* — Delete: selected tiles shrink away, the rest FLIP into place — */
+  delBtn.addEventListener('click', () => {
+    const gone = tiles().filter(isSel);
+    closePops();
+    if (!gone.length) return;
+    const stay = tiles().filter((t) => !isSel(t));
+    const finish = () => {
+      const before = new Map(stay.map((t) => [t, t.getBoundingClientRect()]));
+      gone.forEach((t) => t.remove());
+      if (!reduced()) {
+        stay.forEach((t, i) => {
+          const a = before.get(t), b = t.getBoundingClientRect();
+          const dx = a.left - b.left, dy = a.top - b.top;
+          if (dx || dy) t.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 460, easing: ease, delay: Math.min(i, 20) * 6 });
+        });
+      }
+      if (!stay.includes(document.activeElement)) { const f = stay[0]; if (f) f.tabIndex = 0; }
+      setMode(false);
+      sync(-1);
+    };
+    if (reduced()) { finish(); return; }
+    let left = gone.length;
+    gone.forEach((t) => {
+      t.animate([{ transform: 'none', opacity: 1 }, { transform: 'scale(.55)', opacity: 0 }], { duration: 240, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }).onfinish = () => { if (--left === 0) finish(); };
+    });
+  });
+
+  /* top scroll-edge appears once photos slide under the title (passive + rAF) */
+  const scroller = $('.nav03-scroll');
+  const edgeT = $('.nav03-edge--t');
+  let raf = 0;
+  scroller.addEventListener('scroll', () => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => { raf = 0; edgeT.style.opacity = String(Math.min(1, scroller.scrollTop / 28)); });
+  }, { passive: true });
+
+  /* initial sizing once fonts are in */
+  requestAnimationFrame(fitSelBtn);
+  ObjKit.onVisible(root, (v) => { if (v) fitSelBtn(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(fitSelBtn));
+  labelKey = '48枚の写真|iCloudと同期済み';
+})();
+</script>

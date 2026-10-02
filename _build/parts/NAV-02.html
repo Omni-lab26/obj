@@ -1,0 +1,632 @@
+<!-- ═══════════ NAV-02 · Tab Bar ═══════════ -->
+<style>
+#NAV-02 .nav02-pair { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 28px 56px; width: 100%; }
+#NAV-02 .nav02-fig { display: flex; flex-direction: column; align-items: center; gap: 16px; min-width: 0; max-width: 100%; margin: 0; }
+#NAV-02 .nav02-cap {
+  display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px 0 5px; border-radius: 999px;
+  font: 600 13px/1 var(--font-text); letter-spacing: 0; color: var(--label);
+  background: light-dark(rgba(255, 255, 255, .62), rgba(40, 40, 46, .62));
+  box-shadow: inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .8), rgba(255, 255, 255, .12)), 0 4px 14px light-dark(rgba(60, 40, 120, .1), rgba(0, 0, 0, .3));
+}
+#NAV-02 .nav02-cap b { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; background: var(--label); color: var(--bg); font: 700 11px/1 var(--font-rounded); }
+#NAV-02 .nav02-cap span { font-weight: 500; color: var(--label-2); }
+#NAV-02 .nav02-screen { background: var(--bg); }
+#NAV-02 .nav02-screen button { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+#NAV-02 .art { display: block; }
+
+/* ─────────────── A · Floating liquid-glass tab bar ─────────────── */
+#NAV-02 .nav02-a { --nav02-tint: light-dark(var(--blue), color-mix(in srgb, var(--blue) 78%, #fff)); }
+#NAV-02 .nav02-scr {
+  position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none;
+  padding: var(--phone-safe-top) 16px 112px; outline: none;
+  opacity: 0; visibility: hidden; transform: translateY(10px) scale(.985);
+  transition: opacity 180ms ease, transform var(--dur-3) var(--ease-ios), visibility 0s linear 180ms;
+}
+#NAV-02 .nav02-scr::-webkit-scrollbar { display: none; }
+#NAV-02 .nav02-scr.is-on { opacity: 1; visibility: visible; transform: none; transition: opacity 240ms ease, transform var(--dur-3) var(--ease-ios), visibility 0s; }
+#NAV-02 .nav02-lt { display: flex; align-items: center; justify-content: space-between; margin: 2px 4px 14px; }
+#NAV-02 .nav02-lt h2 { margin: 0; font: 700 var(--fs-largetitle)/41px var(--font-display); letter-spacing: -0.4px; }
+#NAV-02 .nav02-lt .av { width: 34px; height: 34px; font-size: 12px; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .06); }
+#NAV-02 .nav02-h3 { margin: 22px 4px 10px; font: 700 var(--fs-title3)/24px var(--font-display); letter-spacing: 0; }
+#NAV-02 .nav02-hero { position: relative; display: block; aspect-ratio: 1 / 1.08; border-radius: 26px; overflow: hidden; }
+#NAV-02 .nav02-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 46%, rgba(0, 0, 0, .55)); }
+#NAV-02 .nav02-hero-t { position: absolute; z-index: 1; left: 18px; right: 18px; bottom: 16px; color: #fff; letter-spacing: 0; }
+#NAV-02 .nav02-hero-t small { display: block; font: 600 12px/16px var(--font-text); opacity: .82; }
+#NAV-02 .nav02-hero-t b { display: block; margin-top: 3px; font: 700 24px/1.2 var(--font-display); }
+#NAV-02 .nav02-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#NAV-02 .nav02-tile { display: block; aspect-ratio: 1; border-radius: 18px; }
+#NAV-02 .nav02-cap2 { display: block; margin: 7px 4px 0; font: 600 13px/17px var(--font-text); letter-spacing: 0; }
+#NAV-02 .nav02-cap2 small { display: block; font-weight: 400; font-size: 12px; color: var(--label-2); }
+#NAV-02 .nav02-chips { display: flex; gap: 8px; margin: 0 -16px 14px; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+#NAV-02 .nav02-chips::-webkit-scrollbar { display: none; }
+#NAV-02 .nav02-chip { flex: none; height: 32px; padding: 0 14px; border: 0; border-radius: 16px; background: var(--fill-3); color: var(--label); font: 500 14px/32px var(--font-text); letter-spacing: 0; cursor: pointer; transition: background var(--dur-2) ease, color var(--dur-2) ease, transform var(--dur-2) var(--ease-spring); }
+#NAV-02 .nav02-chip:active { transform: scale(.94); transition-duration: 80ms; }
+#NAV-02 .nav02-chip[aria-pressed="true"] { background: var(--label); color: var(--bg); }
+#NAV-02 .nav02-mosaic { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 104px; gap: 8px; }
+#NAV-02 .nav02-mosaic .art { border-radius: 16px; position: relative; overflow: hidden; }
+#NAV-02 .nav02-mosaic .nav02-tall { grid-row: span 2; }
+#NAV-02 .nav02-mosaic .nav02-wide { grid-column: span 2; }
+#NAV-02 .nav02-mosaic .art-7 i { color: #2b2540; text-shadow: none; }
+#NAV-02 .nav02-mosaic i { position: absolute; left: 10px; bottom: 9px; font: 700 13px/1 var(--font-text); font-style: normal; color: #fff; letter-spacing: 0; text-shadow: 0 1px 6px rgba(0, 0, 0, .35); }
+#NAV-02 .nav02-vid { display: block; margin-bottom: 18px; }
+#NAV-02 .nav02-thumb { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden; }
+#NAV-02 .nav02-play { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; color: #fff; background: rgba(255, 255, 255, .24); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .5), 0 4px 14px rgba(0, 0, 0, .18); }
+#NAV-02 .nav02-play .i { font-size: 20px; margin-left: 2px; }
+#NAV-02 .nav02-dur { position: absolute; right: 9px; bottom: 8px; padding: 3px 6px; border-radius: 6px; background: rgba(0, 0, 0, .5); color: #fff; font: 600 11px/1 var(--font-text); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+#NAV-02 .nav02-vid b { display: block; margin: 9px 4px 0; font: 600 15px/20px var(--font-text); letter-spacing: 0; }
+#NAV-02 .nav02-vid small { display: block; margin: 1px 4px 0; font-size: 12px; line-height: 16px; color: var(--label-2); letter-spacing: 0; }
+#NAV-02 .nav02-prof { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 8px; }
+#NAV-02 .nav02-ring { padding: 3px; border-radius: 50%; background: var(--grad-story); }
+#NAV-02 .nav02-ring .av { width: 84px; height: 84px; font-size: 32px; box-shadow: 0 0 0 3px var(--bg); }
+#NAV-02 .nav02-prof h3 { margin: 12px 0 0; font: 700 var(--fs-title3)/24px var(--font-display); letter-spacing: 0; }
+#NAV-02 .nav02-handle { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; font-size: 13px; color: var(--label-2); letter-spacing: 0; }
+#NAV-02 .nav02-handle .i { color: var(--blue); font-size: 14px; }
+#NAV-02 .nav02-stats { display: flex; justify-content: center; gap: 26px; margin: 16px 0; padding: 0; list-style: none; }
+#NAV-02 .nav02-stats b { display: block; font: 700 17px/22px var(--font-display); letter-spacing: -0.2px; font-variant-numeric: tabular-nums; }
+#NAV-02 .nav02-stats span { font-size: 12px; color: var(--label-2); letter-spacing: 0; }
+#NAV-02 .nav02-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin: 0 -16px; }
+#NAV-02 .nav02-grid3 .art { aspect-ratio: 1; }
+#NAV-02 .nav02-recent { margin: 0; padding: 0; list-style: none; }
+#NAV-02 .nav02-recent li { display: flex; align-items: center; gap: 12px; height: 44px; margin: 0 4px; font-size: var(--fs-body); letter-spacing: 0; box-shadow: inset 0 -.5px 0 var(--separator); }
+#NAV-02 .nav02-recent li:last-child { box-shadow: none; }
+#NAV-02 .nav02-recent .i { color: var(--label-3); font-size: 17px; }
+
+/* top + bottom scroll-edge effects */
+#NAV-02 .nav02-edge-t {
+  position: absolute; z-index: 5; inset: 0 0 auto; height: 70px; pointer-events: none; opacity: 0; border-radius: 45px 45px 0 0;
+  background: linear-gradient(var(--bg) 25%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  -webkit-mask-image: linear-gradient(#000 50%, transparent); mask-image: linear-gradient(#000 50%, transparent);
+}
+#NAV-02 .nav02-edge-b { position: absolute; z-index: 5; inset: auto 0 0; height: 120px; pointer-events: none; background: linear-gradient(transparent, color-mix(in srgb, var(--bg) 42%, transparent)); }
+
+/* dock */
+#NAV-02 .nav02-dock { position: absolute; z-index: 10; left: 14px; right: 14px; bottom: 22px; height: 62px; container-type: inline-size; }
+#NAV-02 .nav02-glass {
+  background: light-dark(rgba(255, 255, 255, .48), rgba(44, 44, 50, .46));
+  -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(1.04); backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
+  box-shadow:
+    0 10px 28px light-dark(rgba(20, 20, 60, .16), rgba(0, 0, 0, .5)), 0 1px 3px light-dark(rgba(0, 0, 0, .08), rgba(0, 0, 0, .35)),
+    inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .75), rgba(255, 255, 255, .16)),
+    inset 0 1px 0 light-dark(rgba(255, 255, 255, .95), rgba(255, 255, 255, .22)),
+    inset 0 -1px 1px light-dark(rgba(255, 255, 255, .35), rgba(255, 255, 255, .06));
+}
+#NAV-02 .nav02-glass::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background:
+    linear-gradient(180deg, light-dark(rgba(255, 255, 255, .5), rgba(255, 255, 255, .12)) 0%, transparent 46%),
+    radial-gradient(90% 70% at 50% 130%, light-dark(rgba(255, 255, 255, .35), rgba(255, 255, 255, .07)), transparent 70%);
+}
+#NAV-02 .nav02-tabs {
+  position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% - 70px); border-radius: 31px; overflow: hidden;
+  touch-action: none; transition: width var(--dur-3) var(--ease-ios);
+}
+#NAV-02 .nav02-track {
+  position: absolute; left: 0; top: 0; bottom: 0; width: calc(100cqw - 70px); display: flex; padding: 4px;
+  transition: transform var(--dur-3) var(--ease-ios);
+}
+#NAV-02 .nav02-lens {
+  position: absolute; left: 0; top: 4px; bottom: 4px; width: 60px; border-radius: 27px; pointer-events: none;
+  background: light-dark(rgba(255, 255, 255, .78), rgba(255, 255, 255, .15));
+  box-shadow: 0 2px 8px light-dark(rgba(0, 0, 0, .08), rgba(0, 0, 0, .25)), inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .9), rgba(255, 255, 255, .2)), inset 0 1px 0 light-dark(#fff, rgba(255, 255, 255, .25));
+  transition: opacity var(--dur-2) ease, background var(--dur-2) ease, box-shadow var(--dur-2) ease;
+  will-change: transform, width;
+}
+#NAV-02 .nav02-lens-in { position: absolute; inset: 0; border-radius: inherit; transition: transform var(--dur-3) var(--ease-spring); }
+#NAV-02 .nav02-tabs.is-press .nav02-lens {
+  background: light-dark(rgba(255, 255, 255, .42), rgba(255, 255, 255, .1));
+  box-shadow: 0 8px 22px light-dark(rgba(0, 0, 0, .14), rgba(0, 0, 0, .4)), inset 0 0 0 1px light-dark(rgba(255, 255, 255, .95), rgba(255, 255, 255, .35)), inset 0 2px 1px light-dark(#fff, rgba(255, 255, 255, .3)), inset 0 -3px 6px light-dark(rgba(255, 255, 255, .6), rgba(255, 255, 255, .08));
+}
+#NAV-02 .nav02-tab {
+  position: relative; z-index: 1; flex: 1 1 0; min-width: max-content; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  padding: 0 3px; border: 0; border-radius: 27px; background: none; color: var(--label); cursor: pointer;
+  font: 600 10px/12px var(--font-text); letter-spacing: 0; transition: color var(--dur-2) ease, opacity var(--dur-2) ease;
+}
+#NAV-02 .nav02-tab .i { font-size: 23px; transition: transform var(--dur-3) var(--ease-ios); }
+#NAV-02 .nav02-tab span { transition: opacity var(--dur-2) ease; }
+#NAV-02 .nav02-tab.is-sel { color: var(--nav02-tint); }
+#NAV-02 .nav02-tab:focus-visible { outline: none; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--nav02-tint) 55%, transparent); }
+#NAV-02 .nav02-tab.is-bounce .i { animation: nav02-bounce 520ms var(--ease-out); }
+@keyframes nav02-bounce { 0% { transform: scale(1); } 28% { transform: scale(.8); } 62% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+/* minimized / search states */
+#NAV-02 .nav02-dock.is-min .nav02-tabs, #NAV-02 .nav02-dock.is-search .nav02-tabs { width: 62px; }
+#NAV-02 .nav02-dock.is-min .nav02-track, #NAV-02 .nav02-dock.is-search .nav02-track { transform: translateX(calc(31px - var(--nav02-sel-x, 31px))); }
+#NAV-02 .nav02-dock.is-min .nav02-tab:not(.is-sel), #NAV-02 .nav02-dock.is-search .nav02-tab:not(.is-sel) { opacity: 0; pointer-events: none; }
+#NAV-02 .nav02-dock.is-min .nav02-tab.is-sel span, #NAV-02 .nav02-dock.is-search .nav02-tab.is-sel span { opacity: 0; }
+#NAV-02 .nav02-dock.is-min .nav02-tab.is-sel .i, #NAV-02 .nav02-dock.is-search .nav02-tab.is-sel .i { transform: translateY(7px) scale(1.06); }
+#NAV-02 .nav02-dock.is-min .nav02-lens, #NAV-02 .nav02-dock.is-search .nav02-lens { opacity: 0; }
+#NAV-02 .nav02-dock.is-search .nav02-tab.is-sel { color: var(--label); }
+
+#NAV-02 .nav02-sfield {
+  position: absolute; right: 0; top: 0; height: 62px; width: 62px; border-radius: 31px; overflow: hidden; display: flex; align-items: center;
+  transition: width var(--dur-3) var(--ease-ios);
+}
+#NAV-02 .nav02-dock.is-search .nav02-sfield { width: calc(100% - 70px); }
+#NAV-02 .nav02-sicon {
+  position: relative; z-index: 1; flex: none; display: grid; place-items: center; width: 62px; height: 62px; padding: 0; border: 0; border-radius: 31px;
+  background: none; color: var(--label); cursor: pointer; transition: transform var(--dur-2) var(--ease-spring);
+}
+#NAV-02 .nav02-sicon .i { font-size: 22px; }
+#NAV-02 .nav02-sicon:active { transform: scale(.9); transition-duration: 80ms; }
+#NAV-02 .nav02-sicon:focus-visible { outline: none; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--nav02-tint) 55%, transparent); }
+#NAV-02 .nav02-sfield input {
+  position: relative; z-index: 1; flex: 1; min-width: 0; height: 100%; margin-left: -12px; padding: 0 18px 0 0; border: 0; outline: 0; background: transparent;
+  font-size: var(--fs-body); letter-spacing: 0; color: var(--label); opacity: 0; transition: opacity var(--dur-2) ease;
+}
+#NAV-02 .nav02-sfield input::placeholder { color: var(--label-2); }
+#NAV-02 .nav02-sfield input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+#NAV-02 .nav02-sclear {
+  position: relative; z-index: 1; flex: none; display: grid; place-items: center; width: 40px; height: 40px; margin-right: 10px; padding: 0; border: 0; border-radius: 50%;
+  background: none; color: var(--label-3); cursor: pointer; opacity: 0; transform: scale(.6); pointer-events: none;
+  transition: opacity var(--dur-1) ease, transform var(--dur-2) var(--ease-spring);
+}
+#NAV-02 .nav02-sclear .i { font-size: 18px; }
+#NAV-02 .nav02-dock.is-search .nav02-sfield.has-text .nav02-sclear { opacity: 1; transform: none; pointer-events: auto; }
+#NAV-02 .nav02-dock.is-search .nav02-sfield.has-text input { padding-right: 0; }
+#NAV-02 .nav02-dock.is-search .nav02-sfield input { opacity: 1; transition-delay: 120ms; }
+#NAV-02 .nav02-dock.is-search .nav02-sicon { pointer-events: none; }
+
+/* ─────────────── B · Classic tab bar ─────────────── */
+#NAV-02 .nav02-b { --nav02-tint: var(--blue); }
+#NAV-02 .nav02-bscr {
+  position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; outline: none;
+  padding: calc(var(--phone-safe-top) + 44px) 0 calc(49px + var(--phone-safe-bottom) + 8px);
+  opacity: 0; visibility: hidden; transition: opacity 140ms ease, visibility 0s linear 140ms;
+}
+#NAV-02 .nav02-bscr::-webkit-scrollbar { display: none; }
+#NAV-02 .nav02-bscr.is-on { opacity: 1; visibility: visible; transition: opacity 160ms ease, visibility 0s; }
+#NAV-02 .nav02-btop { position: absolute; z-index: 8; inset: 0 0 auto; height: calc(var(--phone-safe-top) + 44px); pointer-events: none; }
+#NAV-02 .nav02-bmat {
+  position: absolute; inset: 0; opacity: 0; transition: opacity var(--dur-2) ease; border-radius: 45px 45px 0 0;
+  background: var(--mat-chrome); -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+  box-shadow: inset 0 -.5px 0 var(--separator);
+}
+#NAV-02 .nav02-btop.is-scrolled .nav02-bmat { opacity: 1; }
+#NAV-02 .nav02-btitle { position: absolute; left: 0; right: 0; top: var(--phone-safe-top); margin: 0; text-align: center; font: 600 var(--fs-headline)/44px var(--font-text); letter-spacing: 0; transition: opacity 120ms ease; }
+#NAV-02 .nav02-btitle.is-swap { opacity: 0; }
+
+#NAV-02 .nav02-post { margin-bottom: 14px; }
+#NAV-02 .nav02-post header { display: flex; align-items: center; gap: 9px; height: 46px; padding: 0 14px; font-size: 14px; letter-spacing: 0; }
+#NAV-02 .nav02-post header .av { width: 30px; height: 30px; font-size: 12px; }
+#NAV-02 .nav02-post header b { font-weight: 600; }
+#NAV-02 .nav02-post header small { margin-left: auto; font-size: 12px; color: var(--label-2); }
+#NAV-02 .nav02-photo { aspect-ratio: 4 / 3.6; }
+#NAV-02 .nav02-post footer { display: flex; align-items: center; gap: 16px; height: 44px; padding: 0 14px; color: var(--label); }
+#NAV-02 .nav02-post footer .i { font-size: 22px; }
+#NAV-02 .nav02-post footer .nav02-liked { color: var(--red); }
+#NAV-02 .nav02-post footer span { margin-left: auto; font-size: 13px; font-weight: 600; letter-spacing: 0; }
+#NAV-02 .nav02-bsearch { display: flex; align-items: center; gap: 6px; height: 36px; margin: 6px 16px 12px; padding: 0 8px; border-radius: 10px; background: var(--fill-3); color: var(--label-2); font-size: var(--fs-body); letter-spacing: 0; }
+#NAV-02 .nav02-bsearch .i { font-size: 17px; }
+#NAV-02 .nav02-bgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+#NAV-02 .nav02-bgrid .art { aspect-ratio: 1; }
+#NAV-02 .nav02-bgrid .nav02-big { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }
+#NAV-02 .nav02-rows { margin: 0; padding: 0; list-style: none; }
+#NAV-02 .nav02-row { display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 8px 16px; position: relative; }
+#NAV-02 .nav02-row::after { content: ""; position: absolute; left: 70px; right: 0; bottom: 0; height: .5px; background: var(--separator); }
+#NAV-02 .nav02-row .av { width: 44px; height: 44px; font-size: 17px; }
+#NAV-02 .nav02-row p { flex: 1; min-width: 0; margin: 0; font-size: 14px; line-height: 19px; letter-spacing: 0; word-break: auto-phrase; }
+#NAV-02 .nav02-row p b { font-weight: 600; }
+#NAV-02 .nav02-row p small { display: block; font-size: 13px; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#NAV-02 .nav02-row p time { color: var(--label-2); margin-left: 4px; white-space: nowrap; }
+#NAV-02 .nav02-row .art { flex: none; width: 44px; height: 44px; border-radius: 8px; }
+#NAV-02 .nav02-row .nav02-unread { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--nav02-tint); }
+#NAV-02 .nav02-row .nav02-mtime { align-self: flex-start; margin-top: 4px; font-size: 13px; color: var(--label-2); letter-spacing: 0; }
+#NAV-02 .nav02-bprof { padding: 8px 16px 14px; }
+#NAV-02 .nav02-bprof-top { display: flex; align-items: center; gap: 18px; }
+#NAV-02 .nav02-bprof-top .av { width: 72px; height: 72px; font-size: 24px; }
+#NAV-02 .nav02-bprof-top ul { flex: 1; display: flex; justify-content: space-around; margin: 0; padding: 0; list-style: none; text-align: center; }
+#NAV-02 .nav02-bprof-top b { display: block; font: 700 17px/22px var(--font-display); font-variant-numeric: tabular-nums; letter-spacing: -0.2px; }
+#NAV-02 .nav02-bprof-top span { font-size: 12px; color: var(--label-2); letter-spacing: 0; }
+#NAV-02 .nav02-bprof p { margin: 12px 0 0; font-size: 14px; line-height: 20px; letter-spacing: 0; }
+#NAV-02 .nav02-bprof p b { display: block; font-weight: 600; }
+#NAV-02 .nav02-edit { display: block; width: 100%; height: 34px; margin-top: 12px; border: 0; border-radius: 9px; background: var(--fill-3); color: var(--label); font: 600 14px/34px var(--font-text); letter-spacing: 0; cursor: pointer; transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease; }
+#NAV-02 .nav02-edit:active { transform: scale(.97); background: var(--fill-2); transition-duration: 80ms; }
+
+#NAV-02 .nav02-bbar {
+  position: absolute; z-index: 10; inset: auto 0 0; height: calc(49px + var(--phone-safe-bottom)); display: flex; padding: 0 2px var(--phone-safe-bottom);
+  border-radius: 0 0 45px 45px;
+}
+#NAV-02 .nav02-bbar::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; transition: opacity var(--dur-2) ease;
+  background: var(--mat-chrome); -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+  box-shadow: inset 0 .5px 0 var(--separator);
+}
+#NAV-02 .nav02-bbar.is-edge::before { opacity: 0; }
+#NAV-02 .nav02-btab {
+  position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 0; border: 0; background: none;
+  color: var(--gray); font: 500 10px/12px var(--font-text); letter-spacing: 0; cursor: pointer; transition: color 120ms ease;
+}
+#NAV-02 .nav02-btab .i { font-size: 25px; height: 28px; }
+#NAV-02 .nav02-btab.is-sel { color: var(--nav02-tint); }
+#NAV-02 .nav02-btab:active .i { opacity: .6; }
+#NAV-02 .nav02-btab:focus-visible { outline: none; }
+#NAV-02 .nav02-btab:focus-visible .i { border-radius: 6px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--nav02-tint) 55%, transparent); }
+#NAV-02 .nav02-btab.is-bounce .i { animation: nav02-bounce 480ms var(--ease-out); }
+#NAV-02 .nav02-badge {
+  position: absolute; top: 3px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: var(--red); color: #fff; font: 600 13px/18px var(--font-text); text-align: center; font-variant-numeric: tabular-nums;
+  transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-2) ease;
+}
+#NAV-02 .nav02-badge.is-gone { transform: scale(0); opacity: 0; transition: transform var(--dur-2) var(--ease-ios), opacity var(--dur-2) ease; }
+
+@media (hover: hover) {
+  #NAV-02 .nav02-tab:not(.is-sel):hover { color: color-mix(in srgb, var(--label) 70%, var(--nav02-tint)); }
+  #NAV-02 .nav02-btab:not(.is-sel):hover { color: color-mix(in srgb, var(--gray) 70%, var(--label)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #NAV-02 .nav02-scr, #NAV-02 .nav02-scr.is-on { transform: none; }
+  #NAV-02 .nav02-tab.is-bounce .i, #NAV-02 .nav02-btab.is-bounce .i { animation: none; }
+  #NAV-02 .nav02-tabs, #NAV-02 .nav02-track, #NAV-02 .nav02-sfield { transition-duration: 1ms; }
+}
+</style>
+<article class="obj" id="NAV-02" data-name="Tab Bar" data-ja="タブバー" data-vector="Glass" data-size="l" data-desc="画面下のタブ切り替え。浮遊ガラス型とクラシック型の2種。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="nav02-pair">
+      <!-- A · floating glass -->
+      <figure class="nav02-fig">
+        <div class="phone nav02-a" style="--phone-h: 600px">
+          <div class="phone-screen nav02-screen">
+            <section class="nav02-scr is-on" data-tab="0" tabindex="-1" aria-label="ホーム">
+              <div class="nav02-lt"><h2>ホーム</h2><span class="av av-8">Me</span></div>
+              <div class="nav02-hero art art-1"><span class="nav02-hero-t"><small>今日のおすすめ</small><b>夕暮れの丘を歩く</b></span></div>
+              <h3 class="nav02-h3">続きを見る</h3>
+              <div class="nav02-grid2">
+                <div><span class="nav02-tile art art-2"></span><span class="nav02-cap2">海辺の朝<small>sora_travel</small></span></div>
+                <div><span class="nav02-tile art art-6"></span><span class="nav02-cap2">北の光<small>haru.photo</small></span></div>
+                <div><span class="nav02-tile art art-4"></span><span class="nav02-cap2">東京ナイト<small>yuna</small></span></div>
+                <div><span class="nav02-tile art art-5"></span><span class="nav02-cap2">砂丘の午後<small>ren.design</small></span></div>
+              </div>
+            </section>
+            <section class="nav02-scr" data-tab="1" tabindex="-1" aria-label="見つける">
+              <div class="nav02-lt"><h2>見つける</h2></div>
+              <div class="nav02-chips"><button class="nav02-chip" type="button" aria-pressed="true">すべて</button><button class="nav02-chip" type="button" aria-pressed="false">写真</button><button class="nav02-chip" type="button" aria-pressed="false">旅行</button><button class="nav02-chip" type="button" aria-pressed="false">音楽</button><button class="nav02-chip" type="button" aria-pressed="false">アート</button></div>
+              <div class="nav02-mosaic">
+                <span class="art art-3 nav02-tall"><i>グリーン</i></span>
+                <span class="art art-7"><i>パステル</i></span>
+                <span class="art art-8"><i>カフェ</i></span>
+                <span class="art art-1 nav02-wide"><i>夕焼け</i></span>
+                <span class="art art-6"><i>夜空</i></span>
+                <span class="art art-2"><i>海</i></span>
+                <span class="art art-5 nav02-wide"><i>砂丘</i></span>
+              </div>
+            </section>
+            <section class="nav02-scr" data-tab="2" tabindex="-1" aria-label="ビデオ">
+              <div class="nav02-lt"><h2>ビデオ</h2></div>
+              <div class="nav02-vid"><span class="nav02-thumb art art-2"><span class="nav02-play"><svg class="i" aria-hidden="true"><use href="#i-play-fill"/></svg></span><span class="nav02-dur">12:48</span></span><b>海辺の朝、5分の瞑想</b><small>sora_travel · 2.1万回視聴</small></div>
+              <div class="nav02-vid"><span class="nav02-thumb art art-4"><span class="nav02-play"><svg class="i" aria-hidden="true"><use href="#i-play-fill"/></svg></span><span class="nav02-dur">8:05</span></span><b>夜の東京を歩くVlog</b><small>yuna · 4,812回視聴</small></div>
+              <div class="nav02-vid"><span class="nav02-thumb art art-6"><span class="nav02-play"><svg class="i" aria-hidden="true"><use href="#i-play-fill"/></svg></span><span class="nav02-dur">21:30</span></span><b>オーロラ撮影の基本</b><small>haru.photo · 9.6万回視聴</small></div>
+            </section>
+            <section class="nav02-scr" data-tab="3" tabindex="-1" aria-label="プロフィール">
+              <div class="nav02-prof">
+                <span class="nav02-ring"><span class="av av-1">H</span></span>
+                <h3>佐藤 春</h3>
+                <span class="nav02-handle">@haru.photo · 写真家<svg class="i" aria-hidden="true"><use href="#i-checkmark-seal-fill"/></svg></span>
+                <ul class="nav02-stats"><li><b>128</b><span>投稿</span></li><li><b>2.4万</b><span>フォロワー</span></li><li><b>312</b><span>フォロー中</span></li></ul>
+              </div>
+              <div class="nav02-grid3"><span class="art art-1"></span><span class="art art-6"></span><span class="art art-2"></span><span class="art art-5"></span><span class="art art-3"></span><span class="art art-4"></span><span class="art art-7"></span><span class="art art-8"></span><span class="art art-1" style="background-size:220% 220%;background-position:50% 70%"></span></div>
+            </section>
+            <section class="nav02-scr" data-tab="search" tabindex="-1" aria-label="検索">
+              <div class="nav02-lt"><h2>検索</h2></div>
+              <h3 class="nav02-h3" style="margin-top:4px">最近の検索</h3>
+              <ul class="nav02-recent">
+                <li><svg class="i" aria-hidden="true"><use href="#i-clock-fill"/></svg>夕焼け</li>
+                <li><svg class="i" aria-hidden="true"><use href="#i-clock-fill"/></svg>オーロラ 撮り方</li>
+                <li><svg class="i" aria-hidden="true"><use href="#i-clock-fill"/></svg>東京 夜景</li>
+              </ul>
+              <h3 class="nav02-h3">おすすめのカテゴリ</h3>
+              <div class="nav02-mosaic" style="grid-auto-rows:84px"><span class="art art-7"><i>アート</i></span><span class="art art-3"><i>自然</i></span><span class="art art-4"><i>夜景</i></span><span class="art art-8"><i>フード</i></span></div>
+            </section>
+
+            <div class="nav02-edge-t" aria-hidden="true"></div>
+            <div class="nav02-edge-b" aria-hidden="true"></div>
+            <nav class="nav02-dock" aria-label="タブ">
+              <div class="nav02-tabs nav02-glass">
+                <div class="nav02-track" role="tablist" aria-label="セクション">
+                  <span class="nav02-lens" aria-hidden="true"></span>
+                  <button class="nav02-tab is-sel" type="button" role="tab" aria-selected="true" tabindex="0"><svg class="i" aria-hidden="true"><use href="#i-house-fill"/></svg><span>ホーム</span></button>
+                  <button class="nav02-tab" type="button" role="tab" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-square-grid-2x2-fill"/></svg><span>見つける</span></button>
+                  <button class="nav02-tab" type="button" role="tab" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-play-rectangle-fill"/></svg><span>ビデオ</span></button>
+                  <button class="nav02-tab" type="button" role="tab" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-person-fill"/></svg><span>プロフィール</span></button>
+                </div>
+              </div>
+              <div class="nav02-sfield nav02-glass">
+                <button class="nav02-sicon" type="button" aria-label="検索"><svg class="i" aria-hidden="true"><use href="#i-magnifyingglass"/></svg></button>
+                <input type="search" placeholder="ビデオを検索" aria-label="検索" tabindex="-1" enterkeyhint="search">
+                <button class="nav02-sclear" type="button" aria-label="消去" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-xmark-circle-fill"/></svg></button>
+              </div>
+            </nav>
+          </div>
+        </div>
+        <figcaption class="nav02-cap"><b>A</b>フローティング・ガラス<span>iOS 26</span></figcaption>
+      </figure>
+
+      <!-- B · classic -->
+      <figure class="nav02-fig">
+        <div class="phone nav02-b" style="--phone-h: 600px">
+          <div class="phone-screen nav02-screen">
+            <section class="nav02-bscr is-on" data-tab="0" data-title="ホーム" tabindex="-1" aria-label="ホーム">
+              <div class="nav02-post"><header><span class="av av-2">M</span><b>mio_k</b><small>2時間前</small></header><div class="art art-3 nav02-photo"></div><footer><svg class="i nav02-liked" aria-hidden="true"><use href="#i-heart-fill"/></svg><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg><svg class="i" aria-hidden="true"><use href="#i-paperplane"/></svg><span>いいね！ 248件</span></footer></div>
+              <div class="nav02-post"><header><span class="av av-5">S</span><b>sora_travel</b><small>5時間前</small></header><div class="art art-2 nav02-photo"></div><footer><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg><svg class="i" aria-hidden="true"><use href="#i-paperplane"/></svg><span>いいね！ 1,024件</span></footer></div>
+              <div class="nav02-post"><header><span class="av av-6">R</span><b>ren.design</b><small>昨日</small></header><div class="art art-7 nav02-photo"></div><footer><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg><svg class="i" aria-hidden="true"><use href="#i-paperplane"/></svg><span>いいね！ 87件</span></footer></div>
+            </section>
+            <section class="nav02-bscr" data-tab="1" data-title="検索" tabindex="-1" aria-label="検索">
+              <div class="nav02-bsearch"><svg class="i" aria-hidden="true"><use href="#i-magnifyingglass"/></svg>検索</div>
+              <div class="nav02-bgrid"><span class="art art-1 nav02-big"></span><span class="art art-6"></span><span class="art art-2"></span><span class="art art-8"></span><span class="art art-3"></span><span class="art art-5"></span><span class="art art-4"></span><span class="art art-7"></span><span class="art art-6" style="background-size:200% 200%;background-position:30% 40%"></span><span class="art art-2" style="background-size:240% 240%;background-position:70% 50%"></span><span class="art art-5" style="background-size:200% 200%;background-position:80% 90%"></span><span class="art art-1" style="background-size:220% 220%;background-position:20% 70%"></span><span class="art art-4" style="background-size:180% 180%;background-position:60% 80%"></span><span class="art art-3" style="background-size:200% 200%;background-position:10% 80%"></span><span class="art art-8" style="background-size:160% 160%;background-position:50% 50%"></span></div>
+            </section>
+            <section class="nav02-bscr" data-tab="2" data-title="通知" tabindex="-1" aria-label="通知">
+              <ul class="nav02-rows">
+                <li class="nav02-row"><span class="av av-2">M</span><p><b>mio_k</b>さんが「いいね！」しました。<time>2分</time></p><span class="art art-1"></span></li>
+                <li class="nav02-row"><span class="av av-3">K</span><p><b>kaito.dev</b>さんにフォローされました。<time>18分</time></p><span class="nav02-unread"></span></li>
+                <li class="nav02-row"><span class="av av-4">Y</span><p><b>yuna</b>さんのコメント:「この色すてき！」<time>1時間</time></p><span class="art art-6"></span></li>
+                <li class="nav02-row"><span class="av av-7">A</span><p><b>aoi</b>さんが投稿を保存しました。<time>3時間</time></p><span class="art art-2"></span></li>
+                <li class="nav02-row"><span class="av av-6">R</span><p><b>ren.design</b>さんがメンションしました。<time>昨日</time></p><span class="art art-7"></span></li>
+                <li class="nav02-row"><span class="av av-5">S</span><p><b>sora_travel</b>さんほか12人が「いいね！」<time>昨日</time></p><span class="art art-5"></span></li>
+              </ul>
+            </section>
+            <section class="nav02-bscr" data-tab="3" data-title="メッセージ" tabindex="-1" aria-label="メッセージ">
+              <ul class="nav02-rows">
+                <li class="nav02-row"><span class="av av-1">H</span><p><b>佐藤 春</b><small>明日の撮影、9時集合でどう？</small></p><span class="nav02-mtime">9:38</span></li>
+                <li class="nav02-row"><span class="av av-4">Y</span><p><b>山本 結菜</b><small>写真ありがとう！最高だった📸</small></p><span class="nav02-mtime">8:12</span></li>
+                <li class="nav02-row"><span class="av av-3">K</span><p><b>高橋 海斗</b><small>新しいビルド、TestFlightに上げました</small></p><span class="nav02-mtime">昨日</span></li>
+                <li class="nav02-row"><span class="av av-7">A</span><p><b>渡辺 葵</b><small>週末のカフェ、予約しておくね</small></p><span class="nav02-mtime">昨日</span></li>
+                <li class="nav02-row"><span class="av av-5">S</span><p><b>中村 空</b><small>アイスランドの写真、共有しました</small></p><span class="nav02-mtime">水曜日</span></li>
+                <li class="nav02-row"><span class="av av-6">R</span><p><b>伊藤 蓮</b><small>ロゴ案、3パターン送ります</small></p><span class="nav02-mtime">火曜日</span></li>
+                <li class="nav02-row"><span class="av av-2">M</span><p><b>小林 美緒</b><small>了解です！</small></p><span class="nav02-mtime">9月28日</span></li>
+              </ul>
+            </section>
+            <section class="nav02-bscr" data-tab="4" data-title="マイページ" tabindex="-1" aria-label="マイページ">
+              <div class="nav02-bprof">
+                <div class="nav02-bprof-top"><span class="av av-8">Me</span><ul><li><b>42</b><span>投稿</span></li><li><b>318</b><span>フォロワー</span></li><li><b>205</b><span>フォロー中</span></li></ul></div>
+                <p><b>あなた</b>週末フォトグラファー。旅と珈琲と夕焼け。</p>
+                <button class="nav02-edit" type="button">プロフィールを編集</button>
+              </div>
+              <div class="nav02-bgrid"><span class="art art-8"></span><span class="art art-5"></span><span class="art art-3"></span><span class="art art-2"></span><span class="art art-1"></span><span class="art art-6"></span><span class="art art-7"></span><span class="art art-4"></span><span class="art art-2" style="background-size:200% 200%;background-position:30% 90%"></span><span class="art art-8" style="background-size:180% 180%;background-position:40% 40%"></span><span class="art art-3" style="background-size:200% 200%;background-position:80% 30%"></span><span class="art art-5" style="background-size:220% 220%;background-position:60% 20%"></span></div>
+            </section>
+
+            <header class="nav02-btop"><div class="nav02-bmat"></div><h2 class="nav02-btitle">ホーム</h2></header>
+            <nav class="nav02-bbar" role="tablist" aria-label="タブ">
+              <button class="nav02-btab is-sel" type="button" role="tab" aria-selected="true" tabindex="0"><svg class="i" aria-hidden="true"><use href="#i-house-fill"/></svg>ホーム</button>
+              <button class="nav02-btab" type="button" role="tab" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-magnifyingglass"/></svg>検索</button>
+              <button class="nav02-btab" type="button" role="tab" aria-selected="false" tabindex="-1" aria-label="通知 3件の未読"><svg class="i" aria-hidden="true"><use href="#i-bell-fill"/></svg>通知<span class="nav02-badge" aria-hidden="true">3</span></button>
+              <button class="nav02-btab" type="button" role="tab" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-message-fill"/></svg>メッセージ</button>
+              <button class="nav02-btab" type="button" role="tab" aria-selected="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg>マイページ</button>
+            </nav>
+          </div>
+        </div>
+        <figcaption class="nav02-cap"><b>B</b>クラシック<span>半透明マテリアル</span></figcaption>
+      </figure>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>タブをタップ・横にドラッグ</li><li>下にスクロールで縮小</li><li>検索ボタンで展開</li><li>通知を開くとバッジが消える</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('NAV-02');
+  if (!root) return;
+  const reduced = () => ObjKit.reducedMotion;
+  const bounce = (el) => { if (reduced()) return; el.classList.remove('is-bounce'); void el.offsetWidth; el.classList.add('is-bounce'); };
+
+  /* ═════════ A · floating glass ═════════ */
+  const A = root.querySelector('.nav02-a');
+  const dock = A.querySelector('.nav02-dock');
+  const tabsBox = A.querySelector('.nav02-tabs');
+  const track = A.querySelector('.nav02-track');
+  const lens = A.querySelector('.nav02-lens');
+  const tabs = [...A.querySelectorAll('.nav02-tab')];
+  const screens = [...A.querySelectorAll('.nav02-scr')];
+  const edgeT = A.querySelector('.nav02-edge-t');
+  const sfield = A.querySelector('.nav02-sfield');
+  const sicon = A.querySelector('.nav02-sicon');
+  const sinput = sfield.querySelector('input');
+  let sel = 0;
+  let mode = ''; // '' | 'min' | 'search'
+
+  const geo = (i) => ({ x: tabs[i].offsetLeft + tabs[i].offsetWidth / 2, w: tabs[i].offsetWidth });
+
+  /* lens spring: critically-ish damped with a little overshoot; stretches with velocity */
+  const L = { x: 0, w: 0, vx: 0, vw: 0, tx: 0, tw: 0, k: 420, c: 30, raf: 0, last: 0, press: false };
+  const paint = () => {
+    const stretch = Math.min(Math.abs(L.vx) * 0.04, 20);
+    const squish = Math.min(Math.abs(L.vx) * 0.00006, 0.06);
+    const w = L.w + stretch;
+    lens.style.width = w.toFixed(2) + 'px';
+    lens.style.transform = `translateX(${(L.x - w / 2).toFixed(2)}px) scale(${L.press ? 1.06 : 1}, ${((L.press ? 1.1 : 1) * (1 - squish)).toFixed(4)})`;
+  };
+  const step = (t) => {
+    const dt = Math.min(0.032, (t - (L.last || t)) / 1000 || 0.016);
+    L.last = t;
+    const sub = 4, h = dt / sub;
+    for (let s = 0; s < sub; s++) {
+      L.vx += (L.k * (L.tx - L.x) - L.c * L.vx) * h; L.x += L.vx * h;
+      L.vw += (L.k * (L.tw - L.w) - L.c * L.vw) * h; L.w += L.vw * h;
+    }
+    paint();
+    const done = Math.abs(L.tx - L.x) < 0.2 && Math.abs(L.vx) < 4 && Math.abs(L.tw - L.w) < 0.2 && Math.abs(L.vw) < 4;
+    if (done && !L.press) { L.x = L.tx; L.w = L.tw; L.vx = L.vw = 0; paint(); L.raf = 0; L.last = 0; return; }
+    L.raf = requestAnimationFrame(step);
+  };
+  const kick = () => { if (!L.raf) { L.last = 0; L.raf = requestAnimationFrame(step); } };
+  const lensTo = (x, w, jump) => {
+    L.tx = x; L.tw = w;
+    if (jump || reduced()) { L.x = x; L.w = w; L.vx = L.vw = 0; paint(); return; }
+    kick();
+  };
+  const placeLens = (jump) => { const g = geo(sel); lensTo(g.x, g.w, jump); track.style.setProperty('--nav02-sel-x', g.x + 'px'); };
+
+  const setMode = (m) => {
+    if (mode === m) return;
+    mode = m;
+    dock.classList.toggle('is-min', m === 'min');
+    dock.classList.toggle('is-search', m === 'search');
+    sinput.tabIndex = m === 'search' ? 0 : -1;
+  };
+
+  const showScreen = (key) => {
+    screens.forEach((s) => {
+      const on = s.dataset.tab === String(key);
+      s.classList.toggle('is-on', on);
+      s.inert = !on;
+    });
+    syncEdge();
+  };
+  const activeScreen = () => screens.find((s) => s.classList.contains('is-on'));
+
+  const select = (i, { focus = false } = {}) => {
+    const changed = i !== sel;
+    sel = i;
+    tabs.forEach((t, j) => {
+      const on = j === i;
+      t.classList.toggle('is-sel', on);
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    });
+    placeLens(false);
+    if (changed) bounce(tabs[i]);
+    if (mode === 'search') { sinput.value = ''; sfield.classList.remove('has-text'); sinput.blur(); }
+    setMode('');
+    showScreen(i);
+    if (focus) tabs[i].focus();
+  };
+
+  /* tap / drag on the capsule (the lens follows the finger, snaps on release) */
+  let drag = null;
+  tabsBox.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    if (mode) return; // in compact states a tap just restores the bar (handled on click)
+    const r = track.getBoundingClientRect();
+    drag = { id: e.pointerId, x0: e.clientX, left: r.left, moved: false };
+    tabsBox.setPointerCapture(e.pointerId);
+    L.press = true; L.k = 900; L.c = 52;
+    tabsBox.classList.add('is-press');
+    kick();
+  });
+  const nearest = (x) => {
+    let best = 0, bd = Infinity;
+    tabs.forEach((t, j) => { const d = Math.abs(geo(j).x - x); if (d < bd) { bd = d; best = j; } });
+    return best;
+  };
+  tabsBox.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    if (!drag.moved && Math.abs(e.clientX - drag.x0) > 6) drag.moved = true;
+    if (!drag.moved) return;
+    const first = geo(0).x, last = geo(tabs.length - 1).x;
+    const x = Math.min(last + 8, Math.max(first - 8, e.clientX - drag.left));
+    const n = nearest(x);
+    tabs.forEach((t, j) => t.classList.toggle('is-sel', j === n));
+    lensTo(x, geo(n).w);
+  });
+  const endDrag = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const x = (drag.moved ? e.clientX : drag.x0) - drag.left;
+    drag = null;
+    L.press = false; L.k = 420; L.c = 30;
+    tabsBox.classList.remove('is-press');
+    select(nearest(x));
+  };
+  tabsBox.addEventListener('pointerup', endDrag);
+  tabsBox.addEventListener('pointercancel', endDrag);
+  tabs.forEach((t, i) => t.addEventListener('click', (e) => { if (e.detail === 0) { e.stopPropagation(); select(i); } })); // keyboard activation
+  tabsBox.addEventListener('click', () => {
+    if (!mode) return; // compact states: tapping the round tab restores the full bar
+    if (mode === 'search') { sinput.value = ''; sfield.classList.remove('has-text'); sinput.blur(); showScreen(sel); }
+    setMode(''); placeLens(true);
+  });
+  track.addEventListener('keydown', (e) => {
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); select(e.key === 'Home' ? 0 : tabs.length - 1, { focus: true }); return; }
+    if (!d) return;
+    e.preventDefault();
+    select((sel + d + tabs.length) % tabs.length, { focus: true });
+  });
+
+  /* search: the round button grows into a field, the tab bar shrinks to the current tab */
+  sicon.addEventListener('click', () => {
+    setMode('search');
+    showScreen('search');
+    setTimeout(() => sinput.focus({ preventScroll: true }), reduced() ? 0 : 260);
+  });
+  const sclear = sfield.querySelector('.nav02-sclear');
+  const syncClear = () => { const has = !!sinput.value; sfield.classList.toggle('has-text', has); sclear.tabIndex = has ? 0 : -1; };
+  sinput.addEventListener('input', syncClear);
+  sclear.addEventListener('click', () => { sinput.value = ''; syncClear(); sinput.focus(); });
+  sinput.addEventListener('keydown', (e) => { if (e.key === 'Escape') { sinput.value = ''; syncClear(); setMode(''); showScreen(sel); sicon.focus(); placeLens(true); } });
+
+  /* minimise on scroll down, restore on scroll up (passive + rAF) */
+  const syncEdge = () => { const s = activeScreen(); if (s) edgeT.style.opacity = String(Math.min(1, s.scrollTop / 24)); };
+  let raf = 0, lastY = 0, lastScr = null;
+  const onScroll = (e) => {
+    const s = e.currentTarget;
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      const y = s.scrollTop;
+      if (s !== lastScr) { lastScr = s; lastY = y; }
+      const dy = y - lastY;
+      lastY = y;
+      edgeT.style.opacity = String(Math.min(1, y / 24));
+      if (mode === 'search') return;
+      if (y < 24) setMode('');
+      else if (dy > 3 && y > 60) { if (mode !== 'min') { placeLens(true); setMode('min'); } }
+      else if (dy < -5) setMode('');
+    });
+  };
+  screens.forEach((s) => s.addEventListener('scroll', onScroll, { passive: true }));
+  screens.forEach((s) => { s.inert = !s.classList.contains('is-on'); });
+  A.querySelectorAll('.nav02-chip').forEach((c, _, all) => c.addEventListener('click', () => all.forEach((x) => x.setAttribute('aria-pressed', String(x === c)))));
+
+  /* initial lens position once layout (and fonts) are ready */
+  const init = () => placeLens(true);
+  requestAnimationFrame(init);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(init));
+  new ResizeObserver(() => { if (!drag) placeLens(true); }).observe(track);
+
+  /* ═════════ B · classic ═════════ */
+  const B = root.querySelector('.nav02-b');
+  const btabs = [...B.querySelectorAll('.nav02-btab')];
+  const bscreens = [...B.querySelectorAll('.nav02-bscr')];
+  const btop = B.querySelector('.nav02-btop');
+  const btitle = B.querySelector('.nav02-btitle');
+  const bbar = B.querySelector('.nav02-bbar');
+  const badge = B.querySelector('.nav02-badge');
+  let bsel = 0, braf = 0, titleT = 0;
+  const bsync = () => {
+    braf = 0;
+    const s = bscreens[bsel];
+    btop.classList.toggle('is-scrolled', s.scrollTop > 1);
+    bbar.classList.toggle('is-edge', s.scrollHeight - s.clientHeight - s.scrollTop < 1);
+  };
+  const bselect = (i, focus) => {
+    if (i === bsel) { bscreens[i].scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); return; } // tap again → scroll to top
+    bsel = i;
+    btabs.forEach((t, j) => {
+      const on = j === i;
+      t.classList.toggle('is-sel', on);
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    });
+    bscreens.forEach((s, j) => { s.classList.toggle('is-on', j === i); s.inert = j !== i; });
+    bounce(btabs[i]);
+    clearTimeout(titleT);
+    btitle.classList.add('is-swap');
+    titleT = setTimeout(() => { btitle.textContent = bscreens[i].dataset.title; btitle.classList.remove('is-swap'); }, 110);
+    if (badge && i === 2 && !badge.classList.contains('is-gone')) {
+      setTimeout(() => { badge.classList.add('is-gone'); btabs[2].setAttribute('aria-label', '通知'); }, 650);
+    }
+    bsync();
+    if (focus) btabs[i].focus();
+  };
+  btabs.forEach((t, i) => t.addEventListener('click', () => bselect(i)));
+  bbar.addEventListener('keydown', (e) => {
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    bselect((bsel + d + btabs.length) % btabs.length, true);
+  });
+  bscreens.forEach((s, j) => {
+    s.inert = j !== 0;
+    s.addEventListener('scroll', () => { if (!braf) braf = requestAnimationFrame(bsync); }, { passive: true });
+  });
+  requestAnimationFrame(bsync);
+})();
+</script>

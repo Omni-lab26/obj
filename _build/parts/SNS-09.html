@@ -1,0 +1,333 @@
+<!-- ═══════════ SNS-09 · Profile Header ═══════════ -->
+<style>
+#SNS-09 .sns09 {
+  --s9-bg: light-dark(#FFF9F7, #19161A);
+  --s9-card: light-dark(#FFFFFF, #242026);
+  --s9-coral: light-dark(#FF6F8E, #FF7E98);
+  --s9-soft: light-dark(rgba(255, 111, 142, .12), rgba(255, 126, 152, .16));
+  --s9-gray: light-dark(rgba(120, 104, 128, .11), rgba(255, 255, 255, .09));
+  --s9-shadow: 0 10px 28px -12px light-dark(rgba(196, 92, 120, .28), rgba(0, 0, 0, .6)), 0 1px 3px light-dark(rgba(120, 60, 80, .06), rgba(0, 0, 0, .3));
+  position: relative; width: min(100%, 375px); border-radius: 32px; overflow: hidden; isolation: isolate;
+  background: var(--s9-bg); color: var(--label);
+  box-shadow: 0 0 0 .5px light-dark(rgba(200, 140, 150, .25), rgba(255, 255, 255, .08)), 0 30px 60px -32px light-dark(rgba(220, 110, 140, .45), rgba(0, 0, 0, .9));
+}
+#SNS-09 button { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+#SNS-09 button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--s9-bg), 0 0 0 4.5px color-mix(in srgb, var(--s9-coral) 60%, transparent); }
+
+/* — cover — */
+#SNS-09 .sns09-cover { position: relative; height: 130px; background-size: 100% 128%; background-position: 50% 0%; }
+#SNS-09 .sns09-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .06) 0%, transparent 40%, color-mix(in srgb, var(--s9-bg) 55%, transparent) 78%, var(--s9-bg) 100%); }
+#SNS-09 .sns09-cbar { position: absolute; z-index: 2; inset: 12px 12px auto; display: flex; gap: 8px; }
+#SNS-09 .sns09-cbar .sns09-sp { flex: 1; }
+#SNS-09 .sns09-gbtn {
+  position: relative; width: 34px; height: 34px; border: 0; padding: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--label);
+  background: light-dark(rgba(255, 255, 255, .5), rgba(30, 28, 34, .45)); -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%);
+  box-shadow: inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .7), rgba(255, 255, 255, .16)), inset 0 1px 0 rgba(255, 255, 255, .35), 0 4px 12px rgba(40, 20, 40, .12);
+  transition: transform 380ms var(--ease-spring), background var(--dur-2) ease, color var(--dur-2) ease;
+}
+#SNS-09 .sns09-gbtn .i { font-size: 17px; }
+#SNS-09 .sns09-gbtn:active { transform: scale(.9); transition-duration: 90ms; }
+#SNS-09 .sns09-gbtn[aria-pressed="true"] { color: #fff; background: color-mix(in srgb, var(--s9-coral) 82%, transparent); }
+
+/* — identity — */
+#SNS-09 .sns09-id { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding: 0 20px; margin-top: -54px; text-align: center; }
+#SNS-09 .sns09-avatar { position: relative; width: 88px; height: 88px; border-radius: 50%; box-shadow: 0 0 0 4px var(--s9-bg), 0 14px 30px -10px light-dark(rgba(255, 106, 136, .55), rgba(0, 0, 0, .7)); }
+#SNS-09 .sns09-avatar .av { width: 100%; height: 100%; font-size: 34px; }
+#SNS-09 .sns09-name { margin: 12px 0 0; display: flex; align-items: center; gap: 5px; font: 700 var(--fs-title2)/1.15 var(--font-display); letter-spacing: 0; }
+#SNS-09 .sns09-name .i { font-size: 19px; color: var(--blue); }
+#SNS-09 .sns09-sub { margin: 6px 0 0; display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--label-2); letter-spacing: -0.2px; }
+#SNS-09 .sns09-chip { height: 22px; padding: 0 9px; border-radius: 999px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--s9-coral); background: var(--s9-soft); }
+#SNS-09 .sns09-bio { margin: 12px 0 0; font-size: 14.5px; line-height: 1.55; letter-spacing: 0; color: var(--label); }
+#SNS-09 .sns09-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 3px 8px; border-radius: 8px; font: 600 14px/1.2 var(--font-text); letter-spacing: -0.1px; color: var(--indigo); text-decoration: none; transition: background var(--dur-1) ease; }
+#SNS-09 .sns09-link .i { font-size: 14px; }
+#SNS-09 .sns09-link:active { background: color-mix(in srgb, var(--indigo) 12%, transparent); }
+#SNS-09 .sns09-link:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--indigo) 50%, transparent); }
+
+/* — stats — */
+#SNS-09 .sns09-stats { margin: 16px 16px 0; display: grid; grid-template-columns: repeat(3, 1fr); padding: 4px; border-radius: 22px; background: var(--s9-card); box-shadow: var(--s9-shadow); }
+#SNS-09 .sns09-stat {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0 9px; border: 0; border-radius: 18px; background: transparent; cursor: pointer; color: var(--label);
+  transition: background var(--dur-2) ease, transform 360ms var(--ease-spring);
+}
+#SNS-09 .sns09-stat + .sns09-stat::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: .5px; background: var(--separator); }
+#SNS-09 .sns09-stat:active { background: var(--s9-soft); transform: scale(.96); transition-duration: 90ms; }
+@media (hover: hover) { #SNS-09 .sns09-stat:hover { background: light-dark(rgba(255, 111, 142, .06), rgba(255, 255, 255, .04)); } }
+#SNS-09 .sns09-stat b { display: inline-block; font: 700 17px/22px var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: -0.2px; }
+#SNS-09 .sns09-stat span { font-size: 13px; color: var(--label-2); letter-spacing: 0; }
+#SNS-09 .sns09-plus { position: absolute; left: 50%; top: 4px; padding: 0 7px; height: 20px; border-radius: 999px; display: grid; place-items: center; font: 700 12px/1 var(--font-rounded); color: #fff; background: var(--s9-coral); box-shadow: 0 4px 10px -2px color-mix(in srgb, var(--s9-coral) 60%, transparent); pointer-events: none; opacity: 0; }
+
+/* — actions — */
+#SNS-09 .sns09-acts { position: relative; display: flex; gap: 8px; margin: 14px 16px 0; }
+#SNS-09 .sns09-btn {
+  position: relative; flex: 1; height: 40px; border: 0; padding: 0 12px; border-radius: 14px; cursor: pointer; overflow: hidden;
+  display: grid; place-items: center; font: 600 15px/1 var(--font-text); letter-spacing: 0; color: var(--label); background: var(--s9-gray);
+  transition: background var(--dur-3) var(--ease-out), color var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out), transform 380ms var(--ease-spring);
+}
+#SNS-09 .sns09-btn:active { transform: scale(.96); transition-duration: 90ms; }
+#SNS-09 .sns09-btn--sq { flex: none; width: 40px; padding: 0; }
+#SNS-09 .sns09-btn--sq .i { font-size: 18px; }
+#SNS-09 .sns09-follow { background: var(--s9-coral); color: #fff; box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--s9-coral) 75%, transparent), inset 0 1px 0 rgba(255, 255, 255, .22); }
+#SNS-09 .sns09-follow.is-on { background: var(--s9-gray); color: var(--label); box-shadow: none; }
+#SNS-09 .sns09-follow > span { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 4px; transition: opacity 220ms ease, transform 380ms var(--ease-ios); }
+#SNS-09 .sns09-follow .sns09-f2 { opacity: 0; transform: translateY(10px); }
+#SNS-09 .sns09-follow .sns09-f2 .i { font-size: 13px; color: var(--label-2); transition: transform var(--dur-2) var(--ease-ios); }
+#SNS-09 .sns09-follow.is-on .sns09-f1 { opacity: 0; transform: translateY(-10px); }
+#SNS-09 .sns09-follow.is-on .sns09-f2 { opacity: 1; transform: none; }
+#SNS-09 .sns09-follow[aria-expanded="true"] .sns09-f2 .i { transform: rotate(180deg); }
+@media (hover: hover) { #SNS-09 .sns09-btn:hover { filter: brightness(light-dark(.98, 1.12)); } }
+
+/* — follow menu — */
+#SNS-09 .sns09-menu {
+  position: absolute; z-index: 20; left: 0; top: 48px; width: 232px; padding: 6px; border-radius: 20px;
+  background: light-dark(rgba(255, 255, 255, .92), rgba(44, 40, 46, .92)); -webkit-backdrop-filter: blur(20px) saturate(170%); backdrop-filter: blur(20px) saturate(170%);
+  box-shadow: 0 0 0 .5px light-dark(rgba(0, 0, 0, .06), rgba(255, 255, 255, .1)), 0 20px 44px -12px light-dark(rgba(150, 70, 100, .35), rgba(0, 0, 0, .7));
+  transform-origin: 24px 0; opacity: 0; transform: scale(.85) translateY(-6px); pointer-events: none; visibility: hidden;
+  transition: opacity 180ms ease, transform 380ms var(--ease-spring), visibility 0s linear 380ms;
+}
+#SNS-09 .sns09-menu.is-open { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition: opacity 160ms ease, transform 420ms var(--ease-spring), visibility 0s; }
+#SNS-09 .sns09-mi { width: 100%; height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; border: 0; border-radius: 14px; background: none; cursor: pointer; font: 400 15px/1 var(--font-text); letter-spacing: 0; color: var(--label); text-align: left; }
+#SNS-09 .sns09-mi .i { font-size: 17px; color: var(--label-2); }
+#SNS-09 .sns09-mi:active, #SNS-09 .sns09-mi:focus-visible { background: var(--s9-gray); box-shadow: none; }
+#SNS-09 .sns09-mi--danger, #SNS-09 .sns09-mi--danger .i { color: var(--red); }
+#SNS-09 .sns09-mi[aria-checked="true"] .i { color: var(--s9-coral); }
+#SNS-09 .sns09-msep { height: .5px; margin: 4px 12px; background: var(--separator); }
+@media (hover: hover) { #SNS-09 .sns09-mi:hover { background: var(--s9-gray); } }
+
+/* — highlights — */
+#SNS-09 .sns09-hl { display: flex; justify-content: center; gap: 18px; margin: 18px 0 0; padding: 0 16px 2px; overflow-x: auto; scrollbar-width: none; }
+#SNS-09 .sns09-hl::-webkit-scrollbar { display: none; }
+#SNS-09 .sns09-hi { flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 66px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--label); border-radius: 14px; }
+#SNS-09 .sns09-hi > span:first-child {
+  width: 64px; height: 64px; border-radius: 50%; padding: 3px; display: grid; place-items: center;
+  background: var(--s9-bg); box-shadow: inset 0 0 0 1.5px light-dark(rgba(200, 160, 170, .55), rgba(255, 255, 255, .18)), 0 6px 14px -8px light-dark(rgba(200, 90, 120, .4), rgba(0, 0, 0, .6));
+  transition: transform 380ms var(--ease-spring);
+}
+#SNS-09 .sns09-hi .art { width: 100%; height: 100%; border-radius: 50%; }
+#SNS-09 .sns09-hi--new > span:first-child { box-shadow: inset 0 0 0 1.5px var(--s9-gray); background: var(--s9-bg); }
+#SNS-09 .sns09-hi--new .sns09-add { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; background: var(--s9-gray); color: var(--label); }
+#SNS-09 .sns09-hi--new .i { font-size: 22px; }
+#SNS-09 .sns09-hi:active > span:first-child { transform: scale(.92); transition-duration: 90ms; }
+#SNS-09 .sns09-hi > span:last-child { font-size: 12px; letter-spacing: 0; color: var(--label); }
+
+/* — tabs + grid — */
+#SNS-09 .sns09-tabs { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 16px; box-shadow: inset 0 -.5px 0 var(--separator); }
+#SNS-09 .sns09-tab { height: 46px; border: 0; padding: 0; background: none; cursor: pointer; display: grid; place-items: center; color: var(--label-3); transition: color var(--dur-2) ease; border-radius: 12px; }
+#SNS-09 .sns09-tab .i { font-size: 22px; }
+#SNS-09 .sns09-tab[aria-selected="true"] { color: var(--label); }
+#SNS-09 .sns09-tab:active .i { transform: scale(.9); }
+#SNS-09 .sns09-ink { position: absolute; left: 0; bottom: 0; width: calc(100% / 3); height: 3px; display: flex; justify-content: center; pointer-events: none; transition: transform 460ms var(--ease-ios); }
+#SNS-09 .sns09-ink::before { content: ""; width: 40px; height: 3px; border-radius: 3px 3px 0 0; background: var(--label); }
+#SNS-09 .sns09-grids { display: grid; padding: 10px 10px 10px; }
+#SNS-09 .sns09-grid { grid-area: 1 / 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; transition: opacity 320ms var(--ease-out), transform 420ms var(--ease-ios); }
+#SNS-09 .sns09-grid[aria-hidden="true"] { opacity: 0; transform: translateX(var(--dx, 0)) scale(.985); pointer-events: none; }
+#SNS-09 .sns09-tile { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; }
+#SNS-09 .sns09-tile:nth-child(4) { border-bottom-left-radius: 22px; }
+#SNS-09 .sns09-tile:nth-child(6) { border-bottom-right-radius: 22px; }
+#SNS-09 .sns09-tile .i { position: absolute; font-size: 14px; color: #fff; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .35)); }
+#SNS-09 .sns09-tile .sns09-tr { top: 7px; right: 7px; }
+#SNS-09 .sns09-views { position: absolute; left: 7px; bottom: 6px; display: flex; align-items: center; gap: 3px; font: 600 11.5px/1 var(--font-rounded); color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .4); letter-spacing: 0; }
+#SNS-09 .sns09-views .i { position: static; font-size: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  #SNS-09 .sns09-ink, #SNS-09 .sns09-grid, #SNS-09 .sns09-follow > span, #SNS-09 .sns09-menu, #SNS-09 .sns09-menu.is-open { transition-property: opacity; transform: none; }
+}
+</style>
+<article class="obj" id="SNS-09" data-name="Profile Header" data-ja="プロフィールヘッダー" data-vector="Soft" data-size="m" data-desc="カバー画像・アイコン・フォロワー数・ハイライトのプロフィール。">
+  <div class="obj-stage" data-bg="plain">
+    <section class="sns09" aria-label="佐藤 春のプロフィール">
+      <div class="sns09-cover art art-5" role="img" aria-label="カバー画像：夕暮れの砂丘">
+        <div class="sns09-cbar">
+          <button class="sns09-gbtn" type="button" aria-label="戻る"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+          <span class="sns09-sp"></span>
+          <button class="sns09-gbtn sns09-bell" type="button" aria-pressed="false" aria-label="投稿のお知らせ"><svg class="i" aria-hidden="true"><use href="#i-bell-fill"/></svg></button>
+          <button class="sns09-gbtn" type="button" aria-label="その他"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+        </div>
+      </div>
+
+      <div class="sns09-id">
+        <div class="sns09-avatar"><span class="av av-1" aria-hidden="true">H</span></div>
+        <h4 class="sns09-name">佐藤 春<svg class="i" role="img" aria-label="認証済み"><use href="#i-checkmark-seal-fill"/></svg></h4>
+        <p class="sns09-sub"><span>@haru.photo</span><span class="sns09-chip">写真家</span></p>
+        <p class="sns09-bio">光と季節を撮っています。旅とコーヒーと、<br>北海道の朝が好き。お仕事のご依頼はDMへ 📮</p>
+        <a class="sns09-link" href="#SNS-09"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg>haru.studio</a>
+      </div>
+
+      <div class="sns09-stats">
+        <button class="sns09-stat" type="button" aria-label="投稿 128件"><b>128</b><span>投稿</span></button>
+        <button class="sns09-stat sns09-followers" type="button" aria-label="フォロワー 12.4万人"><b>12.4万</b><span>フォロワー</span><i class="sns09-plus" aria-hidden="true">+1</i></button>
+        <button class="sns09-stat" type="button" aria-label="フォロー中 312人"><b>312</b><span>フォロー中</span></button>
+      </div>
+
+      <div class="sns09-acts">
+        <button class="sns09-btn sns09-follow" type="button" aria-haspopup="menu" aria-expanded="false"><span class="sns09-f1">フォローする</span><span class="sns09-f2" aria-hidden="true">フォロー中<svg class="i"><use href="#i-chevron-down"/></svg></span></button>
+        <button class="sns09-btn" type="button">メッセージ</button>
+        <button class="sns09-btn sns09-btn--sq" type="button" aria-label="おすすめのユーザー"><svg class="i" aria-hidden="true"><use href="#i-person-badge-plus"/></svg></button>
+        <div class="sns09-menu" role="menu" aria-label="フォロー中のオプション">
+          <button class="sns09-mi" type="button" role="menuitemcheckbox" aria-checked="false" data-act="fav">お気に入りに追加<svg class="i" aria-hidden="true"><use href="#i-star"/></svg></button>
+          <button class="sns09-mi" type="button" role="menuitemcheckbox" aria-checked="false" data-act="mute">ミュート<svg class="i" aria-hidden="true"><use href="#i-bell-slash-fill"/></svg></button>
+          <div class="sns09-msep" role="separator"></div>
+          <button class="sns09-mi sns09-mi--danger" type="button" role="menuitem" data-act="unfollow">フォローをやめる<svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>
+        </div>
+      </div>
+
+      <div class="sns09-hl" role="list" aria-label="ハイライト">
+        <button class="sns09-hi" type="button" role="listitem"><span><span class="art art-2"></span></span><span>旅</span></button>
+        <button class="sns09-hi" type="button" role="listitem"><span><span class="art art-8"></span></span><span>カフェ</span></button>
+        <button class="sns09-hi" type="button" role="listitem"><span><span class="art art-1"></span></span><span>作品</span></button>
+        <button class="sns09-hi sns09-hi--new" type="button" role="listitem"><span><span class="sns09-add"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span></span><span>新規</span></button>
+      </div>
+
+      <div class="sns09-tabs" role="tablist" aria-label="投稿の種類">
+        <button class="sns09-tab" type="button" role="tab" aria-selected="true" aria-controls="SNS-09-g0" aria-label="投稿"><svg class="i" aria-hidden="true"><use href="#i-square-grid-2x2-fill"/></svg></button>
+        <button class="sns09-tab" type="button" role="tab" aria-selected="false" aria-controls="SNS-09-g1" aria-label="リール" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-play-rectangle-fill"/></svg></button>
+        <button class="sns09-tab" type="button" role="tab" aria-selected="false" aria-controls="SNS-09-g2" aria-label="タグ付け" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg></button>
+        <span class="sns09-ink" aria-hidden="true"></span>
+      </div>
+      <div class="sns09-grids">
+        <div class="sns09-grid" id="SNS-09-g0" role="tabpanel" aria-label="投稿">
+          <div class="sns09-tile art art-3"><svg class="i sns09-tr" aria-hidden="true"><use href="#i-pin-fill"/></svg></div>
+          <div class="sns09-tile art art-8"></div>
+          <div class="sns09-tile art art-2" style="background-size: 180% 140%; background-position: 70% 40%"><svg class="i sns09-tr" aria-hidden="true"><use href="#i-square-on-square"/></svg></div>
+          <div class="sns09-tile art art-5"></div>
+          <div class="sns09-tile art art-7"></div>
+          <div class="sns09-tile art art-1" style="background-size: 160% 130%; background-position: 50% 80%"></div>
+        </div>
+        <div class="sns09-grid" id="SNS-09-g1" role="tabpanel" aria-label="リール" aria-hidden="true">
+          <div class="sns09-tile art art-6"><span class="sns09-views"><svg class="i" aria-hidden="true"><use href="#i-play-fill"/></svg>3.2万</span></div>
+          <div class="sns09-tile art art-2" style="background-size: 120% 200%; background-position: 30% 60%"><span class="sns09-views"><svg class="i" aria-hidden="true"><use href="#i-play-fill"/></svg>1.8万</span></div>
+          <div class="sns09-tile art art-4"><span class="sns09-views"><svg class="i" aria-hidden="true"><use href="#i-play-fill"/></svg>9,412</span></div>
+          <div class="sns09-tile art art-3" style="background-size: 200% 160%; background-position: 80% 90%"><span class="sns09-views"><svg class="i" aria-hidden="true"><use href="#i-play-fill"/></svg>6,033</span></div>
+          <div class="sns09-tile art art-8" style="background-size: 150% 150%; background-position: 40% 40%"><span class="sns09-views"><svg class="i" aria-hidden="true"><use href="#i-play-fill"/></svg>4,870</span></div>
+          <div class="sns09-tile art art-5" style="background-size: 140% 180%; background-position: 20% 100%"><span class="sns09-views"><svg class="i" aria-hidden="true"><use href="#i-play-fill"/></svg>2,105</span></div>
+        </div>
+        <div class="sns09-grid" id="SNS-09-g2" role="tabpanel" aria-label="タグ付け" aria-hidden="true">
+          <div class="sns09-tile art art-7" style="filter: hue-rotate(-30deg)"><svg class="i sns09-tr" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg></div>
+          <div class="sns09-tile art art-4" style="background-size: 170% 140%; background-position: 30% 70%"><svg class="i sns09-tr" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg></div>
+          <div class="sns09-tile art art-1" style="filter: hue-rotate(25deg) saturate(.85)"><svg class="i sns09-tr" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg></div>
+          <div class="sns09-tile art art-8" style="filter: saturate(.7) brightness(1.08)"><svg class="i sns09-tr" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg></div>
+          <div class="sns09-tile art art-6" style="background-size: 200% 140%; background-position: 70% 40%"><svg class="i sns09-tr" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg></div>
+          <div class="sns09-tile art art-2" style="filter: hue-rotate(160deg) saturate(.6)"><svg class="i sns09-tr" aria-hidden="true"><use href="#i-person-crop-circle-fill"/></svg></div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <ul class="obj-notes"><li>フォローで +1</li><li>フォロー中 → メニュー</li><li>タブで切り替え</li><li>ベルで通知オン</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-09');
+  if (!root) return;
+  const reduced = () => !!(window.ObjKit && window.ObjKit.reducedMotion);
+  const play = (el, kf, o) => (el && el.animate && !reduced() ? el.animate(kf, o) : null);
+  const SPRING = 'cubic-bezier(.34,1.56,.64,1)';
+
+  /* — follow / following + menu — */
+  const follow = root.querySelector('.sns09-follow');
+  const menu = root.querySelector('.sns09-menu');
+  const followers = root.querySelector('.sns09-followers');
+  const plus = followers.querySelector('.sns09-plus');
+  const num = followers.querySelector('b');
+  const f1 = follow.querySelector('.sns09-f1'), f2 = follow.querySelector('.sns09-f2');
+  let following = false;
+  const base = 124318;
+
+  function setFollowing(on) {
+    following = on;
+    follow.classList.toggle('is-on', on);
+    f1.setAttribute('aria-hidden', String(on));
+    f2.setAttribute('aria-hidden', String(!on));
+    follow.setAttribute('aria-label', on ? 'フォロー中。オプションを表示' : 'フォローする');
+    const n = base + (on ? 1 : 0);
+    followers.setAttribute('aria-label', `フォロワー ${n.toLocaleString('ja-JP')}人`);
+    if (on) {
+      play(follow, [{ transform: 'scale(.95)' }, { transform: 'scale(1.03)', offset: 0.45 }, { transform: 'scale(1)' }], { duration: 460, easing: 'ease-out' });
+      plus.textContent = '+1';
+      play(plus, [
+        { transform: 'translate(-50%, 8px) scale(.6)', opacity: 0 },
+        { transform: 'translate(-50%, -16px) scale(1)', opacity: 1, offset: 0.3, easing: 'ease-out' },
+        { transform: 'translate(-50%, -20px) scale(1)', opacity: 1, offset: 0.7 },
+        { transform: 'translate(-50%, -30px) scale(.9)', opacity: 0 },
+      ], { duration: 1100, easing: 'cubic-bezier(.2,.8,.3,1)' });
+      play(num, [{ transform: 'scale(1)' }, { transform: 'scale(1.16)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: 640, easing: 'cubic-bezier(.3,.7,.4,1)', delay: 120 });
+    } else {
+      play(num, [{ transform: 'scale(1)' }, { transform: 'scale(.92)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: 380, easing: 'ease-out' });
+    }
+  }
+  function openMenu(open, focusFirst) {
+    menu.classList.toggle('is-open', open);
+    follow.setAttribute('aria-expanded', String(open));
+    if (open && focusFirst) menu.querySelector('.sns09-mi').focus({ preventScroll: true });
+  }
+  follow.addEventListener('click', (e) => {
+    if (!following) { setFollowing(true); return; }
+    openMenu(!menu.classList.contains('is-open'), e.detail === 0);
+  });
+  menu.addEventListener('click', (e) => {
+    const mi = e.target.closest('.sns09-mi');
+    if (!mi) return;
+    const act = mi.dataset.act;
+    if (act === 'unfollow') {
+      openMenu(false);
+      setFollowing(false);
+      menu.querySelectorAll('[aria-checked]').forEach((m) => { m.setAttribute('aria-checked', 'false'); });
+      menu.querySelector('[data-act="fav"] use').setAttribute('href', '#i-star');
+      follow.focus({ preventScroll: true });
+      return;
+    }
+    const on = mi.getAttribute('aria-checked') !== 'true';
+    mi.setAttribute('aria-checked', String(on));
+    if (act === 'fav') mi.querySelector('use').setAttribute('href', on ? '#i-star-fill' : '#i-star');
+    play(mi.querySelector('.i'), [{ transform: 'scale(.6)' }, { transform: 'scale(1.25)', offset: 0.5 }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
+    setTimeout(() => { openMenu(false); follow.focus({ preventScroll: true }); }, reduced() ? 0 : 260);
+  });
+  menu.addEventListener('keydown', (e) => {
+    const items = [...menu.querySelectorAll('.sns09-mi')];
+    const i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); openMenu(false); follow.focus({ preventScroll: true }); }
+    else if (e.key === 'Tab') openMenu(false);
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (!menu.classList.contains('is-open')) return;
+    if (!root.contains(e.target) || (!menu.contains(e.target) && !follow.contains(e.target))) openMenu(false);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.classList.contains('is-open') && !menu.contains(document.activeElement)) openMenu(false); });
+
+  root.querySelector('.sns09-link').addEventListener('click', (e) => e.preventDefault());
+
+  /* — bell — */
+  const bell = root.querySelector('.sns09-bell');
+  bell.addEventListener('click', () => {
+    const on = bell.getAttribute('aria-pressed') !== 'true';
+    bell.setAttribute('aria-pressed', String(on));
+    if (on) play(bell.querySelector('.i'), [
+      { transform: 'rotate(0)' }, { transform: 'rotate(-18deg)', offset: 0.15 }, { transform: 'rotate(15deg)', offset: 0.35 },
+      { transform: 'rotate(-9deg)', offset: 0.55 }, { transform: 'rotate(5deg)', offset: 0.75 }, { transform: 'rotate(0)' },
+    ], { duration: 650, easing: 'ease-out' });
+  });
+
+  /* — tabs — */
+  const tabs = [...root.querySelectorAll('.sns09-tab')];
+  const grids = [...root.querySelectorAll('.sns09-grid')];
+  const ink = root.querySelector('.sns09-ink');
+  let cur = 0;
+  function select(i, focus) {
+    if (i === cur) return;
+    const dir = i > cur ? 1 : -1;
+    tabs.forEach((t, j) => { t.setAttribute('aria-selected', String(j === i)); t.tabIndex = j === i ? 0 : -1; });
+    grids[cur].style.setProperty('--dx', `${-dir * 14}px`);
+    grids[i].style.setProperty('--dx', `${dir * 14}px`);
+    grids[cur].setAttribute('aria-hidden', 'true');
+    void grids[i].offsetWidth;
+    grids[i].removeAttribute('aria-hidden');
+    ink.style.transform = `translateX(${i * 100}%)`;
+    cur = i;
+    if (focus) tabs[i].focus({ preventScroll: true });
+  }
+  tabs.forEach((t, i) => t.addEventListener('click', () => select(i)));
+  root.querySelector('.sns09-tabs').addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    select((cur + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length, true);
+  });
+})();
+</script>

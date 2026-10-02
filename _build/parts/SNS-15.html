@@ -1,0 +1,434 @@
+<!-- ═══════════ SNS-15 · Share Sheet ═══════════ -->
+<style>
+#SNS-15 .sns15-phone { -webkit-tap-highlight-color: transparent; }
+#SNS-15 .sns15-black { position: absolute; inset: 0; background: #000; }
+
+/* — Bespoke "bamboo grove" photo (media content) — */
+#SNS-15 .sns15-bamboo {
+  background:
+    radial-gradient(70% 42% at 58% -6%, rgba(255, 255, 228, .9), rgba(255, 255, 220, 0) 72%),
+    linear-gradient(104deg, transparent 0 32%, rgba(255, 255, 220, .22) 40%, transparent 49%),
+    linear-gradient(98deg, transparent 0 58%, rgba(255, 255, 220, .14) 63%, transparent 69%),
+    repeating-linear-gradient(90deg, transparent 0 9px, rgba(22, 70, 30, .5) 9px 15px, transparent 15px 31px),
+    repeating-linear-gradient(90deg, transparent 0 19px, rgba(128, 178, 86, .55) 19px 23px, transparent 23px 47px),
+    repeating-linear-gradient(90deg, transparent 0 4px, rgba(10, 40, 20, .62) 4px 13px, transparent 13px 61px),
+    linear-gradient(180deg, #e6f4cc 0%, #a2cb80 32%, #528d4b 68%, #1d4225 100%);
+}
+
+/* — Presenting page (scales back like an iOS page sheet) — */
+#SNS-15 .sns15-page {
+  position: absolute; inset: 0; overflow: hidden; border-radius: 45px;
+  background: var(--bg); color: var(--label);
+  transform-origin: 50% 0;
+  transition: transform var(--dur-4) cubic-bezier(.25, 1, .35, 1), filter var(--dur-4) ease;
+}
+#SNS-15 .sns15-page.is-drag, #SNS-15 .sns15-sheet.is-drag, #SNS-15 .sns15-scrim.is-drag { transition: none; }
+#SNS-15 .sns15-scroll { position: absolute; inset: 0; overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain; }
+#SNS-15 .sns15-scroll::-webkit-scrollbar { display: none; }
+#SNS-15 .sns15-hero { position: relative; height: 318px; }
+#SNS-15 .sns15-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .32) 0%, transparent 26%, transparent 70%, rgba(0, 0, 0, .18)); }
+#SNS-15 .sns15-topbtns { position: absolute; z-index: 2; top: 56px; left: 14px; right: 14px; display: flex; justify-content: space-between; }
+#SNS-15 .sns15-gbtn {
+  display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; padding: 0; cursor: pointer;
+  color: #fff; font-size: 19px;
+  background: rgba(255, 255, 255, .16); -webkit-backdrop-filter: blur(14px) saturate(180%); backdrop-filter: blur(14px) saturate(180%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .4), inset 0 1px 0 rgba(255, 255, 255, .45), 0 4px 14px rgba(0, 0, 0, .15);
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+#SNS-15 .sns15-gbtn:active { transform: scale(.9); transition-duration: 80ms; }
+#SNS-15 .sns15-art { padding: 20px 20px 120px; }
+#SNS-15 .sns15-kicker { margin: 0 0 6px; font: 600 var(--fs-caption1)/1 var(--font-text); letter-spacing: .04em; color: var(--green); }
+#SNS-15 .sns15-h { margin: 0; font: 700 var(--fs-title1)/1.2 var(--font-display); letter-spacing: 0; }
+#SNS-15 .sns15-by { display: flex; align-items: center; gap: 8px; margin: 12px 0 16px; font: 400 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; color: var(--label-2); }
+#SNS-15 .sns15-by .av { width: 26px; height: 26px; font-size: 11px; }
+#SNS-15 .sns15-by b { font-weight: 600; color: var(--label); }
+#SNS-15 .sns15-by .i { font-size: 13px; color: var(--blue); margin-left: -4px; }
+#SNS-15 .sns15-p { margin: 0 0 12px; font: 400 var(--fs-subhead)/1.65 var(--font-text); letter-spacing: 0; color: var(--label); }
+
+/* floating liquid-glass toolbar */
+#SNS-15 .sns15-bar {
+  position: absolute; z-index: 3; left: 50%; bottom: 36px; display: flex; align-items: center; gap: 2px; padding: 4px; transform: translateX(-50%);
+  border-radius: var(--r-full);
+  background: light-dark(rgba(255, 255, 255, .5), rgba(40, 40, 44, .5));
+  -webkit-backdrop-filter: blur(16px) saturate(190%); backdrop-filter: blur(16px) saturate(190%);
+  box-shadow: var(--glass-edge), 0 10px 30px light-dark(rgba(0, 0, 0, .14), rgba(0, 0, 0, .5)), 0 1px 3px rgba(0, 0, 0, .08);
+}
+#SNS-15 .sns15-bar::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(180deg, light-dark(rgba(255, 255, 255, .38), rgba(255, 255, 255, .1)), rgba(255, 255, 255, 0) 55%); }
+#SNS-15 .sns15-tb {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 44px; min-width: 44px; padding: 0 12px;
+  border: 0; border-radius: var(--r-full); background: none; cursor: pointer; color: var(--label);
+  font: 600 var(--fs-footnote)/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#SNS-15 .sns15-tb .i { font-size: 21px; }
+#SNS-15 .sns15-tb:active { transform: scale(.9); background: var(--fill-3); transition-duration: 80ms; }
+#SNS-15 .sns15-tb.is-on { color: var(--pink); }
+#SNS-15 .sns15-tb.is-share { color: var(--accent); }
+#SNS-15 .sns15-tb.is-share .i { font-size: 22px; margin-top: -3px; }
+
+/* — Scrim — */
+#SNS-15 .sns15-scrim { position: absolute; inset: 0; z-index: 4; background: #000; opacity: 0; pointer-events: none; transition: opacity var(--dur-4) ease; }
+#SNS-15 .sns15-scrim.is-on { pointer-events: auto; }
+
+/* — Sheet — */
+#SNS-15 .sns15-sheet {
+  --sns15-glass-a: light-dark(rgba(246, 246, 249, .6), rgba(38, 38, 42, .58));
+  --sns15-glass-b: light-dark(rgba(246, 246, 249, .84), rgba(30, 30, 34, .82));
+  --sns15-card: light-dark(rgba(255, 255, 255, .78), rgba(255, 255, 255, .075));
+  position: absolute; z-index: 5; left: 6px; right: 6px; bottom: 6px; top: 58px;
+  display: flex; flex-direction: column; border-radius: 39px; overflow: hidden;
+  background: linear-gradient(180deg, var(--sns15-glass-a) 0, var(--sns15-glass-b) 150px);
+  -webkit-backdrop-filter: blur(30px) saturate(190%); backdrop-filter: blur(30px) saturate(190%);
+  box-shadow: inset 0 0 0 .5px light-dark(rgba(255, 255, 255, .7), rgba(255, 255, 255, .16)), inset 0 1px 0 light-dark(rgba(255, 255, 255, .9), rgba(255, 255, 255, .2)), 0 -2px 30px rgba(0, 0, 0, .18);
+  transform: translateY(110%); visibility: hidden;
+  transition: top var(--dur-4) cubic-bezier(.25, 1.06, .35, 1), transform var(--dur-4) cubic-bezier(.25, 1.06, .35, 1), visibility 0s linear var(--dur-4);
+  touch-action: none;
+}
+#SNS-15 .sns15-sheet::before { content: ""; position: absolute; inset: 0 0 auto; height: 90px; pointer-events: none; background: linear-gradient(180deg, light-dark(rgba(255, 255, 255, .4), rgba(255, 255, 255, .05)), transparent); }
+#SNS-15 .sns15-sheet.is-open { visibility: visible; transition: top var(--dur-4) cubic-bezier(.25, 1.06, .35, 1), transform var(--dur-4) cubic-bezier(.25, 1.06, .35, 1), visibility 0s; }
+#SNS-15 .sns15-grab { position: relative; flex: none; height: 16px; cursor: grab; }
+#SNS-15 .sns15-grab::after { content: ""; position: absolute; left: 50%; top: 6px; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--label-3); }
+#SNS-15 .sns15-head { position: relative; flex: none; display: flex; align-items: flex-start; gap: 12px; padding: 6px 16px 14px 20px; cursor: grab; }
+#SNS-15 .sns15-thumb { width: 44px; height: 44px; border-radius: 10px; flex: none; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .1); }
+#SNS-15 .sns15-ht { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding-top: 2px; }
+#SNS-15 .sns15-ht b { font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#SNS-15 .sns15-ht span { font: 400 var(--fs-footnote)/1.2 var(--font-text); letter-spacing: -0.08px; color: var(--label-2); transition: opacity var(--dur-2) ease; }
+#SNS-15 .sns15-opt {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 2px; height: 24px; margin-top: 4px; padding: 0 8px 0 10px;
+  border: 0; border-radius: var(--r-full); cursor: pointer; background: var(--fill-3); color: var(--label);
+  font: 600 var(--fs-caption1)/1 var(--font-text); letter-spacing: 0;
+  transition: background var(--dur-1) ease, transform var(--dur-2) var(--ease-spring);
+}
+#SNS-15 .sns15-opt .i { font-size: 11px; color: var(--label-2); transition: transform var(--dur-3) var(--ease-spring); }
+#SNS-15 .sns15-opt[aria-expanded="true"] .i { transform: rotate(90deg); }
+#SNS-15 .sns15-opt:active { transform: scale(.94); background: var(--fill-2); }
+#SNS-15 .sns15-close {
+  display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 50%; padding: 0; cursor: pointer; flex: none;
+  background: var(--fill-3); color: var(--label-2); font-size: 13px;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#SNS-15 .sns15-close .i { stroke: currentColor; stroke-width: 1.2px; }
+#SNS-15 .sns15-close:active { transform: scale(.88); background: var(--fill-2); }
+
+#SNS-15 .sns15-fmt { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); height: 30px; margin: -4px 20px 12px; padding: 2px; border-radius: 9px; background: var(--segment-bg); position: relative; }
+#SNS-15 .sns15-fmt[hidden] { display: none; }
+#SNS-15 .sns15-fmt i { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 3); border-radius: 7px; background: var(--segment-thumb); box-shadow: 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04); transition: transform var(--dur-3) var(--ease-ios); }
+#SNS-15 .sns15-fmt button { position: relative; z-index: 1; border: 0; background: none; cursor: pointer; font: 500 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; color: var(--label); }
+#SNS-15 .sns15-fmt button[aria-checked="true"] { font-weight: 600; }
+
+#SNS-15 .sns15-body { flex: 1; min-height: 0; overflow: hidden; overscroll-behavior: contain; scrollbar-width: none; touch-action: none; }
+#SNS-15 .sns15-body::-webkit-scrollbar { display: none; }
+#SNS-15 .sns15-sheet.is-large .sns15-body { overflow-y: auto; touch-action: pan-y; }
+#SNS-15 .sns15-sep { height: .5px; margin: 0 20px; background: var(--separator); }
+#SNS-15 .sns15-row {
+  display: flex; gap: 2px; padding: 14px 12px 12px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x;
+}
+#SNS-15 .sns15-row::-webkit-scrollbar { display: none; }
+#SNS-15 .sns15-tgt {
+  flex: none; display: flex; flex-direction: column; align-items: center; gap: 7px; width: 74px; padding: 0; border: 0; background: none; cursor: pointer;
+  color: var(--label); font: 400 11px/1.2 var(--font-text); letter-spacing: 0; text-align: center;
+  -webkit-user-select: none; user-select: none;
+}
+#SNS-15 .sns15-tgt > span:last-child { max-width: 72px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#SNS-15 .sns15-tgt .sns15-ic { transition: transform var(--dur-2) var(--ease-spring), filter var(--dur-1) ease; }
+#SNS-15 .sns15-tgt:active .sns15-ic { transform: scale(.9); filter: brightness(.85); transition-duration: 80ms; }
+#SNS-15 .sns15-tgt:focus-visible { outline: none; }
+#SNS-15 .sns15-tgt:focus-visible .sns15-ic { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); }
+#SNS-15 .sns15-pav { position: relative; width: 60px; height: 60px; border-radius: 50%; }
+#SNS-15 .sns15-pav .av { width: 60px; height: 60px; font-size: 22px; }
+#SNS-15 .sns15-badge {
+  position: absolute; right: -3px; bottom: -3px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6.5px;
+  color: #fff; font-size: 13px; box-shadow: 0 0 0 2px light-dark(#F1F1F4, #2B2B2F);
+}
+#SNS-15 .sns15-badge.is-msg { background: linear-gradient(180deg, #5DF27A, #1EC23E); }
+#SNS-15 .sns15-badge.is-mail { background: linear-gradient(180deg, #3FA9FF, #0A6CFF); font-size: 12px; }
+#SNS-15 .sns15-app {
+  position: relative; display: grid; place-items: center; width: 60px; height: 60px; border-radius: 13.5px; color: #fff; font-size: 32px;
+  box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .08), inset 0 1px 0 rgba(255, 255, 255, .3), 0 2px 6px rgba(0, 0, 0, .08);
+}
+#SNS-15 .sns15-app.is-msg { background: linear-gradient(180deg, #67F27F 0%, #1DBF3B 100%); }
+#SNS-15 .sns15-app.is-mail { background: linear-gradient(180deg, #4AB2FF 0%, #0A64F5 100%); font-size: 30px; }
+#SNS-15 .sns15-app.is-note { background: linear-gradient(180deg, #FFE36B 0%, #FFB300 100%); font-size: 30px; }
+#SNS-15 .sns15-app.is-rem { background: linear-gradient(180deg, #FF9F6B 0%, #FF4F2E 100%); font-size: 30px; }
+#SNS-15 .sns15-app.is-more { background: var(--fill-3); color: var(--label-2); box-shadow: inset 0 0 0 .5px var(--separator); font-size: 30px; }
+#SNS-15 .sns15-glyph { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+#SNS-15 .sns15-acts { padding: 14px 16px 28px; display: flex; flex-direction: column; gap: 12px; }
+#SNS-15 .sns15-grp { border-radius: 13px; overflow: hidden; background: var(--sns15-card); box-shadow: inset 0 0 0 .5px light-dark(rgba(0, 0, 0, .04), rgba(255, 255, 255, .06)); }
+#SNS-15 .sns15-act {
+  position: relative; display: flex; align-items: center; justify-content: space-between; width: 100%; height: 48px; padding: 0 16px;
+  border: 0; background: none; cursor: pointer; color: var(--label); text-align: left;
+  font: 400 var(--fs-body)/1 var(--font-text); letter-spacing: 0;
+  transition: background var(--dur-1) ease;
+}
+#SNS-15 .sns15-act + .sns15-act::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--separator); }
+#SNS-15 .sns15-act:active, #SNS-15 .sns15-act:focus-visible { background: var(--fill-3); outline: none; transition-duration: 40ms; }
+#SNS-15 .sns15-act .i { font-size: 21px; color: var(--label); }
+#SNS-15 .sns15-edit { display: block; margin: 2px auto 0; padding: 8px 12px; border: 0; background: none; color: var(--accent); font: 400 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; cursor: pointer; }
+#SNS-15 .sns15-edit:active { opacity: .45; }
+
+/* — Toast — */
+#SNS-15 .sns15-toast {
+  position: absolute; z-index: 6; top: 58px; left: 50%; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px 0 14px;
+  border-radius: var(--r-full); white-space: nowrap; color: var(--label);
+  font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0;
+  background: light-dark(rgba(255, 255, 255, .62), rgba(44, 44, 48, .62));
+  -webkit-backdrop-filter: blur(20px) saturate(190%); backdrop-filter: blur(20px) saturate(190%);
+  box-shadow: var(--glass-edge), 0 10px 30px rgba(0, 0, 0, .18);
+  transform: translate(-50%, -80px) scale(.9); opacity: 0; pointer-events: none;
+  transition: transform var(--dur-3) var(--ease-ios), opacity var(--dur-2) ease;
+}
+#SNS-15 .sns15-toast.is-on { transform: translate(-50%, 0) scale(1); opacity: 1; transition: transform var(--dur-4) var(--ease-spring), opacity var(--dur-2) ease; }
+#SNS-15 .sns15-toast > .i, #SNS-15 .sns15-toast > svg { font-size: 19px; width: 19px; height: 19px; color: var(--accent); }
+
+@media (hover: hover) {
+  #SNS-15 .sns15-act:hover { background: var(--fill-4); }
+  #SNS-15 .sns15-close:hover { background: var(--fill-2); }
+  #SNS-15 .sns15-tb:hover { background: var(--fill-4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #SNS-15 .sns15-page, #SNS-15 .sns15-sheet, #SNS-15 .sns15-scrim, #SNS-15 .sns15-toast { transition-duration: 1ms !important; }
+}
+</style>
+<article class="obj" id="SNS-15" data-name="Share Sheet" data-ja="共有シート" data-vector="Glass" data-size="m" data-desc="人・アプリ・アクションが並ぶiOS風の共有シート。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="phone sns15-phone" data-status="light">
+      <div class="phone-screen">
+        <div class="sns15-black" aria-hidden="true"></div>
+
+        <div class="sns15-page">
+          <div class="sns15-scroll">
+            <div class="sns15-hero sns15-bamboo" role="img" aria-label="朝の嵐山の竹林の写真"></div>
+            <div class="sns15-art">
+              <p class="sns15-kicker">TRAVEL · 京都</p>
+              <h3 class="sns15-h">嵐山の竹林</h3>
+              <div class="sns15-by"><span class="av av-1" aria-hidden="true">H</span><b>haru.studio</b><svg class="i" aria-label="認証済み"><use href="#i-checkmark-seal-fill"/></svg><span>· 10月2日</span></div>
+              <p class="sns15-p">朝6時、観光客が訪れる前の竹林は、風が葉を揺らす音だけが響く静かな場所でした。</p>
+              <p class="sns15-p">霧が晴れて光の筋が差し込む数分間だけ、竹の緑がいちばん鮮やかに見えます。三脚は使わず、ISOを少し上げて手持ちで撮影しました。</p>
+              <p class="sns15-p">次は雪の日に、同じ場所を撮りに来たいと思います。</p>
+            </div>
+          </div>
+          <div class="sns15-topbtns">
+            <button class="sns15-gbtn" type="button" aria-label="戻る"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+            <button class="sns15-gbtn" type="button" aria-label="その他"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+          </div>
+          <div class="sns15-bar" role="toolbar" aria-label="投稿の操作">
+            <button class="sns15-tb sns15-like" type="button" aria-pressed="false" aria-label="いいね"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><span>1.2万</span></button>
+            <button class="sns15-tb" type="button" aria-label="コメント"><svg class="i" aria-hidden="true"><use href="#i-bubble-right"/></svg><span>248</span></button>
+            <button class="sns15-tb sns15-save" type="button" aria-pressed="false" aria-label="保存"><svg class="i" aria-hidden="true"><use href="#i-bookmark"/></svg></button>
+            <button class="sns15-tb is-share" type="button" aria-label="共有" aria-haspopup="dialog"><svg class="i" aria-hidden="true"><use href="#i-square-and-arrow-up"/></svg></button>
+          </div>
+        </div>
+
+        <div class="sns15-scrim" aria-hidden="true"></div>
+
+        <div class="sns15-sheet" role="dialog" aria-modal="true" aria-label="共有">
+          <div class="sns15-grab" aria-hidden="true"></div>
+          <div class="sns15-head">
+            <span class="sns15-thumb sns15-bamboo" aria-hidden="true"></span>
+            <div class="sns15-ht"><b>嵐山の竹林</b><span class="sns15-sub">haru.studio</span>
+              <button class="sns15-opt" type="button" aria-expanded="false">オプション<svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button></div>
+            <button class="sns15-close" type="button" aria-label="閉じる"><svg class="i" aria-hidden="true"><use href="#i-xmark"/></svg></button>
+          </div>
+          <div class="sns15-fmt" role="radiogroup" aria-label="送信形式" hidden>
+            <i aria-hidden="true"></i>
+            <button type="button" role="radio" aria-checked="true" data-sub="haru.studio">リンク</button>
+            <button type="button" role="radio" aria-checked="false" data-sub="画像 · JPEG">画像</button>
+            <button type="button" role="radio" aria-checked="false" data-sub="PDF · 2ページ">PDF</button>
+          </div>
+          <div class="sns15-sep"></div>
+          <div class="sns15-body">
+            <div class="sns15-row" role="list" aria-label="連絡先">
+              <button class="sns15-tgt" type="button" role="listitem" data-toast="美緒にメッセージで送信しました" data-icon="i-paperplane-fill"><span class="sns15-pav sns15-ic"><span class="av av-2" aria-hidden="true">M</span><span class="sns15-badge is-msg" aria-hidden="true"><svg class="i"><use href="#i-message-fill"/></svg></span></span><span>小林 美緒</span></button>
+              <button class="sns15-tgt" type="button" role="listitem" data-toast="海斗にメッセージで送信しました" data-icon="i-paperplane-fill"><span class="sns15-pav sns15-ic"><span class="av av-3" aria-hidden="true">K</span><span class="sns15-badge is-msg" aria-hidden="true"><svg class="i"><use href="#i-message-fill"/></svg></span></span><span>高橋 海斗</span></button>
+              <button class="sns15-tgt" type="button" role="listitem" data-toast="結菜にメールで送信しました" data-icon="i-envelope-fill"><span class="sns15-pav sns15-ic"><span class="av av-4" aria-hidden="true">Y</span><span class="sns15-badge is-mail" aria-hidden="true"><svg class="i"><use href="#i-envelope-fill"/></svg></span></span><span>山本 結菜</span></button>
+              <button class="sns15-tgt" type="button" role="listitem" data-toast="空にメッセージで送信しました" data-icon="i-paperplane-fill"><span class="sns15-pav sns15-ic"><span class="av av-5" aria-hidden="true">S</span><span class="sns15-badge is-msg" aria-hidden="true"><svg class="i"><use href="#i-message-fill"/></svg></span></span><span>中村 空</span></button>
+              <button class="sns15-tgt" type="button" role="listitem" data-toast="蓮にメールで送信しました" data-icon="i-envelope-fill"><span class="sns15-pav sns15-ic"><span class="av av-6" aria-hidden="true">R</span><span class="sns15-badge is-mail" aria-hidden="true"><svg class="i"><use href="#i-envelope-fill"/></svg></span></span><span>伊藤 蓮</span></button>
+            </div>
+            <div class="sns15-sep"></div>
+            <div class="sns15-row" role="list" aria-label="App">
+              <button class="sns15-tgt" type="button" role="listitem" data-toast="メッセージを作成しています" data-icon="i-message-fill"><span class="sns15-app is-msg sns15-ic" aria-hidden="true"><svg class="i"><use href="#i-message-fill"/></svg></span><span>メッセージ</span></button>
+              <button class="sns15-tgt" type="button" role="listitem" data-toast="メールの下書きを作成しました" data-icon="i-envelope-fill"><span class="sns15-app is-mail sns15-ic" aria-hidden="true"><svg class="i"><use href="#i-envelope-fill"/></svg></span><span>メール</span></button>
+              <button class="sns15-tgt" type="button" role="listitem" data-toast="メモに保存しました" data-icon="i-pencil"><span class="sns15-app is-note sns15-ic" aria-hidden="true"><svg class="i"><use href="#i-pencil"/></svg></span><span>メモ</span></button>
+              <button class="sns15-tgt" type="button" role="listitem" data-toast="リマインダーに追加しました" data-icon="i-checkmark-circle-fill"><span class="sns15-app is-rem sns15-ic" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><circle cx="5.5" cy="7" r="1.9"/><circle cx="5.5" cy="12" r="1.9"/><circle cx="5.5" cy="17" r="1.9"/><rect x="9.5" y="6.1" width="10.5" height="1.8" rx=".9"/><rect x="9.5" y="11.1" width="10.5" height="1.8" rx=".9"/><rect x="9.5" y="16.1" width="10.5" height="1.8" rx=".9"/></svg></span><span>リマインダー</span></button>
+              <button class="sns15-tgt" type="button" role="listitem" data-more="1"><span class="sns15-app is-more sns15-ic" aria-hidden="true"><svg class="i"><use href="#i-ellipsis"/></svg></span><span>その他</span></button>
+            </div>
+            <div class="sns15-acts">
+              <div class="sns15-grp">
+                <button class="sns15-act" type="button" data-toast="リンクをコピーしました" data-icon="i-doc-on-doc">コピー<svg class="i" aria-hidden="true"><use href="#i-doc-on-doc"/></svg></button>
+              </div>
+              <div class="sns15-grp">
+                <button class="sns15-act" type="button" data-toast="リーディングリストに追加しました" data-icon="i-bookmark-fill">リーディングリストに追加<svg class="i sns15-glyph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6.4" cy="14.2" r="3.7"/><circle cx="17.6" cy="14.2" r="3.7"/><path d="M10.1 13.6c1.2-.9 2.6-.9 3.8 0M2.8 13.4 4.5 7.9c.3-1 1-1.5 2-1.5M21.2 13.4l-1.7-5.5c-.3-1-1-1.5-2-1.5"/></svg></button>
+                <button class="sns15-act" type="button" data-toast="ブックマークを追加しました" data-icon="i-bookmark-fill">ブックマークを追加<svg class="i" aria-hidden="true"><use href="#i-bookmark"/></svg></button>
+                <button class="sns15-act" type="button" data-toast="お気に入りに追加しました" data-icon="i-star-fill">お気に入りに追加<svg class="i" aria-hidden="true"><use href="#i-star"/></svg></button>
+              </div>
+              <button class="sns15-edit" type="button">アクションを編集…</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sns15-toast" role="status" aria-live="polite"><svg class="i" aria-hidden="true"><use href="#i-doc-on-doc"/></svg><span></span></div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>共有ボタンでシート表示</li><li>グラバーを下にドラッグで閉じる</li><li>上にドラッグで全画面</li><li>Escで閉じる</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-15');
+  if (!root) return;
+  const $ = (s, el = root) => el.querySelector(s);
+  const $$ = (s, el = root) => Array.from(el.querySelectorAll(s));
+  const rm = () => !!(window.ObjKit && ObjKit.reducedMotion);
+
+  const phone = $('.phone'), screen = $('.phone-screen'), page = $('.sns15-page'), scrim = $('.sns15-scrim');
+  const sheet = $('.sns15-sheet'), body = $('.sns15-body'), shareBtn = $('.sns15-tb.is-share'), closeBtn = $('.sns15-close');
+  const toast = $('.sns15-toast'), toastTx = $('span', toast), toastUse = $('use', toast);
+
+  /* ---------- geometry: 3 detents (hidden / medium / large) ---------- */
+  const TOP = 58, INSET = 6;    // large-detent top edge; floating inset from the screen edges
+  const MEDIUM = 448;            // sheet height at the medium detent
+  let state = 'hidden', y = 0, lastFocus = null;
+  const sheetH = () => screen.clientHeight - TOP - INSET;                       // height at the large detent
+  const yFor = (s) => (s === 'large' ? 0 : s === 'medium' ? Math.max(0, sheetH() - MEDIUM) : Math.max(0, sheetH() - MEDIUM) + MEDIUM + 40);
+
+  /* y = distance of the sheet's top edge below the large detent.
+     Between large and medium the floating sheet resizes (its top edge moves);
+     below medium it keeps its height and slides away. */
+  function apply(yy, drag) {
+    y = yy;
+    const yMed = yFor('medium'), yHid = yFor('hidden');
+    const p = Math.min(1, Math.max(0, (yHid - yy) / (yHid - yMed)));            // 0 → medium
+    const q = yMed > 0 ? Math.min(1, Math.max(0, (yMed - yy) / yMed)) : 0;        // medium → large
+    [page, sheet, scrim].forEach((el) => el.classList.toggle('is-drag', !!drag));
+    sheet.style.top = (TOP + Math.min(yy, yMed)).toFixed(1) + 'px';
+    sheet.style.transform = yy > yMed ? `translateY(${(yy - yMed).toFixed(1)}px)` : 'none';
+    const sc = 1 - .04 * p - .03 * q;
+    page.style.transform = p > 0 ? `translateY(${(p * 6 + q * 6).toFixed(2)}px) scale(${sc.toFixed(4)})` : '';
+    page.style.filter = q > 0 ? `brightness(${1 - q * .08})` : '';
+    scrim.style.opacity = String(p * .28 + q * .12);
+  }
+
+  function go(s) {
+    const prev = state; state = s;
+    if (s !== 'hidden') { sheet.classList.add('is-open'); sheet.setAttribute('aria-hidden', 'false'); }
+    sheet.classList.toggle('is-large', s === 'large');
+    scrim.classList.toggle('is-on', s !== 'hidden');
+    if (s !== 'large') body.scrollTop = 0;
+    apply(yFor(s), false);
+    if (s === 'hidden') {
+      sheet.classList.remove('is-open'); sheet.setAttribute('aria-hidden', 'true');
+      if (prev !== 'hidden' && lastFocus && root.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+    }
+  }
+
+  function open() {
+    if (state !== 'hidden') return;
+    lastFocus = document.activeElement;
+    sheet.classList.add('is-open');
+    apply(yFor('hidden'), true);          // start just below the screen
+    sheet.getBoundingClientRect();
+    requestAnimationFrame(() => { go('medium'); setTimeout(() => closeBtn.focus({ preventScroll: true }), 60); });
+  }
+  shareBtn.addEventListener('click', open);
+  closeBtn.addEventListener('click', () => go('hidden'));
+  scrim.addEventListener('click', () => go('hidden'));
+  sheet.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); go('hidden'); } });
+
+  /* ---------- drag (grabber / header / body at the medium detent) ---------- */
+  let drag = null;
+  sheet.addEventListener('pointerdown', (e) => {
+    if (state === 'hidden' || e.button > 0) return;
+    const inHead = !!e.target.closest('.sns15-grab, .sns15-head');
+    const inBody = !!e.target.closest('.sns15-body');
+    if (!inHead && !(inBody && (state === 'medium' || body.scrollTop <= 0))) return;
+    drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, sy: y, t: performance.now(), lastY: e.clientY, v: 0, on: false, head: inHead };
+  });
+  sheet.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (!drag.on) {
+      if (Math.abs(dy) < 6 || Math.abs(dy) < Math.abs(dx)) { if (Math.abs(dx) > 8) drag = null; return; }
+      if (!drag.head && state === 'large' && dy < 0) { drag = null; return; }   // let the list scroll up
+      drag.on = true; sheet.setPointerCapture(e.pointerId);
+    }
+    const now = performance.now();
+    drag.v = (e.clientY - drag.lastY) / Math.max(1, now - drag.t); drag.t = now; drag.lastY = e.clientY;
+    let ny = drag.sy + dy;
+    if (ny < 0) ny = -Math.pow(-ny, .7);                                  // rubber band above the large detent
+    apply(ny, true);
+  });
+  const end = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null;
+    if (!d.on) return;
+    sheet.classList.add('sns15-suppress');
+    setTimeout(() => sheet.classList.remove('sns15-suppress'), 0);
+    const yMed = yFor('medium'), proj = y + d.v * 180;                    // project with velocity
+    let target;
+    if (d.v > 1.1 || proj > yMed + (yFor('hidden') - yMed) * .4) target = 'hidden';
+    else if (d.v < -0.9 || proj < yMed * .5) target = 'large';
+    else target = 'medium';
+    if (target === 'hidden' && state === 'large' && d.v < 1.1 && proj < yMed + 120) target = 'medium';
+    go(target);
+  };
+  sheet.addEventListener('pointerup', end);
+  sheet.addEventListener('pointercancel', end);
+  sheet.addEventListener('click', (e) => { if (sheet.classList.contains('sns15-suppress')) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+  /* wheel: scroll down at medium → expand; scroll up at top of large → collapse */
+  sheet.addEventListener('wheel', (e) => {
+    if (state === 'medium' && e.deltaY > 4) { e.preventDefault(); go('large'); }
+    else if (state === 'large' && body.scrollTop <= 0 && e.deltaY < -12) { e.preventDefault(); go('medium'); }
+  }, { passive: false });
+
+  /* ---------- options (send format) ---------- */
+  const optBtn = $('.sns15-opt'), fmt = $('.sns15-fmt'), sub = $('.sns15-sub');
+  optBtn.addEventListener('click', () => {
+    const on = optBtn.getAttribute('aria-expanded') !== 'true';
+    optBtn.setAttribute('aria-expanded', String(on));
+    fmt.hidden = !on;
+    if (on && !rm()) fmt.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.22,1,.36,1)' });
+  });
+  $$('button', fmt).forEach((b, i) => b.addEventListener('click', () => {
+    $$('button', fmt).forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+    $('i', fmt).style.transform = `translateX(${i * 100}%)`;
+    sub.textContent = b.dataset.sub;
+    if (!rm()) sub.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
+  }));
+
+  /* ---------- targets & actions → dismiss + toast ---------- */
+  let tt = 0;
+  function showToast(text, icon) {
+    toastTx.textContent = text; toastUse.setAttribute('href', '#' + icon);
+    toast.classList.add('is-on'); clearTimeout(tt);
+    tt = setTimeout(() => toast.classList.remove('is-on'), 2200);
+  }
+  root.addEventListener('click', (e) => {
+    const t = e.target.closest('.sns15-tgt, .sns15-act');
+    if (!t || !sheet.contains(t)) return;
+    if (t.dataset.more) { go('large'); return; }
+    go('hidden');
+    setTimeout(() => showToast(t.dataset.toast, t.dataset.icon), rm() ? 0 : 320);
+  });
+  $('.sns15-edit').addEventListener('click', () => go('large'));
+
+  /* ---------- page toolbar toggles ---------- */
+  const like = $('.sns15-like'), save = $('.sns15-save');
+  like.addEventListener('click', () => {
+    const on = like.getAttribute('aria-pressed') !== 'true';
+    like.setAttribute('aria-pressed', String(on)); like.classList.toggle('is-on', on);
+    $('use', like).setAttribute('href', on ? '#i-heart-fill' : '#i-heart');
+    if (on && !rm()) $('.i', like).animate([{ transform: 'scale(.6)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+  });
+  save.addEventListener('click', () => {
+    const on = save.getAttribute('aria-pressed') !== 'true';
+    save.setAttribute('aria-pressed', String(on));
+    $('use', save).setAttribute('href', on ? '#i-bookmark-fill' : '#i-bookmark');
+  });
+
+  sheet.setAttribute('aria-hidden', 'true');
+  window.addEventListener('resize', () => { if (state !== 'hidden') go(state); });
+  void phone;
+})();
+</script>

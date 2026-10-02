@@ -1,0 +1,403 @@
+<!-- ═══════════ LST-02 · Swipe Actions Row ═══════════ -->
+<style>
+#LST-02 .lst02 { width: min(100%, 360px); display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+#LST-02 .lst02-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* — Mailbox header — */
+#LST-02 .lst02-head { display: flex; align-items: baseline; gap: 8px; padding: 0 4px 10px 16px; }
+#LST-02 .lst02-h { font: 700 var(--fs-title3)/24px var(--font-display); letter-spacing: 0; }
+#LST-02 .lst02-n { font-size: var(--fs-footnote); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#LST-02 .lst02-reset {
+  margin-left: auto; align-self: center; height: 30px; padding: 0 12px; border: 0; border-radius: 15px; background: transparent;
+  color: var(--accent); font: 400 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; cursor: pointer;
+  transition: opacity .2s ease, color .2s ease;
+}
+#LST-02 .lst02-reset:active { opacity: .35; transition: none; }
+#LST-02 .lst02-reset:disabled { color: var(--label-3); cursor: default; }
+#LST-02 .lst02-reset:disabled:active { opacity: 1; }
+#LST-02 .lst02-reset:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 50%, transparent); }
+
+/* — Card / list — */
+#LST-02 .lst02-list { position: relative; margin: 0; padding: 0; list-style: none; background: var(--bg-grouped-2); border-radius: 12px; overflow: hidden; isolation: isolate; }
+#LST-02 .lst02-list.is-in { animation: lst02-in .45s var(--ease-out) both; }
+#LST-02 .lst02-item { position: relative; overflow: hidden; }
+#LST-02 .lst02-item.is-collapsing { transition: height .34s var(--ease-ios), opacity .34s ease; }
+
+/* — Row content (moves) — */
+#LST-02 .lst02-row {
+  position: relative; z-index: 2; display: flex; align-items: flex-start;
+  padding: 11px 16px 12px 0; background: var(--bg-grouped-2); color: var(--label);
+  touch-action: pan-y; cursor: default; outline: none; will-change: transform;
+  transition: background-color .4s ease;
+}
+#LST-02 .lst02-row::after { content: ""; position: absolute; left: 78px; right: 0; bottom: 0; height: 1px; background: var(--separator); transform: scaleY(.5); transform-origin: 0 100%; }
+#LST-02 .lst02-item:last-child .lst02-row::after { display: none; }
+#LST-02 .lst02-row.is-pressed { background-color: var(--gray4); transition: none; }
+#LST-02 .lst02-row:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+#LST-02 .lst02-gut { flex: none; width: 26px; height: 40px; display: grid; place-items: center; }
+#LST-02 .lst02-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); transform: scale(0); opacity: 0; transition: transform .38s var(--ease-spring), opacity .2s ease; }
+#LST-02 .lst02-item.is-unread .lst02-dot { transform: scale(1); opacity: 1; }
+#LST-02 .lst02-av { width: 40px; height: 40px; font-size: 16px; margin: 0 12px 0 0; }
+#LST-02 .lst02-main { flex: 1; min-width: 0; }
+#LST-02 .lst02-l1 { display: flex; align-items: center; gap: 6px; height: 22px; }
+#LST-02 .lst02-from { flex: 1; min-width: 0; font: 600 var(--fs-headline)/22px var(--font-text); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#LST-02 .lst02-flag { flex: none; width: 13px; height: 13px; color: var(--orange); transform: scale(0); opacity: 0; margin-right: -6px; transition: transform .38s var(--ease-spring), opacity .2s ease, margin .3s var(--ease-ios); }
+#LST-02 .lst02-item.is-flagged .lst02-flag { transform: scale(1); opacity: 1; margin-right: 0; }
+#LST-02 .lst02-time { flex: none; font-size: var(--fs-subhead); line-height: 20px; color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#LST-02 .lst02-chev { flex: none; width: 7px; height: 12px; color: var(--gray3); margin-left: 1px; }
+#LST-02 .lst02-subj { margin-top: 1px; font-size: var(--fs-subhead); line-height: 20px; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#LST-02 .lst02-prev {
+  font-size: var(--fs-subhead); line-height: 20px; color: var(--label-2); letter-spacing: 0;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+}
+
+/* — Actions (positioned per frame with transforms) — */
+#LST-02 .lst02-acts { position: absolute; inset: 0; z-index: 1; visibility: hidden; }
+#LST-02 .lst02-act {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 100%; margin: 0; padding: 0; border: 0; border-radius: 0;
+  background: var(--c); color: #fff; cursor: pointer; overflow: hidden; will-change: transform; -webkit-tap-highlight-color: transparent;
+}
+#LST-02 .lst02-act::after { content: ""; position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity .2s ease; pointer-events: none; }
+#LST-02 .lst02-act:active::after { opacity: .18; transition: none; }
+#LST-02 .lst02-act:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .85); }
+#LST-02 .lst02-ac {
+  position: absolute; top: 0; bottom: 0; left: 0; width: var(--slot, 72px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  font: 500 var(--fs-footnote)/1 var(--font-text); letter-spacing: 0; white-space: nowrap;
+}
+#LST-02 .lst02-acts--lead .lst02-ac { left: auto; right: 0; }
+#LST-02 .lst02-ac .i { width: 22px; height: 22px; }
+
+/* — Empty — */
+#LST-02 .lst02-empty { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 150px; color: var(--label-2); font-size: var(--fs-subhead); letter-spacing: 0; }
+#LST-02 .lst02-empty .i { width: 34px; height: 34px; color: var(--label-3); }
+#LST-02 .lst02-list:empty + .lst02-empty { display: flex; }
+#LST-02 .lst02-list:empty { display: none; }
+#LST-02 .lst02-emptywrap { background: var(--bg-grouped-2); border-radius: 12px; animation: lst02-in .4s var(--ease-out) both; }
+
+@keyframes lst02-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  #LST-02 .lst02-dot, #LST-02 .lst02-flag, #LST-02 .lst02-item.is-collapsing { transition: none; }
+  #LST-02 .lst02-list.is-in { animation: none; }
+}
+</style>
+<article class="obj" id="LST-02" data-name="Swipe Actions Row" data-ja="スワイプアクション行" data-vector="Clean" data-size="m" data-desc="行を横にスワイプして削除・フラグなどを出すメール風リスト。">
+  <div class="obj-stage" data-bg="grouped">
+    <svg class="lst02-defs" aria-hidden="true" focusable="false"><symbol id="LST-02-chev" viewBox="0 0 8 14"><path d="M1.6 1.6 6.6 7l-5 5.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol></svg>
+    <div class="lst02">
+      <div class="lst02-head">
+        <span class="lst02-h">受信</span>
+        <span class="lst02-n" aria-live="polite"></span>
+        <button class="lst02-reset" type="button" disabled>リセット</button>
+      </div>
+      <ul class="lst02-list" aria-label="受信メール"></ul>
+      <div class="lst02-empty lst02-emptywrap"><svg class="i" aria-hidden="true"><use href="#i-tray-fill"/></svg>メールはありません</div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>左へスワイプでその他・フラグ・ゴミ箱</li><li>右へスワイプで開封／未開封</li><li>左へ大きく引くと削除</li><li>←→ / Delete キー</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('LST-02');
+  if (!root) return;
+  const list = root.querySelector('.lst02-list');
+  const countEl = root.querySelector('.lst02-n');
+  const resetBtn = root.querySelector('.lst02-reset');
+  const reduce = () => window.ObjKit && ObjKit.reducedMotion;
+
+  const MAIL = [
+    { av: 1, ini: 'H', from: '佐藤 春', time: '9:41', subj: '週末の撮影データ、共有しました', prev: '金曜の朝焼けの写真を RAW で送ります。色味を少し整えたバージョンも同じフォルダに入れておきました。', unread: true },
+    { av: 2, ini: 'M', from: '小林 美緒', time: '8:15', subj: '来週の打ち合わせについて', prev: 'お疲れさまです。火曜の打ち合わせを 14 時からに変更できますか？資料は前日までに共有します。', unread: true },
+    { av: 3, ini: 'K', from: '高橋 海斗', time: '昨日', subj: 'PR #128 のレビューをお願いします', prev: 'ログイン画面のアニメーションを修正しました。スワイプ時の慣性が強すぎたので、減衰を少し調整しています。', flagged: true },
+    { av: 5, ini: 'S', from: '中村 空', time: '水曜日', subj: '京都旅行のしおり', prev: '宿は駅から徒歩 5 分のところを押さえました。2 日目は朝早めに出て、嵐山の竹林に行きましょう。', unread: true },
+    { av: 4, ini: 'Y', from: '山本 結菜', time: '2026/09/24', subj: 'Re: 誕生日プレゼント', prev: 'ありがとう！とても気に入りました。今度お礼にお茶でもごちそうさせてね。' },
+  ];
+  const ic = (id) => `<svg class="i" aria-hidden="true"><use href="#${id}"/></svg>`;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  let items = [];       // runtime state per row
+  let openIt = null;    // the row currently open
+  let dirty = false;
+
+  /* ---------- render ---------- */
+  function build() {
+    list.innerHTML = MAIL.map((m, i) => `<li class="lst02-item${m.unread ? ' is-unread' : ''}${m.flagged ? ' is-flagged' : ''}" data-i="${i}">
+        <div class="lst02-row" tabindex="0" role="button">
+          <span class="lst02-gut"><span class="lst02-dot"></span></span>
+          <span class="av av-${m.av} lst02-av" aria-hidden="true">${m.ini}</span>
+          <div class="lst02-main">
+            <div class="lst02-l1"><span class="lst02-from">${esc(m.from)}</span><svg class="i lst02-flag" aria-hidden="true"><use href="#i-flag-fill"/></svg><span class="lst02-time">${m.time}</span><svg class="lst02-chev" aria-hidden="true"><use href="#LST-02-chev"/></svg></div>
+            <div class="lst02-subj">${esc(m.subj)}</div>
+            <div class="lst02-prev">${esc(m.prev)}</div>
+          </div>
+        </div>
+        <div class="lst02-acts lst02-acts--trail">
+          <button class="lst02-act" type="button" data-act="more" tabindex="-1" style="--c: var(--gray)"><span class="lst02-ac">${ic('i-ellipsis-circle')}<span class="lst02-al">その他</span></span></button>
+          <button class="lst02-act" type="button" data-act="flag" tabindex="-1" style="--c: var(--orange)"><span class="lst02-ac">${ic('i-flag-fill')}<span class="lst02-al lst02-flagtxt">フラグ</span></span></button>
+          <button class="lst02-act" type="button" data-act="trash" tabindex="-1" style="--c: var(--red)"><span class="lst02-ac">${ic('i-trash-fill')}<span class="lst02-al">ゴミ箱</span></span></button>
+        </div>
+        <div class="lst02-acts lst02-acts--lead">
+          <button class="lst02-act" type="button" data-act="read" tabindex="-1" style="--c: var(--blue)"><span class="lst02-ac">${ic('i-envelope-fill')}<span class="lst02-al lst02-readtxt"></span></span></button>
+        </div>
+      </li>`.trim()).join('');
+    items = [...list.children].map((li) => ({
+      li, row: li.querySelector('.lst02-row'),
+      trail: li.querySelector('.lst02-acts--trail'), lead: li.querySelector('.lst02-acts--lead'),
+      tBtns: [...li.querySelectorAll('.lst02-acts--trail .lst02-act')], lBtn: li.querySelector('.lst02-acts--lead .lst02-act'),
+      tLbl: [...li.querySelectorAll('.lst02-acts--trail .lst02-al')], lLbl: li.querySelector('.lst02-acts--lead .lst02-al'),
+      x: 0, v: 0, tx: 0, e: 0, te: 0, el: 0, tel: 0, w: 0, raf: 0, drag: false, gone: false,
+    }));
+    items.forEach(sync);
+    updateCount();
+  }
+  function sync(it) {
+    const unread = it.li.classList.contains('is-unread');
+    const flagged = it.li.classList.contains('is-flagged');
+    it.li.querySelector('.lst02-readtxt').textContent = unread ? '開封' : '未開封';
+    it.li.querySelector('.lst02-flagtxt').textContent = flagged ? 'フラグ解除' : 'フラグ';
+    const m = MAIL[+it.li.dataset.i];
+    it.row.setAttribute('aria-label', `${unread ? '未読、' : ''}${flagged ? 'フラグ付き、' : ''}${m.from}、${m.subj}、${m.time}`);
+  }
+  function updateCount() {
+    const live = items.filter((it) => !it.gone);
+    const u = live.filter((it) => it.li.classList.contains('is-unread')).length;
+    countEl.textContent = live.length ? `未読 ${u}件` : '';
+    resetBtn.disabled = !dirty;
+  }
+
+  /* ---------- geometry (transforms only) ---------- */
+  const N = 3;
+  const dims = (it) => {
+    if (!it.w) it.w = it.row.offsetWidth;
+    const w = it.w;
+    const openT = Math.min(216, Math.round(w * 0.6));
+    const openL = Math.min(84, Math.round(w * 0.26));
+    return { w, openT, openL, fullT: Math.max(openT + 48, w * 0.72), fullL: Math.max(openL + 64, w * 0.45) };
+  };
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+  function paint(it) {
+    const { w, openT, openL } = dims(it);
+    const x = it.x;
+    it.row.style.transform = x ? `translate3d(${x}px,0,0)` : '';
+    const wt = Math.max(0, -x), wl = Math.max(0, x);
+    it.trail.style.visibility = wt > .5 ? 'visible' : 'hidden';
+    it.lead.style.visibility = wl > .5 ? 'visible' : 'hidden';
+    if (wt > .5) {
+      const slot = openT / N;
+      const lo = clamp01((wt / N - 44) / 18);
+      it.tBtns.forEach((b, i) => {
+        let pos = w - wt + (wt * i) / N;
+        let off = (wt / N - slot) / 2;
+        if (i === N - 1) { pos = lerp(pos, w - wt, it.e); off = lerp(off, 0, it.e); }
+        b.style.transform = `translate3d(${pos}px,0,0)`;
+        const c = b.firstElementChild; c.style.setProperty('--slot', slot + 'px'); c.style.transform = `translate3d(${off}px,0,0)`;
+        it.tLbl[i].style.opacity = i === N - 1 ? lerp(lo, 1, it.e) : lo;
+      });
+    }
+    if (wl > .5) {
+      it.lBtn.style.transform = `translate3d(${wl - w}px,0,0)`;
+      const c = it.lBtn.firstElementChild; c.style.setProperty('--slot', openL + 'px');
+      c.style.transform = `translate3d(${lerp(-(wl - openL) / 2, 0, it.el)}px,0,0)`;
+      it.lLbl.style.opacity = clamp01((wl - 50) / 20);
+    }
+  }
+
+  /* ---------- spring loop (velocity-aware, critically-ish damped) ---------- */
+  function run(it) {
+    if (it.raf) return;
+    let last = performance.now();
+    const step = (now) => {
+      let dt = Math.min(0.034, (now - last) / 1000); last = now;
+      const k = 420, c = 2 * Math.sqrt(k) * 0.86;
+      if (!it.drag) {
+        const sub = 4, h = dt / sub;
+        for (let s = 0; s < sub; s++) { it.v += (-k * (it.x - it.tx) - c * it.v) * h; it.x += it.v * h; }
+      }
+      const a = 1 - Math.exp(-dt * 24);
+      it.e += (it.te - it.e) * a; it.el += (it.tel - it.el) * a;
+      const settled = !it.drag && Math.abs(it.x - it.tx) < .25 && Math.abs(it.v) < 6 && Math.abs(it.e - it.te) < .004 && Math.abs(it.el - it.tel) < .004;
+      if (settled) { it.x = it.tx; it.v = 0; it.e = it.te; it.el = it.tel; }
+      paint(it);
+      if (settled) { it.raf = 0; rest(it); return; }
+      it.raf = requestAnimationFrame(step);
+    };
+    it.raf = requestAnimationFrame(step);
+  }
+  function snap(it, tx, v = 0) {
+    it.tx = tx; it.v = v; it.te = 0; it.tel = 0;
+    if (reduce()) { it.x = tx; it.e = 0; it.el = 0; paint(it); rest(it); return; }
+    run(it);
+  }
+  function rest(it) {
+    if (it.x === 0) { if (openIt === it) openIt = null; setActsFocusable(it, false); }
+    else if (!it.gone) { openIt = it; setActsFocusable(it, true); }
+    if (it.onRest) { const f = it.onRest; it.onRest = null; f(); }
+  }
+  function setActsFocusable(it, on) {
+    it.tBtns.forEach((b) => (b.tabIndex = on && it.x < 0 ? 0 : -1));
+    it.lBtn.tabIndex = on && it.x > 0 ? 0 : -1;
+  }
+  const close = (it) => { if (it && !it.gone && (it.x !== 0 || it.tx !== 0)) snap(it, 0); };
+
+  /* ---------- actions ---------- */
+  function remove(it) {
+    if (it.gone) return;
+    it.gone = true; dirty = true;
+    if (openIt === it) openIt = null;
+    const { w } = dims(it);
+    it.te = 1; it.tx = -w; it.v = Math.min(it.v, -900);
+    const collapse = () => {
+      const li = it.li;
+      li.style.height = li.offsetHeight + 'px';
+      li.offsetHeight; // commit start height
+      li.classList.add('is-collapsing');
+      li.style.height = '0px'; li.style.opacity = '0';
+      let done = false;
+      const fin = () => { if (done) return; done = true; if (it.raf) { cancelAnimationFrame(it.raf); it.raf = 0; } li.remove(); items = items.filter((x) => x !== it); updateCount(); };
+      li.addEventListener('transitionend', (e) => { if (e.target === li && e.propertyName === 'height') fin(); });
+      setTimeout(fin, reduce() ? 0 : 520);
+    };
+    if (reduce()) { it.x = -w; it.e = 1; paint(it); collapse(); return; }
+    it.onRest = null; run(it);
+    setTimeout(collapse, 210);
+    updateCount();
+  }
+  function toggleRead(it) {
+    it.li.classList.toggle('is-unread'); dirty = true; sync(it); updateCount();
+  }
+  function toggleFlag(it) {
+    it.li.classList.toggle('is-flagged'); dirty = true; sync(it); updateCount();
+  }
+  function act(it, kind) {
+    if (kind === 'trash') return remove(it);
+    if (kind === 'read') { snap(it, 0); setTimeout(() => toggleRead(it), 120); }
+    else if (kind === 'flag') { snap(it, 0); setTimeout(() => toggleFlag(it), 160); }
+    else snap(it, 0);
+    it.row.focus({ preventScroll: true });
+  }
+  list.addEventListener('click', (e) => {
+    const b = e.target.closest('.lst02-act');
+    if (!b) return;
+    const it = items.find((x) => x.li.contains(b));
+    if (it && !it.gone) act(it, b.dataset.act);
+  });
+
+  /* ---------- gesture ---------- */
+  let g = null; // { it, sx, sy, x0, mode, samples, pid, consumed }
+  const rubber = (over, dim) => (1 - 1 / ((over * 0.55) / dim + 1)) * dim;
+  list.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || e.target.closest('.lst02-act')) return;
+    const row = e.target.closest('.lst02-row');
+    const it = row && items.find((x) => x.row === row);
+    if (!it || it.gone) return;
+    const consumed = !!(openIt && openIt !== it);
+    if (consumed) close(openIt);
+    it.w = 0; dims(it);
+    g = { it, sx: e.clientX, sy: e.clientY, x0: it.x, mode: 'pending', samples: [{ t: e.timeStamp, x: e.clientX }], pid: e.pointerId, consumed, wasOpen: it.x !== 0 };
+    if (!consumed && it.x === 0) { g.pressT = setTimeout(() => { if (g && g.mode === 'pending') row.classList.add('is-pressed'); }, e.pointerType === 'touch' ? 80 : 0); }
+  });
+  list.addEventListener('pointermove', (e) => {
+    if (!g || e.pointerId !== g.pid) return;
+    const { it } = g;
+    const dx = e.clientX - g.sx, dy = e.clientY - g.sy;
+    if (g.mode === 'pending') {
+      if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy) * 1.15) {
+        g.mode = 'h';
+        clearTimeout(g.pressT); it.row.classList.remove('is-pressed');
+        try { it.row.setPointerCapture(e.pointerId); } catch (_) {}
+        g.x0 = it.x; g.sx = e.clientX; // absorb the slop so the row never jumps
+        it.drag = true; it.v = 0; run(it);
+      } else if (Math.abs(dy) > 8) { g.mode = 'v'; clearTimeout(g.pressT); it.row.classList.remove('is-pressed'); }
+    }
+    if (g.mode !== 'h') return;
+    e.preventDefault();
+    g.samples.push({ t: e.timeStamp, x: e.clientX });
+    if (g.samples.length > 6) g.samples.shift();
+    const { w, fullT, fullL } = dims(it);
+    let raw = g.x0 + (e.clientX - g.sx);
+    // rubber-band beyond the limits
+    const maxL = w * 0.78, maxT = w;
+    if (raw > maxL) raw = maxL + rubber(raw - maxL, w);
+    if (raw < -maxT) raw = -maxT - rubber(-maxT - raw, w);
+    it.x = raw;
+    it.te = -raw > fullT ? 1 : 0;
+    it.tel = raw > fullL ? 1 : 0;
+  });
+  const end = (e) => {
+    if (!g || e.pointerId !== g.pid) return;
+    const s = g; g = null;
+    const { it } = s;
+    clearTimeout(s.pressT);
+    if (s.mode === 'h') {
+      it.drag = false;
+      const pts = s.samples.filter((p) => e.timeStamp - p.t < 100);
+      const a = pts[0], b = pts[pts.length - 1];
+      const vx = a && b && b.t > a.t ? (b.x - a.x) / (b.t - a.t) : 0; // px/ms
+      const { openT, openL, fullT, fullL } = dims(it);
+      if (e.type !== 'pointercancel' && -it.x > fullT) { it.v = vx * 1000; remove(it); return; }
+      if (e.type !== 'pointercancel' && it.x > fullL) { snap(it, 0, vx * 1000); setTimeout(() => toggleRead(it), 140); return; }
+      const proj = it.x + vx * 160;
+      let tx = 0;
+      if (proj < -openT * 0.38) tx = -openT;
+      else if (proj > openL * 0.45) tx = openL;
+      if (s.x0 < 0 && tx > 0) tx = 0;  // from open-trailing a flick right closes first
+      if (s.x0 > 0 && tx < 0) tx = 0;
+      snap(it, tx, vx * 1000);
+      return;
+    }
+    if (s.mode === 'pending' && e.type === 'pointerup') {
+      // a tap
+      if (s.consumed) return;
+      if (s.wasOpen) { close(it); it.row.classList.remove('is-pressed'); return; }
+      openMail(it, true);
+      return;
+    }
+    it.row.classList.remove('is-pressed');
+  };
+  list.addEventListener('pointerup', end);
+  list.addEventListener('pointercancel', end);
+
+  function openMail(it, fromPointer) {
+    const row = it.row;
+    row.classList.add('is-pressed');
+    setTimeout(() => row.classList.remove('is-pressed'), fromPointer ? 90 : 140);
+    if (it.li.classList.contains('is-unread')) setTimeout(() => toggleRead(it), 160);
+  }
+
+  /* close an open row when tapping anywhere else */
+  document.addEventListener('pointerdown', (e) => {
+    if (openIt && !openIt.li.contains(e.target)) close(openIt);
+  }, true);
+
+  /* ---------- keyboard ---------- */
+  list.addEventListener('keydown', (e) => {
+    const row = e.target.closest('.lst02-row');
+    const it = row && items.find((x) => x.row === row);
+    if (!it || it.gone) return;
+    it.w = 0;
+    const { openT, openL } = dims(it);
+    if (e.key === 'ArrowLeft') { e.preventDefault(); if (openIt && openIt !== it) close(openIt); snap(it, it.x > 0 ? 0 : -openT); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); if (openIt && openIt !== it) close(openIt); snap(it, it.x < 0 ? 0 : openL); }
+    else if (e.key === 'Escape') { if (it.x !== 0) { e.preventDefault(); close(it); } }
+    else if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      const idx = items.indexOf(it);
+      const next = items[idx + 1] || items[idx - 1];
+      remove(it);
+      if (next) setTimeout(() => next.row.focus({ preventScroll: true }), 60);
+    } else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (it.x !== 0) close(it); else openMail(it, false); }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    items.forEach((it) => it.raf && cancelAnimationFrame(it.raf));
+    openIt = null; dirty = false;
+    build();
+    list.classList.remove('is-in'); list.offsetWidth; list.classList.add('is-in');
+  });
+  addEventListener('resize', () => items.forEach((it) => { it.w = 0; if (it.x) { it.x = it.tx = 0; it.v = 0; paint(it); rest(it); } }), { passive: true });
+
+  build();
+})();
+</script>

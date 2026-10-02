@@ -1,0 +1,252 @@
+<!-- ═══════════ BTN-04 · Destructive Button ═══════════ -->
+<style>
+#BTN-04 .btn04-stack { display: flex; flex-direction: column; align-items: stretch; gap: 24px; width: min(100%, 320px); }
+#BTN-04 .btn04-group { display: flex; flex-direction: column; gap: 8px; }
+#BTN-04 .btn04-cap {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 4px;
+  font: 500 var(--fs-caption1)/16px var(--font-text); color: var(--label-2); letter-spacing: 0;
+}
+#BTN-04 .btn04-meta { font: 500 10.5px/16px var(--font-mono); color: var(--label-3); letter-spacing: .02em; }
+#BTN-04 .btn04-row { display: flex; align-items: center; gap: 8px; }
+
+/* — Shared destructive base — */
+#BTN-04 .btn04 {
+  --ink: light-dark(color-mix(in oklab, var(--red) 90%, #000), var(--red));
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 50px; padding: 0 20px; border: 0; border-radius: 14px;
+  background: transparent; color: var(--ink);
+  font: 600 var(--fs-headline)/1 var(--font-text); letter-spacing: 0; white-space: nowrap;
+  cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none;
+  outline: 3px solid transparent; outline-offset: 5px;
+  transition:
+    transform var(--dur-3) var(--ease-spring), opacity var(--dur-2) ease,
+    background-color var(--dur-2) ease, color var(--dur-2) ease,
+    outline-color var(--dur-1) ease, outline-offset var(--dur-2) var(--ease-out);
+}
+#BTN-04 .btn04:focus-visible { outline-color: color-mix(in srgb, var(--red) 40%, transparent); outline-offset: 2px; }
+#BTN-04 .btn04 .i { font-size: 18px; }
+
+/* filled */
+#BTN-04 .btn04--fill { width: 100%; background-color: var(--red); color: #fff; box-shadow: inset 0 .5px 0 rgba(255, 255, 255, .3), 0 1px 2px color-mix(in srgb, var(--red) 25%, transparent); }
+@media (hover: hover) { #BTN-04 .btn04--fill:hover { background-color: color-mix(in srgb, var(--red) 92%, #fff); } }
+#BTN-04 .btn04--fill:active { background-color: light-dark(color-mix(in srgb, var(--red) 80%, #fff), color-mix(in srgb, var(--red) 80%, #000)); transform: scale(.97); transition: transform 110ms var(--ease-out), background-color 60ms ease; }
+/* tinted */
+#BTN-04 .btn04--tint { flex: 1; height: 44px; border-radius: 12px; font-size: var(--fs-callout); background-color: light-dark(color-mix(in srgb, var(--red) 12%, transparent), color-mix(in srgb, var(--red) 20%, transparent)); }
+#BTN-04 .btn04--tint .i { font-size: 17px; }
+@media (hover: hover) { #BTN-04 .btn04--tint:hover { background-color: light-dark(color-mix(in srgb, var(--red) 16%, transparent), color-mix(in srgb, var(--red) 25%, transparent)); } }
+#BTN-04 .btn04--tint:active { background-color: light-dark(color-mix(in srgb, var(--red) 22%, transparent), color-mix(in srgb, var(--red) 30%, transparent)); transform: scale(.97); transition: transform 110ms var(--ease-out), background-color 60ms ease; }
+/* plain */
+#BTN-04 .btn04--plain { height: 44px; padding: 0 14px; border-radius: 12px; font-weight: 400; font-size: var(--fs-body); }
+@media (hover: hover) { #BTN-04 .btn04--plain:hover { opacity: .75; } }
+#BTN-04 .btn04--plain:active { opacity: .35; transition: opacity 0s; }
+
+/* — Hold to confirm — */
+#BTN-04 .btn04--hold {
+  --p: 0;
+  display: block; width: 100%; padding: 0; overflow: hidden; isolation: isolate; touch-action: manipulation;
+  background-color: light-dark(color-mix(in srgb, var(--red) 12%, transparent), color-mix(in srgb, var(--red) 20%, transparent));
+  transition: transform var(--dur-3) var(--ease-spring), background-color var(--dur-2) ease, outline-color var(--dur-1) ease, outline-offset var(--dur-2) var(--ease-out);
+}
+@media (hover: hover) { #BTN-04 .btn04--hold:hover { background-color: light-dark(color-mix(in srgb, var(--red) 16%, transparent), color-mix(in srgb, var(--red) 25%, transparent)); } }
+#BTN-04 .btn04--hold.is-holding { transform: scale(.97); transition: transform 160ms var(--ease-out), background-color 60ms ease; }
+#BTN-04 .btn04--hold.is-done { animation: btn04-pop 560ms var(--ease-out); }
+/* faces: base (red on tint) and over (white on solid red, revealed left→right) */
+#BTN-04 .btn04-face { position: absolute; inset: 0; display: grid; place-items: center; }
+#BTN-04 .btn04-face--over {
+  color: #fff; z-index: 1;
+  background: linear-gradient(90deg, var(--red) calc(100% - 26px), color-mix(in srgb, var(--red) 78%, #fff));
+  clip-path: inset(0 calc((1 - var(--p)) * 100%) 0 0);
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+#BTN-04 .is-done .btn04-face--over { background: var(--red); }
+#BTN-04 .btn04-face--over.is-fading { opacity: 0; }
+#BTN-04 .btn04-lbl {
+  grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 7px;
+  transition: opacity 220ms var(--ease-out), transform var(--dur-3) var(--ease-ios), filter 220ms ease;
+}
+#BTN-04 .btn04-lbl[data-s="hold"], #BTN-04 .btn04-lbl[data-s="done"] { opacity: 0; transform: translateY(14px); filter: blur(2px); }
+#BTN-04 .btn04--hold.is-holding .btn04-lbl[data-s="idle"],
+#BTN-04 .btn04--hold.is-done .btn04-lbl[data-s="idle"],
+#BTN-04 .btn04--hold.is-done .btn04-lbl[data-s="hold"] { opacity: 0; transform: translateY(-14px); filter: blur(2px); }
+#BTN-04 .btn04--hold.is-holding .btn04-lbl[data-s="hold"],
+#BTN-04 .btn04--hold.is-done .btn04-lbl[data-s="done"] { opacity: 1; transform: none; filter: none; }
+#BTN-04 .btn04-lbl[data-s="hold"] { font-variant-numeric: tabular-nums; }
+#BTN-04 .btn04-check { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+#BTN-04 .btn04-check path { stroke-dasharray: 20; stroke-dashoffset: 20; }
+#BTN-04 .is-done .btn04-check path { stroke-dashoffset: 0; transition: stroke-dashoffset 380ms var(--ease-out) 120ms; }
+
+#BTN-04 .btn04-note { display: flex; align-items: center; gap: 6px; margin: 2px 4px 0; font: 400 var(--fs-footnote)/18px var(--font-text); color: var(--label-2); letter-spacing: 0; }
+#BTN-04 .btn04-note .i { font-size: 13px; color: var(--orange); flex: none; }
+
+@keyframes btn04-pop {
+  0% { transform: scale(.97); }
+  38% { transform: scale(1.035); }
+  70% { transform: scale(.995); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #BTN-04 .btn04, #BTN-04 .btn04:active, #BTN-04 .btn04--hold.is-holding { transform: none !important; }
+  #BTN-04 .btn04--hold.is-done { animation: none; }
+  #BTN-04 .btn04-lbl { transform: none !important; filter: none !important; transition: opacity var(--dur-1) linear; }
+  #BTN-04 .btn04-face--over { transition: opacity var(--dur-1) linear; }
+}
+</style>
+<article class="obj" id="BTN-04" data-name="Destructive Button" data-ja="削除ボタン" data-vector="Clean" data-size="m" data-desc="削除など取り消せない操作用。長押しで確定するタイプも。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="btn04-stack">
+      <div class="btn04-group">
+        <p class="btn04-cap"><span>長押しで確定</span><span class="btn04-meta">hold · 1.2s</span></p>
+        <button class="btn04 btn04--hold" type="button" aria-label="長押しで削除" aria-describedby="BTN-04-hint">
+          <span class="btn04-face" aria-hidden="true">
+            <span class="btn04-lbl" data-s="idle"><svg class="i"><use href="#i-trash-fill"/></svg>長押しで削除</span>
+            <span class="btn04-lbl" data-s="hold">そのまま押し続ける…</span>
+          </span>
+          <span class="btn04-face btn04-face--over" aria-hidden="true">
+            <span class="btn04-lbl" data-s="idle"><svg class="i"><use href="#i-trash-fill"/></svg>長押しで削除</span>
+            <span class="btn04-lbl" data-s="hold">そのまま押し続ける…</span>
+            <span class="btn04-lbl" data-s="done"><svg class="btn04-check" viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg>削除しました</span>
+          </span>
+        </button>
+        <p class="btn04-note" id="BTN-04-hint"><svg class="i" aria-hidden="true"><use href="#i-exclamationmark-triangle-fill"/></svg>この操作は取り消せません<span class="sr-only">。1.2秒押し続けると削除されます。</span></p>
+        <span class="sr-only" role="status" aria-live="polite"></span>
+      </div>
+
+      <div class="btn04-group">
+        <p class="btn04-cap"><span>塗り・ティント・テキスト</span><span class="btn04-meta">systemRed</span></p>
+        <button class="btn04 btn04--fill" type="button"><svg class="i" aria-hidden="true"><use href="#i-trash-fill"/></svg>アカウントを削除</button>
+        <div class="btn04-row">
+          <button class="btn04 btn04--tint" type="button"><svg class="i" aria-hidden="true"><use href="#i-xmark-circle-fill"/></svg>履歴を消去</button>
+          <button class="btn04 btn04--plain" type="button">削除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>押し続けると赤が満ちて確定</li><li>途中で離すと戻る</li><li>Space/Enter長押しも可</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('BTN-04');
+  root.addEventListener('touchstart', () => {}, { passive: true });
+
+  const btn = root.querySelector('.btn04--hold');
+  const over = btn.querySelector('.btn04-face--over');
+  const live = root.querySelector('[role="status"]');
+  const HOLD = 1200, RESET = 1800;
+  let state = 'idle';          // idle | holding | releasing | done
+  let p = 0, v = 0, raf = 0, t0 = 0, p0 = 0, resetT = 0, fadeT = 0;
+
+  const setP = (x) => { p = x; btn.style.setProperty('--p', x.toFixed(4)); };
+  // Mostly-linear progress with soft ends: honest timing, no abrupt start/stop.
+  const ease = (t) => 0.55 * t + 0.45 * (t * t * (3 - 2 * t));
+  const inv = (y) => { let lo = 0, hi = 1; for (let i = 0; i < 18; i++) { const m = (lo + hi) / 2; if (ease(m) < y) lo = m; else hi = m; } return (lo + hi) / 2; };
+  const stopLoop = () => { cancelAnimationFrame(raf); raf = 0; };
+
+  function start() {
+    if (state === 'done') return;
+    stopLoop();
+    clearTimeout(fadeT);
+    over.classList.remove('is-fading');
+    state = 'holding';
+    btn.classList.add('is-holding');
+    // resume from wherever a spring-back left the fill
+    p0 = p; t0 = performance.now() - inv(p0) * HOLD;
+    const tick = (now) => {
+      const t = Math.min(1, (now - t0) / HOLD);
+      setP(ease(t));
+      if (t >= 1) return complete();
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  }
+
+  function release() {
+    if (state !== 'holding') return;
+    stopLoop();
+    state = 'releasing';
+    btn.classList.remove('is-holding');
+    if (ObjKit.reducedMotion) {
+      over.classList.add('is-fading');
+      fadeT = setTimeout(() => { setP(0); over.classList.remove('is-fading'); state = 'idle'; }, 170);
+      return;
+    }
+    // critically-damped spring back to 0 (feels like the fill "lets go")
+    v = 0;
+    let last = performance.now();
+    const k = 340, c = 2 * Math.sqrt(k);
+    const tick = (now) => {
+      const dt = Math.min(0.032, (now - last) / 1000); last = now;
+      v += (-k * p - c * v) * dt;
+      const np = p + v * dt;
+      if (np <= 0.004) { setP(0); state = 'idle'; raf = 0; return; }
+      setP(np);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  }
+
+  function complete() {
+    stopLoop();
+    setP(1);
+    state = 'done';
+    btn.classList.remove('is-holding');
+    btn.classList.add('is-done');
+    btn.setAttribute('aria-label', '削除しました');
+    live.textContent = '削除しました';
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
+    resetT = setTimeout(reset, RESET);
+  }
+
+  function reset() {
+    over.classList.add('is-fading');
+    btn.classList.remove('is-done');
+    fadeT = setTimeout(() => {
+      setP(0);
+      over.classList.remove('is-fading');
+      btn.setAttribute('aria-label', '長押しで削除');
+      live.textContent = '';
+      state = 'idle';
+    }, 460);
+  }
+
+  // Pointer: press-and-hold; dragging well outside cancels like a native control.
+  let pid = null, rect = null;
+  btn.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || state === 'done') return;
+    pid = e.pointerId;
+    try { btn.setPointerCapture(pid); } catch (err) {}
+    rect = btn.getBoundingClientRect();
+    start();
+  });
+  btn.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== pid || state !== 'holding' || !rect) return;
+    const m = 48;
+    if (e.clientX < rect.left - m || e.clientX > rect.right + m || e.clientY < rect.top - m || e.clientY > rect.bottom + m) release();
+  });
+  const end = (e) => { if (e.pointerId !== pid) return; pid = null; release(); };
+  btn.addEventListener('pointerup', end);
+  btn.addEventListener('pointercancel', end);
+  btn.addEventListener('lostpointercapture', end);
+  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  // Keyboard: hold Space or Enter.
+  let key = null;
+  btn.addEventListener('keydown', (e) => {
+    if (e.key !== ' ' && e.key !== 'Enter') return;
+    e.preventDefault();
+    if (e.repeat || key) return;
+    key = e.key;
+    start();
+  });
+  btn.addEventListener('keyup', (e) => {
+    if (e.key !== key) return;
+    e.preventDefault();
+    key = null;
+    release();
+  });
+  btn.addEventListener('blur', () => { key = null; release(); });
+  // A plain click (no hold) never deletes.
+  btn.addEventListener('click', (e) => e.preventDefault());
+
+  ObjKit.onVisible(root, (vis) => { if (!vis && state === 'holding') release(); });
+})();
+</script>

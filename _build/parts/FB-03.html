@@ -1,0 +1,492 @@
+<!-- ═══════════ FB-03 · Bottom Sheet ═══════════ -->
+<style>
+#FB-03 {
+  --fb03-land: light-dark(#F4F1EA, #212429);
+  --fb03-bldg: light-dark(#E7E2D7, #2A2E34);
+  --fb03-park: light-dark(#CFE8C1, #1D3625);
+  --fb03-park-2: light-dark(#BEDFAE, #22432D);
+  --fb03-water: light-dark(#A8D3F6, #1B3958);
+  --fb03-road: light-dark(#FFFFFF, #3A3E46);
+  --fb03-casing: light-dark(#DDD7CA, #17191D);
+  --fb03-major: light-dark(#FFE59C, #66573A);
+  --fb03-major-c: light-dark(#E9C766, #3A3222);
+  --fb03-rail: light-dark(#A7A7AE, #5A5E67);
+  --fb03-lbl: light-dark(#6B6B72, #A3A3AA);
+  --fb03-lbl-halo: light-dark(rgba(244, 241, 234, .92), rgba(33, 36, 41, .92));
+  --fb03-park-lbl: light-dark(#3C7A35, #86C47C);
+  --fb03-dim: light-dark(rgba(0, 0, 0, .24), rgba(0, 0, 0, .55));
+  --fb03-card: light-dark(#FFFFFF, rgba(118, 118, 128, .2));
+  --fb03-grab: light-dark(rgba(60, 60, 67, .3), rgba(235, 235, 245, .3));
+}
+#FB-03 .fb03-screen { background: #000; overflow: clip; }
+
+/* ── Presenting view (map) ── */
+#FB-03 .fb03-pres { position: absolute; inset: 0; overflow: clip; border-radius: 45px; transform-origin: 50% 0; background: var(--fb03-land); }
+#FB-03 .fb03-map { position: absolute; inset: 0; width: 100%; height: 100%; }
+#FB-03 .fb03-map .m-land { fill: var(--fb03-land); }
+#FB-03 .fb03-map .m-bldg { fill: var(--fb03-bldg); }
+#FB-03 .fb03-map .m-park { fill: var(--fb03-park); }
+#FB-03 .fb03-map .m-park2 { fill: var(--fb03-park-2); }
+#FB-03 .fb03-map .m-water { fill: var(--fb03-water); }
+#FB-03 .fb03-map .m-river { fill: none; stroke: var(--fb03-water); stroke-width: 7; stroke-linecap: round; }
+#FB-03 .fb03-map .m-case { fill: none; stroke: var(--fb03-casing); stroke-width: 6.6; stroke-linecap: round; stroke-linejoin: round; }
+#FB-03 .fb03-map .m-road { fill: none; stroke: var(--fb03-road); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+#FB-03 .fb03-map .m-mcase { fill: none; stroke: var(--fb03-major-c); stroke-width: 10.5; stroke-linecap: round; }
+#FB-03 .fb03-map .m-major { fill: none; stroke: var(--fb03-major); stroke-width: 8.5; stroke-linecap: round; }
+#FB-03 .fb03-map .m-rail { fill: none; stroke: var(--fb03-rail); stroke-width: 4; }
+#FB-03 .fb03-map .m-rail2 { fill: none; stroke: var(--fb03-land); stroke-width: 1.8; stroke-dasharray: 7 7; }
+#FB-03 .fb03-map text { font: 600 10px/1 var(--font-text); letter-spacing: 0; fill: var(--fb03-lbl); stroke: var(--fb03-lbl-halo); stroke-width: 3px; paint-order: stroke; stroke-linejoin: round; }
+#FB-03 .fb03-map .t-park { fill: var(--fb03-park-lbl); font-size: 11px; }
+#FB-03 .fb03-map .t-road { font-size: 9px; font-weight: 500; }
+#FB-03 .fb03-map .t-jr { font: 800 6.5px/1 var(--font-text); fill: #fff; stroke: none; }
+#FB-03 .fb03-map .m-jr { fill: #1E9E3E; }
+
+/* map pins (map-space x via calc(50% + dx)) */
+#FB-03 .fb03-pin {
+  position: absolute; left: 50%; top: 0; z-index: 2; width: 0; height: 0; pointer-events: none;
+  transform: translate(var(--px), var(--py)); transition: transform 620ms cubic-bezier(.32, .72, 0, 1);
+}
+#FB-03 .fb03-pin-body { position: absolute; left: -17px; bottom: 0; width: 34px; height: 44px; transform-origin: 50% 100%; }
+#FB-03 .fb03-pin-body.is-drop { animation: fb03-drop 620ms cubic-bezier(.3, 1.4, .5, 1); }
+#FB-03 .fb03-pin-head {
+  position: absolute; left: 0; top: 0; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: linear-gradient(180deg, #FF6B5E, #F2362A); color: #fff; font-size: 17px;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .95), 0 3px 8px rgba(120, 10, 0, .35);
+}
+#FB-03 .fb03-pin-head::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 3px; height: 10px; margin-left: -1.5px; border-radius: 0 0 2px 2px; background: #E2342A; }
+#FB-03 .fb03-pin-shadow { position: absolute; left: -6px; top: -3px; width: 12px; height: 5px; border-radius: 50%; background: rgba(0, 0, 0, .28); filter: blur(1.5px); }
+#FB-03 .fb03-pin-lbl { position: absolute; left: 0; top: 6px; transform: translateX(-50%); white-space: nowrap; font: 700 11px/1 var(--font-text); letter-spacing: 0; color: light-dark(#D7261B, #FF7A70);
+  text-shadow: 0 0 2px var(--fb03-lbl-halo), 0 0 2px var(--fb03-lbl-halo), 0 0 3px var(--fb03-lbl-halo); transition: opacity 200ms ease; }
+#FB-03 .fb03-pin.is-moving .fb03-pin-lbl { opacity: 0; }
+@keyframes fb03-drop { 0% { transform: translateY(-22px) scale(1.06); } 55% { transform: translateY(0) scale(1.03, .94); } 100% { transform: none; } }
+
+#FB-03 .fb03-me { position: absolute; left: 50%; top: 0; width: 0; height: 0; transform: translate(65px, 252px); pointer-events: none; }
+#FB-03 .fb03-me > i { position: absolute; border-radius: 50%; }
+#FB-03 .fb03-beam { left: -44px; top: -44px; width: 88px; height: 88px;
+  background: conic-gradient(from -32deg, rgba(10, 132, 255, 0) 0deg, rgba(10, 132, 255, .55) 22deg 42deg, rgba(10, 132, 255, 0) 64deg);
+  -webkit-mask: radial-gradient(closest-side, #000 18%, transparent 100%); mask: radial-gradient(closest-side, #000 18%, transparent 100%);
+  transform: rotate(28deg); }
+#FB-03 .fb03-halo { left: -30px; top: -30px; width: 60px; height: 60px; background: rgba(10, 132, 255, .22); animation: fb03-pulse 2.6s var(--ease-out) infinite; }
+#FB-03 .fb03-dot { left: -9px; top: -9px; width: 18px; height: 18px; background: #0A84FF; box-shadow: 0 0 0 3px #fff, 0 2px 6px rgba(0, 0, 0, .35); }
+#FB-03.fb03-paused .fb03-halo { animation-play-state: paused; }
+@keyframes fb03-pulse { 0% { transform: scale(.3); opacity: .9; } 70% { opacity: .25; } 100% { transform: scale(1); opacity: 0; } }
+
+#FB-03 .fb03-ctrls { position: absolute; z-index: 3; top: calc(var(--phone-safe-top) + 6px); right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+#FB-03 .fb03-ctrlgrp { display: flex; flex-direction: column; width: 44px; border-radius: 12px; overflow: hidden;
+  background: var(--mat-regular); -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .12), inset 0 0 0 .5px light-dark(rgba(0, 0, 0, .05), rgba(255, 255, 255, .1)); }
+#FB-03 .fb03-ctrl { position: relative; height: 44px; border: 0; background: transparent; color: var(--label-2); display: grid; place-items: center; cursor: pointer; font-size: 20px;
+  -webkit-tap-highlight-color: transparent; transition: background var(--dur-1) ease, color var(--dur-1) ease; }
+#FB-03 .fb03-ctrl + .fb03-ctrl::before { content: ""; position: absolute; top: 0; left: 8px; right: 8px; height: .5px; background: var(--separator); }
+#FB-03 .fb03-ctrl:active { background: var(--fill-3); }
+#FB-03 .fb03-ctrl[aria-pressed="true"] { color: var(--accent); }
+#FB-03 .fb03-ctrl:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+#FB-03 .fb03-wx { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 9px 0 7px; border-radius: 9px;
+  background: var(--mat-regular); -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .1); font: 600 13px/1 var(--font-rounded); color: var(--label); font-variant-numeric: tabular-nums; }
+#FB-03 .fb03-wx .i { font-size: 15px; color: var(--orange); }
+#FB-03 .fb03-dimmer { position: absolute; inset: 0; z-index: 4; background: var(--fb03-dim); opacity: 0; pointer-events: none; }
+#FB-03 .fb03-dimmer.is-on { pointer-events: auto; cursor: pointer; }
+
+/* ── Sheet ── */
+#FB-03 .fb03-sheet {
+  position: absolute; z-index: 10; left: 0; right: 0; bottom: -120px; height: calc(100% - 64px + 120px);
+  display: flex; flex-direction: column; border-radius: 14px 14px 0 0;
+  background: var(--mat-thick); -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+  box-shadow: 0 -.5px 0 light-dark(rgba(0, 0, 0, .06), rgba(255, 255, 255, .1)), 0 -8px 28px light-dark(rgba(0, 0, 0, .1), rgba(0, 0, 0, .4));
+  transform: translate3d(0, 267px, 0); will-change: transform;
+  user-select: none; -webkit-user-select: none;
+}
+#FB-03 .fb03-head { position: relative; flex: none; padding: 17px 16px 12px; touch-action: none; cursor: grab; }
+#FB-03.is-dragging .fb03-head, #FB-03.is-dragging .fb03-body { cursor: grabbing; }
+#FB-03 .fb03-grabber { position: absolute; left: 50%; top: 0; width: 64px; height: 18px; margin-left: -32px; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 9px; -webkit-tap-highlight-color: transparent; }
+#FB-03 .fb03-grabber::before { content: ""; position: absolute; left: 14px; right: 14px; top: 5px; height: 5px; border-radius: 3px; background: var(--fb03-grab); transition: background var(--dur-1) ease, transform var(--dur-2) var(--ease-spring); }
+#FB-03 .fb03-grabber.is-pressed::before, #FB-03.is-dragging .fb03-grabber::before { background: light-dark(rgba(60, 60, 67, .45), rgba(235, 235, 245, .45)); transform: scaleX(1.12); }
+#FB-03 .fb03-grabber:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent); }
+#FB-03 .fb03-searchrow { display: flex; align-items: center; gap: 10px; }
+#FB-03 .fb03-search { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 8px 0 8px; border-radius: 10px; background: var(--fill-3); color: var(--label-2); cursor: text; }
+#FB-03 .fb03-search .i { font-size: 17px; flex: none; }
+#FB-03 .fb03-input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; padding: 0; background: transparent; color: var(--label); font: 400 var(--fs-body)/1 var(--font-text); letter-spacing: 0; user-select: text; -webkit-user-select: text; }
+#FB-03 .fb03-input::placeholder { color: var(--label-2); }
+#FB-03 .fb03-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+#FB-03 .fb03-me-av { width: 36px; height: 36px; font-size: 13px; transition: opacity var(--dur-2) ease, transform var(--dur-3) var(--ease-spring), margin var(--dur-3) var(--ease-ios); }
+#FB-03 .fb03-cancel { flex: none; max-width: 0; overflow: hidden; height: 36px; padding: 0; border: 0; background: none; color: var(--accent); font: 400 var(--fs-body)/1 var(--font-text); letter-spacing: 0; white-space: nowrap; cursor: pointer; opacity: 0;
+  margin-left: -10px; transition: max-width var(--dur-3) var(--ease-ios), opacity var(--dur-2) ease, margin var(--dur-3) var(--ease-ios); }
+#FB-03 .fb03-sheet[data-searching] .fb03-cancel { max-width: 90px; opacity: 1; margin-left: 0; }
+#FB-03 .fb03-sheet[data-searching] .fb03-me-av { opacity: 0; transform: scale(.4); margin-left: -46px; pointer-events: none; }
+#FB-03 .fb03-cancel.is-pressed, #FB-03 .fb03-cancel:active { opacity: .35; transition-duration: 0s; }
+
+#FB-03 .fb03-body { flex: 1; min-height: 0; overflow: clip; overscroll-behavior: contain; touch-action: none; padding: 4px 16px calc(120px + var(--phone-safe-bottom) + 16px); scrollbar-width: none; }
+#FB-03 .fb03-body::-webkit-scrollbar { display: none; }
+#FB-03 .fb03-sheet[data-detent="large"] .fb03-body { overflow-y: auto; touch-action: pan-y; }
+#FB-03 .fb03-sechead { display: flex; align-items: baseline; justify-content: space-between; margin: 12px 4px 8px; }
+#FB-03 .fb03-sechead h5 { margin: 0; font: 700 var(--fs-title3)/1.2 var(--font-display); letter-spacing: 0; color: var(--label); }
+#FB-03 .fb03-more { padding: 4px 0; border: 0; background: none; color: var(--accent); font: 400 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; cursor: pointer; }
+#FB-03 .fb03-more.is-pressed, #FB-03 .fb03-more:active { opacity: .35; }
+#FB-03 .fb03-card { border-radius: 12px; background: var(--fb03-card); overflow: hidden; }
+#FB-03 .fb03-favs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 14px 4px 12px; }
+#FB-03 .fb03-fav { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--label); -webkit-tap-highlight-color: transparent; min-width: 0; }
+#FB-03 .fb03-fav-ic { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; font-size: 25px; color: var(--c);
+  background: color-mix(in srgb, var(--c) 16%, transparent); transition: transform var(--dur-2) var(--ease-spring), filter var(--dur-1) ease; }
+#FB-03 .fb03-fav.is-pressed .fb03-fav-ic, #FB-03 .fb03-fav:active .fb03-fav-ic { transform: scale(.92); filter: brightness(.92); transition-duration: 90ms; }
+#FB-03 .fb03-fav b { font: 600 13px/1.1 var(--font-text); letter-spacing: 0; }
+#FB-03 .fb03-fav small { margin-top: -3px; font: 400 12px/1.1 var(--font-text); letter-spacing: 0; color: var(--label-2); font-variant-numeric: tabular-nums; }
+#FB-03 .fb03-list { margin: 0; padding: 0; list-style: none; }
+#FB-03 .fb03-row { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 58px; padding: 8px 16px 8px 12px; border: 0; background: transparent; text-align: left; cursor: pointer; color: var(--label); -webkit-tap-highlight-color: transparent; transition: background 220ms ease; }
+#FB-03 .fb03-list li:not([hidden]) ~ li:not([hidden]) .fb03-row::before { content: ""; position: absolute; top: 0; left: 56px; right: 0; height: .5px; background: var(--separator); }
+#FB-03 .fb03-row.is-pressed, #FB-03 .fb03-row:active { background: var(--fill-3); transition-duration: 0s; }
+#FB-03 .fb03-row:focus-visible, #FB-03 .fb03-fav:focus-visible, #FB-03 .fb03-more:focus-visible, #FB-03 .fb03-cancel:focus-visible { outline: none; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent); border-radius: 10px; }
+#FB-03 .fb03-row-ic { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 50%; background: var(--c); color: #fff; font-size: 16px; }
+#FB-03 .fb03-row-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#FB-03 .fb03-row-t b { font: 500 var(--fs-callout)/1.25 var(--font-text); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-03 .fb03-row-t span { font: 400 var(--fs-footnote)/1.25 var(--font-text); letter-spacing: 0; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#FB-03 .fb03-row[hidden], #FB-03 .fb03-list li[hidden] { display: none; }
+#FB-03 .fb03-empty { padding: 18px 16px; text-align: center; font-size: var(--fs-subhead); color: var(--label-2); letter-spacing: 0; }
+#FB-03 .fb03-foot { display: flex; justify-content: center; gap: 14px; margin: 22px 0 0; font-size: var(--fs-caption1); color: var(--label-3); letter-spacing: 0; }
+
+@media (hover: hover) {
+  #FB-03 .fb03-row:hover { background: var(--fill-4); }
+  #FB-03 .fb03-ctrl:hover { color: var(--label); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #FB-03 .fb03-halo { animation: none; opacity: .5; transform: scale(.6); }
+  #FB-03 .fb03-pin, #FB-03 .fb03-pin-body.is-drop { transition: none; animation: none; }
+}
+</style>
+<article class="obj" id="FB-03" data-name="Bottom Sheet" data-ja="ボトムシート" data-vector="Clean" data-size="m" data-desc="つまみ付きのハーフモーダル。ドラッグで高さを切り替え。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="phone" style="--phone-h: 680px">
+      <div class="phone-screen fb03-screen">
+        <div class="fb03-pres">
+          <svg class="fb03-map" viewBox="0 0 322 662" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <pattern id="FB-03-blk" width="27" height="23" patternUnits="userSpaceOnUse" patternTransform="rotate(-6)">
+                <rect class="m-bldg" x="2" y="2" width="10.5" height="8" rx="1.6"/><rect class="m-bldg" x="14.5" y="2" width="10.5" height="8" rx="1.6"/><rect class="m-bldg" x="2" y="12.5" width="23" height="8.5" rx="1.6"/>
+              </pattern>
+            </defs>
+            <rect class="m-land" width="322" height="662"/>
+            <rect width="322" height="662" fill="url(#FB-03-blk)"/>
+            <path class="m-park" d="M-10 66C60 56 140 58 190 72C202 122 198 196 188 262C150 274 106 280 58 282C30 284 4 288-10 290Z"/>
+            <path class="m-park2" d="M14 92C70 82 134 86 172 98C178 140 172 182 152 204C110 212 58 208 20 198C8 160 8 120 14 92Z"/>
+            <ellipse class="m-water" cx="138" cy="244" rx="24" ry="10"/>
+            <path class="m-river" d="M-10 606C46 590 92 606 118 640S150 680 160 700"/>
+            <path class="m-case" d="M-6 372L192 352M-6 446L190 424M-6 524L188 504M44 290L52 700M112 284L122 700M150 504L156 700M214 182L262 176M224 400L330 386M222 476L330 462M290-10L296 700M262 62L330 54M262 122L330 116M262 232L330 238M196 610L330 600M20 18L190 30M120 20L118 60"/>
+            <path class="m-road" d="M-6 372L192 352M-6 446L190 424M-6 524L188 504M44 290L52 700M112 284L122 700M150 504L156 700M214 182L262 176M224 400L330 386M222 476L330 462M290-10L296 700M262 62L330 54M262 122L330 116M262 232L330 238M196 610L330 600M20 18L190 30M120 20L118 60"/>
+            <path class="m-mcase" d="M262-10C258 140 262 300 256 420S250 600 252 700M196 318L340 410M-10 330C60 320 140 316 196 318M130 700C200 610 280 566 340 548"/>
+            <path class="m-major" d="M262-10C258 140 262 300 256 420S250 600 252 700M196 318L340 410M-10 330C60 320 140 316 196 318M130 700C200 610 280 566 340 548"/>
+            <path class="m-rail" d="M212-10C206 120 202 230 198 330S188 560 184 700"/>
+            <path class="m-rail2" d="M212-10C206 120 202 230 198 330S188 560 184 700"/>
+            <rect class="m-jr" x="193" y="282" width="14" height="14" rx="4"/>
+            <text class="t-jr" x="200" y="291.6" text-anchor="middle" stroke="none">JR</text>
+            <text x="188" y="293" text-anchor="end">原宿</text>
+            <text class="t-park" x="22" y="246">代々木公園</text>
+            <text class="t-road" x="0" y="0" text-anchor="middle" transform="translate(286 368) rotate(32.6)">表参道</text>
+            <text class="t-road" x="0" y="0" text-anchor="middle" transform="translate(253 520) rotate(-88)">明治通り</text>
+            <text class="t-road" x="0" y="0" text-anchor="middle" transform="translate(70 324) rotate(-3)">井ノ頭通り</text>
+          </svg>
+          <div class="fb03-me" aria-hidden="true"><i class="fb03-beam"></i><i class="fb03-halo"></i><i class="fb03-dot"></i></div>
+          <div class="fb03-pin" style="--px: -65px; --py: 150px" aria-hidden="true">
+            <span class="fb03-pin-shadow"></span>
+            <span class="fb03-pin-body"><span class="fb03-pin-head"><svg class="i" aria-hidden="true"><use href="#i-star-fill"/></svg></span></span>
+            <span class="fb03-pin-lbl">明治神宮</span>
+          </div>
+          <div class="fb03-ctrls">
+            <div class="fb03-ctrlgrp">
+              <button class="fb03-ctrl" type="button" aria-label="地図の種類" aria-pressed="false" data-ctrl="map">
+                <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 6.5 8 4.6v13.1l-4.1 1.7a.6.6 0 0 1-.8-.5V7.1a.6.6 0 0 1 .2-.6Zm6.1-1.9 5.2 2v13l-5.2-2v-13Zm6.6 2 4.1-1.7a.6.6 0 0 1 .8.6v12.2a.6.6 0 0 1-.4.6L16 19.6V6.6Z"/></svg>
+              </button>
+              <button class="fb03-ctrl" type="button" aria-label="現在地" aria-pressed="true" data-ctrl="loc"><svg class="i" aria-hidden="true"><use href="#i-location-fill"/></svg></button>
+            </div>
+            <span class="fb03-wx"><svg class="i" aria-hidden="true"><use href="#i-sun-max-fill"/></svg>24°</span>
+          </div>
+          <div class="fb03-dimmer" aria-hidden="true"></div>
+        </div>
+
+        <section class="fb03-sheet" data-detent="medium" aria-label="マップ検索">
+          <div class="fb03-head">
+            <button class="fb03-grabber" type="button" aria-label="シートの高さ: 中（タップで切り替え）"></button>
+            <div class="fb03-searchrow">
+              <label class="fb03-search">
+                <svg class="i" aria-hidden="true"><use href="#i-magnifyingglass"/></svg>
+                <input class="fb03-input" type="search" placeholder="場所を検索" aria-label="場所を検索" autocomplete="off" enterkeyhint="search">
+                <svg class="i" aria-hidden="true"><use href="#i-mic-fill"/></svg>
+              </label>
+              <span class="av av-8 fb03-me-av" aria-hidden="true">Me</span>
+              <button class="fb03-cancel" type="button" tabindex="-1">キャンセル</button>
+            </div>
+          </div>
+          <div class="fb03-body">
+            <div class="fb03-sechead"><h5>よく使う項目</h5><button class="fb03-more" type="button">すべて表示</button></div>
+            <div class="fb03-card fb03-favs">
+              <button class="fb03-fav" type="button" style="--c: var(--blue)"><span class="fb03-fav-ic"><svg class="i" aria-hidden="true"><use href="#i-house-fill"/></svg></span><b>自宅</b><small>12分</small></button>
+              <button class="fb03-fav" type="button" style="--c: var(--brown)"><span class="fb03-fav-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 7V5.9c0-.9.7-1.6 1.6-1.6h2.4c.9 0 1.6.7 1.6 1.6V7" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="2.8" y="7.4" width="18.4" height="12.4" rx="2.8"/><path d="M2.8 12.6h18.4" stroke="#fff" stroke-opacity=".35" stroke-width="1.2"/></svg></span><b>職場</b><small>25分</small></button>
+              <button class="fb03-fav" type="button" style="--c: var(--orange)"><span class="fb03-fav-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 8.6h12.4v4.6a5.6 5.6 0 0 1-5.6 5.6H9.8a5.6 5.6 0 0 1-5.6-5.6V8.6Z"/><path d="M16.4 10.4h1.4a2.6 2.6 0 0 1 0 5.2h-1.9" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="19.8" width="14.8" height="1.8" rx=".9"/><path d="M8.4 2.8c-.7.9.7 1.5 0 2.6m3.4-2.6c-.7.9.7 1.5 0 2.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span><b>カフェ</b><small>近く</small></button>
+              <button class="fb03-fav" type="button" style="--c: var(--gray)"><span class="fb03-fav-ic"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span><b>追加</b><small>&nbsp;</small></button>
+            </div>
+            <div class="fb03-sechead"><h5>最近の検索</h5><button class="fb03-more" type="button">すべて表示</button></div>
+            <div class="fb03-card">
+              <ul class="fb03-list">
+                <li><button class="fb03-row" type="button" data-x="96" data-y="150" data-name="明治神宮" style="--c: var(--red)"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-star-fill"/></svg></span><span class="fb03-row-t"><b>明治神宮</b><span>渋谷区代々木神園町1-1</span></span></button></li>
+                <li><button class="fb03-row" type="button" data-x="174" data-y="270" data-name="原宿駅" style="--c: #1E9E3E"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-mappin"/></svg></span><span class="fb03-row-t"><b>原宿駅</b><span>JR山手線 · 渋谷区神宮前1丁目</span></span></button></li>
+                <li><button class="fb03-row" type="button" data-x="238" data-y="166" data-name="竹下通り" style="--c: var(--pink)"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-cart-fill"/></svg></span><span class="fb03-row-t"><b>竹下通り</b><span>ショッピング · 渋谷区神宮前1丁目</span></span></button></li>
+                <li><button class="fb03-row" type="button" data-x="140" data-y="300" data-name="ブルーボトル" style="--c: var(--orange)"><span class="fb03-row-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 8.6h12.4v4.6a5.6 5.6 0 0 1-5.6 5.6H9.8a5.6 5.6 0 0 1-5.6-5.6V8.6Z"/><path d="M16.4 10.4h1.4a2.6 2.6 0 0 1 0 5.2h-1.9" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="19.8" width="14.8" height="1.8" rx=".9"/></svg></span><span class="fb03-row-t"><b>ブルーボトルコーヒー 原宿</b><span>カフェ · 徒歩 6 分</span></span></button></li>
+                <li><button class="fb03-row" type="button" data-x="276" data-y="294" data-name="表参道ヒルズ" style="--c: var(--yellow)"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-bookmark-fill"/></svg></span><span class="fb03-row-t"><b>表参道ヒルズ</b><span>ガイド「週末の散歩」 · 神宮前4-12-10</span></span></button></li>
+                <li><button class="fb03-row" type="button" data-x="56" data-y="232" data-name="代々木公園" style="--c: var(--green)"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-location-fill"/></svg></span><span class="fb03-row-t"><b>代々木公園</b><span>公園 · 渋谷区代々木神園町2-1</span></span></button></li>
+                <li><button class="fb03-row" type="button" data-x="232" data-y="318" data-name="キャットストリート" style="--c: var(--gray)"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-clock-fill"/></svg></span><span class="fb03-row-t"><b>キャットストリート</b><span>最近の検索 · 昨日</span></span></button></li>
+              </ul>
+              <p class="fb03-empty" hidden>一致する場所がありません</p>
+            </div>
+            <p class="fb03-foot"><span>マップについて報告</span><span>·</span><span>利用規約</span></p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>つまみ・ヘッダーをドラッグ</li><li>素早く払うと次の段へ</li><li>つまみタップで高さを切替</li><li>最近の検索でピン移動</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('FB-03');
+  const phone = root.querySelector('.phone');
+  const screen = root.querySelector('.fb03-screen');
+  const pres = root.querySelector('.fb03-pres');
+  const dimmer = root.querySelector('.fb03-dimmer');
+  const sheet = root.querySelector('.fb03-sheet');
+  const head = root.querySelector('.fb03-head');
+  const body = root.querySelector('.fb03-body');
+  const grab = root.querySelector('.fb03-grabber');
+  const input = root.querySelector('.fb03-input');
+  const cancelBtn = root.querySelector('.fb03-cancel');
+  const pin = root.querySelector('.fb03-pin');
+  const pinBody = root.querySelector('.fb03-pin-body');
+  const pinLbl = root.querySelector('.fb03-pin-lbl');
+  const rows = [...root.querySelectorAll('.fb03-row')];
+  const empty = root.querySelector('.fb03-empty');
+  const rm = () => window.ObjKit && ObjKit.reducedMotion;
+
+  const OVER = 120, TOP = 64, SAFE_B = 28, MAP_W = 322;
+  const ORDER = ['small', 'medium', 'large'];
+  const LABEL = { small: '小', medium: '中', large: '大' };
+  const det = { small: 104, medium: 331, large: 598 };
+  let H = 662, h = det.medium, detent = 'medium', raf = 0, lightBar = false, searching = false;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+  function measure() {
+    const nh = screen.clientHeight;
+    if (!nh) return false;
+    H = nh;
+    det.large = H - TOP;
+    det.medium = Math.round(H * 0.5);
+    det.small = Math.round(head.offsetHeight + SAFE_B + 12);
+    sheet.style.height = (det.large + OVER) + 'px';
+    return true;
+  }
+
+  /* One function paints every frame: sheet position, presenting-view stacking, content fade. */
+  function render(x) {
+    h = x;
+    sheet.style.transform = `translate3d(0, ${(det.large - x).toFixed(2)}px, 0)`;
+    const p = clamp((x - det.medium) / (det.large - det.medium), 0, 1);
+    pres.style.transform = p > 0 ? `translate3d(0, ${(p * 50).toFixed(2)}px, 0) scale(${(1 - 0.068 * p).toFixed(4)})` : '';
+    pres.style.borderRadius = (45 - 33 * p).toFixed(2) + 'px';
+    dimmer.style.opacity = p.toFixed(3);
+    dimmer.classList.toggle('is-on', p > 0.5);
+    body.style.opacity = clamp((x - det.small) / 90, 0, 1).toFixed(3);
+    const lb = p > 0.4;
+    if (lb !== lightBar) { lightBar = lb; if (lb) phone.dataset.status = 'light'; else phone.removeAttribute('data-status'); }
+  }
+
+  function setDetent(name) {
+    detent = name;
+    sheet.dataset.detent = name;
+    grab.setAttribute('aria-label', `シートの高さ: ${LABEL[name]}（タップで切り替え）`);
+    if (name !== 'large') {
+      if (body.scrollTop > 0) body.scrollTo({ top: 0, behavior: rm() ? 'auto' : 'smooth' });
+      if (searching) exitSearch(false);
+    }
+  }
+
+  /* Damped spring that inherits the release velocity (px/ms, + = growing). */
+  function springTo(name, v0 = 0) {
+    cancelAnimationFrame(raf); raf = 0;
+    const target = det[name];
+    setDetent(name);
+    if (rm()) { render(target); return; }
+    const k = 300, c = 2 * 0.86 * Math.sqrt(k);
+    let x = h, v = v0 * 1000, last = performance.now();
+    const step = (now) => {
+      const dt = Math.min(0.1, (now - last) / 1000); last = now;
+      const n = Math.max(1, Math.ceil(dt * 240)), sdt = dt / n;
+      for (let i = 0; i < n; i++) { const a = -k * (x - target) - c * v; v += a * sdt; x += v * sdt; }
+      if (Math.abs(x - target) < 0.35 && Math.abs(v) < 6) { render(target); raf = 0; return; }
+      render(x); raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  }
+
+  /* iOS rubber-band: f(x) = (1 - 1 / (x * c / d + 1)) * d */
+  const band = (x, d) => (1 - 1 / ((x * 0.55) / d + 1)) * d;
+  function rubber(raw) {
+    if (raw > det.large) return det.large + band(raw - det.large, 56);   // stiff above the top detent
+    if (raw < det.small) return det.small - band(det.small - raw, H);
+    return raw;
+  }
+  function pick(x, v) {
+    const proj = x + v * 190;                 // project ~where a free flick would come to rest
+    let best = 'medium', bd = Infinity;
+    for (const k of ORDER) { const d = Math.abs(det[k] - proj); if (d < bd) { bd = d; best = k; } }
+    return best;
+  }
+  const step = (dir) => ORDER[clamp(ORDER.indexOf(detent) + dir, 0, 2)];
+
+  /* — Dragging —
+     The pointer is captured on press so a fast pull can leave the header; taps are resolved here too
+     (rows, grabber, search, cancel), which also gives iOS-style "highlight cancels once you drag". */
+  const TAPPABLE = '.fb03-row, .fb03-fav, .fb03-more, .fb03-cancel, .fb03-grabber, .fb03-search';
+  let drag = null;
+  function press(el, on) { if (el && el.matches('.fb03-row, .fb03-fav, .fb03-more, .fb03-cancel, .fb03-grabber')) el.classList.toggle('is-pressed', on); }
+  function onDown(e, src) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (!measure()) return;
+    const now = performance.now();
+    drag = {
+      id: e.pointerId, src, y0: e.clientY, h0: h, moved: false, el: e.currentTarget, tap: e.target.closest(TAPPABLE), tapOk: true,
+      canDrag: !(src === 'body' && detent === 'large' && body.scrollTop > 0), s: [[now, e.clientY]],
+    };
+    press(drag.tap, true);
+    if (raf && src === 'head') { cancelAnimationFrame(raf); raf = 0; drag.h0 = h; }   // catch a moving sheet
+    try { drag.el.setPointerCapture(e.pointerId); } catch (_) {}
+  }
+  function onMove(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dy = e.clientY - drag.y0;
+    if (!drag.moved) {
+      if (Math.abs(dy) < 6) return;
+      drag.tapOk = false; press(drag.tap, false);
+      const scrollGesture = drag.src === 'body' && detent === 'large' && (dy < 0 || body.scrollTop > 0);
+      if (!drag.canDrag || scrollGesture) { drag.canDrag = false; return; }
+      drag.moved = true;
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      drag.y0 = e.clientY; drag.h0 = h;
+      if (document.activeElement === input && !searching) input.blur();
+      root.classList.add('is-dragging');
+    }
+    const now = performance.now();
+    drag.s.push([now, e.clientY]);
+    while (drag.s.length > 2 && now - drag.s[0][0] > 100) drag.s.shift();
+    render(rubber(drag.h0 - (e.clientY - drag.y0)));
+  }
+  function onUp(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null;
+    root.classList.remove('is-dragging');
+    press(d.tap, false);
+    if (!d.moved) { if (d.tapOk && d.tap) activate(d.tap); return; }
+    const now = performance.now();
+    let [t0, y0] = d.s[0];
+    if (now - t0 > 120) { t0 = now; y0 = e.clientY; }   // finger rested before release → no fling
+    const v = now - t0 > 0 ? (y0 - e.clientY) / (now - t0) : 0;
+    springTo(pick(h, v), v);
+  }
+  function onCancel(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null;
+    root.classList.remove('is-dragging');
+    press(d.tap, false);
+    if (d.moved) springTo(pick(h, 0));
+  }
+  [[head, 'head'], [body, 'body']].forEach(([el, src]) => {
+    el.addEventListener('pointerdown', (e) => onDown(e, src));
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointercancel', onCancel);
+  });
+  /* Touch at the large detent: pulling down from the top of the list drags the sheet instead of overscrolling. */
+  body.addEventListener('touchmove', (e) => { if (drag && drag.moved && e.cancelable) e.preventDefault(); }, { passive: false });
+
+  function activate(el) {
+    if (el.classList.contains('fb03-grabber')) cycle();
+    else if (el.classList.contains('fb03-search')) { input.focus({ preventScroll: true }); enterSearch(); }
+    else if (el.classList.contains('fb03-cancel')) exitSearch(true);
+    else if (el.classList.contains('fb03-row')) choose(el);
+  }
+  /* Keyboard / AT activation arrives as click with detail 0 (pointer taps are handled above). */
+  sheet.addEventListener('click', (e) => {
+    const t = e.target.closest('.fb03-row, .fb03-cancel, .fb03-grabber');
+    if (t && e.detail === 0) activate(t);
+  });
+
+  function cycle() {
+    measure();
+    const i = ORDER.indexOf(detent);
+    springTo(ORDER[(i + 1) % 3]);
+  }
+  grab.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); measure(); springTo(step(e.key === 'ArrowUp' ? 1 : -1)); }
+  });
+
+  /* — Search mode (like Maps: focus → large, “キャンセル” slides in) — */
+  function enterSearch() {
+    if (!searching) { searching = true; sheet.dataset.searching = ''; cancelBtn.tabIndex = 0; }
+    measure();
+    if (detent !== 'large') springTo('large');
+  }
+  function exitSearch(snap = true) {
+    searching = false;
+    sheet.removeAttribute('data-searching');
+    cancelBtn.tabIndex = -1;
+    input.value = ''; filter('');
+    if (document.activeElement === input) input.blur();
+    if (snap) { measure(); springTo('medium'); }
+  }
+  input.addEventListener('focus', () => { if (!drag) enterSearch(); });
+  input.addEventListener('input', () => filter(input.value));
+  function filter(q) {
+    q = q.trim().toLowerCase();
+    let n = 0;
+    rows.forEach((r) => { const hit = !q || r.textContent.toLowerCase().includes(q); r.parentElement.hidden = !hit; if (hit) n++; });
+    empty.hidden = n > 0;
+  }
+
+  /* Keyboard focus moving into the list expands the sheet first (content only scrolls at the large detent). */
+  body.addEventListener('focusin', (e) => {
+    if (detent === 'large' || drag) return;
+    let kb = false;
+    try { kb = e.target.matches(':focus-visible'); } catch (_) {}
+    if (!kb) return;
+    measure(); springTo('large');
+    setTimeout(() => e.target.scrollIntoView({ block: 'nearest' }), rm() ? 0 : 320);
+  });
+
+  root.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (searching) { e.preventDefault(); exitSearch(true); }
+    else if (detent === 'large') { e.preventDefault(); measure(); springTo('medium'); }
+  });
+  dimmer.addEventListener('click', () => { measure(); springTo('medium'); });
+
+  /* — Choosing a place drops the pin there and brings the map back — */
+  let pinT = 0;
+  function choose(r) {
+    const x = +r.dataset.x, y = +r.dataset.y;
+    if (searching) exitSearch(false);
+    measure(); springTo('medium');
+    pin.classList.add('is-moving');
+    pin.style.setProperty('--px', (x - MAP_W / 2) + 'px');
+    pin.style.setProperty('--py', y + 'px');
+    clearTimeout(pinT);
+    pinT = setTimeout(() => {
+      pinLbl.textContent = r.dataset.name;
+      pin.classList.remove('is-moving');
+      pinBody.classList.remove('is-drop'); void pinBody.offsetWidth; pinBody.classList.add('is-drop');
+    }, rm() ? 0 : 420);
+  }
+
+  root.querySelectorAll('.fb03-ctrl').forEach((b) => b.addEventListener('click', () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true')));
+
+  /* Lazy layout: paint once the phone has a size; keep the detent (not pixels) on resize. */
+  const ro = new ResizeObserver(() => { if (measure() && !drag) { cancelAnimationFrame(raf); raf = 0; render(det[detent]); } });
+  ro.observe(screen);
+  if (window.ObjKit) ObjKit.onVisible(root, (v) => root.classList.toggle('fb03-paused', !v));
+})();
+</script>

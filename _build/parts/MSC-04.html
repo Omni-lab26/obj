@@ -1,0 +1,284 @@
+<!-- ═══════════ MSC-04 · Control Tile ═══════════ -->
+<style>
+/* blurred "home screen" behind Control Center so the glass has something to refract */
+#MSC-04 .msc04-home {
+  position: absolute; inset: 0; z-index: 0; display: grid; grid-template-columns: repeat(4, 58px); gap: 26px 24px;
+  justify-content: center; align-content: center; pointer-events: none; filter: blur(14px) saturate(120%);
+}
+#MSC-04 .msc04-home i { display: block; width: 58px; height: 58px; border-radius: 15px; }
+#MSC-04 .msc04-home i:nth-child(8n+1) { background: var(--grad-sunset); }
+#MSC-04 .msc04-home i:nth-child(8n+2) { background: var(--grad-ocean); }
+#MSC-04 .msc04-home i:nth-child(8n+3) { background: var(--grad-mint); }
+#MSC-04 .msc04-home i:nth-child(8n+4) { background: var(--grad-berry); }
+#MSC-04 .msc04-home i:nth-child(8n+5) { background: linear-gradient(140deg, #fff, #d9dde6); }
+#MSC-04 .msc04-home i:nth-child(8n+6) { background: var(--grad-vivid); }
+#MSC-04 .msc04-home i:nth-child(8n+7) { background: linear-gradient(140deg, #5AC8FA, #34C759); }
+#MSC-04 .msc04-home i:nth-child(8n+8) { background: linear-gradient(140deg, #FFD60A, #FF9F0A); }
+#MSC-04 .msc04-veil {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: light-dark(rgba(26, 20, 48, .36), rgba(0, 0, 0, .34));
+  -webkit-backdrop-filter: blur(30px) saturate(165%); backdrop-filter: blur(30px) saturate(165%);
+}
+
+#MSC-04 .msc04-wrap { position: relative; z-index: 2; width: min(100%, 320px); container-type: inline-size; color: #fff; }
+#MSC-04 .msc04-grid {
+  --gap: clamp(12px, 5cqw, 16px);
+  --u: calc((100cqw - 3 * var(--gap)) / 4);
+  display: grid; grid-template-columns: repeat(4, var(--u)); grid-auto-rows: var(--u); gap: var(--gap);
+}
+
+/* — Liquid-glass module — */
+#MSC-04 .msc04-g {
+  position: relative; border: 0; margin: 0; padding: 0; color: #fff; font-family: var(--font-text);
+  background: linear-gradient(160deg, rgba(255, 255, 255, .26) 0%, rgba(255, 255, 255, .13) 48%, rgba(255, 255, 255, .1) 100%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .26), inset 0 1px 0 rgba(255, 255, 255, .34), inset 0 -1px 1px rgba(255, 255, 255, .08), 0 12px 30px -14px rgba(0, 0, 0, .45);
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform 460ms cubic-bezier(.3, 1.55, .5, 1), background 240ms ease, color 240ms ease, box-shadow 240ms ease;
+}
+#MSC-04 .msc04-g::after { /* specular sheen */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(120% 70% at 18% 0%, rgba(255, 255, 255, .2), transparent 55%);
+  transition: opacity 240ms ease;
+}
+#MSC-04 .msc04-press { cursor: pointer; }
+#MSC-04 .msc04-press.is-down { transform: scale(.94); transition-duration: 140ms; transition-timing-function: cubic-bezier(.2, 0, .4, 1); }
+#MSC-04 .msc04-press:focus-visible, #MSC-04 .msc04-sl:focus-visible { outline: none; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .26), 0 0 0 2.5px rgba(255, 255, 255, .85); }
+#MSC-04 .msc04-g.is-on { background: rgba(255, 255, 255, .94); color: #1C1C1E; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .6), 0 12px 30px -12px rgba(0, 0, 0, .45); }
+#MSC-04 .msc04-g.is-on::after { opacity: 0; }
+
+/* (1) connectivity platter 2×2 */
+#MSC-04 .msc04-conn {
+  grid-column: span 2; grid-row: span 2; border-radius: calc(var(--u) * .48);
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: calc(var(--u) * .17); padding: calc(var(--u) * .2);
+}
+#MSC-04 .msc04-tg {
+  --c: var(--blue);
+  position: relative; display: grid; place-items: center; width: 100%; height: 100%; border: 0; border-radius: 50%; padding: 0;
+  background: rgba(255, 255, 255, .17); color: #fff; font-size: calc(var(--u) * .36); cursor: pointer;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .12);
+  -webkit-tap-highlight-color: transparent; transition: background 260ms ease, box-shadow 260ms ease, transform 420ms cubic-bezier(.3, 1.6, .5, 1);
+}
+#MSC-04 .msc04-tg[aria-pressed="true"] { background: var(--c); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 6px 16px -6px color-mix(in srgb, var(--c) 80%, transparent); }
+#MSC-04 .msc04-tg.is-down { transform: scale(.88); transition-duration: 120ms; }
+#MSC-04 .msc04-tg:focus-visible { outline: none; box-shadow: 0 0 0 2.5px rgba(255, 255, 255, .85); }
+
+/* (2) now playing 2×2 */
+#MSC-04 .msc04-media {
+  grid-column: span 2; grid-row: span 2; border-radius: calc(var(--u) * .48);
+  display: flex; flex-direction: column; padding: calc(var(--u) * .21) calc(var(--u) * .21) calc(var(--u) * .14);
+}
+#MSC-04 .msc04-mtop { display: flex; align-items: flex-start; justify-content: space-between; }
+#MSC-04 .msc04-cover {
+  width: calc(var(--u) * .66); height: calc(var(--u) * .66); border-radius: calc(var(--u) * .14); background-size: 170% 170%; background-position: 40% 62%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .3), inset 0 0 0 .5px rgba(255, 255, 255, .18);
+  transform: scale(.9); transform-origin: 0 0; transition: transform 520ms cubic-bezier(.3, 1.4, .5, 1);
+}
+#MSC-04 .msc04-media.is-playing .msc04-cover { transform: none; }
+#MSC-04 .msc04-airplay { width: 20px; height: 20px; margin: 2px 0 0; color: rgba(255, 255, 255, .7); }
+#MSC-04 .msc04-meta { display: flex; flex-direction: column; gap: 1px; margin-top: auto; min-width: 0; }
+#MSC-04 .msc04-meta b { font: 600 14px/1.2 var(--font-text); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#MSC-04 .msc04-meta span { font: 400 12px/1.25 var(--font-text); color: rgba(255, 255, 255, .62); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#MSC-04 .msc04-ctrls { display: flex; align-items: center; justify-content: space-between; margin: calc(var(--u) * .06) calc(var(--u) * -.08) 0; }
+#MSC-04 .msc04-mb {
+  display: grid; place-items: center; width: calc(var(--u) * .5); height: calc(var(--u) * .5); border: 0; border-radius: 50%; padding: 0;
+  background: transparent; color: #fff; font-size: calc(var(--u) * .3); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: transform 380ms cubic-bezier(.3, 1.6, .5, 1), background 160ms ease;
+}
+#MSC-04 .msc04-mb.msc04-play { font-size: calc(var(--u) * .36); }
+#MSC-04 .msc04-mb.is-down { transform: scale(.84); background: rgba(255, 255, 255, .16); transition-duration: 110ms; }
+#MSC-04 .msc04-mb:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .8); }
+#MSC-04 .msc04-play .i { transition: opacity 160ms ease, transform 300ms cubic-bezier(.3, 1.6, .5, 1); }
+#MSC-04 .msc04-play { position: relative; }
+#MSC-04 .msc04-play .i { position: absolute; }
+#MSC-04 .msc04-play .msc04-i-pause, #MSC-04 .is-playing .msc04-play .msc04-i-play { opacity: 0; transform: scale(.5); }
+#MSC-04 .is-playing .msc04-play .msc04-i-pause { opacity: 1; transform: none; }
+
+/* (3) focus 2×1 */
+#MSC-04 .msc04-focus, #MSC-04 .msc04-wide {
+  grid-column: span 2; border-radius: calc(var(--u) * .5); display: flex; align-items: center; gap: calc(var(--u) * .14);
+  padding: 0 calc(var(--u) * .16) 0 calc(var(--u) * .15); text-align: left;
+}
+#MSC-04 .msc04-fic {
+  flex: none; display: grid; place-items: center; width: calc(var(--u) * .56); height: calc(var(--u) * .56); border-radius: 50%;
+  background: rgba(255, 255, 255, .2); font-size: calc(var(--u) * .27); color: #fff; transition: background 260ms ease, color 260ms ease;
+}
+#MSC-04 .msc04-focus.is-on .msc04-fic { background: var(--indigo); color: #fff; box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--indigo) 80%, transparent); }
+#MSC-04 .msc04-txt { display: flex; flex-direction: column; min-width: 0; font: 600 calc(var(--u) * .2)/1.18 var(--font-text); letter-spacing: 0; word-break: keep-all; }
+#MSC-04 .msc04-txt small { font-weight: 500; font-size: calc(var(--u) * .17); opacity: .62; }
+
+/* (4) sliders 1×2 */
+#MSC-04 .msc04-sl {
+  --v: .5; position: relative; grid-row: span 2; overflow: hidden; border-radius: calc(var(--u) * .48); cursor: ns-resize; touch-action: none;
+  transform-origin: 50% 100%;
+}
+#MSC-04 .msc04-sl.is-top { transform-origin: 50% 0%; }
+#MSC-04 .msc04-sl.is-snap { transition: transform 520ms cubic-bezier(.3, 1.5, .5, 1); }
+#MSC-04 .msc04-fill { position: absolute; inset: auto 0 0 0; height: calc(var(--v) * 100%); background: #fff; overflow: hidden; pointer-events: none; }
+#MSC-04 .msc04-sl.is-anim .msc04-fill { transition: height 260ms var(--ease-out); }
+#MSC-04 .msc04-sg { position: absolute; left: 50%; bottom: calc(var(--u) * .3); width: 1em; height: 1em; margin: 0 0 -.5em -.5em; font-size: calc(var(--u) * .34); color: #fff; pointer-events: none; }
+#MSC-04 .msc04-fill .msc04-sg { color: #8E8E93; }
+#MSC-04 .msc04-sg .i { display: block; }
+
+/* (5) small circles 1×1 */
+#MSC-04 .msc04-sm { border-radius: 50%; display: grid; place-items: center; font-size: calc(var(--u) * .36); }
+#MSC-04 .msc04-sm.is-on[data-k="lock"] { color: var(--red); }
+#MSC-04 .msc04-sm svg { width: 1em; height: 1em; }
+#MSC-04 .msc04-wide .msc04-wic { flex: none; font-size: calc(var(--u) * .34); margin-left: calc(var(--u) * .04); }
+
+@media (prefers-reduced-motion: reduce) {
+  #MSC-04 .msc04-g, #MSC-04 .msc04-tg, #MSC-04 .msc04-mb, #MSC-04 .msc04-cover, #MSC-04 .msc04-sl.is-snap { transition-duration: 1ms; }
+}
+</style>
+<article class="obj" id="MSC-04" data-name="Control Tile" data-ja="コントロールタイル" data-vector="Glass" data-size="m" data-desc="コントロールセンター風のタイル群。タップで点灯。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="msc04-home" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="msc04-veil" aria-hidden="true"></div>
+
+    <div class="msc04-wrap">
+      <div class="msc04-grid" role="group" aria-label="コントロールセンター">
+        <div class="msc04-g msc04-conn" role="group" aria-label="接続">
+          <button class="msc04-tg" type="button" style="--c: var(--orange)" aria-pressed="false" aria-label="機内モード"><svg class="i" aria-hidden="true"><use href="#i-airplane"/></svg></button>
+          <button class="msc04-tg" type="button" style="--c: var(--green)" aria-pressed="true" aria-label="モバイルデータ通信"><svg class="i" aria-hidden="true"><use href="#i-antenna-radiowaves"/></svg></button>
+          <button class="msc04-tg" type="button" style="--c: var(--blue)" aria-pressed="true" aria-label="Wi-Fi"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg></button>
+          <button class="msc04-tg" type="button" style="--c: var(--blue)" aria-pressed="true" aria-label="Bluetooth"><svg class="i" aria-hidden="true"><use href="#i-dot-radiowaves"/></svg></button>
+        </div>
+
+        <div class="msc04-g msc04-media" role="group" aria-label="再生中">
+          <div class="msc04-mtop">
+            <span class="msc04-cover art art-4" aria-hidden="true"></span>
+            <svg class="msc04-airplay" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.4 17.2a8.6 8.6 0 1 1 13.2 0M8.3 14.6a4.8 4.8 0 1 1 7.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 14.2 16.6 20H7.4Z" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="msc04-meta"><b>夜間飛行</b><span>中村 空</span></div>
+          <div class="msc04-ctrls">
+            <button class="msc04-mb" type="button" aria-label="前の曲"><svg class="i" aria-hidden="true"><use href="#i-backward-fill"/></svg></button>
+            <button class="msc04-mb msc04-play" type="button" aria-label="再生" aria-pressed="false"><svg class="i msc04-i-play" aria-hidden="true"><use href="#i-play-fill"/></svg><svg class="i msc04-i-pause" aria-hidden="true"><use href="#i-pause-fill"/></svg></button>
+            <button class="msc04-mb" type="button" aria-label="次の曲"><svg class="i" aria-hidden="true"><use href="#i-forward-fill"/></svg></button>
+          </div>
+        </div>
+
+        <button class="msc04-g msc04-press msc04-focus" type="button" aria-pressed="false" data-k="focus">
+          <span class="msc04-fic"><svg class="i" aria-hidden="true"><use href="#i-moon-fill"/></svg></span>
+          <span class="msc04-txt"><span class="msc04-focus-l">集中モード</span></span>
+        </button>
+
+        <div class="msc04-g msc04-sl" role="slider" tabindex="0" aria-label="明るさ" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62" style="--v: .62" data-k="bright">
+          <span class="msc04-sg"><svg class="i" aria-hidden="true"><use href="#i-sun-max-fill"/></svg></span>
+          <span class="msc04-fill"><span class="msc04-sg"><svg class="i" aria-hidden="true"><use href="#i-sun-max-fill"/></svg></span></span>
+        </div>
+        <div class="msc04-g msc04-sl" role="slider" tabindex="0" aria-label="音量" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="40" style="--v: .4" data-k="vol">
+          <span class="msc04-sg"><svg class="i" aria-hidden="true"><use class="msc04-vol-use" href="#i-speaker-wave-2-fill"/></svg></span>
+          <span class="msc04-fill"><span class="msc04-sg"><svg class="i" aria-hidden="true"><use class="msc04-vol-use" href="#i-speaker-wave-2-fill"/></svg></span></span>
+        </div>
+
+        <button class="msc04-g msc04-press msc04-sm" type="button" aria-pressed="false" aria-label="フラッシュライト" data-k="torch"><svg class="i" aria-hidden="true"><use href="#i-flashlight-on-fill"/></svg></button>
+        <button class="msc04-g msc04-press msc04-sm" type="button" aria-label="タイマー" data-k="timer"><svg class="i" aria-hidden="true"><use href="#i-timer"/></svg></button>
+
+        <button class="msc04-g msc04-press msc04-wide" type="button" aria-label="画面ミラーリング" data-k="mirror">
+          <span class="msc04-wic"><svg class="i" aria-hidden="true"><use href="#i-square-on-square"/></svg></span>
+          <span class="msc04-txt"><span class="msc04-mirror-l">画面<wbr>ミラーリング</span></span>
+        </button>
+        <button class="msc04-g msc04-press msc04-sm" type="button" aria-label="カメラ" data-k="camera"><svg class="i" aria-hidden="true"><use href="#i-camera-fill"/></svg></button>
+        <button class="msc04-g msc04-press msc04-sm" type="button" aria-pressed="false" aria-label="画面縦向きのロック" data-k="lock">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.7 8.7A8.6 8.6 0 1 1 15 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13.4 1.4 18.2 4l-4.3 3.3Z" stroke="currentColor" stroke-width=".9" stroke-linejoin="round"/><use href="#i-lock-fill" x="6.4" y="6.6" width="11.2" height="11.2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>タップで点灯・消灯</li><li>スライダーは上下にドラッグ</li><li>端で引っ張るとゴムのように伸びる</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('MSC-04');
+  if (!root) return;
+  const rm = () => !!(window.ObjKit && ObjKit.reducedMotion);
+
+  /* — springy press state for every tappable thing (works for touch, where :active is unreliable) — */
+  root.querySelectorAll('.msc04-press, .msc04-tg, .msc04-mb').forEach((el) => {
+    const up = () => el.classList.remove('is-down');
+    el.addEventListener('pointerdown', (e) => { if (e.button === 0) el.classList.add('is-down'); });
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+    el.addEventListener('pointerleave', up);
+    el.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') el.classList.add('is-down'); });
+    el.addEventListener('keyup', up);
+    el.addEventListener('blur', up);
+  });
+
+  /* connectivity toggles */
+  root.querySelectorAll('.msc04-tg').forEach((b) => {
+    b.addEventListener('click', () => b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')));
+  });
+
+  /* toggling tiles */
+  const focus = root.querySelector('[data-k="focus"]');
+  const focusL = focus.querySelector('.msc04-focus-l');
+  const toggle = (el, on) => { el.classList.toggle('is-on', on); el.setAttribute('aria-pressed', String(on)); };
+  focus.addEventListener('click', () => {
+    const on = !focus.classList.contains('is-on');
+    toggle(focus, on);
+    focusL.textContent = on ? 'おやすみ中' : '集中モード';
+  });
+  ['torch', 'lock'].forEach((k) => {
+    const el = root.querySelector(`[data-k="${k}"]`);
+    el.addEventListener('click', () => toggle(el, !el.classList.contains('is-on')));
+  });
+
+  /* now playing */
+  const media = root.querySelector('.msc04-media');
+  const play = root.querySelector('.msc04-play');
+  play.addEventListener('click', () => {
+    const on = !media.classList.contains('is-playing');
+    media.classList.toggle('is-playing', on);
+    play.setAttribute('aria-pressed', String(on));
+    play.setAttribute('aria-label', on ? '一時停止' : '再生');
+  });
+
+  /* — vertical sliders: relative drag, rubber-band stretch past the ends, keyboard — */
+  root.querySelectorAll('.msc04-sl').forEach((sl) => {
+    let v = parseFloat(getComputedStyle(sl).getPropertyValue('--v')) || 0;
+    const volUses = [...sl.querySelectorAll('.msc04-vol-use')];
+    const set = (nv, anim) => {
+      v = Math.max(0, Math.min(1, nv));
+      sl.classList.toggle('is-anim', !!anim);
+      sl.style.setProperty('--v', v.toFixed(4));
+      sl.setAttribute('aria-valuenow', String(Math.round(v * 100)));
+      if (volUses.length) {
+        const ic = v === 0 ? '#i-speaker-fill' : '#i-speaker-wave-2-fill';
+        volUses.forEach((u) => u.setAttribute('href', ic));
+      }
+    };
+    let drag = null;
+    sl.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      drag = { id: e.pointerId, y: e.clientY, v, h: sl.getBoundingClientRect().height };
+      sl.setPointerCapture(e.pointerId);
+      sl.classList.remove('is-snap');
+    });
+    sl.addEventListener('pointermove', (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const raw = drag.v + (drag.y - e.clientY) / drag.h;
+      set(raw, false);
+      const over = raw > 1 ? raw - 1 : raw < 0 ? -raw : 0;
+      if (over > 0 && !rm()) {
+        const s = 1 + Math.min(over, .6) * .14;
+        sl.classList.toggle('is-top', raw < 0);
+        sl.style.transform = `scale(${(1 - (s - 1) * .45).toFixed(4)}, ${s.toFixed(4)})`;
+      } else sl.style.transform = '';
+    });
+    const end = (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      drag = null;
+      sl.classList.add('is-snap');
+      sl.style.transform = '';
+    };
+    sl.addEventListener('pointerup', end);
+    sl.addEventListener('pointercancel', end);
+    sl.addEventListener('keydown', (e) => {
+      const step = { ArrowUp: .0625, ArrowRight: .0625, ArrowDown: -.0625, ArrowLeft: -.0625, PageUp: .25, PageDown: -.25 }[e.key];
+      if (step !== undefined) { e.preventDefault(); set(v + step, true); }
+      else if (e.key === 'Home') { e.preventDefault(); set(0, true); }
+      else if (e.key === 'End') { e.preventDefault(); set(1, true); }
+    });
+  });
+})();
+</script>

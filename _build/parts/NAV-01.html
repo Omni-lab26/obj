@@ -1,0 +1,385 @@
+<!-- ═══════════ NAV-01 · Large Title Nav Bar ═══════════ -->
+<style>
+#NAV-01 .nav01-phone { --nav01-tint: var(--orange); --nav01-bar-h: calc(var(--phone-safe-top) + 44px); --nav01-side: 20px; }
+#NAV-01 .nav01-screen { background: var(--bg); }
+
+/* — Scroll container — */
+#NAV-01 .nav01-scroll {
+  position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto;
+  padding: var(--nav01-bar-h) 0 calc(var(--phone-safe-bottom) + 28px);
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; outline: none;
+}
+#NAV-01 .nav01-scroll::-webkit-scrollbar { display: none; }
+
+/* — Large title block — */
+#NAV-01 .nav01-large { padding: 0 var(--nav01-side) 8px; }
+#NAV-01 .nav01-kicker { margin: 0; font: 600 13px/18px var(--font-text); color: var(--label-2); letter-spacing: 0; will-change: opacity; }
+#NAV-01 .nav01-title {
+  margin: 0; font: 700 var(--fs-largetitle)/41px var(--font-display); letter-spacing: -0.4px; color: var(--label);
+  transform-origin: 0 50%; will-change: opacity;
+}
+
+/* — Search field — */
+#NAV-01 .nav01-searchrow { display: flex; align-items: center; margin: 0 16px 6px; }
+#NAV-01 .nav01-search {
+  position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 8px;
+  border-radius: 10px; background: var(--fill-3); color: var(--label-2); cursor: text;
+}
+#NAV-01 .nav01-search .i { font-size: 17px; flex: none; }
+#NAV-01 .nav01-search input {
+  flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: transparent;
+  font-size: var(--fs-body); letter-spacing: 0; color: var(--label); -webkit-appearance: none; appearance: none;
+}
+#NAV-01 .nav01-search input::placeholder { color: var(--label-2); }
+#NAV-01 .nav01-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+#NAV-01 .nav01-cancel {
+  flex: none; max-width: 0; margin-left: 0; padding: 0; border: 0; background: none; overflow: hidden; white-space: nowrap; opacity: 0;
+  font-size: var(--fs-body); letter-spacing: 0; color: var(--nav01-tint); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: max-width var(--dur-3) var(--ease-ios), margin var(--dur-3) var(--ease-ios), opacity var(--dur-2) ease;
+}
+#NAV-01 .nav01-cancel:active { opacity: .45 !important; }
+#NAV-01 .nav01-searchrow.is-active .nav01-cancel { max-width: 96px; margin-left: 12px; opacity: 1; }
+
+/* — Editorial sections — */
+#NAV-01 .nav01-sec { margin-top: 26px; }
+#NAV-01 .nav01-rule { height: .5px; margin: 0 var(--nav01-side) 12px; background: var(--separator); }
+#NAV-01 .nav01-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 var(--nav01-side); margin-bottom: 14px; }
+#NAV-01 .nav01-eyebrow { margin: 0 0 3px; font: 600 12px/16px var(--font-text); color: var(--nav01-tint); letter-spacing: 0; }
+#NAV-01 .nav01-h { margin: 0; font: 700 var(--fs-title2)/28px var(--font-display); letter-spacing: 0; color: var(--label); }
+#NAV-01 .nav01-more {
+  flex: none; display: inline-flex; align-items: center; gap: 1px; height: 28px; padding: 0; border: 0; background: none;
+  font: 400 var(--fs-subhead)/1 var(--font-text); color: var(--nav01-tint); letter-spacing: 0; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: opacity var(--dur-1) ease;
+}
+#NAV-01 .nav01-more .i { font-size: 13px; }
+#NAV-01 .nav01-more:active { opacity: .45; transition-duration: 0s; }
+
+/* — Shelf (horizontal) — */
+#NAV-01 .nav01-shelf {
+  display: flex; gap: 14px; overflow-x: auto; overflow-y: hidden; padding: 2px var(--nav01-side) 10px;
+  scroll-snap-type: x mandatory; scroll-padding-inline: var(--nav01-side); scrollbar-width: none; overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y; cursor: grab;
+}
+#NAV-01 .nav01-shelf::-webkit-scrollbar { display: none; }
+#NAV-01 .nav01-shelf.is-drag { scroll-snap-type: none; cursor: grabbing; }
+#NAV-01 .nav01-book {
+  flex: none; width: 112px; padding: 0; border: 0; background: none; text-align: left; color: inherit; cursor: pointer;
+  scroll-snap-align: start; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+#NAV-01 .nav01-cover {
+  position: relative; display: block; width: 112px; height: 160px; border-radius: 3px 7px 7px 3px; overflow: hidden;
+  box-shadow: 0 10px 18px -10px rgba(0, 0, 0, .55), 0 2px 4px rgba(0, 0, 0, .08), 0 0 0 .5px rgba(0, 0, 0, .08);
+  transition: transform var(--dur-2) var(--ease-spring), box-shadow var(--dur-2) ease;
+}
+#NAV-01 .nav01-cover::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 11px; z-index: 1;
+  background: linear-gradient(90deg, rgba(0, 0, 0, .3), rgba(255, 255, 255, .22) 35%, rgba(0, 0, 0, .1) 62%, transparent);
+}
+#NAV-01 .nav01-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(150deg, rgba(255, 255, 255, .2), transparent 38%); }
+#NAV-01 .nav01-book:active .nav01-cover { transform: scale(.96); transition-duration: 90ms; }
+#NAV-01 .nav01-book:focus-visible { outline: none; }
+#NAV-01 .nav01-book:focus-visible .nav01-cover { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4.5px var(--nav01-tint); }
+/* cover typography */
+#NAV-01 .nav01-ct { position: absolute; z-index: 2; color: #fff; font-family: var(--font-display); text-shadow: 0 1px 8px rgba(0, 0, 0, .25); }
+#NAV-01 .nav01-ct--v { top: 12px; right: 12px; writing-mode: vertical-rl; font-weight: 700; font-size: 18px; line-height: 1.1; letter-spacing: .08em; }
+#NAV-01 .nav01-ct--v small { display: block; margin-top: .5em; font-size: 9.5px; font-weight: 500; letter-spacing: .14em; opacity: .9; }
+#NAV-01 .nav01-ct--h { left: 14px; right: 10px; bottom: 12px; font-weight: 800; font-size: 17px; line-height: 1.12; letter-spacing: 0; }
+#NAV-01 .nav01-ct--h small { display: block; margin-bottom: 5px; font-size: 8.5px; font-weight: 600; letter-spacing: .16em; opacity: .9; }
+#NAV-01 .nav01-ct--ink { color: #1d1d1f; text-shadow: none; }
+#NAV-01 .nav01-btitle { display: block; margin-top: 9px; font: 600 13px/17px var(--font-text); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#NAV-01 .nav01-bmeta { display: flex; align-items: center; gap: 5px; margin-top: 1px; font: 400 12px/16px var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; }
+#NAV-01 .nav01-new { font-size: 10.5px; font-weight: 700; color: var(--nav01-tint); }
+#NAV-01 .nav01-pct { font-variant-numeric: tabular-nums; }
+
+/* — Reading stats (typographic hero) — */
+#NAV-01 .nav01-goal { padding: 0 var(--nav01-side); }
+#NAV-01 .nav01-big { display: flex; align-items: baseline; gap: 4px; margin: 2px 0 0; color: var(--label); }
+#NAV-01 .nav01-big b { font: 800 72px/.95 var(--font-display); letter-spacing: -0.045em; font-variant-numeric: tabular-nums; margin-left: -3px; }
+#NAV-01 .nav01-big span { font: 700 22px/1 var(--font-display); letter-spacing: 0; }
+#NAV-01 .nav01-big em { margin-left: auto; font: 600 13px/1 var(--font-text); font-style: normal; color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#NAV-01 .nav01-lede { margin: 10px 0 12px; font: 400 15px/1.5 var(--font-text); color: var(--label-2); letter-spacing: 0; word-break: auto-phrase; text-wrap: pretty; }
+#NAV-01 .nav01-lede b { color: var(--label); font-weight: 600; }
+#NAV-01 .nav01-bar-track { position: relative; height: 4px; border-radius: 2px; background: var(--fill-3); overflow: hidden; }
+#NAV-01 .nav01-bar-fill { position: absolute; inset: 0; border-radius: inherit; background: var(--nav01-tint); transform-origin: 0 50%; transform: scaleX(.7667); }
+#NAV-01 .nav01-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 18px 0 0; padding: 0; list-style: none; }
+#NAV-01 .nav01-stats li { padding: 2px 0 2px 12px; box-shadow: inset .5px 0 0 var(--separator); }
+#NAV-01 .nav01-stats li:first-child { padding-left: 0; box-shadow: none; }
+#NAV-01 .nav01-stats b { display: block; font: 700 22px/26px var(--font-display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--label); }
+#NAV-01 .nav01-stats b small { font-size: 13px; font-weight: 600; letter-spacing: 0; margin-left: 1px; }
+#NAV-01 .nav01-stats span { display: block; margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--label-2); letter-spacing: 0; }
+
+/* — Collection list — */
+#NAV-01 .nav01-list { margin: 0; padding: 0; list-style: none; }
+#NAV-01 .nav01-row {
+  position: relative; display: flex; align-items: center; gap: 14px; width: 100%; min-height: 44px; padding: 0 16px 0 var(--nav01-side);
+  border: 0; background: transparent; color: var(--label); text-align: left; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; transition: background var(--dur-2) ease;
+}
+#NAV-01 .nav01-row::after { content: ""; position: absolute; left: 58px; right: 0; bottom: 0; height: .5px; background: var(--separator); }
+#NAV-01 .nav01-list li:last-child .nav01-row::after { display: none; }
+#NAV-01 .nav01-row:active { background: var(--fill-4); transition-duration: 0s; }
+#NAV-01 .nav01-row:focus-visible { outline: none; background: color-mix(in srgb, var(--nav01-tint) 12%, transparent); }
+#NAV-01 .nav01-row > .i { width: 24px; font-size: 21px; color: var(--nav01-tint); }
+#NAV-01 .nav01-row-t { flex: 1; min-width: 0; font-size: var(--fs-body); letter-spacing: 0; line-height: 22px; padding: 11px 0; }
+#NAV-01 .nav01-row-n { font-size: var(--fs-body); color: var(--label-2); font-variant-numeric: tabular-nums; letter-spacing: -0.2px; }
+#NAV-01 .nav01-row .nav01-chev { font-size: 13px; color: var(--label-3); margin-left: 2px; }
+#NAV-01 .nav01-foot { margin: 22px var(--nav01-side) 0; font-size: 12px; line-height: 16px; color: var(--label-3); text-align: center; letter-spacing: 0; }
+
+/* — Top bar (material + compact title appear on scroll) — */
+#NAV-01 .nav01-bar { position: absolute; z-index: 20; inset: 0 0 auto; height: var(--nav01-bar-h); pointer-events: none; }
+#NAV-01 .nav01-bar-bg {
+  position: absolute; inset: 0; opacity: 0; will-change: opacity; border-radius: 45px 45px 0 0; /* keeps the backdrop inside the screen corners */
+  background: var(--mat-chrome); -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+  box-shadow: inset 0 -.5px 0 var(--separator);
+}
+#NAV-01 .nav01-compact {
+  position: absolute; left: 50%; top: var(--phone-safe-top); margin: 0; max-width: 52%;
+  font: 600 var(--fs-headline)/44px var(--font-text); letter-spacing: 0; color: var(--label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; transform: translate(-50%, 5px); will-change: opacity, transform;
+}
+#NAV-01 .nav01-actions { position: absolute; right: 16px; top: var(--phone-safe-top); height: 44px; display: flex; align-items: center; gap: 12px; pointer-events: auto; }
+#NAV-01 .nav01-cbtn {
+  position: relative; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--fill-3); color: var(--nav01-tint); cursor: pointer; user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent; transition: transform var(--dur-2) var(--ease-spring), opacity var(--dur-1) ease, background var(--dur-2) ease;
+}
+#NAV-01 .nav01-cbtn .i { font-size: 17px; }
+#NAV-01 .nav01-cbtn:active { transform: scale(.88); opacity: .6; transition-duration: 80ms; }
+#NAV-01 .nav01-cbtn[aria-expanded="true"] { background: color-mix(in srgb, var(--nav01-tint) 18%, transparent); }
+#NAV-01 .nav01-cbtn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4.5px color-mix(in srgb, var(--nav01-tint) 60%, transparent); }
+@media (hover: hover) { #NAV-01 .nav01-cbtn:hover { background: var(--fill-2); } #NAV-01 .nav01-row:hover { background: var(--fill-4); } }
+
+/* — Pull-down menu — */
+#NAV-01 .nav01-menu {
+  position: absolute; z-index: 30; top: calc(var(--phone-safe-top) + 42px); right: 12px; width: 232px; margin: 0; padding: 0; list-style: none;
+  border-radius: 14px; overflow: hidden; background: var(--mat-thick); -webkit-backdrop-filter: var(--mat-blur); backdrop-filter: var(--mat-blur);
+  box-shadow: 0 14px 40px light-dark(rgba(0, 0, 0, .18), rgba(0, 0, 0, .55)), 0 0 0 .5px var(--separator);
+  transform-origin: calc(100% - 22px) 0; transform: scale(.4); opacity: 0; visibility: hidden;
+  transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-1) ease, visibility 0s linear var(--dur-3);
+}
+#NAV-01 .nav01-menu.is-open { transform: none; opacity: 1; visibility: visible; transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-1) ease, visibility 0s; }
+#NAV-01 .nav01-mi {
+  position: relative; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 10px 16px; border: 0; background: transparent;
+  color: var(--label); text-align: left; font-size: var(--fs-body); letter-spacing: 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+#NAV-01 .nav01-mi + .nav01-mi { box-shadow: inset 0 .5px 0 var(--separator); }
+#NAV-01 .nav01-mi span { flex: 1; min-width: 0; line-height: 20px; }
+#NAV-01 .nav01-mi small { display: block; font-size: 13px; line-height: 16px; color: var(--label-2); }
+#NAV-01 .nav01-mi .i { font-size: 19px; width: 22px; }
+#NAV-01 .nav01-mi:active, #NAV-01 .nav01-mi:focus-visible { outline: none; background: var(--fill-3); }
+@media (hover: hover) { #NAV-01 .nav01-mi:hover { background: var(--fill-4); } }
+
+@media (prefers-reduced-motion: reduce) {
+  #NAV-01 .nav01-menu, #NAV-01 .nav01-menu.is-open, #NAV-01 .nav01-cbtn, #NAV-01 .nav01-cover { transition: opacity var(--dur-1) ease, visibility 0s; transform: none; }
+}
+</style>
+<article class="obj" id="NAV-01" data-name="Large Title Nav Bar" data-ja="大見出しナビバー" data-vector="Editorial" data-size="m" data-desc="スクロールで大見出しが小さなタイトルに縮むナビゲーションバー。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="phone nav01-phone" style="--phone-h: 640px">
+      <div class="phone-screen nav01-screen">
+        <div class="nav01-scroll" tabindex="0" aria-label="ライブラリ">
+          <header class="nav01-large">
+            <p class="nav01-kicker">10月2日 金曜日</p>
+            <h2 class="nav01-title">ライブラリ</h2>
+          </header>
+          <div class="nav01-searchrow">
+            <label class="nav01-search">
+              <svg class="i" aria-hidden="true"><use href="#i-magnifyingglass"/></svg>
+              <input type="search" placeholder="タイトル、著者、ジャンル" aria-label="ライブラリを検索" enterkeyhint="search">
+              <svg class="i" aria-hidden="true"><use href="#i-mic-fill"/></svg>
+            </label>
+            <button class="nav01-cancel" type="button" tabindex="-1">キャンセル</button>
+          </div>
+
+          <section class="nav01-sec" aria-labelledby="NAV-01-recent">
+            <div class="nav01-rule"></div>
+            <div class="nav01-head">
+              <div><p class="nav01-eyebrow">新着 · 6冊</p><h3 class="nav01-h" id="NAV-01-recent">最近追加した項目</h3></div>
+              <button class="nav01-more" type="button">すべて表示<svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
+            </div>
+            <div class="nav01-shelf" role="list">
+              <button class="nav01-book" type="button" role="listitem"><span class="nav01-cover art art-1"><span class="nav01-ct nav01-ct--v">夕凪のころ<small>小林 美緒</small></span></span><span class="nav01-btitle">夕凪のころ</span><span class="nav01-bmeta"><span class="nav01-new">新着</span>小林 美緒</span></button>
+              <button class="nav01-book" type="button" role="listitem"><span class="nav01-cover art art-2"><span class="nav01-ct nav01-ct--h"><small>PHOTOGRAPHS</small>海をわたる<br>光</span></span><span class="nav01-btitle">海をわたる光</span><span class="nav01-bmeta"><span class="nav01-new">新着</span>佐藤 春</span></button>
+              <button class="nav01-book" type="button" role="listitem"><span class="nav01-cover art art-7"><span class="nav01-ct nav01-ct--h nav01-ct--ink"><small>ESSAYS ON DESIGN</small>余白の<br>デザイン</span></span><span class="nav01-btitle">余白のデザイン</span><span class="nav01-bmeta">伊藤 蓮 · <span class="nav01-pct">32%</span></span></button>
+              <button class="nav01-book" type="button" role="listitem"><span class="nav01-cover art art-6"><span class="nav01-ct nav01-ct--v">北の夜空<small>中村 空</small></span></span><span class="nav01-btitle">北の夜空</span><span class="nav01-bmeta">中村 空 · <span class="nav01-pct">68%</span></span></button>
+              <button class="nav01-book" type="button" role="listitem"><span class="nav01-cover art art-5"><span class="nav01-ct nav01-ct--h nav01-ct--ink"><small>POEMS</small>砂の時間</span></span><span class="nav01-btitle">砂の時間</span><span class="nav01-bmeta">渡辺 葵 · <span class="nav01-pct">9%</span></span></button>
+              <button class="nav01-book" type="button" role="listitem"><span class="nav01-cover art art-4"><span class="nav01-ct nav01-ct--v">東京夜行<small>山本 結菜</small></span></span><span class="nav01-btitle">東京夜行</span><span class="nav01-bmeta">山本 結菜 · 読了</span></button>
+            </div>
+          </section>
+
+          <section class="nav01-sec" aria-labelledby="NAV-01-goal">
+            <div class="nav01-rule"></div>
+            <div class="nav01-head">
+              <div><p class="nav01-eyebrow">2026年の読書</p><h3 class="nav01-h" id="NAV-01-goal">読書の記録</h3></div>
+            </div>
+            <div class="nav01-goal">
+              <p class="nav01-big"><b>23</b><span>冊</span><em>目標 30冊</em></p>
+              <p class="nav01-lede">今年の目標まで、<b>あと7冊</b>。このペースなら11月中に達成できます。</p>
+              <div class="nav01-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="30" aria-valuenow="23" aria-label="年間目標の達成度"><div class="nav01-bar-fill"></div></div>
+              <ul class="nav01-stats">
+                <li><b>12<small>日</small></b><span>連続記録</span></li>
+                <li><b>4.5<small>時間</small></b><span>今週の読書</span></li>
+                <li><b>86</b><span>ハイライト</span></li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="nav01-sec" aria-labelledby="NAV-01-col">
+            <div class="nav01-rule"></div>
+            <div class="nav01-head"><h3 class="nav01-h" id="NAV-01-col">コレクション</h3></div>
+            <ul class="nav01-list">
+              <li><button class="nav01-row" type="button"><svg class="i" aria-hidden="true"><use href="#i-square-grid-2x2-fill"/></svg><span class="nav01-row-t">すべて</span><span class="nav01-row-n">128</span><svg class="i nav01-chev" aria-hidden="true"><use href="#i-chevron-right"/></svg></button></li>
+              <li><button class="nav01-row" type="button"><svg class="i" aria-hidden="true"><use href="#i-bookmark"/></svg><span class="nav01-row-t">読みたい本</span><span class="nav01-row-n">24</span><svg class="i nav01-chev" aria-hidden="true"><use href="#i-chevron-right"/></svg></button></li>
+              <li><button class="nav01-row" type="button"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg><span class="nav01-row-t">読了</span><span class="nav01-row-n">63</span><svg class="i nav01-chev" aria-hidden="true"><use href="#i-chevron-right"/></svg></button></li>
+              <li><button class="nav01-row" type="button"><svg class="i" aria-hidden="true"><use href="#i-waveform"/></svg><span class="nav01-row-t">オーディオブック</span><span class="nav01-row-n">9</span><svg class="i nav01-chev" aria-hidden="true"><use href="#i-chevron-right"/></svg></button></li>
+              <li><button class="nav01-row" type="button"><svg class="i" aria-hidden="true"><use href="#i-doc-on-doc"/></svg><span class="nav01-row-t">PDF</span><span class="nav01-row-n">17</span><svg class="i nav01-chev" aria-hidden="true"><use href="#i-chevron-right"/></svg></button></li>
+              <li><button class="nav01-row" type="button"><svg class="i" aria-hidden="true"><use href="#i-heart"/></svg><span class="nav01-row-t">お気に入り</span><span class="nav01-row-n">15</span><svg class="i nav01-chev" aria-hidden="true"><use href="#i-chevron-right"/></svg></button></li>
+            </ul>
+          </section>
+          <p class="nav01-foot">128冊 · 9:41にiCloudと同期済み</p>
+        </div>
+
+        <header class="nav01-bar">
+          <div class="nav01-bar-bg"></div>
+          <p class="nav01-compact" aria-hidden="true">ライブラリ</p>
+          <div class="nav01-actions">
+            <button class="nav01-cbtn" type="button" aria-label="追加"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            <button class="nav01-cbtn nav01-more-btn" type="button" aria-label="その他" aria-haspopup="menu" aria-expanded="false" aria-controls="NAV-01-menu"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+          </div>
+        </header>
+        <div class="nav01-menu" id="NAV-01-menu" role="menu" aria-label="その他">
+          <button class="nav01-mi" type="button" role="menuitem"><span>選択</span><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg></button>
+          <button class="nav01-mi" type="button" role="menuitem"><span>並べ替え<small>最近追加した順</small></span><svg class="i" aria-hidden="true"><use href="#i-line-3-horizontal-decrease"/></svg></button>
+          <button class="nav01-mi" type="button" role="menuitem"><span>表示オプション</span><svg class="i" aria-hidden="true"><use href="#i-slider-horizontal-3"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>画面内をスクロール</li><li>大見出しが小さなタイトルに</li><li>途中で離すとスナップ</li><li>…でメニュー</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('NAV-01');
+  if (!root) return;
+  const $ = (s) => root.querySelector(s);
+  const scroller = $('.nav01-scroll');
+  const bar = $('.nav01-bar');
+  const barBg = $('.nav01-bar-bg');
+  const compact = $('.nav01-compact');
+  const large = $('.nav01-large');
+  const kicker = $('.nav01-kicker');
+  const title = $('.nav01-title');
+  const clamp = (v) => Math.min(1, Math.max(0, v));
+  const ss = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+
+  /* — Scroll-linked collapse (passive listener + one rAF per frame) — */
+  let raf = 0;
+  let collapsedY = 60;
+  const update = () => {
+    raf = 0;
+    const y = scroller.scrollTop;
+    const barH = bar.offsetHeight;
+    const titleBottom = title.offsetTop + title.offsetHeight - barH; // y where the large title has fully slid under the bar
+    collapsedY = large.offsetTop + large.offsetHeight - barH;
+    kicker.style.opacity = String(1 - ss(0, 20, y));
+    title.style.opacity = String(1 - ss(titleBottom - 30, titleBottom - 6, y));
+    const c = ss(titleBottom - 12, titleBottom + 2, y);
+    compact.style.opacity = String(c);
+    compact.style.transform = `translate(-50%, ${((1 - c) * 5).toFixed(2)}px)`;
+    barBg.style.opacity = String(ss(collapsedY - 4, collapsedY + 10, y));
+  };
+  const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+  scroller.addEventListener('scroll', onScroll, { passive: true });
+
+  /* — Snap the large title fully open / fully collapsed when scrolling stops halfway — */
+  let snapT = 0;
+  let pointerDown = false;
+  const snap = () => {
+    if (pointerDown) return;
+    const y = scroller.scrollTop;
+    if (y > 0.5 && y < collapsedY - 0.5) {
+      scroller.scrollTo({ top: y < collapsedY / 2 ? 0 : collapsedY, behavior: ObjKit.reducedMotion ? 'auto' : 'smooth' });
+    }
+  };
+  if ('onscrollend' in window) scroller.addEventListener('scrollend', snap);
+  else scroller.addEventListener('scroll', () => { clearTimeout(snapT); snapT = setTimeout(snap, 160); }, { passive: true });
+  scroller.addEventListener('pointerdown', () => { pointerDown = true; }, { passive: true });
+  scroller.addEventListener('pointerup', () => { pointerDown = false; setTimeout(snap, 60); }, { passive: true });
+  scroller.addEventListener('pointercancel', () => { pointerDown = false; }, { passive: true });
+
+  /* — Shelf: mouse drag-to-scroll (touch / trackpad scroll natively) — */
+  const shelf = $('.nav01-shelf');
+  let drag = null;
+  shelf.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    drag = { x: e.clientX, left: shelf.scrollLeft, moved: false, id: e.pointerId };
+  });
+  shelf.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) > 4) { drag.moved = true; shelf.classList.add('is-drag'); shelf.setPointerCapture(drag.id); }
+    if (drag.moved) shelf.scrollLeft = drag.left - dx;
+  });
+  const endDrag = () => {
+    if (!drag) return;
+    const moved = drag.moved;
+    drag = null;
+    if (!moved) return;
+    const left = shelf.scrollLeft;
+    shelf.classList.remove('is-drag');
+    shelf.scrollLeft = left;
+    // nearest snap target, animated
+    const step = shelf.querySelector('.nav01-book').offsetWidth + 14;
+    shelf.scrollTo({ left: Math.round(left / step) * step, behavior: 'smooth' });
+    const kill = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+    shelf.addEventListener('click', kill, { capture: true, once: true });
+    setTimeout(() => shelf.removeEventListener('click', kill, { capture: true }), 0);
+  };
+  shelf.addEventListener('pointerup', endDrag);
+  shelf.addEventListener('pointercancel', endDrag);
+
+  /* — Pull-down menu — */
+  const moreBtn = $('.nav01-more-btn');
+  const menu = $('.nav01-menu');
+  const items = [...menu.querySelectorAll('.nav01-mi')];
+  const onDocDown = (e) => { if (!menu.contains(e.target) && !moreBtn.contains(e.target)) setMenu(false); };
+  const onKey = (e) => {
+    if (e.key === 'Escape') { setMenu(false); moreBtn.focus(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const i = items.indexOf(document.activeElement);
+      const n = e.key === 'ArrowDown' ? (i + 1) % items.length : (i - 1 + items.length) % items.length;
+      items[n].focus();
+    }
+  };
+  function setMenu(open) {
+    if (open === menu.classList.contains('is-open')) return;
+    menu.classList.toggle('is-open', open);
+    moreBtn.setAttribute('aria-expanded', String(open));
+    if (open) {
+      document.addEventListener('pointerdown', onDocDown, true);
+      root.addEventListener('keydown', onKey);
+    } else {
+      document.removeEventListener('pointerdown', onDocDown, true);
+      root.removeEventListener('keydown', onKey);
+    }
+  }
+  moreBtn.addEventListener('click', () => {
+    const open = !menu.classList.contains('is-open');
+    setMenu(open);
+    if (open && moreBtn.matches(':focus-visible')) requestAnimationFrame(() => items[0].focus());
+  });
+  items.forEach((it) => it.addEventListener('click', () => { setMenu(false); }));
+
+  /* — Search field: キャンセル slides in while editing — */
+  const srow = $('.nav01-searchrow');
+  const input = srow.querySelector('input');
+  const cancel = srow.querySelector('.nav01-cancel');
+  input.addEventListener('focus', () => { srow.classList.add('is-active'); cancel.tabIndex = 0; });
+  input.addEventListener('blur', () => { if (!input.value) { srow.classList.remove('is-active'); cancel.tabIndex = -1; } });
+  cancel.addEventListener('click', () => { input.value = ''; input.blur(); srow.classList.remove('is-active'); cancel.tabIndex = -1; });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Escape') cancel.click(); });
+
+  requestAnimationFrame(update);
+})();
+</script>
