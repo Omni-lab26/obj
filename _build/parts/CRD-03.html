@@ -1,0 +1,292 @@
+<!-- ═══════════ CRD-03 · Now Playing Card ═══════════ -->
+<style>
+#CRD-03 .obj-stage { padding: 28px 16px; }
+#CRD-03 .crd03-card {
+  position: relative; isolation: isolate; overflow: hidden;
+  width: min(100%, 340px); padding: 10px 26px 22px; border-radius: 34px;
+  color: #fff; background: #19181d;
+  box-shadow: 0 34px 70px -26px rgba(0, 0, 0, .75), 0 0 0 .5px rgba(255, 255, 255, .08);
+  -webkit-user-select: none; user-select: none;
+}
+/* blurred, saturated artwork bleeding into the whole card */
+#CRD-03 .crd03-bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
+#CRD-03 .crd03-bgart { position: absolute; inset: -40%; filter: blur(44px) saturate(1.8) brightness(.78); transform: translateZ(0); }
+#CRD-03 .crd03-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .05) 0%, rgba(0, 0, 0, .22) 45%, rgba(0, 0, 0, .5) 100%);
+}
+#CRD-03 .crd03-bgart.is-enter, #CRD-03 .crd03-art.is-enter { animation: crd03-fade 700ms ease both; }
+#CRD-03 .crd03-grabber { display: block; width: 36px; height: 5px; margin: 0 auto 20px; border-radius: 3px; background: rgba(255, 255, 255, .32); }
+
+/* artwork: shrinks when paused (Apple Music) */
+#CRD-03 .crd03-artwrap { position: relative; width: 100%; aspect-ratio: 1; }
+#CRD-03 .crd03-art {
+  position: absolute; inset: 0; border-radius: 12px;
+  box-shadow: 0 28px 50px -18px rgba(0, 0, 0, .7), 0 0 0 .5px rgba(255, 255, 255, .1);
+  transition: scale 680ms var(--ease-spring), box-shadow 680ms var(--ease-ios);
+}
+#CRD-03 .crd03-artwrap .crd03-art { background-size: 120% 120%; background-position: 50% 60%; }
+#CRD-03 .is-paused .crd03-art { scale: .8; box-shadow: 0 14px 28px -14px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .06); transition: scale 520ms var(--ease-ios), box-shadow 520ms var(--ease-ios); }
+
+/* title row */
+#CRD-03 .crd03-info { display: flex; align-items: center; gap: 10px; margin-top: 26px; }
+#CRD-03 .crd03-titles { flex: 1; min-width: 0; }
+#CRD-03 .crd03-title { margin: 0; overflow: hidden; white-space: nowrap; font: 600 var(--fs-title3)/1.3 var(--font-display); letter-spacing: 0; }
+#CRD-03 .crd03-mq { display: inline-flex; gap: 40px; will-change: transform; }
+#CRD-03 .crd03-title.is-mq { -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 16px), transparent); mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 16px), transparent); }
+#CRD-03 .crd03-title.is-mq .crd03-mq { animation: crd03-mq var(--crd03-dur, 10s) linear infinite; animation-play-state: paused; }
+#CRD-03 .is-playing .crd03-title.is-mq .crd03-mq { animation-play-state: running; }
+#CRD-03 .crd03-artist { margin: 2px 0 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 400 var(--fs-body)/1.3 var(--font-text); color: rgba(255, 255, 255, .6); letter-spacing: 0; }
+#CRD-03 .crd03-round {
+  width: 30px; height: 30px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: rgba(255, 255, 255, .14); color: #fff; font-size: 15px;
+  -webkit-tap-highlight-color: transparent; transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#CRD-03 .crd03-round:active { transform: scale(.88); background: rgba(255, 255, 255, .24); transition-duration: 90ms; }
+#CRD-03 .crd03-round svg { grid-area: 1 / 1; transition: opacity 160ms ease, scale 340ms var(--ease-spring); }
+#CRD-03 .crd03-star .crd03-on { opacity: 0; scale: .3; color: #FF375F; }
+#CRD-03 .crd03-star[aria-pressed="true"] .crd03-on { opacity: 1; scale: 1; }
+#CRD-03 .crd03-star[aria-pressed="true"] .crd03-off { opacity: 0; scale: .3; }
+
+/* sliders (scrubber + volume): track thickens while touched */
+#CRD-03 .crd03-scrub { margin-top: 20px; padding-top: 8px; cursor: pointer; touch-action: none; outline: none; border-radius: 8px; }
+#CRD-03 .crd03-track { position: relative; height: 4px; border-radius: 4px; overflow: hidden; background: rgba(255, 255, 255, .22); transition: transform 240ms var(--ease-ios), background 240ms ease; }
+#CRD-03 .crd03-fill { position: absolute; inset: 0; transform-origin: left center; transform: scaleX(var(--crd03-p, 0)); background: rgba(255, 255, 255, .86); }
+@media (hover: hover) { #CRD-03 .crd03-scrub:hover .crd03-track, #CRD-03 .crd03-vol:hover .crd03-track { transform: scaleY(1.6); } }
+#CRD-03 .is-dragging .crd03-track { transform: scaleY(1.85); background: rgba(255, 255, 255, .28); }
+#CRD-03 .is-dragging .crd03-fill { background: #fff; }
+#CRD-03 .crd03-times { display: flex; justify-content: space-between; margin-top: 8px; font: 600 11.5px/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0; color: rgba(255, 255, 255, .5); transition: color 200ms ease; }
+#CRD-03 .crd03-scrub.is-dragging .crd03-times { color: rgba(255, 255, 255, .9); }
+#CRD-03 .crd03-scrub:focus-visible, #CRD-03 .crd03-vol:focus-visible { box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); }
+
+/* transport */
+#CRD-03 .crd03-controls { display: flex; align-items: center; justify-content: space-between; margin: 12px 10px 0; }
+#CRD-03 .crd03-ctl {
+  position: relative; width: 64px; height: 64px; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: transparent; color: #fff; font-size: 32px; -webkit-tap-highlight-color: transparent;
+}
+#CRD-03 .crd03-ctl--main { width: 78px; height: 78px; font-size: 44px; }
+#CRD-03 .crd03-ctl::before {
+  content: ""; position: absolute; inset: 2px; border-radius: 50%; background: rgba(255, 255, 255, .16);
+  opacity: 0; scale: .6; transition: opacity 280ms ease, scale 380ms var(--ease-out);
+}
+#CRD-03 .crd03-ctl:active::before { opacity: 1; scale: 1; transition-duration: 80ms; }
+#CRD-03 .crd03-glyph { display: grid; place-items: center; transition: scale 340ms var(--ease-spring); }
+#CRD-03 .crd03-ctl:active .crd03-glyph { scale: .84; transition-duration: 90ms; }
+#CRD-03 .crd03-glyph svg { grid-area: 1 / 1; transition: opacity 180ms ease, scale 360ms var(--ease-spring); }
+#CRD-03 .crd03-ic-pause, #CRD-03 .is-paused .crd03-ic-play { opacity: 1; scale: 1; }
+#CRD-03 .crd03-ic-play, #CRD-03 .is-paused .crd03-ic-pause { opacity: 0; scale: .4; }
+#CRD-03 .crd03-glyph.is-kick-next { animation: crd03-kick-n 420ms var(--ease-out); }
+#CRD-03 .crd03-glyph.is-kick-prev { animation: crd03-kick-p 420ms var(--ease-out); }
+#CRD-03 .crd03-ctl:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); }
+#CRD-03 .crd03-round:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); }
+
+#CRD-03 .crd03-vol { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 8px 0; cursor: pointer; touch-action: none; outline: none; border-radius: 8px; color: rgba(255, 255, 255, .55); }
+#CRD-03 .crd03-vol .crd03-track { flex: 1; }
+#CRD-03 .crd03-vol .i { font-size: 13px; }
+#CRD-03 .crd03-vol .i:last-child { font-size: 16px; }
+
+@keyframes crd03-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes crd03-mq { 0%, 18% { transform: translateX(0); } 100% { transform: translateX(var(--crd03-shift, 0)); } }
+@keyframes crd03-kick-n { 0% { translate: 0 0; } 35% { translate: 7px 0; } 100% { translate: 0 0; } }
+@keyframes crd03-kick-p { 0% { translate: 0 0; } 35% { translate: -7px 0; } 100% { translate: 0 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  #CRD-03 .crd03-art, #CRD-03 .is-paused .crd03-art { transition: none; }
+  #CRD-03 .crd03-title.is-mq .crd03-mq, #CRD-03 .crd03-glyph.is-kick-next, #CRD-03 .crd03-glyph.is-kick-prev { animation: none; }
+}
+</style>
+<article class="obj" id="CRD-03" data-name="Now Playing Card" data-ja="再生中カード" data-vector="Immersive" data-size="m" data-desc="音楽プレイヤー。アートワークの色が背景ににじむ没入型。">
+  <div class="obj-stage" data-bg="dark">
+    <div class="crd03-card force-dark is-playing" role="group" aria-label="再生中">
+      <div class="crd03-bg" aria-hidden="true"><div class="art art-1 crd03-bgart"></div></div>
+      <span class="crd03-grabber" aria-hidden="true"></span>
+      <div class="crd03-artwrap"><div class="art art-1 crd03-art" role="img" aria-label="アートワーク"></div></div>
+
+      <div class="crd03-info">
+        <div class="crd03-titles">
+          <p class="crd03-title"><span class="crd03-mq"><span class="crd03-t">夜明けのグラデーション</span></span></p>
+          <p class="crd03-artist">渡辺 葵</p>
+        </div>
+        <button class="crd03-round crd03-star" type="button" aria-label="お気に入り" aria-pressed="false">
+          <svg class="i crd03-off" aria-hidden="true"><use href="#i-star"/></svg><svg class="i crd03-on" aria-hidden="true"><use href="#i-star-fill"/></svg>
+        </button>
+        <button class="crd03-round" type="button" aria-label="その他"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+      </div>
+
+      <div class="crd03-scrub" role="slider" tabindex="0" aria-label="再生位置" aria-valuemin="0" aria-valuemax="223" aria-valuenow="72">
+        <div class="crd03-track"><div class="crd03-fill"></div></div>
+        <div class="crd03-times"><span class="crd03-el">1:12</span><span class="crd03-rem">-2:31</span></div>
+      </div>
+
+      <div class="crd03-controls">
+        <button class="crd03-ctl" type="button" data-act="prev" aria-label="前へ"><span class="crd03-glyph"><svg class="i" aria-hidden="true"><use href="#i-backward-fill"/></svg></span></button>
+        <button class="crd03-ctl crd03-ctl--main" type="button" data-act="play" aria-label="一時停止"><span class="crd03-glyph"><svg class="i crd03-ic-play" aria-hidden="true"><use href="#i-play-fill"/></svg><svg class="i crd03-ic-pause" aria-hidden="true"><use href="#i-pause-fill"/></svg></span></button>
+        <button class="crd03-ctl" type="button" data-act="next" aria-label="次へ"><span class="crd03-glyph"><svg class="i" aria-hidden="true"><use href="#i-forward-fill"/></svg></span></button>
+      </div>
+
+      <div class="crd03-vol" role="slider" tabindex="0" aria-label="音量" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62">
+        <svg class="i" aria-hidden="true"><use href="#i-speaker-fill"/></svg>
+        <div class="crd03-track"><div class="crd03-fill"></div></div>
+        <svg class="i" aria-hidden="true"><use href="#i-speaker-wave-2-fill"/></svg>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>再生／一時停止でアートが伸縮</li><li>バーをドラッグで移動</li><li>前へ・次へで曲を切替</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('CRD-03');
+  const q = (s) => root.querySelector(s);
+  const card = q('.crd03-card'), scrub = q('.crd03-scrub'), vol = q('.crd03-vol');
+  const elT = q('.crd03-el'), remT = q('.crd03-rem'), title = q('.crd03-title'), mq = q('.crd03-mq'), artist = q('.crd03-artist');
+  const playBtn = q('[data-act="play"]');
+  const TRACKS = [
+    { title: '夜明けのグラデーション', artist: '渡辺 葵', art: 1, dur: 223 },
+    { title: '潮騒とネオン', artist: '中村 空', art: 4, dur: 245 },
+    { title: 'オーロラ・ノート', artist: '小林 美緒', art: 6, dur: 198 },
+  ];
+  const st = { i: 0, pos: 72, playing: true, dragging: false, visible: false, vol: .62 };
+  const fmt = (s) => { s = Math.max(0, Math.floor(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const rm = () => ObjKit.reducedMotion;
+
+  function renderPos() {
+    const t = TRACKS[st.i];
+    scrub.style.setProperty('--crd03-p', (st.pos / t.dur).toFixed(4));
+    const e = fmt(st.pos), r = '-' + fmt(t.dur - Math.floor(st.pos));
+    if (elT.textContent !== e) elT.textContent = e;
+    if (remT.textContent !== r) remT.textContent = r;
+    scrub.setAttribute('aria-valuenow', Math.floor(st.pos));
+    scrub.setAttribute('aria-valuetext', `${e} / ${fmt(t.dur)}`);
+  }
+  function renderVol() {
+    vol.style.setProperty('--crd03-p', st.vol.toFixed(3));
+    vol.setAttribute('aria-valuenow', Math.round(st.vol * 100));
+  }
+
+  /* — marquee for titles that don't fit — */
+  function setupMarquee() {
+    title.classList.remove('is-mq');
+    mq.querySelectorAll('.crd03-dup').forEach((d) => d.remove());
+    const t = mq.querySelector('.crd03-t');
+    const w = t.scrollWidth, avail = title.clientWidth;
+    if (!avail || rm() || w <= avail + 1) return;
+    const dup = t.cloneNode(true);
+    dup.classList.replace('crd03-t', 'crd03-dup'); dup.setAttribute('aria-hidden', 'true');
+    mq.appendChild(dup);
+    const shift = w + 40;
+    title.style.setProperty('--crd03-shift', `${-shift}px`);
+    title.style.setProperty('--crd03-dur', `${(shift / 30 / .82).toFixed(2)}s`);
+    title.classList.add('is-mq');
+  }
+
+  /* — playback loop (only while playing, visible and not scrubbing) — */
+  let raf = 0, last = 0;
+  function loop(t) {
+    const dt = last ? Math.min(.25, (t - last) / 1000) : 0;
+    last = t;
+    if (!st.dragging) {
+      st.pos += dt;
+      if (st.pos >= TRACKS[st.i].dur) { loadTrack((st.i + 1) % TRACKS.length, 1); st.pos = 0; }
+      renderPos();
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  function sync() {
+    const run = st.playing && st.visible && !document.hidden;
+    if (run && !raf) { last = 0; raf = requestAnimationFrame(loop); }
+    if (!run && raf) { cancelAnimationFrame(raf); raf = 0; }
+  }
+  function setPlaying(on) {
+    st.playing = on;
+    card.classList.toggle('is-playing', on);
+    card.classList.toggle('is-paused', !on);
+    playBtn.setAttribute('aria-label', on ? '一時停止' : '再生');
+    sync();
+  }
+
+  /* — track change: artwork + backdrop cross-fade, text fade — */
+  function swapArt(sel, n) {
+    const old = q(sel);
+    const el = old.cloneNode(false);
+    el.className = old.className.replace(/\bart-\d\b/, `art-${n}`).replace(/\s*is-enter/, '') + ' is-enter';
+    old.after(el);
+    const done = () => old.remove();
+    if (rm()) done(); else setTimeout(done, 720);
+    el.addEventListener('animationend', () => el.classList.remove('is-enter'), { once: true });
+  }
+  function loadTrack(i, dir) {
+    st.i = i;
+    const t = TRACKS[i];
+    swapArt('.crd03-artwrap .crd03-art:last-child', t.art);
+    swapArt('.crd03-bg .crd03-bgart:last-child', t.art);
+    mq.innerHTML = '';
+    const s = document.createElement('span'); s.className = 'crd03-t'; s.textContent = t.title; mq.appendChild(s);
+    artist.textContent = t.artist;
+    scrub.setAttribute('aria-valuemax', t.dur);
+    if (!rm()) {
+      const ease = 'cubic-bezier(.22, 1, .36, 1)';
+      [title, artist].forEach((el, k) => el.animate(
+        [{ opacity: 0, transform: `translateX(${dir * 14}px)` }, { opacity: 1, transform: 'none' }],
+        { duration: 420, delay: k * 40, easing: ease, fill: 'backwards' }));
+    }
+    requestAnimationFrame(setupMarquee);
+  }
+  function kick(btn, cls) {
+    const g = btn.querySelector('.crd03-glyph');
+    g.classList.remove('is-kick-next', 'is-kick-prev'); void g.offsetWidth;
+    if (!rm()) g.classList.add(cls);
+  }
+
+  root.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b || !card.contains(b)) return;
+    const act = b.dataset.act;
+    if (act === 'play') setPlaying(!st.playing);
+    else if (act === 'next') { kick(b, 'is-kick-next'); loadTrack((st.i + 1) % TRACKS.length, 1); st.pos = 0; renderPos(); }
+    else if (act === 'prev') {
+      kick(b, 'is-kick-prev');
+      if (st.pos > 3) st.pos = 0;
+      else { loadTrack((st.i + TRACKS.length - 1) % TRACKS.length, -1); st.pos = 0; }
+      renderPos();
+    } else if (b.classList.contains('crd03-star')) {
+      b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+    }
+  });
+
+  /* — sliders — */
+  function makeSlider(el, get, set, step) {
+    const track = el.querySelector('.crd03-track');
+    const at = (x) => { const r = track.getBoundingClientRect(); return Math.max(0, Math.min(1, (x - r.left) / r.width)); };
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button > 0) return;
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('is-dragging');
+      if (el === scrub) st.dragging = true;
+      set(at(e.clientX));
+      const move = (ev) => set(at(ev.clientX));
+      const up = () => {
+        el.classList.remove('is-dragging');
+        if (el === scrub) st.dragging = false;
+        el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+      };
+      el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    });
+    el.addEventListener('keydown', (e) => {
+      const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+      if (d) set(Math.max(0, Math.min(1, get() + d * step)));
+      else if (e.key === 'Home') set(0);
+      else if (e.key === 'End') set(1);
+      else return;
+      e.preventDefault();
+    });
+  }
+  makeSlider(scrub, () => st.pos / TRACKS[st.i].dur, (r) => { st.pos = Math.min(r, .999) * TRACKS[st.i].dur; renderPos(); }, 5 / 223);
+  makeSlider(vol, () => st.vol, (r) => { st.vol = r; renderVol(); }, 1 / 16);
+
+  ObjKit.onVisible(root, (v) => { st.visible = v; if (v) setupMarquee(); sync(); });
+  document.addEventListener('visibilitychange', sync);
+  if (document.fonts) document.fonts.ready.then(setupMarquee);
+  renderPos(); renderVol(); setPlaying(true);
+})();
+</script>

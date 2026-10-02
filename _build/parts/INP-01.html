@@ -118,7 +118,7 @@
 #INP-01 .inp01-float .inp01-input:focus ~ .inp01-flabel,
 #INP-01 .inp01-float .inp01-input:not(:placeholder-shown) ~ .inp01-flabel { transform: translateY(-9px) scale(.706); }
 #INP-01 .inp01-float .inp01-input:focus ~ .inp01-flabel { color: var(--accent); }
-#INP-01 .inp01-float.is-invalid .inp01-flabel { color: var(--red); }
+#INP-01 .inp01-float.is-invalid .inp01-input ~ .inp01-flabel { color: var(--red); } /* same specificity as :focus rule, declared later → red wins */
 #INP-01 .inp01-float .inp01-ok { order: 3; }
 #INP-01 .inp01-float.is-valid .inp01-ok { width: 30px; opacity: 1; transform: none; }
 #INP-01 .inp01-count {

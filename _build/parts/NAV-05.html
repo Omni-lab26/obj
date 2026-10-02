@@ -45,6 +45,8 @@
 #NAV-05 .nav05-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
 #NAV-05 .nav05-search:focus-within { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
 #NAV-05 .nav05-slist { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 2px 12px 12px; scrollbar-width: none; }
+/* rows fade out into the footer instead of being cut mid-line */
+#NAV-05 .nav05-slist { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 36px), transparent); }
 #NAV-05 .nav05-slist::-webkit-scrollbar { display: none; }
 #NAV-05 .nav05-sec-h {
   display: flex; align-items: center; justify-content: space-between; width: 100%; height: 44px; margin-top: 6px; padding: 0 8px; border: 0; border-radius: 10px;

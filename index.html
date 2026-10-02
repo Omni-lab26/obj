@@ -2171,7 +2171,7 @@ body.is-solo .cat-solo-exit { display: inline-flex; }
 #INP-01 .inp01-float .inp01-input:focus ~ .inp01-flabel,
 #INP-01 .inp01-float .inp01-input:not(:placeholder-shown) ~ .inp01-flabel { transform: translateY(-9px) scale(.706); }
 #INP-01 .inp01-float .inp01-input:focus ~ .inp01-flabel { color: var(--accent); }
-#INP-01 .inp01-float.is-invalid .inp01-flabel { color: var(--red); }
+#INP-01 .inp01-float.is-invalid .inp01-input ~ .inp01-flabel { color: var(--red); } /* same specificity as :focus rule, declared later → red wins */
 #INP-01 .inp01-float .inp01-ok { order: 3; }
 #INP-01 .inp01-float.is-valid .inp01-ok { width: 30px; opacity: 1; transform: none; }
 #INP-01 .inp01-count {
@@ -6595,6 +6595,8 @@ body.is-solo .cat-solo-exit { display: inline-flex; }
 #NAV-05 .nav05-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
 #NAV-05 .nav05-search:focus-within { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
 #NAV-05 .nav05-slist { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 2px 12px 12px; scrollbar-width: none; }
+/* rows fade out into the footer instead of being cut mid-line */
+#NAV-05 .nav05-slist { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 36px), transparent); }
 #NAV-05 .nav05-slist::-webkit-scrollbar { display: none; }
 #NAV-05 .nav05-sec-h {
   display: flex; align-items: center; justify-content: space-between; width: 100%; height: 44px; margin-top: 6px; padding: 0 8px; border: 0; border-radius: 10px;
@@ -8440,10 +8442,298 @@ body.is-solo .cat-solo-exit { display: inline-flex; }
 })();
 </script>
 
-<!-- ═══ CRD-03 · Now Playing Card (未作成) ═══ -->
-<article class="obj obj--todo" id="CRD-03" data-name="Now Playing Card" data-ja="再生中カード" data-vector="Immersive" data-size="m" data-desc="音楽プレイヤー。アートワークの色が背景ににじむ没入型。">
-  <div class="obj-stage" data-bg="dark"><p>未作成</p></div>
+<!-- ═══════════ CRD-03 · Now Playing Card ═══════════ -->
+<style>
+#CRD-03 .obj-stage { padding: 28px 16px; }
+#CRD-03 .crd03-card {
+  position: relative; isolation: isolate; overflow: hidden;
+  width: min(100%, 340px); padding: 10px 26px 22px; border-radius: 34px;
+  color: #fff; background: #19181d;
+  box-shadow: 0 34px 70px -26px rgba(0, 0, 0, .75), 0 0 0 .5px rgba(255, 255, 255, .08);
+  -webkit-user-select: none; user-select: none;
+}
+/* blurred, saturated artwork bleeding into the whole card */
+#CRD-03 .crd03-bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
+#CRD-03 .crd03-bgart { position: absolute; inset: -40%; filter: blur(44px) saturate(1.8) brightness(.78); transform: translateZ(0); }
+#CRD-03 .crd03-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .05) 0%, rgba(0, 0, 0, .22) 45%, rgba(0, 0, 0, .5) 100%);
+}
+#CRD-03 .crd03-bgart.is-enter, #CRD-03 .crd03-art.is-enter { animation: crd03-fade 700ms ease both; }
+#CRD-03 .crd03-grabber { display: block; width: 36px; height: 5px; margin: 0 auto 20px; border-radius: 3px; background: rgba(255, 255, 255, .32); }
+
+/* artwork: shrinks when paused (Apple Music) */
+#CRD-03 .crd03-artwrap { position: relative; width: 100%; aspect-ratio: 1; }
+#CRD-03 .crd03-art {
+  position: absolute; inset: 0; border-radius: 12px;
+  box-shadow: 0 28px 50px -18px rgba(0, 0, 0, .7), 0 0 0 .5px rgba(255, 255, 255, .1);
+  transition: scale 680ms var(--ease-spring), box-shadow 680ms var(--ease-ios);
+}
+#CRD-03 .crd03-artwrap .crd03-art { background-size: 120% 120%; background-position: 50% 60%; }
+#CRD-03 .is-paused .crd03-art { scale: .8; box-shadow: 0 14px 28px -14px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .06); transition: scale 520ms var(--ease-ios), box-shadow 520ms var(--ease-ios); }
+
+/* title row */
+#CRD-03 .crd03-info { display: flex; align-items: center; gap: 10px; margin-top: 26px; }
+#CRD-03 .crd03-titles { flex: 1; min-width: 0; }
+#CRD-03 .crd03-title { margin: 0; overflow: hidden; white-space: nowrap; font: 600 var(--fs-title3)/1.3 var(--font-display); letter-spacing: 0; }
+#CRD-03 .crd03-mq { display: inline-flex; gap: 40px; will-change: transform; }
+#CRD-03 .crd03-title.is-mq { -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 16px), transparent); mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 16px), transparent); }
+#CRD-03 .crd03-title.is-mq .crd03-mq { animation: crd03-mq var(--crd03-dur, 10s) linear infinite; animation-play-state: paused; }
+#CRD-03 .is-playing .crd03-title.is-mq .crd03-mq { animation-play-state: running; }
+#CRD-03 .crd03-artist { margin: 2px 0 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 400 var(--fs-body)/1.3 var(--font-text); color: rgba(255, 255, 255, .6); letter-spacing: 0; }
+#CRD-03 .crd03-round {
+  width: 30px; height: 30px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: rgba(255, 255, 255, .14); color: #fff; font-size: 15px;
+  -webkit-tap-highlight-color: transparent; transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#CRD-03 .crd03-round:active { transform: scale(.88); background: rgba(255, 255, 255, .24); transition-duration: 90ms; }
+#CRD-03 .crd03-round svg { grid-area: 1 / 1; transition: opacity 160ms ease, scale 340ms var(--ease-spring); }
+#CRD-03 .crd03-star .crd03-on { opacity: 0; scale: .3; color: #FF375F; }
+#CRD-03 .crd03-star[aria-pressed="true"] .crd03-on { opacity: 1; scale: 1; }
+#CRD-03 .crd03-star[aria-pressed="true"] .crd03-off { opacity: 0; scale: .3; }
+
+/* sliders (scrubber + volume): track thickens while touched */
+#CRD-03 .crd03-scrub { margin-top: 20px; padding-top: 8px; cursor: pointer; touch-action: none; outline: none; border-radius: 8px; }
+#CRD-03 .crd03-track { position: relative; height: 4px; border-radius: 4px; overflow: hidden; background: rgba(255, 255, 255, .22); transition: transform 240ms var(--ease-ios), background 240ms ease; }
+#CRD-03 .crd03-fill { position: absolute; inset: 0; transform-origin: left center; transform: scaleX(var(--crd03-p, 0)); background: rgba(255, 255, 255, .86); }
+@media (hover: hover) { #CRD-03 .crd03-scrub:hover .crd03-track, #CRD-03 .crd03-vol:hover .crd03-track { transform: scaleY(1.6); } }
+#CRD-03 .is-dragging .crd03-track { transform: scaleY(1.85); background: rgba(255, 255, 255, .28); }
+#CRD-03 .is-dragging .crd03-fill { background: #fff; }
+#CRD-03 .crd03-times { display: flex; justify-content: space-between; margin-top: 8px; font: 600 11.5px/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0; color: rgba(255, 255, 255, .5); transition: color 200ms ease; }
+#CRD-03 .crd03-scrub.is-dragging .crd03-times { color: rgba(255, 255, 255, .9); }
+#CRD-03 .crd03-scrub:focus-visible, #CRD-03 .crd03-vol:focus-visible { box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); }
+
+/* transport */
+#CRD-03 .crd03-controls { display: flex; align-items: center; justify-content: space-between; margin: 12px 10px 0; }
+#CRD-03 .crd03-ctl {
+  position: relative; width: 64px; height: 64px; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: transparent; color: #fff; font-size: 32px; -webkit-tap-highlight-color: transparent;
+}
+#CRD-03 .crd03-ctl--main { width: 78px; height: 78px; font-size: 44px; }
+#CRD-03 .crd03-ctl::before {
+  content: ""; position: absolute; inset: 2px; border-radius: 50%; background: rgba(255, 255, 255, .16);
+  opacity: 0; scale: .6; transition: opacity 280ms ease, scale 380ms var(--ease-out);
+}
+#CRD-03 .crd03-ctl:active::before { opacity: 1; scale: 1; transition-duration: 80ms; }
+#CRD-03 .crd03-glyph { display: grid; place-items: center; transition: scale 340ms var(--ease-spring); }
+#CRD-03 .crd03-ctl:active .crd03-glyph { scale: .84; transition-duration: 90ms; }
+#CRD-03 .crd03-glyph svg { grid-area: 1 / 1; transition: opacity 180ms ease, scale 360ms var(--ease-spring); }
+#CRD-03 .crd03-ic-pause, #CRD-03 .is-paused .crd03-ic-play { opacity: 1; scale: 1; }
+#CRD-03 .crd03-ic-play, #CRD-03 .is-paused .crd03-ic-pause { opacity: 0; scale: .4; }
+#CRD-03 .crd03-glyph.is-kick-next { animation: crd03-kick-n 420ms var(--ease-out); }
+#CRD-03 .crd03-glyph.is-kick-prev { animation: crd03-kick-p 420ms var(--ease-out); }
+#CRD-03 .crd03-ctl:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); }
+#CRD-03 .crd03-round:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); }
+
+#CRD-03 .crd03-vol { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 8px 0; cursor: pointer; touch-action: none; outline: none; border-radius: 8px; color: rgba(255, 255, 255, .55); }
+#CRD-03 .crd03-vol .crd03-track { flex: 1; }
+#CRD-03 .crd03-vol .i { font-size: 13px; }
+#CRD-03 .crd03-vol .i:last-child { font-size: 16px; }
+
+@keyframes crd03-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes crd03-mq { 0%, 18% { transform: translateX(0); } 100% { transform: translateX(var(--crd03-shift, 0)); } }
+@keyframes crd03-kick-n { 0% { translate: 0 0; } 35% { translate: 7px 0; } 100% { translate: 0 0; } }
+@keyframes crd03-kick-p { 0% { translate: 0 0; } 35% { translate: -7px 0; } 100% { translate: 0 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  #CRD-03 .crd03-art, #CRD-03 .is-paused .crd03-art { transition: none; }
+  #CRD-03 .crd03-title.is-mq .crd03-mq, #CRD-03 .crd03-glyph.is-kick-next, #CRD-03 .crd03-glyph.is-kick-prev { animation: none; }
+}
+</style>
+<article class="obj" id="CRD-03" data-name="Now Playing Card" data-ja="再生中カード" data-vector="Immersive" data-size="m" data-desc="音楽プレイヤー。アートワークの色が背景ににじむ没入型。">
+  <div class="obj-stage" data-bg="dark">
+    <div class="crd03-card force-dark is-playing" role="group" aria-label="再生中">
+      <div class="crd03-bg" aria-hidden="true"><div class="art art-1 crd03-bgart"></div></div>
+      <span class="crd03-grabber" aria-hidden="true"></span>
+      <div class="crd03-artwrap"><div class="art art-1 crd03-art" role="img" aria-label="アートワーク"></div></div>
+
+      <div class="crd03-info">
+        <div class="crd03-titles">
+          <p class="crd03-title"><span class="crd03-mq"><span class="crd03-t">夜明けのグラデーション</span></span></p>
+          <p class="crd03-artist">渡辺 葵</p>
+        </div>
+        <button class="crd03-round crd03-star" type="button" aria-label="お気に入り" aria-pressed="false">
+          <svg class="i crd03-off" aria-hidden="true"><use href="#i-star"/></svg><svg class="i crd03-on" aria-hidden="true"><use href="#i-star-fill"/></svg>
+        </button>
+        <button class="crd03-round" type="button" aria-label="その他"><svg class="i" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+      </div>
+
+      <div class="crd03-scrub" role="slider" tabindex="0" aria-label="再生位置" aria-valuemin="0" aria-valuemax="223" aria-valuenow="72">
+        <div class="crd03-track"><div class="crd03-fill"></div></div>
+        <div class="crd03-times"><span class="crd03-el">1:12</span><span class="crd03-rem">-2:31</span></div>
+      </div>
+
+      <div class="crd03-controls">
+        <button class="crd03-ctl" type="button" data-act="prev" aria-label="前へ"><span class="crd03-glyph"><svg class="i" aria-hidden="true"><use href="#i-backward-fill"/></svg></span></button>
+        <button class="crd03-ctl crd03-ctl--main" type="button" data-act="play" aria-label="一時停止"><span class="crd03-glyph"><svg class="i crd03-ic-play" aria-hidden="true"><use href="#i-play-fill"/></svg><svg class="i crd03-ic-pause" aria-hidden="true"><use href="#i-pause-fill"/></svg></span></button>
+        <button class="crd03-ctl" type="button" data-act="next" aria-label="次へ"><span class="crd03-glyph"><svg class="i" aria-hidden="true"><use href="#i-forward-fill"/></svg></span></button>
+      </div>
+
+      <div class="crd03-vol" role="slider" tabindex="0" aria-label="音量" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62">
+        <svg class="i" aria-hidden="true"><use href="#i-speaker-fill"/></svg>
+        <div class="crd03-track"><div class="crd03-fill"></div></div>
+        <svg class="i" aria-hidden="true"><use href="#i-speaker-wave-2-fill"/></svg>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>再生／一時停止でアートが伸縮</li><li>バーをドラッグで移動</li><li>前へ・次へで曲を切替</li></ul>
 </article>
+<script>
+(() => {
+  const root = document.getElementById('CRD-03');
+  const q = (s) => root.querySelector(s);
+  const card = q('.crd03-card'), scrub = q('.crd03-scrub'), vol = q('.crd03-vol');
+  const elT = q('.crd03-el'), remT = q('.crd03-rem'), title = q('.crd03-title'), mq = q('.crd03-mq'), artist = q('.crd03-artist');
+  const playBtn = q('[data-act="play"]');
+  const TRACKS = [
+    { title: '夜明けのグラデーション', artist: '渡辺 葵', art: 1, dur: 223 },
+    { title: '潮騒とネオン', artist: '中村 空', art: 4, dur: 245 },
+    { title: 'オーロラ・ノート', artist: '小林 美緒', art: 6, dur: 198 },
+  ];
+  const st = { i: 0, pos: 72, playing: true, dragging: false, visible: false, vol: .62 };
+  const fmt = (s) => { s = Math.max(0, Math.floor(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const rm = () => ObjKit.reducedMotion;
+
+  function renderPos() {
+    const t = TRACKS[st.i];
+    scrub.style.setProperty('--crd03-p', (st.pos / t.dur).toFixed(4));
+    const e = fmt(st.pos), r = '-' + fmt(t.dur - Math.floor(st.pos));
+    if (elT.textContent !== e) elT.textContent = e;
+    if (remT.textContent !== r) remT.textContent = r;
+    scrub.setAttribute('aria-valuenow', Math.floor(st.pos));
+    scrub.setAttribute('aria-valuetext', `${e} / ${fmt(t.dur)}`);
+  }
+  function renderVol() {
+    vol.style.setProperty('--crd03-p', st.vol.toFixed(3));
+    vol.setAttribute('aria-valuenow', Math.round(st.vol * 100));
+  }
+
+  /* — marquee for titles that don't fit — */
+  function setupMarquee() {
+    title.classList.remove('is-mq');
+    mq.querySelectorAll('.crd03-dup').forEach((d) => d.remove());
+    const t = mq.querySelector('.crd03-t');
+    const w = t.scrollWidth, avail = title.clientWidth;
+    if (!avail || rm() || w <= avail + 1) return;
+    const dup = t.cloneNode(true);
+    dup.classList.replace('crd03-t', 'crd03-dup'); dup.setAttribute('aria-hidden', 'true');
+    mq.appendChild(dup);
+    const shift = w + 40;
+    title.style.setProperty('--crd03-shift', `${-shift}px`);
+    title.style.setProperty('--crd03-dur', `${(shift / 30 / .82).toFixed(2)}s`);
+    title.classList.add('is-mq');
+  }
+
+  /* — playback loop (only while playing, visible and not scrubbing) — */
+  let raf = 0, last = 0;
+  function loop(t) {
+    const dt = last ? Math.min(.25, (t - last) / 1000) : 0;
+    last = t;
+    if (!st.dragging) {
+      st.pos += dt;
+      if (st.pos >= TRACKS[st.i].dur) { loadTrack((st.i + 1) % TRACKS.length, 1); st.pos = 0; }
+      renderPos();
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  function sync() {
+    const run = st.playing && st.visible && !document.hidden;
+    if (run && !raf) { last = 0; raf = requestAnimationFrame(loop); }
+    if (!run && raf) { cancelAnimationFrame(raf); raf = 0; }
+  }
+  function setPlaying(on) {
+    st.playing = on;
+    card.classList.toggle('is-playing', on);
+    card.classList.toggle('is-paused', !on);
+    playBtn.setAttribute('aria-label', on ? '一時停止' : '再生');
+    sync();
+  }
+
+  /* — track change: artwork + backdrop cross-fade, text fade — */
+  function swapArt(sel, n) {
+    const old = q(sel);
+    const el = old.cloneNode(false);
+    el.className = old.className.replace(/\bart-\d\b/, `art-${n}`).replace(/\s*is-enter/, '') + ' is-enter';
+    old.after(el);
+    const done = () => old.remove();
+    if (rm()) done(); else setTimeout(done, 720);
+    el.addEventListener('animationend', () => el.classList.remove('is-enter'), { once: true });
+  }
+  function loadTrack(i, dir) {
+    st.i = i;
+    const t = TRACKS[i];
+    swapArt('.crd03-artwrap .crd03-art:last-child', t.art);
+    swapArt('.crd03-bg .crd03-bgart:last-child', t.art);
+    mq.innerHTML = '';
+    const s = document.createElement('span'); s.className = 'crd03-t'; s.textContent = t.title; mq.appendChild(s);
+    artist.textContent = t.artist;
+    scrub.setAttribute('aria-valuemax', t.dur);
+    if (!rm()) {
+      const ease = 'cubic-bezier(.22, 1, .36, 1)';
+      [title, artist].forEach((el, k) => el.animate(
+        [{ opacity: 0, transform: `translateX(${dir * 14}px)` }, { opacity: 1, transform: 'none' }],
+        { duration: 420, delay: k * 40, easing: ease, fill: 'backwards' }));
+    }
+    requestAnimationFrame(setupMarquee);
+  }
+  function kick(btn, cls) {
+    const g = btn.querySelector('.crd03-glyph');
+    g.classList.remove('is-kick-next', 'is-kick-prev'); void g.offsetWidth;
+    if (!rm()) g.classList.add(cls);
+  }
+
+  root.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b || !card.contains(b)) return;
+    const act = b.dataset.act;
+    if (act === 'play') setPlaying(!st.playing);
+    else if (act === 'next') { kick(b, 'is-kick-next'); loadTrack((st.i + 1) % TRACKS.length, 1); st.pos = 0; renderPos(); }
+    else if (act === 'prev') {
+      kick(b, 'is-kick-prev');
+      if (st.pos > 3) st.pos = 0;
+      else { loadTrack((st.i + TRACKS.length - 1) % TRACKS.length, -1); st.pos = 0; }
+      renderPos();
+    } else if (b.classList.contains('crd03-star')) {
+      b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+    }
+  });
+
+  /* — sliders — */
+  function makeSlider(el, get, set, step) {
+    const track = el.querySelector('.crd03-track');
+    const at = (x) => { const r = track.getBoundingClientRect(); return Math.max(0, Math.min(1, (x - r.left) / r.width)); };
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button > 0) return;
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('is-dragging');
+      if (el === scrub) st.dragging = true;
+      set(at(e.clientX));
+      const move = (ev) => set(at(ev.clientX));
+      const up = () => {
+        el.classList.remove('is-dragging');
+        if (el === scrub) st.dragging = false;
+        el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+      };
+      el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    });
+    el.addEventListener('keydown', (e) => {
+      const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+      if (d) set(Math.max(0, Math.min(1, get() + d * step)));
+      else if (e.key === 'Home') set(0);
+      else if (e.key === 'End') set(1);
+      else return;
+      e.preventDefault();
+    });
+  }
+  makeSlider(scrub, () => st.pos / TRACKS[st.i].dur, (r) => { st.pos = Math.min(r, .999) * TRACKS[st.i].dur; renderPos(); }, 5 / 223);
+  makeSlider(vol, () => st.vol, (r) => { st.vol = r; renderVol(); }, 1 / 16);
+
+  ObjKit.onVisible(root, (v) => { st.visible = v; if (v) setupMarquee(); sync(); });
+  document.addEventListener('visibilitychange', sync);
+  if (document.fonts) document.fonts.ready.then(setupMarquee);
+  renderPos(); renderVol(); setPlaying(true);
+})();
+</script>
 
   </div>
 </section>
@@ -9324,7 +9614,7 @@ body.is-solo .cat-solo-exit { display: inline-flex; }
                 <li><button class="fb03-row" type="button" data-x="96" data-y="150" data-name="明治神宮" style="--c: var(--red)"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-star-fill"/></svg></span><span class="fb03-row-t"><b>明治神宮</b><span>渋谷区代々木神園町1-1</span></span></button></li>
                 <li><button class="fb03-row" type="button" data-x="174" data-y="270" data-name="原宿駅" style="--c: #1E9E3E"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-mappin"/></svg></span><span class="fb03-row-t"><b>原宿駅</b><span>JR山手線 · 渋谷区神宮前1丁目</span></span></button></li>
                 <li><button class="fb03-row" type="button" data-x="238" data-y="166" data-name="竹下通り" style="--c: var(--pink)"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-cart-fill"/></svg></span><span class="fb03-row-t"><b>竹下通り</b><span>ショッピング · 渋谷区神宮前1丁目</span></span></button></li>
-                <li><button class="fb03-row" type="button" data-x="140" data-y="300" data-name="ブルーボトル" style="--c: var(--orange)"><span class="fb03-row-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 8.6h12.4v4.6a5.6 5.6 0 0 1-5.6 5.6H9.8a5.6 5.6 0 0 1-5.6-5.6V8.6Z"/><path d="M16.4 10.4h1.4a2.6 2.6 0 0 1 0 5.2h-1.9" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="19.8" width="14.8" height="1.8" rx=".9"/></svg></span><span class="fb03-row-t"><b>ブルーボトルコーヒー 原宿</b><span>カフェ · 徒歩 6 分</span></span></button></li>
+                <li><button class="fb03-row" type="button" data-x="140" data-y="300" data-name="カフェ こもれび" style="--c: var(--orange)"><span class="fb03-row-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 8.6h12.4v4.6a5.6 5.6 0 0 1-5.6 5.6H9.8a5.6 5.6 0 0 1-5.6-5.6V8.6Z"/><path d="M16.4 10.4h1.4a2.6 2.6 0 0 1 0 5.2h-1.9" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="19.8" width="14.8" height="1.8" rx=".9"/></svg></span><span class="fb03-row-t"><b>カフェ こもれび 原宿</b><span>カフェ · 徒歩 6 分</span></span></button></li>
                 <li><button class="fb03-row" type="button" data-x="276" data-y="294" data-name="表参道ヒルズ" style="--c: var(--yellow)"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-bookmark-fill"/></svg></span><span class="fb03-row-t"><b>表参道ヒルズ</b><span>ガイド「週末の散歩」 · 神宮前4-12-10</span></span></button></li>
                 <li><button class="fb03-row" type="button" data-x="56" data-y="232" data-name="代々木公園" style="--c: var(--green)"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-location-fill"/></svg></span><span class="fb03-row-t"><b>代々木公園</b><span>公園 · 渋谷区代々木神園町2-1</span></span></button></li>
                 <li><button class="fb03-row" type="button" data-x="232" data-y="318" data-name="キャットストリート" style="--c: var(--gray)"><span class="fb03-row-ic"><svg class="i" aria-hidden="true"><use href="#i-clock-fill"/></svg></span><span class="fb03-row-t"><b>キャットストリート</b><span>最近の検索 · 昨日</span></span></button></li>
@@ -9586,10 +9876,295 @@ body.is-solo .cat-solo-exit { display: inline-flex; }
 })();
 </script>
 
-<!-- ═══ FB-04 · HUD & Toast (未作成) ═══ -->
-<article class="obj obj--todo" id="FB-04" data-name="HUD &amp; Toast" data-ja="HUD／トースト" data-vector="Glass" data-size="m" data-desc="「コピーしました」等の一時表示。上部・中央・下部の3種。">
-  <div class="obj-stage" data-bg="wallpaper"><p>未作成</p></div>
+<!-- ═══════════ FB-04 · HUD & Toast ═══════════ -->
+<style>
+#FB-04 {
+  --fb04-panel: light-dark(rgba(255, 255, 255, .42), rgba(54, 54, 62, .42));
+  --fb04-sheen: light-dark(rgba(255, 255, 255, .42), rgba(255, 255, 255, .07));
+}
+/* room above / below the scene for the toast and the undo bar */
+#FB-04 .obj-stage { min-height: 520px; padding-top: 92px; padding-bottom: 100px; }
+
+/* ── Scene (content behind the overlays) ── */
+#FB-04 .fb04-scene { display: flex; flex-direction: column; align-items: center; gap: 18px; width: min(100%, 340px); }
+#FB-04 .fb04-panel {
+  position: relative; width: 100%; padding: 14px 12px 12px; border-radius: 24px;
+  background: var(--fb04-panel);
+  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+}
+#FB-04 .fb04-panel-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 6px 10px; }
+#FB-04 .fb04-panel-title { margin: 0; font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: 0; color: var(--label); }
+#FB-04 .fb04-count { font: 500 var(--fs-footnote)/1.2 var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#FB-04 .fb04-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+#FB-04 .fb04-tile {
+  aspect-ratio: 1; border-radius: 13px; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .08);
+  transition: opacity 320ms ease, scale 560ms var(--ease-spring), filter 320ms ease;
+}
+#FB-04 .fb04-tile:nth-child(2) { background-size: 170% 170%; background-position: 45% 72%; }
+#FB-04 .fb04-tile:nth-child(3) { background-size: 150% 150%; background-position: 60% 40%; }
+#FB-04 .fb04-tile.is-gone { opacity: 0; scale: .8; filter: blur(8px); transition: opacity 240ms ease, scale 300ms var(--ease-ios), filter 240ms ease; }
+
+/* ── Triggers (glass capsules, same recipe as FB-01) ── */
+#FB-04 .fb04-triggers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }
+#FB-04 .fb04-trigger {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 44px; padding: 0 12px; min-width: 0;
+  border: 0; border-radius: var(--r-full); cursor: pointer; color: var(--label);
+  font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; white-space: nowrap;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-2) ease;
+}
+#FB-04 .fb04-trigger::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, var(--fb04-sheen), rgba(255, 255, 255, 0) 55%); }
+#FB-04 .fb04-trigger .i { font-size: 17px; color: var(--fb04-c); }
+#FB-04 .fb04-trigger[data-act="toast"] { --fb04-c: var(--green); }
+#FB-04 .fb04-trigger[data-act="hud"] { --fb04-c: var(--accent); }
+#FB-04 .fb04-trigger[data-act="load"] { --fb04-c: var(--indigo); }
+#FB-04 .fb04-trigger[data-act="snack"] { --fb04-c: var(--red); }
+@media (hover: hover) { #FB-04 .fb04-trigger:hover { background: light-dark(rgba(255, 255, 255, .7), rgba(72, 72, 80, .6)); } }
+#FB-04 .fb04-trigger:active { transform: scale(.96); transition-duration: 90ms; }
+#FB-04 .fb04-trigger:focus-visible { outline: none; box-shadow: var(--glass-shadow), 0 0 0 3px var(--focus-ring); }
+
+/* ── 1. Top toast — drops from the top edge like a Dynamic Island alert ── */
+#FB-04 .fb04-toast {
+  position: absolute; z-index: 30; top: 16px; left: 50%;
+  display: flex; align-items: center; gap: 10px; height: 52px; max-width: calc(100% - 32px); padding: 0 22px 0 11px;
+  border-radius: 26px; color: var(--label); pointer-events: none;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(26px) saturate(190%); backdrop-filter: blur(26px) saturate(190%);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  translate: -50% calc(-100% - 24px); scale: .9; opacity: 0; visibility: hidden;
+  transition: translate 340ms var(--ease-ios), scale 340ms var(--ease-ios), opacity 200ms ease 80ms, visibility 0s linear 340ms;
+}
+#FB-04 .fb04-toast.is-on {
+  translate: -50% 0; scale: 1; opacity: 1; visibility: visible;
+  transition: translate 640ms var(--ease-spring), scale 640ms var(--ease-spring), opacity 160ms ease, visibility 0s;
+}
+#FB-04 .fb04-toast.is-bump { animation: fb04-bump 380ms var(--ease-out); }
+#FB-04 .fb04-toast-ic {
+  width: 30px; height: 30px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--green); color: #fff; box-shadow: 0 2px 8px color-mix(in srgb, var(--green) 40%, transparent);
+}
+#FB-04 .fb04-toast-ic svg { width: 16px; height: 16px; }
+#FB-04 .fb04-toast-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+#FB-04 .fb04-toast-title { font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: 0; white-space: nowrap; }
+#FB-04 .fb04-toast-sub { font: 400 var(--fs-caption1)/1.25 var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── 2. Center HUD — check (stroke-drawn) or 8-spoke spinner → check ── */
+#FB-04 .fb04-hud {
+  position: absolute; z-index: 25; left: 50%; top: 50%; width: 156px; height: 156px; margin: -78px 0 0 -78px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  border-radius: 32px; color: var(--label); pointer-events: none;
+  /* thick material: HUD text must win over whatever sits behind it */
+  background: light-dark(rgba(250, 250, 252, .74), rgba(46, 46, 52, .74));
+  -webkit-backdrop-filter: blur(18px) saturate(180%); backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  opacity: 0; scale: .84; visibility: hidden;
+  transition: opacity 240ms ease, scale 300ms var(--ease-ios), visibility 0s linear 300ms;
+}
+#FB-04 .fb04-hud.is-on { opacity: 1; scale: 1; visibility: visible; transition: opacity 160ms ease, scale 560ms var(--ease-spring), visibility 0s; }
+#FB-04 .fb04-glyph { position: relative; width: 64px; height: 64px; }
+#FB-04 .fb04-check, #FB-04 .fb04-spin { position: absolute; inset: 0; display: grid; place-items: center; transition: opacity 200ms ease, scale 380ms var(--ease-spring); }
+#FB-04 .fb04-check svg { width: 64px; height: 64px; overflow: visible; }
+#FB-04 .fb04-check path { fill: none; stroke: currentColor; stroke-width: 5.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+#FB-04 .fb04-hud[data-state="done"] .fb04-check path { animation: fb04-draw 440ms var(--ease-out) 90ms forwards; }
+#FB-04 .fb04-hud[data-state="loading"] .fb04-check { opacity: 0; scale: .7; }
+#FB-04 .fb04-hud[data-state="done"] .fb04-spin { opacity: 0; scale: .6; }
+#FB-04 .fb04-spokes { position: relative; width: 40px; height: 40px; animation: fb04-rot 880ms steps(8, end) infinite; animation-play-state: paused; }
+#FB-04 .fb04-hud.is-on[data-state="loading"] .fb04-spokes { animation-play-state: running; }
+#FB-04 .fb04-spokes i { position: absolute; left: 50%; top: 0; width: 4.5px; height: 12px; margin-left: -2.25px; border-radius: 3px; background: var(--label-2); transform-origin: 50% 20px; }
+#FB-04 .fb04-spokes i:nth-child(1) { rotate: 0deg; opacity: 1; }
+#FB-04 .fb04-spokes i:nth-child(2) { rotate: 45deg; opacity: .2; }
+#FB-04 .fb04-spokes i:nth-child(3) { rotate: 90deg; opacity: .28; }
+#FB-04 .fb04-spokes i:nth-child(4) { rotate: 135deg; opacity: .38; }
+#FB-04 .fb04-spokes i:nth-child(5) { rotate: 180deg; opacity: .48; }
+#FB-04 .fb04-spokes i:nth-child(6) { rotate: 225deg; opacity: .6; }
+#FB-04 .fb04-spokes i:nth-child(7) { rotate: 270deg; opacity: .72; }
+#FB-04 .fb04-spokes i:nth-child(8) { rotate: 315deg; opacity: .86; }
+#FB-04 .fb04-hud-label { display: grid; font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: 0; }
+#FB-04 .fb04-hud-label > span { grid-area: 1 / 1; text-align: center; transition: opacity 200ms ease, translate 320ms var(--ease-out); }
+#FB-04 .fb04-hud[data-state="loading"] .fb04-l-done,
+#FB-04 .fb04-hud[data-state="done"] .fb04-l-load { opacity: 0; translate: 0 5px; }
+
+/* ── 3. Undo bar — dark glass capsule with a 5s countdown line ── */
+#FB-04 .fb04-snack {
+  position: absolute; z-index: 28; left: 50%; bottom: 18px; width: min(calc(100% - 28px), 360px);
+  display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 7px 7px 7px 16px;
+  border-radius: 27px; overflow: hidden; color: #fff;
+  background: rgba(30, 30, 34, .8);
+  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .28), inset 0 0 0 .5px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .12);
+  translate: -50% calc(100% + 30px); opacity: 0; visibility: hidden;
+  transition: translate 320ms var(--ease-ios), opacity 220ms ease, visibility 0s linear 320ms;
+}
+#FB-04 .fb04-snack.is-on { translate: -50% 0; opacity: 1; visibility: visible; transition: translate 480ms var(--ease-ios), opacity 200ms ease, visibility 0s; }
+#FB-04 .fb04-snack-ic { width: 22px; flex: none; display: grid; place-items: center; font-size: 18px; color: rgba(255, 255, 255, .9); }
+#FB-04 .fb04-snack-ic > * { grid-area: 1 / 1; transition: opacity 200ms ease, scale 380ms var(--ease-spring); }
+#FB-04 .fb04-snack-ic .fb04-ic-ok { color: #32D74B; }
+#FB-04 .fb04-snack-text { flex: 1; min-width: 0; display: grid; font: 500 var(--fs-subhead)/1.25 var(--font-text); letter-spacing: 0; }
+#FB-04 .fb04-snack-text > span { grid-area: 1 / 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity 220ms ease, translate 340ms var(--ease-out); }
+#FB-04 .fb04-snack[data-state="undone"] .fb04-s-del,
+#FB-04 .fb04-snack[data-state="deleted"] .fb04-s-undone { opacity: 0; translate: 0 6px; }
+#FB-04 .fb04-snack[data-state="undone"] .fb04-ic-del,
+#FB-04 .fb04-snack[data-state="deleted"] .fb04-ic-ok { opacity: 0; scale: .4; }
+#FB-04 .fb04-undo {
+  flex: none; height: 40px; padding: 0 16px; border: 0; border-radius: var(--r-full); cursor: pointer;
+  background: rgba(255, 255, 255, .12); color: #4AA3FF;
+  font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease, opacity 200ms ease;
+}
+#FB-04 .fb04-undo:active { transform: scale(.94); background: rgba(255, 255, 255, .2); transition-duration: 90ms; }
+#FB-04 .fb04-undo:focus-visible { outline: 2px solid #4AA3FF; outline-offset: 2px; }
+#FB-04 .fb04-snack[data-state="undone"] .fb04-undo { opacity: 0; pointer-events: none; }
+#FB-04 .fb04-bar { position: absolute; left: 24px; right: 24px; bottom: 0; height: 2px; border-radius: 1px; background: rgba(255, 255, 255, .55); transform-origin: left center; }
+#FB-04 .fb04-snack[data-state="undone"] .fb04-bar { opacity: 0; transition: opacity 200ms ease; }
+
+@keyframes fb04-bump { 0% { scale: 1; } 35% { scale: 1.05; } 100% { scale: 1; } }
+@keyframes fb04-draw { to { stroke-dashoffset: 0; } }
+@keyframes fb04-rot { to { rotate: 360deg; } }
+
+@media (prefers-reduced-motion: reduce) {
+  #FB-04 .fb04-toast, #FB-04 .fb04-toast.is-on { translate: -50% 0; scale: 1; transition-property: opacity, visibility; }
+  #FB-04 .fb04-hud, #FB-04 .fb04-hud.is-on { scale: 1; transition-property: opacity, visibility; }
+  #FB-04 .fb04-snack, #FB-04 .fb04-snack.is-on { translate: -50% 0; transition-property: opacity, visibility; }
+  #FB-04 .fb04-toast.is-bump { animation: none; }
+  #FB-04 .fb04-hud[data-state="done"] .fb04-check path { animation: none; stroke-dashoffset: 0; }
+  #FB-04 .fb04-spokes { animation-duration: 1.6s; }
+  #FB-04 .fb04-tile, #FB-04 .fb04-tile.is-gone { scale: 1; filter: none; }
+}
+</style>
+<article class="obj" id="FB-04" data-name="HUD &amp; Toast" data-ja="HUD／トースト" data-vector="Glass" data-size="m" data-desc="「コピーしました」等の一時表示。上部・中央・下部の3種。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="fb04-scene">
+      <section class="fb04-panel" aria-label="最近の項目">
+        <div class="fb04-panel-head"><h4 class="fb04-panel-title">最近の項目</h4><span class="fb04-count">3枚</span></div>
+        <div class="fb04-tiles">
+          <div class="art art-2 fb04-tile" role="img" aria-label="海の写真"></div>
+          <div class="art art-1 fb04-tile" role="img" aria-label="夕焼けの写真"></div>
+          <div class="art art-6 fb04-tile fb04-tile--del" role="img" aria-label="オーロラの写真"></div>
+        </div>
+      </section>
+      <div class="fb04-triggers">
+        <button class="fb04-trigger" type="button" data-act="toast"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg>上部トースト</button>
+        <button class="fb04-trigger" type="button" data-act="hud"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg>中央HUD</button>
+        <button class="fb04-trigger" type="button" data-act="load"><svg class="i" aria-hidden="true"><use href="#i-arrow-clockwise"/></svg>読み込みHUD</button>
+        <button class="fb04-trigger" type="button" data-act="snack"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg>取り消しバー</button>
+      </div>
+    </div>
+
+    <div class="fb04-toast" aria-hidden="true">
+      <span class="fb04-toast-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5.5 12.5 4.3 4.3 8.7-9.3"/></svg></span>
+      <span class="fb04-toast-text"><span class="fb04-toast-title">リンクをコピーしました</span><span class="fb04-toast-sub">haru.studio/arashiyama</span></span>
+    </div>
+
+    <div class="fb04-hud" data-state="done" aria-hidden="true">
+      <div class="fb04-glyph">
+        <span class="fb04-spin"><span class="fb04-spokes"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+        <span class="fb04-check"><svg viewBox="0 0 64 64" aria-hidden="true"><path pathLength="1" d="M16.5 33.5 27.5 44.5 48 21.5"/></svg></span>
+      </div>
+      <div class="fb04-hud-label"><span class="fb04-l-load">読み込み中</span><span class="fb04-l-done">完了</span></div>
+    </div>
+
+    <div class="fb04-snack" data-state="deleted">
+      <span class="fb04-snack-ic" aria-hidden="true"><svg class="i fb04-ic-del"><use href="#i-trash"/></svg><svg class="i fb04-ic-ok"><use href="#i-checkmark-circle-fill"/></svg></span>
+      <span class="fb04-snack-text"><span class="fb04-s-del">1件の写真を削除しました</span><span class="fb04-s-undone">元に戻しました</span></span>
+      <button class="fb04-undo" type="button">取り消す</button>
+      <span class="fb04-bar" aria-hidden="true"></span>
+    </div>
+
+    <p class="sr-only fb04-live" role="status" aria-live="polite"></p>
+  </div>
+  <ul class="obj-notes"><li>4つのボタンで表示</li><li>取り消すで写真が戻る</li><li>連打すると置き換え</li></ul>
 </article>
+<script>
+(() => {
+  const root = document.getElementById('FB-04');
+  const q = (s) => root.querySelector(s);
+  const toast = q('.fb04-toast'), hud = q('.fb04-hud'), snack = q('.fb04-snack');
+  const bar = q('.fb04-bar'), undoBtn = q('.fb04-undo'), tile = q('.fb04-tile--del'), count = q('.fb04-count'), live = q('.fb04-live');
+  const snackTrigger = q('.fb04-trigger[data-act="snack"]');
+  const reflow = (el) => void el.offsetWidth;
+  const say = (t) => { live.textContent = ''; setTimeout(() => { live.textContent = t; }, 30); };
+
+  /* — 1. top toast — re-triggering while visible restarts the timer with a small bump */
+  let toastT = 0;
+  function showToast() {
+    clearTimeout(toastT);
+    if (toast.classList.contains('is-on')) { toast.classList.remove('is-bump'); reflow(toast); toast.classList.add('is-bump'); }
+    toast.classList.add('is-on');
+    say('リンクをコピーしました');
+    toastT = setTimeout(() => toast.classList.remove('is-on', 'is-bump'), 2200);
+  }
+
+  /* — 2. center HUD — */
+  let hudT = [];
+  const clearHud = () => { hudT.forEach(clearTimeout); hudT = []; };
+  const setHudState = (s) => { hud.dataset.state = ''; reflow(hud); hud.dataset.state = s; }; // restarts the check stroke
+  function showHud(loading) {
+    clearHud();
+    setHudState(loading ? 'loading' : 'done');
+    hud.classList.add('is-on');
+    say(loading ? '読み込み中' : '完了');
+    if (loading) {
+      hudT.push(setTimeout(() => { setHudState('done'); say('完了'); }, 1600));
+      hudT.push(setTimeout(() => hud.classList.remove('is-on'), 2900));
+    } else {
+      hudT.push(setTimeout(() => hud.classList.remove('is-on'), 1500));
+    }
+  }
+
+  /* — 3. undo bar — */
+  let snackT = [];
+  const clearSnack = () => { snackT.forEach(clearTimeout); snackT = []; };
+  const setCount = (n) => { count.textContent = `${n}枚`; };
+  function hideSnack() {
+    if (document.activeElement === undoBtn) snackTrigger.focus({ preventScroll: true });
+    snack.classList.remove('is-on');
+  }
+  function showSnack() {
+    clearSnack();
+    snack.dataset.state = 'deleted';
+    tile.classList.add('is-gone');
+    setCount(2);
+    snack.classList.add('is-on');
+    bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)'; reflow(bar);
+    bar.style.transition = 'transform 5s linear'; bar.style.transform = 'scaleX(0)';
+    say('1件の写真を削除しました。取り消すことができます');
+    snackT.push(setTimeout(commit, 5000));
+  }
+  function commit() {
+    clearSnack();
+    hideSnack();
+    // demo reset: quietly bring the photo back once the bar has gone
+    snackT.push(setTimeout(() => { tile.classList.remove('is-gone'); setCount(3); }, 900));
+  }
+  function undo() {
+    if (snack.dataset.state !== 'deleted') return;
+    clearSnack();
+    const t = getComputedStyle(bar).transform;
+    bar.style.transition = 'none'; bar.style.transform = t === 'none' ? '' : t;
+    snack.dataset.state = 'undone';
+    tile.classList.remove('is-gone');
+    setCount(3);
+    say('元に戻しました');
+    snackT.push(setTimeout(hideSnack, 1400));
+  }
+
+  const actions = { toast: showToast, hud: () => showHud(false), load: () => showHud(true), snack: showSnack };
+  q('.fb04-triggers').addEventListener('click', (e) => {
+    const b = e.target.closest('.fb04-trigger');
+    if (b && actions[b.dataset.act]) actions[b.dataset.act]();
+  });
+  undoBtn.addEventListener('click', undo);
+  root.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && snack.classList.contains('is-on') && snack.dataset.state === 'deleted') commit();
+  });
+})();
+</script>
 
 <!-- ═══════════ FB-05 · Notification Banner ═══════════ -->
 <style>
@@ -18753,11 +19328,14 @@ body.is-solo .cat-solo-exit { display: inline-flex; }
 /* floating liquid-glass toolbar */
 #SNS-15 .sns15-bar {
   position: absolute; z-index: 3; left: 50%; bottom: 36px; display: flex; align-items: center; gap: 2px; padding: 4px; transform: translateX(-50%);
+  width: max-content; white-space: nowrap; /* left:50% would otherwise cap the shrink-to-fit width and wrap "1.2万" */
   border-radius: var(--r-full);
-  background: light-dark(rgba(255, 255, 255, .5), rgba(40, 40, 44, .5));
+  background: light-dark(rgba(255, 255, 255, .72), rgba(40, 40, 44, .72));
   -webkit-backdrop-filter: blur(16px) saturate(190%); backdrop-filter: blur(16px) saturate(190%);
   box-shadow: var(--glass-edge), 0 10px 30px light-dark(rgba(0, 0, 0, .14), rgba(0, 0, 0, .5)), 0 1px 3px rgba(0, 0, 0, .08);
 }
+/* the article below is light in light mode: keep the home indicator legible over it */
+#SNS-15 .sns15-phone .phone-home { background: var(--label); }
 #SNS-15 .sns15-bar::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(180deg, light-dark(rgba(255, 255, 255, .38), rgba(255, 255, 255, .1)), rgba(255, 255, 255, 0) 55%); }
 #SNS-15 .sns15-tb {
   position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 44px; min-width: 44px; padding: 0 12px;
@@ -21056,10 +21634,448 @@ body.is-solo .cat-solo-exit { display: inline-flex; }
 })();
 </script>
 
-<!-- ═══ SNS-20 · Voice Message (未作成) ═══ -->
-<article class="obj obj--todo" id="SNS-20" data-name="Voice Message" data-ja="ボイスメッセージ" data-vector="Soft" data-size="m" data-desc="波形付きの音声メッセージと、長押しで録音するボタン。">
-  <div class="obj-stage" data-bg="grouped"><p>未作成</p></div>
+<!-- ═══════════ SNS-20 · Voice Message ═══════════ -->
+<style>
+#SNS-20 {
+  --sns20-in: light-dark(#F1F0F7, #2C2C31);
+  --sns20-out-a: color-mix(in srgb, var(--accent) 76%, #fff);
+  --sns20-out-b: var(--accent);
+  --sns20-bar-in: light-dark(rgba(60, 60, 67, .24), rgba(235, 235, 245, .26));
+  --sns20-tint: light-dark(#F8F5FF, #1F1E26);
+}
+#SNS-20 .sns20-chat {
+  position: relative; width: min(100%, 360px); border-radius: 28px;
+  background: linear-gradient(180deg, transparent 40%, var(--sns20-tint) 100%), var(--bg-grouped-2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 18px 40px -18px light-dark(rgba(96, 80, 170, .32), rgba(0, 0, 0, .7)), inset 0 0 0 .5px var(--separator);
+}
+
+/* header */
+#SNS-20 .sns20-head { display: flex; align-items: center; gap: 10px; padding: 14px 14px 12px 16px; border-bottom: .5px solid var(--separator); }
+#SNS-20 .sns20-av { width: 38px; height: 38px; font-size: 16px; box-shadow: 0 3px 10px -3px rgba(127, 90, 240, .5); }
+#SNS-20 .sns20-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+#SNS-20 .sns20-who b { font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: -0.2px; }
+#SNS-20 .sns20-who span { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-caption1); color: var(--label-2); letter-spacing: 0; }
+#SNS-20 .sns20-online { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+#SNS-20 .sns20-call {
+  width: 36px; height: 36px; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; font-size: 16px;
+  color: var(--green); background: color-mix(in srgb, var(--green) 14%, transparent);
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+#SNS-20 .sns20-call:active { transform: scale(.9); transition-duration: 90ms; }
+
+/* message list */
+#SNS-20 .sns20-list {
+  display: flex; flex-direction: column; gap: 6px; height: 292px; padding: 10px 14px 8px;
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+}
+#SNS-20 .sns20-list::-webkit-scrollbar { display: none; }
+#SNS-20 .sns20-stamp { margin: 2px 0 4px; text-align: center; font: 500 var(--fs-caption2)/1.3 var(--font-text); color: var(--label-3); letter-spacing: 0; }
+#SNS-20 .sns20-msg { display: flex; }
+#SNS-20 .sns20-msg--out { justify-content: flex-end; }
+#SNS-20 .sns20-msg.is-new { animation: sns20-in 460ms var(--ease-spring) both; }
+#SNS-20 .sns20-text {
+  max-width: 78%; margin: 0; padding: 8px 13px; border-radius: 20px;
+  font: 400 var(--fs-callout)/1.35 var(--font-text); letter-spacing: 0; overflow-wrap: anywhere;
+  background: var(--sns20-in); color: var(--label);
+}
+#SNS-20 .sns20-msg--out .sns20-text { background: linear-gradient(140deg, var(--sns20-out-a), var(--sns20-out-b)); color: #fff; }
+
+/* voice bubble */
+#SNS-20 .sns20-voice {
+  --p: 0;
+  display: flex; align-items: center; gap: 10px; padding: 8px 14px 7px 8px; border-radius: 24px;
+  background: var(--sns20-in); color: var(--label);
+}
+#SNS-20 .sns20-msg--out .sns20-voice { background: linear-gradient(140deg, var(--sns20-out-a), var(--sns20-out-b)); color: #fff; box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--accent) 70%, transparent); }
+#SNS-20 .sns20-play {
+  position: relative; width: 36px; height: 36px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: var(--accent); color: #fff; font-size: 15px;
+  -webkit-tap-highlight-color: transparent; transition: transform var(--dur-2) var(--ease-spring);
+}
+#SNS-20 .sns20-msg--out .sns20-play { background: #fff; color: var(--accent); }
+#SNS-20 .sns20-play:active { transform: scale(.88); transition-duration: 90ms; }
+#SNS-20 .sns20-play svg { grid-area: 1 / 1; transition: opacity 160ms ease, scale 320ms var(--ease-spring); }
+#SNS-20 .sns20-ic-play { translate: 1.5px 0; }
+#SNS-20 .sns20-ic-pause, #SNS-20 .is-playing .sns20-ic-play { opacity: 0; scale: .4; }
+#SNS-20 .is-playing .sns20-ic-pause { opacity: 1; scale: 1; }
+#SNS-20 .sns20-vbody { display: flex; flex-direction: column; gap: 3px; }
+#SNS-20 .sns20-wave { position: relative; width: 138px; height: 28px; cursor: pointer; touch-action: none; border-radius: 4px; outline: none; }
+#SNS-20 .sns20-wave:focus-visible { box-shadow: 0 0 0 3px var(--focus-ring); }
+#SNS-20 .sns20-bars { position: absolute; inset: 0; display: flex; align-items: center; gap: 2px; pointer-events: none; }
+#SNS-20 .sns20-bars i { width: 3px; height: calc(4px + var(--h) * 22px); flex: none; border-radius: 2px; background: currentColor; }
+#SNS-20 .sns20-bars--base { color: var(--sns20-bar-in); }
+#SNS-20 .sns20-bars--on { color: var(--accent); clip-path: inset(0 calc(100% - var(--p) * 100%) 0 0); }
+#SNS-20 .sns20-msg--out .sns20-bars--base { color: rgba(255, 255, 255, .42); }
+#SNS-20 .sns20-msg--out .sns20-bars--on { color: #fff; }
+#SNS-20 .sns20-meta { display: flex; align-items: center; gap: 6px; height: 18px; font: 600 var(--fs-caption1)/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--label-2); }
+#SNS-20 .sns20-msg--out .sns20-meta { color: rgba(255, 255, 255, .86); }
+#SNS-20 .sns20-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: 0; scale: .3; transition: opacity 200ms ease, scale 300ms var(--ease-spring); }
+#SNS-20 .is-unplayed .sns20-dot { opacity: 1; scale: 1; }
+#SNS-20 .sns20-speed {
+  margin-left: auto; height: 18px; min-width: 32px; padding: 0 7px; border: 0; border-radius: 9px; cursor: pointer;
+  font: 700 10.5px/18px var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0;
+  background: light-dark(rgba(60, 60, 67, .08), rgba(255, 255, 255, .1)); color: var(--label-2);
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#SNS-20 .sns20-msg--out .sns20-speed { background: rgba(255, 255, 255, .22); color: #fff; }
+#SNS-20 .sns20-speed.is-pop { animation: sns20-pop 340ms var(--ease-spring); }
+
+/* composer */
+#SNS-20 .sns20-composer { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 12px 12px; }
+#SNS-20 .sns20-plus { width: 34px; height: 34px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; font-size: 16px; background: var(--fill-3); color: var(--label-2); }
+#SNS-20 .sns20-field { flex: 1; min-width: 0; height: 36px; display: flex; align-items: center; padding: 0 14px; border-radius: 18px; background: var(--fill-4); box-shadow: inset 0 0 0 .5px var(--separator); transition: opacity 200ms ease; }
+#SNS-20 .sns20-field input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 16px; letter-spacing: 0; caret-color: var(--accent); }
+#SNS-20 .sns20-field input::placeholder { color: var(--label-3); }
+#SNS-20 .sns20-mic {
+  position: relative; z-index: 3; width: 36px; height: 36px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  font-size: 18px; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent);
+  touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-2) ease, color var(--dur-2) ease, opacity 160ms ease;
+}
+#SNS-20 .sns20-mic:active { transform: scale(.9); }
+#SNS-20 .sns20-mic:focus-visible, #SNS-20 .sns20-play:focus-visible, #SNS-20 .sns20-speed:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus-ring); }
+#SNS-20 .sns20-mic svg { grid-area: 1 / 1; transition: opacity 160ms ease, scale 300ms var(--ease-spring); }
+#SNS-20 .sns20-ic-send, #SNS-20 .sns20-mic.is-send .sns20-ic-mic { opacity: 0; scale: .4; }
+#SNS-20 .sns20-mic.is-send { background: var(--accent); color: #fff; }
+#SNS-20 .sns20-mic.is-send .sns20-ic-send { opacity: 1; scale: 1; }
+#SNS-20 .is-rec .sns20-mic { opacity: 0; }
+
+/* recording strip */
+#SNS-20 .sns20-rec {
+  position: absolute; left: 12px; right: 56px; top: 8px; height: 36px; z-index: 2;
+  display: flex; align-items: center; gap: 8px; padding: 0 12px 0 13px; border-radius: 18px; overflow: hidden;
+  background: light-dark(#FFF1F2, rgba(255, 69, 58, .14)); color: var(--label);
+  opacity: 0; visibility: hidden; translate: 12px 0;
+  transition: opacity 200ms ease, translate 360ms var(--ease-ios), visibility 0s linear 360ms;
+}
+#SNS-20 .is-rec .sns20-rec { opacity: 1; visibility: visible; translate: 0 0; transition: opacity 160ms ease, translate 360ms var(--ease-ios), visibility 0s; }
+#SNS-20 .sns20-rec-lead { position: relative; width: 16px; height: 16px; flex: none; display: grid; place-items: center; }
+#SNS-20 .sns20-rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); animation: sns20-blink 1s ease-in-out infinite; transition: opacity 160ms ease, scale 260ms var(--ease-ios); }
+#SNS-20 .sns20-rec-trash { position: absolute; font-size: 16px; color: var(--red); opacity: 0; scale: .4; transition: opacity 160ms ease, scale 300ms var(--ease-spring); }
+#SNS-20 .sns20-rec-time { width: 34px; flex: none; font: 600 var(--fs-subhead)/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+#SNS-20 .sns20-rec-wave { flex: 1; min-width: 0; height: 24px; display: flex; align-items: center; justify-content: flex-end; gap: 2px; overflow: hidden; color: var(--red); }
+#SNS-20 .sns20-rec-wave i { width: 3px; flex: none; height: calc(3px + var(--h, 0) * 20px); border-radius: 2px; background: currentColor; opacity: .75; transition: height 90ms linear; }
+#SNS-20 .sns20-rec-hint { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: var(--fs-footnote); color: var(--label-2); letter-spacing: 0; white-space: nowrap; }
+#SNS-20 .sns20-rec-hint .i { font-size: 12px; animation: sns20-nudge 1.4s var(--ease-in-out) infinite; }
+#SNS-20 .is-trash .sns20-rec-dot { opacity: 0; scale: .3; }
+#SNS-20 .is-trash .sns20-rec-trash { opacity: 1; scale: 1; animation: sns20-trash 620ms var(--ease-out) 60ms; }
+#SNS-20 .is-trash .sns20-rec-time, #SNS-20 .is-trash .sns20-rec-wave, #SNS-20 .is-trash .sns20-rec-hint { opacity: .25; transition: opacity 200ms ease; }
+
+/* the soft mic blob that grows under the finger */
+#SNS-20 .sns20-hold {
+  position: absolute; z-index: 4; right: -12px; top: -16px; width: 84px; height: 84px; border-radius: 50%; isolation: isolate;
+  display: grid; place-items: center; color: #fff; font-size: 30px; pointer-events: none;
+  background: radial-gradient(circle at 35% 30%, var(--sns20-out-a), var(--sns20-out-b) 70%);
+  box-shadow: 0 14px 30px -10px color-mix(in srgb, var(--accent) 70%, transparent);
+  opacity: 0; scale: .35;
+  transition: opacity 180ms ease, scale 260ms var(--ease-ios), translate 200ms var(--ease-out);
+}
+#SNS-20 .sns20-hold::before, #SNS-20 .sns20-hold::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 28%, transparent); opacity: 0;
+}
+#SNS-20 .is-rec .sns20-hold { opacity: 1; scale: calc(1 + var(--sns20-amp, 0) * .08); transition: opacity 160ms ease, scale 120ms ease-out, translate 60ms linear; }
+#SNS-20 .is-rec .sns20-hold::before { animation: sns20-ring 1.6s var(--ease-out) infinite; }
+#SNS-20 .is-rec .sns20-hold::after { animation: sns20-ring 1.6s var(--ease-out) .8s infinite; }
+#SNS-20 .is-trash .sns20-hold { opacity: 0; scale: .3; transition: opacity 220ms ease, scale 280ms var(--ease-ios); }
+#SNS-20 .sns20-hold .i { translate: 0 1px; }
+
+/* tooltip */
+#SNS-20 .sns20-tip {
+  position: absolute; right: 8px; bottom: 58px; z-index: 5; margin: 0; padding: 7px 11px; border-radius: 12px;
+  font: 500 var(--fs-footnote)/1.2 var(--font-text); letter-spacing: 0; color: #fff; background: rgba(30, 30, 34, .86);
+  box-shadow: var(--shadow-2); pointer-events: none;
+  opacity: 0; translate: 0 6px; transition: opacity 200ms ease, translate 300ms var(--ease-out);
+}
+#SNS-20 .sns20-tip.is-on { opacity: 1; translate: 0 0; }
+#SNS-20 .sns20-tip::after { content: ""; position: absolute; right: 20px; bottom: -5px; width: 10px; height: 10px; rotate: 45deg; border-radius: 2px; background: inherit; }
+
+@keyframes sns20-in { from { opacity: 0; translate: 0 14px; scale: .94; } to { opacity: 1; translate: 0 0; scale: 1; } }
+@keyframes sns20-pop { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes sns20-blink { 50% { opacity: .25; } }
+@keyframes sns20-ring { from { transform: scale(1); opacity: .7; } to { transform: scale(1.75); opacity: 0; } }
+@keyframes sns20-nudge { 0%, 100% { translate: 0 0; } 50% { translate: -3px 0; } }
+@keyframes sns20-trash { 0% { rotate: 0deg; } 25% { rotate: -16deg; } 50% { rotate: 12deg; } 75% { rotate: -5deg; } 100% { rotate: 0deg; translate: 0 2px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-20 .sns20-msg.is-new { animation-duration: 1ms; }
+  #SNS-20 .sns20-rec-dot, #SNS-20 .sns20-rec-hint .i, #SNS-20 .is-rec .sns20-hold::before, #SNS-20 .is-rec .sns20-hold::after, #SNS-20 .is-trash .sns20-rec-trash { animation: none; }
+  #SNS-20 .is-rec .sns20-hold { scale: 1; }
+}
+</style>
+<article class="obj" id="SNS-20" data-name="Voice Message" data-ja="ボイスメッセージ" data-vector="Soft" data-size="m" data-desc="波形付きの音声メッセージと、長押しで録音するボタン。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="sns20-chat">
+      <header class="sns20-head">
+        <span class="av av-4 sns20-av" aria-hidden="true">Y</span>
+        <div class="sns20-who"><b>yuna</b><span><i class="sns20-online" aria-hidden="true"></i>オンライン</span></div>
+        <button class="sns20-call" type="button" aria-label="音声通話"><svg class="i" aria-hidden="true"><use href="#i-phone-fill"/></svg></button>
+      </header>
+      <div class="sns20-list" role="log" aria-label="メッセージ">
+        <p class="sns20-stamp">今日 9:38</p>
+        <div class="sns20-msg sns20-msg--in"><p class="sns20-text">朝の散歩で録れたよ🐦</p></div>
+      </div>
+      <div class="sns20-composer">
+        <button class="sns20-plus" type="button" aria-label="添付"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+        <label class="sns20-field"><input type="text" placeholder="メッセージ" aria-label="メッセージ" autocomplete="off" enterkeyhint="send"></label>
+        <button class="sns20-mic" type="button" aria-label="長押しで録音">
+          <svg class="i sns20-ic-mic" aria-hidden="true"><use href="#i-mic-fill"/></svg>
+          <svg class="i sns20-ic-send" aria-hidden="true"><use href="#i-arrow-up"/></svg>
+        </button>
+        <div class="sns20-rec" aria-hidden="true">
+          <span class="sns20-rec-lead"><span class="sns20-rec-dot"></span><svg class="i sns20-rec-trash"><use href="#i-trash-fill"/></svg></span>
+          <span class="sns20-rec-time">0:00</span>
+          <span class="sns20-rec-wave"></span>
+          <span class="sns20-rec-hint"><svg class="i"><use href="#i-chevron-left"/></svg>スライドでキャンセル</span>
+        </div>
+        <div class="sns20-hold" aria-hidden="true"><svg class="i"><use href="#i-mic-fill"/></svg></div>
+        <p class="sns20-tip" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>▶で再生・波形タップで移動</li><li>1x で速度切替</li><li>マイクを長押しで録音</li><li>左へスライドでキャンセル</li></ul>
 </article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-20');
+  const q = (s) => root.querySelector(s);
+  const list = q('.sns20-list'), composer = q('.sns20-composer'), mic = q('.sns20-mic'), input = q('.sns20-field input');
+  const recTime = q('.sns20-rec-time'), recWave = q('.sns20-rec-wave'), recHint = q('.sns20-rec-hint'), hold = q('.sns20-hold'), tip = q('.sns20-tip');
+  const BARS = 28, RATES = [1, 1.5, 2];
+  const fmt = (s) => { s = Math.max(0, Math.ceil(s - 1e-6)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const rm = () => ObjKit.reducedMotion;
+
+  /* deterministic, speech-like waveform */
+  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function makeAmps(seed) {
+    const r = mulberry(seed), out = [];
+    for (let i = 0; i < BARS; i++) {
+      const env = Math.pow(Math.sin(Math.PI * (i + .5) / BARS), .45);
+      const syl = .5 + .5 * Math.abs(Math.sin(i * .78 + seed));
+      out.push(Math.max(.1, Math.min(1, env * syl * (.4 + .6 * r()))));
+    }
+    return out;
+  }
+  function resample(src) {
+    if (!src.length) return makeAmps(3);
+    const out = [];
+    for (let i = 0; i < BARS; i++) {
+      const a = Math.floor(i * src.length / BARS), b = Math.max(a + 1, Math.floor((i + 1) * src.length / BARS));
+      let m = 0; for (let k = a; k < b && k < src.length; k++) m = Math.max(m, src[k]);
+      out.push(Math.max(.1, Math.min(1, m)));
+    }
+    return out;
+  }
+
+  /* — voice bubbles — */
+  const players = new Map(); // voice el → state
+  function addVoice({ dir, dur, amps, unplayed = false, animate = false }) {
+    const msg = document.createElement('div');
+    msg.className = `sns20-msg sns20-msg--${dir}${animate ? ' is-new' : ''}`;
+    const bars = amps.map((a) => `<i style="--h:${a.toFixed(2)}"></i>`).join('');
+    msg.innerHTML =
+      `<div class="sns20-voice${unplayed ? ' is-unplayed' : ''}">` +
+        `<button class="sns20-play" type="button" aria-label="再生"><svg class="i sns20-ic-play" aria-hidden="true"><use href="#i-play-fill"/></svg><svg class="i sns20-ic-pause" aria-hidden="true"><use href="#i-pause-fill"/></svg></button>` +
+        `<div class="sns20-vbody">` +
+          `<div class="sns20-wave" role="slider" tabindex="0" aria-label="再生位置" aria-valuemin="0" aria-valuemax="${dur}" aria-valuenow="0" aria-valuetext="0秒 / ${dur}秒">` +
+            `<span class="sns20-bars sns20-bars--base">${bars}</span><span class="sns20-bars sns20-bars--on">${bars}</span></div>` +
+          `<div class="sns20-meta"><span class="sns20-time">${fmt(dur)}</span><i class="sns20-dot" aria-hidden="true"></i><button class="sns20-speed" type="button" aria-label="再生速度 1倍">1x</button></div>` +
+        `</div></div>`;
+    list.appendChild(msg);
+    const v = msg.querySelector('.sns20-voice');
+    players.set(v, { dur, pos: 0, rate: 0, playing: false, scrubbing: false });
+    render(v);
+    return msg;
+  }
+  function render(v) {
+    const st = players.get(v);
+    v.style.setProperty('--p', (st.pos / st.dur).toFixed(4));
+    v.querySelector('.sns20-time').textContent = fmt(st.pos > 0 ? st.dur - st.pos : st.dur);
+    const w = v.querySelector('.sns20-wave');
+    w.setAttribute('aria-valuenow', Math.round(st.pos));
+    w.setAttribute('aria-valuetext', `${Math.round(st.pos)}秒 / ${st.dur}秒`);
+  }
+  let raf = 0, last = 0;
+  function loop(t) {
+    const dt = last ? Math.min(.1, (t - last) / 1000) : 0;
+    last = t;
+    let any = false;
+    players.forEach((st, v) => {
+      if (!st.playing) return;
+      any = true;
+      if (!st.scrubbing) st.pos += dt * RATES[st.rate];
+      if (st.pos >= st.dur) { st.pos = 0; setPlaying(v, false); }
+      render(v);
+    });
+    raf = any ? requestAnimationFrame(loop) : 0;
+    if (!any) last = 0;
+  }
+  function setPlaying(v, on) {
+    const st = players.get(v);
+    if (on) players.forEach((s, other) => { if (other !== v && s.playing) setPlaying(other, false); }); // only one at a time
+    st.playing = on;
+    v.classList.toggle('is-playing', on);
+    if (on) v.classList.remove('is-unplayed');
+    v.querySelector('.sns20-play').setAttribute('aria-label', on ? '一時停止' : '再生');
+    if (on && !raf) { last = 0; raf = requestAnimationFrame(loop); }
+  }
+  const voiceOf = (el) => el.closest('.sns20-voice');
+
+  list.addEventListener('click', (e) => {
+    const play = e.target.closest('.sns20-play');
+    if (play) { const v = voiceOf(play); setPlaying(v, !players.get(v).playing); return; }
+    const sp = e.target.closest('.sns20-speed');
+    if (sp) {
+      const st = players.get(voiceOf(sp));
+      st.rate = (st.rate + 1) % RATES.length;
+      sp.textContent = `${RATES[st.rate]}x`;
+      sp.setAttribute('aria-label', `再生速度 ${RATES[st.rate]}倍`);
+      sp.classList.remove('is-pop'); void sp.offsetWidth; if (!rm()) sp.classList.add('is-pop');
+    }
+  });
+  /* scrub: tap / drag on the waveform seeks and plays */
+  const seekTo = (v, clientX) => {
+    const st = players.get(v), r = v.querySelector('.sns20-wave').getBoundingClientRect();
+    st.pos = Math.max(0, Math.min(.999, (clientX - r.left) / r.width)) * st.dur;
+    render(v);
+  };
+  list.addEventListener('pointerdown', (e) => {
+    const w = e.target.closest('.sns20-wave');
+    if (!w || e.button > 0) return;
+    const v = voiceOf(w), st = players.get(v);
+    w.setPointerCapture(e.pointerId);
+    st.scrubbing = true;
+    seekTo(v, e.clientX);
+    const move = (ev) => seekTo(v, ev.clientX);
+    const up = () => {
+      st.scrubbing = false;
+      w.removeEventListener('pointermove', move); w.removeEventListener('pointerup', up); w.removeEventListener('pointercancel', up);
+      if (!st.playing) setPlaying(v, true);
+    };
+    w.addEventListener('pointermove', move); w.addEventListener('pointerup', up); w.addEventListener('pointercancel', up);
+  });
+  list.addEventListener('keydown', (e) => {
+    const w = e.target.closest('.sns20-wave');
+    if (!w) return;
+    const v = voiceOf(w), st = players.get(v);
+    const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+    if (step) st.pos = Math.max(0, Math.min(st.dur - .01, st.pos + step));
+    else if (e.key === 'Home') st.pos = 0;
+    else if (e.key === 'End') st.pos = st.dur - .01;
+    else if (e.key === ' ' || e.key === 'Enter') setPlaying(v, !st.playing);
+    else return;
+    e.preventDefault();
+    render(v);
+  });
+
+  /* initial conversation */
+  addVoice({ dir: 'in', dur: 12, amps: makeAmps(7), unplayed: true });
+  addVoice({ dir: 'out', dur: 8, amps: makeAmps(21) });
+
+  /* — composer: text send — */
+  const scrollEnd = () => list.scrollTo({ top: list.scrollHeight, behavior: rm() ? 'auto' : 'smooth' });
+  const syncMic = () => {
+    const has = input.value.trim().length > 0;
+    mic.classList.toggle('is-send', has);
+    mic.setAttribute('aria-label', has ? '送信' : '長押しで録音');
+  };
+  function sendText() {
+    const t = input.value.trim();
+    if (!t) return;
+    const m = document.createElement('div');
+    m.className = 'sns20-msg sns20-msg--out is-new';
+    const p = document.createElement('p'); p.className = 'sns20-text'; p.textContent = t;
+    m.appendChild(p); list.appendChild(m);
+    input.value = ''; syncMic(); scrollEnd();
+  }
+  input.addEventListener('input', syncMic);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendText(); } });
+
+  /* — composer: press-and-hold to record — */
+  const POOL = 26;
+  recWave.innerHTML = '<i></i>'.repeat(POOL);
+  const poolBars = [...recWave.children];
+  let rec = null, tipT = 0;
+  function showTip(text) {
+    clearTimeout(tipT);
+    tip.textContent = text; tip.classList.add('is-on');
+    tipT = setTimeout(() => tip.classList.remove('is-on'), 1500);
+  }
+  function startRec(x) {
+    if (rec) return;
+    players.forEach((st, v) => st.playing && setPlaying(v, false));
+    rec = { t0: performance.now(), x0: x, amps: [], live: new Array(POOL).fill(0), timer: 0, phase: Math.random() * 6 };
+    composer.classList.remove('is-trash');
+    composer.classList.add('is-rec');
+    recTime.textContent = '0:00';
+    recHint.style.opacity = ''; recHint.style.translate = '';
+    hold.style.translate = '';
+    poolBars.forEach((b) => b.style.setProperty('--h', 0));
+    rec.timer = setInterval(sample, 90);
+  }
+  function sample() {
+    const el = (performance.now() - rec.t0) / 1000;
+    const p = rec.phase + el * 7;
+    const a = Math.max(.08, Math.min(1, (.25 + .75 * Math.abs(Math.sin(p) * Math.sin(p * .43 + 1))) * (.55 + .45 * Math.random())));
+    rec.amps.push(a);
+    rec.live.push(a); rec.live.shift();
+    poolBars.forEach((b, i) => b.style.setProperty('--h', rec.live[i].toFixed(2)));
+    hold.style.setProperty('--sns20-amp', a.toFixed(2));
+    recTime.textContent = `${Math.floor(el / 60)}:${String(Math.floor(el) % 60).padStart(2, '0')}`;
+    if (el >= 60) finishRec();
+  }
+  function dragRec(x) {
+    if (!rec || rec.x0 == null) return;
+    const dx = Math.max(0, rec.x0 - x);
+    hold.style.translate = `${-Math.min(dx, 140)}px 0`;
+    recHint.style.opacity = String(Math.max(0, 1 - dx / 80));
+    recHint.style.translate = `${-dx * .35}px 0`;
+    if (dx > 80) cancelRec(true);
+  }
+  function stopTimer() { if (rec) clearInterval(rec.timer); }
+  function cancelRec(trash) {
+    if (!rec) return;
+    stopTimer(); rec = null;
+    if (trash && !rm()) {
+      composer.classList.add('is-trash');
+      setTimeout(() => composer.classList.remove('is-rec', 'is-trash'), 700);
+    } else composer.classList.remove('is-rec', 'is-trash');
+  }
+  function finishRec() {
+    if (!rec) return;
+    const el = (performance.now() - rec.t0) / 1000, amps = rec.amps;
+    stopTimer(); rec = null;
+    composer.classList.remove('is-rec');
+    if (el < .6) { showTip('長押しで録音できます'); return; }
+    addVoice({ dir: 'out', dur: Math.max(1, Math.round(el)), amps: resample(amps), animate: true });
+    scrollEnd();
+  }
+  mic.addEventListener('pointerdown', (e) => {
+    if (mic.classList.contains('is-send') || e.button > 0) return;
+    e.preventDefault();
+    mic.setPointerCapture(e.pointerId);
+    startRec(e.clientX);
+  });
+  mic.addEventListener('pointermove', (e) => dragRec(e.clientX));
+  mic.addEventListener('pointerup', () => finishRec());
+  mic.addEventListener('pointercancel', () => cancelRec(false));
+  mic.addEventListener('click', () => { if (mic.classList.contains('is-send')) sendText(); });
+  mic.addEventListener('contextmenu', (e) => e.preventDefault());
+  mic.addEventListener('keydown', (e) => {
+    if (mic.classList.contains('is-send')) return;
+    if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); startRec(null); }
+    else if (e.key === 'Escape') cancelRec(true);
+  });
+  mic.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') finishRec(); });
+
+  /* pause everything while off-screen */
+  ObjKit.onVisible(root, (vis) => {
+    if (vis) return;
+    players.forEach((st, v) => st.playing && setPlaying(v, false));
+    cancelRec(false);
+  });
+})();
+</script>
 
   </div>
 </section>

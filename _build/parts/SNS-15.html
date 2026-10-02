@@ -48,11 +48,14 @@
 /* floating liquid-glass toolbar */
 #SNS-15 .sns15-bar {
   position: absolute; z-index: 3; left: 50%; bottom: 36px; display: flex; align-items: center; gap: 2px; padding: 4px; transform: translateX(-50%);
+  width: max-content; white-space: nowrap; /* left:50% would otherwise cap the shrink-to-fit width and wrap "1.2万" */
   border-radius: var(--r-full);
-  background: light-dark(rgba(255, 255, 255, .5), rgba(40, 40, 44, .5));
+  background: light-dark(rgba(255, 255, 255, .72), rgba(40, 40, 44, .72));
   -webkit-backdrop-filter: blur(16px) saturate(190%); backdrop-filter: blur(16px) saturate(190%);
   box-shadow: var(--glass-edge), 0 10px 30px light-dark(rgba(0, 0, 0, .14), rgba(0, 0, 0, .5)), 0 1px 3px rgba(0, 0, 0, .08);
 }
+/* the article below is light in light mode: keep the home indicator legible over it */
+#SNS-15 .sns15-phone .phone-home { background: var(--label); }
 #SNS-15 .sns15-bar::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(180deg, light-dark(rgba(255, 255, 255, .38), rgba(255, 255, 255, .1)), rgba(255, 255, 255, 0) 55%); }
 #SNS-15 .sns15-tb {
   position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 44px; min-width: 44px; padding: 0 12px;

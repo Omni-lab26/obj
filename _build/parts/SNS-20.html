@@ -1,0 +1,442 @@
+<!-- ═══════════ SNS-20 · Voice Message ═══════════ -->
+<style>
+#SNS-20 {
+  --sns20-in: light-dark(#F1F0F7, #2C2C31);
+  --sns20-out-a: color-mix(in srgb, var(--accent) 76%, #fff);
+  --sns20-out-b: var(--accent);
+  --sns20-bar-in: light-dark(rgba(60, 60, 67, .24), rgba(235, 235, 245, .26));
+  --sns20-tint: light-dark(#F8F5FF, #1F1E26);
+}
+#SNS-20 .sns20-chat {
+  position: relative; width: min(100%, 360px); border-radius: 28px;
+  background: linear-gradient(180deg, transparent 40%, var(--sns20-tint) 100%), var(--bg-grouped-2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 18px 40px -18px light-dark(rgba(96, 80, 170, .32), rgba(0, 0, 0, .7)), inset 0 0 0 .5px var(--separator);
+}
+
+/* header */
+#SNS-20 .sns20-head { display: flex; align-items: center; gap: 10px; padding: 14px 14px 12px 16px; border-bottom: .5px solid var(--separator); }
+#SNS-20 .sns20-av { width: 38px; height: 38px; font-size: 16px; box-shadow: 0 3px 10px -3px rgba(127, 90, 240, .5); }
+#SNS-20 .sns20-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+#SNS-20 .sns20-who b { font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: -0.2px; }
+#SNS-20 .sns20-who span { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-caption1); color: var(--label-2); letter-spacing: 0; }
+#SNS-20 .sns20-online { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+#SNS-20 .sns20-call {
+  width: 36px; height: 36px; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; font-size: 16px;
+  color: var(--green); background: color-mix(in srgb, var(--green) 14%, transparent);
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+#SNS-20 .sns20-call:active { transform: scale(.9); transition-duration: 90ms; }
+
+/* message list */
+#SNS-20 .sns20-list {
+  display: flex; flex-direction: column; gap: 6px; height: 292px; padding: 10px 14px 8px;
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+}
+#SNS-20 .sns20-list::-webkit-scrollbar { display: none; }
+#SNS-20 .sns20-stamp { margin: 2px 0 4px; text-align: center; font: 500 var(--fs-caption2)/1.3 var(--font-text); color: var(--label-3); letter-spacing: 0; }
+#SNS-20 .sns20-msg { display: flex; }
+#SNS-20 .sns20-msg--out { justify-content: flex-end; }
+#SNS-20 .sns20-msg.is-new { animation: sns20-in 460ms var(--ease-spring) both; }
+#SNS-20 .sns20-text {
+  max-width: 78%; margin: 0; padding: 8px 13px; border-radius: 20px;
+  font: 400 var(--fs-callout)/1.35 var(--font-text); letter-spacing: 0; overflow-wrap: anywhere;
+  background: var(--sns20-in); color: var(--label);
+}
+#SNS-20 .sns20-msg--out .sns20-text { background: linear-gradient(140deg, var(--sns20-out-a), var(--sns20-out-b)); color: #fff; }
+
+/* voice bubble */
+#SNS-20 .sns20-voice {
+  --p: 0;
+  display: flex; align-items: center; gap: 10px; padding: 8px 14px 7px 8px; border-radius: 24px;
+  background: var(--sns20-in); color: var(--label);
+}
+#SNS-20 .sns20-msg--out .sns20-voice { background: linear-gradient(140deg, var(--sns20-out-a), var(--sns20-out-b)); color: #fff; box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--accent) 70%, transparent); }
+#SNS-20 .sns20-play {
+  position: relative; width: 36px; height: 36px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: var(--accent); color: #fff; font-size: 15px;
+  -webkit-tap-highlight-color: transparent; transition: transform var(--dur-2) var(--ease-spring);
+}
+#SNS-20 .sns20-msg--out .sns20-play { background: #fff; color: var(--accent); }
+#SNS-20 .sns20-play:active { transform: scale(.88); transition-duration: 90ms; }
+#SNS-20 .sns20-play svg { grid-area: 1 / 1; transition: opacity 160ms ease, scale 320ms var(--ease-spring); }
+#SNS-20 .sns20-ic-play { translate: 1.5px 0; }
+#SNS-20 .sns20-ic-pause, #SNS-20 .is-playing .sns20-ic-play { opacity: 0; scale: .4; }
+#SNS-20 .is-playing .sns20-ic-pause { opacity: 1; scale: 1; }
+#SNS-20 .sns20-vbody { display: flex; flex-direction: column; gap: 3px; }
+#SNS-20 .sns20-wave { position: relative; width: 138px; height: 28px; cursor: pointer; touch-action: none; border-radius: 4px; outline: none; }
+#SNS-20 .sns20-wave:focus-visible { box-shadow: 0 0 0 3px var(--focus-ring); }
+#SNS-20 .sns20-bars { position: absolute; inset: 0; display: flex; align-items: center; gap: 2px; pointer-events: none; }
+#SNS-20 .sns20-bars i { width: 3px; height: calc(4px + var(--h) * 22px); flex: none; border-radius: 2px; background: currentColor; }
+#SNS-20 .sns20-bars--base { color: var(--sns20-bar-in); }
+#SNS-20 .sns20-bars--on { color: var(--accent); clip-path: inset(0 calc(100% - var(--p) * 100%) 0 0); }
+#SNS-20 .sns20-msg--out .sns20-bars--base { color: rgba(255, 255, 255, .42); }
+#SNS-20 .sns20-msg--out .sns20-bars--on { color: #fff; }
+#SNS-20 .sns20-meta { display: flex; align-items: center; gap: 6px; height: 18px; font: 600 var(--fs-caption1)/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--label-2); }
+#SNS-20 .sns20-msg--out .sns20-meta { color: rgba(255, 255, 255, .86); }
+#SNS-20 .sns20-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: 0; scale: .3; transition: opacity 200ms ease, scale 300ms var(--ease-spring); }
+#SNS-20 .is-unplayed .sns20-dot { opacity: 1; scale: 1; }
+#SNS-20 .sns20-speed {
+  margin-left: auto; height: 18px; min-width: 32px; padding: 0 7px; border: 0; border-radius: 9px; cursor: pointer;
+  font: 700 10.5px/18px var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0;
+  background: light-dark(rgba(60, 60, 67, .08), rgba(255, 255, 255, .1)); color: var(--label-2);
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease;
+}
+#SNS-20 .sns20-msg--out .sns20-speed { background: rgba(255, 255, 255, .22); color: #fff; }
+#SNS-20 .sns20-speed.is-pop { animation: sns20-pop 340ms var(--ease-spring); }
+
+/* composer */
+#SNS-20 .sns20-composer { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 12px 12px; }
+#SNS-20 .sns20-plus { width: 34px; height: 34px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; font-size: 16px; background: var(--fill-3); color: var(--label-2); }
+#SNS-20 .sns20-field { flex: 1; min-width: 0; height: 36px; display: flex; align-items: center; padding: 0 14px; border-radius: 18px; background: var(--fill-4); box-shadow: inset 0 0 0 .5px var(--separator); transition: opacity 200ms ease; }
+#SNS-20 .sns20-field input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 16px; letter-spacing: 0; caret-color: var(--accent); }
+#SNS-20 .sns20-field input::placeholder { color: var(--label-3); }
+#SNS-20 .sns20-mic {
+  position: relative; z-index: 3; width: 36px; height: 36px; flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  font-size: 18px; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent);
+  touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-2) ease, color var(--dur-2) ease, opacity 160ms ease;
+}
+#SNS-20 .sns20-mic:active { transform: scale(.9); }
+#SNS-20 .sns20-mic:focus-visible, #SNS-20 .sns20-play:focus-visible, #SNS-20 .sns20-speed:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus-ring); }
+#SNS-20 .sns20-mic svg { grid-area: 1 / 1; transition: opacity 160ms ease, scale 300ms var(--ease-spring); }
+#SNS-20 .sns20-ic-send, #SNS-20 .sns20-mic.is-send .sns20-ic-mic { opacity: 0; scale: .4; }
+#SNS-20 .sns20-mic.is-send { background: var(--accent); color: #fff; }
+#SNS-20 .sns20-mic.is-send .sns20-ic-send { opacity: 1; scale: 1; }
+#SNS-20 .is-rec .sns20-mic { opacity: 0; }
+
+/* recording strip */
+#SNS-20 .sns20-rec {
+  position: absolute; left: 12px; right: 56px; top: 8px; height: 36px; z-index: 2;
+  display: flex; align-items: center; gap: 8px; padding: 0 12px 0 13px; border-radius: 18px; overflow: hidden;
+  background: light-dark(#FFF1F2, rgba(255, 69, 58, .14)); color: var(--label);
+  opacity: 0; visibility: hidden; translate: 12px 0;
+  transition: opacity 200ms ease, translate 360ms var(--ease-ios), visibility 0s linear 360ms;
+}
+#SNS-20 .is-rec .sns20-rec { opacity: 1; visibility: visible; translate: 0 0; transition: opacity 160ms ease, translate 360ms var(--ease-ios), visibility 0s; }
+#SNS-20 .sns20-rec-lead { position: relative; width: 16px; height: 16px; flex: none; display: grid; place-items: center; }
+#SNS-20 .sns20-rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); animation: sns20-blink 1s ease-in-out infinite; transition: opacity 160ms ease, scale 260ms var(--ease-ios); }
+#SNS-20 .sns20-rec-trash { position: absolute; font-size: 16px; color: var(--red); opacity: 0; scale: .4; transition: opacity 160ms ease, scale 300ms var(--ease-spring); }
+#SNS-20 .sns20-rec-time { width: 34px; flex: none; font: 600 var(--fs-subhead)/1 var(--font-rounded); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+#SNS-20 .sns20-rec-wave { flex: 1; min-width: 0; height: 24px; display: flex; align-items: center; justify-content: flex-end; gap: 2px; overflow: hidden; color: var(--red); }
+#SNS-20 .sns20-rec-wave i { width: 3px; flex: none; height: calc(3px + var(--h, 0) * 20px); border-radius: 2px; background: currentColor; opacity: .75; transition: height 90ms linear; }
+#SNS-20 .sns20-rec-hint { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: var(--fs-footnote); color: var(--label-2); letter-spacing: 0; white-space: nowrap; }
+#SNS-20 .sns20-rec-hint .i { font-size: 12px; animation: sns20-nudge 1.4s var(--ease-in-out) infinite; }
+#SNS-20 .is-trash .sns20-rec-dot { opacity: 0; scale: .3; }
+#SNS-20 .is-trash .sns20-rec-trash { opacity: 1; scale: 1; animation: sns20-trash 620ms var(--ease-out) 60ms; }
+#SNS-20 .is-trash .sns20-rec-time, #SNS-20 .is-trash .sns20-rec-wave, #SNS-20 .is-trash .sns20-rec-hint { opacity: .25; transition: opacity 200ms ease; }
+
+/* the soft mic blob that grows under the finger */
+#SNS-20 .sns20-hold {
+  position: absolute; z-index: 4; right: -12px; top: -16px; width: 84px; height: 84px; border-radius: 50%; isolation: isolate;
+  display: grid; place-items: center; color: #fff; font-size: 30px; pointer-events: none;
+  background: radial-gradient(circle at 35% 30%, var(--sns20-out-a), var(--sns20-out-b) 70%);
+  box-shadow: 0 14px 30px -10px color-mix(in srgb, var(--accent) 70%, transparent);
+  opacity: 0; scale: .35;
+  transition: opacity 180ms ease, scale 260ms var(--ease-ios), translate 200ms var(--ease-out);
+}
+#SNS-20 .sns20-hold::before, #SNS-20 .sns20-hold::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 28%, transparent); opacity: 0;
+}
+#SNS-20 .is-rec .sns20-hold { opacity: 1; scale: calc(1 + var(--sns20-amp, 0) * .08); transition: opacity 160ms ease, scale 120ms ease-out, translate 60ms linear; }
+#SNS-20 .is-rec .sns20-hold::before { animation: sns20-ring 1.6s var(--ease-out) infinite; }
+#SNS-20 .is-rec .sns20-hold::after { animation: sns20-ring 1.6s var(--ease-out) .8s infinite; }
+#SNS-20 .is-trash .sns20-hold { opacity: 0; scale: .3; transition: opacity 220ms ease, scale 280ms var(--ease-ios); }
+#SNS-20 .sns20-hold .i { translate: 0 1px; }
+
+/* tooltip */
+#SNS-20 .sns20-tip {
+  position: absolute; right: 8px; bottom: 58px; z-index: 5; margin: 0; padding: 7px 11px; border-radius: 12px;
+  font: 500 var(--fs-footnote)/1.2 var(--font-text); letter-spacing: 0; color: #fff; background: rgba(30, 30, 34, .86);
+  box-shadow: var(--shadow-2); pointer-events: none;
+  opacity: 0; translate: 0 6px; transition: opacity 200ms ease, translate 300ms var(--ease-out);
+}
+#SNS-20 .sns20-tip.is-on { opacity: 1; translate: 0 0; }
+#SNS-20 .sns20-tip::after { content: ""; position: absolute; right: 20px; bottom: -5px; width: 10px; height: 10px; rotate: 45deg; border-radius: 2px; background: inherit; }
+
+@keyframes sns20-in { from { opacity: 0; translate: 0 14px; scale: .94; } to { opacity: 1; translate: 0 0; scale: 1; } }
+@keyframes sns20-pop { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes sns20-blink { 50% { opacity: .25; } }
+@keyframes sns20-ring { from { transform: scale(1); opacity: .7; } to { transform: scale(1.75); opacity: 0; } }
+@keyframes sns20-nudge { 0%, 100% { translate: 0 0; } 50% { translate: -3px 0; } }
+@keyframes sns20-trash { 0% { rotate: 0deg; } 25% { rotate: -16deg; } 50% { rotate: 12deg; } 75% { rotate: -5deg; } 100% { rotate: 0deg; translate: 0 2px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  #SNS-20 .sns20-msg.is-new { animation-duration: 1ms; }
+  #SNS-20 .sns20-rec-dot, #SNS-20 .sns20-rec-hint .i, #SNS-20 .is-rec .sns20-hold::before, #SNS-20 .is-rec .sns20-hold::after, #SNS-20 .is-trash .sns20-rec-trash { animation: none; }
+  #SNS-20 .is-rec .sns20-hold { scale: 1; }
+}
+</style>
+<article class="obj" id="SNS-20" data-name="Voice Message" data-ja="ボイスメッセージ" data-vector="Soft" data-size="m" data-desc="波形付きの音声メッセージと、長押しで録音するボタン。">
+  <div class="obj-stage" data-bg="grouped">
+    <div class="sns20-chat">
+      <header class="sns20-head">
+        <span class="av av-4 sns20-av" aria-hidden="true">Y</span>
+        <div class="sns20-who"><b>yuna</b><span><i class="sns20-online" aria-hidden="true"></i>オンライン</span></div>
+        <button class="sns20-call" type="button" aria-label="音声通話"><svg class="i" aria-hidden="true"><use href="#i-phone-fill"/></svg></button>
+      </header>
+      <div class="sns20-list" role="log" aria-label="メッセージ">
+        <p class="sns20-stamp">今日 9:38</p>
+        <div class="sns20-msg sns20-msg--in"><p class="sns20-text">朝の散歩で録れたよ🐦</p></div>
+      </div>
+      <div class="sns20-composer">
+        <button class="sns20-plus" type="button" aria-label="添付"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+        <label class="sns20-field"><input type="text" placeholder="メッセージ" aria-label="メッセージ" autocomplete="off" enterkeyhint="send"></label>
+        <button class="sns20-mic" type="button" aria-label="長押しで録音">
+          <svg class="i sns20-ic-mic" aria-hidden="true"><use href="#i-mic-fill"/></svg>
+          <svg class="i sns20-ic-send" aria-hidden="true"><use href="#i-arrow-up"/></svg>
+        </button>
+        <div class="sns20-rec" aria-hidden="true">
+          <span class="sns20-rec-lead"><span class="sns20-rec-dot"></span><svg class="i sns20-rec-trash"><use href="#i-trash-fill"/></svg></span>
+          <span class="sns20-rec-time">0:00</span>
+          <span class="sns20-rec-wave"></span>
+          <span class="sns20-rec-hint"><svg class="i"><use href="#i-chevron-left"/></svg>スライドでキャンセル</span>
+        </div>
+        <div class="sns20-hold" aria-hidden="true"><svg class="i"><use href="#i-mic-fill"/></svg></div>
+        <p class="sns20-tip" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+  <ul class="obj-notes"><li>▶で再生・波形タップで移動</li><li>1x で速度切替</li><li>マイクを長押しで録音</li><li>左へスライドでキャンセル</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('SNS-20');
+  const q = (s) => root.querySelector(s);
+  const list = q('.sns20-list'), composer = q('.sns20-composer'), mic = q('.sns20-mic'), input = q('.sns20-field input');
+  const recTime = q('.sns20-rec-time'), recWave = q('.sns20-rec-wave'), recHint = q('.sns20-rec-hint'), hold = q('.sns20-hold'), tip = q('.sns20-tip');
+  const BARS = 28, RATES = [1, 1.5, 2];
+  const fmt = (s) => { s = Math.max(0, Math.ceil(s - 1e-6)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const rm = () => ObjKit.reducedMotion;
+
+  /* deterministic, speech-like waveform */
+  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function makeAmps(seed) {
+    const r = mulberry(seed), out = [];
+    for (let i = 0; i < BARS; i++) {
+      const env = Math.pow(Math.sin(Math.PI * (i + .5) / BARS), .45);
+      const syl = .5 + .5 * Math.abs(Math.sin(i * .78 + seed));
+      out.push(Math.max(.1, Math.min(1, env * syl * (.4 + .6 * r()))));
+    }
+    return out;
+  }
+  function resample(src) {
+    if (!src.length) return makeAmps(3);
+    const out = [];
+    for (let i = 0; i < BARS; i++) {
+      const a = Math.floor(i * src.length / BARS), b = Math.max(a + 1, Math.floor((i + 1) * src.length / BARS));
+      let m = 0; for (let k = a; k < b && k < src.length; k++) m = Math.max(m, src[k]);
+      out.push(Math.max(.1, Math.min(1, m)));
+    }
+    return out;
+  }
+
+  /* — voice bubbles — */
+  const players = new Map(); // voice el → state
+  function addVoice({ dir, dur, amps, unplayed = false, animate = false }) {
+    const msg = document.createElement('div');
+    msg.className = `sns20-msg sns20-msg--${dir}${animate ? ' is-new' : ''}`;
+    const bars = amps.map((a) => `<i style="--h:${a.toFixed(2)}"></i>`).join('');
+    msg.innerHTML =
+      `<div class="sns20-voice${unplayed ? ' is-unplayed' : ''}">` +
+        `<button class="sns20-play" type="button" aria-label="再生"><svg class="i sns20-ic-play" aria-hidden="true"><use href="#i-play-fill"/></svg><svg class="i sns20-ic-pause" aria-hidden="true"><use href="#i-pause-fill"/></svg></button>` +
+        `<div class="sns20-vbody">` +
+          `<div class="sns20-wave" role="slider" tabindex="0" aria-label="再生位置" aria-valuemin="0" aria-valuemax="${dur}" aria-valuenow="0" aria-valuetext="0秒 / ${dur}秒">` +
+            `<span class="sns20-bars sns20-bars--base">${bars}</span><span class="sns20-bars sns20-bars--on">${bars}</span></div>` +
+          `<div class="sns20-meta"><span class="sns20-time">${fmt(dur)}</span><i class="sns20-dot" aria-hidden="true"></i><button class="sns20-speed" type="button" aria-label="再生速度 1倍">1x</button></div>` +
+        `</div></div>`;
+    list.appendChild(msg);
+    const v = msg.querySelector('.sns20-voice');
+    players.set(v, { dur, pos: 0, rate: 0, playing: false, scrubbing: false });
+    render(v);
+    return msg;
+  }
+  function render(v) {
+    const st = players.get(v);
+    v.style.setProperty('--p', (st.pos / st.dur).toFixed(4));
+    v.querySelector('.sns20-time').textContent = fmt(st.pos > 0 ? st.dur - st.pos : st.dur);
+    const w = v.querySelector('.sns20-wave');
+    w.setAttribute('aria-valuenow', Math.round(st.pos));
+    w.setAttribute('aria-valuetext', `${Math.round(st.pos)}秒 / ${st.dur}秒`);
+  }
+  let raf = 0, last = 0;
+  function loop(t) {
+    const dt = last ? Math.min(.1, (t - last) / 1000) : 0;
+    last = t;
+    let any = false;
+    players.forEach((st, v) => {
+      if (!st.playing) return;
+      any = true;
+      if (!st.scrubbing) st.pos += dt * RATES[st.rate];
+      if (st.pos >= st.dur) { st.pos = 0; setPlaying(v, false); }
+      render(v);
+    });
+    raf = any ? requestAnimationFrame(loop) : 0;
+    if (!any) last = 0;
+  }
+  function setPlaying(v, on) {
+    const st = players.get(v);
+    if (on) players.forEach((s, other) => { if (other !== v && s.playing) setPlaying(other, false); }); // only one at a time
+    st.playing = on;
+    v.classList.toggle('is-playing', on);
+    if (on) v.classList.remove('is-unplayed');
+    v.querySelector('.sns20-play').setAttribute('aria-label', on ? '一時停止' : '再生');
+    if (on && !raf) { last = 0; raf = requestAnimationFrame(loop); }
+  }
+  const voiceOf = (el) => el.closest('.sns20-voice');
+
+  list.addEventListener('click', (e) => {
+    const play = e.target.closest('.sns20-play');
+    if (play) { const v = voiceOf(play); setPlaying(v, !players.get(v).playing); return; }
+    const sp = e.target.closest('.sns20-speed');
+    if (sp) {
+      const st = players.get(voiceOf(sp));
+      st.rate = (st.rate + 1) % RATES.length;
+      sp.textContent = `${RATES[st.rate]}x`;
+      sp.setAttribute('aria-label', `再生速度 ${RATES[st.rate]}倍`);
+      sp.classList.remove('is-pop'); void sp.offsetWidth; if (!rm()) sp.classList.add('is-pop');
+    }
+  });
+  /* scrub: tap / drag on the waveform seeks and plays */
+  const seekTo = (v, clientX) => {
+    const st = players.get(v), r = v.querySelector('.sns20-wave').getBoundingClientRect();
+    st.pos = Math.max(0, Math.min(.999, (clientX - r.left) / r.width)) * st.dur;
+    render(v);
+  };
+  list.addEventListener('pointerdown', (e) => {
+    const w = e.target.closest('.sns20-wave');
+    if (!w || e.button > 0) return;
+    const v = voiceOf(w), st = players.get(v);
+    w.setPointerCapture(e.pointerId);
+    st.scrubbing = true;
+    seekTo(v, e.clientX);
+    const move = (ev) => seekTo(v, ev.clientX);
+    const up = () => {
+      st.scrubbing = false;
+      w.removeEventListener('pointermove', move); w.removeEventListener('pointerup', up); w.removeEventListener('pointercancel', up);
+      if (!st.playing) setPlaying(v, true);
+    };
+    w.addEventListener('pointermove', move); w.addEventListener('pointerup', up); w.addEventListener('pointercancel', up);
+  });
+  list.addEventListener('keydown', (e) => {
+    const w = e.target.closest('.sns20-wave');
+    if (!w) return;
+    const v = voiceOf(w), st = players.get(v);
+    const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+    if (step) st.pos = Math.max(0, Math.min(st.dur - .01, st.pos + step));
+    else if (e.key === 'Home') st.pos = 0;
+    else if (e.key === 'End') st.pos = st.dur - .01;
+    else if (e.key === ' ' || e.key === 'Enter') setPlaying(v, !st.playing);
+    else return;
+    e.preventDefault();
+    render(v);
+  });
+
+  /* initial conversation */
+  addVoice({ dir: 'in', dur: 12, amps: makeAmps(7), unplayed: true });
+  addVoice({ dir: 'out', dur: 8, amps: makeAmps(21) });
+
+  /* — composer: text send — */
+  const scrollEnd = () => list.scrollTo({ top: list.scrollHeight, behavior: rm() ? 'auto' : 'smooth' });
+  const syncMic = () => {
+    const has = input.value.trim().length > 0;
+    mic.classList.toggle('is-send', has);
+    mic.setAttribute('aria-label', has ? '送信' : '長押しで録音');
+  };
+  function sendText() {
+    const t = input.value.trim();
+    if (!t) return;
+    const m = document.createElement('div');
+    m.className = 'sns20-msg sns20-msg--out is-new';
+    const p = document.createElement('p'); p.className = 'sns20-text'; p.textContent = t;
+    m.appendChild(p); list.appendChild(m);
+    input.value = ''; syncMic(); scrollEnd();
+  }
+  input.addEventListener('input', syncMic);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendText(); } });
+
+  /* — composer: press-and-hold to record — */
+  const POOL = 26;
+  recWave.innerHTML = '<i></i>'.repeat(POOL);
+  const poolBars = [...recWave.children];
+  let rec = null, tipT = 0;
+  function showTip(text) {
+    clearTimeout(tipT);
+    tip.textContent = text; tip.classList.add('is-on');
+    tipT = setTimeout(() => tip.classList.remove('is-on'), 1500);
+  }
+  function startRec(x) {
+    if (rec) return;
+    players.forEach((st, v) => st.playing && setPlaying(v, false));
+    rec = { t0: performance.now(), x0: x, amps: [], live: new Array(POOL).fill(0), timer: 0, phase: Math.random() * 6 };
+    composer.classList.remove('is-trash');
+    composer.classList.add('is-rec');
+    recTime.textContent = '0:00';
+    recHint.style.opacity = ''; recHint.style.translate = '';
+    hold.style.translate = '';
+    poolBars.forEach((b) => b.style.setProperty('--h', 0));
+    rec.timer = setInterval(sample, 90);
+  }
+  function sample() {
+    const el = (performance.now() - rec.t0) / 1000;
+    const p = rec.phase + el * 7;
+    const a = Math.max(.08, Math.min(1, (.25 + .75 * Math.abs(Math.sin(p) * Math.sin(p * .43 + 1))) * (.55 + .45 * Math.random())));
+    rec.amps.push(a);
+    rec.live.push(a); rec.live.shift();
+    poolBars.forEach((b, i) => b.style.setProperty('--h', rec.live[i].toFixed(2)));
+    hold.style.setProperty('--sns20-amp', a.toFixed(2));
+    recTime.textContent = `${Math.floor(el / 60)}:${String(Math.floor(el) % 60).padStart(2, '0')}`;
+    if (el >= 60) finishRec();
+  }
+  function dragRec(x) {
+    if (!rec || rec.x0 == null) return;
+    const dx = Math.max(0, rec.x0 - x);
+    hold.style.translate = `${-Math.min(dx, 140)}px 0`;
+    recHint.style.opacity = String(Math.max(0, 1 - dx / 80));
+    recHint.style.translate = `${-dx * .35}px 0`;
+    if (dx > 80) cancelRec(true);
+  }
+  function stopTimer() { if (rec) clearInterval(rec.timer); }
+  function cancelRec(trash) {
+    if (!rec) return;
+    stopTimer(); rec = null;
+    if (trash && !rm()) {
+      composer.classList.add('is-trash');
+      setTimeout(() => composer.classList.remove('is-rec', 'is-trash'), 700);
+    } else composer.classList.remove('is-rec', 'is-trash');
+  }
+  function finishRec() {
+    if (!rec) return;
+    const el = (performance.now() - rec.t0) / 1000, amps = rec.amps;
+    stopTimer(); rec = null;
+    composer.classList.remove('is-rec');
+    if (el < .6) { showTip('長押しで録音できます'); return; }
+    addVoice({ dir: 'out', dur: Math.max(1, Math.round(el)), amps: resample(amps), animate: true });
+    scrollEnd();
+  }
+  mic.addEventListener('pointerdown', (e) => {
+    if (mic.classList.contains('is-send') || e.button > 0) return;
+    e.preventDefault();
+    mic.setPointerCapture(e.pointerId);
+    startRec(e.clientX);
+  });
+  mic.addEventListener('pointermove', (e) => dragRec(e.clientX));
+  mic.addEventListener('pointerup', () => finishRec());
+  mic.addEventListener('pointercancel', () => cancelRec(false));
+  mic.addEventListener('click', () => { if (mic.classList.contains('is-send')) sendText(); });
+  mic.addEventListener('contextmenu', (e) => e.preventDefault());
+  mic.addEventListener('keydown', (e) => {
+    if (mic.classList.contains('is-send')) return;
+    if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); startRec(null); }
+    else if (e.key === 'Escape') cancelRec(true);
+  });
+  mic.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') finishRec(); });
+
+  /* pause everything while off-screen */
+  ObjKit.onVisible(root, (vis) => {
+    if (vis) return;
+    players.forEach((st, v) => st.playing && setPlaying(v, false));
+    cancelRec(false);
+  });
+})();
+</script>

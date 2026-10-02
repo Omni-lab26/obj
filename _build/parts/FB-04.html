@@ -1,0 +1,289 @@
+<!-- ═══════════ FB-04 · HUD & Toast ═══════════ -->
+<style>
+#FB-04 {
+  --fb04-panel: light-dark(rgba(255, 255, 255, .42), rgba(54, 54, 62, .42));
+  --fb04-sheen: light-dark(rgba(255, 255, 255, .42), rgba(255, 255, 255, .07));
+}
+/* room above / below the scene for the toast and the undo bar */
+#FB-04 .obj-stage { min-height: 520px; padding-top: 92px; padding-bottom: 100px; }
+
+/* ── Scene (content behind the overlays) ── */
+#FB-04 .fb04-scene { display: flex; flex-direction: column; align-items: center; gap: 18px; width: min(100%, 340px); }
+#FB-04 .fb04-panel {
+  position: relative; width: 100%; padding: 14px 12px 12px; border-radius: 24px;
+  background: var(--fb04-panel);
+  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+}
+#FB-04 .fb04-panel-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 6px 10px; }
+#FB-04 .fb04-panel-title { margin: 0; font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: 0; color: var(--label); }
+#FB-04 .fb04-count { font: 500 var(--fs-footnote)/1.2 var(--font-text); color: var(--label-2); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+#FB-04 .fb04-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+#FB-04 .fb04-tile {
+  aspect-ratio: 1; border-radius: 13px; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .08);
+  transition: opacity 320ms ease, scale 560ms var(--ease-spring), filter 320ms ease;
+}
+#FB-04 .fb04-tile:nth-child(2) { background-size: 170% 170%; background-position: 45% 72%; }
+#FB-04 .fb04-tile:nth-child(3) { background-size: 150% 150%; background-position: 60% 40%; }
+#FB-04 .fb04-tile.is-gone { opacity: 0; scale: .8; filter: blur(8px); transition: opacity 240ms ease, scale 300ms var(--ease-ios), filter 240ms ease; }
+
+/* ── Triggers (glass capsules, same recipe as FB-01) ── */
+#FB-04 .fb04-triggers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }
+#FB-04 .fb04-trigger {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 44px; padding: 0 12px; min-width: 0;
+  border: 0; border-radius: var(--r-full); cursor: pointer; color: var(--label);
+  font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0; white-space: nowrap;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-2) ease;
+}
+#FB-04 .fb04-trigger::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, var(--fb04-sheen), rgba(255, 255, 255, 0) 55%); }
+#FB-04 .fb04-trigger .i { font-size: 17px; color: var(--fb04-c); }
+#FB-04 .fb04-trigger[data-act="toast"] { --fb04-c: var(--green); }
+#FB-04 .fb04-trigger[data-act="hud"] { --fb04-c: var(--accent); }
+#FB-04 .fb04-trigger[data-act="load"] { --fb04-c: var(--indigo); }
+#FB-04 .fb04-trigger[data-act="snack"] { --fb04-c: var(--red); }
+@media (hover: hover) { #FB-04 .fb04-trigger:hover { background: light-dark(rgba(255, 255, 255, .7), rgba(72, 72, 80, .6)); } }
+#FB-04 .fb04-trigger:active { transform: scale(.96); transition-duration: 90ms; }
+#FB-04 .fb04-trigger:focus-visible { outline: none; box-shadow: var(--glass-shadow), 0 0 0 3px var(--focus-ring); }
+
+/* ── 1. Top toast — drops from the top edge like a Dynamic Island alert ── */
+#FB-04 .fb04-toast {
+  position: absolute; z-index: 30; top: 16px; left: 50%;
+  display: flex; align-items: center; gap: 10px; height: 52px; max-width: calc(100% - 32px); padding: 0 22px 0 11px;
+  border-radius: 26px; color: var(--label); pointer-events: none;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(26px) saturate(190%); backdrop-filter: blur(26px) saturate(190%);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  translate: -50% calc(-100% - 24px); scale: .9; opacity: 0; visibility: hidden;
+  transition: translate 340ms var(--ease-ios), scale 340ms var(--ease-ios), opacity 200ms ease 80ms, visibility 0s linear 340ms;
+}
+#FB-04 .fb04-toast.is-on {
+  translate: -50% 0; scale: 1; opacity: 1; visibility: visible;
+  transition: translate 640ms var(--ease-spring), scale 640ms var(--ease-spring), opacity 160ms ease, visibility 0s;
+}
+#FB-04 .fb04-toast.is-bump { animation: fb04-bump 380ms var(--ease-out); }
+#FB-04 .fb04-toast-ic {
+  width: 30px; height: 30px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--green); color: #fff; box-shadow: 0 2px 8px color-mix(in srgb, var(--green) 40%, transparent);
+}
+#FB-04 .fb04-toast-ic svg { width: 16px; height: 16px; }
+#FB-04 .fb04-toast-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+#FB-04 .fb04-toast-title { font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: 0; white-space: nowrap; }
+#FB-04 .fb04-toast-sub { font: 400 var(--fs-caption1)/1.25 var(--font-text); color: var(--label-2); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── 2. Center HUD — check (stroke-drawn) or 8-spoke spinner → check ── */
+#FB-04 .fb04-hud {
+  position: absolute; z-index: 25; left: 50%; top: 50%; width: 156px; height: 156px; margin: -78px 0 0 -78px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  border-radius: 32px; color: var(--label); pointer-events: none;
+  /* thick material: HUD text must win over whatever sits behind it */
+  background: light-dark(rgba(250, 250, 252, .74), rgba(46, 46, 52, .74));
+  -webkit-backdrop-filter: blur(18px) saturate(180%); backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  opacity: 0; scale: .84; visibility: hidden;
+  transition: opacity 240ms ease, scale 300ms var(--ease-ios), visibility 0s linear 300ms;
+}
+#FB-04 .fb04-hud.is-on { opacity: 1; scale: 1; visibility: visible; transition: opacity 160ms ease, scale 560ms var(--ease-spring), visibility 0s; }
+#FB-04 .fb04-glyph { position: relative; width: 64px; height: 64px; }
+#FB-04 .fb04-check, #FB-04 .fb04-spin { position: absolute; inset: 0; display: grid; place-items: center; transition: opacity 200ms ease, scale 380ms var(--ease-spring); }
+#FB-04 .fb04-check svg { width: 64px; height: 64px; overflow: visible; }
+#FB-04 .fb04-check path { fill: none; stroke: currentColor; stroke-width: 5.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+#FB-04 .fb04-hud[data-state="done"] .fb04-check path { animation: fb04-draw 440ms var(--ease-out) 90ms forwards; }
+#FB-04 .fb04-hud[data-state="loading"] .fb04-check { opacity: 0; scale: .7; }
+#FB-04 .fb04-hud[data-state="done"] .fb04-spin { opacity: 0; scale: .6; }
+#FB-04 .fb04-spokes { position: relative; width: 40px; height: 40px; animation: fb04-rot 880ms steps(8, end) infinite; animation-play-state: paused; }
+#FB-04 .fb04-hud.is-on[data-state="loading"] .fb04-spokes { animation-play-state: running; }
+#FB-04 .fb04-spokes i { position: absolute; left: 50%; top: 0; width: 4.5px; height: 12px; margin-left: -2.25px; border-radius: 3px; background: var(--label-2); transform-origin: 50% 20px; }
+#FB-04 .fb04-spokes i:nth-child(1) { rotate: 0deg; opacity: 1; }
+#FB-04 .fb04-spokes i:nth-child(2) { rotate: 45deg; opacity: .2; }
+#FB-04 .fb04-spokes i:nth-child(3) { rotate: 90deg; opacity: .28; }
+#FB-04 .fb04-spokes i:nth-child(4) { rotate: 135deg; opacity: .38; }
+#FB-04 .fb04-spokes i:nth-child(5) { rotate: 180deg; opacity: .48; }
+#FB-04 .fb04-spokes i:nth-child(6) { rotate: 225deg; opacity: .6; }
+#FB-04 .fb04-spokes i:nth-child(7) { rotate: 270deg; opacity: .72; }
+#FB-04 .fb04-spokes i:nth-child(8) { rotate: 315deg; opacity: .86; }
+#FB-04 .fb04-hud-label { display: grid; font: 600 var(--fs-subhead)/1.2 var(--font-text); letter-spacing: 0; }
+#FB-04 .fb04-hud-label > span { grid-area: 1 / 1; text-align: center; transition: opacity 200ms ease, translate 320ms var(--ease-out); }
+#FB-04 .fb04-hud[data-state="loading"] .fb04-l-done,
+#FB-04 .fb04-hud[data-state="done"] .fb04-l-load { opacity: 0; translate: 0 5px; }
+
+/* ── 3. Undo bar — dark glass capsule with a 5s countdown line ── */
+#FB-04 .fb04-snack {
+  position: absolute; z-index: 28; left: 50%; bottom: 18px; width: min(calc(100% - 28px), 360px);
+  display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 7px 7px 7px 16px;
+  border-radius: 27px; overflow: hidden; color: #fff;
+  background: rgba(30, 30, 34, .8);
+  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .28), inset 0 0 0 .5px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .12);
+  translate: -50% calc(100% + 30px); opacity: 0; visibility: hidden;
+  transition: translate 320ms var(--ease-ios), opacity 220ms ease, visibility 0s linear 320ms;
+}
+#FB-04 .fb04-snack.is-on { translate: -50% 0; opacity: 1; visibility: visible; transition: translate 480ms var(--ease-ios), opacity 200ms ease, visibility 0s; }
+#FB-04 .fb04-snack-ic { width: 22px; flex: none; display: grid; place-items: center; font-size: 18px; color: rgba(255, 255, 255, .9); }
+#FB-04 .fb04-snack-ic > * { grid-area: 1 / 1; transition: opacity 200ms ease, scale 380ms var(--ease-spring); }
+#FB-04 .fb04-snack-ic .fb04-ic-ok { color: #32D74B; }
+#FB-04 .fb04-snack-text { flex: 1; min-width: 0; display: grid; font: 500 var(--fs-subhead)/1.25 var(--font-text); letter-spacing: 0; }
+#FB-04 .fb04-snack-text > span { grid-area: 1 / 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity 220ms ease, translate 340ms var(--ease-out); }
+#FB-04 .fb04-snack[data-state="undone"] .fb04-s-del,
+#FB-04 .fb04-snack[data-state="deleted"] .fb04-s-undone { opacity: 0; translate: 0 6px; }
+#FB-04 .fb04-snack[data-state="undone"] .fb04-ic-del,
+#FB-04 .fb04-snack[data-state="deleted"] .fb04-ic-ok { opacity: 0; scale: .4; }
+#FB-04 .fb04-undo {
+  flex: none; height: 40px; padding: 0 16px; border: 0; border-radius: var(--r-full); cursor: pointer;
+  background: rgba(255, 255, 255, .12); color: #4AA3FF;
+  font: 600 var(--fs-subhead)/1 var(--font-text); letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring), background var(--dur-1) ease, opacity 200ms ease;
+}
+#FB-04 .fb04-undo:active { transform: scale(.94); background: rgba(255, 255, 255, .2); transition-duration: 90ms; }
+#FB-04 .fb04-undo:focus-visible { outline: 2px solid #4AA3FF; outline-offset: 2px; }
+#FB-04 .fb04-snack[data-state="undone"] .fb04-undo { opacity: 0; pointer-events: none; }
+#FB-04 .fb04-bar { position: absolute; left: 24px; right: 24px; bottom: 0; height: 2px; border-radius: 1px; background: rgba(255, 255, 255, .55); transform-origin: left center; }
+#FB-04 .fb04-snack[data-state="undone"] .fb04-bar { opacity: 0; transition: opacity 200ms ease; }
+
+@keyframes fb04-bump { 0% { scale: 1; } 35% { scale: 1.05; } 100% { scale: 1; } }
+@keyframes fb04-draw { to { stroke-dashoffset: 0; } }
+@keyframes fb04-rot { to { rotate: 360deg; } }
+
+@media (prefers-reduced-motion: reduce) {
+  #FB-04 .fb04-toast, #FB-04 .fb04-toast.is-on { translate: -50% 0; scale: 1; transition-property: opacity, visibility; }
+  #FB-04 .fb04-hud, #FB-04 .fb04-hud.is-on { scale: 1; transition-property: opacity, visibility; }
+  #FB-04 .fb04-snack, #FB-04 .fb04-snack.is-on { translate: -50% 0; transition-property: opacity, visibility; }
+  #FB-04 .fb04-toast.is-bump { animation: none; }
+  #FB-04 .fb04-hud[data-state="done"] .fb04-check path { animation: none; stroke-dashoffset: 0; }
+  #FB-04 .fb04-spokes { animation-duration: 1.6s; }
+  #FB-04 .fb04-tile, #FB-04 .fb04-tile.is-gone { scale: 1; filter: none; }
+}
+</style>
+<article class="obj" id="FB-04" data-name="HUD &amp; Toast" data-ja="HUD／トースト" data-vector="Glass" data-size="m" data-desc="「コピーしました」等の一時表示。上部・中央・下部の3種。">
+  <div class="obj-stage" data-bg="wallpaper">
+    <div class="fb04-scene">
+      <section class="fb04-panel" aria-label="最近の項目">
+        <div class="fb04-panel-head"><h4 class="fb04-panel-title">最近の項目</h4><span class="fb04-count">3枚</span></div>
+        <div class="fb04-tiles">
+          <div class="art art-2 fb04-tile" role="img" aria-label="海の写真"></div>
+          <div class="art art-1 fb04-tile" role="img" aria-label="夕焼けの写真"></div>
+          <div class="art art-6 fb04-tile fb04-tile--del" role="img" aria-label="オーロラの写真"></div>
+        </div>
+      </section>
+      <div class="fb04-triggers">
+        <button class="fb04-trigger" type="button" data-act="toast"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg>上部トースト</button>
+        <button class="fb04-trigger" type="button" data-act="hud"><svg class="i" aria-hidden="true"><use href="#i-checkmark-circle-fill"/></svg>中央HUD</button>
+        <button class="fb04-trigger" type="button" data-act="load"><svg class="i" aria-hidden="true"><use href="#i-arrow-clockwise"/></svg>読み込みHUD</button>
+        <button class="fb04-trigger" type="button" data-act="snack"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg>取り消しバー</button>
+      </div>
+    </div>
+
+    <div class="fb04-toast" aria-hidden="true">
+      <span class="fb04-toast-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5.5 12.5 4.3 4.3 8.7-9.3"/></svg></span>
+      <span class="fb04-toast-text"><span class="fb04-toast-title">リンクをコピーしました</span><span class="fb04-toast-sub">haru.studio/arashiyama</span></span>
+    </div>
+
+    <div class="fb04-hud" data-state="done" aria-hidden="true">
+      <div class="fb04-glyph">
+        <span class="fb04-spin"><span class="fb04-spokes"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+        <span class="fb04-check"><svg viewBox="0 0 64 64" aria-hidden="true"><path pathLength="1" d="M16.5 33.5 27.5 44.5 48 21.5"/></svg></span>
+      </div>
+      <div class="fb04-hud-label"><span class="fb04-l-load">読み込み中</span><span class="fb04-l-done">完了</span></div>
+    </div>
+
+    <div class="fb04-snack" data-state="deleted">
+      <span class="fb04-snack-ic" aria-hidden="true"><svg class="i fb04-ic-del"><use href="#i-trash"/></svg><svg class="i fb04-ic-ok"><use href="#i-checkmark-circle-fill"/></svg></span>
+      <span class="fb04-snack-text"><span class="fb04-s-del">1件の写真を削除しました</span><span class="fb04-s-undone">元に戻しました</span></span>
+      <button class="fb04-undo" type="button">取り消す</button>
+      <span class="fb04-bar" aria-hidden="true"></span>
+    </div>
+
+    <p class="sr-only fb04-live" role="status" aria-live="polite"></p>
+  </div>
+  <ul class="obj-notes"><li>4つのボタンで表示</li><li>取り消すで写真が戻る</li><li>連打すると置き換え</li></ul>
+</article>
+<script>
+(() => {
+  const root = document.getElementById('FB-04');
+  const q = (s) => root.querySelector(s);
+  const toast = q('.fb04-toast'), hud = q('.fb04-hud'), snack = q('.fb04-snack');
+  const bar = q('.fb04-bar'), undoBtn = q('.fb04-undo'), tile = q('.fb04-tile--del'), count = q('.fb04-count'), live = q('.fb04-live');
+  const snackTrigger = q('.fb04-trigger[data-act="snack"]');
+  const reflow = (el) => void el.offsetWidth;
+  const say = (t) => { live.textContent = ''; setTimeout(() => { live.textContent = t; }, 30); };
+
+  /* — 1. top toast — re-triggering while visible restarts the timer with a small bump */
+  let toastT = 0;
+  function showToast() {
+    clearTimeout(toastT);
+    if (toast.classList.contains('is-on')) { toast.classList.remove('is-bump'); reflow(toast); toast.classList.add('is-bump'); }
+    toast.classList.add('is-on');
+    say('リンクをコピーしました');
+    toastT = setTimeout(() => toast.classList.remove('is-on', 'is-bump'), 2200);
+  }
+
+  /* — 2. center HUD — */
+  let hudT = [];
+  const clearHud = () => { hudT.forEach(clearTimeout); hudT = []; };
+  const setHudState = (s) => { hud.dataset.state = ''; reflow(hud); hud.dataset.state = s; }; // restarts the check stroke
+  function showHud(loading) {
+    clearHud();
+    setHudState(loading ? 'loading' : 'done');
+    hud.classList.add('is-on');
+    say(loading ? '読み込み中' : '完了');
+    if (loading) {
+      hudT.push(setTimeout(() => { setHudState('done'); say('完了'); }, 1600));
+      hudT.push(setTimeout(() => hud.classList.remove('is-on'), 2900));
+    } else {
+      hudT.push(setTimeout(() => hud.classList.remove('is-on'), 1500));
+    }
+  }
+
+  /* — 3. undo bar — */
+  let snackT = [];
+  const clearSnack = () => { snackT.forEach(clearTimeout); snackT = []; };
+  const setCount = (n) => { count.textContent = `${n}枚`; };
+  function hideSnack() {
+    if (document.activeElement === undoBtn) snackTrigger.focus({ preventScroll: true });
+    snack.classList.remove('is-on');
+  }
+  function showSnack() {
+    clearSnack();
+    snack.dataset.state = 'deleted';
+    tile.classList.add('is-gone');
+    setCount(2);
+    snack.classList.add('is-on');
+    bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)'; reflow(bar);
+    bar.style.transition = 'transform 5s linear'; bar.style.transform = 'scaleX(0)';
+    say('1件の写真を削除しました。取り消すことができます');
+    snackT.push(setTimeout(commit, 5000));
+  }
+  function commit() {
+    clearSnack();
+    hideSnack();
+    // demo reset: quietly bring the photo back once the bar has gone
+    snackT.push(setTimeout(() => { tile.classList.remove('is-gone'); setCount(3); }, 900));
+  }
+  function undo() {
+    if (snack.dataset.state !== 'deleted') return;
+    clearSnack();
+    const t = getComputedStyle(bar).transform;
+    bar.style.transition = 'none'; bar.style.transform = t === 'none' ? '' : t;
+    snack.dataset.state = 'undone';
+    tile.classList.remove('is-gone');
+    setCount(3);
+    say('元に戻しました');
+    snackT.push(setTimeout(hideSnack, 1400));
+  }
+
+  const actions = { toast: showToast, hud: () => showHud(false), load: () => showHud(true), snack: showSnack };
+  q('.fb04-triggers').addEventListener('click', (e) => {
+    const b = e.target.closest('.fb04-trigger');
+    if (b && actions[b.dataset.act]) actions[b.dataset.act]();
+  });
+  undoBtn.addEventListener('click', undo);
+  root.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && snack.classList.contains('is-on') && snack.dataset.state === 'deleted') commit();
+  });
+})();
+</script>
