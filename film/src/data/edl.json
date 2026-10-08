@@ -3,14 +3,15 @@
  "fps": 24,
  "width": 1920,
  "height": 1080,
- "durationInFrames": 3348,
- "provisional_music": true,
+ "durationInFrames": 3156,
+ "provisional_music": false,
  "music": {
-  "file": null,
-  "offset_frames": 72,
-  "offset_s": 3.0,
-  "end_s": 113.0,
-  "duration_s": 110.0
+  "file": "public/audio/music.wav",
+  "offset_frames": 48,
+  "offset_s": 2.0,
+  "end_s": 107.674,
+  "duration_s": 110.179,
+  "drop_s": 103.483
  },
  "chapters": [
   {
@@ -18,42 +19,42 @@
    "name": "始まり",
    "en": "Beginning",
    "from": 0,
-   "to": 512
+   "to": 505
   },
   {
    "id": 2,
    "name": "生命の芽生え",
    "en": "First Life",
-   "from": 512,
-   "to": 952
+   "from": 505,
+   "to": 794
   },
   {
    "id": 3,
    "name": "広がる生命",
    "en": "Branching Out",
-   "from": 952,
-   "to": 1392
+   "from": 794,
+   "to": 1339
   },
   {
    "id": 4,
    "name": "生命の交響曲",
    "en": "Symphony",
-   "from": 1392,
-   "to": 2272
+   "from": 1339,
+   "to": 2161
   },
   {
    "id": 5,
    "name": "すべてがつながる",
    "en": "Connected",
-   "from": 2272,
-   "to": 2712
+   "from": 2161,
+   "to": 2484
   },
   {
    "id": 6,
    "name": "余韻",
    "en": "Afterglow",
-   "from": 2712,
-   "to": 3024
+   "from": 2484,
+   "to": 2832
   }
  ],
  "shots": [
@@ -70,15 +71,16 @@
    "hold": false,
    "sync": "free",
    "cut_frame": 0,
-   "end_frame": 94,
+   "end_frame": 96,
    "from": 0,
-   "dur": 94,
+   "dur": 96,
    "fade_in": 30,
    "fade_out": 0,
    "transition_in": "fade_from_black",
+   "fade_delay": 24,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 3.917,
+   "clip_need_s": 4.0,
    "move": null,
    "amb": [
     "rumble",
@@ -86,7 +88,10 @@
    ],
    "fx": [],
    "text": "era1",
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 7923692
+   }
   },
   {
    "id": "C1-02",
@@ -100,16 +105,17 @@
    ],
    "hold": false,
    "sync": "hit",
-   "cut_frame": 94,
-   "end_frame": 159,
-   "from": 94,
-   "dur": 65,
+   "cut_frame": 96,
+   "end_frame": 141,
+   "from": 96,
+   "dur": 45,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.708,
+   "clip_need_s": 1.875,
    "move": null,
    "amb": [
     "rumble",
@@ -119,7 +125,10 @@
     "boom"
    ],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 13438865
+   }
   },
   {
    "id": "C1-03",
@@ -133,16 +142,17 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 159,
-   "end_frame": 223,
-   "from": 159,
-   "dur": 64,
+   "cut_frame": 141,
+   "end_frame": 227,
+   "from": 141,
+   "dur": 86,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.667,
+   "clip_need_s": 3.583,
    "move": null,
    "amb": [
     "rumble",
@@ -150,13 +160,16 @@
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 17675069
+   }
   },
   {
    "id": "C1-04",
    "chapter": 1,
    "kind": "metaphor",
-   "desc": "溶岩が海に流れ込み、白い蒸気が立ちのぼる",
+   "desc": "昼の空撮。噴煙を上げる火口と溶岩の川",
    "queries": [
     "lava ocean steam",
     "lava entering ocean",
@@ -164,16 +177,17 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 223,
-   "end_frame": 286,
-   "from": 223,
-   "dur": 63,
+   "cut_frame": 227,
+   "end_frame": 285,
+   "from": 227,
+   "dur": 58,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.625,
+   "clip_need_s": 2.417,
    "move": null,
    "amb": [
     "lava",
@@ -181,7 +195,10 @@
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 9882072
+   }
   },
   {
    "id": "C1-05",
@@ -195,16 +212,17 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 286,
-   "end_frame": 347,
-   "from": 286,
-   "dur": 61,
+   "cut_frame": 285,
+   "end_frame": 350,
+   "from": 285,
+   "dur": 65,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.542,
+   "clip_need_s": 2.708,
    "move": null,
    "amb": [
     "wind",
@@ -212,7 +230,10 @@
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 14118346
+   }
   },
   {
    "id": "C1-06",
@@ -226,29 +247,33 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 347,
-   "end_frame": 426,
-   "from": 347,
-   "dur": 79,
+   "cut_frame": 350,
+   "end_frame": 414,
+   "from": 350,
+   "dur": 64,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 3.292,
+   "clip_need_s": 2.667,
    "move": null,
    "amb": [
     "surf"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 2053567
+   }
   },
   {
    "id": "C1-07",
    "chapter": 1,
-   "kind": "observation",
-   "desc": "宇宙から見た青い地球。海をまとった惑星の全景（実写のみ。CGの場合は reconstruction 扱い）",
+   "kind": "reconstruction",
+   "desc": "宇宙から見た地球の縁と薄い大気（CGによる再現）",
    "queries": [
     "earth from space",
     "earth from international space station",
@@ -256,23 +281,27 @@
    ],
    "hold": false,
    "sync": "downbeat",
-   "cut_frame": 426,
-   "end_frame": 512,
-   "from": 426,
-   "dur": 95,
+   "cut_frame": 414,
+   "end_frame": 505,
+   "from": 414,
+   "dur": 91,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 3.958,
+   "clip_need_s": 3.792,
    "move": null,
    "amb": [
     "space"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 8733055
+   }
   },
   {
    "id": "C2-01",
@@ -286,23 +315,27 @@
    ],
    "hold": false,
    "sync": "downbeat",
-   "cut_frame": 512,
-   "end_frame": 578,
-   "from": 503,
-   "dur": 75,
-   "fade_in": 18,
+   "cut_frame": 505,
+   "end_frame": 582,
+   "from": 505,
+   "dur": 77,
+   "fade_in": 0,
    "fade_out": 0,
-   "transition_in": "dissolve",
+   "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
-   "clip_trim": 15,
-   "clip_need_s": 3.125,
+   "clip_trim": 24,
+   "clip_need_s": 3.208,
    "move": null,
    "amb": [
     "underwater"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 2632737
+   }
   },
   {
    "id": "C2-02",
@@ -316,29 +349,33 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 578,
-   "end_frame": 632,
-   "from": 578,
-   "dur": 54,
+   "cut_frame": 582,
+   "end_frame": 649,
+   "from": 582,
+   "dur": 67,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.25,
+   "clip_need_s": 2.792,
    "move": null,
    "amb": [
     "bubbles"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 855333
+   }
   },
   {
    "id": "C2-03",
    "chapter": 2,
    "kind": "observation",
-   "desc": "温泉の微生物マットの色彩（現生の微生物の実際の観察）",
+   "desc": "陽の差す浅い水底に揺れる藻類（現生の光合成生物）",
    "queries": [
     "grand prismatic spring aerial",
     "hot spring bacteria colors",
@@ -346,16 +383,17 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 632,
-   "end_frame": 702,
-   "from": 632,
-   "dur": 70,
+   "cut_frame": 649,
+   "end_frame": 715,
+   "from": 649,
+   "dur": 66,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.917,
+   "clip_need_s": 2.75,
    "move": null,
    "amb": [
     "bubbles",
@@ -363,97 +401,10 @@
    ],
    "fx": [],
    "text": null,
-   "source": null
-  },
-  {
-   "id": "C2-04",
-   "chapter": 2,
-   "kind": "observation",
-   "desc": "顕微鏡下で動く微生物・プランクトン（現生）",
-   "queries": [
-    "microorganisms microscope",
-    "plankton microscope",
-    "paramecium microscope"
-   ],
-   "hold": false,
-   "sync": "beat",
-   "cut_frame": 702,
-   "end_frame": 770,
-   "from": 702,
-   "dur": 68,
-   "fade_in": 0,
-   "fade_out": 0,
-   "transition_in": "cut",
-   "clip": null,
-   "clip_trim": 24,
-   "clip_need_s": 2.833,
-   "move": null,
-   "amb": [
-    "underwater_close"
-   ],
-   "fx": [],
-   "text": null,
-   "source": null
-  },
-  {
-   "id": "C2-05",
-   "chapter": 2,
-   "kind": "observation",
-   "desc": "細胞・珪藻の形（顕微鏡）。小さな幾何学",
-   "queries": [
-    "diatoms microscope",
-    "cells under microscope",
-    "cell division microscope"
-   ],
-   "hold": false,
-   "sync": "beat",
-   "cut_frame": 770,
-   "end_frame": 836,
-   "from": 770,
-   "dur": 66,
-   "fade_in": 0,
-   "fade_out": 0,
-   "transition_in": "cut",
-   "clip": null,
-   "clip_trim": 24,
-   "clip_need_s": 2.75,
-   "move": null,
-   "amb": [
-    "underwater_close"
-   ],
-   "fx": [],
-   "text": null,
-   "source": null
-  },
-  {
-   "id": "C2-06",
-   "chapter": 2,
-   "kind": "observation",
-   "desc": "浅瀬のストロマトライト（現生。最古級の化石記録と同じ構造をつくる微生物群集）",
-   "queries": [
-    "stromatolites",
-    "shark bay stromatolites",
-    "microbial mat shallow water"
-   ],
-   "hold": false,
-   "sync": "beat",
-   "cut_frame": 836,
-   "end_frame": 884,
-   "from": 836,
-   "dur": 48,
-   "fade_in": 0,
-   "fade_out": 0,
-   "transition_in": "cut",
-   "clip": null,
-   "clip_trim": 24,
-   "clip_need_s": 2.0,
-   "move": null,
-   "amb": [
-    "water_lap"
-   ],
-   "fx": [],
-   "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 3994403
+   }
   },
   {
    "id": "C2-07",
@@ -467,23 +418,27 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 884,
-   "end_frame": 952,
-   "from": 884,
-   "dur": 77,
+   "cut_frame": 715,
+   "end_frame": 794,
+   "from": 715,
+   "dur": 79,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 3.208,
+   "clip_need_s": 3.292,
    "move": null,
    "amb": [
     "underwater"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 2558530
+   }
   },
   {
    "id": "C3-01",
@@ -497,23 +452,27 @@
    ],
    "hold": false,
    "sync": "downbeat",
-   "cut_frame": 952,
-   "end_frame": 1007,
-   "from": 943,
-   "dur": 64,
-   "fade_in": 18,
+   "cut_frame": 794,
+   "end_frame": 876,
+   "from": 794,
+   "dur": 82,
+   "fade_in": 0,
    "fade_out": 0,
-   "transition_in": "dissolve",
+   "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
-   "clip_trim": 15,
-   "clip_need_s": 2.667,
+   "clip_trim": 24,
+   "clip_need_s": 3.417,
    "move": null,
    "amb": [
     "underwater"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 2397239
+   }
   },
   {
    "id": "C3-02",
@@ -527,23 +486,27 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1007,
-   "end_frame": 1051,
-   "from": 1007,
-   "dur": 44,
+   "cut_frame": 876,
+   "end_frame": 938,
+   "from": 876,
+   "dur": 62,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.833,
+   "clip_need_s": 2.583,
    "move": null,
    "amb": [
     "underwater"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 5358755
+   }
   },
   {
    "id": "C3-03",
@@ -557,23 +520,61 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1051,
-   "end_frame": 1094,
-   "from": 1051,
-   "dur": 43,
+   "cut_frame": 938,
+   "end_frame": 1005,
+   "from": 938,
+   "dur": 67,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.792,
+   "clip_need_s": 2.792,
    "move": null,
    "amb": [
     "underwater"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 15099714
+   }
+  },
+  {
+   "id": "C3-04",
+   "chapter": 3,
+   "kind": "observation",
+   "desc": "体色を変えるタコ・コウイカ（適応）",
+   "queries": [
+    "octopus camouflage",
+    "cuttlefish",
+    "octopus underwater"
+   ],
+   "hold": false,
+   "sync": "beat",
+   "cut_frame": 1005,
+   "end_frame": 1051,
+   "from": 1005,
+   "dur": 46,
+   "fade_in": 0,
+   "fade_out": 0,
+   "transition_in": "cut",
+   "fade_delay": 0,
+   "clip": null,
+   "clip_trim": 24,
+   "clip_need_s": 1.917,
+   "move": null,
+   "amb": [
+    "underwater"
+   ],
+   "fx": [],
+   "text": null,
+   "source": {
+    "provider": "pexels",
+    "id": 15623349
+   }
   },
   {
    "id": "C3-05",
@@ -587,23 +588,27 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1094,
-   "end_frame": 1137,
-   "from": 1094,
-   "dur": 43,
+   "cut_frame": 1051,
+   "end_frame": 1109,
+   "from": 1051,
+   "dur": 58,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.792,
+   "clip_need_s": 2.417,
    "move": null,
    "amb": [
     "water_lap"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 1409899
+   }
   },
   {
    "id": "C3-06",
@@ -617,29 +622,33 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1137,
-   "end_frame": 1179,
-   "from": 1137,
-   "dur": 42,
+   "cut_frame": 1109,
+   "end_frame": 1172,
+   "from": 1109,
+   "dur": 63,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.75,
+   "clip_need_s": 2.625,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 3224617
+   }
   },
   {
    "id": "C3-07",
    "chapter": 3,
    "kind": "observation",
-   "desc": "シダの若芽がほどけるタイムラプス",
+   "desc": "シダの茂る林床（陸に広がった植物）",
    "queries": [
     "fern unfurling timelapse",
     "fern fiddlehead",
@@ -647,84 +656,27 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1179,
-   "end_frame": 1233,
-   "from": 1179,
-   "dur": 54,
+   "cut_frame": 1172,
+   "end_frame": 1226,
+   "from": 1172,
+   "dur": 57,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.25,
+   "clip_need_s": 2.375,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
-  },
-  {
-   "id": "C3-08",
-   "chapter": 3,
-   "kind": "observation",
-   "desc": "水辺のカエル",
-   "queries": [
-    "frog close up",
-    "frog water",
-    "tree frog"
-   ],
-   "hold": false,
-   "sync": "beat",
-   "cut_frame": 1233,
-   "end_frame": 1273,
-   "from": 1233,
-   "dur": 40,
-   "fade_in": 0,
-   "fade_out": 0,
-   "transition_in": "cut",
-   "clip": null,
-   "clip_trim": 24,
-   "clip_need_s": 1.667,
-   "move": null,
-   "amb": [
-    "forest_air",
-    "water_lap"
-   ],
-   "fx": [],
-   "text": null,
-   "source": null
-  },
-  {
-   "id": "C3-09",
-   "chapter": 3,
-   "kind": "observation",
-   "desc": "枝分かれする河川（空撮）",
-   "queries": [
-    "braided river aerial",
-    "river delta aerial",
-    "river branches aerial"
-   ],
-   "hold": false,
-   "sync": "downbeat",
-   "cut_frame": 1273,
-   "end_frame": 1312,
-   "from": 1273,
-   "dur": 42,
-   "fade_in": 0,
-   "fade_out": 0,
-   "transition_in": "cut",
-   "clip": null,
-   "clip_trim": 24,
-   "clip_need_s": 1.75,
-   "move": null,
-   "amb": [
-    "wind"
-   ],
-   "fx": [],
-   "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 4880958
+   }
   },
   {
    "id": "C3-10",
@@ -738,29 +690,33 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1312,
-   "end_frame": 1350,
-   "from": 1309,
-   "dur": 44,
+   "cut_frame": 1226,
+   "end_frame": 1273,
+   "from": 1223,
+   "dur": 53,
    "fade_in": 6,
    "fade_out": 0,
    "transition_in": "match",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 21,
-   "clip_need_s": 1.833,
+   "clip_need_s": 2.208,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 7663511
+   }
   },
   {
    "id": "C3-11",
    "chapter": 3,
    "kind": "observation",
-   "desc": "トンボの翅脈（マクロ）",
+   "desc": "枝分かれする小枝（葉脈から枝へ、枝分かれの連鎖）",
    "queries": [
     "dragonfly wing macro",
     "dragonfly macro",
@@ -768,29 +724,33 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1350,
-   "end_frame": 1392,
-   "from": 1347,
-   "dur": 54,
+   "cut_frame": 1273,
+   "end_frame": 1339,
+   "from": 1270,
+   "dur": 69,
    "fade_in": 6,
    "fade_out": 0,
    "transition_in": "match",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 21,
-   "clip_need_s": 2.25,
+   "clip_need_s": 2.875,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 1138823
+   }
   },
   {
    "id": "C4-01",
    "chapter": 4,
    "kind": "observation",
-   "desc": "霧のかかった森を越える空撮（長回し）",
+   "desc": "霧の朝の木立（長回し）",
    "queries": [
     "forest aerial mist",
     "misty forest drone",
@@ -798,16 +758,17 @@
    ],
    "hold": true,
    "sync": "downbeat",
-   "cut_frame": 1392,
-   "end_frame": 1497,
-   "from": 1383,
-   "dur": 114,
-   "fade_in": 18,
+   "cut_frame": 1339,
+   "end_frame": 1451,
+   "from": 1339,
+   "dur": 112,
+   "fade_in": 0,
    "fade_out": 0,
-   "transition_in": "dissolve",
+   "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
-   "clip_trim": 15,
-   "clip_need_s": 4.75,
+   "clip_trim": 24,
+   "clip_need_s": 4.667,
    "move": null,
    "amb": [
     "forest_air",
@@ -815,7 +776,10 @@
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 6327822
+   }
   },
   {
    "id": "C4-02",
@@ -829,23 +793,27 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1497,
-   "end_frame": 1544,
-   "from": 1497,
-   "dur": 47,
+   "cut_frame": 1451,
+   "end_frame": 1526,
+   "from": 1451,
+   "dur": 75,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.958,
+   "clip_need_s": 3.125,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 5692315
+   }
   },
   {
    "id": "C4-03",
@@ -859,23 +827,27 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1544,
-   "end_frame": 1590,
-   "from": 1544,
-   "dur": 46,
+   "cut_frame": 1526,
+   "end_frame": 1579,
+   "from": 1526,
+   "dur": 53,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.917,
+   "clip_need_s": 2.208,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 16590272
+   }
   },
   {
    "id": "C4-04",
@@ -889,29 +861,33 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1590,
-   "end_frame": 1635,
-   "from": 1590,
-   "dur": 45,
+   "cut_frame": 1579,
+   "end_frame": 1619,
+   "from": 1579,
+   "dur": 40,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.875,
+   "clip_need_s": 1.667,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 3877884
+   }
   },
   {
    "id": "C4-05",
    "chapter": 4,
    "kind": "observation",
-   "desc": "ハチドリのホバリング（スロー）",
+   "desc": "枝にとまるハチドリ。喉の羽が光る",
    "queries": [
     "hummingbird slow motion",
     "hummingbird",
@@ -919,23 +895,27 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1635,
-   "end_frame": 1680,
-   "from": 1635,
-   "dur": 45,
+   "cut_frame": 1619,
+   "end_frame": 1662,
+   "from": 1619,
+   "dur": 43,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.875,
+   "clip_need_s": 1.792,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 6389401
+   }
   },
   {
    "id": "C4-06",
@@ -949,23 +929,27 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1680,
-   "end_frame": 1723,
-   "from": 1680,
-   "dur": 46,
+   "cut_frame": 1662,
+   "end_frame": 1709,
+   "from": 1662,
+   "dur": 50,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.917,
+   "clip_need_s": 2.083,
    "move": null,
    "amb": [
     "surf"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 3571264
+   }
   },
   {
    "id": "C4-07",
@@ -979,23 +963,59 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1723,
-   "end_frame": 1787,
-   "from": 1720,
-   "dur": 70,
+   "cut_frame": 1709,
+   "end_frame": 1786,
+   "from": 1706,
+   "dur": 80,
    "fade_in": 6,
    "fade_out": 0,
    "transition_in": "match",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 21,
-   "clip_need_s": 2.917,
+   "clip_need_s": 3.333,
    "move": null,
    "amb": [
     "underwater"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 1151329
+   }
+  },
+  {
+   "id": "C4-12",
+   "chapter": 4,
+   "kind": "observation",
+   "desc": "光の方へ泳ぎ上がるタイマイ（→空の群れへ）",
+   "queries": [
+    "hawksbill turtle swimming"
+   ],
+   "hold": false,
+   "sync": "beat",
+   "cut_frame": 1786,
+   "end_frame": 1835,
+   "from": 1786,
+   "dur": 52,
+   "fade_in": 0,
+   "fade_out": 0,
+   "transition_in": "cut",
+   "fade_delay": 0,
+   "clip": null,
+   "clip_trim": 24,
+   "clip_need_s": 2.167,
+   "move": null,
+   "amb": [
+    "underwater"
+   ],
+   "fx": [],
+   "text": null,
+   "source": {
+    "provider": "pexels",
+    "id": 1456996
+   }
   },
   {
    "id": "C4-08",
@@ -1009,16 +1029,17 @@
    ],
    "hold": true,
    "sync": "downbeat",
-   "cut_frame": 1787,
-   "end_frame": 1889,
-   "from": 1784,
-   "dur": 105,
+   "cut_frame": 1835,
+   "end_frame": 1967,
+   "from": 1832,
+   "dur": 135,
    "fade_in": 6,
    "fade_out": 0,
    "transition_in": "match",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 21,
-   "clip_need_s": 4.375,
+   "clip_need_s": 5.625,
    "move": null,
    "amb": [
     "wind",
@@ -1026,13 +1047,16 @@
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 3851642
+   }
   },
   {
    "id": "C4-09",
    "chapter": 4,
    "kind": "observation",
-   "desc": "湿地を飛び立つ鳥の群れ",
+   "desc": "水面の上を飛ぶ鳥の群れ",
    "queries": [
     "birds taking off water",
     "flamingos flying",
@@ -1040,16 +1064,17 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1889,
-   "end_frame": 1928,
-   "from": 1889,
-   "dur": 39,
+   "cut_frame": 1967,
+   "end_frame": 2002,
+   "from": 1967,
+   "dur": 35,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.625,
+   "clip_need_s": 1.458,
    "move": null,
    "amb": [
     "wings",
@@ -1057,7 +1082,43 @@
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 12873497
+   }
+  },
+  {
+   "id": "C4-11",
+   "chapter": 4,
+   "kind": "observation",
+   "desc": "夕日の海を舞うカモメ",
+   "queries": [
+    "seagulls flying sunset sea"
+   ],
+   "hold": false,
+   "sync": "beat",
+   "cut_frame": 2002,
+   "end_frame": 2039,
+   "from": 2002,
+   "dur": 37,
+   "fade_in": 0,
+   "fade_out": 0,
+   "transition_in": "cut",
+   "fade_delay": 0,
+   "clip": null,
+   "clip_trim": 24,
+   "clip_need_s": 1.542,
+   "move": null,
+   "amb": [
+    "wind",
+    "surf"
+   ],
+   "fx": [],
+   "text": null,
+   "source": {
+    "provider": "pexels",
+    "id": 5560963
+   }
   },
   {
    "id": "C4-10",
@@ -1071,120 +1132,33 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 1928,
-   "end_frame": 1968,
-   "from": 1928,
-   "dur": 40,
+   "cut_frame": 2039,
+   "end_frame": 2105,
+   "from": 2039,
+   "dur": 66,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.667,
+   "clip_need_s": 2.75,
    "move": null,
    "amb": [
     "wind"
    ],
    "fx": [],
    "text": null,
-   "source": null
-  },
-  {
-   "id": "C4-11",
-   "chapter": 4,
-   "kind": "observation",
-   "desc": "ゾウの家族",
-   "queries": [
-    "elephant family",
-    "elephants walking",
-    "elephant herd"
-   ],
-   "hold": false,
-   "sync": "beat",
-   "cut_frame": 1968,
-   "end_frame": 2006,
-   "from": 1968,
-   "dur": 38,
-   "fade_in": 0,
-   "fade_out": 0,
-   "transition_in": "cut",
-   "clip": null,
-   "clip_trim": 24,
-   "clip_need_s": 1.583,
-   "move": null,
-   "amb": [
-    "wind"
-   ],
-   "fx": [],
-   "text": null,
-   "source": null
-  },
-  {
-   "id": "C4-12",
-   "chapter": 4,
-   "kind": "observation",
-   "desc": "クジラ（ブリーチまたは水中を泳ぐ姿、長め）",
-   "queries": [
-    "humpback whale",
-    "whale breaching",
-    "whale underwater"
-   ],
-   "hold": true,
-   "sync": "downbeat",
-   "cut_frame": 2006,
-   "end_frame": 2099,
-   "from": 2006,
-   "dur": 93,
-   "fade_in": 0,
-   "fade_out": 0,
-   "transition_in": "cut",
-   "clip": null,
-   "clip_trim": 24,
-   "clip_need_s": 3.875,
-   "move": null,
-   "amb": [
-    "underwater",
-    "surf"
-   ],
-   "fx": [],
-   "text": null,
-   "source": null
-  },
-  {
-   "id": "C4-13",
-   "chapter": 4,
-   "kind": "observation",
-   "desc": "イルカの群れ",
-   "queries": [
-    "dolphins pod",
-    "dolphins swimming",
-    "dolphins jumping"
-   ],
-   "hold": false,
-   "sync": "beat",
-   "cut_frame": 2099,
-   "end_frame": 2145,
-   "from": 2099,
-   "dur": 46,
-   "fade_in": 0,
-   "fade_out": 0,
-   "transition_in": "cut",
-   "clip": null,
-   "clip_trim": 24,
-   "clip_need_s": 1.917,
-   "move": null,
-   "amb": [
-    "surf"
-   ],
-   "fx": [],
-   "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 6168935
+   }
   },
   {
    "id": "C4-14",
    "chapter": 4,
    "kind": "observation",
-   "desc": "滑空する猛禽",
+   "desc": "青空を滑空する鳥（スロー）",
    "queries": [
     "eagle flying",
     "eagle soaring",
@@ -1192,53 +1166,27 @@
    ],
    "hold": false,
    "sync": "beat",
-   "cut_frame": 2145,
-   "end_frame": 2190,
-   "from": 2145,
-   "dur": 45,
+   "cut_frame": 2105,
+   "end_frame": 2161,
+   "from": 2105,
+   "dur": 56,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.875,
+   "clip_need_s": 2.333,
    "move": null,
    "amb": [
     "wind"
    ],
    "fx": [],
    "text": null,
-   "source": null
-  },
-  {
-   "id": "C4-15",
-   "chapter": 4,
-   "kind": "observation",
-   "desc": "巨大な滝（空撮、クライマックス）",
-   "queries": [
-    "waterfall aerial",
-    "huge waterfall",
-    "waterfall drone"
-   ],
-   "hold": true,
-   "sync": "hit",
-   "cut_frame": 2190,
-   "end_frame": 2272,
-   "from": 2190,
-   "dur": 91,
-   "fade_in": 0,
-   "fade_out": 0,
-   "transition_in": "cut",
-   "clip": null,
-   "clip_trim": 24,
-   "clip_need_s": 3.792,
-   "move": null,
-   "amb": [
-    "waterfall"
-   ],
-   "fx": [],
-   "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 3826855
+   }
   },
   {
    "id": "C5-01",
@@ -1251,54 +1199,62 @@
     "raindrops leaves slow motion"
    ],
    "hold": false,
-   "sync": "free",
-   "cut_frame": 2272,
-   "end_frame": 2330,
-   "from": 2263,
-   "dur": 67,
-   "fade_in": 18,
+   "sync": "beat",
+   "cut_frame": 2161,
+   "end_frame": 2199,
+   "from": 2161,
+   "dur": 38,
+   "fade_in": 0,
    "fade_out": 0,
-   "transition_in": "dissolve",
+   "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
-   "clip_trim": 15,
-   "clip_need_s": 2.792,
+   "clip_trim": 24,
+   "clip_need_s": 1.583,
    "move": null,
    "amb": [
     "rain"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 5754996
+   }
   },
   {
    "id": "C5-02",
    "chapter": 5,
    "kind": "observation",
-   "desc": "水面に広がる雨の波紋",
+   "desc": "地面に跳ねる雨粒（スロー）",
    "queries": [
     "raindrops puddle",
     "rain ripples water",
     "rain on pond"
    ],
    "hold": false,
-   "sync": "free",
-   "cut_frame": 2330,
-   "end_frame": 2380,
-   "from": 2330,
-   "dur": 50,
+   "sync": "beat",
+   "cut_frame": 2199,
+   "end_frame": 2226,
+   "from": 2199,
+   "dur": 27,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.083,
+   "clip_need_s": 1.125,
    "move": null,
    "amb": [
     "rain"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 2491284
+   }
   },
   {
    "id": "C5-03",
@@ -1311,144 +1267,164 @@
     "small stream forest"
    ],
    "hold": false,
-   "sync": "free",
-   "cut_frame": 2380,
-   "end_frame": 2434,
-   "from": 2380,
-   "dur": 54,
+   "sync": "beat",
+   "cut_frame": 2226,
+   "end_frame": 2249,
+   "from": 2226,
+   "dur": 23,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.25,
+   "clip_need_s": 0.958,
    "move": null,
    "amb": [
     "stream"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 6446287
+   }
   },
   {
    "id": "C5-04",
    "chapter": 5,
    "kind": "observation",
-   "desc": "キノコが育つタイムラプス（菌類）",
+   "desc": "林床のキノコ（菌類）",
    "queries": [
     "mushroom growing timelapse",
     "fungi timelapse",
     "mushrooms forest floor"
    ],
    "hold": false,
-   "sync": "free",
-   "cut_frame": 2434,
-   "end_frame": 2496,
-   "from": 2434,
-   "dur": 62,
+   "sync": "beat",
+   "cut_frame": 2249,
+   "end_frame": 2297,
+   "from": 2249,
+   "dur": 48,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.583,
+   "clip_need_s": 2.0,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 3229033
+   }
   },
   {
    "id": "C5-05",
    "chapter": 5,
    "kind": "observation",
-   "desc": "苔と菌に覆われた倒木（分解と再生）",
+   "desc": "枯れ葉に伸びる菌（分解と再生）",
    "queries": [
     "fallen tree moss",
     "rotting log fungi",
     "decaying wood forest"
    ],
    "hold": false,
-   "sync": "free",
-   "cut_frame": 2496,
-   "end_frame": 2550,
-   "from": 2496,
-   "dur": 54,
+   "sync": "beat",
+   "cut_frame": 2297,
+   "end_frame": 2323,
+   "from": 2297,
+   "dur": 26,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.25,
+   "clip_need_s": 1.083,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 3224616
+   }
   },
   {
    "id": "C5-06",
    "chapter": 5,
    "kind": "observation",
-   "desc": "土の上の小さな生き物（アリ・ミミズ等）",
+   "desc": "アリ塚にうごめく無数のアリ",
    "queries": [
     "ants forest floor macro",
     "earthworm soil",
     "beetle forest floor"
    ],
    "hold": false,
-   "sync": "free",
-   "cut_frame": 2550,
-   "end_frame": 2596,
-   "from": 2550,
-   "dur": 46,
+   "sync": "beat",
+   "cut_frame": 2323,
+   "end_frame": 2343,
+   "from": 2323,
+   "dur": 20,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 1.917,
+   "clip_need_s": 0.833,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 7367254
+   }
   },
   {
    "id": "C5-07",
    "chapter": 5,
    "kind": "observation",
-   "desc": "小川で水を飲むシカ",
+   "desc": "森で草を食むシカ",
    "queries": [
     "deer drinking water",
     "deer stream",
     "deer forest"
    ],
    "hold": false,
-   "sync": "free",
-   "cut_frame": 2596,
-   "end_frame": 2658,
-   "from": 2596,
-   "dur": 62,
+   "sync": "beat",
+   "cut_frame": 2343,
+   "end_frame": 2393,
+   "from": 2343,
+   "dur": 50,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.583,
+   "clip_need_s": 2.083,
    "move": null,
    "amb": [
     "stream"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 18619715
+   }
   },
   {
    "id": "C5-08",
@@ -1461,30 +1437,68 @@
     "leaf falling"
    ],
    "hold": false,
-   "sync": "free",
-   "cut_frame": 2658,
-   "end_frame": 2712,
-   "from": 2658,
-   "dur": 63,
+   "sync": "beat",
+   "cut_frame": 2393,
+   "end_frame": 2412,
+   "from": 2393,
+   "dur": 19,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 24,
-   "clip_need_s": 2.625,
+   "clip_need_s": 0.792,
    "move": null,
    "amb": [
     "wind_soft"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 10132396
+   }
+  },
+  {
+   "id": "C5-09",
+   "chapter": 5,
+   "kind": "observation",
+   "desc": "巨大な滝（空撮）。クライマックス、ここで曲が途切れる",
+   "queries": [
+    "waterfall aerial",
+    "huge waterfall",
+    "waterfall drone"
+   ],
+   "hold": false,
+   "sync": "beat",
+   "cut_frame": 2412,
+   "end_frame": 2484,
+   "from": 2412,
+   "dur": 72,
+   "fade_in": 0,
+   "fade_out": 0,
+   "transition_in": "cut",
+   "fade_delay": 0,
+   "clip": null,
+   "clip_trim": 24,
+   "clip_need_s": 3.0,
+   "move": null,
+   "amb": [
+    "waterfall"
+   ],
+   "fx": [],
+   "text": null,
+   "source": {
+    "provider": "pexels",
+    "id": 8226944
+   }
   },
   {
    "id": "C6-01",
    "chapter": 6,
    "kind": "observation",
-   "desc": "葉の上の水滴（マクロ、長め）",
+   "desc": "葉の上の水滴（マクロ、長め）。曲が途切れた瞬間に切り替える",
    "queries": [
     "water drop leaf macro",
     "dew drop leaf",
@@ -1492,16 +1506,17 @@
    ],
    "hold": true,
    "sync": "free",
-   "cut_frame": 2712,
-   "end_frame": 2811,
-   "from": 2703,
-   "dur": 117,
-   "fade_in": 18,
+   "cut_frame": 2484,
+   "end_frame": 2594,
+   "from": 2484,
+   "dur": 119,
+   "fade_in": 0,
    "fade_out": 0,
-   "transition_in": "dissolve",
+   "transition_in": "cut",
+   "fade_delay": 0,
    "clip": null,
-   "clip_trim": 15,
-   "clip_need_s": 4.875,
+   "clip_trim": 24,
+   "clip_need_s": 4.958,
    "move": null,
    "amb": [
     "drip",
@@ -1509,7 +1524,10 @@
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 5210325
+   }
   },
   {
    "id": "C6-02",
@@ -1523,23 +1541,27 @@
    ],
    "hold": true,
    "sync": "free",
-   "cut_frame": 2811,
-   "end_frame": 2900,
-   "from": 2802,
-   "dur": 107,
+   "cut_frame": 2594,
+   "end_frame": 2694,
+   "from": 2585,
+   "dur": 118,
    "fade_in": 18,
    "fade_out": 0,
    "transition_in": "dissolve",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 15,
-   "clip_need_s": 4.458,
+   "clip_need_s": 4.917,
    "move": null,
    "amb": [
     "forest_air"
    ],
    "fx": [],
    "text": null,
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 8522207
+   }
   },
   {
    "id": "C6-03",
@@ -1553,16 +1575,17 @@
    ],
    "hold": true,
    "sync": "free",
-   "cut_frame": 2900,
-   "end_frame": 3024,
-   "from": 2891,
-   "dur": 133,
+   "cut_frame": 2694,
+   "end_frame": 2832,
+   "from": 2685,
+   "dur": 147,
    "fade_in": 18,
    "fade_out": 36,
    "transition_in": "dissolve",
+   "fade_delay": 0,
    "clip": null,
    "clip_trim": 15,
-   "clip_need_s": 5.542,
+   "clip_need_s": 6.125,
    "move": null,
    "amb": [
     "forest_air",
@@ -1570,27 +1593,30 @@
    ],
    "fx": [],
    "text": "closing",
-   "source": null
+   "source": {
+    "provider": "pexels",
+    "id": 3132090
+   }
   }
  ],
  "texts": [
   {
    "id": "era1",
    "from": 16,
-   "dur": 71,
+   "dur": 73,
    "text": "約46億年前",
    "style": "era"
   },
   {
    "id": "closing",
-   "from": 2924,
-   "dur": 96,
+   "from": 2718,
+   "dur": 110,
    "text": "一度も途切れることなく、\n命はここまで続いてきた。",
    "style": "line"
   },
   {
    "id": "title",
-   "from": 3024,
+   "from": 2832,
    "dur": 108,
    "text": "生命の軌跡",
    "sub": "地球が紡いだ奇跡",
@@ -1598,18 +1624,18 @@
   }
  ],
  "credits": {
-  "from": 3132,
+  "from": 2940,
   "dur": 192
  },
  "intentional_black": [
   {
    "from": 0,
-   "to": 30,
+   "to": 54,
    "why": "冒頭の暗闇からのフェードイン"
   },
   {
-   "from": 3006,
-   "to": 3348,
+   "from": 2814,
+   "to": 3156,
    "why": "余韻のフェードアウト → タイトル・クレジット（黒地）"
   }
  ]

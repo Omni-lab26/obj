@@ -14,8 +14,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-NOTE = ("本作の映像はすべて、現在の地球で撮影された実写です。"
+NOTE = ("本作の映像は、宇宙から見た地球（CGによる再現）を除き、すべて現在の地球で撮影された実写です。"
         "過去の地球や古代の生物を記録したものではなく、地球と生命の歴史を表すために用いています。")
+UNKNOWN = "（Pexels 投稿者・名前未確認）"
 
 
 def load(p, default):
@@ -33,12 +34,18 @@ def main():
     used.sort(key=lambda m: min(m["shots"]))
     # 同じ作者は一度だけ表示
     seen, footage = set(), []
+    unknown = False
     for m in used:
+        if m["author"] == UNKNOWN:
+            unknown = True
+            continue
         key = (m["provider"], m["author"])
         if key in seen:
             continue
         seen.add(key)
         footage.append({"credit": m["author"], "source": m["provider"].capitalize()})
+    if unknown:
+        footage.append({"credit": "ほか Pexels の投稿者の皆さん", "source": "Pexels"})
 
     providers = sorted({m["provider"].capitalize() for m in used})
     credits = {
@@ -54,7 +61,7 @@ def main():
 
     fields = ["shots", "asset_id", "provider", "source_url", "author", "author_url", "license", "license_url",
               "attribution_required", "credit", "width", "height", "fps", "duration", "codec", "has_audio",
-              "sha1", "retrieved", "file"]
+              "sha1", "retrieved", "file_1080"]
     with open(ROOT / "docs" / "assets.csv", "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore")
         w.writeheader()
@@ -71,7 +78,8 @@ def main():
         for m in used:
             sh = ", ".join(m["shots"])
             d = " / ".join(descs.get(s, "") for s in m["shots"])
-            lines.append(f"| {sh} | {d} | [{m['author']}]({m['author_url']}) | [{m['provider']} {m['provider_id']}]({m['source_url']}) | "
+            author = f"[{m['author']}]({m['author_url']})" if m.get("author_url") else m["author"]
+            lines.append(f"| {sh} | {d} | {author} | [{m['provider']} {m['provider_id']}]({m['source_url']}) | "
                          f"[{m['license']}]({m['license_url']}) | {m['width']}x{m['height']} {m['fps']}fps | {m['credit']} |")
     else:
         lines.append("（まだ素材を取得していません。scripts/fetch_footage.py download 実行後に自動で埋まります）")

@@ -8,7 +8,8 @@ export const ShotLayer: React.FC<{shot: Shot; res: "1080" | "2160"}> = ({shot, r
   const frame = useCurrentFrame();
   const {dur, fade_in: fi, fade_out: fo, move} = shot;
 
-  const opacityIn = fi > 0 ? interpolate(frame, [0, fi], [0, 1], clamp) : 1;
+  const delay = shot.fade_delay ?? 0;
+  const opacityIn = fi > 0 ? interpolate(frame, [delay, delay + fi], [0, 1], clamp) : 1;
   const opacityOut = fo > 0 ? interpolate(frame, [dur - fo, dur], [1, 0], clamp) : 1;
 
   // 静的な画にだけ、ごくわずかな寄り・パンを付ける（selects.json の move で指定）

@@ -1,0 +1,384 @@
+{
+ "C1-01": {
+  "provider": "pexels",
+  "id": 7923692,
+  "auto": false,
+  "grade": {
+   "exposure": -0.06,
+   "gamma": 0.82,
+   "saturation": 0.9
+  },
+  "note": "溶岩の亀裂。夕暮れの空を暗く落として夜にする",
+  "file": "work/src/pexels_7923692_1920x1080.mp4",
+  "in": 4.0
+ },
+ "C1-02": {
+  "provider": "pexels",
+  "id": 13438865,
+  "auto": false,
+  "note": "スローの溶岩噴泉（フック）",
+  "file": "work/src/pexels_13438865_1920x1080.mp4",
+  "in": 10.4
+ },
+ "C1-03": {
+  "provider": "pexels",
+  "id": 17675069,
+  "auto": false,
+  "note": "夜の空撮。枝分かれする溶岩流",
+  "file": "work/src/pexels_17675069_1920x1080.mp4",
+  "in": 6.0
+ },
+ "C1-04": {
+  "provider": "pexels",
+  "id": 9882072,
+  "auto": false,
+  "note": "昼の空撮。噴煙と溶岩の川（溶岩が海へ流れ込む素材は無し）",
+  "file": "work/src/pexels_9882072_1920x1080.mp4",
+  "in": 5.0
+ },
+ "C1-05": {
+  "provider": "pexels",
+  "id": 14118346,
+  "auto": false,
+  "note": "積乱雲のタイムラプス",
+  "file": "work/src/pexels_14118346_1920x1080.mp4",
+  "in": 2.0
+ },
+ "C1-06": {
+  "provider": "pexels",
+  "id": 2053567,
+  "auto": false,
+  "note": "黒い岩に砕ける波（スロー）",
+  "file": "work/src/pexels_2053567_1920x1080.mp4",
+  "in": 1.2
+ },
+ "C1-07": {
+  "provider": "pexels",
+  "id": 8733055,
+  "auto": false,
+  "note": "CG（再現）。地球の縁と大気",
+  "file": "work/src/pexels_8733055_1920x1080.mp4",
+  "in": 5.0
+ },
+ "C2-01": {
+  "provider": "pexels",
+  "id": 2632737,
+  "auto": false,
+  "in": 0.5,
+  "note": "水中の光。前半（人影の出る後半は使わない）",
+  "file": "work/src/pexels_2632737_1920x1080.mp4"
+ },
+ "C2-02": {
+  "provider": "pexels",
+  "id": 855333,
+  "auto": false,
+  "note": "間欠泉の湯だまり",
+  "file": "work/src/pexels_855333_1920x1080.mp4",
+  "in": 0.6
+ },
+ "C2-03": {
+  "provider": "pexels",
+  "id": 3994403,
+  "auto": false,
+  "note": "陽の差す水底の藻類（微生物マットの代わり）",
+  "file": "work/src/pexels_3994403_1920x1080.mp4",
+  "in": 25.0,
+  "grade": {
+   "contrast": 1.1,
+   "exposure": -0.03,
+   "saturation": 1.0
+  }
+ },
+ "C2-07": {
+  "provider": "pexels",
+  "id": 2558530,
+  "auto": false,
+  "note": "暗い水中で光るクラゲ",
+  "file": "work/src/pexels_2558530_1920x1080.mp4",
+  "in": 8.0,
+  "grade": {
+   "saturation": 0.62,
+   "gamma": 0.95
+  }
+ },
+ "C3-01": {
+  "provider": "pexels",
+  "id": 2397239,
+  "auto": false,
+  "note": "ハナガサクラゲの仲間、金色",
+  "file": "work/src/pexels_2397239_2048x1080.mp4",
+  "in": 10.0
+ },
+ "C3-02": {
+  "provider": "pexels",
+  "id": 5358755,
+  "auto": false,
+  "note": "サンゴ礁とキンギョハナダイの群れ",
+  "file": "work/src/pexels_5358755_1920x1080.mp4",
+  "in": 7.0,
+  "grade": {
+   "saturation": 0.88
+  }
+ },
+ "C3-03": {
+  "provider": "pexels",
+  "id": 15099714,
+  "auto": false,
+  "note": "アオウミガメ",
+  "file": "work/src/pexels_15099714_1920x1080.mp4",
+  "in": 5.0
+ },
+ "C3-04": {
+  "provider": "pexels",
+  "id": 15623349,
+  "auto": false,
+  "note": "岩に溶け込むタコ（擬態）",
+  "file": "work/src/pexels_15623349_1920x1080.mp4",
+  "in": 3.0
+ },
+ "C3-05": {
+  "provider": "pexels",
+  "id": 1409899,
+  "auto": false,
+  "note": "真上からの波打ち際",
+  "file": "work/src/pexels_1409899_1920x1080.mp4",
+  "in": 4.0
+ },
+ "C3-06": {
+  "provider": "pexels",
+  "id": 3224617,
+  "auto": false,
+  "note": "苔のマクロ",
+  "file": "work/src/pexels_3224617_1920x1080.mp4",
+  "in": 3.0
+ },
+ "C3-07": {
+  "provider": "pexels",
+  "id": 4880958,
+  "auto": false,
+  "note": "シダの林床（若芽のタイムラプスは無し）",
+  "file": "work/src/pexels_4880958_1920x1080.mp4",
+  "in": 5.0
+ },
+ "C3-10": {
+  "provider": "pexels",
+  "id": 7663511,
+  "auto": false,
+  "note": "葉脈のマクロ",
+  "file": "work/src/pexels_7663511_1920x1080.mp4",
+  "in": 1.0
+ },
+ "C3-11": {
+  "provider": "pexels",
+  "id": 1138823,
+  "auto": false,
+  "note": "枝分かれする針葉樹の小枝（翅脈の代わり）",
+  "file": "work/src/pexels_1138823_1920x1080.mp4",
+  "in": 4.0
+ },
+ "C4-01": {
+  "provider": "pexels",
+  "id": 6327822,
+  "auto": false,
+  "note": "霧の朝の木立（森の空撮の代わり）",
+  "file": "work/src/pexels_6327822_1920x1080.mp4",
+  "in": 4.0
+ },
+ "C4-02": {
+  "provider": "pexels",
+  "id": 5692315,
+  "auto": false,
+  "note": "霧の森に差す光芒",
+  "file": "work/src/pexels_5692315_1920x1080.mp4",
+  "in": 8.0
+ },
+ "C4-03": {
+  "provider": "pexels",
+  "id": 16590272,
+  "auto": false,
+  "note": "サンザシの花とミツバチ",
+  "file": "work/src/pexels_16590272_1920x1080.mp4",
+  "in": 1.0
+ },
+ "C4-04": {
+  "provider": "pexels",
+  "id": 3877884,
+  "auto": false,
+  "note": "ヒマワリにとまるヒメアカタテハ",
+  "file": "work/src/pexels_3877884_1920x1080.mp4",
+  "in": 11.0
+ },
+ "C4-05": {
+  "provider": "pexels",
+  "id": 6389401,
+  "auto": false,
+  "note": "枝にとまるハチドリ（ホバリング素材は無し）",
+  "file": "work/src/pexels_6389401_1920x1080.mp4",
+  "in": 1.0
+ },
+ "C4-06": {
+  "provider": "pexels",
+  "id": 3571264,
+  "auto": false,
+  "note": "斜めに押し寄せる波（空撮）→魚群へ",
+  "file": "work/src/pexels_3571264_1920x1080.mp4",
+  "in": 14.0
+ },
+ "C4-07": {
+  "provider": "pexels",
+  "id": 1151329,
+  "auto": false,
+  "note": "川のように流れる黄色い魚群",
+  "file": "work/src/pexels_1151329_1920x1080.mp4",
+  "in": 6.0
+ },
+ "C4-08": {
+  "provider": "pexels",
+  "id": 3851642,
+  "auto": false,
+  "note": "ムクドリの群れ",
+  "file": "work/src/pexels_3851642_1920x1080.mp4",
+  "in": 16.0
+ },
+ "C4-09": {
+  "provider": "pexels",
+  "id": 12873497,
+  "auto": false,
+  "note": "水面の上の鳥の群れ",
+  "file": "work/src/pexels_12873497_1920x1080.mp4",
+  "in": 0.8
+ },
+ "C4-10": {
+  "provider": "pexels",
+  "id": 6168935,
+  "auto": false,
+  "note": "走るシマウマ（空撮）",
+  "file": "work/src/pexels_6168935_1920x1080.mp4",
+  "in": 13.0
+ },
+ "C4-14": {
+  "provider": "pexels",
+  "id": 3826855,
+  "auto": false,
+  "note": "青空を滑空する鳥（スロー）",
+  "file": "work/src/pexels_3826855_1920x1080.mp4",
+  "in": 3.0
+ },
+ "C5-01": {
+  "provider": "pexels",
+  "id": 5754996,
+  "auto": false,
+  "note": "葉を打つ雨",
+  "file": "work/src/pexels_5754996_1920x1080.mp4",
+  "in": 0.0
+ },
+ "C5-02": {
+  "provider": "pexels",
+  "id": 2491284,
+  "auto": false,
+  "note": "地面に跳ねる雨（スロー）",
+  "file": "work/src/pexels_2491284_2048x1080.mp4",
+  "in": 2.0
+ },
+ "C5-03": {
+  "provider": "pexels",
+  "id": 6446287,
+  "auto": false,
+  "note": "苔むした岩の渓流",
+  "file": "work/src/pexels_6446287_1920x1080.mp4",
+  "in": 5.0
+ },
+ "C5-04": {
+  "provider": "pexels",
+  "id": 3229033,
+  "auto": false,
+  "note": "林床のキノコ",
+  "file": "work/src/pexels_3229033_1920x1080.mp4",
+  "in": 10.0
+ },
+ "C5-05": {
+  "provider": "pexels",
+  "id": 3224616,
+  "auto": false,
+  "note": "枯れ葉に伸びる菌",
+  "file": "work/src/pexels_3224616_1920x1080.mp4",
+  "in": 20.0
+ },
+ "C5-06": {
+  "provider": "pexels",
+  "id": 7367254,
+  "auto": false,
+  "note": "アリ塚",
+  "file": "work/src/pexels_7367254_1920x1080.mp4",
+  "in": 100.0
+ },
+ "C5-07": {
+  "provider": "pexels",
+  "id": 18619715,
+  "auto": false,
+  "note": "森で草を食むシカ",
+  "file": "work/src/pexels_18619715_1920x1080.mp4",
+  "in": 4.0
+ },
+ "C5-08": {
+  "provider": "pexels",
+  "id": 10132396,
+  "auto": false,
+  "note": "逆光に舞う黄葉",
+  "file": "work/src/pexels_10132396_1920x1080.mp4",
+  "in": 10.0
+ },
+ "C5-09": {
+  "provider": "pexels",
+  "id": 8226944,
+  "auto": false,
+  "note": "渓谷の滝（空撮）。ここで曲が途切れる",
+  "file": "work/src/pexels_8226944_2560x1440.mp4",
+  "in": 4.0,
+  "crop": {
+   "zoom": 1.25,
+   "x": 0.5,
+   "y": 0.9
+  }
+ },
+ "C6-01": {
+  "provider": "pexels",
+  "id": 5210325,
+  "auto": false,
+  "note": "葉先から落ちるひとしずく",
+  "file": "work/src/pexels_5210325_1920x1080.mp4",
+  "in": 2.0
+ },
+ "C6-02": {
+  "provider": "pexels",
+  "id": 8522207,
+  "auto": false,
+  "note": "芽生えのタイムラプス",
+  "file": "work/src/pexels_8522207_1920x1080.mp4",
+  "in": 3.0
+ },
+ "C6-03": {
+  "provider": "pexels",
+  "id": 3132090,
+  "auto": false,
+  "note": "木漏れ日の若葉（締めの言葉）",
+  "file": "work/src/pexels_3132090_1920x1080.mp4",
+  "in": 4.5
+ },
+ "C4-11": {
+  "provider": "pexels",
+  "id": 5560963,
+  "auto": false,
+  "note": "夕日の海とカモメ",
+  "file": "work/src/pexels_5560963_1920x1080.mp4",
+  "in": 13.0
+ },
+ "C4-12": {
+  "provider": "pexels",
+  "id": 1456996,
+  "auto": false,
+  "in": 17.5,
+  "note": "タイマイが青い水中へ泳ぎ上がる（後半）",
+  "file": "work/src/pexels_1456996_1920x1080.mp4"
+ }
+}

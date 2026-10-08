@@ -41,10 +41,23 @@ export PEXELS_API_KEY=...            # https://www.pexels.com/api/ で無料発�
 曲ファイル（権利を確認したもの）は `public/audio/music.wav` に置く（`.flac` `.m4a` `.mp3` も可）。
 置かない場合は、仮の拍グリッドで組み、音楽なし版だけを書き出す。
 
+## 素材の取得経路
+
+Pexels API の新規キー発行が停止中で、www.pexels.com もボット対策で取得できないため、本作は次の経路で素材を集めた。
+
+1. Web 検索で Pexels の動画ページ URL（`https://www.pexels.com/video/<slug>-<ID>/`）を集め、`data/web_candidates.json` に保存
+2. `python3 scripts/pexels_cdn.py probe` … 公開 CDN（videos.pexels.com / images.pexels.com）で、各IDの解像度・fps・プレビューを確認し、
+   `work/sheets/<ショット>.jpg` に比較シートを作る（プレビューが無いものは `fill` で SD 版からコマを抜く）
+3. 比較シートを見て `data/selects.json` に採用IDを書く
+4. `python3 scripts/pexels_cdn.py download` … 取得し、`data/manifest.json` に取得元・作者・ライセンスを記録
+5. `python3 scripts/source_strips.py` … 採用素材の全体をコマで並べたシート（`work/strips/ch<N>.jpg`）を見て、使い始め位置 `in` を決める
+
+API キーがある場合は `make fetch`（`scripts/fetch_footage.py`）でも同じことができる。
+
 ## 制作の流れ
 
 ```bash
-make fetch      # 1. 素材の検索 → work/sheets/<ショット>.jpg に候補の比較シート → 仮選定 → ダウンロード
+make fetch      # 1. 素材の検索 → work/sheets/<ショット>.jpg に候補の比較シート → 仮選定 → ダウンロード（API キーがある場合）
 make analyze    # 2. 曲の解析（data/music.json, docs/music_analysis.png）
 make conform    # 3. タイムライン生成 → 素材を 24fps / 1920x1080 / 共通トーンに整形
 make audio      # 4. 環境音の合成とミックス（曲入り・音楽なし）

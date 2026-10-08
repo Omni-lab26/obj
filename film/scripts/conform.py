@@ -101,7 +101,10 @@ def conform_shot(shot, sel, cfg, res, force):
     out = OUT / f"{shot['id']}_{res}.mp4"
     if out.exists() and not force:
         return out, "exists"
-    src = ROOT / sel["file"]
+    key = "file_2160" if res == "2160" else "file"
+    if not sel.get(key):
+        raise ValueError(f"{shot['id']}: no source file for {res}p ({key} in selects.json)")
+    src = ROOT / sel[key]
     info = probe(src)
     fps_out = cfg["fps"]
     speed = float(sel.get("speed") or fps_out / info["fps"])

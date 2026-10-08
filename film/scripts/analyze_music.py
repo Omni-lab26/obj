@@ -12,6 +12,9 @@
   sections        構造の区切り（音色・和声の変化から自己類似行列で分割）
   energy          音の密度・大きさの推移（0..1、0.5秒刻み）
   hits            強いアタック（映像の大きな転換に使える候補）
+  pulses          低音域のアタック（体感のパルス。カットはこれに合わせる）
+  harmony         和声（低音の音高）の変わり目
+  drop            音量が急に落ちる位置（曲の終わりのブレイク）
 """
 import json
 import sys
@@ -19,7 +22,7 @@ from pathlib import Path
 
 import numpy as np
 import librosa
-from scipy import ndimage
+from scipy import ndimage, signal
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -139,6 +142,50 @@ def analyze(path: Path):
             if post > pre * 1.4:
                 hits.append(round(float(librosa.frames_to_time(f, sr=sr, hop_length=hop)), 3))
 
+    # 体感のパルス: 低音域（300Hz 未満）のアタック。加速する曲でも、拍の表に近い位置が取れる
+    hop2 = 256
+    M = librosa.feature.melspectrogram(y=y, sr=sr, hop_length=hop2, n_mels=128, fmin=30, fmax=8000)
+    mf = librosa.mel_frequencies(n_mels=128, fmin=30, fmax=8000)
+    oe_low = librosa.onset.onset_strength(S=librosa.power_to_db(M[mf < 300]), sr=sr, hop_length=hop2)
+    oe_low = ndimage.gaussian_filter1d(oe_low, 1.5)
+    t2 = librosa.times_like(oe_low, sr=sr, hop_length=hop2)
+    loc = ndimage.uniform_filter1d(oe_low, size=int(3 / (hop2 / sr)))
+    pk, _ = signal.find_peaks(oe_low, distance=int(0.7 / (hop2 / sr)),
+                              prominence=np.percentile(oe_low, 90) * 0.5)
+    pk = [q for q in pk if oe_low[q] > 1.6 * loc[q]]
+    pulses = [round(float(t2[q]), 3) for q in pk]
+    pulse_strength = [round(float(oe_low[q] / (oe_low.max() + 1e-9)), 3) for q in pk]
+
+    # 和声の変わり目: 低音域クロマの前後0.8秒の平均の差
+    Cq = np.abs(librosa.cqt(y, sr=sr, hop_length=hop, fmin=librosa.note_to_hz("C1"), n_bins=48))
+    chb = ndimage.uniform_filter1d(librosa.feature.chroma_cqt(C=Cq, sr=sr, hop_length=hop), size=9, axis=1)
+    chb /= np.linalg.norm(chb, axis=0, keepdims=True) + 1e-9
+    W = int(0.8 / (hop / sr))
+    nov = np.zeros(chb.shape[1])
+    for i in range(W, chb.shape[1] - W):
+        a, b = chb[:, i - W:i].mean(1), chb[:, i:i + W].mean(1)
+        nov[i] = 1 - a @ b / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-9)
+    nov = ndimage.gaussian_filter1d(nov, 2)
+    hk, _ = signal.find_peaks(nov, height=0.05, distance=int(1.0 / (hop / sr)), prominence=0.04)
+    th = librosa.times_like(nov, sr=sr, hop_length=hop)
+    harmony = [round(float(th[q]), 3) for q in hk]
+
+    # ブレイク: -14dB を下回ったまま 2 秒以上戻らない最初の位置を探し、
+    # そこから遡って最後に -6dB 以上鳴っていたフレームを「落ちる瞬間」とする
+    drop = None
+    rdb = librosa.amplitude_to_db(librosa.feature.rms(y=y, hop_length=hop2)[0], ref=np.max)
+    rdb = ndimage.uniform_filter1d(rdb, 3)
+    span = int(2.0 / (hop2 / sr))
+    loud_seen = False
+    for i in range(len(rdb) - span):
+        loud_seen = loud_seen or rdb[i] > -6
+        if loud_seen and rdb[i] < -14 and rdb[i:i + span].max() < -14:
+            j = i
+            while j > 0 and rdb[j] <= -6:
+                j -= 1
+            drop = round(float(t2[j]), 3)
+            break
+
     # 終わり方: 最後の2秒の音量変化
     tail_m = t_frames[:n] > end_sound - 2.0
     tail_shape = "abrupt" if (len(rms_db[:n][tail_m]) and rms_db[:n][tail_m][:-5].mean() > -20) else "decay"
@@ -160,6 +207,10 @@ def analyze(path: Path):
         "sections": sections,
         "energy": energy,
         "hits": hits,
+        "pulses": pulses,
+        "pulse_strength": pulse_strength,
+        "harmony": harmony,
+        "drop": drop,
     }
 
 
@@ -184,6 +235,12 @@ def plot(res, out_png: Path):
     ax[1].set_ylabel("BPM")
     ax[2].vlines(res["beats"], 0, 0.5, color="#555", lw=0.5)
     ax[2].vlines(res["downbeats"], 0, 1, color="#000", lw=1.0)
+    ax[2].vlines(res.get("pulses", []), 0, 0.8, color="#c60", lw=1.2)
+    for h in res.get("harmony", []):
+        ax[0].axvline(h, color="#36c", lw=0.6, ls=":")
+    if res.get("drop"):
+        for a in ax:
+            a.axvline(res["drop"], color="#000", lw=1.5)
     ax[2].set_ylabel("beats")
     ax[2].set_xlabel("sec")
     fig.tight_layout()
@@ -201,7 +258,7 @@ def main():
     plot(res, ROOT / "docs" / "music_analysis.png")
     print(f"duration {res['duration']}s (sound {res['start_sound']}–{res['end_sound']}), "
           f"beats {len(res['beats'])}, sections {len(res['sections'])}, hits {len(res['hits'])}, "
-          f"ending={res['ending']}")
+          f"ending={res['ending']}, pulses {len(res['pulses'])}, harmony {len(res['harmony'])}, drop {res['drop']}")
     for s in res["sections"]:
         print(f"  section {s['start']:7.2f}–{s['end']:7.2f}  energy {s['energy']:.2f}")
 

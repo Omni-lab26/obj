@@ -86,10 +86,17 @@ def main():
     m_end = m0 + music["end_sound"]
     mdur = music["end_sound"]
 
-    beats = [m0 + b for b in music["beats"]]
-    bstr = music.get("beat_strength") or [0.5] * len(beats)
-    accents = [m0 + b for b in music.get("downbeats", [])]
+    # カットの格子: 低音のアタック（体感のパルス）があればそれを使い、無ければ PLP の拍
+    if music.get("pulses"):
+        beats = [m0 + b for b in music["pulses"]]
+        bstr = music.get("pulse_strength") or [0.5] * len(beats)
+    else:
+        beats = [m0 + b for b in music["beats"]]
+        bstr = music.get("beat_strength") or [0.5] * len(beats)
     hits = [m0 + h for h in music.get("hits", [])]
+    # 強い転換の候補: 和声の変わり目とアタック（無ければアクセント拍）
+    accents = sorted(set([m0 + h for h in music.get("harmony", [])] + hits)) or \
+        [m0 + b for b in music.get("downbeats", [])]
     sec_bounds = [m0 + s["start"] for s in music["sections"]]
     snap = cfg["snap"]
 
@@ -103,13 +110,17 @@ def main():
             t = 0.0
         elif "music_frac" in a:
             target = m0 + mdur * a["music_frac"]
-            t = nearest(sec_bounds, target, target - snap["section_window"], target + snap["section_window"])
+            t = nearest(sec_bounds, target, target - snap.get("section_window", 4.0), target + snap.get("section_window", 4.0))
             if t is None:
                 t = nearest(accents, target, target - snap["accent_window"], target + snap["accent_window"])
             if t is None:
                 t = nearest(beats, target, target - 1, target + 1, bstr) or target
         elif "music_at" in a:
-            t = m0 + a["music_at"]
+            target = m0 + a["music_at"]
+            w = snap.get("anchor_window", 0.35)
+            t = nearest(sorted(set(hits + beats)), target, target - w, target + w) or target
+        elif a.get("music_event") == "drop":
+            t = m0 + (music.get("drop") or music["end_sound"])
         elif "music_end" in a:
             t = m_end + a["music_end"]
         else:
@@ -127,13 +138,17 @@ def main():
         o = selects.get(s["id"], {}) if isinstance(selects.get(s["id"]), dict) else {}
         return {**s, **{k: o[k] for k in ("dur", "sync", "transition_in", "drop", "hold") if k in o}}
 
+    final_mode = any(isinstance(v, dict) and v.get("id") for v in selects.values())
     timeline = []
     for ch in chapters:
         cid = ch["id"]
         L = ch_end[cid] - ch_start[cid]
         items = [shot_over(s) for s in sh["shots"] if s["chapter"] == cid]
         items = [s for s in items if not s.get("drop")]
-        min_avg = 1.25 if cid == 4 else 1.7
+        if final_mode:
+            # 素材を選び始めたら、素材の無いショットは外して尺を配り直す
+            items = [s for s in items if isinstance(selects.get(s["id"]), dict) and selects[s["id"]].get("id")]
+        min_avg = 1.25 if cid in (4, 5) else 1.7
         # 章が短すぎる場合は optional のショットを後ろから外す
         while len(items) > 1 and L / len(items) < min_avg:
             opt = [s for s in items if s.get("optional")]
@@ -141,15 +156,15 @@ def main():
                 break
             items.remove(opt[-1])
         W = sum(s["dur"] for s in items)
-        mn = snap["min_shot_fast"] if cid == 4 else snap["min_shot"]
+        mn = snap["min_shot_fast"] if cid in (4, 5) else snap["min_shot"]
         cuts = [ch_start[cid]]
         acc = ch_start[cid]
         for i, s in enumerate(items[:-1]):
             acc += s["dur"] * L / W
             nxt = items[i + 1]
             remaining = len(items) - (i + 1)
-            lo = max(cuts[-1] + mn, acc - 0.6)
-            hi = min(ch_end[cid] - mn * remaining, acc + 0.6)
+            lo = max(cuts[-1] + mn, acc - snap["beat_window"])
+            hi = min(ch_end[cid] - mn * remaining, acc + snap["beat_window"])
             t = None
             sync = nxt.get("sync", "beat")
             if sync == "hit":
@@ -160,6 +175,9 @@ def main():
                 sync = "beat" if t is None else sync
             if t is None and sync == "beat":
                 t = nearest(beats, acc, max(lo, acc - snap["beat_window"]), min(hi, acc + snap["beat_window"]), bstr)
+            if t is None and sync != "free":
+                # 窓の中に拍が無ければ、許される範囲で最も近い拍へ
+                t = nearest(beats, acc, lo, hi, bstr)
             if t is None:
                 t = min(max(acc, lo), hi)
             cuts.append(t)
@@ -201,6 +219,7 @@ def main():
             "cut_frame": f0, "end_frame": f1,
             "from": f0 - pre, "dur": (f1 + post) - (f0 - pre),
             "fade_in": fade_in, "fade_out": fade_out, "transition_in": kind_in,
+            "fade_delay": int(round(cfg.get("lead_black", 0) * fps)) if k == 0 else 0,
             "clip": src_rel, "clip_trim": int(round(H * fps)) - pre,
             "clip_need_s": round(((f1 + post) - (f0 - pre)) / fps, 3),
             "move": (sel or {}).get("move"),
@@ -234,14 +253,16 @@ def main():
         "durationInFrames": total,
         "provisional_music": bool(music.get("provisional")),
         "music": {"file": mfile_used, "offset_frames": round(m0 * fps), "offset_s": m0,
-                  "end_s": round(m_end, 3), "duration_s": music["duration"]},
+                  "end_s": round(m_end, 3), "duration_s": music["duration"],
+                  "drop_s": round(m0 + music["drop"], 3) if music.get("drop") else None},
         "chapters": [{"id": c["id"], "name": c["name"], "en": c["en"], "from": round(ch_start[c["id"]] * fps),
                       "to": round(ch_end[c["id"]] * fps)} for c in chapters],
         "shots": out_shots,
         "texts": texts,
         "credits": {"from": cr_from, "dur": cr_len},
         "intentional_black": [
-            {"from": 0, "to": out_shots[0]["from"] + out_shots[0]["fade_in"], "why": "冒頭の暗闇からのフェードイン"},
+            {"from": 0, "to": out_shots[0]["from"] + out_shots[0]["fade_delay"] + out_shots[0]["fade_in"],
+             "why": "冒頭の暗闇からのフェードイン"},
             {"from": out_shots[-1]["end_frame"] - out_shots[-1]["fade_out"] // 2, "to": total,
              "why": "余韻のフェードアウト → タイトル・クレジット（黒地）"},
         ],

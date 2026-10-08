@@ -23,6 +23,7 @@ export type Shot = {
   dur: number;
   fade_in: number;
   fade_out: number;
+  fade_delay?: number;
   transition_in: string;
   clip: string | null;
   clip_trim: number;

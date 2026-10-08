@@ -106,8 +106,9 @@ def main():
 
     # 曲が鳴っている区間の曲線（環境音の音量を切り替える）
     m0 = edl["music"]["offset_s"]
-    m1 = edl["music"]["end_s"]
-    music_on = ramp(N, int(m0 * SR), int(m1 * SR), 3.0)
+    # 曲が急に途切れる曲では、その瞬間から環境音を前に出す（無音にせず余韻を残す）
+    m1 = edl["music"].get("drop_s") or edl["music"]["end_s"]
+    music_on = ramp(N, int(m0 * SR), int((m1 + 0.4) * SR), 1.2)
     bed_db = acfg["ambience_gain_db_no_music_section"] + music_on * (
         acfg["ambience_gain_db_under_music"] - acfg["ambience_gain_db_no_music_section"])
     bed = db(bed_db)[:, None]
