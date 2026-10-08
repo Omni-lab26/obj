@@ -163,7 +163,7 @@ def main():
             acc += s["dur"] * L / W
             nxt = items[i + 1]
             remaining = len(items) - (i + 1)
-            lo = max(cuts[-1] + mn, acc - snap["beat_window"])
+            lo = max(cuts[-1] + mn - 1.0 / fps, acc - snap["beat_window"])  # 1フレームの余裕
             hi = min(ch_end[cid] - mn * remaining, acc + snap["beat_window"])
             t = None
             sync = nxt.get("sync", "beat")

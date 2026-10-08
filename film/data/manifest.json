@@ -971,33 +971,6 @@
   "retrieved": "2026-10-08T21:32:23+00:00",
   "file_1080": "work/src/pexels_18619715_1920x1080.mp4"
  },
- "pexels_10132396": {
-  "asset_id": "pexels_10132396",
-  "shots": [
-   "C5-08"
-  ],
-  "provider": "pexels",
-  "provider_id": 10132396,
-  "source_url": "https://www.pexels.com/video/autumn-leaves-falling-from-tree-10132396/",
-  "title": "Autumn Leaves Falling From Tree",
-  "author": "Ray Notes",
-  "author_url": null,
-  "license": "Pexels License",
-  "license_url": "https://www.pexels.com/license/",
-  "attribution_required": false,
-  "credit": "Video by Ray Notes on Pexels",
-  "file_url": "https://videos.pexels.com/video-files/10132396/10132396-hd_1920_1080_24fps.mp4",
-  "width": 1920,
-  "height": 1080,
-  "fps": 24.0,
-  "duration": 33.173333,
-  "codec": "h264",
-  "color_transfer": "bt709",
-  "has_audio": true,
-  "sha1": "9dd84435844c4163ae768dbc7e2d268997e0351a",
-  "retrieved": "2026-10-08T21:32:24+00:00",
-  "file_1080": "work/src/pexels_10132396_1920x1080.mp4"
- },
  "pexels_8226944": {
   "asset_id": "pexels_8226944",
   "shots": [
@@ -1159,5 +1132,32 @@
   "sha1": "823cb7b7fd5d1345e4081e52d80fc61c801a946b",
   "retrieved": "2026-10-08T21:33:33+00:00",
   "file_1080": "work/src/pexels_1456996_1920x1080.mp4"
+ },
+ "pexels_9939089": {
+  "asset_id": "pexels_9939089",
+  "shots": [
+   "C5-08"
+  ],
+  "provider": "pexels",
+  "provider_id": 9939089,
+  "source_url": "https://www.pexels.com/video/falling-leaves-from-trees-in-autumn-9939089/",
+  "title": "Falling Leaves From Trees in Autumn",
+  "author": "Bogdan Krupin",
+  "author_url": null,
+  "license": "Pexels License",
+  "license_url": "https://www.pexels.com/license/",
+  "attribution_required": false,
+  "credit": "Video by Bogdan Krupin on Pexels",
+  "file_url": "https://videos.pexels.com/video-files/9939089/9939089-hd_1920_1080_30fps.mp4",
+  "width": 1920,
+  "height": 1080,
+  "fps": 29.97,
+  "duration": 21.205,
+  "codec": "h264",
+  "color_transfer": "bt709",
+  "has_audio": true,
+  "sha1": "7b77455ee5a9553a2da36455d0ce12c8690abd59",
+  "retrieved": "2026-10-08T21:59:22+00:00",
+  "file_1080": "work/src/pexels_9939089_1920x1080.mp4"
  }
 }

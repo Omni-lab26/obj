@@ -28,10 +28,13 @@ export const TextCard: React.FC<{event: TextEvent}> = ({event}) => {
   if (event.style === "line") {
     return (
       <AbsoluteFill style={{justifyContent: "flex-end", alignItems: "center", paddingBottom: 150 * u, opacity}}>
+        {/* 文字の下だけをわずかに沈め、明るいボケの上でも読めるようにする */}
+        <AbsoluteFill style={{background: "linear-gradient(to top, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.18) 32%, rgba(0,0,0,0) 55%)"}} />
         <div
           style={{
             fontFamily: SERIF,
-            fontSize: 44 * u,
+            position: "relative",
+            fontSize: 46 * u,
             lineHeight: 1.95,
             letterSpacing: "0.16em",
             textAlign: "center",

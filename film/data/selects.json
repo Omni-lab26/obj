@@ -328,11 +328,14 @@
  },
  "C5-08": {
   "provider": "pexels",
-  "id": 10132396,
+  "id": 9939089,
   "auto": false,
-  "note": "逆光に舞う黄葉",
-  "file": "work/src/pexels_10132396_1920x1080.mp4",
-  "in": 10.0
+  "in": 8.0,
+  "note": "黄葉の森に舞う葉（道路の写る 10132396 から差し替え）",
+  "file": "work/src/pexels_9939089_1920x1080.mp4",
+  "grade": {
+   "saturation": 0.92
+  }
  },
  "C5-09": {
   "provider": "pexels",

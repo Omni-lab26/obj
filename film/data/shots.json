@@ -89,7 +89,7 @@
    "chapter": 1,
    "dur": 2.6,
    "kind": "metaphor",
-   "desc": "溶岩の流れ（空撮）。川のように枝分かれして流れる",
+   "desc": "夜の空撮。枝分かれして流れる溶岩",
    "queries": [
     "lava flow aerial",
     "lava river",
@@ -124,7 +124,7 @@
    "chapter": 1,
    "dur": 2.4,
    "kind": "metaphor",
-   "desc": "海上の積乱雲・雷（タイムラプス）。空から海へ",
+   "desc": "積乱雲のタイムラプス（空と水）",
    "queries": [
     "storm clouds ocean timelapse",
     "lightning storm sea",
@@ -192,7 +192,7 @@
    "chapter": 2,
    "dur": 2.6,
    "kind": "observation",
-   "desc": "湧き上がる温泉・熱水の泡（熱と水が出会う場所）",
+   "desc": "間欠泉の湯だまりが膨らみ、はじける（熱と水が出会う場所）",
    "queries": [
     "hot spring bubbling",
     "geothermal pool bubbles",
@@ -274,7 +274,7 @@
    "chapter": 2,
    "dur": 3.0,
    "kind": "observation",
-   "desc": "暗い水中を漂う小さなクシクラゲ・プランクトン",
+   "desc": "暗い水中で光るクラゲ",
    "queries": [
     "comb jelly",
     "ctenophore",
@@ -557,7 +557,7 @@
    "chapter": 4,
    "dur": 1.8,
    "kind": "observation",
-   "desc": "うねる海（空撮）",
+   "desc": "斜めに押し寄せる波（空撮）",
    "queries": [
     "ocean swell aerial",
     "waves aerial",
@@ -738,7 +738,7 @@
    "chapter": 5,
    "dur": 1.5,
    "kind": "observation",
-   "desc": "苔むした岩と根の間を流れる小川",
+   "desc": "苔むした岩の間を流れる渓流",
    "queries": [
     "forest stream moss",
     "creek rocks moss",
@@ -819,7 +819,7 @@
    "chapter": 5,
    "dur": 1.4,
    "kind": "observation",
-   "desc": "舞い落ちる葉（生と死の循環）",
+   "desc": "黄葉の森に舞う葉（生と死の循環）",
    "queries": [
     "falling leaves slow motion",
     "autumn leaves falling",
@@ -835,7 +835,7 @@
    "chapter": 5,
    "dur": 3.2,
    "kind": "observation",
-   "desc": "巨大な滝（空撮）。クライマックス、ここで曲が途切れる",
+   "desc": "渓谷の滝（空撮）。クライマックス、ここで曲が途切れる",
    "queries": [
     "waterfall aerial",
     "huge waterfall",
