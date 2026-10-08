@@ -63,6 +63,7 @@ make conform    # 3. タイムライン生成 → 素材を 24fps / 1920x1080 / 
 make audio      # 4. 環境音の合成とミックス（曲入り・音楽なし）
 make render     # 5. 書き出し → 品質確認（out/qc/, docs/qc_*.md）
 make conform4k render4k   # 4K 版（全ショットが 2160p 以上の素材のときのみ）
+make share      # 共有用の小さいコピー（約28MB）
 ```
 
 素材が届く前は `make animatic` で、スレートと環境音だけの仮編集を書き出して構成と尺を確認できる。

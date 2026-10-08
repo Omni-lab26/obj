@@ -8,6 +8,7 @@
 |---|---|
 | `out/seimei-no-kiseki_1080p.mp4` | 完成版（曲入り、1920x1080 / 24fps / H.264 / AAC 48kHz） |
 | `out/seimei-no-kiseki_1080p_nomusic.mp4` | 環境音のみの版（曲を別に付ける場合） |
+| `out/share/seimei-no-kiseki_1080p_share.mp4` | 共有用コピー（同じ 1080p を 2 パスで約28MB に圧縮。`make share`） |
 | `docs/qc_*.md`, `out/qc/` | 品質確認（黒・静止・無音・ラウドネス、カット前後のフレーム） |
 
 動画ファイルは容量が大きいため Git には含めず、`make` で再生成する。

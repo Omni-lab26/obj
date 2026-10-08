@@ -8,6 +8,7 @@
 #   make audio     環境音の合成とミックス
 #   make render    1080p の書き出し（曲入り・音楽なし）→ 品質確認
 #   make render4k  4K の書き出し（全ショットが 2160p 以上の素材のときのみ）
+#   make share     共有用の小さいコピー（約28MB）
 #   make all       analyze〜render を順に実行
 
 PY      := python3
@@ -17,7 +18,7 @@ MUSIC   ?= $(firstword $(wildcard public/audio/music.wav public/audio/music.flac
 RENDER  := npx remotion render --muted --codec=h264 --pixel-format=yuv420p --color-space=bt709 \
            --x264-preset=slow --jpeg-quality=95 --concurrency=4
 
-.PHONY: all setup fetch analyze edl conform conform4k audio render render4k animatic qc clean-render
+.PHONY: all setup fetch analyze edl conform conform4k audio render render4k share animatic qc clean-render
 
 all: analyze edl conform audio render
 
@@ -70,6 +71,15 @@ render4k:
 	    -c:a aac -b:a 320k -movflags +faststart $(OUT)/$(NAME)_4k.mp4; fi
 	ffmpeg -v error -y -i $(OUT)/video_2160.mp4 -i public/audio/mix_nomusic.wav -map 0:v -map 1:a -c:v copy \
 	  -c:a aac -b:a 320k -movflags +faststart $(OUT)/$(NAME)_4k_nomusic.mp4
+
+# 共有用の小さいコピー（約28MB。チャットやメッセージで送れる上限 30MB 未満に収める 2 パス）
+share:
+	mkdir -p $(OUT)/share
+	ffmpeg -v error -y -i $(OUT)/$(NAME)_1080p.mp4 -c:v libx264 -preset slow -tune film -b:v 1640k -pass 1 \
+	  -passlogfile $(OUT)/share/2pass -an -f null -
+	ffmpeg -v error -y -i $(OUT)/$(NAME)_1080p.mp4 -c:v libx264 -preset slow -tune film -b:v 1640k -maxrate 3280k \
+	  -bufsize 6560k -pass 2 -passlogfile $(OUT)/share/2pass -c:a aac -b:a 128k -movflags +faststart \
+	  $(OUT)/share/$(NAME)_1080p_share.mp4
 
 # 素材が届く前の仮編集（スレート + 環境音）。構成と尺の確認用
 animatic: edl audio
