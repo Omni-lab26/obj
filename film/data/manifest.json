@@ -485,33 +485,6 @@
   "retrieved": "2026-10-08T21:31:59+00:00",
   "file_1080": "work/src/pexels_4880958_1920x1080.mp4"
  },
- "pexels_7663511": {
-  "asset_id": "pexels_7663511",
-  "shots": [
-   "C3-10"
-  ],
-  "provider": "pexels",
-  "provider_id": 7663511,
-  "source_url": "https://www.pexels.com/video/close-up-video-of-a-leaf-7663511/",
-  "title": "Close-Up Video of a Leaf",
-  "author": "（Pexels 投稿者・名前未確認）",
-  "author_url": null,
-  "license": "Pexels License",
-  "license_url": "https://www.pexels.com/license/",
-  "attribution_required": false,
-  "credit": "Pexels",
-  "file_url": "https://videos.pexels.com/video-files/7663511/7663511-hd_1920_1080_25fps.mp4",
-  "width": 1280,
-  "height": 720,
-  "fps": 25.0,
-  "duration": 6.613333,
-  "codec": "h264",
-  "color_transfer": "bt709",
-  "has_audio": true,
-  "sha1": "ade37771133c958c006ff60b096fc5b7556bbd12",
-  "retrieved": "2026-10-08T21:32:00+00:00",
-  "file_1080": "work/src/pexels_7663511_1920x1080.mp4"
- },
  "pexels_1138823": {
   "asset_id": "pexels_1138823",
   "shots": [
@@ -647,33 +620,6 @@
   "retrieved": "2026-10-08T21:32:05+00:00",
   "file_1080": "work/src/pexels_3877884_1920x1080.mp4"
  },
- "pexels_6389401": {
-  "asset_id": "pexels_6389401",
-  "shots": [
-   "C4-05"
-  ],
-  "provider": "pexels",
-  "provider_id": 6389401,
-  "source_url": "https://www.pexels.com/video/close-up-shot-of-a-humming-bird-6389401/",
-  "title": "Close Up Shot of a Humming Bird",
-  "author": "Joseph Vogel",
-  "author_url": null,
-  "license": "Pexels License",
-  "license_url": "https://www.pexels.com/license/",
-  "attribution_required": false,
-  "credit": "Video by Joseph Vogel on Pexels",
-  "file_url": "https://videos.pexels.com/video-files/6389401/6389401-hd_1920_1080_24fps.mp4",
-  "width": 1280,
-  "height": 720,
-  "fps": 23.976,
-  "duration": 22.868333,
-  "codec": "h264",
-  "color_transfer": "bt709",
-  "has_audio": true,
-  "sha1": "933893a986d6ffe52f8edb9d32e30b8c5db86fd8",
-  "retrieved": "2026-10-08T21:32:06+00:00",
-  "file_1080": "work/src/pexels_6389401_1920x1080.mp4"
- },
  "pexels_3571264": {
   "asset_id": "pexels_3571264",
   "shots": [
@@ -689,9 +635,9 @@
   "license_url": "https://www.pexels.com/license/",
   "attribution_required": false,
   "credit": "Video by Enrique on Pexels",
-  "file_url": "https://videos.pexels.com/video-files/3571264/3571264-hd_1920_1080_30fps.mp4",
-  "width": 1280,
-  "height": 720,
+  "file_url": "https://videos.pexels.com/video-files/3571264/3571264-uhd_2560_1440_30fps.mp4",
+  "width": 2560,
+  "height": 1440,
   "fps": 29.97,
   "duration": 33.045,
   "codec": "h264",
@@ -699,7 +645,7 @@
   "has_audio": true,
   "sha1": "7d4a2d567958e7292f2e6c6fc9a4cb3f3dc6fa74",
   "retrieved": "2026-10-08T21:32:06+00:00",
-  "file_1080": "work/src/pexels_3571264_1920x1080.mp4"
+  "file_1080": "work/src/pexels_3571264_2560x1440.mp4"
  },
  "pexels_1151329": {
   "asset_id": "pexels_1151329",

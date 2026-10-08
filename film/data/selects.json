@@ -158,15 +158,11 @@
   "auto": false,
   "note": "シダの林床（若芽のタイムラプスは無し）",
   "file": "work/src/pexels_4880958_1920x1080.mp4",
-  "in": 5.0
- },
- "C3-10": {
-  "provider": "pexels",
-  "id": 7663511,
-  "auto": false,
-  "note": "葉脈のマクロ",
-  "file": "work/src/pexels_7663511_1920x1080.mp4",
-  "in": 1.0
+  "in": 5.0,
+  "grade": {
+   "exposure": -0.03,
+   "saturation": 0.92
+  }
  },
  "C3-11": {
   "provider": "pexels",
@@ -174,7 +170,11 @@
   "auto": false,
   "note": "枝分かれする針葉樹の小枝（翅脈の代わり）",
   "file": "work/src/pexels_1138823_1920x1080.mp4",
-  "in": 4.0
+  "in": 4.0,
+  "grade": {
+   "saturation": 0.78,
+   "exposure": -0.03
+  }
  },
  "C4-01": {
   "provider": "pexels",
@@ -206,22 +206,18 @@
   "auto": false,
   "note": "ヒマワリにとまるヒメアカタテハ",
   "file": "work/src/pexels_3877884_1920x1080.mp4",
-  "in": 11.0
- },
- "C4-05": {
-  "provider": "pexels",
-  "id": 6389401,
-  "auto": false,
-  "note": "枝にとまるハチドリ（ホバリング素材は無し）",
-  "file": "work/src/pexels_6389401_1920x1080.mp4",
-  "in": 1.0
+  "in": 11.0,
+  "grade": {
+   "saturation": 0.82,
+   "exposure": -0.02
+  }
  },
  "C4-06": {
   "provider": "pexels",
   "id": 3571264,
   "auto": false,
   "note": "斜めに押し寄せる波（空撮）→魚群へ",
-  "file": "work/src/pexels_3571264_1920x1080.mp4",
+  "file": "work/src/pexels_3571264_2560x1440.mp4",
   "in": 14.0
  },
  "C4-07": {
@@ -230,7 +226,10 @@
   "auto": false,
   "note": "川のように流れる黄色い魚群",
   "file": "work/src/pexels_1151329_1920x1080.mp4",
-  "in": 6.0
+  "in": 6.0,
+  "grade": {
+   "saturation": 0.82
+  }
  },
  "C4-08": {
   "provider": "pexels",
@@ -246,7 +245,11 @@
   "auto": false,
   "note": "水面の上の鳥の群れ",
   "file": "work/src/pexels_12873497_1920x1080.mp4",
-  "in": 0.8
+  "in": 0.8,
+  "grade": {
+   "contrast": 1.08,
+   "exposure": -0.04
+  }
  },
  "C4-10": {
   "provider": "pexels",
@@ -262,7 +265,10 @@
   "auto": false,
   "note": "青空を滑空する鳥（スロー）",
   "file": "work/src/pexels_3826855_1920x1080.mp4",
-  "in": 3.0
+  "in": 3.0,
+  "grade": {
+   "saturation": 0.88
+  }
  },
  "C5-01": {
   "provider": "pexels",
@@ -379,6 +385,9 @@
   "auto": false,
   "in": 17.5,
   "note": "タイマイが青い水中へ泳ぎ上がる（後半）",
-  "file": "work/src/pexels_1456996_1920x1080.mp4"
+  "file": "work/src/pexels_1456996_1920x1080.mp4",
+  "grade": {
+   "saturation": 0.85
+  }
  }
 }
