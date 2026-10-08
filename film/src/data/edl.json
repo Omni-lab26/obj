@@ -3,7 +3,7 @@
  "fps": 24,
  "width": 1920,
  "height": 1080,
- "durationInFrames": 3156,
+ "durationInFrames": 3192,
  "provisional_music": false,
  "music": {
   "file": "public/audio/music.wav",
@@ -54,7 +54,7 @@
    "name": "余韻",
    "en": "Afterglow",
    "from": 2484,
-   "to": 2832
+   "to": 2868
   }
  ],
  "shots": [
@@ -77,7 +77,7 @@
    "fade_in": 30,
    "fade_out": 0,
    "transition_in": "fade_from_black",
-   "fade_delay": 24,
+   "fade_delay": 36,
    "clip": "clips/C1-01",
    "clip_trim": 24,
    "clip_need_s": 4.0,
@@ -869,7 +869,7 @@
    "fade_out": 0,
    "transition_in": "cut",
    "fade_delay": 0,
-   "clip": null,
+   "clip": "clips/C4-06",
    "clip_trim": 24,
    "clip_need_s": 2.083,
    "move": null,
@@ -1439,22 +1439,27 @@
    "hold": true,
    "sync": "free",
    "cut_frame": 2484,
-   "end_frame": 2594,
+   "end_frame": 2597,
    "from": 2484,
-   "dur": 119,
+   "dur": 122,
    "fade_in": 0,
    "fade_out": 0,
    "transition_in": "cut",
    "fade_delay": 0,
    "clip": "clips/C6-01",
    "clip_trim": 24,
-   "clip_need_s": 4.958,
+   "clip_need_s": 5.083,
    "move": null,
    "amb": [
-    "drip",
     "forest_air"
    ],
-   "fx": [],
+   "fx": [
+    {
+     "tag": "drip_one",
+     "at": 2.55,
+     "db": -3.0
+    }
+   ],
    "text": null,
    "source": {
     "provider": "pexels",
@@ -1473,17 +1478,17 @@
    ],
    "hold": true,
    "sync": "free",
-   "cut_frame": 2594,
-   "end_frame": 2694,
-   "from": 2585,
-   "dur": 118,
+   "cut_frame": 2597,
+   "end_frame": 2696,
+   "from": 2588,
+   "dur": 117,
    "fade_in": 18,
    "fade_out": 0,
    "transition_in": "dissolve",
    "fade_delay": 0,
    "clip": "clips/C6-02",
    "clip_trim": 15,
-   "clip_need_s": 4.917,
+   "clip_need_s": 4.875,
    "move": null,
    "amb": [
     "forest_air"
@@ -1507,17 +1512,17 @@
    ],
    "hold": true,
    "sync": "free",
-   "cut_frame": 2694,
-   "end_frame": 2832,
-   "from": 2685,
-   "dur": 147,
+   "cut_frame": 2696,
+   "end_frame": 2868,
+   "from": 2687,
+   "dur": 181,
    "fade_in": 18,
    "fade_out": 36,
    "transition_in": "dissolve",
    "fade_delay": 0,
    "clip": "clips/C6-03",
    "clip_trim": 15,
-   "clip_need_s": 6.125,
+   "clip_need_s": 7.542,
    "move": null,
    "amb": [
     "forest_air",
@@ -1534,21 +1539,21 @@
  "texts": [
   {
    "id": "era1",
-   "from": 16,
-   "dur": 73,
+   "from": 7,
+   "dur": 57,
    "text": "約46億年前",
    "style": "era"
   },
   {
    "id": "closing",
-   "from": 2718,
-   "dur": 110,
+   "from": 2720,
+   "dur": 144,
    "text": "一度も途切れることなく、\n命はここまで続いてきた。",
    "style": "line"
   },
   {
    "id": "title",
-   "from": 2832,
+   "from": 2868,
    "dur": 108,
    "text": "生命の軌跡",
    "sub": "地球が紡いだ奇跡",
@@ -1556,18 +1561,18 @@
   }
  ],
  "credits": {
-  "from": 2940,
+  "from": 2976,
   "dur": 192
  },
  "intentional_black": [
   {
    "from": 0,
-   "to": 54,
+   "to": 66,
    "why": "冒頭の暗闇からのフェードイン"
   },
   {
-   "from": 2814,
-   "to": 3156,
+   "from": 2850,
+   "to": 3192,
    "why": "余韻のフェードアウト → タイトル・クレジット（黒地）"
   }
  ]

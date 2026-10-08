@@ -320,6 +320,17 @@ def make_boom():
     return np.stack([y, y], axis=1)
 
 
+def make_drip_one():
+    """ひとしずく（単発）。葉から落ちた水滴が水面を打つ音。"""
+    r = np.random.default_rng(11)
+    n = int(3.0 * SR)
+    y = np.zeros(n)
+    place(y, chirp(1150, 1700, 0.22, 0.05) * 0.8, 0.02)
+    place(y, chirp(2300, 3100, 0.08, 0.015) * 0.15, 0.02)
+    y = reverb(y, 2.2, 0.4, r)
+    return np.stack([y, y * 0.96], axis=1)
+
+
 def normalize(y, target=-20.0):
     meter = pyln.Meter(SR)
     loud = meter.integrated_loudness(y)
@@ -332,10 +343,11 @@ def normalize(y, target=-20.0):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    tags = sys.argv[1:] or TAGS + ["boom"]
+    tags = sys.argv[1:] or TAGS + ["boom", "drip_one"]
+    single = {"boom": make_boom, "drip_one": make_drip_one}
     for tag in tags:
-        y = make_boom() if tag == "boom" else make_loop(tag)
-        y = normalize(y, -16.0 if tag == "boom" else -20.0)
+        y = single[tag]() if tag in single else make_loop(tag)
+        y = normalize(y, -16.0 if tag in single else -20.0)
         sf.write(OUT / f"{tag}.wav", y.astype(np.float32), SR, subtype="PCM_24")
         print(f"{tag}: {len(y) / SR:.1f}s")
 

@@ -849,7 +849,7 @@
   {
    "id": "C6-01",
    "chapter": 6,
-   "dur": 4.0,
+   "dur": 4.6,
    "hold": true,
    "kind": "observation",
    "desc": "葉の上の水滴（マクロ、長め）。曲が途切れた瞬間に切り替える",
@@ -859,17 +859,23 @@
     "water droplet on leaf"
    ],
    "amb": [
-    "drip",
     "forest_air"
    ],
    "transition_in": "cut",
    "sync": "free",
-   "match": "水滴の球 ↔ 冒頭の地球"
+   "match": "水滴の球 ↔ 冒頭の地球",
+   "fx": [
+    {
+     "tag": "drip_one",
+     "at": 2.55,
+     "db": -3.0
+    }
+   ]
   },
   {
    "id": "C6-02",
    "chapter": 6,
-   "dur": 3.6,
+   "dur": 4.0,
    "hold": true,
    "kind": "observation",
    "desc": "土から芽が出るタイムラプス",
@@ -887,7 +893,7 @@
   {
    "id": "C6-03",
    "chapter": 6,
-   "dur": 5.0,
+   "dur": 7.0,
    "hold": true,
    "kind": "observation",
    "desc": "朝の光の中の若葉。ここに締めの言葉",

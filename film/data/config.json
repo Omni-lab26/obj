@@ -51,7 +51,7 @@
     "min_shot": 0.8,
     "min_shot_fast": 0.7
   },
-  "chapter6_len": 14.5,
+  "chapter6_len": 16.0,
   "title_len": 4.5,
   "credits_len": 8.0,
   "end_black": 1.0,
@@ -76,6 +76,11 @@
     "curves_master": "0/0.012 0.18/0.155 0.5/0.5 0.82/0.84 1/0.985",
     "saturation": 0.96
   },
-  "lead_black": 1.0,
-  "_lead_black_doc": "冒頭、最初のショットが現れるまでの黒（秒）。この間に「約46億年前」が浮かぶ。"
+  "lead_black": 1.5,
+  "_lead_black_doc": "冒頭、最初のショットが現れるまでの黒（秒）。この間に「約46億年前」が浮かぶ。",
+  "era_text": {
+    "from": 0.3,
+    "to": 2.7,
+    "_doc": "冒頭の年代表示（秒）。黒地に浮かび、溶岩が明るくなる前に消える"
+  }
 }

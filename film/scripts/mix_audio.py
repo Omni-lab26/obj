@@ -146,8 +146,10 @@ def main():
     # 単発の効果音（ショットの fx 指定。カット位置に置く）
     for s in shots:
         for fx in s.get("fx") or []:
-            one = load_stem(fx) * db(-4.0)
-            a = int(s["cut_frame"] / fps * SR)
+            if isinstance(fx, str):
+                fx = {"tag": fx}
+            one = load_stem(fx["tag"]) * db(fx.get("db", -4.0))
+            a = int((s["cut_frame"] / fps + fx.get("at", 0.0)) * SR)
             e = min(N, a + len(one))
             amb[a:e] += one[: e - a]
 

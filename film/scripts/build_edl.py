@@ -234,7 +234,9 @@ def main():
         if not s["text"]:
             continue
         d = tdefs[s["text"]]
-        if d["style"] == "era":
+        if d["style"] == "era" and cfg.get("era_text"):
+            a, b = int(cfg["era_text"]["from"] * fps), int(cfg["era_text"]["to"] * fps)
+        elif d["style"] == "era":
             a, b = s["cut_frame"] + int(0.7 * fps), s["end_frame"] - int(0.3 * fps)
         else:
             a, b = s["cut_frame"] + int(1.0 * fps), s["end_frame"] - int(0.2 * fps)
