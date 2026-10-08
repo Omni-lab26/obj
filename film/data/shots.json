@@ -1,0 +1,74 @@
+{
+  "_doc": "ショットリスト。build_edl.py / pexels_fetch.py / ambience.py が参照する。dur は目安秒数（章の実尺に合わせて比例配分される）。kind: observation=現在の自然の観察映像 / metaphor=現代の映像による比喩（古代の記録ではない）/ reconstruction=図解・再現。queries は Pexels 検索語（英語）。",
+  "chapters": [
+    {"id": 1, "name": "始まり", "en": "Beginning", "emotion": "好奇心", "intent": "暗闇、熱、岩、海。静けさから、何かが生まれようとする気配へ。最初の5秒で引き込む。"},
+    {"id": 2, "name": "生命の芽生え", "en": "First Life", "emotion": "好奇心", "intent": "水中の光、熱水、微生物。小さな動きが大きな物語の始まりであること。"},
+    {"id": 3, "name": "広がる生命", "en": "Branching Out", "emotion": "驚き", "intent": "海の生物から陸の植物・動物へ。多様化と適応。河川→葉脈→翅脈の枝分かれで『進歩の一本道ではなく枝分かれ』を示す。"},
+    {"id": 4, "name": "生命の交響曲", "en": "Symphony", "emotion": "高揚", "intent": "森、昆虫、鳥、群れ、大型動物。速い編集の中に長いショットを残す。波→魚群→鳥群の運動の呼応。"},
+    {"id": 5, "name": "すべてがつながる", "en": "Connected", "emotion": "静かな感動", "intent": "雨、水、土、菌類、植物、動物、生と死の循環。説明せず映像で。"},
+    {"id": 6, "name": "余韻", "en": "Afterglow", "emotion": "静かな感動", "intent": "水滴、芽、若葉。身近な命へ。短い言葉とタイトル。"}
+  ],
+  "shots": [
+    {"id": "C1-01", "chapter": 1, "dur": 3.4, "kind": "metaphor", "desc": "暗闇に走る溶岩の亀裂。赤い光がゆっくり脈打つ（若い地球の熱の比喩）", "queries": ["lava close up night", "molten lava crack", "glowing lava dark"], "amb": ["rumble", "lava"], "transition_in": "fade_from_black", "sync": "free", "text": "era1"},
+    {"id": "C1-02", "chapter": 1, "dur": 2.6, "kind": "metaphor", "desc": "夜の噴火。溶岩の噴泉が闇を裂く（フック）", "queries": ["volcano eruption night", "lava fountain", "volcanic eruption"], "amb": ["rumble", "lava"], "fx": ["boom"], "sync": "hit"},
+    {"id": "C1-03", "chapter": 1, "dur": 2.6, "kind": "metaphor", "desc": "溶岩の流れ（空撮）。川のように枝分かれして流れる", "queries": ["lava flow aerial", "lava river", "lava flow"], "amb": ["rumble", "lava"], "sync": "beat", "match": "溶岩の流路の形が後の河川(C3-09)と呼応"},
+    {"id": "C1-04", "chapter": 1, "dur": 2.6, "kind": "metaphor", "desc": "溶岩が海に流れ込み、白い蒸気が立ちのぼる", "queries": ["lava ocean steam", "lava entering ocean", "lava sea"], "amb": ["lava", "surf"], "sync": "beat"},
+    {"id": "C1-05", "chapter": 1, "dur": 2.4, "kind": "metaphor", "desc": "海上の積乱雲・雷（タイムラプス）。空から海へ", "queries": ["storm clouds ocean timelapse", "lightning storm sea", "cumulonimbus timelapse"], "amb": ["wind", "thunder"], "sync": "beat", "optional": true},
+    {"id": "C1-06", "chapter": 1, "dur": 3.0, "kind": "observation", "desc": "黒い火山岩に打ち寄せる波（スローモーション）", "queries": ["waves crashing black rocks slow motion", "ocean waves volcanic rocks", "waves black sand beach"], "amb": ["surf"], "sync": "beat"},
+    {"id": "C1-07", "chapter": 1, "dur": 3.2, "kind": "observation", "desc": "宇宙から見た青い地球。海をまとった惑星の全景（実写のみ。CGの場合は reconstruction 扱い）", "queries": ["earth from space", "earth from international space station", "planet earth orbit"], "amb": ["space"], "sync": "downbeat", "optional": true},
+
+    {"id": "C2-01", "chapter": 2, "dur": 3.0, "kind": "observation", "desc": "深い青の水中に差し込む光の筋", "queries": ["underwater sun rays", "light rays underwater ocean", "underwater sunlight"], "amb": ["underwater"], "transition_in": "dissolve", "sync": "downbeat"},
+    {"id": "C2-02", "chapter": 2, "dur": 2.6, "kind": "observation", "desc": "湧き上がる温泉・熱水の泡（熱と水が出会う場所）", "queries": ["hot spring bubbling", "geothermal pool bubbles", "boiling mud pool"], "amb": ["bubbles"], "sync": "beat"},
+    {"id": "C2-03", "chapter": 2, "dur": 3.0, "kind": "observation", "desc": "温泉の微生物マットの色彩（現生の微生物の実際の観察）", "queries": ["grand prismatic spring aerial", "hot spring bacteria colors", "yellowstone hot spring aerial"], "amb": ["bubbles", "wind_soft"], "sync": "beat"},
+    {"id": "C2-04", "chapter": 2, "dur": 2.8, "kind": "observation", "desc": "顕微鏡下で動く微生物・プランクトン（現生）", "queries": ["microorganisms microscope", "plankton microscope", "paramecium microscope"], "amb": ["underwater_close"], "sync": "beat"},
+    {"id": "C2-05", "chapter": 2, "dur": 2.8, "kind": "observation", "desc": "細胞・珪藻の形（顕微鏡）。小さな幾何学", "queries": ["diatoms microscope", "cells under microscope", "cell division microscope"], "amb": ["underwater_close"], "sync": "beat"},
+    {"id": "C2-06", "chapter": 2, "dur": 2.6, "kind": "observation", "desc": "浅瀬のストロマトライト（現生。最古級の化石記録と同じ構造をつくる微生物群集）", "queries": ["stromatolites", "shark bay stromatolites", "microbial mat shallow water"], "amb": ["water_lap"], "sync": "beat", "optional": true},
+    {"id": "C2-07", "chapter": 2, "dur": 3.0, "kind": "observation", "desc": "暗い水中を漂う小さなクシクラゲ・プランクトン", "queries": ["comb jelly", "ctenophore", "plankton underwater dark"], "amb": ["underwater"], "sync": "beat"},
+
+    {"id": "C3-01", "chapter": 3, "dur": 3.0, "kind": "observation", "desc": "脈動しながら泳ぐクラゲ", "queries": ["jellyfish", "jellyfish swimming dark", "moon jellyfish"], "amb": ["underwater"], "transition_in": "dissolve", "sync": "downbeat"},
+    {"id": "C3-02", "chapter": 3, "dur": 2.6, "kind": "observation", "desc": "サンゴ礁と多様な魚", "queries": ["coral reef fish", "coral reef", "tropical reef underwater"], "amb": ["underwater"], "sync": "beat"},
+    {"id": "C3-03", "chapter": 3, "dur": 2.6, "kind": "observation", "desc": "ゆったり泳ぐウミガメ", "queries": ["sea turtle swimming", "green sea turtle", "turtle underwater"], "amb": ["underwater"], "sync": "beat"},
+    {"id": "C3-04", "chapter": 3, "dur": 2.2, "kind": "observation", "desc": "体色を変えるタコ・コウイカ（適応）", "queries": ["octopus camouflage", "cuttlefish", "octopus underwater"], "amb": ["underwater"], "sync": "beat", "optional": true},
+    {"id": "C3-05", "chapter": 3, "dur": 2.4, "kind": "observation", "desc": "潮だまり・波打ち際。水から陸へ", "queries": ["tide pool", "rocky shore waves", "crab on rock beach"], "amb": ["water_lap"], "sync": "beat"},
+    {"id": "C3-06", "chapter": 3, "dur": 2.4, "kind": "observation", "desc": "苔のマクロ。朝露と胞子体", "queries": ["moss macro", "moss dew close up", "moss sporophytes"], "amb": ["forest_air"], "sync": "beat"},
+    {"id": "C3-07", "chapter": 3, "dur": 2.8, "kind": "observation", "desc": "シダの若芽がほどけるタイムラプス", "queries": ["fern unfurling timelapse", "fern fiddlehead", "fern leaves"], "amb": ["forest_air"], "sync": "beat"},
+    {"id": "C3-08", "chapter": 3, "dur": 2.2, "kind": "observation", "desc": "水辺のカエル", "queries": ["frog close up", "frog water", "tree frog"], "amb": ["forest_air", "water_lap"], "sync": "beat"},
+    {"id": "C3-09", "chapter": 3, "dur": 2.6, "kind": "observation", "desc": "枝分かれする河川（空撮）", "queries": ["braided river aerial", "river delta aerial", "river branches aerial"], "amb": ["wind"], "sync": "downbeat", "match": "枝分かれの形 → 葉脈(C3-10)"},
+    {"id": "C3-10", "chapter": 3, "dur": 2.2, "kind": "observation", "desc": "逆光の葉脈（マクロ）", "queries": ["leaf veins macro", "leaf veins backlit", "leaf texture macro"], "amb": ["forest_air"], "transition_in": "match", "sync": "beat", "match": "葉脈 → 翅脈(C3-11)"},
+    {"id": "C3-11", "chapter": 3, "dur": 2.2, "kind": "observation", "desc": "トンボの翅脈（マクロ）", "queries": ["dragonfly wing macro", "dragonfly macro", "insect wing macro"], "amb": ["forest_air"], "transition_in": "match", "sync": "beat"},
+
+    {"id": "C4-01", "chapter": 4, "dur": 4.0, "hold": true, "kind": "observation", "desc": "霧のかかった森を越える空撮（長回し）", "queries": ["forest aerial mist", "misty forest drone", "rainforest aerial fog"], "amb": ["forest_air", "wind"], "transition_in": "dissolve", "sync": "downbeat"},
+    {"id": "C4-02", "chapter": 4, "dur": 2.0, "kind": "observation", "desc": "林冠から差し込む光", "queries": ["sunlight through forest canopy", "sun rays forest", "forest light beams"], "amb": ["forest_air"], "sync": "beat"},
+    {"id": "C4-03", "chapter": 4, "dur": 1.6, "kind": "observation", "desc": "花に来るミツバチ（スロー）", "queries": ["bee flower slow motion", "honeybee pollen", "bee macro"], "amb": ["forest_air"], "sync": "beat"},
+    {"id": "C4-04", "chapter": 4, "dur": 1.6, "kind": "observation", "desc": "蝶の翅", "queries": ["butterfly wings close up", "butterfly flower", "butterfly macro"], "amb": ["forest_air"], "sync": "beat"},
+    {"id": "C4-05", "chapter": 4, "dur": 1.6, "kind": "observation", "desc": "ハチドリのホバリング（スロー）", "queries": ["hummingbird slow motion", "hummingbird", "hummingbird feeding"], "amb": ["forest_air"], "sync": "beat", "optional": true},
+    {"id": "C4-06", "chapter": 4, "dur": 1.8, "kind": "observation", "desc": "うねる海（空撮）", "queries": ["ocean swell aerial", "waves aerial", "rolling waves"], "amb": ["surf"], "sync": "beat", "match": "うねりの運動 → 魚群(C4-07)"},
+    {"id": "C4-07", "chapter": 4, "dur": 2.2, "kind": "observation", "desc": "渦を巻く魚群", "queries": ["school of fish", "sardine school", "fish swarm underwater"], "amb": ["underwater"], "transition_in": "match", "sync": "beat", "match": "群れの渦 → 鳥群(C4-08)"},
+    {"id": "C4-08", "chapter": 4, "dur": 3.4, "hold": true, "kind": "observation", "desc": "ムクドリの群れ（マーマレーション、長め）", "queries": ["starling murmuration", "murmuration", "flock of birds sky"], "amb": ["wind", "wings"], "transition_in": "match", "sync": "downbeat"},
+    {"id": "C4-09", "chapter": 4, "dur": 1.6, "kind": "observation", "desc": "湿地を飛び立つ鳥の群れ", "queries": ["birds taking off water", "flamingos flying", "flock of birds lake"], "amb": ["wings", "water_lap"], "sync": "beat"},
+    {"id": "C4-10", "chapter": 4, "dur": 1.6, "kind": "observation", "desc": "草原を駆ける群れ（ヌー・シマウマ）", "queries": ["wildebeest migration", "zebra herd running", "herd running savanna"], "amb": ["wind"], "sync": "beat"},
+    {"id": "C4-11", "chapter": 4, "dur": 1.8, "kind": "observation", "desc": "ゾウの家族", "queries": ["elephant family", "elephants walking", "elephant herd"], "amb": ["wind"], "sync": "beat"},
+    {"id": "C4-12", "chapter": 4, "dur": 3.0, "hold": true, "kind": "observation", "desc": "クジラ（ブリーチまたは水中を泳ぐ姿、長め）", "queries": ["humpback whale", "whale breaching", "whale underwater"], "amb": ["underwater", "surf"], "sync": "downbeat"},
+    {"id": "C4-13", "chapter": 4, "dur": 1.6, "kind": "observation", "desc": "イルカの群れ", "queries": ["dolphins pod", "dolphins swimming", "dolphins jumping"], "amb": ["surf"], "sync": "beat"},
+    {"id": "C4-14", "chapter": 4, "dur": 1.6, "kind": "observation", "desc": "滑空する猛禽", "queries": ["eagle flying", "eagle soaring", "bird of prey flight"], "amb": ["wind"], "sync": "beat"},
+    {"id": "C4-15", "chapter": 4, "dur": 3.2, "hold": true, "kind": "observation", "desc": "巨大な滝（空撮、クライマックス）", "queries": ["waterfall aerial", "huge waterfall", "waterfall drone"], "amb": ["waterfall"], "sync": "hit"},
+
+    {"id": "C5-01", "chapter": 5, "dur": 2.8, "kind": "observation", "desc": "森に降る雨、葉を打つ雨粒", "queries": ["rain on leaves", "rain forest", "raindrops leaves slow motion"], "amb": ["rain"], "transition_in": "dissolve", "sync": "free"},
+    {"id": "C5-02", "chapter": 5, "dur": 2.4, "kind": "observation", "desc": "水面に広がる雨の波紋", "queries": ["raindrops puddle", "rain ripples water", "rain on pond"], "amb": ["rain"], "sync": "free"},
+    {"id": "C5-03", "chapter": 5, "dur": 2.6, "kind": "observation", "desc": "苔むした岩と根の間を流れる小川", "queries": ["forest stream moss", "creek rocks moss", "small stream forest"], "amb": ["stream"], "sync": "free"},
+    {"id": "C5-04", "chapter": 5, "dur": 3.0, "kind": "observation", "desc": "キノコが育つタイムラプス（菌類）", "queries": ["mushroom growing timelapse", "fungi timelapse", "mushrooms forest floor"], "amb": ["forest_air"], "sync": "free"},
+    {"id": "C5-05", "chapter": 5, "dur": 2.6, "kind": "observation", "desc": "苔と菌に覆われた倒木（分解と再生）", "queries": ["fallen tree moss", "rotting log fungi", "decaying wood forest"], "amb": ["forest_air"], "sync": "free"},
+    {"id": "C5-06", "chapter": 5, "dur": 2.2, "kind": "observation", "desc": "土の上の小さな生き物（アリ・ミミズ等）", "queries": ["ants forest floor macro", "earthworm soil", "beetle forest floor"], "amb": ["forest_air"], "sync": "free", "optional": true},
+    {"id": "C5-07", "chapter": 5, "dur": 3.0, "kind": "observation", "desc": "小川で水を飲むシカ", "queries": ["deer drinking water", "deer stream", "deer forest"], "amb": ["stream"], "sync": "free"},
+    {"id": "C5-08", "chapter": 5, "dur": 2.6, "kind": "observation", "desc": "舞い落ちる葉（生と死の循環）", "queries": ["falling leaves slow motion", "autumn leaves falling", "leaf falling"], "amb": ["wind_soft"], "sync": "free"},
+
+    {"id": "C6-01", "chapter": 6, "dur": 4.0, "hold": true, "kind": "observation", "desc": "葉の上の水滴（マクロ、長め）", "queries": ["water drop leaf macro", "dew drop leaf", "water droplet on leaf"], "amb": ["drip", "forest_air"], "transition_in": "dissolve", "sync": "free", "match": "水滴の球 ↔ 冒頭の地球"},
+    {"id": "C6-02", "chapter": 6, "dur": 3.6, "hold": true, "kind": "observation", "desc": "土から芽が出るタイムラプス", "queries": ["seed sprouting timelapse", "plant growing timelapse", "sprout soil"], "amb": ["forest_air"], "transition_in": "dissolve", "sync": "free"},
+    {"id": "C6-03", "chapter": 6, "dur": 5.0, "hold": true, "kind": "observation", "desc": "朝の光の中の若葉。ここに締めの言葉", "queries": ["young leaves sunlight", "new leaf morning light", "green leaves backlit"], "amb": ["forest_air", "birds_far"], "transition_in": "dissolve", "sync": "free", "text": "closing"}
+  ],
+  "texts": {
+    "era1": {"text": "約46億年前", "style": "era", "note": "地球の形成（約45.4億年前±0.5億年）。日本語では『約46億年前』が一般的。出典は docs/science.md"},
+    "closing": {"text": "一度も途切れることなく、\n命はここまで続いてきた。", "style": "line", "note": "共通祖先からの系譜が途切れず現在の全生物に至るという事実に基づく"},
+    "title": {"text": "生命の軌跡", "sub": "地球が紡いだ奇跡", "style": "title"}
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "_doc": "全体設定。時間は秒。chapter_anchors は各章の開始位置（音楽内の位置）。build_edl.py が曲の区切り・アクセント拍に吸着させる。",
+  "title": "生命の軌跡 — 地球が紡いだ奇跡",
+  "fps": 24,
+  "width": 1920,
+  "height": 1080,
+
+  "music": {
+    "file_candidates": ["public/audio/music.wav", "public/audio/music.flac", "public/audio/music.m4a", "public/audio/music.mp3", "public/audio/music.aac"],
+    "offset": 3.0,
+    "_offset_doc": "映像の 0 秒から何秒後に曲を始めるか。冒頭は暗闇と低い地鳴りだけで始める。",
+    "gain_db": 0.0,
+    "provisional_duration": 110.0,
+    "_provisional_doc": "曲ファイルが無い間の仮の長さ（アルバム版 約1分50秒）。曲が届いたら analyze_music.py の結果で置き換わる。"
+  },
+
+  "chapter_anchors": {
+    "1": {"at": "film_start"},
+    "2": {"music_frac": 0.145},
+    "3": {"music_frac": 0.31},
+    "4": {"music_frac": 0.52},
+    "5": {"music_frac": 0.80},
+    "6": {"music_end": 0.0}
+  },
+  "_chapter_doc": "6章は曲の終わりから始まる余韻（曲が終わった後の静けさに水滴と芽）。曲の終わり方を解析したら調整する。",
+  "snap": {
+    "section_window": 4.0,
+    "accent_window": 1.2,
+    "beat_window": 0.45,
+    "min_shot": 1.0,
+    "min_shot_fast": 0.8
+  },
+  "chapter6_len": 13.0,
+  "title_len": 4.5,
+  "credits_len": 8.0,
+  "end_black": 1.0,
+
+  "transitions": {
+    "dissolve_frames": 18,
+    "match_frames": 6,
+    "fade_from_black_frames": 30,
+    "fade_to_black_frames": 36
+  },
+
+  "clip_handle": 1.0,
+
+  "audio": {
+    "sample_rate": 48000,
+    "ambience_gain_db_under_music": -24.0,
+    "ambience_gain_db_no_music_section": -14.0,
+    "ambience_crossfade": 0.6,
+    "target_lufs": -14.0,
+    "true_peak": -1.5
+  },
+
+  "look": {
+    "_doc": "全編共通のトーン（ffmpeg curves）。暗部を潰さず、わずかなS字で深みを出す。",
+    "curves_master": "0/0.012 0.18/0.155 0.5/0.5 0.82/0.84 1/0.985",
+    "saturation": 0.96
+  }
+}

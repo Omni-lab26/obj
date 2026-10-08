@@ -1,0 +1,10 @@
+node_modules
+dist
+.DS_Store
+.env
+
+# 生成物・大きなファイル（make で再生成できる）
+out
+work
+public/clips
+public/audio
