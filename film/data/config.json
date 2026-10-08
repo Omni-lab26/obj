@@ -65,11 +65,11 @@
   "audio": {
     "sample_rate": 48000,
     "ambience_gain_db_under_music": -16.0,
-    "ambience_gain_db_no_music_section": -8.0,
+    "ambience_gain_db_no_music_section": -5.0,
     "ambience_crossfade": 0.6,
     "target_lufs": -14.0,
     "true_peak": -1.5,
-    "_doc": "環境音の各素材は -20 LUFS にそろえてある。曲の下では -16dB（約 -36 LUFS）、曲の前後は -8dB（約 -28 LUFS）。曲は -14 LUFS に正規化。"
+    "_doc": "環境音の各素材は -20 LUFS にそろえてある。曲の下では -16dB（約 -36 LUFS）、曲の前後は -5dB（約 -25 LUFS）。曲は -14 LUFS に正規化。"
   },
   "look": {
     "_doc": "全編共通のトーン（ffmpeg curves）。暗部を潰さず、わずかなS字で深みを出す。",

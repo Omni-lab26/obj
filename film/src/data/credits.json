@@ -1,8 +1,129 @@
 {
- "note": "本作の映像はすべて、現在の地球で撮影された実写です。過去の地球や古代の生物を記録したものではなく、地球と生命の歴史を表すために用いています。",
- "footage": [],
- "music": null,
+ "note": "本作の映像は、宇宙から見た地球（CGによる再現）を除き、すべて現在の地球で撮影された実写です。過去の地球や古代の生物を記録したものではなく、地球と生命の歴史を表すために用いています。",
+ "footage": [
+  {
+   "credit": "Gylfi Gylfason",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Anoop A Nair",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Martin Sanchez",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Cesar A. Ramirez Vallejo Traphitho",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Elia Clerici",
+   "source": "Pexels"
+  },
+  {
+   "credit": "James Cheney",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Pixabay",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Magda Ehlers",
+   "source": "Pexels"
+  },
+  {
+   "credit": "K",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Adrien JACTA",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Jozef Papp",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Michal Marek",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Chris Gonzalez",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Ambient_Nature_ Atmosphere",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Matthias Groeneveld",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Kmeel.com",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Zuzanna Musial",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Tom Fisk",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Egor Kunovsky",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Shotify",
+   "source": "Pexels"
+  },
+  {
+   "credit": "SwissHumanity Stories",
+   "source": "Pexels"
+  },
+  {
+   "credit": "follie follie",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Harvey Tan Villarino",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Kelly",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Artur Vander PiloT",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Tony Flanagan",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Ray Notes",
+   "source": "Pexels"
+  },
+  {
+   "credit": "Dean Diemert",
+   "source": "Pexels"
+  },
+  {
+   "credit": "David Roberts",
+   "source": "Pexels"
+  },
+  {
+   "credit": "ほか Pexels の投稿者の皆さん",
+   "source": "Pexels"
+  }
+ ],
+ "music": "Can You Hear the Music — Ludwig Göransson（映画『オッペンハイマー』サウンドトラック）",
  "sound": "合成による環境音（本作のために生成）",
  "font": "しっぽり明朝（SIL Open Font License 1.1）",
- "tools": "映像素材: —　制作: Remotion, FFmpeg, librosa"
+ "tools": "映像素材: Pexels　制作: Remotion, FFmpeg, librosa"
 }

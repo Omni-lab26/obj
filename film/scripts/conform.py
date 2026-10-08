@@ -127,7 +127,7 @@ def conform_shot(shot, sel, cfg, res, force):
     OUT.mkdir(parents=True, exist_ok=True)
     crf = "14" if res == "1080" else "16"
     cmd = ["ffmpeg", "-v", "error", "-y", "-ss", f"{ss:.3f}", "-t", f"{need_src:.3f}", "-i", str(src),
-           "-vf", vf, "-an", "-c:v", "libx264", "-preset", "slow", "-crf", crf, "-pix_fmt", "yuv420p",
+           "-vf", vf, "-an", "-c:v", "libx264", "-preset", "medium", "-crf", crf, "-pix_fmt", "yuv420p",
            "-g", str(fps_out), "-keyint_min", str(fps_out), "-sc_threshold", "0",
            "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv",
            "-movflags", "+faststart", "-t", f"{need_out:.3f}", str(out)]
