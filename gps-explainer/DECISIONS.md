@@ -20,3 +20,13 @@ One line per call made when the brief was open. Newest at the bottom.
 - Next step at the payoff uses a sourced UI fact instead: the circle around the location dot in Google Maps means "you could be anywhere within this circle" (Google Maps Help).
 - No street map at street scale: the diagram is a vertical cross-section, where a top-down street grid would be wrong. A 300 m bracket gives the scale instead.
 - Reduced-motion cut: same sequence and timing; every spatial move becomes a short cross-fade or a held state, wavefronts become a single fade-in.
+- Design review (Meaghan Choi's three questions, run by a review subagent) changed the film:
+  - The turn now says 「平面なら3つ／立体なら4つ」. The old line 「位置3つ＋時計のずれ1つ＝衛星4つ」 contradicted the picture, where three circles also absorb the clock in 2D.
+  - S3 sets up the phone's own clock (「送信時刻と自分の時計を比べて」), so the turn breaks something the viewer already knows about.
+  - Captions no longer announce a result before the picture shows it: 「そこが現在地」 and 「衛星は答えを知らない」 were cut, and the S5 caption moved to the markers.
+  - Labels that only repeated the caption were cut (見られている？, 時刻と位置を発信, the clock label, 受信だけ). Satellite letters were dropped: nothing refers to them.
+  - The equation stays whole on screen (two stacked lines) with the radius drawn until b38. Tall formats use a camera framing with headroom for it.
+  - The false-belief beam is grey ink, never the accent, which is reserved for real signals.
+  - The no-send arrow tilts 25° so it is not read as blocking satellite A's signal.
+  - At street scale the circles return one at a time with a tick each, the Earth outline drops so circle A is not mistaken for the ground, and the error triangle gets a light accent fill under 「1点で交わらない」.
+  - The film opens and closes on the map app's location dot with its accuracy circle. The payoff dims everything else to 15% and draws the dot circle in screen space, so the 5,700 km true-scale circle never reads as a second globe.

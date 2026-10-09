@@ -83,7 +83,8 @@
 
   // ---------------------------------------------------------------- camera
   function fit(regionName) {
-    const [x0, y0, x1, y1] = T.cameras[regionName];
+    const tall = FMT !== "16x9" && T.cameras[regionName + "_tall"];
+    const [x0, y0, x1, y1] = tall || T.cameras[regionName];
     const s = Math.min(DW / (x1 - x0), DH / (y1 - y0));
     return {s, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2};
   }
@@ -258,6 +259,9 @@
     ctx.restore();
   }
 
+  // the payoff dims everything but the location dot
+  const focus = (b) => 1 - 0.85 * (REDUCED ? fade("focus_dot", b) : mv("focus_dot", b));
+
   // ---------------------------------------------------------------- scene objects
   const PHONE = W0.phone;
   const satPos = (k) => W0.sats[k].pos;
@@ -268,8 +272,9 @@
     const lift = REDUCED ? 0 : (1 - a) * 16;
     const pts = circlePath(0, 0, W0.R);
     if (pts.length < 2) return;
+    const fo = focus(b);
     ctx.save();
-    ctx.globalAlpha = a;
+    ctx.globalAlpha = a * fo;
     ctx.translate(0, lift);
     ctx.beginPath();
     ctx.moveTo(pts[0][0], pts[0][1]);
@@ -292,7 +297,9 @@
     ctx.fillStyle = COL.paper_shade;
     ctx.fill();
     ctx.restore();
-    strokePts(pts.map((p) => [p[0], p[1] + lift]), COL.rule, TOK.stroke.line, a);
+    // the outline is a planet-scale cue only; at street scale circle A must not be mistaken for the ground edge
+    const outline = CAM.s < 2 ? 1 : CAM.s > 20 ? 0 : 1 - (CAM.s - 2) / 18;
+    strokePts(pts.map((p) => [p[0], p[1] + lift]), COL.rule, TOK.stroke.line, a * fo * outline);
   }
 
   function satAlpha(k, b) {
@@ -301,7 +308,7 @@
     return REDUCED ? fade(name, b) : mv(name, b);
   }
   function drawSat(k, b) {
-    const a = satAlpha(k, b);
+    const a = satAlpha(k, b) * focus(b);
     if (a <= 0.001) return;
     let [x, y] = satScreen(k);
     if (!REDUCED) y -= (1 - a) * 36;
@@ -334,8 +341,6 @@
       ctx.stroke();
     }
     ctx.restore();
-    // letter
-    drawText([k], x, y - 50 * (SIZE.label / 52), "label", "center", a, COL.ink);
   }
 
   // the wrong belief: a beam from satellite A onto the phone
@@ -360,10 +365,12 @@
     ctx.lineTo(end[0] - half, end[1]);
     ctx.lineTo(end[0] + half, end[1]);
     ctx.closePath();
-    ctx.fillStyle = COL.accent_tint;
+    ctx.fillStyle = COL.ink;
+    ctx.globalAlpha = a * 0.06;
     ctx.fill();
+    ctx.globalAlpha = a;
     ctx.setLineDash([14, 12]);
-    ctx.strokeStyle = COL.accent;
+    ctx.strokeStyle = COL.ink_2;
     ctx.lineWidth = TOK.stroke.line;
     ctx.stroke();
     ctx.restore();
@@ -376,14 +383,16 @@
     let alpha = 1;
     const dim = mv("circles_dim", b);
     alpha *= lerp(1, 0.28, dim);
-    const back = REDUCED ? fade("street_arcs_in", b) : mv("street_arcs_in", b);
-    if (b >= T.moves.street_arcs_in[0]) alpha = lerp(0.28, 1, back);
+    const sk = "street_" + k + "_in";
+    const back = REDUCED ? fade(sk, b) : mv(sk, b);
+    if (b >= T.moves.street_A_in[0]) alpha = lerp(0.28, 1, back);
     if (b >= T.moves.arcs_out[0]) alpha *= 1 - (REDUCED ? fade("arcs_out", b) : mv("arcs_out", b));
     const color = mix >= 1 ? COL.ink_2 : COL.accent;
     return [color, alpha, TOK.stroke.line, mix];
   }
 
   function drawWavefronts(b) {
+    const fo = focus(b);
     for (const e of T.emissions) {
       if (b < e.b) continue;
       const range = W0.sats[e.sat].range;
@@ -392,7 +401,7 @@
       if (REDUCED) {
         // no expanding ring: the ring appears at its arrival radius and fades
         if (e.freeze) continue;
-        const a = window01(b, e.arrive - 0.25, e.arrive + 1.5, 0.35, 0.8) * 0.85;
+        const a = window01(b, e.arrive - 0.25, e.arrive + 1.5, 0.35, 0.8) * 0.85 * fo;
         strokePts(circlePath(c[0], c[1], range), COL.accent, TOK.stroke.line, a);
         continue;
       }
@@ -404,7 +413,7 @@
       }
       const end = range * 1.4;
       if (r > end) continue;
-      const a = r < range ? 0.95 : 0.95 * (1 - (r - range) / (end - range));
+      const a = (r < range ? 0.95 : 0.95 * (1 - (r - range) / (end - range))) * fo;
       strokePts(circlePath(c[0], c[1], r), COL.accent, TOK.stroke.line, a);
     }
   }
@@ -477,8 +486,7 @@
       const ang = -Math.PI / 2 - q * 2 * Math.PI;
       const c = satPos("A");
       const end = S(c[0] + r * Math.cos(ang), c[1] + r * Math.sin(ang));
-      a *= 1 - clamp01((b - sw[1]) / 1.0);
-      if (REDUCED) a = b < sw[0] + 0.5 ? 1 - clamp01((b - sw[0]) / 0.5) : 0;
+      a *= 1 - (REDUCED ? fade("radius_out", b) : mv("radius_out", b));
       line(A, end, COL.accent, TOK.stroke.bold, a);
       return;
     }
@@ -534,23 +542,36 @@
     });
   }
 
+  const UP_TILT = (25 * Math.PI) / 180;
+  function upGeom() {
+    const P = SP(PHONE);
+    const u = SIZE.label / 52;
+    const dir = [Math.sin(UP_TILT), -Math.cos(UP_TILT)];
+    const nrm = [Math.cos(UP_TILT), Math.sin(UP_TILT)];
+    const from = [P[0] + dir[0] * 26 * u, P[1] + dir[1] * 26 * u];
+    const len = 150 * u;
+    const top = [from[0] + dir[0] * len, from[1] + dir[1] * len];
+    return {P, u, dir, nrm, from, top, len};
+  }
   function drawUpArrow(b) {
     if (b < T.moves.up_in[0] || b > T.moves.signals_out[1]) return;
     const a = (REDUCED ? fade("up_in", b) : mv("up_in", b)) * (1 - (REDUCED ? fade("signals_out", b) : mv("signals_out", b)));
-    const P = SP(PHONE);
-    const u = SIZE.label / 52;
-    const len = 150 * u;
-    const top = [P[0], P[1] - 26 * u - len];
+    const {u, dir, nrm, from, top, len} = upGeom();
     const struck = REDUCED ? fade("strike_in", b) : mv("strike_in", b);
     const fadeA = lerp(1, 0.45, struck);
-    line([P[0], P[1] - 26 * u], top, COL.ink, TOK.stroke.bold, a * fadeA);
-    line(top, [top[0] - 16 * u, top[1] + 22 * u], COL.ink, TOK.stroke.bold, a * fadeA);
-    line(top, [top[0] + 16 * u, top[1] + 22 * u], COL.ink, TOK.stroke.bold, a * fadeA);
+    const head = (s) => [top[0] - dir[0] * 22 * u + s * nrm[0] * 16 * u, top[1] - dir[1] * 22 * u + s * nrm[1] * 16 * u];
+    line(from, top, COL.ink, TOK.stroke.bold, a * fadeA);
+    line(top, head(-1), COL.ink, TOK.stroke.bold, a * fadeA);
+    line(top, head(1), COL.ink, TOK.stroke.bold, a * fadeA);
     if (struck > 0) {
-      const c = [P[0], P[1] - 26 * u - len / 2];
+      const c = [from[0] + dir[0] * len / 2, from[1] + dir[1] * len / 2];
       const s = 46 * u;
       const k = REDUCED ? 1 : struck;
-      line([c[0] - s, c[1] + s], [c[0] - s + 2 * s * k, c[1] + s - 2 * s * k], COL.accent, TOK.stroke.bold + 1, a);
+      // strike across the arrow: perpendicular-ish diagonal
+      const d1 = [-(nrm[0] + dir[0]) * s * 0.75, -(nrm[1] + dir[1]) * s * 0.75];
+      const p0 = [c[0] + d1[0], c[1] + d1[1]];
+      const p1 = [c[0] - d1[0], c[1] - d1[1]];
+      line(p0, [lerp(p0[0], p1[0], k), lerp(p0[1], p1[1], k)], COL.accent, TOK.stroke.bold + 1, a);
     }
   }
 
@@ -570,18 +591,53 @@
     line([p[0] - t, p[1]], [p[0] + t, p[1]], COL.ink, TOK.stroke.line, a);
     line([q[0] - t, q[1]], [q[0] + t, q[1]], COL.ink, TOK.stroke.line, a);
   }
+  function circleMeet(k1, k2, extra) {
+    // intersection of two (range + extra) circles closest to the phone
+    const [x1, y1] = satPos(k1), [x2, y2] = satPos(k2);
+    const r1 = W0.sats[k1].range + extra, r2 = W0.sats[k2].range + extra;
+    const d = Math.hypot(x2 - x1, y2 - y1);
+    const a = (r1 * r1 - r2 * r2 + d * d) / (2 * d);
+    const h = Math.sqrt(Math.max(0, r1 * r1 - a * a));
+    const mx = x1 + (a * (x2 - x1)) / d, my = y1 + (a * (y2 - y1)) / d;
+    const c1 = [mx + (h * (y2 - y1)) / d, my - (h * (x2 - x1)) / d];
+    const c2 = [mx - (h * (y2 - y1)) / d, my + (h * (x2 - x1)) / d];
+    const dist = (p) => Math.hypot(p[0] - PHONE[0], p[1] - PHONE[1]);
+    return dist(c1) < dist(c2) ? c1 : c2;
+  }
+  function errorTriangle() {
+    return [circleMeet("A", "B", W0.ERROR_KM), circleMeet("B", "C", W0.ERROR_KM), circleMeet("A", "C", W0.ERROR_KM)].map(SP);
+  }
   function triangleCentroid() {
-    return S(-0.027, W0.R - 0.368);
+    const v = errorTriangle();
+    return [Math.min(...v.map((p) => p[0])), (v[0][1] + v[1][1] + v[2][1]) / 3];
+  }
+  function drawTriangle(b) {
+    const a = window01(b, T.moves.bracket_in[0] + 0.5, T.moves.solve[0], 0.4, 0.4);
+    if (a <= 0) return;
+    const v = errorTriangle();
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = COL.accent;
+    ctx.globalAlpha = a * 0.16;
+    ctx.beginPath();
+    ctx.moveTo(v[0][0], v[0][1]);
+    ctx.lineTo(v[1][0], v[1][1]);
+    ctx.lineTo(v[2][0], v[2][1]);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   }
 
   function drawPhone(b) {
     const a = REDUCED ? fade("phone_in", b) : mv("phone_in", b);
     const P = SP(PHONE);
     const u = SIZE.label / 52;
-    const md = REDUCED ? fade("mapdot", b) : mv("mapdot", b);
+    const md = b < 10
+      ? 1 - (REDUCED ? fade("mapdot_open", b) : mv("mapdot_open", b)) // opening: the map dot shrinks into the phone point
+      : (REDUCED ? fade("mapdot", b) : mv("mapdot", b));
     if (md > 0) {
       // the point becomes the map app's location dot with its accuracy circle
-      const R = 84 * u * md;
+      const R = (b < 10 ? 84 : 120) * u * md;
       ctx.save();
       ctx.globalAlpha = 0.07 + 0.0 * md;
       ctx.fillStyle = COL.ink;
@@ -601,7 +657,8 @@
     if (at === "cone") { const A = satScreen("A"), P = SP(PHONE); return [lerp(A[0], P[0], 0.55) + 90 * u, lerp(A[1], P[1], 0.55)]; }
     if (at.startsWith("sat:")) return satScreen(at.slice(4));
     if (at === "delay_mid") { const c = satPos("A"); return S(c[0], c[1] - W0.sats.A.range / 2); }
-    if (at === "up") { const P = SP(PHONE); return [P[0] + 30 * u, P[1] - 26 * u - 75 * u]; }
+    if (at === "up") { const g = upGeom(); return [g.top[0] + 10 * u, g.top[1] + 40 * u]; }
+    if (at === "mapdot_below") { const P = SP(PHONE); return [P[0], P[1] + 132 * u]; }
     if (at === "bracket") { const {p, q} = bracketGeom(); return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2]; }
     if (at === "triangle") return triangleCentroid();
     if (at === "mapdot") { const P = SP(PHONE); return [P[0] + 84 * u, P[1]]; }
@@ -614,7 +671,7 @@
       if (a <= 0) continue;
       ctx.font = fontFor(an.style);
       const z = sizeOf(an.style);
-      const maxW = an.side === "below" || an.side === "top" ? DW : DW * 0.6;
+      const maxW = ["below", "top", "topleft", "corner"].includes(an.side) ? DW : DW * 0.6;
       const txt = wrap(an.text, maxW);
       lines += txt.length;
       const w = Math.max(...txt.map((l) => ctx.measureText(l).width));
@@ -627,6 +684,12 @@
       else if (an.side === "left") { align = "right"; x -= pad; }
       else if (an.side === "top") { align = "center"; x = DX + DW / 2; y = DY + h / 2; }
       else if (an.side === "corner") { align = "left"; x = DX; y = DY + DH - h / 2; }
+      else if (an.side === "topleft") {
+        // top-left corner; tall formats use a camera framing with headroom for it (cameras.*_tall)
+        align = "left"; x = DX;
+        const row = an.at === "eq2" ? 1 : 0;
+        y = DY + h / 2 + row * z * 1.5;
+      }
       // keep the label inside the diagram area
       let left = align === "left" ? x : align === "center" ? x - w / 2 : x - w;
       const shift = Math.max(DX - left, 0) - Math.max(left + w - (DX + DW), 0);
@@ -705,6 +768,7 @@
     drawCone(b);
     drawSignals(b);
     drawMarkers(b);
+    drawTriangle(b);
     drawBracket(b);
     drawUpArrow(b);
     for (const k of ["A", "B", "C", "D"]) drawSat(k, b);

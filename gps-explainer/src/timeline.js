@@ -38,6 +38,8 @@
   const cameras = {
     close: [-25000, 2600, 25000, 28600],
     planet: [-22000, -7000, 22000, 47200],
+    // tall formats (9:16, 1:1): same framing with headroom above circle A for the equation
+    planet_tall: [-22000, -7000, 22000, 61500],
     planet2: [-27500, -7000, 27500, 45500],
     street: [-0.75, R - 0.78, 0.75, R + 0.36],
   };
@@ -54,15 +56,17 @@
 
   // named moves: [from, to, easing]
   const moves = {
-    earth_in: [0, 1.5, "settle"],
-    phone_in: [0.5, 1.5, "settle"],
-    A_in: [1, 2.5, "settle"],
+    earth_in: [0.75, 2, "settle"],
+    mapdot_open: [1, 2, "move"],  // the map dot's accuracy circle collapses into the phone point
+    phone_in: [0, 0.5, "settle"],
+    A_in: [1.5, 3, "settle"],
     cone_in: [3, 5, "settle"],
     cone_out: [10, 11.5, "exit"],
     delay_line: [18, 19.5, "settle"],
     label_math: [29, 29.6, "settle"],     // 0.067秒 → 0.067秒 × 光の速さ
     label_result: [30.5, 31.1, "settle"], // → 20,200 km
     sweep_A: [31.5, 33.5, "move"],
+    radius_out: [38, 39, "exit"],
     circleA_settle: [38, 39, "settle"],
     B_in: [39.5, 40.5, "settle"],
     markers_in: [43, 43.75, "settle"],
@@ -74,13 +78,16 @@
     up_in: [61.5, 62.5, "settle"],
     strike_in: [63, 63.5, "settle"],
     signals_out: [67.25, 68, "exit"],
-    street_arcs_in: [69.5, 70.5, "settle"],
+    street_A_in: [70.5, 71, "settle"],
+    street_B_in: [71, 71.5, "settle"],
+    street_C_in: [71.5, 72, "settle"],
     clock_error: [74, 75.5, "move"],
     bracket_in: [75.75, 76.5, "settle"],
     solve: [80, 82, "move"],
     lock2_in: [82, 82.75, "settle"],
     arcs_out: [85.5, 86.5, "exit"],
     D_in: [87, 88, "settle"],
+    focus_dot: [89.5, 90.5, "move"],
     mapdot: [90, 91.5, "move"],
   };
 
@@ -113,6 +120,7 @@
     {b: 60, type: "arrive"}, {b: 60.5, type: "arrive"}, {b: 61, type: "arrive"},
     {b: 63, type: "strike"},
     {b: 68, type: "whoosh_in"},
+    {b: 70.5, type: "arrive"}, {b: 71, type: "arrive"}, {b: 71.5, type: "arrive"},
     {b: 74, type: "error"},
     {b: 82, type: "motif"}, {b: 82, type: "lock"},
     {b: 85.5, type: "whoosh_out"},
@@ -125,36 +133,32 @@
   const captions = [
     {from: 2, to: 10, text: "地図の現在地。|衛星があなたを|見つけている？"},
     {from: 11, to: 18, text: "実は逆。|衛星は、時刻と位置を|流しているだけ。"},
-    {from: 18.5, to: 26, text: "スマホは、|信号が届くまでの|遅れを測る。"},
+    {from: 18.5, to: 26, text: "スマホは、|送信時刻と|自分の時計を比べて、|遅れを測る。"},
     {from: 27.5, to: 31.5, text: "遅れ×光の速さ＝|衛星までの距離。"},
     {from: 33.5, to: 38, text: "分かるのは|『この円のどこか』まで。"},
-    {from: 41, to: 48, text: "2つ目の衛星の円を|重ねると、|候補は2点。"},
-    {from: 50, to: 58, text: "3つ目の円で|1点に決まる。|そこが現在地。"},
-    {from: 60, to: 68, text: "計算するのは|スマホ自身。|衛星は答えを|知らない。"},
+    {from: 43, to: 48, text: "2つ目の衛星の円を|重ねると、|候補は2点。"},
+    {from: 52.5, to: 58, text: "3つ目の円で、|1点に決まる。"},
+    {from: 60, to: 67.75, text: "位置を計算するのは、|スマホ自身。"},
     {from: 70.5, to: 75.25, text: "スマホの時計が|100万分の1秒|ずれると、"},
-    {from: 75.5, to: 80, text: "距離が全部|300m狂い、|交わらない。"},
-    {from: 80.25, to: 85.25, text: "時計のずれも|一緒に解く。|だから衛星は4つ。"},
+    {from: 75.5, to: 80, text: "距離が全部|300m狂う。"},
+    {from: 80.25, to: 85.25, text: "時計のずれも|一緒に解く。|立体なら衛星4つ。"},
     {from: 87.25, to: 90.25, text: "衛星は、|あなたを知らない。"},
     {from: 90.5, to: 96, text: "次に地図を開いたら、|点のまわりの円を|見てみて。"},
   ];
 
   // on-screen anchors: short labels that sit on objects. `at` names the object; `side` the preferred placement.
   const anchors = [
-    {id: "you", from: 1.5, to: 9.5, text: "あなた", at: "phone", side: "below", style: "label"},
-    {id: "watched", from: 5, to: 9.5, text: "見られている？", at: "cone", side: "right", style: "anchor"},
-    {id: "broadcast", from: 12.5, to: 17.5, text: "時刻と位置を発信", at: "sat:A", side: "right", style: "anchor"},
+    {id: "you", from: 2, to: 9.5, text: "あなた", at: "phone", side: "below", style: "label"},
     {id: "delay", from: 19.5, to: 29, text: "遅れ 0.067秒", at: "delay_mid", side: "right", style: "mono"},
-    {id: "delay_x_c", from: 29, to: 30.5, text: "0.067秒 |× 光の速さ", at: "delay_mid", side: "right", style: "mono"},
-    {id: "range", from: 30.5, to: 38, text: "＝ 20,200 km", at: "delay_mid", side: "right", style: "mono"},
-    {id: "flat", from: 43.5, to: 48, text: "※図は平面。|実際は球で考える", at: "corner", side: "corner", style: "small"},
+    {id: "eq1", from: 29, to: 38, text: "0.067秒 × 光の速さ", at: "eq", side: "topleft", style: "mono"},
+    {id: "eq2", from: 30.5, to: 38, text: "＝ 20,200 km", at: "eq2", side: "topleft", style: "mono"},
+    {id: "flat", from: 45, to: 50, text: "※図は平面。|実際は球で考える", at: "corner", side: "corner", style: "small"},
     {id: "here", from: 54, to: 58, text: "現在地", at: "phone", side: "below", style: "anchor"},
     {id: "nosend", from: 63, to: 67.75, text: "送信なし", at: "up", side: "right", style: "anchor"},
-    {id: "clock", from: 71, to: 75.5, text: "時計のずれ |+0.000001秒", at: "top", side: "top", style: "mono"},
     {id: "m300", from: 76, to: 79.75, text: "300m", at: "bracket", side: "right", style: "mono"},
-    {id: "nomeet", from: 76.5, to: 79.75, text: "交わらない", at: "triangle", side: "left", style: "anchor"},
-    {id: "four", from: 82.25, to: 85.25, text: "位置3つ＋|時計のずれ1つ|＝衛星4つ", at: "top", side: "top", style: "anchor"},
-    {id: "receive", from: 89.25, to: 92, text: "受信だけ", at: "phone", side: "below", style: "anchor"},
-    {id: "somewhere", from: 92, to: 96, text: "この中のどこか", at: "mapdot", side: "right", style: "anchor"},
+    {id: "nomeet", from: 76.5, to: 79.75, text: "1点で交わらない", at: "triangle", side: "left", style: "anchor"},
+    {id: "four", from: 82.25, to: 85.25, text: "平面なら3つ／|立体なら4つ", at: "top", side: "top", style: "anchor"},
+    {id: "somewhere", from: 92, to: 96, text: "この中のどこか", at: "mapdot_below", side: "below", style: "anchor"},
   ];
 
   const scenes = [
