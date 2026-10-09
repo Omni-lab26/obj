@@ -20,7 +20,7 @@ An 83-second explainer film (Japanese, captions only) that leaves a map-app user
 | `DECISIONS.md` | Every call made where the brief was open |
 | `SOURCES.md` | Source for every number and claim on screen |
 
-The mp4 files are build outputs and are not committed (see `.gitignore`); `./build.sh` recreates them.
+The mp4 files are committed (about 1–8 MB each); `./build.sh` recreates them byte-for-byte from the source.
 
 ## How it is built
 
@@ -42,7 +42,20 @@ node tools/stills.mjs --fmt 9x16 --beats 30,77 --out review/stills   # stills at
 
 ## What was tested
 
-Every item below was run in this environment. The results are in the last build log (`out/build.log`) and in `review/`.
+Every item below was run in this environment on the final source. Results of the last full build:
+
+| Check | Result |
+|---|---|
+| Frames | 5,000 per output (83.33 s × 60 fps), as expected |
+| Determinism | 12 / 12 frame pairs byte-identical (4 per format, two sessions, second in reverse order) |
+| Contrast | lowest text pair 4.76:1 |
+| Caption speed | 2.6–3.95 characters per second (limit 4.0) |
+| Lines on screen | max 2 caption lines and 2 label lines, every ¼ beat, all formats |
+| Flashes | 0 per second in 16:9, 9:16 and 1:1; 1 per second in the reduced-motion cut (a cut replacing a zoom) |
+| Loudness | −15.9 LUFS integrated, −1.9 dBTP true peak, all four outputs |
+| Sound cues | 31 / 31 land on an audible onset within 25 ms, all four outputs |
+
+The full log is written to `out/build.log` on each build (not committed); review images are in `review/`.
 
 - **Determinism** (`tools/determinism.mjs`): four frames per format, rendered in two separate browser sessions with the second session in reverse order. Each pair's PNG bytes are compared.
 - **Contrast** (`tools/contrast.py`): every declared text colour pair is ≥ 4.5:1 (lowest 4.76:1).
