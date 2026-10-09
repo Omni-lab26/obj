@@ -5,7 +5,7 @@
  * World units are kilometres; origin is the Earth's centre, y points up, the phone sits on top of the Earth.
  */
 (function (root) {
-  const BPM = 90;
+  const BPM = 72;
   const SPB = 60 / BPM;
 
   // ---- true-scale geometry (tools/geometry.py; sources in SOURCES.md)
@@ -87,8 +87,8 @@
     lock2_in: [82, 82.75, "settle"],
     arcs_out: [85.5, 86.5, "exit"],
     D_in: [87, 88, "settle"],
-    focus_dot: [89.5, 90.5, "move"],
-    mapdot: [90, 91.5, "move"],
+    focus_dot: [92, 93, "move"],
+    mapdot: [92.5, 94, "move"],
   };
 
   // wavefronts: a ring leaves `sat` at beat b and grows at KM_PER_BEAT.
@@ -125,28 +125,29 @@
     {b: 82, type: "motif"}, {b: 82, type: "lock"},
     {b: 85.5, type: "whoosh_out"},
     {b: 87.5, type: "emit"}, {b: 88, type: "emit"}, {b: 88.5, type: "emit"}, {b: 89, type: "emit"},
-    {b: 91.5, type: "motif"},
+    {b: 94, type: "motif"},
   ];
 
   // narration, burned in and exported as captions.srt. Japanese, ≤ ~6.5 characters per second.
   // "|" marks where a line may break (phrase boundaries); it is never drawn.
   const captions = [
-    {from: 2, to: 10, text: "地図の現在地。|衛星があなたを|見つけている？"},
-    {from: 11, to: 18, text: "実は逆。|衛星は、時刻と位置を|流しているだけ。"},
-    {from: 18.5, to: 26, text: "スマホは、|送信時刻と|自分の時計を比べて、|遅れを測る。"},
-    {from: 27.5, to: 31.5, text: "遅れ×光の速さ＝|衛星までの距離。"},
-    {from: 33.5, to: 38, text: "分かるのは|『この円のどこか』まで。"},
-    {from: 43, to: 48, text: "2つ目の衛星の円を|重ねると、|候補は2点。"},
+    {from: 2, to: 10, text: "地図の現在地。|衛星に見られている？"},
+    {from: 11, to: 18, text: "実は逆。衛星は|時刻と位置を流すだけ。"},
+    {from: 18.5, to: 26, text: "届いた送信時刻を|自分の時計と比べる。"},
+    {from: 27.5, to: 33.25, text: "遅れ×光の速さ＝|衛星までの距離。"},
+    {from: 33.25, to: 38, text: "分かるのは、|円のどこかまで。"},
+    {from: 41, to: 48, text: "2つ目の衛星の円を|重ねると、候補は2点。"},
     {from: 52.5, to: 58, text: "3つ目の円で、|1点に決まる。"},
     {from: 60, to: 67.75, text: "位置を計算するのは、|スマホ自身。"},
-    {from: 70.5, to: 75.25, text: "スマホの時計が|100万分の1秒|ずれると、"},
-    {from: 75.5, to: 80, text: "距離が全部|300m狂う。"},
-    {from: 80.25, to: 85.25, text: "時計のずれも|一緒に解く。|立体なら衛星4つ。"},
-    {from: 87.25, to: 90.25, text: "衛星は、|あなたを知らない。"},
-    {from: 90.5, to: 96, text: "次に地図を開いたら、|点のまわりの円を|見てみて。"},
+    {from: 70.5, to: 76, text: "時計が100万分の1秒|ずれると、"},
+    {from: 76, to: 80.25, text: "距離が全部|300m狂う。"},
+    {from: 80.25, to: 85.5, text: "ずれも解く。|立体なら衛星4つ。"},
+    {from: 87, to: 91.25, text: "衛星は、|あなたを知らない。"},
+    {from: 92.5, to: 100, text: "次に地図を開いたら、|点のまわりの円を見てみて。"},
   ];
 
   // on-screen anchors: short labels that sit on objects. `at` names the object; `side` the preferred placement.
+  // `at`/`side` may be per-format objects ({"16x9": ..., default: ...}).
   const anchors = [
     {id: "you", from: 2, to: 9.5, text: "あなた", at: "phone", side: "below", style: "label"},
     {id: "delay", from: 19.5, to: 29, text: "遅れ 0.067秒", at: "delay_mid", side: "right", style: "mono"},
@@ -156,9 +157,8 @@
     {id: "here", from: 54, to: 58, text: "現在地", at: "phone", side: "below", style: "anchor"},
     {id: "nosend", from: 63, to: 67.75, text: "送信なし", at: "up", side: "right", style: "anchor"},
     {id: "m300", from: 76, to: 79.75, text: "300m", at: "bracket", side: "right", style: "mono"},
-    {id: "nomeet", from: 76.5, to: 79.75, text: "1点で交わらない", at: "triangle", side: "left", style: "anchor"},
-    {id: "four", from: 82.25, to: 85.25, text: "平面なら3つ／|立体なら4つ", at: "top", side: "top", style: "anchor"},
-    {id: "somewhere", from: 92, to: 96, text: "この中のどこか", at: "mapdot_below", side: "below", style: "anchor"},
+    {id: "nomeet", from: 76.5, to: 79.75, text: "1点で交わらない", at: "triangle_low", side: "below", style: "anchor"},
+    {id: "somewhere", from: 94, to: 100, text: "この中のどこか", at: {"16x9": "mapdot_right", default: "mapdot_below"}, side: {"16x9": "right", default: "below"}, style: "anchor"},
   ];
 
   const scenes = [
@@ -170,15 +170,15 @@
     {id: "S6", from: 48, to: 58, part: "Proof"},
     {id: "S7", from: 58, to: 68, part: "Proof"},
     {id: "S8", from: 68, to: 85.5, part: "Turn"},
-    {id: "S9", from: 85.5, to: 96, part: "Payoff"},
+    {id: "S9", from: 85.5, to: 100, part: "Payoff"},
   ];
 
   // key beats for stills / contact sheet: one per important state
-  const keyBeats = [1.5, 5.5, 9, 13.5, 21, 30, 34.5, 41, 45, 51.5, 55, 64.5, 72, 77, 83.5, 89.5, 94];
+  const keyBeats = [0.5, 5.5, 13.5, 21, 30, 35, 45, 51.5, 55, 64.5, 72, 77, 83.5, 89.5, 96, 99];
 
   const TIMELINE = {
     title: "青い点は、見られていない — GPSのしくみ",
-    fps: 60, bpm: BPM, spb: SPB, beats: 96, duration: 96 * SPB, seed: 20261009,
+    fps: 60, bpm: BPM, spb: SPB, beats: 100, duration: 100 * SPB, seed: 20261009,
     world: {R, C_KMS, sats, KM_PER_BEAT, ERROR_KM, phone: PHONE, secondAB},
     cameras, cameraTrack, moves, emissions, cues, captions, anchors, scenes, keyBeats,
     toSec: (b) => b * SPB,

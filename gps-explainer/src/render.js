@@ -14,7 +14,7 @@
 
   // ---------------------------------------------------------------- layout per format
   const FORMATS = {
-    "16x9": {W: 1920, H: 1080, diag: [96, 64, 1728, 760], capBottom: 1016, capMaxW: 1720},
+    "16x9": {W: 1920, H: 1080, diag: [96, 56, 1728, 690], capBottom: 1024, capMaxW: 1720},
     "9x16": {W: 1080, H: 1920, diag: [72, 200, 936, 1180], capBottom: 1700, capMaxW: 936},
     "1x1": {W: 1080, H: 1080, diag: [72, 48, 936, 760], capBottom: 1030, capMaxW: 960},
   };
@@ -659,14 +659,18 @@
     if (at === "delay_mid") { const c = satPos("A"); return S(c[0], c[1] - W0.sats.A.range / 2); }
     if (at === "up") { const g = upGeom(); return [g.top[0] + 10 * u, g.top[1] + 40 * u]; }
     if (at === "mapdot_below") { const P = SP(PHONE); return [P[0], P[1] + 132 * u]; }
+    if (at === "mapdot_right") { const P = SP(PHONE); return [P[0] + 120 * u, P[1]]; }
     if (at === "bracket") { const {p, q} = bracketGeom(); return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2]; }
     if (at === "triangle") return triangleCentroid();
+    if (at === "triangle_low") { const v = errorTriangle(); const lo = v.reduce((m, p) => (p[1] > m[1] ? p : m)); return [lo[0], lo[1] + 6]; }
     if (at === "mapdot") { const P = SP(PHONE); return [P[0] + 84 * u, P[1]]; }
     return [DX + DW / 2, DY + SIZE.anchor];
   }
   function drawAnchors(b) {
     let lines = 0;
-    for (const an of T.anchors) {
+    const pick = (v) => (v && typeof v === "object" ? v[FMT] || v.default : v);
+    for (const an0 of T.anchors) {
+      const an = Object.assign({}, an0, {at: pick(an0.at), side: pick(an0.side)});
       const a = window01(b, an.from, an.to, 0.25, 0.25);
       if (a <= 0) continue;
       ctx.font = fontFor(an.style);

@@ -4,12 +4,14 @@ const require = createRequire(import.meta.url);
 const T = require("../src/timeline.js");
 let fail = 0;
 const s = (b) => (b * T.spb).toFixed(2) + "s";
-console.log("captions (chars per second, limit 6.5):");
+// Netflix Japanese timed-text guideline: 4 characters per second; counted over the time after the fade-in.
+const FADE_IN_S = 0.3 * T.spb;
+console.log("captions (chars per second after fade-in, limit 4.0):");
 for (const c of T.captions) {
   const n = Array.from(c.text.replace(/\|/g, "")).length;
-  const dur = (c.to - c.from) * T.spb;
+  const dur = (c.to - c.from) * T.spb - FADE_IN_S;
   const cps = n / dur;
-  const ok = cps <= 6.5;
+  const ok = cps <= 4.0;
   if (!ok) fail++;
   console.log(`  ${s(c.from)}–${s(c.to)}  ${n} chars  ${cps.toFixed(2)} cps  ${ok ? "ok" : "FAIL"}  ${c.text.replace(/\|/g, "")}`);
 }

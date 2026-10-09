@@ -47,7 +47,7 @@
     master.gain.value = 0.9;
     master.connect(ctx.destination);
     // final fade
-    master.gain.setValueAtTime(0.9, dur - 2.0);
+    master.gain.setValueAtTime(0.9, dur - 3.0);
     master.gain.linearRampToValueAtTime(0.0001, dur - 0.05);
 
     // reverb from seeded decaying noise
@@ -143,9 +143,9 @@
     for (let e = 0; e < T.beats * 2; e++) {
       const b = e / 2;
       const lvl = intensity(b);
-      const ticking = (b >= 10 && b < 74) || (b >= 82 && b < 94);
+      const ticking = (b >= 10 && b < 74) || (b >= 82 && b < T.beats - 4);
       if (ticking) noiseBurst(at(b), 0.035, (e % 2 === 0 ? 0.03 : 0.018) * lvl, "highpass", 5200, 7000, bed, 0.5);
-      const pulsing = (b >= 18 && b < 68) || (b >= 82 && b < 92);
+      const pulsing = (b >= 18 && b < 68) || (b >= 82 && b < T.beats - 8);
       if (pulsing && e % 4 === 0) {
         const o = ctx.createOscillator();
         o.type = "sine";
