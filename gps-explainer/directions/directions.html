@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Directions — GPS explainer</title>
+<style>
+  :root { --paper:#F3EFE6; --ink:#1C1A17; --ink2:#58534B; --rule:#C9C0AF; --accent:#A8380F; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.6 "IBM Plex Sans JP", system-ui, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font-size: 28px; margin: 0 0 4px; font-weight: 600; }
+  .lede { color: var(--ink2); margin: 0 0 32px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+  .card { border:1px solid var(--rule); border-radius: 12px; padding: 16px; background: #F7F4EE; }
+  .card.win { border: 2px solid var(--accent); }
+  .card img { width:100%; display:block; border-radius: 6px; border: 1px solid var(--rule); margin-bottom: 8px; }
+  .card h2 { font-size: 18px; margin: 8px 0 4px; }
+  .tag { display:inline-block; font: 600 12px/1 "IBM Plex Mono", monospace; padding: 4px 8px; border-radius: 4px; border:1px solid var(--rule); color: var(--ink2); }
+  .win .tag { border-color: var(--accent); color: var(--accent); }
+  ul { padding-left: 18px; margin: 6px 0 0; }
+  li { margin: 2px 0; }
+  section.log { margin-top: 40px; border-top: 1px solid var(--rule); padding-top: 24px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  td, th { text-align:left; border-bottom: 1px solid var(--rule); padding: 8px 6px; vertical-align: top; }
+  th { color: var(--ink2); font-weight: 500; }
+</style>
+</head>
+<body>
+<main>
+  <h1>4つの方向性と、選んだ理由</h1>
+  <p class="lede">同じ2つの瞬間（3つ目の円で1点に決まる b55 ／ 時計のずれで円が交わらない b77）を、4つの見た目で描いた。判断の基準は「1つの考え（遅れ→距離→円の交点）が一番まっすぐ読めるか」。</p>
+
+  <div class="grid">
+    <div class="card win">
+      <span class="tag">WINNER · A</span>
+      <h2>A — 紙の測量図</h2>
+      <img src="16x9_normal_A_b00055.png" alt="Direction A, three circles meeting at the phone">
+      <img src="16x9_normal_A_b00077.png" alt="Direction A, clock error: dashed circles miss">
+      <ul>
+        <li>暖かい紙の地、墨の線、信号と時刻だけにアクセント1色。</li>
+        <li>実寸の幾何（km）がそのまま図になる。飾りが要らない。</li>
+        <li>アクセントが「信号の糸」を最初から最後まで追える。</li>
+        <li>明るい画面でも、390px幅でも線と文字が残る（全ペア 4.5:1 以上）。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag">B</span>
+      <h2>B — 夜の計器</h2>
+      <img src="16x9_normal_B_b00055.png" alt="Direction B">
+      <img src="16x9_normal_B_b00077.png" alt="Direction B, turn">
+      <ul>
+        <li>宇宙らしさは出るが、「宇宙の絵」に寄って発光や星を足したくなる。</li>
+        <li>細い線が圧縮で痩せる。暖かい中間色の地という指定からも外れる。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag">C</span>
+      <h2>C — 青焼き</h2>
+      <img src="16x9_normal_C_b00055.png" alt="Direction C">
+      <img src="16x9_normal_C_b00077.png" alt="Direction C, turn">
+      <ul>
+        <li>方眼が意味を持たないテクスチャになる（縮尺も方位も表さない）。</li>
+        <li>冷たい地で「技術文書」に見え、日常の地図アプリから遠ざかる。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag">D</span>
+      <h2>D — 大きな数字</h2>
+      <img src="16x9_normal_D_b00055.png" alt="Direction D">
+      <img src="16x9_normal_D_b00077.png" alt="Direction D, turn">
+      <ul>
+        <li>「3→1」が主役になり、交点という本題と視線を奪い合う。</li>
+        <li>数字は理解の結果であって原因ではない。抑制の原則で削る。</li>
+      </ul>
+    </div>
+  </div>
+
+  <section class="log">
+    <h2>決定ログ</h2>
+    <table>
+      <tr><th>問い</th><th>答え</th></tr>
+      <tr><td>誰のため？</td><td>毎日地図アプリを使い、「衛星が自分を見つけている」と思っている日本語話者。</td></tr>
+      <tr><td>何を伝える？</td><td>GPSは一方通行。遅れ×光速＝距離、円の交点が現在地。時計のずれを解くために衛星がもう1つ要る。</td></tr>
+      <tr><td>名前は要る？見えないままでいい？</td><td>用語（三辺測量、擬似距離）は出さない。名前を付けるのは「遅れ」「距離」「円」「現在地」だけ。仕組みは見えないまま、図が説明する。</td></tr>
+      <tr><td>選んだ方向</td><td>A。理由は上のとおり。B〜Dは見た目の魅力はあるが、どれも図以外に視線を割く。</td></tr>
+    </table>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,8 @@
+node_modules
+out/.parts_*
+out/.v_*
+out/animatic_*
+out/audio_raw.wav
+review/stills
+review/w390
+review/motion
