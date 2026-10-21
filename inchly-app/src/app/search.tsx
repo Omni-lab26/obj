@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { JUKU, PEOPLE, Uni, UNIS } from '@/data';
 import { toggleFollow, toggleIn, useStore } from '@/store';
-import { ease, font, useT } from '@/theme';
+import { ease, font, useT, noOutline } from '@/theme';
 import { Avatar, Btn, Empty, haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Checkbox } from '@/ui/Form';
@@ -228,7 +228,7 @@ export default function Search() {
         <Icon name="search" size={18} color={t.ink3} />
         <TextInput ref={inputRef} value={text} onChangeText={changeText} autoFocus placeholder="大学・ユーザー・塾・投稿" placeholderTextColor={t.ink3}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} returnKeyType="search" clearButtonMode="never" autoCorrect={false}
-          accessibilityLabel="検索" style={{ flex: 1, minWidth: 0, fontSize: 16, color: t.ink, fontFamily: font.ui, height: 44 }} />
+          accessibilityLabel="検索" style={[{ flex: 1, minWidth: 0, fontSize: 16, color: t.ink, fontFamily: font.ui, height: 44 }, noOutline]} />
         {text ? (
           <Pressable onPress={() => { changeText(''); inputRef.current?.focus(); }} hitSlop={10} accessibilityLabel="消す"
             style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>

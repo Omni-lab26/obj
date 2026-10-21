@@ -17,11 +17,17 @@ export const colorOf = (n: string) => PERSON_COLOR[n] ?? '#8C8F95';
 /** Four-dot colour mark used as a group's icon. */
 export function GroupMark({ colors, size = 40 }: { colors: string[]; size?: number }) {
   const t = useT();
-  const d = size * 0.32;
+  const d = size * 0.3;
+  const cs = colors.slice(0, 4);
+  // Two explicit rows: a wrapped flex row can drop to one column when it rounds.
   return (
-    <View style={{ width: size, height: size, borderRadius: size * 0.28, backgroundColor: t.surface, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line,
-      flexDirection: 'row', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', gap: size * 0.07, padding: size * 0.12 }}>
-      {colors.slice(0, 4).map((c, i) => <View key={i} style={{ width: d, height: d, borderRadius: d / 2, backgroundColor: c }} />)}
+    <View style={{ width: size, height: size, flexShrink: 0, borderRadius: size * 0.28, backgroundColor: t.surface, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line,
+      alignItems: 'center', justifyContent: 'center', gap: size * 0.07 }}>
+      {[cs.slice(0, 2), cs.slice(2, 4)].map((row, r) => (
+        <View key={r} style={{ flexDirection: 'row', gap: size * 0.07 }}>
+          {row.map((c, i) => <View key={i} style={{ width: d, height: d, borderRadius: d / 2, backgroundColor: c }} />)}
+        </View>
+      ))}
     </View>
   );
 }

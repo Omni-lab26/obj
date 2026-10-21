@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
-import { ease, font, useT } from '../theme';
+import { ease, font, useT, noOutline } from '../theme';
 import { haptic, Press, Txt } from './base';
 import { Icon, IconName } from './Icon';
 import { Rolling } from './Rolling';
@@ -48,7 +48,7 @@ export function Field({
           multiline={multiline}
           autoFocus={autoFocus}
           placeholderTextColor={t.ink3}
-          style={{ flex: 1, minHeight: h, paddingHorizontal: 14, paddingTop: multiline ? 22 : 14, paddingBottom: multiline ? 12 : 0, fontSize: 16, color: t.ink, fontFamily: font.ui, textAlignVertical: multiline ? 'top' : 'center' }}
+          style={[{ flex: 1, minHeight: h, paddingHorizontal: 14, paddingTop: multiline ? 22 : 14, paddingBottom: multiline ? 12 : 0, fontSize: 16, color: t.ink, fontFamily: font.ui, textAlignVertical: multiline ? 'top' : 'center' }, noOutline]}
         />
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 10, top: 0, paddingHorizontal: 4, backgroundColor: up ? surface : 'transparent', transformOrigin: 'left center' }, la]}>
           <Txt size={15} tone={error ? 'red' : focus ? 'ink' : 'ink3'} w={up ? '500' : '400'}>{label}</Txt>

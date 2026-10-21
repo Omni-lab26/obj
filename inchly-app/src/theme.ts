@@ -1,4 +1,4 @@
-import { useColorScheme } from 'react-native';
+import { Platform, TextStyle, useColorScheme } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 
 // Two surface levels (canvas grey, white), hairlines instead of shadows,
@@ -82,3 +82,6 @@ export const ease = {
 };
 
 export const hairline = 1;
+
+// Web only: the field draws its own focus border, so drop the browser outline.
+export const noOutline: TextStyle | null = Platform.OS === 'web' ? { outlineWidth: 0 } : null;

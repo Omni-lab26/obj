@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChatMsg, GEvent, Group, hms, subj } from '@/data';
 import { elapsedOf, getState, startStudy, updateGroup, useStore } from '@/store';
-import { font, useT } from '@/theme';
+import { font, useT, noOutline } from '@/theme';
 import { Avatar, AvatarStack, Btn, Empty, haptic, IconBtn, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Bar, PeoplePill, takePendingGroupTab } from '@/ui/GroupParts';
@@ -130,7 +130,7 @@ function Chat({ g }: { g: Group }) {
         </ScrollView>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingTop: 8 }}>
           <TextInput ref={input} value={text} onChangeText={setText} placeholder="メッセージ" placeholderTextColor={t.ink3} onSubmitEditing={send} returnKeyType="send" accessibilityLabel="メッセージ"
-            style={{ flex: 1, height: 42, borderRadius: 21, paddingHorizontal: 16, backgroundColor: t.sunken, color: t.ink, fontSize: 15, fontFamily: font.ui }} />
+            style={[{ flex: 1, height: 42, borderRadius: 21, paddingHorizontal: 16, backgroundColor: t.sunken, color: t.ink, fontSize: 15, fontFamily: font.ui }, noOutline]} />
           <Press onPress={send} disabled={!text.trim()} scale={0.88} accessibilityLabel="送信"
             style={{ width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: text.trim() ? t.ink : t.sunken }}>
             <Icon name="send" size={18} color={text.trim() ? t.onInk : t.ink3} />
