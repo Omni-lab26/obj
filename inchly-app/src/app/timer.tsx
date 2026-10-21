@@ -1,84 +1,30 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Pressable, View } from 'react-native';
-import Animated, { Easing, useAnimatedProps, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Line } from 'react-native-svg';
 
-import { hm, hms, pad, subj, SUBJ } from '@/data';
-import { adjustElapsed, elapsedOf, getState, setSubject, startStudy, togglePause, useNow, useStore } from '@/store';
+import { hm, pad, subj, SUBJ } from '@/data';
+import { elapsedOf, getState, setSubject, setTarget, startStudy, togglePause, useNow, useStore } from '@/store';
 import { focus } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
 import { recordSheet } from '@/ui/RecordSheet';
+import { Rolling } from '@/ui/Rolling';
 import { SlideToRecord } from '@/ui/SlideToRecord';
+import { TimeScrubber } from '@/ui/TimeScrubber';
 import { toast } from '@/ui/Toast';
 
-// Focus timer: always dark. The dial's green arc is progress through the
-// current 25-minute pomodoro; four blocks make a session.
-const BLOCK = 1500;
-const SIZE = 286;
-const C = SIZE / 2;
-const R = 118;
-const L = 2 * Math.PI * R;
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-
-const TICKS = Array.from({ length: 60 }, (_, i) => {
-  const a = (i / 60) * Math.PI * 2 - Math.PI / 2;
-  const major = i % 5 === 0;
-  const r1 = 140, r2 = major ? 131 : 135;
-  return { major, x1: C + Math.cos(a) * r1, y1: C + Math.sin(a) * r1, x2: C + Math.cos(a) * r2, y2: C + Math.sin(a) * r2 };
-});
-
-function Dial({ e, running, paused }: { e: number; running: boolean; paused: boolean }) {
-  const idx = Math.min(3, Math.floor(e / BLOCK));
-  const w = e - idx * BLOCK;
-  const off = useSharedValue(L * (1 - w / BLOCK));
-  useEffect(() => {
-    const target = L * (1 - w / BLOCK);
-    // Ease over the second between ticks; jump when a new block starts or time is adjusted.
-    if (Math.abs(target - off.value) > L * 0.02) off.value = withTiming(target, { duration: 420, easing: Easing.out(Easing.cubic) });
-    else off.value = withTiming(target, { duration: 1000, easing: Easing.linear });
-  }, [w, off]);
-  const arc = useAnimatedProps(() => ({ strokeDashoffset: off.value }));
-  const blink = useSharedValue(1);
-  useEffect(() => {
-    blink.value = paused ? withRepeat(withSequence(withTiming(0.25, { duration: 0 }), withTiming(0.25, { duration: 700 }), withTiming(1, { duration: 0 }), withTiming(1, { duration: 700 })), -1) : withTiming(1, { duration: 150 });
-  }, [paused, blink]);
-  const ba = useAnimatedStyle(() => ({ opacity: blink.value }));
-  const left = BLOCK - w;
-  return (
-    <View style={{ width: SIZE, height: SIZE, alignSelf: 'center', marginTop: 22 }}>
-      <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
-        {TICKS.map((k, i) => (
-          <Line key={i} x1={k.x1} y1={k.y1} x2={k.x2} y2={k.y2} stroke={k.major ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.22)'} strokeWidth={k.major ? 2 : 1.5} />
-        ))}
-        <Circle cx={C} cy={C} r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={10} />
-        <AnimatedCircle cx={C} cy={C} r={R} fill="none" stroke={focus.green} strokeWidth={10} strokeLinecap="round"
-          strokeDasharray={`${L} ${L}`} animatedProps={arc} transform={`rotate(-90 ${C} ${C})`} opacity={running ? 1 : 0} />
-      </Svg>
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-        <Animated.View style={ba}>
-          <Txt num size={46} w="500" color={focus.ink} lh={52} accessibilityLabel={`経過 ${hms(e)}`}>{hms(e)}</Txt>
-        </Animated.View>
-        <Txt size={13} color={focus.ink2}>
-          {running ? `ポモドーロ ${idx + 1}/4 · 休憩まで ${pad(Math.floor(left / 60))}:${pad(left % 60)}` : 'まだ始めていません'}
-        </Txt>
-      </View>
-    </View>
-  );
-}
-
-function Side({ label, onPress, a11y }: { label: string; onPress: () => void; a11y: string }) {
-  return (
-    <Press onPress={onPress} scale={0.9} accessibilityLabel={a11y}
-      style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: focus.raise, alignItems: 'center', justifyContent: 'center' }}>
-      <Txt num size={14} w="600" color={focus.ink}>{label}</Txt>
-    </Press>
-  );
-}
+// Focus timer: always dark. The readout counts down the planned session;
+// the ruler (bencho "time scrubber") shows the remaining minutes and drifts as
+// time passes — drag or fling it to plan or adjust the session.
+const fmt = (sec: number) => {
+  const v = Math.max(0, Math.round(sec));
+  const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60, x = v % 60;
+  return h ? `${h}:${pad(m)}:${pad(x)}` : `${pad(m)}:${pad(x)}`;
+};
+const rulerLabel = (m: number) => (m < 60 ? `${m}分` : m % 60 ? `${Math.floor(m / 60)}:${pad(m % 60)}` : `${m / 60}時間`);
 
 export default function Timer() {
   const insets = useSafeAreaInsets();
@@ -87,6 +33,19 @@ export default function Timer() {
   const e = elapsedOf(s);
   const sj = subj(s.subj);
   const playing = s.running && !s.paused;
+  const rem = s.targetMin * 60 - e;
+  const over = s.running && rem < 0;
+
+  // One nudge when the planned time is reached.
+  const nudged = useRef(false);
+  useEffect(() => {
+    if (!s.running) nudged.current = false;
+    else if (over && !nudged.current) {
+      nudged.current = true;
+      haptic.success();
+      toast(`目標の${Math.round(s.targetMin)}分に届きました`, 'このまま続けても、記録してもOK');
+    }
+  }, [over, s.running, s.targetMin]);
 
   const pickSubject = (id: string) => {
     if (id === s.subj) return;
@@ -104,6 +63,14 @@ export default function Timer() {
     if (!s.running) startStudy(s.subj);
     else togglePause();
   };
+  // Ruler: planned length while idle, remaining minutes while running.
+  const rulerValue = s.running ? Math.max(0, rem) / 60 : s.targetMin;
+  const onRuler = (m: number) => {
+    const cur = getState();
+    if (cur.running) setTarget(elapsedOf(cur) / 60 + m);
+    else setTarget(Math.max(5, m));
+  };
+  const side = over ? '超過' : s.running ? '残り' : 'に集中';
 
   return (
     <Screen bg={focus.bg} style={{ paddingBottom: insets.bottom + 16 }}>
@@ -129,27 +96,38 @@ export default function Timer() {
         })}
       </View>
 
-      <Dial e={e} running={s.running} paused={s.paused} />
+      <View style={{ flex: 1, minHeight: 24 }} />
 
-      <View style={{ alignItems: 'center', marginTop: 6, gap: 4 }}>
-        <Txt size={12.5} color={focus.ink2}>{sj.task}</Txt>
-        <View style={{ flexDirection: 'row', gap: 22 }}>
-          <Txt size={12.5} color={focus.ink2}>今日 <Txt num size={13} w="600" color="#fff">{hm(s.todayMin)}</Txt></Txt>
-          <Txt size={12.5} color={focus.ink2}>目標 <Txt num size={13} w="600" color="#fff">{hm(s.goalMin).replace('00分', '')}</Txt></Txt>
-        </View>
+      {/* readout: the time, with a small word on the right like bencho's "AM" */}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 8, opacity: s.paused ? 0.5 : 1 }}
+        accessible accessibilityLabel={`${side} ${fmt(over ? -rem : s.running ? rem : s.targetMin * 60)}`}>
+        {over ? <Txt num size={40} w="500" color={focus.green} style={{ marginBottom: 6 }}>+</Txt> : null}
+        <Rolling value={fmt(over ? -rem : s.running ? rem : s.targetMin * 60)} size={64} weight="500" color={over ? focus.green : focus.ink} />
+        <Txt size={16} w="500" color={over ? focus.green : focus.ink2} style={{ marginBottom: 12 }}>{side}</Txt>
+      </View>
+      <Txt size={12.5} color={focus.ink3} style={{ textAlign: 'center', marginTop: 2 }}>
+        {s.paused ? '一時停止中' : s.running ? `${sj.name} · ${sj.task}` : 'ルーラーを動かして、集中する時間を決めます'}
+      </Txt>
+
+      <View style={{ marginTop: 26, marginHorizontal: 20 }}>
+        <TimeScrubber value={rulerValue} onChange={onRuler} min={s.running ? 0 : 5} max={180} step={5} tick={1} mid={5} major={15}
+          label={rulerLabel} dark a11y={s.running ? '残り時間' : '集中する時間'} />
       </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 26, marginTop: 22 }}>
-        <Side label="−5" a11y="5分戻す" onPress={() => { adjustElapsed(-300); haptic.soft(); }} />
-        <Press onPress={main} haptics={false} scale={0.92} accessibilityLabel={playing ? '一時停止' : '開始'}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 22, marginTop: 14 }}>
+        <Txt size={12.5} color={focus.ink2}>今日 <Txt num size={13} w="600" color="#fff">{hm(s.todayMin)}</Txt></Txt>
+        <Txt size={12.5} color={focus.ink2}>目標 <Txt num size={13} w="600" color="#fff">{hm(s.goalMin).replace('00分', '')}</Txt></Txt>
+      </View>
+
+      <View style={{ alignItems: 'center', marginTop: 26 }}>
+        <Press onPress={main} haptics={false} scale={0.92} accessibilityLabel={playing ? '一時停止' : s.running ? '再開' : '開始'}
           style={{ width: 82, height: 82, borderRadius: 41, backgroundColor: focus.ink, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name={playing ? 'pause' : 'play'} size={30} color={focus.bg} />
         </Press>
-        <Side label="+5" a11y="5分進める" onPress={() => { adjustElapsed(300); haptic.soft(); }} />
       </View>
 
-      <View style={{ flex: 1 }} />
-      <View style={{ marginHorizontal: 24, marginTop: 30 }}>
+      <View style={{ flex: 1, minHeight: 24 }} />
+      <View style={{ marginHorizontal: 24 }}>
         <SlideToRecord disabled={!s.running} onDone={() => recordSheet({ leaveTimer: true })} />
       </View>
     </Screen>

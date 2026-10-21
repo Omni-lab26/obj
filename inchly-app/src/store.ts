@@ -13,6 +13,7 @@ export type State = {
   subj: string;
   todayMin: number;
   goalMin: number;
+  targetMin: number; // planned length of this focus session
   todos: Todo[];
   following: string[];
   helpful: number[];
@@ -30,6 +31,7 @@ let state: State = {
   subj: 'en',
   todayMin: 165,
   goalMin: 180,
+  targetMin: 60,
   todos: [
     { s: 'ma', t: '青チャート 数III 例題41〜50', d: false },
     { s: 'en', t: '長文読解 第3講（時間を測る）', d: true },
@@ -99,6 +101,10 @@ export function adjustElapsed(deltaSec: number) {
   const s = state;
   const e = Math.max(0, elapsedOf(s) + deltaSec);
   setState({ base: e, startedAt: Date.now() });
+}
+export function setTarget(min: number) {
+  // kept to the second, so a snapped ruler gives an exact remaining time
+  setState({ targetMin: Math.max(1 / 60, Math.round(min * 60) / 60) });
 }
 export function setSubject(id: string) {
   setState({ subj: id });

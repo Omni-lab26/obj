@@ -26,7 +26,7 @@ function useIndicator(index: number, boxes: Box[]) {
 }
 
 /** Segmented control on a sunken track; the white thumb slides to the selection. */
-export function Segmented<K extends string>({ options, value, onChange, style }: { options: Opt<K>[]; value: K; onChange: (v: K) => void; style?: ViewStyle }) {
+export function Segmented<K extends string>({ options, value, onChange, style, small }: { options: Opt<K>[]; value: K; onChange: (v: K) => void; style?: ViewStyle; small?: boolean }) {
   const t = useT();
   const [boxes, setBoxes] = useState<Box[]>([]);
   const index = options.findIndex((o) => o.v === value);
@@ -36,16 +36,16 @@ export function Segmented<K extends string>({ options, value, onChange, style }:
     setBoxes((b) => { const n = [...b]; n[i] = { x, w: width }; return n; });
   };
   return (
-    <View style={[{ flexDirection: 'row', backgroundColor: t.sunken, borderRadius: 11, padding: 3 }, style]} accessibilityRole="tablist">
+    <View style={[{ flexDirection: 'row', backgroundColor: t.sunken, borderRadius: small ? 10 : 11, padding: small ? 2 : 3 }, style]} accessibilityRole="tablist">
       <Animated.View
-        style={[{ position: 'absolute', top: 3, bottom: 3, left: 0, borderRadius: 8, backgroundColor: t.dark ? t.canvas : t.surface,
+        style={[{ position: 'absolute', top: small ? 2 : 3, bottom: small ? 2 : 3, left: 0, borderRadius: 8, backgroundColor: t.dark ? t.canvas : t.surface,
           borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line }, a]}
       />
       {options.map((o, i) => (
         <Pressable key={o.v} onLayout={onLayout(i)} onPress={() => { if (o.v !== value) { haptic.tap(); onChange(o.v); } }}
           accessibilityRole="tab" accessibilityState={{ selected: o.v === value }}
-          style={{ flex: 1, height: 34, alignItems: 'center', justifyContent: 'center' }}>
-          <Txt size={13.5} w={o.v === value ? '600' : '500'} tone={o.v === value ? 'ink' : 'ink2'}>{o.label}</Txt>
+          style={{ flex: 1, height: small ? 28 : 34, paddingHorizontal: small ? 10 : 0, alignItems: 'center', justifyContent: 'center' }}>
+          <Txt size={small ? 12 : 13.5} w={small ? '500' : o.v === value ? '600' : '500'} tone={o.v === value ? 'ink' : 'ink3'}>{o.label}</Txt>
         </Pressable>
       ))}
     </View>

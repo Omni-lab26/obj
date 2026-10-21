@@ -68,7 +68,7 @@ function RecordBody({ close, leaveTimer }: { close: () => void; leaveTimer?: boo
           <View style={{ marginTop: 10 }}>
             <Row k="科目" v={sj.name} />
             <Row k="勉強した時間" v={`${min}分`} num />
-            <Row k="ポモドーロ" v={`${Math.min(4, Math.floor(e / 1500) + 1)}回`} num />
+            <Row k="予定していた時間" v={`${Math.round(s.targetMin)}分`} num />
             <Row k="今日の合計" v={hm(s.todayMin + min)} num />
           </View>
         </Animated.View>

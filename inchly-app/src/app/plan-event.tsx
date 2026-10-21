@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ComponentRef, useRef, useState } from 'react';
-import { KeyboardAvoidingView, NativeScrollEvent, NativeSyntheticEvent, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { pad, TODAY } from '@/data';
@@ -11,6 +11,7 @@ import { NavBar, Screen } from '@/ui/Chrome';
 import { Field, Label, RadioCards, Stepper } from '@/ui/Form';
 import { setPendingGroupTab } from '@/ui/GroupParts';
 import { Rolling } from '@/ui/Rolling';
+import { TimeScrubber } from '@/ui/TimeScrubber';
 import { toast } from '@/ui/Toast';
 
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
@@ -18,10 +19,9 @@ const DAYS = Array.from({ length: 7 }, (_, i) => { const d = new Date(TODAY); d.
 type Kind = 'もくもく自習' | '時間チャレンジ' | '振り返り会';
 type Who = 'all' | 'invited';
 
-// Time ruler: 6:00–24:00 in 15-minute steps.
-const STEP = 12;
+// Start time: 6:00–24:00, snapping to 15 minutes.
 const START = 6 * 60;
-const COUNT = (24 - 6) * 4 + 1;
+const END = 24 * 60;
 
 export default function PlanEvent() {
   const t = useT();
@@ -89,14 +89,18 @@ export default function PlanEvent() {
                 );
               })}
             </ScrollView>
-            <View style={{ marginHorizontal: 20, marginTop: 12, borderRadius: 14, backgroundColor: t.surface, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line, overflow: 'hidden' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 4, paddingTop: 14 }}>
-                <Rolling value={time} size={34} weight="700" />
-                <Txt size={13} tone="ink3" style={{ marginBottom: 5 }}>から</Txt>
+            {/* bencho time scrubber: readout on top, fisheye ruler below */}
+            <View style={{ marginHorizontal: 20, marginTop: 12, borderRadius: 20, backgroundColor: t.surface, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 6 }}>
+                <Rolling value={time} size={30} weight="500" />
+                <Txt size={14} w="500" tone="ink3" style={{ marginBottom: 4 }}>から</Txt>
               </View>
-              <Ruler minutes={minutes} onChange={setMinutes} />
+              <View style={{ marginTop: 16 }}>
+                <TimeScrubber value={minutes} onChange={setMinutes} min={START} max={END} step={15} tick={5} mid={15} major={60}
+                  label={(m) => `${m / 60}時`} a11y="開始時刻" />
+              </View>
             </View>
-            <Txt size={12} tone="ink3" style={{ paddingHorizontal: 20, marginTop: 8 }}>ルーラーを左右に動かして時刻を選びます（15分刻み）</Txt>
+            <Txt size={12} tone="ink3" style={{ paddingHorizontal: 20, marginTop: 8 }}>ルーラーをドラッグして時刻を選びます。はじくと15分刻みで止まります</Txt>
           </View>
 
           <View style={{ paddingHorizontal: 20 }}>
@@ -106,7 +110,7 @@ export default function PlanEvent() {
               { v: 'invited', title: '招待した人だけ', sub: 'あとでメンバーを選びます' },
             ]} />
             <View style={{ marginTop: 10 }}>
-              <Stepper value={cap} min={2} max={24} onChange={setCap} unit="人まで" />
+              <Stepper value={cap} min={2} max={24} onChange={setCap} unit="人まで" label="定員" />
             </View>
           </View>
 
@@ -126,46 +130,5 @@ export default function PlanEvent() {
         </View>
       </KeyboardAvoidingView>
     </Screen>
-  );
-}
-
-/** Horizontal ruler with native momentum and snapping; the red needle marks the chosen time. */
-function Ruler({ minutes, onChange }: { minutes: number; onChange: (m: number) => void }) {
-  const t = useT();
-  const [w, setW] = useState(0);
-  const ref = useRef<ComponentRef<typeof ScrollView>>(null);
-  const last = useRef(minutes);
-  const placed = useRef(false);
-  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const i = Math.max(0, Math.min(COUNT - 1, Math.round(e.nativeEvent.contentOffset.x / STEP)));
-    const m = START + i * 15;
-    if (m !== last.current) { last.current = m; haptic.tap(); onChange(m); }
-  };
-  return (
-    <View style={{ height: 64, marginTop: 6 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} accessibilityRole="adjustable" accessibilityLabel="開始時刻" accessibilityValue={{ text: `${Math.floor(minutes / 60)}時${minutes % 60}分` }}
-      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
-      onAccessibilityAction={(e) => {
-        const m = Math.max(START, Math.min(24 * 60, minutes + (e.nativeEvent.actionName === 'increment' ? 15 : -15)));
-        ref.current?.scrollTo({ x: ((m - START) / 15) * STEP, animated: true });
-      }}>
-      {w ? (
-        <ScrollView ref={ref} horizontal contentOffset={{ x: ((minutes - START) / 15) * STEP, y: 0 }}
-          onLayout={() => { if (!placed.current) { placed.current = true; ref.current?.scrollTo({ x: ((minutes - START) / 15) * STEP, animated: false }); } }} showsHorizontalScrollIndicator={false} snapToInterval={STEP} decelerationRate="fast" scrollEventThrottle={16} onScroll={onScroll}
-          contentContainerStyle={{ paddingHorizontal: w / 2 - STEP / 2, alignItems: 'flex-start' }}>
-          {Array.from({ length: COUNT }, (_, i) => {
-            const m = START + i * 15;
-            const hour = m % 60 === 0;
-            const half = m % 30 === 0;
-            return (
-              <View key={i} style={{ width: STEP, alignItems: 'center' }}>
-                <View style={{ width: hour ? 2 : 1.2, height: hour ? 22 : half ? 14 : 9, borderRadius: 1, backgroundColor: hour ? t.ink2 : t.line2, marginTop: 4 }} />
-                {hour ? <Txt num size={11} tone="ink3" style={{ position: 'absolute', top: 30, left: (STEP - 30) / 2, width: 30, textAlign: 'center' }}>{m / 60}</Txt> : null}
-              </View>
-            );
-          })}
-        </ScrollView>
-      ) : null}
-      <View pointerEvents="none" style={{ position: 'absolute', left: w / 2 - 1, top: 0, width: 2, height: 32, borderRadius: 1, backgroundColor: t.red }} />
-    </View>
   );
 }

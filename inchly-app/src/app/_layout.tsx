@@ -3,7 +3,8 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { getState, startStudy } from '@/store';
 import { useT } from '@/theme';
@@ -47,7 +48,7 @@ export default function RootLayout() {
     <ThemeProvider value={{ ...nav, colors: { ...nav.colors, background: t.canvas, card: t.surface, text: t.ink, border: t.line, primary: t.green } }}>
       <StatusBar style={t.dark ? 'light' : 'dark'} />
       {/* userSelect: dragging sliders and charts with a mouse shouldn't select text on web */}
-      <View style={[{ flex: 1, backgroundColor: t.canvas }, Platform.OS === 'web' && ({ userSelect: 'none' } as object)]}>
+      <GestureHandlerRootView style={[{ flex: 1, backgroundColor: t.canvas }, Platform.OS === 'web' && ({ userSelect: 'none' } as object)]}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="timer" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: '#0F1110' } }} />
@@ -59,7 +60,7 @@ export default function RootLayout() {
         </Stack>
         <SheetHost />
         <ToastHost />
-      </View>
+      </GestureHandlerRootView>
     </ThemeProvider>
   );
 }

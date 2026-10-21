@@ -4,8 +4,8 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } 
 
 import { ease, font, useT, noOutline } from '../theme';
 import { haptic, Press, Txt } from './base';
-import { Icon, IconName } from './Icon';
-import { Rolling } from './Rolling';
+import { Icon } from './Icon';
+import { Counter } from './Counter';
 
 // ---------- floating-label field ----------
 // The label sits inside the box and lifts into the top border on focus
@@ -64,41 +64,9 @@ export function Field({
   );
 }
 
-// ---------- stepper: hold to repeat, accelerating ----------
-export function Stepper({ value, min, max, onChange, unit }: { value: number; min: number; max: number; onChange: (v: number) => void; unit: string }) {
-  const t = useT();
-  const v = useRef(value);
-  useEffect(() => { v.current = value; }, [value]);
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const step = (d: number) => {
-    const nv = Math.max(min, Math.min(max, v.current + d));
-    if (nv !== v.current) { v.current = nv; onChange(nv); haptic.tap(); }
-  };
-  const start = (d: number) => {
-    step(d);
-    let n = 0;
-    const rep = () => { n++; step(d); timer.current = setTimeout(rep, Math.max(45, 200 - n * 18)); };
-    timer.current = setTimeout(rep, 380);
-  };
-  const stop = () => clearTimeout(timer.current);
-  useEffect(() => stop, []);
-  const btn = (d: number, icon: IconName, disabled: boolean) => (
-    <Press haptics={false} onPressIn={() => !disabled && start(d)} onPressOut={stop} disabled={disabled} scale={0.9}
-      accessibilityLabel={d > 0 ? '増やす' : '減らす'}
-      style={{ width: 46, height: 46, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-      <Icon name={icon} size={18} color={t.ink} />
-    </Press>
-  );
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 6, borderRadius: 14, backgroundColor: t.surface, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line }}>
-      {btn(-1, 'minus', value <= min)}
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 4 }}>
-        <Rolling value={String(value)} size={28} />
-        <Txt size={13} tone="ink3" style={{ marginBottom: 3 }}>{unit}</Txt>
-      </View>
-      {btn(1, 'plus', value >= max)}
-    </View>
-  );
+// ---------- stepper: the bencho-style rolling counter ----------
+export function Stepper({ value, min, max, onChange, unit, label = '数' }: { value: number; min: number; max: number; onChange: (v: number) => void; unit: string; label?: string }) {
+  return <Counter value={value} min={min} max={max} onChange={onChange} unit={unit} label={label} />;
 }
 
 // ---------- radio cards ----------

@@ -85,8 +85,8 @@ export default function CreateGroup() {
             ]} />
           </View>
           <View>
-            <Label sub="押し続けると速く変わります">定員</Label>
-            <Stepper value={cap} min={2} max={50} onChange={setCap} unit="人" />
+            <Label sub="押し続けると速く変わります。数字を上下にドラッグしても変えられます">定員</Label>
+            <Stepper value={cap} min={2} max={50} onChange={setCap} unit="人" label="定員" />
           </View>
         </ScrollView>
         {/* sticky summary + action */}
