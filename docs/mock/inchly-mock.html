@@ -399,7 +399,7 @@ h2.sec{font:700 15px var(--f-body)}
 .ghead .t{flex:1;min-width:0}
 .ghead h2{font:800 18px/1.2 var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gseg{margin:0 16px 10px}
-.gbody{flex:1;overflow-y:auto;padding:4px 16px 110px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.gbody{flex:1;overflow-y:auto;padding:4px 16px 168px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
 .gbody::-webkit-scrollbar{display:none}
 .chat{display:flex;flex-direction:column;gap:10px}
 .sys{align-self:center;font-family:inherit;font:500 10.5px/1.4 var(--f-mono);color:var(--ink-3);padding:5px 10px;border-radius:999px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);text-align:center;max-width:90%}
@@ -448,6 +448,43 @@ h2.sec{font:700 15px var(--f-body)}
 .sharegrid .th{width:38px;height:38px;border-radius:10px}
 .group{width:100%;text-align:left}
 
+/* chat: presence bar, quick actions, cards, banner */
+.presence{margin:0 16px 10px;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 10px;border-radius:20px}
+.presence .t{flex:1;min-width:0;line-height:1.3}
+.presence .t b{display:block;font-size:13px}
+.presence .t span{font:500 10.5px var(--f-mono);color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.avs{display:flex;align-items:center;flex:none}
+.avs .av{width:26px;height:26px;font-size:10px;margin-left:-7px;box-shadow:0 0 0 2px var(--glass-strong)}
+.avs .av:first-child{margin-left:0}
+.quick{position:absolute;left:0;right:0;bottom:78px;z-index:26;display:flex;gap:8px;overflow-x:auto;padding:4px 12px;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.quick button{flex:none;display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:999px;font:600 12.5px var(--f-body);background:var(--glass-strong);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 4px 14px rgba(40,30,80,.10),inset 0 0 0 1px var(--line);white-space:nowrap}
+.quick button svg{width:15px;height:15px}
+.quick button.primary{background:var(--solid);color:var(--on-solid);box-shadow:0 6px 16px rgba(30,20,60,.25)}
+.sys.act{display:flex;align-items:center;gap:8px;padding:5px 5px 5px 10px}
+.sys.act .go{font:600 10.5px var(--f-body);padding:4px 9px;border-radius:999px;background:var(--solid);color:var(--on-solid)}
+.sys .livedot{width:6px;height:6px}
+.ccard{padding:12px;border-radius:18px;background:var(--glass-strong);box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:8px;min-width:0}
+.msg.me .ccard{background:var(--glass-strong)}
+.ccard .ct{display:flex;align-items:center;gap:8px}
+.ccard .ct b{font:700 14px var(--f-body)}
+.ccard .ic{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--pos-bg);color:var(--pos);flex:none}
+.ccard .ic svg{width:16px;height:16px}
+.ccard .ic.blue{background:rgba(79,125,243,.14);color:var(--knob)}
+.ccard .ic.warn{background:rgba(201,138,18,.14);color:#C98A12}
+.qopt{display:flex;flex-direction:column;gap:6px}
+.qopt button{padding:9px 12px;border-radius:12px;text-align:left;font:500 13px var(--f-body);background:var(--chip);box-shadow:inset 0 0 0 1px var(--line)}
+.qopt button.right{background:var(--pos-bg);color:var(--pos);box-shadow:none;font-weight:700}
+.qopt button.wrong{background:var(--neg-bg);color:var(--neg);box-shadow:none}
+.mini7{display:flex;gap:4px}
+.mini7 i{width:16px;height:16px;border-radius:4px;background:var(--g0)}
+.banner{position:absolute;top:54px;left:12px;right:12px;z-index:58;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 12px;border-radius:22px;background:var(--glass-strong);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);box-shadow:0 14px 40px rgba(30,20,60,.22),inset 0 0 0 1px var(--line);animation:drop .35s cubic-bezier(.2,.8,.2,1)}
+.banner .t{flex:1;min-width:0;line-height:1.35}
+.banner .t b{display:block;font-size:13px}
+.banner .t span{font:500 10.5px var(--f-mono);color:var(--ink-3)}
+.banner .appicon{width:30px;height:30px;padding:6px;gap:2px;border-radius:9px;box-shadow:none}
+@keyframes drop{from{transform:translateY(-24px);opacity:0}to{transform:none;opacity:1}}
+
 /* ---------- phone width: the app fills the screen ---------- */
 @media (max-width:960px){.side{display:none}}
 @media (max-width:520px){
@@ -458,6 +495,7 @@ h2.sec{font:700 15px var(--f-body)}
   .view{padding-top:18px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
   .studyview{padding-top:22px}
   .ghead{padding-top:18px}
+  .banner{top:12px}
   .toast{top:16px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.holo{transform:none!important}}
@@ -709,6 +747,7 @@ h2.sec{font:700 15px var(--f-body)}
         <div class="seg glass gseg" role="tablist" data-seg="grp">
           <button role="tab" aria-selected="true" data-panel="chat">チャット</button><button role="tab" aria-selected="false" data-panel="shared">共有</button><button role="tab" aria-selected="false" data-panel="events">イベント</button><button role="tab" aria-selected="false" data-panel="members">メンバー</button>
         </div>
+        <div class="presence glass" id="presence"><span class="avs" id="presAvs"></span><div class="t"><b id="presText">3人が勉強中</b><span id="presSub">英語 · 数学 · 化学</span></div><button class="followbtn" id="presJoin">一緒に始める</button></div>
         <div class="gbody" id="gbody">
           <div data-group="grp" data-name="chat" class="chat" id="gChat"></div>
           <div data-group="grp" data-name="shared" hidden style="display:flex;flex-direction:column;gap:12px">
@@ -723,6 +762,15 @@ h2.sec{font:700 15px var(--f-body)}
             <section class="card glass"><div class="row between"><span class="label">THIS WEEK · グループ内</span><span class="chip" id="gTotal">合計 0h</span></div><div class="people" id="gMembers"></div></section>
             <section class="card glass"><div class="label">メンバーを招待</div><div class="mono dim2" id="inviteLink" style="font-size:12px;overflow-wrap:anywhere;user-select:all">https://getinchly.com/g/rk7Q2m</div><button class="btn" id="copyInvite">招待リンクをコピー</button></section>
           </div>
+        </div>
+        <div class="quick" id="quick" role="toolbar" aria-label="勉強のアクション">
+          <button class="primary" data-q="start"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2z"/></svg>勉強を始める</button>
+          <button data-q="together"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5c.4-3.2 2.7-5.2 5.5-5.2s5.1 2 5.5 5.2"/><path d="M17 8v6M14 11h6"/></svg>一緒に勉強する</button>
+          <button data-q="pomo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M9.5 3h5"/></svg>休憩を合わせる</button>
+          <button data-q="goal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>今日の目標を宣言</button>
+          <button data-q="quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.2 9a3 3 0 1 1 4.3 2.7c-.9.4-1.5 1.1-1.5 2.1V15"/><circle cx="12" cy="18.5" r=".9" fill="currentColor"/></svg>問題を出す</button>
+          <button data-q="report"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="5" rx="1.2"/><rect x="9.5" y="3" width="5" height="5" rx="1.2" opacity=".5"/><rect x="16" y="3" width="5" height="5" rx="1.2"/><rect x="3" y="9.5" width="5" height="5" rx="1.2" opacity=".5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/><rect x="16" y="9.5" width="5" height="5" rx="1.2" opacity=".3"/><rect x="3" y="16" width="5" height="5" rx="1.2"/><rect x="9.5" y="16" width="5" height="5" rx="1.2"/><rect x="16" y="16" width="5" height="5" rx="1.2" opacity=".5"/></svg>進捗を報告</button>
+          <button data-q="ask"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>質問する</button>
         </div>
         <form class="composer glass" id="composer">
           <button type="button" class="plusbtn" data-grp-go="shared" aria-label="共有タブを開く"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -805,6 +853,7 @@ h2.sec{font:700 15px var(--f-body)}
         <div class="sharegrid" id="shareGrid"></div>
       </section>
 
+      <div class="banner" id="banner" hidden role="status"><span class="appicon" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><div class="t"><b id="bnText"></b><span id="bnSub"></span></div><button class="followbtn" id="bnJoin">一緒に始める</button></div>
       <div class="toast" id="toast" hidden></div>
     </div>
   </div>
@@ -854,7 +903,10 @@ h2.sec{font:700 15px var(--f-body)}
         { me:true, text:'日曜のもくもく会、9時からでいい？' },
         { n:'ゆな', c:'#8C3B6E', text:'OK！参加する' },
         { sys:'あなた がイベント「日曜もくもく会」を企画しました' },
+        { n:'みお', c:'#E8663D', card:{ type:'together', subj:'英語', what:'長文 1題 · 25分 × 2', when:'21:00から', joined:[['みお','#E8663D'],['ゆな','#8C3B6E']] } },
+        { sys:'そら が 数学 を勉強し始めました', act:'join', who:'そら' },
       ],
+      studying:[['みお','#E8663D','英語'],['そら','#3E4FC9','数学'],['ゆな','#8C3B6E','化学']],
       shares:[
         { type:'note', title:'電磁気 まとめノート p.12', by:'かいと', when:'今日', meta:'画像 2枚' },
         { type:'link', title:'【数III】置換積分の「置き方」がわかる15分', by:'そら', when:'昨日', meta:'YouTube' },
@@ -868,10 +920,12 @@ h2.sec{font:700 15px var(--f-body)}
       ] },
     { id:'g2', n:'朝活 6:00 スタート', m:12, live:1, today:'14h', cs:['#C9952A','#8C3B6E','#2E6B3F','#3E4FC9'], rank:'グループ内 2位', join:'公開',
       msgs:[ { sys:'れん が 世界史 を 30分 コミットしました' }, { n:'れん', c:'#2E6B3F', text:'おはよう。今日は論述1題から' }, { me:true, text:'おはよう、古文単語80個やる' } ],
+      studying:[['れん','#2E6B3F','世界史']],
       shares:[ { type:'plan', title:'朝30分 ルーティン表', by:'れん', when:'先週', meta:'ToDo 7件' } ],
       events:[ { mo:'10', d:'26', dow:'月', title:'1週間 毎朝6時チャレンジ', time:'10/26 – 11/1', type:'時間チャレンジ', joined:false, count:8, goal:35, done:0 } ] },
     { id:'g3', n:'英語長文 毎日1題', m:41, live:5, today:'52h', cs:['#0F5E5A','#E8663D','#8C3B6E','#2E6B3F'], rank:'グループ内 11位', join:'公開',
       msgs:[ { sys:'今日のお題：やっておきたい英語長文 700 · 第8講' }, { n:'みお', c:'#E8663D', text:'第8講、設問3の指示語がむずかしい' } ],
+      studying:[['みお','#E8663D','英語'],['あおい','#0F5E5A','英語'],['ひなた','#C9952A','英語'],['りく','#3E4FC9','英語'],['なな','#8C3B6E','英語']],
       shares:[], events:[] },
   ];
   const PUBLIC_GROUPS = [
@@ -1001,7 +1055,7 @@ h2.sec{font:700 15px var(--f-body)}
   function selectSeg(group, name){
     $$(`[data-seg="${group}"] button`).forEach(x => x.setAttribute('aria-selected', String(x.dataset.panel === name)));
     $$(`[data-group="${group}"]`).forEach(p => p.hidden = p.dataset.name !== name);
-    if (group === 'grp') $('#composer').hidden = name !== 'chat';
+    if (group === 'grp') { $('#composer').hidden = name !== 'chat'; $('#quick').hidden = name !== 'chat'; $('#presence').hidden = name !== 'chat'; }
   }
   $$('[data-me]').forEach(b => b.addEventListener('click', () => selectSeg('me', b.dataset.me)));
   $$('.range .rail button').forEach(b => b.addEventListener('click', () => $$('.range .rail button').forEach(x => x.setAttribute('aria-selected', String(x === b)))));
@@ -1071,13 +1125,39 @@ h2.sec{font:700 15px var(--f-body)}
   ];
   const thIcon = t => t === 'book' ? 'B' : t === 'plan' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>' : t === 'record' ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="5" rx="1.2"/><rect x="9.5" y="3" width="5" height="5" rx="1.2" opacity=".5"/><rect x="16" y="3" width="5" height="5" rx="1.2"/><rect x="3" y="9.5" width="5" height="5" rx="1.2" opacity=".5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/><rect x="16" y="9.5" width="5" height="5" rx="1.2" opacity=".3"/><rect x="3" y="16" width="5" height="5" rx="1.2"/><rect x="9.5" y="16" width="5" height="5" rx="1.2" opacity=".3"/><rect x="16" y="16" width="5" height="5" rx="1.2"/></svg>' : '';
   const attach = sh => `<div class="attach"><span class="th th-${sh.type}">${thIcon(sh.type)}</span><div><div class="b">${esc(sh.title)}</div><div class="mono dim" style="font-size:10.5px">${esc(sh.meta || '')}</div></div></div>`;
-  const msgHTML = m => {
+  const ICON = {
+    together:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5c.4-3.2 2.7-5.2 5.5-5.2s5.1 2 5.5 5.2"/><path d="M17 8v6M14 11h6"/></svg>',
+    pomo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M9.5 3h5"/></svg>',
+    goal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/></svg>',
+    quiz:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.2 9a3 3 0 1 1 4.3 2.7c-.9.4-1.5 1.1-1.5 2.1V15"/><circle cx="12" cy="18.5" r=".9" fill="currentColor"/></svg>',
+  };
+  const cardHTML = (c, mi) => {
+    if (c.type === 'together' || c.type === 'pomo') { const meIn = c.joined.some(j => j[0] === 'あなた');
+      return `<div class="ccard"><div class="ct"><span class="ic ${c.type === 'pomo' ? 'warn' : ''}">${ICON[c.type]}</span><div style="min-width:0"><b>${c.type === 'pomo' ? '休憩を合わせよう' : '一緒に勉強しよう'}</b><div class="mono dim" style="font-size:10.5px">${esc(c.subj)} · ${esc(c.what)} · ${esc(c.when)}</div></div></div>
+        <div class="row between"><span class="avs">${c.joined.map(j => av(j[1], j[0])).join('')}<span class="mono dim" style="font-size:10.5px;margin-left:8px">${c.joined.length}人</span></span><button class="followbtn ${meIn ? 'on' : ''}" data-join-card="${mi}">${meIn ? '参加中' : '参加する'}</button></div></div>`; }
+    if (c.type === 'goal') { const p = Math.min(100, Math.round(state.todayMin / c.goal * 100)); const h = Math.floor(state.todayMin / 60), m = state.todayMin % 60;
+      return `<div class="ccard"><div class="ct"><span class="ic blue">${ICON.goal}</span><div><b>今日の目標：${c.goal / 60}時間</b><div class="mono dim" style="font-size:10.5px">いま ${h}h ${pad(m)}m · ${p}%</div></div></div><div class="bar"><i style="width:${p}%"></i></div><span class="dim" style="font-size:11.5px">達成するとグループに自動でお知らせします</span></div>`; }
+    if (c.type === 'quiz') return `<div class="ccard"><div class="ct"><span class="ic warn">${ICON.quiz}</span><div><b>${esc(c.q)}</b><div class="mono dim" style="font-size:10.5px">${esc(c.subj)} · タップで答える</div></div></div><div class="qopt">${c.opts.map((o, k) => `<button data-quiz="${mi}" data-k="${k}" class="${c.picked === undefined ? '' : k === c.ans ? 'right' : k === c.picked ? 'wrong' : ''}">${esc(o)}</button>`).join('')}</div>${c.picked === undefined ? '' : `<span class="mono" style="font-size:11px;color:${c.picked === c.ans ? 'var(--pos)' : 'var(--neg)'}">${c.picked === c.ans ? '正解！' : '惜しい。正解は「' + esc(c.opts[c.ans]) + '」'}</span>`}</div>`;
+    if (c.type === 'report') { const h = Math.floor(state.todayMin / 60), m = state.todayMin % 60;
+      return `<div class="ccard"><div class="ct"><span class="ic">${ICON.goal}</span><div><b>今日の進捗 ${h}h ${pad(m)}m</b><div class="mono dim" style="font-size:10.5px">23日連続 · ToDo 2/5 完了</div></div></div><div class="mini7">${[2,1,3,2,1,4,3].map(l => `<i class="l${l}"></i>`).join('')}</div></div>`; }
+    return '';
+  };
+  const msgHTML = (m, mi) => {
+    if (m.sys && m.act === 'join') return `<div class="sys act"><span class="livedot"></span>${esc(m.sys)}<button class="go" data-join-who="${esc(m.who)}">一緒に始める</button></div>`;
+    if (m.card) { const body = cardHTML(m.card, mi); return m.me ? `<div class="msg me"><div style="max-width:86%">${body}</div></div>` : `<div class="msg">${av(m.c, m.n, 'width:30px;height:30px;font-size:12px')}<div style="max-width:86%"><span class="who">${esc(m.n)}</span>${body}</div></div>`; }
     if (m.sys) return m.go ? `<button class="sys" data-grp-go="${m.go}">${esc(m.sys)} · 見る →</button>` : `<div class="sys">${esc(m.sys)}</div>`;
     const body = (m.text ? `<div class="bubble">${esc(m.text)}</div>` : '') + (m.share ? attach(m.share) : '');
     if (m.me) return `<div class="msg me"><div>${body}</div></div>`;
     return `<div class="msg">${av(m.c, m.n, 'width:30px;height:30px;font-size:12px')}<div><span class="who">${esc(m.n)}</span>${body}</div></div>`;
   };
-  function renderChat(){ $('#gChat').innerHTML = curG.msgs.map(msgHTML).join(''); const b = $('#gbody'); b.scrollTop = b.scrollHeight; }
+  function renderChat(){ $('#gChat').innerHTML = curG.msgs.map((m, i) => msgHTML(m, i)).join(''); const b = $('#gbody'); b.scrollTop = b.scrollHeight; renderPresence(); }
+  function renderPresence(){ if (!curG) return; const st = curG.studying || []; const meIn = state.studying;
+    const list = meIn ? [['あなた','#6E56CF',state.subj.name], ...st] : st;
+    $('#presAvs').innerHTML = list.slice(0, 4).map(p => av(p[1], p[0])).join('');
+    $('#presText').textContent = list.length ? `${list.length}人が勉強中` : 'いま勉強中の人はいません';
+    $('#presSub').textContent = list.map(p => `${p[0]}：${p[2]}`).join(' · ') || '最初の1人になろう';
+    $('#presJoin').textContent = meIn ? '勉強中' : '一緒に始める'; $('#presJoin').classList.toggle('on', meIn);
+    $('#gLive').textContent = list.length; }
   function renderShared(){ $('#gShared').innerHTML = curG.shares.length ? curG.shares.map(sh => `<div class="sharerow"><span class="th th-${sh.type}">${thIcon(sh.type)}</span><div class="t"><div style="font-weight:700;line-height:1.35">${esc(sh.title)}</div><div class="mono dim" style="font-size:10.5px">${esc(sh.by)} · ${esc(sh.when)} · ${esc(sh.meta)}</div></div><button class="followbtn" data-on="保存済み" data-off="保存">保存</button></div>`).join('') : '<p class="dim" style="font-size:13px">まだ何も共有されていません。ノートの写真や役に立った動画を共有してみましょう。</p>'; }
   function renderEvents(){ $('#gEvents').innerHTML = curG.events.length ? curG.events.map((e, i) => {
       const goal = e.goal ? `<div class="bar"><i style="width:${Math.min(100, Math.round(e.done / e.goal * 100))}%"></i></div><div class="mono dim" style="font-size:11px">${e.done}h / ${e.goal}h · みんなの合計</div>` : '';
@@ -1097,6 +1177,52 @@ h2.sec{font:700 15px var(--f-body)}
   $('#gBack').addEventListener('click', closeGroup);
   document.addEventListener('click', e => { const g = e.target.closest('[data-grp-go]'); if (g) selectSeg('grp', g.dataset.grpGo); });
   document.addEventListener('click', e => { const g = e.target.closest('[data-gid]'); if (g) openGroup(g.dataset.gid); });
+  // study actions from chat
+  function startFromChat(withWho){
+    const g = curG || GROUPS[0]; const was = state.studying;
+    if (!was) { state.studying = true; state.paused = false; state.elapsed = 0; paintSubject(); tick(true); }
+    $('#homeLive').hidden = false;
+    if (was && !withWho) { toast(`もう勉強中です · ${state.subj.name} ${hms(state.elapsed)}`); return; }
+    g.msgs.push({ sys: withWho ? `あなた が ${withWho} と一緒に ${state.subj.name} を${was ? '勉強しています' : '始めました'}` : `あなた が ${state.subj.name} を勉強し始めました` });
+    if (curG) renderChat();
+    toast(withWho ? `${withWho} と一緒に勉強中` : `${state.subj.name} のタイマーを始めました`);
+  }
+  const QUIZZES = [
+    { subj:'英単語', q:'inevitable の意味は？', opts:['避けられない','ありえない','目に見えない'], ans:0 },
+    { subj:'数学', q:'∫₀¹ x eˣ dx の値は？', opts:['e − 1','1','e'], ans:1 },
+    { subj:'化学', q:'ベンゼン環に −OH が付いた化合物は？', opts:['アニリン','フェノール','トルエン'], ans:1 },
+  ];
+  let qi = 0;
+  $('#quick').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (!b || !curG) return; const q = b.dataset.q;
+    if (q === 'start') { startFromChat(); return; }
+    if (q === 'ask') { const i = $('#msgInput'); i.value = '【質問 · ' + state.subj.name + '】'; i.focus(); return; }
+    if (q === 'together') { curG.msgs.push({ me:true, card:{ type:'together', subj:state.subj.name, what:'25分 × 2', when:'今から', joined:[['あなた','#6E56CF']] } }); const mi = curG.msgs.length - 1; renderChat();
+      const g = curG; setTimeout(() => { const c = g.msgs[mi].card; c.joined.push(['そら','#3E4FC9']); g.msgs.push({ sys:'そら が参加しました · 2人で勉強中' }); if (curG === g) renderChat(); showBanner('そら があなたの「一緒に勉強しよう」に参加しました', g.n, null); }, 2200); return; }
+    if (q === 'pomo') { curG.msgs.push({ me:true, card:{ type:'pomo', subj:'25分集中 → 5分休憩', what:'4セット', when:'次のスタート 21:00', joined:[['あなた','#6E56CF']] } }); renderChat(); return; }
+    if (q === 'goal') { curG.msgs.push({ me:true, card:{ type:'goal', goal:180 } }); renderChat(); return; }
+    if (q === 'quiz') { curG.msgs.push({ me:true, card:{ type:'quiz', ...QUIZZES[qi++ % QUIZZES.length] } }); renderChat(); return; }
+    if (q === 'report') { curG.msgs.push({ me:true, card:{ type:'report' } }); renderChat(); return; }
+  });
+  document.addEventListener('click', e => {
+    const jc = e.target.closest('[data-join-card]'); if (jc && curG) { const c = curG.msgs[+jc.dataset.joinCard].card; const i = c.joined.findIndex(j => j[0] === 'あなた'); if (i >= 0) c.joined.splice(i, 1); else { c.joined.push(['あなた','#6E56CF']); startFromChat(); } renderChat(); return; }
+    const jw = e.target.closest('[data-join-who]'); if (jw) { startFromChat(jw.dataset.joinWho); return; }
+    const qz = e.target.closest('[data-quiz]'); if (qz && curG) { const c = curG.msgs[+qz.dataset.quiz].card; if (c.picked === undefined) { c.picked = +qz.dataset.k; renderChat(); } return; }
+  });
+  $('#presJoin').addEventListener('click', () => { if (!state.studying) { const st = curG && curG.studying && curG.studying[0]; startFromChat(st ? st[0] : null); } });
+
+  // "○○ が勉強を始めました" notifications (simulated)
+  let bnT, bnWho = null;
+  function showBanner(text, sub, who){ $('#bnText').textContent = text; $('#bnSub').textContent = sub; bnWho = who; $('#bnJoin').hidden = !who; const b = $('#banner'); b.hidden = false; b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; clearTimeout(bnT); bnT = setTimeout(() => b.hidden = true, 4200); }
+  $('#bnJoin').addEventListener('click', () => { $('#banner').hidden = true; if (!curG) openGroup('g1'); startFromChat(bnWho); });
+  $('#banner').addEventListener('click', e => { if (e.target.closest('#bnJoin')) return; $('#banner').hidden = true; show('social'); selectSeg('soc', 'groups'); openGroup('g1'); });
+  const FEEDS = [ ['かいと','#0F5E5A','物理'], ['れん','#2E6B3F','世界史'], ['ひなた','#C9952A','数学'], ['つばさ','#3E4FC9','物理'], ['あおい','#0F5E5A','英語'] ];
+  let fi = 0;
+  function simulate(){ if (fi >= FEEDS.length) return; const g = GROUPS.find(x => x.id === 'g1'); const [n, c, sb] = FEEDS[fi++];
+    g.studying.push([n, c, sb]); g.msgs.push({ sys:`${n} が ${sb} を勉強し始めました`, act:'join', who:n });
+    if (curG === g) renderChat(); showBanner(`${n} が ${sb} を勉強し始めました`, `${g.n} · いま ${g.studying.length + (state.studying ? 1 : 0)}人が勉強中`, n);
+    setTimeout(simulate, 16000); }
+  setTimeout(simulate, 7000);
+
   const REPLIES = ['いいね、一緒にやろう', '了解！', 'それ助かる、ありがとう', 'おつかれ！こっちもあと1ポモ'];
   $('#composer').addEventListener('submit', e => {
     e.preventDefault(); const inp = $('#msgInput'); const text = inp.value.trim(); if (!text || !curG) return;
@@ -1127,7 +1253,7 @@ h2.sec{font:700 15px var(--f-body)}
     const desc = $('#gfDesc').value.trim(); const join = picked('gfJoin').startsWith('公開') ? '公開' : '招待制';
     const cs = Array.from({ length:4 }, (_, i) => PALETTE[(GROUPS.length * 3 + i * 2) % PALETTE.length]);
     const g = { id:'g' + Date.now(), n:name, m:1, live:0, today:'0h', cs, rank:'作成者', join,
-      msgs:[ { sys:`グループ「${name}」を作りました · テーマ：${picked('gfTheme')} · 定員 ${picked('gfMax')}` }, ...(desc ? [{ me:true, text:desc }] : []), { sys:'メンバー タブから招待リンクを送れます' } ], shares:[], events:[] };
+      studying:[], msgs:[ { sys:`グループ「${name}」を作りました · テーマ：${picked('gfTheme')} · 定員 ${picked('gfMax')}` }, ...(desc ? [{ me:true, text:desc }] : []), { sys:'メンバー タブから招待リンクを送れます' } ], shares:[], events:[] };
     GROUPS.unshift(g); renderGroups(); e.target.reset(); closeSheets(); openGroup(g.id); toast('グループを作りました');
   });
   $('#copyInvite').addEventListener('click', async () => { const link = $('#inviteLink').textContent;
