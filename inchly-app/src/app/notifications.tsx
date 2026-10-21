@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { NOTIFS, Notif } from '@/data';
+import { NOTIFS, Notif, PERSON_COLOR, ROOM } from '@/data';
 import { getState, setState, startStudy, toggleFollow, toggleIn, useStore } from '@/store';
 import { useT } from '@/theme';
-import { Btn, Empty, haptic, IconBtn, Txt } from '@/ui/base';
+import { Avatar, Btn, Empty, haptic, IconBtn, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
 import { SwipeRow } from '@/ui/SwipeRow';
@@ -19,6 +19,8 @@ const markRead = (id: number) => setState((s) => (s.notifRead.includes(id) ? {} 
 function Row({ n, unread, joined, onJoin }: { n: Notif; unread: boolean; joined: boolean; onJoin: () => void }) {
   const t = useT();
   const following = useStore((s) => (n.follow ? s.following.includes(n.follow) : false));
+  // follow notices name the handle; study notices name the person
+  const who = n.join ?? (n.follow ? ROOM.find((p) => p.h === n.follow)?.n : undefined);
   const tile = n.kind === 'imp' ? { bg: t.amberSoft, fg: t.amber } : n.kind === 'study' ? { bg: t.greenSoft, fg: t.greenInk } : { bg: t.sunken, fg: t.ink2 };
   const cta = () => {
     if (n.id === 6) { startStudy('en'); haptic.firm(); toast('英語を始めました', '記録はタイマーを止めたときに残ります'); }
@@ -29,9 +31,14 @@ function Row({ n, unread, joined, onJoin }: { n: Notif; unread: boolean; joined:
     <Pressable onPress={() => markRead(n.id)} accessibilityLabel={`${unread ? '未読 ' : ''}${n.title}`}
       style={{ flexDirection: 'row', gap: 12, paddingVertical: 14, paddingHorizontal: 20 }}>
       {n.kind === 'imp' ? <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, backgroundColor: t.amber }} /> : null}
+      {who ? (
+        // about a person: show the person
+        <Avatar name={who} color={PERSON_COLOR[who] ?? t.ink3} size={34} />
+      ) : (
       <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: tile.bg, alignItems: 'center', justifyContent: 'center' }}>
         <Icon name={n.icon} size={18} color={tile.fg} />
       </View>
+      )}
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {unread ? <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: t.blue }} /> : null}

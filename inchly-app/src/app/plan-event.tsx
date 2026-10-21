@@ -67,9 +67,9 @@ export default function PlanEvent() {
           <View style={{ paddingHorizontal: 20 }}>
             <Label>1. 何をする？</Label>
             <RadioCards value={kind} onChange={setKind} options={[
-              { v: 'もくもく自習', title: 'もくもく自習', sub: '決めた時間にみんなで勉強を始めます。カメラは使いません' },
-              { v: '時間チャレンジ', title: '時間チャレンジ', sub: '期間中の合計時間の目標を、みんなで目指します' },
-              { v: '振り返り会', title: '振り返り会', sub: '模試のあとなどに、間違えた問題を持ち寄ります' },
+              { v: 'もくもく自習', title: 'もくもく自習', sub: '時間を決めて、みんなで一斉に始める。カメラなし' },
+              { v: '時間チャレンジ', title: '時間チャレンジ', sub: '期間中の合計時間を、みんなで目指す' },
+              { v: '振り返り会', title: '振り返り会', sub: '模試のあと、間違えた問題を持ち寄る' },
             ]} />
           </View>
 
@@ -100,7 +100,6 @@ export default function PlanEvent() {
                   label={(m) => `${m / 60}時`} a11y="開始時刻" />
               </View>
             </View>
-            <Txt size={12} tone="ink3" style={{ paddingHorizontal: 20, marginTop: 8 }}>ルーラーをドラッグして時刻を選びます。はじくと15分刻みで止まります</Txt>
           </View>
 
           <View style={{ paddingHorizontal: 20 }}>

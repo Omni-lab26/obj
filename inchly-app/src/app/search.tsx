@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { JUKU, PEOPLE, Uni, UNIS } from '@/data';
+import { hoursIn, JUKU, PEOPLE, Uni, UNIS } from '@/data';
 import { toggleFollow, toggleIn, useStore } from '@/store';
 import { ease, font, useT, noOutline } from '@/theme';
 import { Avatar, Btn, Empty, haptic, Press, Txt } from '@/ui/base';
@@ -49,7 +49,7 @@ function compareSheet(us: Uni[]) {
 }
 function CompareTable({ us, close }: { us: Uni[]; close: () => void }) {
   const t = useT();
-  const me = 24.4;
+  const me = hoursIn(7);
   const maxFans = Math.max(...us.map((u) => u.fans));
   const minAvg = Math.min(...us.map((u) => u.avg));
   const rows: { k: string; cells: { v: string; best?: boolean }[] }[] = [
@@ -168,9 +168,9 @@ export default function Search() {
             </View>
           </View>
         ))}
-        <Txt size={12} tone="ink3" style={{ paddingHorizontal: 20, paddingVertical: 12 }}>偏差値はサンプルです。□を2校以上選ぶと比べられます。</Txt>
+        <Txt size={12} tone="ink3" style={{ paddingHorizontal: 20, paddingVertical: 12 }}>偏差値は河合塾の目安（サンプル）</Txt>
       </Animated.View>
-    ) : <Empty title={`「${q}」に合う大学はありません`} sub="大学名や学部名で探してみてください" />;
+    ) : <Empty title={`「${q}」に合う大学はありません`} sub="「東大」「工学部」みたいに短くすると見つかりやすい" />;
   } else if (kind === 'user') {
     const list = PEOPLE.filter((p) => !q || (p.n + p.h + p.g).includes(q));
     body = list.length ? (
@@ -189,7 +189,7 @@ export default function Search() {
           );
         })}
       </Animated.View>
-    ) : <Empty title={`「${q}」に合うユーザーはいません`} sub="名前やID、志望校で探してみてください" />;
+    ) : <Empty title={`「${q}」に合うユーザーはいません`} sub="ニックネーム、@ID、志望校でも探せます" />;
   } else {
     const list = JUKU.filter((j) => !q || j.n.includes(q));
     body = list.length ? (
@@ -215,7 +215,7 @@ export default function Search() {
           </Press>
         ))}
       </Animated.View>
-    ) : <Empty title={`「${q}」に合う塾は見つかりませんでした`} sub="教室名で探してみてください" />;
+    ) : <Empty title={`「${q}」に合う塾は見つかりませんでした`} sub="駅名や教室名でも探せます" />;
   }
 
   const showHeader = kind === 'uni' && !loading && UNIS.some((u) => !q || (u.n + u.f).includes(q));

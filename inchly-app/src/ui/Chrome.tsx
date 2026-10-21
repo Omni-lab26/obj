@@ -21,19 +21,26 @@ export function Screen({ children, style, bg }: { children: ReactNode; style?: V
   return <View style={[{ flex: 1, backgroundColor: bg ?? t.canvas, paddingTop: insets.top }, style]}>{children}</View>;
 }
 
-/** Large title for tab roots, with search and notifications on the right. */
-export function TopBar({ title, date }: { title: string; date?: string }) {
-  const unread = useUnread();
+/** Large title for tab roots. Each tab brings only the actions it needs (or none). */
+export function TopBar({ title, sub, right }: { title: string; sub?: ReactNode; right?: ReactNode }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 8, gap: 4 }}>
-      <View style={{ flex: 1 }}>
-        {date ? <Txt size={13} tone="ink3">{date}</Txt> : null}
-        <Txt size={28} w="700" lh={36}>{title}</Txt>
+    <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 40 }}>
+        <Txt size={28} w="700" lh={36} style={{ flex: 1 }}>{title}</Txt>
+        {right}
       </View>
-      <IconBtn name="search" label="さがす" onPress={() => router.push('/search')} />
-      <IconBtn name="bell" label="お知らせ" dot={unread > 0} onPress={() => router.push('/notifications')} />
+      {sub ? <View style={{ marginTop: 2 }}>{sub}</View> : null}
     </View>
   );
+}
+
+/** The two global actions, for screens that want them. */
+export function SearchBtn() {
+  return <IconBtn name="search" label="さがす" onPress={() => router.push('/search')} />;
+}
+export function BellBtn() {
+  const unread = useUnread();
+  return <IconBtn name="bell" label="お知らせ" dot={unread > 0} onPress={() => router.push('/notifications')} />;
 }
 
 /** Pushed-screen header: back, centered title, optional right action. */

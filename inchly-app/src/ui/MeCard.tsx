@@ -4,15 +4,18 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSpr
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { grass } from '@/data';
-import { haptic, Txt } from '@/ui/base';
+import { Avatar, haptic, Txt } from '@/ui/base';
+import { Wordmark } from '@/ui/Brand';
+import { Rolling } from '@/ui/Rolling';
 
 const CARD_GRASS = ['rgba(255,255,255,0.1)', '#1B5E3A', '#258A50', '#36B86B', '#6DE09E'];
 
-// The holo study card. The sheen drifts on its own; drag a finger across the
-// card and the sheen follows it while the card tilts slightly toward the touch.
-export function HoloCard({ name }: { name: string }) {
+// The study card — the page's centerpiece, sized like a student ID. The sheen
+// drifts on its own; drag a finger across it and the sheen follows while the card tilts.
+const CARD_H = 212;
+export function HoloCard({ name, handle, goal, stats }: { name: string; handle: string; goal: string; stats: { v: string; from: string; label: string }[] }) {
   const [w, setW] = useState(0);
-  const cells = useMemo(() => grass(4, 5, 3), []);
+  const cells = useMemo(() => grass(12, 5, 3), []);
   const sheen = useSharedValue(-1); // -1..1 across the card
   const rx = useSharedValue(0);
   const ry = useSharedValue(0);
@@ -27,7 +30,7 @@ export function HoloCard({ name }: { name: string }) {
     const follow = (x: number, y: number) => {
       if (!cw.value) return;
       const nx = Math.max(-1, Math.min(1, (x / cw.value) * 2 - 1));
-      const ny = Math.max(-1, Math.min(1, (y / 92) * 2 - 1));
+      const ny = Math.max(-1, Math.min(1, (y / CARD_H) * 2 - 1));
       sheen.value = withTiming(nx, { duration: 90 });
       ry.value = withTiming(nx * 7, { duration: 90 });
       rx.value = withTiming(-ny * 7, { duration: 90 });
@@ -62,33 +65,51 @@ export function HoloCard({ name }: { name: string }) {
   const sheenA = useAnimatedStyle(() => ({ transform: [{ translateX: sheen.value * w * 0.75 }] }));
 
   return (
-    <Animated.View style={[{ marginHorizontal: 20, marginTop: 18 }, cardA]}>
+    <Animated.View style={[{ marginHorizontal: 16, marginTop: 6 }, cardA]}>
       <View onLayout={(e) => setW(e.nativeEvent.layout.width)} {...pan.panHandlers}
-        accessibilityLabel={`${name}のカード。指でなぞると光が動きます`}
-        style={{ height: 92, borderRadius: 16, backgroundColor: '#17181A', overflow: 'hidden', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>
+        accessibilityLabel={`${name}の勉強カード。指でなぞると光が動きます`}
+        style={{ height: CARD_H, borderRadius: 22, backgroundColor: '#141716', overflow: 'hidden', padding: 18, justifyContent: 'space-between' }}>
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: 0, bottom: 0, left: -w * 0.25, width: w * 1.5 }, sheenA]}>
           {w ? (
-            <Svg width={w * 1.5} height={92}>
+            <Svg width={w * 1.5} height={CARD_H}>
               <Defs>
-                <LinearGradient id="holo" x1="0" y1="0" x2="1" y2="0.35">
+                <LinearGradient id="holo" x1="0" y1="0" x2="1" y2="0.45">
                   <Stop offset="0.3" stopColor="#78FFB4" stopOpacity="0" />
-                  <Stop offset="0.44" stopColor="#78FFB4" stopOpacity="0.22" />
-                  <Stop offset="0.52" stopColor="#8CB4FF" stopOpacity="0.24" />
+                  <Stop offset="0.44" stopColor="#78FFB4" stopOpacity="0.2" />
+                  <Stop offset="0.52" stopColor="#8CB4FF" stopOpacity="0.22" />
                   <Stop offset="0.6" stopColor="#D49CFF" stopOpacity="0.12" />
                   <Stop offset="0.7" stopColor="#8CB4FF" stopOpacity="0" />
                 </LinearGradient>
               </Defs>
-              <Rect width={w * 1.5} height={92} fill="url(#holo)" />
+              <Rect width={w * 1.5} height={CARD_H} fill="url(#holo)" />
             </Svg>
           ) : null}
         </Animated.View>
-        <View pointerEvents="none">
-          <Txt size={15} w="700" color="#fff">{name}のカード</Txt>
-          <Txt size={12} color="rgba(255,255,255,0.6)">ホロ加工 · Plus 会員</Txt>
+
+        <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Wordmark size={15} color="#F2F3F1" />
+          <Txt num size={11} color="rgba(255,255,255,0.5)">No. 0412 · PLUS</Txt>
         </View>
-        <View pointerEvents="none" style={{ flexDirection: 'row', flexWrap: 'wrap', width: 14 * 7 + 13 * 2, gap: 2 }}>
-          {cells.map((l, i) => (
-            <View key={i} style={{ width: 7, height: 7, borderRadius: 1.5, backgroundColor: CARD_GRASS[l] }} />
+
+        <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Avatar name={name} color="#6E56CF" size={46} ring="rgba(255,255,255,0.18)" />
+          <View style={{ flex: 1 }}>
+            <Txt size={20} w="700" lh={26} color="#fff">{name}</Txt>
+            <Txt size={12} color="rgba(255,255,255,0.6)" numberOfLines={1}>{`@${handle} · ${goal}`}</Txt>
+          </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 12 * 6 + 11 * 2, gap: 2, transform: [{ rotate: '0deg' }] }}>
+            {cells.slice(-48).map((l, i) => (
+              <View key={i} style={{ width: 6, height: 6, borderRadius: 1.5, backgroundColor: CARD_GRASS[l] }} />
+            ))}
+          </View>
+        </View>
+
+        <View pointerEvents="none" style={{ flexDirection: 'row', gap: 22 }}>
+          {stats.map((x) => (
+            <View key={x.label}>
+              <Rolling value={x.v} size={22} weight="600" color="#fff" />
+              <Txt size={11} color="rgba(255,255,255,0.55)">{x.label}</Txt>
+            </View>
           ))}
         </View>
       </View>

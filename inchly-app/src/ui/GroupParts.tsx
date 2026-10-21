@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
 import { PERSON_COLOR } from '@/data';
+import { AVATAR, PHOTO } from '@/photos';
+import { Avatar } from '@/ui/base';
 import { ease, useT } from '@/theme';
 
 // Pieces shared by the community, group and plan-event screens.
@@ -15,16 +17,31 @@ export const takePendingGroupTab = () => { const t = pendingTab; pendingTab = nu
 export const colorOf = (n: string) => PERSON_COLOR[n] ?? '#8C8F95';
 
 /** Four-dot colour mark used as a group's icon. */
-export function GroupMark({ colors, size = 40 }: { colors: string[]; size?: number }) {
+export function GroupMark({ colors, size = 40, members, icon }: { colors: string[]; size?: number; members?: string[]; icon?: keyof typeof PHOTO }) {
   const t = useT();
+  const r = size * 0.28;
+  // a cover photo, or the first four members' icons, like a real group chat
+  if (icon) return <Image source={PHOTO[icon]} style={{ width: size, height: size, borderRadius: r, flexShrink: 0, backgroundColor: t.sunken }} resizeMode="cover" />;
+  if (members?.length) {
+    const half = size / 2;
+    return (
+      <View style={{ width: size, height: size, borderRadius: r, overflow: 'hidden', flexDirection: 'row', flexWrap: 'wrap', flexShrink: 0, backgroundColor: t.sunken }}>
+        {members.slice(0, 4).map((n) => (
+          <View key={n} style={{ width: half, height: half }}>
+            {AVATAR[n] ? <Image source={AVATAR[n]} style={{ width: half, height: half }} resizeMode="cover" /> : null}
+          </View>
+        ))}
+      </View>
+    );
+  }
   const d = size * 0.3;
   const cs = colors.slice(0, 4);
   // Two explicit rows: a wrapped flex row can drop to one column when it rounds.
   return (
-    <View style={{ width: size, height: size, flexShrink: 0, borderRadius: size * 0.28, backgroundColor: t.surface, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line,
+    <View style={{ width: size, height: size, flexShrink: 0, borderRadius: r, backgroundColor: t.surface, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line,
       alignItems: 'center', justifyContent: 'center', gap: size * 0.07 }}>
-      {[cs.slice(0, 2), cs.slice(2, 4)].map((row, r) => (
-        <View key={r} style={{ flexDirection: 'row', gap: size * 0.07 }}>
+      {[cs.slice(0, 2), cs.slice(2, 4)].map((row, k) => (
+        <View key={k} style={{ flexDirection: 'row', gap: size * 0.07 }}>
           {row.map((c, i) => <View key={i} style={{ width: d, height: d, borderRadius: d / 2, backgroundColor: c }} />)}
         </View>
       ))}
@@ -61,8 +78,8 @@ export function PeoplePill({ names, ring }: { names: string[]; ring: string }) {
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 30, paddingLeft: 3, paddingRight: 10, borderRadius: 15, backgroundColor: t.sunken }}>
       <View style={{ flexDirection: 'row' }}>
         {names.slice(0, 4).map((n, i) => (
-          <View key={n + i} style={{ marginLeft: i ? -7 : 0, width: 24, height: 24, borderRadius: 12, backgroundColor: colorOf(n), borderWidth: 2, borderColor: ring, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>{n[0]}</Text>
+          <View key={n + i} style={{ marginLeft: i ? -7 : 0, zIndex: 4 - i }}>
+            <Avatar name={n === 'あなた' ? 'はる' : n} color={colorOf(n)} size={24} ring={ring} />
           </View>
         ))}
       </View>

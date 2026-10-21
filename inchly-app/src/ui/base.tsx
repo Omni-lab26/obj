@@ -1,8 +1,9 @@
 import * as Haptics from 'expo-haptics';
 import { ReactNode } from 'react';
-import { ActivityIndicator, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, Image, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
+import { AVATAR } from '../photos';
 import { ease, font, Theme, useT } from '../theme';
 import { Icon, IconName } from './Icon';
 
@@ -100,10 +101,19 @@ export function IconBtn({ name, onPress, color, dot, label, size = 22 }: { name:
 }
 
 // ---------- avatar ----------
+// The person's photo when they have set one; otherwise the plain "not set" look
+// every real app has: their first character on a quiet tint.
 export function Avatar({ name, color, size = 32, ring }: { name: string; color: string; size?: number; ring?: string }) {
+  const t = useT();
+  const photo = AVATAR[name];
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color, alignItems: 'center', justifyContent: 'center', borderWidth: ring ? 2 : 0, borderColor: ring }}>
-      <Text style={{ color: '#fff', fontSize: size * 0.42, fontWeight: '700' }}>{name[0]}</Text>
+    <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', borderWidth: ring ? 2 : 0, borderColor: ring,
+      backgroundColor: photo ? t.sunken : t.dark ? '#2A2C2F' : '#E4E5E1', alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={name}>
+      {photo ? (
+        <Image source={photo} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+      ) : (
+        <Text style={{ color: color, fontSize: size * 0.42, fontWeight: '600' }}>{[...name][0]}</Text>
+      )}
     </View>
   );
 }

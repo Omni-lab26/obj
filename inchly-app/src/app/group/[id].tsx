@@ -1,10 +1,11 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ComponentRef, useCallback, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, LinearTransition, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChatMsg, GEvent, Group, hms, subj } from '@/data';
+import { PHOTO } from '@/photos';
 import { elapsedOf, getState, startStudy, updateGroup, useStore } from '@/store';
 import { font, useT, noOutline } from '@/theme';
 import { Avatar, AvatarStack, Btn, Empty, haptic, IconBtn, Press, Txt } from '@/ui/base';
@@ -304,42 +305,36 @@ function EventRow({ e, onToggle }: { e: GEvent; onToggle: () => void }) {
 }
 
 // ---------- shared ----------
+// The one place pictures live: a grid of what people shared, photo first.
+const SHARED_PHOTO = [PHOTO.noteDesk, PHOTO.noteVideo, PHOTO.noteBook];
 function Shared({ g }: { g: Group }) {
   const t = useT();
   const [saved, setSaved] = useState<string[]>([]);
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
-      <Txt size={12.5} tone="ink3" style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6 }}>画像（ノートの写真など）はここからだけ共有できます</Txt>
-      {g.shared.length ? g.shared.map(([kind, title, meta]) => {
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 14, paddingBottom: 40, flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+      {g.shared.length ? g.shared.map(([kind, title, meta], i) => {
         const on = saved.includes(title);
         return (
-          <View key={title} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: t.line }}>
-            <Thumb video={kind === 'video'} />
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Txt size={14.5} w="500" numberOfLines={2} lh={21}>{title}</Txt>
-              <Txt size={12} tone="ink3">{meta}</Txt>
+          <View key={title} style={{ width: '47.5%' }}>
+            <View>
+              <Image source={SHARED_PHOTO[i % SHARED_PHOTO.length]} style={{ width: '100%', aspectRatio: 1, borderRadius: 14, backgroundColor: t.sunken }} resizeMode="cover" />
+              {kind === 'video' ? (
+                <View style={{ position: 'absolute', left: 8, bottom: 8, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.55)' }}>
+                  <Icon name="play" size={11} color="#fff" />
+                  <Txt num size={11.5} w="600" color="#fff">15:02</Txt>
+                </View>
+              ) : null}
+              <Press onPress={() => { if (on) { setSaved(saved.filter((x) => x !== title)); return; } setSaved([...saved, title]); haptic.success(); toast('保存しました'); }}
+                scale={0.86} haptics={false} accessibilityLabel={on ? '保存済み' : '保存'}
+                style={{ position: 'absolute', right: 8, top: 8, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.green : 'rgba(0,0,0,0.45)' }}>
+                <Icon name={on ? 'check' : 'plus'} size={15} color="#fff" width={2.4} />
+              </Press>
             </View>
-            <Btn small kind={on ? 'ghost' : 'quiet'} label={on ? '保存済み' : '保存'} done={on}
-              onPress={() => { if (on) { setSaved(saved.filter((x) => x !== title)); return; } setSaved([...saved, title]); haptic.success(); toast('保存しました', 'マイページの「保存」から見られます'); }} />
+            <Txt size={13.5} w="600" numberOfLines={2} lh={19} style={{ marginTop: 8 }}>{title}</Txt>
+            <Txt size={11.5} tone="ink3">{meta}</Txt>
           </View>
         );
-      }) : <Empty title="まだ何も共有されていません" sub="ノートの写真や役に立った動画を共有できます" />}
+      }) : <View style={{ width: '100%' }}><Empty title="まだ何も共有されていません" sub="ノートの写真や、役に立った動画をここに" /></View>}
     </ScrollView>
-  );
-}
-
-function Thumb({ video }: { video: boolean }) {
-  const t = useT();
-  if (video) {
-    return (
-      <View style={{ width: 52, height: 52, borderRadius: 10, backgroundColor: t.dark ? t.sunken : t.ink, alignItems: 'center', justifyContent: 'center' }}>
-        <Icon name="play" size={20} color={t.dark ? t.ink : t.onInk} />
-      </View>
-    );
-  }
-  return (
-    <View style={{ width: 52, height: 52, borderRadius: 10, backgroundColor: t.surface, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line2, paddingHorizontal: 9, paddingTop: 11, gap: 6 }}>
-      {[1, 0.8, 1, 0.55].map((w, k) => <View key={k} style={{ height: 2, width: `${w * 100}%`, borderRadius: 1, backgroundColor: t.line2 }} />)}
-    </View>
   );
 }

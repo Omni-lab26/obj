@@ -21,6 +21,8 @@ export type State = {
   notifGone: number[];
   groups: Group[];
   joinedFeed: string[];
+  showLive: boolean; // appear in みんな while studying
+  showRank: boolean; // appear in rankings
 };
 
 let state: State = {
@@ -45,6 +47,8 @@ let state: State = {
   notifGone: [],
   groups: GROUPS,
   joinedFeed: [],
+  showLive: true,
+  showRank: true,
 };
 
 const listeners = new Set<() => void>();

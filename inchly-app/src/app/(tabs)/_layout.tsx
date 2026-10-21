@@ -2,11 +2,10 @@ import { router } from 'expo-router';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { StyleSheet, View } from 'react-native';
 
-import { useStore } from '@/store';
+import { elapsedOf, useNow, useStore } from '@/store';
 import { useT } from '@/theme';
 import { Press, Txt } from '@/ui/base';
 import { Icon, IconName } from '@/ui/Icon';
-import { MiniPlayer } from '@/ui/MiniPlayer';
 
 const TABS: Record<string, { label: string; icon: IconName }> = {
   index: { label: 'ホーム', icon: 'home' },
@@ -17,7 +16,10 @@ const TABS: Record<string, { label: string; icon: IconName }> = {
 
 function TabBar({ state, navigation, insets }: BottomTabBarProps) {
   const t = useT();
-  const running = useStore((s) => s.running);
+  useNow();
+  const st = useStore((s) => s);
+  const running = st.running, paused = st.paused;
+  const mins = Math.floor(elapsedOf(st) / 60);
   const routes = state.routes;
   const btn = (i: number) => {
     const r = routes[i];
@@ -37,14 +39,20 @@ function TabBar({ state, navigation, insets }: BottomTabBarProps) {
   };
   return (
     <View style={{ backgroundColor: t.surface, borderTopWidth: StyleSheet.hairlineWidth * 2, borderTopColor: t.line }}>
-      <MiniPlayer />
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingTop: 8, paddingBottom: Math.max(insets.bottom, 10), paddingHorizontal: 6 }}>
         {btn(0)}
         {btn(1)}
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Press onPress={() => router.push('/timer')} scale={0.9} accessibilityLabel={running ? '勉強中の画面を開く' : '勉強を始める'}
-            style={{ width: 54, height: 38, borderRadius: 13, backgroundColor: running ? t.ink : t.green, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name={running ? 'stop' : 'play'} size={20} color={running ? t.onInk : '#fff'} />
+          <Press onPress={() => router.push('/timer')} scale={0.9} accessibilityLabel={running ? `勉強中 ${mins}分。タイマーを開く` : '勉強を始める'}
+            style={{ height: 38, minWidth: 56, paddingHorizontal: running ? 12 : 0, borderRadius: 19, backgroundColor: running ? t.ink : t.green, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            {running ? (
+              <>
+                <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: paused ? t.amber : '#2EC471' }} />
+                <Txt num size={14} w="600" color={t.onInk}>{mins}<Txt size={11} color={t.onInk}>分</Txt></Txt>
+              </>
+            ) : (
+              <Icon name="play" size={19} color="#fff" />
+            )}
           </Press>
         </View>
         {btn(2)}

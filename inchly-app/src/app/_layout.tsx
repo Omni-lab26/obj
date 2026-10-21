@@ -14,7 +14,7 @@ import { toast, ToastHost } from '@/ui/Toast';
 SplashScreen.preventAutoHideAsync();
 
 // Simulated "someone started studying" pushes, so the live layer is visible in the mock.
-const FEED: [string, string][] = [['かいと', '物理'], ['れん', '世界史'], ['ひなた', '数学']];
+const FEED: [string, string][] = [['kaito', '物理'], ['れん', '世界史'], ['ひなた', '数学']];
 function useFeed() {
   useEffect(() => {
     let i = 0;

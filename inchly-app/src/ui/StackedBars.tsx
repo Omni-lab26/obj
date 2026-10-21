@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { pad, rng, SUBJ, TODAY } from '../data';
+import { dayLog, pad, SUBJ, TODAY } from '../data';
 import { ease, useT } from '../theme';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
@@ -24,16 +24,15 @@ type Mode = 'day' | 'week';
 type Col = { label: string; parts: number[]; total: number; short: number };
 
 function build(mode: Mode): Col[] {
-  const r = rng(mode === 'day' ? 11 : 29);
   const goal = mode === 'day' ? 180 : 1260;
   return Array.from({ length: N }, (_, i) => {
     const back = N - 1 - i;
+    const span = mode === 'day' ? 1 : 7;
+    const days = Array.from({ length: span }, (_, k) => dayLog(back * span + k));
+    const parts = SUBJ.map((_, k) => days.reduce((a, d) => a + d.parts[k], 0));
+    const total = parts.reduce((a, b) => a + b, 0);
     const d = new Date(TODAY);
-    d.setDate(TODAY.getDate() - back * (mode === 'day' ? 1 : 7));
-    const total = Math.round(mode === 'day' ? 70 + r() * 250 : 820 + r() * 820);
-    const w = SUBJ.map(() => 0.35 + r());
-    const sum = w.reduce((a, b) => a + b, 0);
-    const parts = w.map((x) => Math.round((x / sum) * total));
+    d.setDate(TODAY.getDate() - back * span);
     return { label: `${d.getMonth() + 1}月${d.getDate()}日`, parts, total, short: Math.max(0, goal - total) };
   });
 }

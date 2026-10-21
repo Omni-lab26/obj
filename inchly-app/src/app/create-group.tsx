@@ -19,7 +19,7 @@ const THEMES: { v: string; icon: IconName }[] = [
 ];
 type Join = '招待制' | '公開';
 
-const nameError = (x: string) => (!x.trim() ? 'グループ名を入力してください' : x.trim().length < 2 ? '2文字以上で入力してください' : undefined);
+const nameError = (x: string) => (!x.trim() ? '名前がまだです' : x.trim().length < 2 ? '2文字以上にしてね' : undefined);
 
 export default function CreateGroup() {
   const t = useT();
@@ -69,7 +69,7 @@ export default function CreateGroup() {
             <Field label="どんな人と、何をがんばる？（任意）" value={desc} onChangeText={setDesc} multiline max={120} />
           </View>
           <View>
-            <Label sub="似たテーマのグループを探している人に表示されます">テーマ</Label>
+            <Label>テーマ</Label>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {THEMES.map((x) => (
                 <ThemeTile key={x.v} label={x.v} icon={x.icon} on={theme === x.v} dim={picked && theme !== x.v}
@@ -80,12 +80,12 @@ export default function CreateGroup() {
           <View>
             <Label>参加のしかた</Label>
             <RadioCards value={join} onChange={setJoin} options={[
-              { v: '招待制', title: '招待制', sub: '招待リンクを受け取った人だけが参加できます' },
-              { v: '公開', title: '公開', sub: '検索やおすすめに表示され、誰でも参加できます' },
+              { v: '招待制', title: '招待制', sub: 'リンクを知っている人だけ' },
+              { v: '公開', title: '公開', sub: '検索に出て、誰でも入れる' },
             ]} />
           </View>
           <View>
-            <Label sub="押し続けると速く変わります。数字を上下にドラッグしても変えられます">定員</Label>
+            <Label>定員</Label>
             <Stepper value={cap} min={2} max={50} onChange={setCap} unit="人" label="定員" />
           </View>
         </ScrollView>

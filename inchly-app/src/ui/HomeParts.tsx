@@ -6,7 +6,7 @@ import Svg, { Defs, Line, Pattern, Rect } from 'react-native-svg';
 import { subj } from '@/data';
 import { Todo } from '@/store';
 import { ease, useT } from '@/theme';
-import { dot, haptic, Txt } from '@/ui/base';
+import { haptic, Txt } from '@/ui/base';
 import { Icon } from '@/ui/Icon';
 
 // Checklist row: the box fills, the tick draws in, and a line strikes across
@@ -33,7 +33,6 @@ export function TodoRow({ todo, onToggle, first }: { todo: Todo; onToggle: () =>
         </View>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-        {dot(sj.c)}
         <Txt size={12} tone="ink3">{sj.name}</Txt>
       </View>
     </Pressable>
