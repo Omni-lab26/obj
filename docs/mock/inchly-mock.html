@@ -1,0 +1,905 @@
+<title>Inchly</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=IBM+Plex+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: an iPhone-sized app shell floating on a pastel aurora; frosted-glass cards, mono labels, big numerals. */
+:root{
+  --bg:#EFE9F1;
+  --a1:#F7DFD0; --a2:#DCD9F2; --a3:#D7E6F6; --a4:#F4DCE2;
+  --ink:#1E1A33; --ink-2:#5F5A78; --ink-3:#9A97A8;
+  --glass:rgba(255,255,255,.52); --glass-strong:rgba(255,255,255,.78);
+  --line:rgba(255,255,255,.85); --hi:rgba(255,255,255,.9); --hair:rgba(30,26,51,.09);
+  --chip:rgba(255,255,255,.7);
+  --pos:#12A06A; --pos-bg:rgba(18,160,106,.12);
+  --neg:#E5484D; --neg-bg:rgba(229,72,77,.12);
+  --solid:#1E1A33; --on-solid:#FFFFFF;
+  --g0:rgba(30,26,51,.07); --g1:#9BE9A8; --g2:#40C463; --g3:#30A14E; --g4:#216E39;
+  --frame:#1E1A33; --shadow:0 12px 32px rgba(70,50,110,.10);
+  --knob:#4F7DF3;
+  --f-display:"Outfit","IBM Plex Sans JP","Hiragino Sans",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans JP","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141127;
+  --a1:#3A2944; --a2:#252249; --a3:#1B2F4D; --a4:#3B2235;
+  --ink:#EEEAF8; --ink-2:#B9B4D0; --ink-3:#8C87A5;
+  --glass:rgba(38,34,64,.55); --glass-strong:rgba(42,38,70,.86);
+  --line:rgba(255,255,255,.10); --hi:rgba(255,255,255,.07); --hair:rgba(255,255,255,.08);
+  --chip:rgba(255,255,255,.07);
+  --pos:#3DD68C; --pos-bg:rgba(61,214,140,.14);
+  --neg:#FF6B70; --neg-bg:rgba(255,107,112,.14);
+  --solid:#EEEAF8; --on-solid:#1E1A33;
+  --g0:rgba(255,255,255,.07); --g1:#0E4429; --g2:#006D32; --g3:#26A641; --g4:#39D353;
+  --frame:#07060D; --shadow:0 12px 32px rgba(0,0,0,.35);
+  --knob:#7FA2FF;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#141127;
+  --a1:#3A2944; --a2:#252249; --a3:#1B2F4D; --a4:#3B2235;
+  --ink:#EEEAF8; --ink-2:#B9B4D0; --ink-3:#8C87A5;
+  --glass:rgba(38,34,64,.55); --glass-strong:rgba(42,38,70,.86);
+  --line:rgba(255,255,255,.10); --hi:rgba(255,255,255,.07); --hair:rgba(255,255,255,.08);
+  --chip:rgba(255,255,255,.07);
+  --pos:#3DD68C; --pos-bg:rgba(61,214,140,.14);
+  --neg:#FF6B70; --neg-bg:rgba(255,107,112,.14);
+  --solid:#EEEAF8; --on-solid:#1E1A33;
+  --g0:rgba(255,255,255,.07); --g1:#0E4429; --g2:#006D32; --g3:#26A641; --g4:#39D353;
+  --frame:#07060D; --shadow:0 12px 32px rgba(0,0,0,.35);
+  --knob:#7FA2FF;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--knob);outline-offset:2px;border-radius:12px}
+h1,h2,h3,p{margin:0}
+.num,.mono,.label,.big,.mid{font-variant-numeric:tabular-nums}
+
+.aurora{
+  background:
+    radial-gradient(60% 40% at 8% 6%, var(--a1) 0%, transparent 70%),
+    radial-gradient(55% 40% at 95% 18%, var(--a3) 0%, transparent 70%),
+    radial-gradient(60% 45% at 85% 78%, var(--a4) 0%, transparent 70%),
+    radial-gradient(65% 45% at 5% 92%, var(--a2) 0%, transparent 72%),
+    var(--bg);
+}
+.grain::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>")}
+
+/* ---------- stage ---------- */
+.stage{position:relative;height:100%;display:flex;align-items:center;justify-content:center;gap:56px;
+  padding-block:20px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.side{width:250px;display:flex;flex-direction:column;gap:22px}
+.side .brand{display:flex;align-items:center;gap:12px}
+.side h1{font:800 30px/1 var(--f-display);letter-spacing:-.02em}
+.side p{color:var(--ink-2);font-size:13px}
+.side nav{display:flex;flex-direction:column;gap:4px}
+.side nav button{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:12px;text-align:left;color:var(--ink-2)}
+.side nav button span:last-child{font:500 10.5px var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
+.side nav button[aria-current="true"]{background:var(--glass);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.side .note{font:400 11px/1.6 var(--f-mono);color:var(--ink-3)}
+
+.device{position:relative;width:390px;height:min(844px,100%);border-radius:52px;padding:11px;background:var(--frame);box-shadow:0 30px 80px rgba(40,25,80,.28),0 0 0 1px rgba(255,255,255,.06) inset;flex:none}
+.screen{position:absolute;inset:11px;border-radius:42px;overflow:hidden;isolation:isolate}
+.statusbar{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;z-index:20;font:600 15px var(--f-display);pointer-events:none}
+.statusbar .island{position:absolute;left:50%;top:11px;width:120px;height:34px;margin-left:-60px;border-radius:20px;background:#000}
+.statusbar .icons{display:flex;gap:6px;align-items:center}
+.statusbar .icons i{display:block;background:currentColor;border-radius:2px}
+
+/* ---------- views ---------- */
+.view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:58px 18px 170px;display:flex;flex-direction:column;gap:14px;scrollbar-width:none}
+.view::-webkit-scrollbar{display:none}
+
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);
+  border:1px solid var(--line);box-shadow:var(--shadow),inset 0 1px 0 var(--hi)}
+.card{border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.row{display:flex;align-items:center;gap:8px;min-width:0}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.label{font:500 10.5px/1.2 var(--f-mono);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+.mono{font-family:var(--f-mono)}
+.dim{color:var(--ink-3)}
+.dim2{color:var(--ink-2)}
+.big{font:800 58px/.95 var(--f-display);letter-spacing:-.03em}
+.big .soft{color:var(--ink-3);font-weight:600;font-size:.6em;letter-spacing:-.01em}
+.mid{font:800 30px/1 var(--f-display);letter-spacing:-.02em}
+.mid small{font-size:.55em;color:var(--ink-3);font-weight:600;margin-left:2px}
+h2.sec{font:700 15px var(--f-body)}
+.sechead{display:flex;align-items:baseline;justify-content:space-between;padding:6px 2px 0}
+.sechead button{font:500 11px var(--f-mono);letter-spacing:.08em;color:var(--ink-3)}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;padding:4px 2px 2px}
+.pagehead h1{font:800 34px/1 var(--f-display);letter-spacing:-.02em}
+
+.chip{display:inline-flex;align-items:center;gap:5px;font:500 11px/1 var(--f-mono);letter-spacing:.04em;padding:6px 10px;border-radius:999px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);white-space:nowrap;color:var(--ink-2)}
+.chip.pos{background:var(--pos-bg);color:var(--pos);box-shadow:none}
+.chip.neg{background:var(--neg-bg);color:var(--neg);box-shadow:none}
+.chip.solid{background:var(--solid);color:var(--on-solid);box-shadow:none}
+.chip.pr{background:transparent;box-shadow:inset 0 0 0 1px var(--ink-3);color:var(--ink-3);padding:3px 6px;font-size:9.5px}
+.chip svg{width:12px;height:12px}
+
+.seg{display:flex;padding:4px;border-radius:999px;gap:2px}
+.seg button{flex:1;padding:8px 6px;border-radius:999px;font:500 12.5px var(--f-body);color:var(--ink-2);white-space:nowrap}
+.seg button[aria-selected="true"]{background:var(--glass-strong);color:var(--ink);box-shadow:0 2px 8px rgba(40,30,80,.08),inset 0 0 0 1px var(--line)}
+
+.hscroll{display:flex;gap:10px;overflow-x:auto;margin:0 -18px;padding:2px 18px 6px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.hscroll>*{scroll-snap-align:start;flex:none}
+
+/* jackets: per-subject cover art (fixed art colors, same in both themes) */
+.jk{position:relative;aspect-ratio:1;border-radius:12px;background:var(--c);overflow:hidden;color:#fff;flex:none;box-shadow:0 6px 16px rgba(20,10,40,.18)}
+.jk b{position:absolute;left:9%;bottom:7%;font:800 var(--fs,28px)/1 var(--f-display);letter-spacing:-.03em}
+.jk[data-art="rings"]::before{content:"";position:absolute;inset:0;background:repeating-radial-gradient(circle at 100% 0, transparent 0 7%, rgba(255,255,255,.28) 7% 8%)}
+.jk[data-art="dots"]::before{content:"";position:absolute;inset:0;background:radial-gradient(rgba(255,255,255,.35) 18%, transparent 20%) 0 0/16% 16%;mask:linear-gradient(200deg,#000 25%,transparent 70%);-webkit-mask:linear-gradient(200deg,#000 25%,transparent 70%)}
+.jk[data-art="stripes"]::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg, rgba(255,255,255,.26) 0 3%, transparent 3% 7%);mask:linear-gradient(0deg,transparent 30%,#000 75%);-webkit-mask:linear-gradient(0deg,transparent 30%,#000 75%)}
+.jk[data-art="sun"]::before{content:"";position:absolute;width:70%;aspect-ratio:1;right:-12%;top:-12%;border-radius:50%;background:rgba(255,255,255,.25)}
+
+/* app header */
+.apphead{display:flex;align-items:center;gap:11px;padding:2px 2px 4px}
+.appicon{width:46px;height:46px;border-radius:13px;background:linear-gradient(150deg,#2A2550,#151229);display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:9px;box-shadow:0 6px 16px rgba(30,20,60,.25);flex:none}
+.appicon i{border-radius:2.5px;background:#40C463}
+.appicon i:nth-child(2),.appicon i:nth-child(4){background:#216E39}
+.appicon i:nth-child(6),.appicon i:nth-child(8){background:#9BE9A8}
+.appicon i:nth-child(1),.appicon i:nth-child(9){background:#30A14E}
+.appname{font:800 26px/1 var(--f-display);letter-spacing:-.02em}
+.livepill{margin-left:auto;display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:999px;font:500 12px var(--f-mono)}
+.livepill .dot,.livedot{width:8px;height:8px;border-radius:50%;background:#3CC48A;box-shadow:0 0 0 4px rgba(60,196,138,.18);animation:pulse 2s infinite}
+.livepill b{font-weight:700}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(60,196,138,0)}}
+
+/* hero */
+.hero{display:flex;flex-direction:column;gap:10px;padding:8px 2px 2px}
+.delta{font:600 13px var(--f-mono)}
+.delta.pos{color:var(--pos)}
+.goal{position:relative;height:18px}
+.goal .track{position:absolute;left:0;right:0;top:8px;height:2px;border-radius:2px;background:var(--hair)}
+.goal .fill{position:absolute;left:0;top:8px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--knob))}
+.goal .knob{position:absolute;top:2px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--knob);box-shadow:0 0 0 4px rgba(79,125,243,.18),0 0 12px rgba(79,125,243,.6);border:3px solid var(--glass-strong)}
+.range{display:flex;align-items:center;gap:10px}
+.range .rail{flex:1;display:flex;justify-content:space-between;position:relative}
+.range .rail::before{content:"";position:absolute;left:10px;right:10px;top:50%;height:1px;background:var(--hair)}
+.range .rail button{position:relative;font:500 11px var(--f-mono);padding:6px 10px;border-radius:999px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink-2)}
+.range .rail button[aria-selected="true"]{background:var(--solid);color:var(--on-solid);box-shadow:none}
+
+/* heatmap */
+.heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:3px}
+.heat i,.mini i,.week i{display:block;aspect-ratio:1;border-radius:3px;background:var(--g0)}
+.l1{background:var(--g1)!important}.l2{background:var(--g2)!important}.l3{background:var(--g3)!important}.l4{background:var(--g4)!important}
+.heat i.today{outline:2px solid var(--pos);outline-offset:1px}
+.legend{display:flex;align-items:center;gap:3px;font:400 10.5px var(--f-mono);color:var(--ink-3)}
+.legend i{width:10px;height:10px;border-radius:2.5px;display:inline-block;background:var(--g0)}
+.mini{display:grid;grid-template-columns:repeat(7,9px);grid-auto-rows:9px;gap:2.5px}
+.mini i{border-radius:2px}
+
+/* work cards */
+.work{width:240px;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.work .top{display:flex;gap:11px;align-items:center}
+.work h3{font:700 15px var(--f-body)}
+.work .issue{font-size:12.5px;color:var(--ink-2);line-height:1.45;min-height:36px}
+.bar{height:5px;border-radius:5px;background:var(--hair);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px;background:var(--pos)}
+.startmini{margin-left:auto;width:34px;height:34px;border-radius:50%;background:var(--solid);color:var(--on-solid);display:grid;place-items:center;flex:none}
+.startmini svg{width:14px;height:14px}
+
+/* d-day */
+.dday{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dday>div{display:flex;flex-direction:column;gap:6px}
+.segbar{display:flex;gap:4px}
+.segbar i{flex:1;height:7px;border-radius:7px;background:var(--hair)}
+.segbar i.on{background:var(--solid)}
+.segbar i.hatch{background:repeating-linear-gradient(135deg,var(--hair) 0 3px,transparent 3px 6px)}
+
+.next{display:flex;gap:12px;align-items:center}
+.next .when{font:700 13px var(--f-mono);padding:8px 10px;border-radius:12px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);text-align:center;line-height:1.25}
+
+.break{display:flex;gap:12px;align-items:center}
+.break .art{width:64px;height:64px;border-radius:16px;flex:none;background:radial-gradient(circle at 30% 35%,#c9c4ff 0 2%,transparent 3%),radial-gradient(circle at 72% 62%,#fff 0 1.5%,transparent 2.5%),radial-gradient(circle at 60% 25%,#ffd6f0 0 1.5%,transparent 2.5%),radial-gradient(60% 60% at 45% 55%,#6b4fd8 0%,#2a1f63 55%,#0d0a26 100%)}
+
+/* mini player */
+.miniplayer{position:absolute;left:14px;right:14px;bottom:98px;z-index:15;display:flex;align-items:center;gap:11px;padding:9px 10px 9px 9px;border-radius:20px;background:var(--glass-strong)}
+.miniplayer .jk{width:42px;--fs:15px;border-radius:10px}
+.miniplayer .t{flex:1;min-width:0;text-align:left}
+.miniplayer .t>span{display:block}
+.miniplayer .ttl{font:700 13.5px var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.miniplayer .clock{font:500 12px var(--f-mono);color:var(--ink-3)}
+.roundbtn{width:38px;height:38px;border-radius:50%;background:var(--solid);color:var(--on-solid);display:grid;place-items:center;flex:none}
+.roundbtn svg{width:15px;height:15px}
+
+/* tab bar */
+.tabbar{position:absolute;left:14px;right:86px;bottom:20px;height:66px;z-index:16;border-radius:33px;display:grid;grid-template-columns:repeat(5,1fr);align-items:center;padding:0 6px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font:500 9.5px var(--f-body);color:var(--ink-3);padding:6px 0;border-radius:24px}
+.tab svg{width:21px;height:21px}
+.tab[aria-current="true"]{color:var(--ink)}
+.tab[aria-current="true"] .ic{background:var(--glass-strong);box-shadow:inset 0 0 0 1px var(--line)}
+.tab .ic{width:40px;height:28px;border-radius:14px;display:grid;place-items:center}
+.tab.start .ic{width:48px;height:48px;border-radius:50%;background:var(--solid);color:var(--on-solid);box-shadow:0 6px 16px rgba(30,20,60,.3)}
+.tab.start svg{width:18px;height:18px}
+.tab.start span:not(.ic){display:none}
+.searchbtn{position:absolute;right:14px;bottom:20px;width:66px;height:66px;border-radius:50%;z-index:16;display:grid;place-items:center;color:var(--ink-2)}
+.searchbtn svg{width:22px;height:22px}
+.searchbtn[aria-current="true"]{color:var(--ink);background:var(--glass-strong)}
+
+/* subjects */
+.shelf .item{width:118px;display:flex;flex-direction:column;gap:6px;text-align:left}
+.shelf .jk{width:118px;--fs:30px;border-radius:16px}
+.shelf .item div{font:700 13px var(--f-body)}
+.list{display:flex;flex-direction:column}
+.list .li{display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid var(--hair)}
+.list .li:first-child{border-top:0}
+.list .li .jk{width:46px;--fs:16px;border-radius:11px}
+.list .li .t{flex:1;min-width:0}
+.list .li .t div:first-child{font:700 14.5px var(--f-body)}
+
+.bars svg,.chart svg,.dist svg{display:block;width:100%;height:auto;overflow:visible}
+.ax{stroke:var(--hair);stroke-width:1}
+.axt{fill:var(--ink-3);font:500 9px var(--f-mono)}
+.b{fill:var(--ink-3);opacity:.35}
+.b.on{fill:var(--solid);opacity:1}
+.ln{fill:none;stroke:var(--pos);stroke-width:2}
+.area{fill:var(--pos);opacity:.1}
+.tgt{stroke:var(--ink-3);stroke-dasharray:4 4;stroke-width:1}
+.tagbg{fill:var(--pos)}
+.tagtx{fill:#fff;font:700 9.5px var(--f-mono)}
+.tagbg2{fill:var(--glass-strong);stroke:var(--line)}
+.tagtx2{fill:var(--ink-2);font:500 9px var(--f-mono)}
+.pt{fill:var(--pos);stroke:var(--glass-strong);stroke-width:2}
+.share{display:flex;height:10px;gap:3px}
+.share i{height:100%;border-radius:10px}
+.keys{display:flex;flex-wrap:wrap;gap:6px 12px;font:400 11px var(--f-mono);color:var(--ink-2)}
+.keys span{display:inline-flex;align-items:center;gap:5px}
+.keys i{width:8px;height:8px;border-radius:50%}
+.hours{display:grid;grid-template-columns:repeat(24,1fr);gap:2px}
+.hours i{aspect-ratio:.55;border-radius:3px;background:var(--g0)}
+
+.exam{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--hair)}
+.exam:first-child{border-top:0}
+.exam .t{flex:1;min-width:0}
+.exam .score{font:800 20px var(--f-display);text-align:right}
+.judge{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font:800 14px var(--f-display);background:var(--chip);box-shadow:inset 0 0 0 1px var(--line)}
+.judge.a{background:var(--pos-bg);color:var(--pos);box-shadow:none}
+
+/* social */
+.people{display:flex;flex-direction:column}
+.person{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid var(--hair)}
+.person:first-child{border-top:0}
+.av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 14px var(--f-display);flex:none;background:var(--c)}
+.person .t{flex:1;min-width:0}
+.person .t div:first-child{font:700 13.5px var(--f-body)}
+.person .r{font:500 12.5px var(--f-mono);text-align:right}
+.rank{width:26px;font:800 15px var(--f-display);text-align:center;color:var(--ink-3)}
+.rank.top{color:var(--ink)}
+.person.me{margin:0 -10px;padding:10px;border-radius:14px;background:var(--glass-strong);border-top-color:transparent}
+.followbtn{font:600 11.5px var(--f-body);padding:7px 12px;border-radius:999px;background:var(--solid);color:var(--on-solid)}
+.followbtn.on{background:var(--chip);color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line)}
+
+.post{display:flex;flex-direction:column;gap:9px;padding:14px 0;border-top:1px solid var(--hair)}
+.post:first-child{border-top:0;padding-top:2px}
+.post .who{display:flex;align-items:center;gap:9px}
+.post .who .av{width:30px;height:30px;font-size:12px}
+.post .who b{font:700 13px var(--f-body)}
+.post p{font-size:14px;line-height:1.65}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font:500 11px var(--f-mono);color:var(--ink-2)}
+.acts{display:flex;gap:18px;font:500 11.5px var(--f-mono);color:var(--ink-3)}
+.acts button{display:inline-flex;align-items:center;gap:5px}
+.acts svg{width:15px;height:15px}
+.acts .useful.on{color:var(--pos)}
+.yt{display:flex;gap:10px;align-items:center;padding:8px;border-radius:14px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);color:inherit;text-decoration:none}
+.yt .th{width:76px;aspect-ratio:16/9;border-radius:8px;background:linear-gradient(135deg,#2a2550,#5b4ba8);display:grid;place-items:center;flex:none}
+.yt .th i{width:0;height:0;border-left:10px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.yt div{font-size:12px;line-height:1.4;min-width:0}
+.compose{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px}
+.compose span{flex:1;color:var(--ink-3)}
+.group{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--hair)}
+.group:first-child{border-top:0}
+.gicon{width:46px;height:46px;border-radius:14px;display:grid;grid-template-columns:repeat(2,1fr);gap:3px;padding:6px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);flex:none}
+.gicon i{border-radius:50%;background:var(--c)}
+
+/* my page */
+.holo-wrap{perspective:900px;padding:4px 0}
+.holo{position:relative;border-radius:26px;padding:20px;aspect-ratio:1.42;color:#221B3D;overflow:hidden;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .2s ease-out;
+  background:linear-gradient(135deg,#FBE3D6 0%,#E3DDF8 38%,#D5E8F8 70%,#F8DCE6 100%);box-shadow:0 18px 40px rgba(60,40,110,.22),inset 0 0 0 1px rgba(255,255,255,.7);display:flex;flex-direction:column;justify-content:space-between}
+.holo::before{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 30%,rgba(255,120,200,.55) 40%,rgba(120,220,255,.55) 47%,rgba(170,255,170,.5) 54%,rgba(255,240,120,.5) 60%,transparent 70%);
+  transform:translate(calc((var(--mx,.5) - .5) * 40%), calc((var(--my,.5) - .5) * 40%));mix-blend-mode:color-dodge;opacity:.55;transition:transform .2s ease-out;pointer-events:none}
+.holo::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at calc(var(--mx,.5)*100%) calc(var(--my,.5)*100%),rgba(255,255,255,.55),transparent 45%);mix-blend-mode:soft-light;pointer-events:none}
+.holo>*{position:relative;z-index:1}
+.holo .who{display:flex;align-items:center;gap:12px}
+.holo .av{width:52px;height:52px;font-size:20px;box-shadow:0 0 0 3px rgba(255,255,255,.8)}
+.holo .name{font:800 22px/1.1 var(--f-display)}
+.holo .handle{font:500 11.5px var(--f-mono);opacity:.65}
+.holo .badge{margin-left:auto;align-self:flex-start;font:700 10px var(--f-mono);letter-spacing:.14em;padding:5px 8px;border-radius:999px;background:rgba(34,27,61,.88);color:#fff}
+.holo .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.holo .stats div{display:flex;flex-direction:column}
+.holo .stats b{font:800 20px/1.1 var(--f-display)}
+.holo .stats span{font:500 9.5px var(--f-mono);letter-spacing:.12em;opacity:.6}
+.holo .strip{display:grid;grid-template-columns:repeat(30,1fr);gap:2px}
+.holo .strip i{aspect-ratio:1;border-radius:2px;background:rgba(34,27,61,.1)}
+.holo .strip i.l1{background:#9BE9A8!important}.holo .strip i.l2{background:#40C463!important}.holo .strip i.l3{background:#30A14E!important}.holo .strip i.l4{background:#216E39!important}
+.follows{display:grid;grid-template-columns:repeat(3,1fr);text-align:center}
+.follows button{display:flex;flex-direction:column;gap:2px;padding:4px 0}
+.follows b{font:800 22px/1 var(--f-display)}
+.follows span{font:500 10.5px var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{padding:11px;border-radius:14px;font:600 13px var(--f-body);text-align:center;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.solid{background:var(--solid);color:var(--on-solid);box-shadow:none}
+
+/* search */
+.searchfield{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:18px;color:var(--ink-3)}
+.searchfield svg{width:18px;height:18px;flex:none}
+.searchfield input{flex:1;min-width:0;border:0;background:none;font:400 15px var(--f-body);color:var(--ink);outline:none}
+.map{position:relative;height:170px;border-radius:18px;overflow:hidden;background:
+  linear-gradient(0deg,transparent 48%,var(--hair) 48% 52%,transparent 52%) 0 0/100% 46px,
+  linear-gradient(90deg,transparent 48%,var(--hair) 48% 52%,transparent 52%) 0 0/58px 100%,
+  linear-gradient(160deg,var(--a3),var(--a2))}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.river{fill:none;stroke:#8CB8E8;stroke-width:9;opacity:.6;stroke-linecap:round}
+.park{fill:#9BE9A8;opacity:.5}
+.pin{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:3px}
+.pin span{font:600 10.5px var(--f-body);padding:4px 8px;border-radius:999px;background:var(--glass-strong);box-shadow:0 4px 10px rgba(30,20,60,.12);white-space:nowrap}
+.pin i{width:12px;height:12px;border-radius:50%;background:var(--solid);border:3px solid var(--glass-strong);box-shadow:0 2px 6px rgba(30,20,60,.25)}
+.pin.u i{background:var(--knob)}
+
+/* study overlay (fixed art: tinted by the subject's cover color) */
+.studyview{position:absolute;inset:0;z-index:30;color:#fff;display:flex;flex-direction:column;align-items:center;gap:16px;padding:60px 26px 34px;overflow-y:auto;
+  background:radial-gradient(70% 45% at 20% 10%,color-mix(in srgb,var(--sc) 80%,#9fe8ff) 0%,transparent 70%),radial-gradient(70% 55% at 90% 85%,color-mix(in srgb,var(--sc) 70%,#ffd0e6) 0%,transparent 70%),linear-gradient(180deg,color-mix(in srgb,var(--sc) 85%,#000) 0%,color-mix(in srgb,var(--sc) 70%,#000) 100%)}
+.studyview .top{align-self:stretch;display:flex;justify-content:space-between;align-items:center}
+.ghost{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.ghost svg{width:20px;height:20px}
+.studyview .live{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:999px;background:rgba(255,255,255,.92);color:#1E1A33;font:500 12px var(--f-mono)}
+.studyview .live .dot{width:8px;height:8px;border-radius:50%;background:#E5484D}
+.studyview .jk{width:min(230px,62%);--fs:64px;border-radius:24px;box-shadow:0 24px 50px rgba(0,0,0,.35)}
+.studyview h2{font:800 24px var(--f-display);align-self:stretch}
+.studyview .issue{align-self:stretch;margin-top:-12px;font-size:13.5px;opacity:.82}
+.timer{font:600 64px/1 var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pomo{align-self:stretch;display:flex;gap:5px}
+.pomo i{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.2);overflow:hidden;position:relative}
+.pomo i b{position:absolute;inset:0 auto 0 0;background:#fff;border-radius:8px}
+.studyview .meta{align-self:stretch;display:flex;justify-content:space-between;font:500 11.5px var(--f-mono);opacity:.8;margin-top:-8px}
+.controls{display:flex;align-items:center;gap:22px}
+.ctl{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);font:600 14px var(--f-mono);color:#fff}
+.ctl.main{width:84px;height:84px;background:rgba(255,255,255,.92);color:#1E1A33}
+.ctl svg{width:28px;height:28px}
+.stopbtn{align-self:stretch;display:flex;justify-content:center;align-items:center;gap:8px;padding:14px;border-radius:18px;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);font:600 14px var(--f-body);color:#fff}
+.stopbtn i{width:12px;height:12px;border-radius:3px;background:#FF6B70}
+.thisweek{display:flex;flex-direction:column;align-items:center;gap:8px}
+.thisweek .lab{font:500 10.5px var(--f-mono);letter-spacing:.14em;opacity:.75}
+.week{display:flex;gap:8px}
+.week i{width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,.18)}
+.week i.today{box-shadow:0 0 0 2px #fff, 0 0 14px rgba(160,255,190,.9)}
+
+/* sheets */
+.backdrop{position:absolute;inset:0;z-index:40;background:rgba(20,16,40,.35)}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;z-index:41;border-radius:32px;padding:18px 18px 20px;background:var(--glass-strong);-webkit-backdrop-filter:blur(26px) saturate(1.5);backdrop-filter:blur(26px) saturate(1.5);box-shadow:0 -10px 40px rgba(30,20,60,.2),inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:14px;max-height:88%;overflow-y:auto}
+.sheet .grab{width:38px;height:5px;border-radius:5px;background:var(--hair);align-self:center;margin-top:-6px}
+.sheet h3{font:800 20px var(--f-display)}
+.pickgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pickgrid button{display:flex;flex-direction:column;gap:6px;font:700 12.5px var(--f-body);text-align:left}
+.pickgrid .jk{width:100%;--fs:26px;border-radius:16px}
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choices button{font:500 13px var(--f-body);padding:9px 13px;border-radius:999px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink-2)}
+.choices button[aria-pressed="true"]{background:var(--solid);color:var(--on-solid);box-shadow:none}
+.summary{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line)}
+.summary .jk{width:48px;--fs:17px;border-radius:12px}
+
+.toast{position:absolute;left:50%;top:58px;transform:translateX(-50%);z-index:50;padding:11px 16px;border-radius:999px;background:var(--solid);color:var(--on-solid);font:600 13px var(--f-body);white-space:nowrap;box-shadow:0 10px 30px rgba(30,20,60,.25)}
+
+/* ---------- phone width: the app fills the screen ---------- */
+@media (max-width:960px){.side{display:none}}
+@media (max-width:520px){
+  .stage{padding-block:0;padding-left:max(0px, env(safe-area-inset-left, 0px));padding-right:max(0px, env(safe-area-inset-right, 0px))}
+  .device{width:100%;height:100%;border-radius:0;padding:0;background:none;box-shadow:none}
+  .screen{inset:0;border-radius:0}
+  .statusbar{display:none}
+  .view{padding-top:18px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+  .studyview{padding-top:22px}
+  .toast{top:16px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.holo{transform:none!important}}
+</style>
+
+<div class="stage aurora grain">
+  <aside class="side" aria-label="モックの案内">
+    <div class="brand"><div class="appicon" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><h1>Inchly</h1></div>
+    <p>勉強をGitHubのように積み上げるアプリのモック。下のタブや真ん中の再生ボタンで画面を切り替えられます。</p>
+    <nav id="sideNav">
+      <button data-go="home"><span>ホーム</span><span>HOME</span></button>
+      <button data-go="subjects"><span>科目</span><span>LIBRARY</span></button>
+      <button data-go="study"><span>勉強中</span><span>NOW</span></button>
+      <button data-go="social"><span>みんな</span><span>SOCIAL</span></button>
+      <button data-go="me"><span>マイページ</span><span>ME</span></button>
+      <button data-go="search"><span>さがす</span><span>SEARCH</span></button>
+    </nav>
+    <div class="note">MOCK v0.1 · 2026-10-21<br>数字・人物・投稿はすべてサンプルです</div>
+  </aside>
+
+  <div class="device">
+    <div class="screen aurora grain" id="screen">
+      <div class="statusbar" aria-hidden="true"><span>9:41</span><span class="island"></span><span class="icons"><i style="width:3px;height:5px"></i><i style="width:3px;height:7px"></i><i style="width:3px;height:9px"></i><i style="width:3px;height:11px;margin-right:4px"></i><i style="width:24px;height:11px;border-radius:3.5px"></i></span></div>
+
+      <!-- ===== HOME ===== -->
+      <section class="view" id="home" aria-label="ホーム">
+        <header class="apphead">
+          <div class="appicon" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div><div class="appname">Inchly</div><div class="label" style="white-space:nowrap">高3 · 東大志望</div></div>
+          <button class="livepill glass" id="homeLive" data-open-study aria-label="勉強中の画面を開く"><span class="dot"></span>LIVE <b class="js-session-short">00:39</b></button>
+        </header>
+
+        <section class="hero" aria-label="今日の勉強時間">
+          <div class="label">STUDY TIME · 今日</div>
+          <div class="big" id="todayBig">2h<span class="soft"> 45m</span></div>
+          <div class="row between"><span class="delta pos">▲ +32m <span class="dim mono" style="font-weight:500">vs yesterday</span></span><span class="mono dim" style="font-size:12px">目標 3h · <b class="dim2" id="goalPct">92%</b></span></div>
+          <div class="goal" aria-hidden="true"><div class="track"></div><div class="fill" id="goalFill" style="width:92%"></div><div class="knob" id="goalKnob" style="left:92%"></div></div>
+          <div class="range"><span class="label">RANGE</span><div class="rail" role="tablist" aria-label="期間">
+            <button role="tab" aria-selected="true">DAY</button><button role="tab" aria-selected="false">WEEK</button><button role="tab" aria-selected="false">MONTH</button><button role="tab" aria-selected="false">YEAR</button>
+          </div></div>
+        </section>
+
+        <section class="card glass" aria-label="草">
+          <div class="row between"><span class="label">CONTRIBUTIONS · 2026</span><span class="chip pos"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1.2 3.4 4.8 5.2 4.8 10.2A4.8 4.8 0 0 1 7.2 12.2c0-2.3 1.2-3.6 2.4-4.6 0 2.2 1 3.4 2.3 3.4 0-3.3-1.1-5.7.1-9z"/></svg>23-DAY STREAK</span></div>
+          <div class="row" style="align-items:baseline;gap:10px"><div class="mid">1,284<small>h</small></div><span class="mono dim" style="font-size:11.5px">今年の積み上げ</span></div>
+          <div class="heat" id="heat" aria-label="過去26週の勉強量"></div>
+          <div class="row between"><span class="label">26 WEEKS</span><span class="legend">Less <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> More</span></div>
+        </section>
+
+        <div class="sechead"><h2 class="sec">取り組んでいる勉強</h2><button data-go="subjects">ALL →</button></div>
+        <div class="hscroll" id="workCards"></div>
+
+        <section class="card glass" aria-label="模試・入試までの日数">
+          <div class="row between"><span class="label">MILESTONES</span><button class="chip" data-go="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M8 3v4M16 3v4"/></svg>CALENDAR</button></div>
+          <div class="dday">
+            <div><span class="dim2" style="font-size:12px">共通テストまで</span><div class="mid">87<small>日</small></div><div class="segbar" aria-label="ToDo 7/12 完了"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="hatch"></i><i class="hatch"></i><i class="hatch"></i><i class="hatch"></i><i class="hatch"></i></div><span class="mono dim" style="font-size:11px">TODO 7/12</span></div>
+            <div><span class="dim2" style="font-size:12px">東大 二次試験まで</span><div class="mid">127<small>日</small></div><div class="segbar" aria-label="ToDo 3/12 完了"><i class="on"></i><i class="on"></i><i class="on"></i><i class="hatch"></i><i class="hatch"></i><i class="hatch"></i><i class="hatch"></i><i class="hatch"></i><i class="hatch"></i><i class="hatch"></i><i class="hatch"></i><i class="hatch"></i></div><span class="mono dim" style="font-size:11px">TODO 3/12</span></div>
+          </div>
+        </section>
+
+        <section class="card glass next" aria-label="次にやること">
+          <div class="when">明日<br>19:00</div>
+          <div style="flex:1;min-width:0"><div class="label">NEXT COMMIT</div><div style="font-weight:700;margin-top:3px">数学 · 青チャート 例題41〜50</div><div class="dim" style="font-size:12px">夕食のあと、と決めた予定</div></div>
+        </section>
+
+        <section class="card glass break" aria-label="ひとやすみ">
+          <div class="art" aria-hidden="true"></div>
+          <div style="min-width:0"><div class="label">ひとやすみ · 宇宙</div><div style="font-weight:700;margin-top:3px;line-height:1.45">宇宙の物質の約85%は、まだ誰も見たことがない</div><div class="dim" style="font-size:12px">高校物理の「円運動」から読める話 · 2分</div></div>
+        </section>
+      </section>
+
+      <!-- ===== SUBJECTS ===== -->
+      <section class="view" id="subjects" aria-label="科目" hidden>
+        <div class="pagehead"><h1>科目</h1><span class="mono dim" style="font-size:11.5px">6 SUBJECTS · 1,284H</span></div>
+        <div class="seg glass" role="tablist" data-seg="subj">
+          <button role="tab" aria-selected="true" data-panel="list">科目</button><button role="tab" aria-selected="false" data-panel="stats">統計</button><button role="tab" aria-selected="false" data-panel="exams">模試</button>
+        </div>
+
+        <div data-group="subj" data-name="list" style="display:flex;flex-direction:column;gap:14px">
+          <div class="sechead"><h2 class="sec">ピン留め</h2></div>
+          <div class="hscroll shelf" id="shelf"></div>
+          <section class="card glass"><div class="label">ALL SUBJECTS</div><div class="list" id="subjList"></div></section>
+          <section class="card glass" aria-label="復習リスト">
+            <div class="row between"><span class="label">REVIEW QUEUE · 今日</span><span class="chip neg">8 問</span></div>
+            <div class="list">
+              <div class="li"><div class="t"><div>青チャート 数III 例題58</div><div class="mono dim" style="font-size:11px">× · 3日前に解いた問題</div></div><span class="chip">数学</span></div>
+              <div class="li"><div class="t"><div>システム英単語 Section 4 · 12語</div><div class="mono dim" style="font-size:11px">△ · 1週間後の復習</div></div><span class="chip">英語</span></div>
+            </div>
+          </section>
+        </div>
+
+        <div data-group="subj" data-name="stats" hidden style="display:flex;flex-direction:column;gap:14px">
+          <section class="card glass">
+            <div class="row between"><span class="label">THIS WEEK</span><span class="mono" style="font-weight:700">24.4h</span></div>
+            <div class="bars" id="weekBars"></div>
+          </section>
+          <section class="card glass">
+            <div class="row between"><span class="label">BY SUBJECT</span><span class="mono dim" style="font-size:11px">今月</span></div>
+            <div class="share" id="share"></div>
+            <div class="keys" id="shareKeys"></div>
+          </section>
+          <section class="card glass">
+            <div class="row between"><span class="label">FOCUS HOURS</span><span class="mono dim" style="font-size:11px">よく勉強する時間帯</span></div>
+            <div class="hours" id="hours"></div>
+            <div class="row between mono dim" style="font-size:10px"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>
+          </section>
+        </div>
+
+        <div data-group="subj" data-name="exams" hidden style="display:flex;flex-direction:column;gap:14px">
+          <section class="card glass">
+            <div class="row between"><span class="label">偏差値 · 総合</span><span class="chip pos">▲ +6.6</span></div>
+            <div class="chart" id="devChart"></div>
+          </section>
+          <section class="card glass">
+            <div class="label">RESULTS</div>
+            <div>
+              <div class="exam"><div class="judge a">A</div><div class="t"><div style="font-weight:700">第3回 記述模試</div><div class="mono dim" style="font-size:11px">2026/10 · 東大 理一</div></div><div class="score">64.8</div></div>
+              <div class="exam"><div class="judge">B</div><div class="t"><div style="font-weight:700">第2回 共通テスト模試</div><div class="mono dim" style="font-size:11px">2026/09 · 東大 理一</div></div><div class="score">63.0</div></div>
+              <div class="exam"><div class="judge">B</div><div class="t"><div style="font-weight:700">東大入試 実戦模試</div><div class="mono dim" style="font-size:11px">2026/08 · 東大 理一</div></div><div class="score">61.4</div></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ===== SOCIAL ===== -->
+      <section class="view" id="social" aria-label="みんな" hidden>
+        <div class="pagehead"><h1>みんな</h1><span class="row mono" style="font-size:12px"><span class="livedot"></span><span class="js-online">1,284</span> ONLINE</span></div>
+        <div class="seg glass" role="tablist" data-seg="soc">
+          <button role="tab" aria-selected="true" data-panel="live">ライブ</button><button role="tab" aria-selected="false" data-panel="rank">ランキング</button><button role="tab" aria-selected="false" data-panel="posts">つぶやき</button><button role="tab" aria-selected="false" data-panel="groups">グループ</button>
+        </div>
+
+        <div data-group="soc" data-name="live" style="display:flex;flex-direction:column;gap:14px">
+          <section class="card glass">
+            <div class="label">STUDYING NOW</div>
+            <div class="row" style="align-items:baseline;gap:8px"><div class="big js-online" style="font-size:52px">1,284</div><span class="dim2">人が勉強中</span></div>
+            <div class="row wrap"><span class="chip solid">全国</span><span class="chip">東大志望 18</span><span class="chip">英語 312</span><span class="chip">フォロー中 6</span></div>
+          </section>
+          <section class="card glass"><div class="label">FOLLOWING · LIVE</div><div class="people" id="livePeople"></div></section>
+        </div>
+
+        <div data-group="soc" data-name="rank" hidden style="display:flex;flex-direction:column;gap:14px">
+          <div class="row wrap"><span class="chip solid">今週</span><span class="chip">東大志望</span><span class="chip">全科目</span><span class="chip">タイマーの時間のみ</span></div>
+          <section class="card glass">
+            <div class="row between"><span class="label">YOUR POSITION</span><span class="chip pos">TOP 18%</span></div>
+            <div class="row" style="align-items:baseline;gap:8px"><div class="big" style="font-size:52px">#57</div><span class="dim2 mono" style="font-size:12px">/ 312人 · 24.4h</span></div>
+            <div class="dist" id="dist"></div>
+          </section>
+          <section class="card glass">
+            <div class="row between"><span class="label">SILVER LEAGUE · WEEK 43</span><span class="chip">6位 / 30</span></div>
+            <div class="bar"><i style="width:80%;background:var(--solid)"></i></div>
+            <div class="row between mono dim" style="font-size:11px"><span>昇格まで あと +1.2h</span><span>残り 4日</span></div>
+          </section>
+          <section class="card glass"><div class="label">LEADERBOARD</div><div class="people" id="board"></div>
+            <div class="mono dim" style="font-size:11px;padding-top:4px">あなたの順位は公開中 · マイページの公開設定で変更できます</div></section>
+        </div>
+
+        <div data-group="soc" data-name="posts" hidden style="display:flex;flex-direction:column;gap:14px">
+          <button class="compose glass"><span class="av" style="--c:#6E56CF;width:32px;height:32px;font-size:12px">H</span><span>いま何を勉強してる？ 役立つ情報もどうぞ</span><span class="chip solid" style="flex:none">投稿</span></button>
+          <div class="row"><span class="chip solid">人気</span><span class="chip">最新</span><span class="chip">#東京大学</span><span class="chip">#おすすめ動画</span></div>
+          <section class="card glass"><div id="feed"></div></section>
+        </div>
+
+        <div data-group="soc" data-name="groups" hidden style="display:flex;flex-direction:column;gap:14px">
+          <section class="card glass"><div class="label">MY GROUPS</div><div id="groups"></div></section>
+          <button class="btn">グループを作る</button>
+        </div>
+      </section>
+
+      <!-- ===== ME ===== -->
+      <section class="view" id="me" aria-label="マイページ" hidden>
+        <div class="pagehead"><h1>マイページ</h1><span class="mono dim" style="font-size:11.5px">@haru_study</span></div>
+        <div class="holo-wrap"><div class="holo" id="holo" aria-label="自分のカード">
+          <div class="who"><div class="av" style="--c:#6E56CF">H</div><div><div class="name">はる</div><div class="handle">@haru_study</div><div class="handle">高3 · 東大 理一志望</div></div><span class="badge">HOLO</span></div>
+          <div class="strip" id="cardStrip" aria-hidden="true"></div>
+          <div class="stats"><div><b>1,284h</b><span>TOTAL</span></div><div><b>23日</b><span>STREAK</span></div><div><b>#57</b><span>RANK</span></div></div>
+        </div></div>
+        <section class="card glass">
+          <div class="follows">
+            <button data-me="posts"><b>56</b><span>POSTS</span></button>
+            <button data-me="following"><b>128</b><span>FOLLOWING</span></button>
+            <button data-me="followers"><b>342</b><span>FOLLOWERS</span></button>
+          </div>
+          <div class="btnrow"><button class="btn">プロフィールを編集</button><button class="btn solid">カードを共有</button></div>
+        </section>
+        <div class="seg glass" role="tablist" data-seg="me">
+          <button role="tab" aria-selected="true" data-panel="posts">投稿</button><button role="tab" aria-selected="false" data-panel="following">フォロー</button><button role="tab" aria-selected="false" data-panel="followers">フォロワー</button>
+        </div>
+        <section class="card glass" data-group="me" data-name="posts"><div id="myPosts"></div></section>
+        <section class="card glass" data-group="me" data-name="following" hidden><div class="people" id="following"></div></section>
+        <section class="card glass" data-group="me" data-name="followers" hidden><div class="people" id="followers"></div></section>
+      </section>
+
+      <!-- ===== SEARCH ===== -->
+      <section class="view" id="search" aria-label="さがす" hidden>
+        <div class="pagehead"><h1>さがす</h1></div>
+        <label class="searchfield glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="q" type="search" placeholder="大学・塾・ユーザー・問題集"></label>
+        <div class="row wrap"><span class="chip solid">すべて</span><span class="chip">大学</span><span class="chip">塾</span><span class="chip">ユーザー</span><span class="chip">つぶやき</span><span class="chip">問題集</span></div>
+        <section class="card glass">
+          <div class="row between"><span class="label">志望校</span><span class="chip pos">二次まで 127日</span></div>
+          <div><div style="font:800 22px var(--f-display)">東京大学 <span style="font-size:15px">理科一類</span></div><div class="mono dim" style="font-size:11px">このアプリで志望している人 1,920 · 合格体験記 46</div></div>
+          <div class="map" aria-label="キャンパスの地図（イメージ）">
+            <svg viewBox="0 0 340 170" preserveAspectRatio="none" aria-hidden="true"><path class="river" d="M-10 140 C 60 120, 90 160, 160 135 S 280 90, 350 110"/><circle class="park" cx="250" cy="45" r="26"/><rect class="park" x="40" y="20" width="60" height="34" rx="12"/></svg>
+            <div class="pin u" style="left:66%;top:44%"><span>東京大学 本郷</span><i></i></div>
+            <div class="pin u" style="left:26%;top:70%"><span>東京大学 駒場</span><i></i></div>
+            <div class="pin" style="left:48%;top:28%"><span>現在地</span><i></i></div>
+          </div>
+        </section>
+        <section class="card glass">
+          <div class="row between"><span class="label">近くの塾</span><span class="mono dim" style="font-size:11px">掲載 3件</span></div>
+          <div class="list">
+            <div class="li"><div class="gicon" style="--c:#E8663D"><i></i><i></i><i></i><i></i></div><div class="t"><div>明星ゼミ 本郷教室 <span class="chip pr">PR</span></div><div class="mono dim" style="font-size:11px">高校生 · 東大対策 · 徒歩8分</div></div></div>
+            <div class="li"><div class="gicon" style="--c:#3E4FC9"><i></i><i></i><i></i><i></i></div><div class="t"><div>個別指導 ソラノ</div><div class="mono dim" style="font-size:11px">中高生 · 自習室あり · 徒歩12分</div></div></div>
+          </div>
+        </section>
+        <div class="sechead"><h2 class="sec">合格体験記・テンプレ</h2><button>ALL →</button></div>
+        <div class="hscroll">
+          <div class="work glass"><div class="label">FORK · 東大 理一 合格</div><div style="font-weight:700">@rin の1年分の計画</div><div class="dim" style="font-size:12px">科目6 · 問題集18冊 · ToDo 240</div><button class="btn solid">テンプレをコピー</button></div>
+          <div class="work glass"><div class="label">FORK · 東大 文三 合格</div><div style="font-weight:700">@kotone の夏からの逆転</div><div class="dim" style="font-size:12px">科目5 · 問題集11冊 · ToDo 160</div><button class="btn">見てみる</button></div>
+        </div>
+      </section>
+
+      <!-- mini player (shown while a session runs) -->
+      <button class="miniplayer glass" id="mini" data-open-study aria-label="勉強中の画面を開く">
+        <span class="jk js-jk" data-art="rings" style="--c:#0F5E5A"><b>EN</b></span>
+        <span class="t"><span class="ttl js-subj-title">英語 · 長文読解 第3講</span><span class="clock"><span class="js-session">00:39:10</span> · POMODORO <span class="js-pomo">2/4</span></span></span>
+        <span class="roundbtn" id="miniPause" role="button" aria-label="一時停止"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></svg></span>
+      </button>
+
+      <!-- tab bar + separate search button -->
+      <nav class="tabbar glass" aria-label="メインのタブ">
+        <button class="tab" data-tab="home" aria-current="true"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg></span><span>ホーム</span></button>
+        <button class="tab" data-tab="subjects"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></span><span>科目</span></button>
+        <button class="tab start" id="startBtn" aria-label="勉強を始める"><span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2z"/></svg></span><span>START</span></button>
+        <button class="tab" data-tab="social"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5c.4-3.2 2.7-5.2 5.5-5.2s5.1 2 5.5 5.2"/><circle cx="17" cy="9.5" r="2.4"/><path d="M16.2 14.4c2.4.3 3.9 2 4.3 4.6"/></svg></span><span>みんな</span></button>
+        <button class="tab" data-tab="me"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.6-3.9 3.7-6.2 7.5-6.2s6.9 2.3 7.5 6.2"/></svg></span><span>マイページ</span></button>
+      </nav>
+      <button class="searchbtn glass" data-tab="search" aria-label="さがす"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+
+      <!-- ===== STUDY (now studying) ===== -->
+      <section class="studyview" id="study" aria-label="勉強中" hidden style="--sc:#0F5E5A">
+        <div class="top">
+          <button class="ghost" id="closeStudy" aria-label="小さくする"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+          <span class="live"><span class="dot"></span>LIVE · POMODORO <span class="js-pomo">2/4</span></span>
+        </div>
+        <span class="jk js-jk" data-art="rings" style="--c:#0F5E5A"><b>EN</b></span>
+        <h2 class="js-subj-name">英語</h2>
+        <div class="issue"><span class="mono" style="opacity:.75">ISSUE #12</span> · <span class="js-issue">長文読解 第3講</span></div>
+        <div class="timer js-session" aria-live="off">00:39:10</div>
+        <div class="pomo" id="pomoBar"><i><b style="width:100%"></b></i><i><b style="width:57%"></b></i><i><b style="width:0"></b></i><i><b style="width:0"></b></i></div>
+        <div class="meta"><span>今日 <span class="js-today-short">2h 45m</span> / 3h</span><span>休憩まで <span id="toBreak">10:50</span></span></div>
+        <div class="controls">
+          <button class="ctl" id="minus5" aria-label="5分戻す">−5</button>
+          <button class="ctl main" id="pauseBtn" aria-label="一時停止"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4.2" height="14" rx="1.3"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.3"/></svg></button>
+          <button class="ctl" id="plus5" aria-label="5分進める">+5</button>
+        </div>
+        <button class="stopbtn" id="stopBtn"><i></i>終了して記録する</button>
+        <div class="thisweek"><span class="lab">THIS WEEK</span><div class="week" id="weekSq"></div></div>
+      </section>
+
+      <div class="backdrop" id="backdrop" hidden></div>
+
+      <!-- pick subject sheet -->
+      <section class="sheet" id="pickSheet" hidden aria-label="科目を選ぶ">
+        <div class="grab"></div>
+        <div class="row between"><h3>何を勉強する？</h3><button class="chip" data-close>閉じる</button></div>
+        <div class="pickgrid" id="pickGrid"></div>
+        <button class="btn">あとで入力する（手入力）</button>
+      </section>
+
+      <!-- commit sheet -->
+      <section class="sheet" id="commitSheet" hidden aria-label="記録する">
+        <div class="grab"></div>
+        <div class="label">COMMIT</div>
+        <div class="summary"><span class="jk js-jk" data-art="rings" style="--c:#0F5E5A"><b>EN</b></span><div style="flex:1"><div style="font-weight:700" class="js-subj-name">英語</div><div class="mono dim" style="font-size:11.5px"><span id="commitMin">39</span>分 · 今週3回目</div></div><span class="chip pos">+1 マス</span></div>
+        <div><div class="label" style="margin-bottom:8px">どのToDoをやった？</div>
+          <div class="choices" data-single><button aria-pressed="true">#12 長文読解 第3講</button><button aria-pressed="false">#13 単語 Section 4</button><button aria-pressed="false">なし</button></div></div>
+        <div><div class="label" style="margin-bottom:8px">次はいつやる？</div>
+          <div class="choices" data-single><button aria-pressed="true">明日の同じ時間</button><button aria-pressed="false">夕食のあと</button><button aria-pressed="false">あとで決める</button></div></div>
+        <button class="btn solid" id="commitBtn">記録する</button>
+      </section>
+
+      <div class="toast" id="toast" hidden></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+  // ---------- sample data ----------
+  const SUBJ = [
+    { id:'en', name:'英語', code:'EN', c:'#0F5E5A', art:'rings', issue:'長文読解 第3講', week:'6.5h', prog:72, todo:3, ago:'LAST COMMIT 2H AGO', share:34 },
+    { id:'ma', name:'数学', code:'Σ',  c:'#E8663D', art:'dots',  issue:'青チャート 数III 例題41〜50', week:'5.8h', prog:48, todo:5, ago:'LAST COMMIT 5H AGO', share:28 },
+    { id:'ph', name:'物理', code:'Φ',  c:'#3E4FC9', art:'stripes', issue:'電磁気 · 名問の森 15〜18', week:'4.1h', prog:35, todo:4, ago:'LAST COMMIT 1D AGO', share:18 },
+    { id:'ch', name:'化学', code:'Ch', c:'#C9952A', art:'sun',   issue:'有機 · 構造決定 演習', week:'2.9h', prog:60, todo:2, ago:'LAST COMMIT 2D AGO', share:12 },
+    { id:'ja', name:'国語', code:'国', c:'#8C3B6E', art:'stripes', issue:'古文単語 315 · 1〜80', week:'1.6h', prog:22, todo:2, ago:'LAST COMMIT 3D AGO', share:5 },
+    { id:'wh', name:'世界史', code:'WH', c:'#2E6B3F', art:'dots', issue:'近現代 論述 3題', week:'1.2h', prog:15, todo:1, ago:'LAST COMMIT 4D AGO', share:3 },
+  ];
+  const PEOPLE = [
+    { h:'mio.k', n:'みお', c:'#E8663D', s:'英語', t:4380, g:'東大 文一' },
+    { h:'sora_06', n:'そら', c:'#3E4FC9', s:'数学', t:2885, g:'東大 理一' },
+    { h:'kaito', n:'かいと', c:'#0F5E5A', s:'物理', t:1730, g:'東工大' },
+    { h:'yuna', n:'ゆな', c:'#8C3B6E', s:'化学', t:950, g:'東大 理二' },
+    { h:'ren.d', n:'れん', c:'#2E6B3F', s:'世界史', t:520, g:'一橋' },
+  ];
+  const BOARD = [
+    [1,'hinata','ひなた','#C9952A',42.5],[2,'tsubasa','つばさ','#3E4FC9',39.8],[3,'mio.k','みお','#E8663D',38.1],
+    [4,'aoi_r','あおい','#0F5E5A',36.4],[5,'sora_06','そら','#3E4FC9',35.9],
+  ];
+  const FEED = [
+    { h:'rin', n:'りん', c:'#2E6B3F', meta:'東大 理一 合格 · 先輩', text:'東大英語の要約(1A)は毎年出る。過去問は15年分あれば十分で、1日1題を「要約→音読」で回すのが一番伸びた。', tags:['#東京大学','#英語','#過去問'], useful:128, rep:14 },
+    { h:'sora_06', n:'そら', c:'#3E4FC9', meta:'高3 · 東大 理一志望', text:'置換積分がずっとふわっとしてたけど、この動画で「何を新しい変数にするか」の決め方が一発で入った。15分なので休憩にちょうどいい。', yt:'【数III】置換積分の「置き方」がわかる15分', tags:['#数学','#おすすめ動画'], useful:86, rep:9 },
+    { h:'kaito', n:'かいと', c:'#0F5E5A', meta:'高3 · 東工大志望', text:'物理の電磁気、エッセンスと名問の森どっちから入るのがいい？ 力学はエッセンスで固めた。', tags:['#物理','#質問'], useful:21, rep:17 },
+  ];
+  const MYPOSTS = [
+    { text:'模試の偏差値、3か月で +6.6。数学の「次にやること」を毎回決めるようにしてから、机に向かうまでが早くなった気がする。', tags:['#数学','#模試'], useful:54, rep:6, when:'2時間前' },
+    { text:'古文単語、朝の10分だけでも草が埋まるのがうれしい。続ける理由ってこういうのでいいんだと思う。', tags:['#国語','#朝活'], useful:31, rep:3, when:'昨日' },
+  ];
+  const GROUPS = [
+    { n:'東大 理一 2027', m:24, today:'68h', cs:['#3E4FC9','#0F5E5A','#E8663D','#C9952A'], rank:'グループ内 5位' },
+    { n:'朝活 6:00 スタート', m:12, today:'14h', cs:['#C9952A','#8C3B6E','#2E6B3F','#3E4FC9'], rank:'グループ内 2位' },
+    { n:'英語長文 毎日1題', m:41, today:'52h', cs:['#0F5E5A','#E8663D','#8C3B6E','#2E6B3F'], rank:'グループ内 11位' },
+  ];
+
+  // ---------- helpers ----------
+  function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const jk = (s, extra = '') => `<span class="jk" data-art="${s.art}" style="--c:${s.c};${extra}"><b>${s.code}</b></span>`;
+  const av = (c, n, size = '') => `<span class="av" style="--c:${c};${size}">${n[0]}</span>`;
+  const pad = n => String(n).padStart(2, '0');
+  const hms = s => `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  const level = r => r < .18 ? 0 : r < .38 ? 1 : r < .62 ? 2 : r < .84 ? 3 : 4;
+  const ico = {
+    useful:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg>',
+    reply:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+    share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/></svg>',
+    play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2z"/></svg>',
+  };
+
+  // ---------- state ----------
+  const state = { studying:true, paused:false, elapsed:2350, subj:SUBJ[0], todayMin:165, todayLevel:3 };
+
+  // ---------- home ----------
+  const heat = $('#heat'); const r = rng(7);
+  const heatCells = [];
+  for (let i = 0; i < 26 * 7; i++) { const el = document.createElement('i'); const lv = i > 150 ? Math.max(1, level(r())) : level(r() * (0.6 + i / 300)); if (lv) el.className = 'l' + lv; heat.appendChild(el); heatCells.push(el); }
+  const todayCell = heatCells[26 * 7 - 1]; todayCell.className = 'l3 today';
+  $('#workCards').innerHTML = SUBJ.slice(0, 3).map(s => `
+    <article class="work glass">
+      <div class="top">${jk(s, 'width:52px;--fs:18px')}<div style="min-width:0"><h3>${s.name}</h3><div class="mono dim" style="font-size:11px">今週 ${s.week} · TODO ${s.todo}</div></div>
+      <button class="startmini" data-start="${s.id}" aria-label="${s.name}を始める">${ico.play}</button></div>
+      <div class="issue"><span class="mono dim" style="font-size:11px">ISSUE · </span>${s.issue}</div>
+      <div class="bar"><i style="width:${s.prog}%"></i></div>
+    </article>`).join('');
+
+  // ---------- subjects ----------
+  $('#shelf').innerHTML = SUBJ.slice(0, 4).map(s => `<button class="item" data-start="${s.id}">${jk(s)}<div>${s.name}</div><span class="mono dim" style="font-size:10.5px">MAIN · ${s.todo} ISSUES</span></button>`).join('');
+  $('#subjList').innerHTML = SUBJ.map((s, k) => { const rr = rng(20 + k); const cells = Array.from({ length: 14 }, () => { const lv = level(rr() * (1.1 - k * .12)); return `<i class="${lv ? 'l' + lv : ''}"></i>`; }).join('');
+    return `<div class="li">${jk(s)}<div class="t"><div>${s.name}</div><div class="mono dim" style="font-size:10.5px">${s.ago}</div></div><div class="mini" aria-hidden="true">${cells}</div></div>`; }).join('');
+  // week bars
+  (() => { const d = [['月',3.2],['火',2.5],['水',4.1],['木',3.6],['金',2.8],['土',5.4],['今日',2.75]]; const W = 300, H = 120, bw = 26, gap = (W - bw * 7) / 6;
+    let s = `<svg viewBox="0 0 ${W} ${H + 18}" role="img" aria-label="今週の曜日ごとの勉強時間">`;
+    [0, 2, 4, 6].forEach(v => { const y = H - v / 6 * H; s += `<line class="ax" x1="0" x2="${W}" y1="${y}" y2="${y}"/><text class="axt" x="${W}" y="${y - 3}" text-anchor="end">${v}h</text>`; });
+    d.forEach(([l, v], i) => { const x = i * (bw + gap), h = v / 6 * H; s += `<rect class="b ${i === 6 ? 'on' : ''}" x="${x}" y="${H - h}" width="${bw}" height="${h}" rx="6"/><text class="axt" x="${x + bw / 2}" y="${H + 14}" text-anchor="middle">${l}</text>`; });
+    $('#weekBars').innerHTML = s + '</svg>'; })();
+  $('#share').innerHTML = SUBJ.map(s => `<i style="flex:${s.share};background:${s.c}"></i>`).join('');
+  $('#shareKeys').innerHTML = SUBJ.map(s => `<span><i style="background:${s.c}"></i>${s.name} ${s.share}%</span>`).join('');
+  (() => { const pr = [0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0,1,2,2,3,4,4,3,1]; $('#hours').innerHTML = pr.map(v => `<i class="${v ? 'l' + v : ''}"></i>`).join(''); })();
+  // deviation chart
+  (() => { const pts = [['6月',58.2],['7月',60.1],['8月',61.4],['9月',63.0],['10月',64.8]]; const W = 300, H = 130, lo = 55, hi = 67;
+    const X = i => 14 + i * (W - 60) / 4, Y = v => H - (v - lo) / (hi - lo) * H;
+    let s = `<svg viewBox="0 0 ${W} ${H + 20}" role="img" aria-label="総合偏差値の推移、6月58.2から10月64.8">`;
+    [56, 60, 64].forEach(v => s += `<line class="ax" x1="0" x2="${W}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axt" x="0" y="${Y(v) - 3}">${v}</text>`);
+    s += `<line class="tgt" x1="0" x2="${W}" y1="${Y(65)}" y2="${Y(65)}"/><rect class="tagbg2" x="${W - 70}" y="${Y(65) - 22}" width="70" height="16" rx="5"/><text class="tagtx2" x="${W - 35}" y="${Y(65) - 11}" text-anchor="middle">目標 65.0</text>`;
+    const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i)} ${Y(p[1])}`).join(' ');
+    s += `<path class="area" d="${line} L${X(4)} ${H} L${X(0)} ${H}Z"/><path class="ln" d="${line}"/>`;
+    pts.forEach((p, i) => { s += `<circle class="pt" cx="${X(i)}" cy="${Y(p[1])}" r="${i === 4 ? 5 : 3.5}"/><text class="axt" x="${X(i)}" y="${H + 16}" text-anchor="middle">${p[0]}</text>`; });
+    s += `<rect class="tagbg" x="${X(4) + 8}" y="${Y(64.8) - 9}" width="38" height="18" rx="5"/><text class="tagtx" x="${X(4) + 27}" y="${Y(64.8) + 4}" text-anchor="middle">64.8</text>`;
+    $('#devChart').innerHTML = s + '</svg>'; })();
+
+  // ---------- social ----------
+  $('#livePeople').innerHTML = PEOPLE.map(p => `<div class="person">${av(p.c, p.n)}<div class="t"><div>${p.n} <span class="mono dim" style="font-size:11px;font-weight:400">@${p.h}</span></div><div class="mono dim" style="font-size:11px">${p.s} · ${p.g}</div></div><div class="r"><span class="row" style="gap:6px;justify-content:flex-end"><span class="livedot" style="width:6px;height:6px"></span><span data-live="${p.t}">${hms(p.t)}</span></span></div></div>`).join('');
+  $('#board').innerHTML = BOARD.map(([n, h, nm, c, v]) => `<div class="person"><span class="rank ${n <= 3 ? 'top' : ''}">${n}</span>${av(c, nm)}<div class="t"><div>${nm}</div><div class="mono dim" style="font-size:11px">@${h}</div></div><div class="r">${v.toFixed(1)}h</div></div>`).join('')
+    + `<div class="person"><span class="rank dim">…</span></div><div class="person me"><span class="rank top">57</span>${av('#6E56CF', 'はる')}<div class="t"><div>あなた</div><div class="mono dim" style="font-size:11px">@haru_study</div></div><div class="r">24.4h</div></div>`;
+  (() => { const bins = [2,4,7,11,16,22,27,31,33,32,29,25,21,17,13,10,7,5,3,2]; const W = 300, H = 80, bw = W / bins.length; const me = 14;
+    let s = `<svg viewBox="0 0 ${W} ${H + 30}" role="img" aria-label="東大志望312人の今週の勉強時間の分布。あなたは上位18%">`;
+    bins.forEach((v, i) => { const h = v / 33 * H; s += `<rect class="b ${i === me ? 'on' : ''}" x="${i * bw + 1.5}" y="${H - h}" width="${bw - 3}" height="${h}" rx="3"/>`; });
+    s += `<line class="ax" x1="0" x2="${W}" y1="${H}" y2="${H}"/><text class="axt" x="0" y="${H + 14}">0h</text><text class="axt" x="${W / 2}" y="${H + 14}" text-anchor="middle">20h</text><text class="axt" x="${W}" y="${H + 14}" text-anchor="end">40h+</text>`;
+    const mx = me * bw + bw / 2; s += `<rect class="tagbg" x="${mx - 18}" y="${H + 17}" width="36" height="13" rx="4"/><text class="tagtx" x="${mx}" y="${H + 26.5}" text-anchor="middle" style="font-size:8px">YOU</text>`;
+    $('#dist').innerHTML = s + '</svg>'; })();
+  const postHTML = (p, mine) => `<article class="post">
+      ${mine ? `<div class="mono dim" style="font-size:11px">${p.when}</div>` : `<div class="who">${av(p.c, p.n)}<div><b>${p.n}</b> <span class="mono dim" style="font-size:11px">@${p.h}</span><div class="mono dim" style="font-size:10.5px">${p.meta}</div></div><button class="followbtn on" style="margin-left:auto">フォロー中</button></div>`}
+      <p>${p.text}</p>
+      ${p.yt ? `<a class="yt" href="https://www.youtube.com/results?search_query=%E7%BD%AE%E6%8F%9B%E7%A9%8D%E5%88%86" target="_blank" rel="noopener"><span class="th"><i></i></span><div><div style="font-weight:700">${p.yt}</div><div class="mono dim" style="font-size:10.5px">YouTube · 15:02</div></div></a>` : ''}
+      <div class="tags">${p.tags.map(t => `<span>${t}</span>`).join('')}</div>
+      <div class="acts"><button class="useful" aria-pressed="false">${ico.useful}<span>役に立った ${p.useful}</span></button><button>${ico.reply}<span>${p.rep}</span></button><button aria-label="共有">${ico.share}</button></div>
+    </article>`;
+  $('#feed').innerHTML = FEED.map(p => postHTML(p)).join('');
+  $('#myPosts').innerHTML = MYPOSTS.map(p => postHTML(p, true)).join('');
+  $('#groups').innerHTML = GROUPS.map(g => `<div class="group"><div class="gicon">${g.cs.map(c => `<i style="--c:${c}"></i>`).join('')}</div><div style="flex:1;min-width:0"><div style="font-weight:700">${g.n}</div><div class="mono dim" style="font-size:11px">${g.m}人 · 今日の合計 ${g.today}</div></div><span class="chip">${g.rank}</span></div>`).join('');
+  const personRow = (p, btn) => `<div class="person">${av(p.c, p.n)}<div class="t"><div>${p.n} <span class="mono dim" style="font-size:11px;font-weight:400">@${p.h}</span></div><div class="mono dim" style="font-size:11px">${p.g} · 今日 ${(p.t / 3600 + 1.2).toFixed(1)}h</div></div>${btn}</div>`;
+  $('#following').innerHTML = PEOPLE.map(p => personRow(p, '<button class="followbtn on">フォロー中</button>')).join('');
+  $('#followers').innerHTML = PEOPLE.slice().reverse().map((p, i) => personRow(p, i % 2 ? '<button class="followbtn on">フォロー中</button>' : '<button class="followbtn">フォロー</button>')).join('');
+
+  // ---------- my card ----------
+  (() => { const rr = rng(3); $('#cardStrip').innerHTML = Array.from({ length: 60 }, (_, i) => { const lv = level(rr() * (0.7 + i / 120)); return `<i class="${lv ? 'l' + lv : ''}"></i>`; }).join(''); })();
+  const holo = $('#holo');
+  const tilt = e => { const b = holo.getBoundingClientRect(); const x = (e.clientX - b.left) / b.width, y = (e.clientY - b.top) / b.height;
+    holo.style.setProperty('--mx', x.toFixed(3)); holo.style.setProperty('--my', y.toFixed(3));
+    holo.style.setProperty('--ry', ((x - .5) * 14).toFixed(2) + 'deg'); holo.style.setProperty('--rx', ((.5 - y) * 12).toFixed(2) + 'deg'); };
+  holo.addEventListener('pointermove', tilt);
+  holo.addEventListener('pointerleave', () => { ['--mx','--my'].forEach(k => holo.style.setProperty(k, .5)); ['--rx','--ry'].forEach(k => holo.style.setProperty(k, '0deg')); });
+
+  // ---------- study ----------
+  $('#pickGrid').innerHTML = SUBJ.map(s => `<button data-start="${s.id}">${jk(s)}<span>${s.name}</span></button>`).join('');
+  const weekSq = $('#weekSq'); [2,1,3,2,1,4,3].forEach((lv, i) => { const el = document.createElement('i'); el.className = 'l' + lv + (i === 6 ? ' today' : ''); weekSq.appendChild(el); });
+
+  // ---------- navigation ----------
+  const VIEWS = ['home','subjects','social','me','search'];
+  let current = 'home';
+  function show(id){
+    if (id === 'study') { openStudy(); return; }
+    if (!VIEWS.includes(id)) id = 'home';
+    current = id;
+    VIEWS.forEach(v => { $('#' + v).hidden = v !== id; });
+    $$('[data-tab]').forEach(t => t.setAttribute('aria-current', String(t.dataset.tab === id)));
+    $$('#sideNav button').forEach(b => b.setAttribute('aria-current', String(b.dataset.go === id)));
+    closeStudy(false);
+    $('#' + id).scrollTop = 0;
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+  }
+  $$('[data-tab]').forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
+  document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) show(g.dataset.go); });
+
+  // segmented controls
+  $$('[data-seg]').forEach(seg => seg.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; selectSeg(seg.dataset.seg, b.dataset.panel); }));
+  function selectSeg(group, name){
+    $$(`[data-seg="${group}"] button`).forEach(x => x.setAttribute('aria-selected', String(x.dataset.panel === name)));
+    $$(`[data-group="${group}"]`).forEach(p => p.hidden = p.dataset.name !== name);
+  }
+  $$('[data-me]').forEach(b => b.addEventListener('click', () => selectSeg('me', b.dataset.me)));
+  $$('.range .rail button').forEach(b => b.addEventListener('click', () => $$('.range .rail button').forEach(x => x.setAttribute('aria-selected', String(x === b)))));
+  document.addEventListener('click', e => { const u = e.target.closest('.useful'); if (!u) return; const on = u.getAttribute('aria-pressed') !== 'true'; u.setAttribute('aria-pressed', String(on)); u.classList.toggle('on', on); const sp = u.querySelector('span'); const n = parseInt(sp.textContent.replace(/\D/g, ''), 10) + (on ? 1 : -1); sp.textContent = '役に立った ' + n; });
+  document.addEventListener('click', e => { const f = e.target.closest('.followbtn'); if (!f) return; const on = !f.classList.contains('on'); f.classList.toggle('on', on); f.textContent = on ? 'フォロー中' : 'フォロー'; });
+  $$('.choices[data-single]').forEach(c => c.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('button', c).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
+
+  // study session
+  const study = $('#study'), mini = $('#mini'), backdrop = $('#backdrop');
+  function paintSubject(){ const s = state.subj;
+    $$('.js-jk').forEach(j => { j.style.setProperty('--c', s.c); j.dataset.art = s.art; j.querySelector('b').textContent = s.code; });
+    $$('.js-subj-name').forEach(e => e.textContent = s.name);
+    $$('.js-issue').forEach(e => e.textContent = s.issue);
+    $$('.js-subj-title').forEach(e => e.textContent = `${s.name} · ${s.issue}`);
+    study.style.setProperty('--sc', s.c); }
+  function openStudy(){ if (!state.studying) { openSheet('#pickSheet'); return; } study.hidden = false; mini.hidden = true; $$('#sideNav button').forEach(b => b.setAttribute('aria-current', String(b.dataset.go === 'study'))); }
+  function closeStudy(updateNav = true){ study.hidden = true; mini.hidden = !state.studying; $('#homeLive').hidden = !state.studying; if (updateNav) $$('#sideNav button').forEach(b => b.setAttribute('aria-current', String(b.dataset.go === current))); }
+  $('#startBtn').addEventListener('click', () => state.studying ? openStudy() : openSheet('#pickSheet'));
+  $$('[data-open-study]').forEach(b => b.addEventListener('click', e => { if (e.target.closest('#miniPause')) return; openStudy(); }));
+  $('#closeStudy').addEventListener('click', () => closeStudy());
+  document.addEventListener('click', e => { const s = e.target.closest('[data-start]'); if (!s) return; const subj = SUBJ.find(x => x.id === s.dataset.start); state.subj = subj; if (!state.studying) { state.studying = true; state.paused = false; state.elapsed = 0; } closeSheets(); paintSubject(); tick(true); openStudy(); });
+  function togglePause(){ state.paused = !state.paused; const path = state.paused ? '<path d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2z"/>' : '<rect x="6" y="5" width="4.2" height="14" rx="1.3"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.3"/>';
+    $('#pauseBtn svg').innerHTML = path; $('#miniPause svg').innerHTML = path; $('#pauseBtn').setAttribute('aria-label', state.paused ? '再開' : '一時停止'); $('#miniPause').setAttribute('aria-label', state.paused ? '再開' : '一時停止'); }
+  $('#pauseBtn').addEventListener('click', togglePause);
+  $('#miniPause').addEventListener('click', e => { e.stopPropagation(); togglePause(); });
+  $('#minus5').addEventListener('click', () => { state.elapsed = Math.max(0, state.elapsed - 300); tick(true); });
+  $('#plus5').addEventListener('click', () => { state.elapsed += 300; tick(true); });
+  $('#stopBtn').addEventListener('click', () => { $('#commitMin').textContent = Math.max(1, Math.round(state.elapsed / 60)); openSheet('#commitSheet'); });
+  $('#commitBtn').addEventListener('click', () => {
+    const add = Math.max(1, Math.round(state.elapsed / 60)); state.todayMin += add; state.studying = false; state.paused = false; state.elapsed = 0;
+    state.todayLevel = Math.min(4, state.todayLevel + 1); todayCell.className = 'l' + state.todayLevel + ' today';
+    closeSheets(); closeStudy(); paintToday(); toast(`記録しました · ${state.subj.name} ${add}分`);
+    show('home');
+  });
+  function openSheet(sel){ backdrop.hidden = false; $(sel).hidden = false; }
+  function closeSheets(){ backdrop.hidden = true; $$('.sheet').forEach(s => s.hidden = true); }
+  backdrop.addEventListener('click', closeSheets);
+  $$('[data-close]').forEach(b => b.addEventListener('click', closeSheets));
+  let tId; function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(tId); tId = setTimeout(() => t.hidden = true, 2600); }
+
+  function paintToday(){ const h = Math.floor(state.todayMin / 60), m = state.todayMin % 60; $('#todayBig').innerHTML = `${h}h<span class="soft"> ${pad(m)}m</span>`;
+    const pct = Math.min(100, Math.round(state.todayMin / 180 * 100)); $('#goalPct').textContent = pct + '%'; $('#goalFill').style.width = pct + '%'; $('#goalKnob').style.left = pct + '%';
+    $$('.js-today-short').forEach(e => e.textContent = `${h}h ${pad(m)}m`); }
+
+  function tick(force){
+    if (state.studying && !state.paused && !force) state.elapsed++;
+    const e = state.elapsed;
+    $$('.js-session').forEach(el => el.textContent = hms(e));
+    $$('.js-session-short').forEach(el => el.textContent = `${pad(Math.floor(e / 3600))}:${pad(Math.floor(e / 60) % 60)}`);
+    const block = 1500, idx = Math.min(3, Math.floor(e / block)), within = e - idx * block;
+    $$('.js-pomo').forEach(el => el.textContent = `${idx + 1}/4`);
+    $$('#pomoBar b').forEach((b, i) => b.style.width = (i < idx ? 100 : i === idx ? Math.min(100, within / block * 100) : 0) + '%');
+    const left = Math.max(0, block - within); $('#toBreak').textContent = `${pad(Math.floor(left / 60))}:${pad(left % 60)}`;
+    $$('[data-live]').forEach(el => { const v = +el.dataset.live + (force ? 0 : 1); el.dataset.live = v; el.textContent = hms(v); });
+  }
+  setInterval(() => tick(false), 1000);
+
+  // ---------- boot ----------
+  paintSubject(); paintToday(); tick(true);
+  const start = (location.hash || '').slice(1);
+  show(VIEWS.includes(start) ? start : 'home');
+  if (start === 'study') openStudy();
+  $$('#sideNav button').forEach(b => b.addEventListener('click', () => { if (b.dataset.go === 'study') openStudy(); }));
+})();
+</script>
