@@ -83,11 +83,10 @@ export function ToastHost() {
   const [spread, setSpread] = useState(false);
   const collapse = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
-    const f = (i: Item[]) => setList(i);
+    const f = (i: Item[]) => { setList(i); if (i.length < 2) setSpread(false); };
     subs.add(f);
     return () => { subs.delete(f); };
   }, []);
-  useEffect(() => { if (list.length < 2) setSpread(false); }, [list.length]);
   const onPress = () => {
     if (list.length < 2) return;
     haptic.tap();

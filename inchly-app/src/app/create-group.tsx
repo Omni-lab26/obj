@@ -40,7 +40,7 @@ export default function CreateGroup() {
     if (nameError(name)) {
       setTouched(true);
       haptic.warn();
-      shake.value = withSequence(withTiming(-6, { duration: 50 }), withTiming(6, { duration: 70 }), withTiming(-3, { duration: 60 }), withTiming(0, { duration: 60 }));
+      shake.set(withSequence(withTiming(-6, { duration: 50 }), withTiming(6, { duration: 70 }), withTiming(-3, { duration: 60 }), withTiming(0, { duration: 60 })));
       return;
     }
     setPhase('saving');

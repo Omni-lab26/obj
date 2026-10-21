@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -26,12 +26,12 @@ export function SheetHost() {
   const H = Dimensions.get('window').height;
   const y = useSharedValue(H);
   const scrim = useSharedValue(0);
-  const height = useRef(H);
+  const height = useSharedValue(H);
 
   const finish = () => setRender(null);
   const close = () => {
-    y.value = withTiming(height.current + 40, { duration: 280, easing: ease.out }, (done) => { if (done) scheduleOnRN(finish); });
-    scrim.value = withTiming(0, { duration: 240 });
+    y.set(withTiming(height.get() + 40, { duration: 280, easing: ease.out }, (done) => { if (done) scheduleOnRN(finish); }));
+    scrim.set(withTiming(0, { duration: 240 }));
   };
   useEffect(() => {
     setter = (r) => setRender(() => r);
@@ -40,22 +40,22 @@ export function SheetHost() {
   });
   useEffect(() => {
     if (render) {
-      y.value = H;
-      y.value = withTiming(0, { duration: 380, easing: ease.out });
-      scrim.value = withTiming(1, { duration: 300 });
+      y.set(H);
+      y.set(withTiming(0, { duration: 380, easing: ease.out }));
+      scrim.set(withTiming(1, { duration: 300 }));
     }
   }, [render, H, y, scrim]);
 
-  const pan = useRef(
+  const [pan] = useState(() =>
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
-      onPanResponderMove: (_, g) => { y.value = Math.max(0, g.dy); },
+      onPanResponderMove: (_, g) => { y.set(Math.max(0, g.dy)); },
       onPanResponderRelease: (_, g) => {
         if (g.dy > 110 || g.vy > 1.1) closer?.();
-        else y.value = withTiming(0, { duration: 260, easing: ease.spring });
+        else y.set(withTiming(0, { duration: 260, easing: ease.spring }));
       },
     }),
-  ).current;
+  );
 
   const sa = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   const ka = useAnimatedStyle(() => ({ opacity: scrim.value }));
@@ -67,7 +67,7 @@ export function SheetHost() {
       </Animated.View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '90%' }} pointerEvents="box-none">
         <Animated.View
-          onLayout={(e) => { height.current = e.nativeEvent.layout.height; }}
+          onLayout={(e) => { height.set(e.nativeEvent.layout.height); }}
           style={[{ backgroundColor: t.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22 }, sa]}
           accessibilityViewIsModal>
           <View {...pan.panHandlers} style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>

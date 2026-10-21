@@ -53,8 +53,8 @@ export function Press({ style, scale = 0.96, children, onPressIn, onPressOut, on
       {...rest}
       style={outer}
       disabled={disabled}
-      onPressIn={(e) => { s.value = withTiming(scale, { duration: 120, easing: ease.press }); onPressIn?.(e); }}
-      onPressOut={(e) => { s.value = withTiming(1, { duration: 240, easing: ease.spring }); onPressOut?.(e); }}
+      onPressIn={(e) => { s.set(withTiming(scale, { duration: 120, easing: ease.press })); onPressIn?.(e); }}
+      onPressOut={(e) => { s.set(withTiming(1, { duration: 240, easing: ease.spring })); onPressOut?.(e); }}
       onPress={(e) => { if (haptics) haptic.tap(); onPress?.(e); }}>
       <Animated.View style={[inner, a, disabled && { opacity: 0.4 }]}>{children}</Animated.View>
     </Pressable>

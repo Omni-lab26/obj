@@ -68,7 +68,7 @@ export function Field({
 export function Stepper({ value, min, max, onChange, unit }: { value: number; min: number; max: number; onChange: (v: number) => void; unit: string }) {
   const t = useT();
   const v = useRef(value);
-  v.current = value;
+  useEffect(() => { v.current = value; }, [value]);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const step = (d: number) => {
     const nv = Math.max(min, Math.min(max, v.current + d));

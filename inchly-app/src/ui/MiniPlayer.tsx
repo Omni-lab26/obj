@@ -15,14 +15,18 @@ import { recordSheet } from './RecordSheet';
 const BLOCK = 1500;
 
 export function MiniPlayer() {
+  const running = useStore((x) => x.running);
+  // Mounting the bar only while running also resets its expanded state.
+  return running ? <Bar /> : null;
+}
+
+function Bar() {
   const t = useT();
   useNow();
   const s = useStore((x) => x);
   const [open, setOpen] = useState(false);
   const e = elapsedOf(s);
   const sj = subj(s.subj);
-  useEffect(() => { if (!s.running) setOpen(false); }, [s.running]);
-  if (!s.running) return null;
   const idx = Math.min(3, Math.floor(e / BLOCK));
   const w = e - idx * BLOCK;
   return (

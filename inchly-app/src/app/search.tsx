@@ -120,11 +120,14 @@ export default function Search() {
   const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   // Debounced search with a short skeleton, like a real request.
+  // `loading` is switched on by the input/tab handlers below; this only ends it.
   useEffect(() => {
-    setLoading(true);
     const id = setTimeout(() => { setQ(text.trim()); setLoading(false); }, text.trim() ? 550 : 350);
     return () => clearTimeout(id);
   }, [text, kind]);
+
+  const changeText = (v: string) => { setText(v); setLoading(true); };
+  const changeKind = (k: Kind) => { setKind(k); setLoading(true); };
 
   const pick = (n: string) => {
     if (!picked.includes(n) && picked.length >= 3) { haptic.warn(); toast('比べられるのは3校までです'); return; }
@@ -137,7 +140,7 @@ export default function Search() {
       <View style={{ paddingHorizontal: 20, paddingTop: 6 }}>
         <Txt size={13} w="700" tone="ink3" style={{ paddingTop: 12, paddingBottom: 6 }}>最近の検索</Txt>
         {RECENT.map((r) => (
-          <Pressable key={r} onPress={() => { haptic.tap(); setText(r.split(' ')[0]); }}
+          <Pressable key={r} onPress={() => { haptic.tap(); changeText(r.split(' ')[0]); }}
             style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: t.line, opacity: pressed ? 0.6 : 1 })}>
             <Icon name="clock" size={16} color={t.ink3} />
             <Txt size={14.5} tone="ink2">{r}</Txt>
@@ -223,18 +226,18 @@ export default function Search() {
       <View style={{ marginHorizontal: 20, marginTop: 2, height: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, borderRadius: 12, backgroundColor: t.surface,
         borderWidth: focused ? 1.6 : StyleSheet.hairlineWidth * 2, borderColor: focused ? t.ink : t.line }}>
         <Icon name="search" size={18} color={t.ink3} />
-        <TextInput ref={inputRef} value={text} onChangeText={setText} autoFocus placeholder="大学・ユーザー・塾・投稿" placeholderTextColor={t.ink3}
+        <TextInput ref={inputRef} value={text} onChangeText={changeText} autoFocus placeholder="大学・ユーザー・塾・投稿" placeholderTextColor={t.ink3}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} returnKeyType="search" clearButtonMode="never" autoCorrect={false}
           accessibilityLabel="検索" style={{ flex: 1, minWidth: 0, fontSize: 16, color: t.ink, fontFamily: font.ui, height: 44 }} />
         {text ? (
-          <Pressable onPress={() => { setText(''); inputRef.current?.focus(); }} hitSlop={10} accessibilityLabel="消す"
+          <Pressable onPress={() => { changeText(''); inputRef.current?.focus(); }} hitSlop={10} accessibilityLabel="消す"
             style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="x" size={11} color={t.ink3} width={2.6} />
           </Pressable>
         ) : null}
       </View>
       <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 }}>
-        <Segmented value={kind} onChange={setKind} options={[{ v: 'uni', label: '大学' }, { v: 'user', label: 'ユーザー' }, { v: 'juku', label: '塾' }]} />
+        <Segmented value={kind} onChange={changeKind} options={[{ v: 'uni', label: '大学' }, { v: 'user', label: 'ユーザー' }, { v: 'juku', label: '塾' }]} />
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" stickyHeaderIndices={showHeader ? [0] : undefined}
         contentContainerStyle={{ paddingBottom: insets.bottom + (picked.length >= 2 ? 96 : 24) }}>

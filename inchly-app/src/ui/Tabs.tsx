@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -11,16 +11,18 @@ type Box = { x: number; w: number };
 function useIndicator(index: number, boxes: Box[]) {
   const x = useSharedValue(0);
   const w = useSharedValue(0);
-  const [placed, setPlaced] = useState(false);
+  const o = useSharedValue(0);
+  const placed = useRef(false);
   useEffect(() => {
     const b = boxes[index];
     if (!b) return;
-    if (!placed) { x.value = b.x; w.value = b.w; setPlaced(true); return; }
-    x.value = withTiming(b.x, { duration: 320, easing: ease.out });
-    w.value = withTiming(b.w, { duration: 320, easing: ease.out });
-  }, [index, boxes, placed, x, w]);
-  const a = useAnimatedStyle(() => ({ width: w.value, transform: [{ translateX: x.value }] }));
-  return { a, placed };
+    // First measurement: jump into place and fade in; afterwards slide.
+    if (!placed.current) { x.set(b.x); w.set(b.w); o.set(1); placed.current = true; return; }
+    x.set(withTiming(b.x, { duration: 320, easing: ease.out }));
+    w.set(withTiming(b.w, { duration: 320, easing: ease.out }));
+  }, [index, boxes, x, w, o]);
+  const a = useAnimatedStyle(() => ({ opacity: o.value, width: w.value, transform: [{ translateX: x.value }] }));
+  return { a };
 }
 
 /** Segmented control on a sunken track; the white thumb slides to the selection. */
@@ -28,7 +30,7 @@ export function Segmented<K extends string>({ options, value, onChange, style }:
   const t = useT();
   const [boxes, setBoxes] = useState<Box[]>([]);
   const index = options.findIndex((o) => o.v === value);
-  const { a, placed } = useIndicator(index, boxes);
+  const { a } = useIndicator(index, boxes);
   const onLayout = (i: number) => (e: LayoutChangeEvent) => {
     const { x, width } = e.nativeEvent.layout;
     setBoxes((b) => { const n = [...b]; n[i] = { x, w: width }; return n; });
@@ -36,7 +38,7 @@ export function Segmented<K extends string>({ options, value, onChange, style }:
   return (
     <View style={[{ flexDirection: 'row', backgroundColor: t.sunken, borderRadius: 11, padding: 3 }, style]} accessibilityRole="tablist">
       <Animated.View
-        style={[{ position: 'absolute', top: 3, bottom: 3, left: 0, borderRadius: 8, backgroundColor: t.dark ? t.canvas : t.surface, opacity: placed ? 1 : 0,
+        style={[{ position: 'absolute', top: 3, bottom: 3, left: 0, borderRadius: 8, backgroundColor: t.dark ? t.canvas : t.surface,
           borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line }, a]}
       />
       {options.map((o, i) => (
@@ -55,7 +57,7 @@ export function UnderTabs<K extends string>({ options, value, onChange }: { opti
   const t = useT();
   const [boxes, setBoxes] = useState<Box[]>([]);
   const index = options.findIndex((o) => o.v === value);
-  const { a, placed } = useIndicator(index, boxes);
+  const { a } = useIndicator(index, boxes);
   const onLayout = (i: number) => (e: LayoutChangeEvent) => {
     const { x, width } = e.nativeEvent.layout;
     setBoxes((b) => { const n = [...b]; n[i] = { x, w: width }; return n; });
@@ -69,7 +71,7 @@ export function UnderTabs<K extends string>({ options, value, onChange }: { opti
             <Txt size={15} w={o.v === value ? '700' : '500'} tone={o.v === value ? 'ink' : 'ink3'}>{o.label}</Txt>
           </Pressable>
         ))}
-        <Animated.View style={[{ position: 'absolute', bottom: 0, left: 0, height: 2, borderRadius: 1, backgroundColor: t.ink, opacity: placed ? 1 : 0 }, a]} />
+        <Animated.View style={[{ position: 'absolute', bottom: 0, left: 0, height: 2, borderRadius: 1, backgroundColor: t.ink }, a]} />
       </ScrollView>
     </View>
   );

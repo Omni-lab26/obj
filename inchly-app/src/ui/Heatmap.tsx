@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -17,7 +17,7 @@ export function Heatmap({ weeks, seed, todayLevel = 3, gap = 3, legend = true }:
   const [hot, setHot] = useState<number | null>(null);
   const size = w ? (w - gap * (weeks - 1)) / weeks : 0;
   const geo = useRef({ size: 0, gap });
-  geo.current = { size, gap };
+  useEffect(() => { geo.current = { size, gap }; }, [size, gap]);
   const last = useRef<number | null>(null);
   const hide = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -33,7 +33,9 @@ export function Heatmap({ weeks, seed, todayLevel = 3, gap = 3, legend = true }:
     last.current = i;
     setHot(i);
   };
-  const pan = useRef(
+  // The responder is created once; its handlers read refs only when a gesture fires, never during render.
+  // eslint-disable-next-line react-hooks/refs
+  const [pan] = useState(() =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > Math.abs(g.dy),
@@ -43,7 +45,7 @@ export function Heatmap({ weeks, seed, todayLevel = 3, gap = 3, legend = true }:
       onPanResponderRelease: () => { hide.current = setTimeout(() => show(null), 1400); },
       onPanResponderTerminate: () => { hide.current = setTimeout(() => show(null), 600); },
     }),
-  ).current;
+  );
 
   let tip: { text: string; x: number; y: number } | null = null;
   if (hot !== null && size) {

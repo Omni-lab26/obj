@@ -67,7 +67,7 @@ export const elapsedOf = (s: State, now = Date.now()) =>
 
 /** Re-renders once per second while mounted. */
 export function useNow(ms = 1000) {
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), ms);
     return () => clearInterval(id);

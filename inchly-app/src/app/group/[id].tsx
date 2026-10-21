@@ -21,7 +21,6 @@ const QUIZ = { q: 'inevitable の意味は？', o: ['避けられない', 'あ�
 const push = (id: string, ...m: ChatMsg[]) => updateGroup(id, (g) => ({ ...g, msgs: [...g.msgs, ...m] }));
 
 export default function GroupScreen() {
-  const t = useT();
   const { id } = useLocalSearchParams<{ id: string }>();
   const g = useStore((s) => s.groups.find((x) => x.id === id) ?? s.groups[0]);
   const [tab, setTab] = useState<Tab>('chat');
@@ -226,7 +225,7 @@ function Card({ m, i, g }: { m: Extract<ChatMsg, { kind: 'card' }>; i: number; g
           const wrong = ans !== undefined && k === ans && k !== QUIZ.a;
           return (
             <Press key={o} disabled={ans !== undefined && !right && !wrong} scale={0.97}
-              onPress={() => { if (ans !== undefined) return; k === QUIZ.a ? haptic.success() : haptic.warn(); set((c) => ({ ...c, answered: k })); }}
+              onPress={() => { if (ans !== undefined) return; if (k === QUIZ.a) haptic.success(); else haptic.warn(); set((c) => ({ ...c, answered: k })); }}
               style={{ height: 40, paddingHorizontal: 12, borderRadius: 10, justifyContent: 'center', flexDirection: 'row', alignItems: 'center', gap: 6,
                 backgroundColor: right ? t.greenSoft : wrong ? t.redSoft : t.sunken }}>
               <Txt size={14} w={right || wrong ? '600' : '500'} tone={right ? 'greenInk' : wrong ? 'red' : 'ink'} style={{ flex: 1 }}>{o}</Txt>
@@ -246,7 +245,6 @@ function Card({ m, i, g }: { m: Extract<ChatMsg, { kind: 'card' }>; i: number; g
 
 // ---------- events ----------
 function Events({ g }: { g: Group }) {
-  const t = useT();
   // Clear the "just planned" highlight once it has been seen.
   useEffect(() => () => { if (g.events.some((e) => e.fresh)) updateGroup(g.id, (x) => ({ ...x, events: x.events.map((e) => ({ ...e, fresh: false })) })); }, [g.id, g.events]);
   const toggle = (e: GEvent) => {

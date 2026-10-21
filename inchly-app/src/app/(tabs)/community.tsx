@@ -38,7 +38,7 @@ export default function Community() {
 function Live() {
   const t = useT();
   const now = useNow();
-  const start = useRef(Date.now()).current;
+  const [start] = useState(() => Date.now());
   const since = Math.floor((now - start) / 1000);
   const [count, setCount] = useState(0);
   useEffect(() => {
@@ -185,7 +185,7 @@ function Helpful({ i, base }: { i: number; base: number }) {
   const [burst, setBurst] = useState(0);
   const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   const press = () => {
-    if (!on) { haptic.soft(); s.value = withSequence(withTiming(1.35, { duration: 120, easing: ease.out }), withSpring(1, { damping: 8, stiffness: 260 })); setBurst((b) => b + 1); }
+    if (!on) { haptic.soft(); s.set(withSequence(withTiming(1.35, { duration: 120, easing: ease.out }), withSpring(1, { damping: 8, stiffness: 260 }))); setBurst((b) => b + 1); }
     toggleHelpful(i);
   };
   return (
