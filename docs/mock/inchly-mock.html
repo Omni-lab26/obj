@@ -389,6 +389,65 @@ h2.sec{font:700 15px var(--f-body)}
 
 .toast{position:absolute;left:50%;top:58px;transform:translateX(-50%);z-index:50;padding:11px 16px;border-radius:999px;background:var(--solid);color:var(--on-solid);font:600 13px var(--f-body);white-space:nowrap;box-shadow:0 10px 30px rgba(30,20,60,.25)}
 
+/* group screen */
+.screen.ingroup .tabbar,.screen.ingroup .searchbtn,.screen.ingroup .miniplayer{display:none!important}
+.gview{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column}
+.ghead{display:flex;align-items:center;gap:10px;padding:58px 16px 10px}
+.backbtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none}
+.backbtn svg{width:18px;height:18px}
+.ghead .gicon{width:42px;height:42px;padding:6px}
+.ghead .t{flex:1;min-width:0}
+.ghead h2{font:800 18px/1.2 var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gseg{margin:0 16px 10px}
+.gbody{flex:1;overflow-y:auto;padding:4px 16px 110px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.gbody::-webkit-scrollbar{display:none}
+.chat{display:flex;flex-direction:column;gap:10px}
+.sys{align-self:center;font:500 10.5px/1.4 var(--f-mono);color:var(--ink-3);padding:5px 10px;border-radius:999px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);text-align:center;max-width:90%}
+.msg{display:flex;gap:8px;align-items:flex-end}
+.msg>div{display:flex;flex-direction:column;gap:4px;min-width:0;max-width:78%}
+.msg .who{font:500 10.5px var(--f-mono);color:var(--ink-3)}
+.bubble{padding:9px 13px;border-radius:18px 18px 18px 6px;background:var(--glass-strong);box-shadow:inset 0 0 0 1px var(--line);font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.msg.me{justify-content:flex-end}
+.msg.me>div{align-items:flex-end}
+.msg.me .bubble{border-radius:18px 18px 6px 18px;background:var(--solid);color:var(--on-solid);box-shadow:none}
+.attach{display:flex;gap:10px;align-items:center;padding:8px 10px 8px 8px;border-radius:16px;background:var(--glass-strong);box-shadow:inset 0 0 0 1px var(--line);min-width:0;text-align:left}
+.attach .b{font:700 13px/1.35 var(--f-body)}
+.attach>div{min-width:0}
+.th{width:46px;height:46px;border-radius:11px;flex:none;display:grid;place-items:center}
+.th-note{background:repeating-linear-gradient(180deg,#FFFFFF 0 7px,#DCE1F2 7px 8px);box-shadow:inset 0 0 0 1px rgba(30,26,51,.12)}
+.th-link{background:linear-gradient(135deg,#2A2550,#5B4BA8)}
+.th-link::after{content:"";border-left:10px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:3px}
+.th-book{background:#0F5E5A;color:#fff;font:800 14px var(--f-display)}
+.th-plan,.th-record{background:var(--pos-bg);color:var(--pos)}
+.th svg{width:22px;height:22px}
+.sharerow{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--hair)}
+.sharerow:first-child{border-top:0;padding-top:0}
+.sharerow .t{flex:1;min-width:0}
+.composer{position:absolute;left:12px;right:12px;bottom:16px;z-index:26;display:flex;align-items:center;gap:8px;padding:7px;border-radius:28px}
+.composer input{flex:1;min-width:0;border:0;background:none;outline:none;font:400 15px var(--f-body);color:var(--ink);padding:6px 4px}
+.plusbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);flex:none}
+.plusbtn svg{width:18px;height:18px}
+.ev{display:flex;gap:12px;padding:14px 0;border-top:1px solid var(--hair)}
+.ev:first-child{border-top:0;padding-top:0}
+.evdate{width:52px;flex:none;align-self:flex-start;border-radius:14px;background:var(--solid);color:var(--on-solid);display:flex;flex-direction:column;align-items:center;padding:7px 0;line-height:1.15}
+.evdate span{font:500 10px var(--f-mono);opacity:.75}
+.evdate b{font:800 22px var(--f-display)}
+.ev .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.ev h4{margin:0;font:700 15px/1.35 var(--f-body)}
+.ev p{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.avs{display:flex;align-items:center}
+.avs .av{width:22px;height:22px;font-size:9px;margin-left:-6px;box-shadow:0 0 0 2px var(--glass-strong)}
+.avs .av:first-child{margin-left:0}
+.avs span{margin-left:8px;font:500 11px var(--f-mono);color:var(--ink-3)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field input,.field textarea{width:100%;border:0;border-radius:14px;padding:11px 12px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);font:400 15px var(--f-body);color:var(--ink);outline:none;resize:none}
+.field input:focus,.field textarea:focus{box-shadow:inset 0 0 0 2px var(--knob)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sharegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sharegrid button{display:flex;align-items:center;gap:10px;padding:10px;border-radius:16px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);font:600 13px var(--f-body);text-align:left}
+.sharegrid .th{width:38px;height:38px;border-radius:10px}
+.group{width:100%;text-align:left}
+
 /* ---------- phone width: the app fills the screen ---------- */
 @media (max-width:960px){.side{display:none}}
 @media (max-width:520px){
@@ -398,6 +457,7 @@ h2.sec{font:700 15px var(--f-body)}
   .statusbar{display:none}
   .view{padding-top:18px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
   .studyview{padding-top:22px}
+  .ghead{padding-top:18px}
   .toast{top:16px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.holo{transform:none!important}}
@@ -412,6 +472,7 @@ h2.sec{font:700 15px var(--f-body)}
       <button data-go="subjects"><span>科目</span><span>LIBRARY</span></button>
       <button data-go="study"><span>勉強中</span><span>NOW</span></button>
       <button data-go="social"><span>みんな</span><span>SOCIAL</span></button>
+      <button data-go="group"><span>グループ</span><span>GROUP</span></button>
       <button data-go="me"><span>マイページ</span><span>ME</span></button>
       <button data-go="search"><span>さがす</span><span>SEARCH</span></button>
     </nav>
@@ -561,8 +622,9 @@ h2.sec{font:700 15px var(--f-body)}
         </div>
 
         <div data-group="soc" data-name="groups" hidden style="display:flex;flex-direction:column;gap:14px">
+          <button class="btn solid" id="createGroupBtn">グループを作る</button>
           <section class="card glass"><div class="label">MY GROUPS</div><div id="groups"></div></section>
-          <button class="btn">グループを作る</button>
+          <section class="card glass"><div class="label">おすすめの公開グループ</div><div id="pubGroups"></div></section>
         </div>
       </section>
 
@@ -636,6 +698,39 @@ h2.sec{font:700 15px var(--f-body)}
       </nav>
       <button class="searchbtn glass" data-tab="search" aria-label="さがす"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
 
+      <!-- ===== GROUP ===== -->
+      <section class="gview aurora grain" id="gview" hidden aria-label="グループ">
+        <header class="ghead">
+          <button class="backbtn glass" id="gBack" aria-label="グループ一覧に戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <div class="gicon" id="gIcon"></div>
+          <div class="t"><h2 id="gTitle">グループ</h2><div class="mono dim" style="font-size:11px" id="gMeta"></div></div>
+          <span class="chip"><span class="livedot" style="width:6px;height:6px"></span><span id="gLive">3</span> LIVE</span>
+        </header>
+        <div class="seg glass gseg" role="tablist" data-seg="grp">
+          <button role="tab" aria-selected="true" data-panel="chat">チャット</button><button role="tab" aria-selected="false" data-panel="shared">共有</button><button role="tab" aria-selected="false" data-panel="events">イベント</button><button role="tab" aria-selected="false" data-panel="members">メンバー</button>
+        </div>
+        <div class="gbody" id="gbody">
+          <div data-group="grp" data-name="chat" class="chat" id="gChat"></div>
+          <div data-group="grp" data-name="shared" hidden style="display:flex;flex-direction:column;gap:12px">
+            <button class="btn solid" data-open-share>グループに共有する</button>
+            <section class="card glass"><div class="label">SHARED · ノート・リンク・問題集・テンプレ</div><div id="gShared"></div></section>
+          </div>
+          <div data-group="grp" data-name="events" hidden style="display:flex;flex-direction:column;gap:12px">
+            <button class="btn solid" id="newEventBtn">イベントを企画する</button>
+            <section class="card glass"><div class="label">UPCOMING</div><div id="gEvents"></div></section>
+          </div>
+          <div data-group="grp" data-name="members" hidden style="display:flex;flex-direction:column;gap:12px">
+            <section class="card glass"><div class="row between"><span class="label">THIS WEEK · グループ内</span><span class="chip" id="gTotal">合計 0h</span></div><div class="people" id="gMembers"></div></section>
+            <section class="card glass"><div class="label">メンバーを招待</div><div class="mono dim2" id="inviteLink" style="font-size:12px;overflow-wrap:anywhere;user-select:all">https://getinchly.com/g/rk7Q2m</div><button class="btn" id="copyInvite">招待リンクをコピー</button></section>
+          </div>
+        </div>
+        <form class="composer glass" id="composer">
+          <button type="button" class="plusbtn" data-open-share aria-label="ノートやリンクを共有"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <input id="msgInput" type="text" placeholder="メッセージ" autocomplete="off" aria-label="メッセージ">
+          <button type="submit" class="roundbtn" aria-label="送信"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11.2 19.2 4.4c.7-.3 1.4.4 1.1 1.1L13.5 20.7c-.3.7-1.3.6-1.5-.1l-1.6-5.9-5.9-1.6c-.7-.2-.8-1.2-.1-1.5z"/></svg></button>
+        </form>
+      </section>
+
       <!-- ===== STUDY (now studying) ===== -->
       <section class="studyview" id="study" aria-label="勉強中" hidden style="--sc:#0F5E5A">
         <div class="top">
@@ -679,6 +774,37 @@ h2.sec{font:700 15px var(--f-body)}
         <button class="btn solid" id="commitBtn">記録する</button>
       </section>
 
+      <!-- create group -->
+      <form class="sheet" id="groupSheet" hidden aria-label="グループを作る">
+        <div class="grab"></div>
+        <div class="row between"><h3>グループを作る</h3><button type="button" class="chip" data-close>閉じる</button></div>
+        <div class="field"><label class="label" for="gfName">グループ名</label><input id="gfName" required maxlength="24" placeholder="例：東大 理一 2027"></div>
+        <div class="field"><label class="label" for="gfDesc">ひとこと</label><textarea id="gfDesc" rows="2" placeholder="どんな人と、何をがんばるグループ？"></textarea></div>
+        <div><div class="label" style="margin-bottom:8px">テーマ</div><div class="choices" data-single id="gfTheme"><button type="button" aria-pressed="true">志望校</button><button type="button" aria-pressed="false">科目</button><button type="button" aria-pressed="false">朝活・夜活</button><button type="button" aria-pressed="false">資格</button><button type="button" aria-pressed="false">友だち</button></div></div>
+        <div><div class="label" style="margin-bottom:8px">参加のしかた</div><div class="choices" data-single id="gfJoin"><button type="button" aria-pressed="true">招待制</button><button type="button" aria-pressed="false">公開（だれでも参加）</button></div></div>
+        <div><div class="label" style="margin-bottom:8px">定員</div><div class="choices" data-single id="gfMax"><button type="button" aria-pressed="false">5人</button><button type="button" aria-pressed="true">10人</button><button type="button" aria-pressed="false">30人</button><button type="button" aria-pressed="false">50人</button></div></div>
+        <button class="btn solid" type="submit">作成する</button>
+      </form>
+
+      <!-- plan event -->
+      <form class="sheet" id="eventSheet" hidden aria-label="イベントを企画する">
+        <div class="grab"></div>
+        <div class="row between"><h3>イベントを企画する</h3><button type="button" class="chip" data-close>閉じる</button></div>
+        <div class="field"><label class="label" for="efTitle">タイトル</label><input id="efTitle" required maxlength="30" placeholder="例：日曜もくもく会"></div>
+        <div><div class="label" style="margin-bottom:8px">種類</div><div class="choices" data-single id="efType"><button type="button" aria-pressed="true">もくもく自習</button><button type="button" aria-pressed="false">時間チャレンジ</button><button type="button" aria-pressed="false">振り返り会</button><button type="button" aria-pressed="false">問題の出し合い</button></div></div>
+        <div><div class="label" style="margin-bottom:8px">日にち</div><div class="choices" data-single id="efDay"><button type="button" aria-pressed="false">今日</button><button type="button" aria-pressed="false">明日</button><button type="button" aria-pressed="true">今週末</button><button type="button" aria-pressed="false">来週</button></div></div>
+        <div class="two"><div class="field"><label class="label" for="efTime">開始</label><input id="efTime" type="time" value="20:00"></div><div class="field"><label class="label" for="efGoal">目標時間（任意）</label><input id="efGoal" type="number" min="1" inputmode="numeric" placeholder="例：100"></div></div>
+        <div class="field"><label class="label" for="efDesc">ひとこと（任意）</label><textarea id="efDesc" rows="2" placeholder="例：カメラなし。終わったら一言報告"></textarea></div>
+        <button class="btn solid" type="submit">企画する</button>
+      </form>
+
+      <!-- share to group -->
+      <section class="sheet" id="shareSheet" hidden aria-label="グループに共有">
+        <div class="grab"></div>
+        <div class="row between"><h3>グループに共有</h3><button type="button" class="chip" data-close>閉じる</button></div>
+        <div class="sharegrid" id="shareGrid"></div>
+      </section>
+
       <div class="toast" id="toast" hidden></div>
     </div>
   </div>
@@ -719,16 +845,47 @@ h2.sec{font:700 15px var(--f-body)}
     { text:'古文単語、朝の10分だけでも草が埋まるのがうれしい。続ける理由ってこういうのでいいんだと思う。', tags:['#国語','#朝活'], useful:31, rep:3, when:'昨日' },
   ];
   const GROUPS = [
-    { n:'東大 理一 2027', m:24, today:'68h', cs:['#3E4FC9','#0F5E5A','#E8663D','#C9952A'], rank:'グループ内 5位' },
-    { n:'朝活 6:00 スタート', m:12, today:'14h', cs:['#C9952A','#8C3B6E','#2E6B3F','#3E4FC9'], rank:'グループ内 2位' },
-    { n:'英語長文 毎日1題', m:41, today:'52h', cs:['#0F5E5A','#E8663D','#8C3B6E','#2E6B3F'], rank:'グループ内 11位' },
+    { id:'g1', n:'東大 理一 2027', m:24, live:3, today:'68h', cs:['#3E4FC9','#0F5E5A','#E8663D','#C9952A'], rank:'グループ内 5位', join:'招待制',
+      msgs:[
+        { sys:'そら が 数学 を 45分 コミットしました' },
+        { n:'みお', c:'#E8663D', text:'今日の英語の要約、時間を測ったら18分だった…目標は15分' },
+        { n:'そら', c:'#3E4FC9', text:'段落ごとに一文メモを先に作ると速くなるよ。最初は遅くても大丈夫' },
+        { n:'かいと', c:'#0F5E5A', share:{ type:'note', title:'電磁気 まとめノート p.12', meta:'画像 2枚' } },
+        { me:true, text:'日曜のもくもく会、9時からでいい？' },
+        { n:'ゆな', c:'#8C3B6E', text:'OK！参加する' },
+        { sys:'あなた がイベント「日曜もくもく会」を企画しました' },
+      ],
+      shares:[
+        { type:'note', title:'電磁気 まとめノート p.12', by:'かいと', when:'今日', meta:'画像 2枚' },
+        { type:'link', title:'【数III】置換積分の「置き方」がわかる15分', by:'そら', when:'昨日', meta:'YouTube' },
+        { type:'book', title:'東大英語 要約問題の進め方', by:'みお', when:'3日前', meta:'問題集の進め方' },
+        { type:'plan', title:'11月の二次対策 ToDoテンプレ', by:'あなた', when:'先週', meta:'ToDo 24件 · コピーできます' },
+      ],
+      events:[
+        { mo:'10', d:'25', dow:'日', title:'日曜もくもく会', time:'9:00 – 12:00', type:'もくもく自習', joined:true, count:9, desc:'カメラなし。ライブで一緒に勉強して、終わったら一言報告' },
+        { mo:'10', d:'31', dow:'土', title:'10月 合計200時間チャレンジ', time:'10/1 – 10/31', type:'時間チャレンジ', joined:true, count:17, goal:200, done:142 },
+        { mo:'11', d:'08', dow:'日', title:'模試の振り返り会', time:'20:00 – 21:00', type:'振り返り会', joined:false, count:6, desc:'間違えた問題を1人1問ずつ持ち寄る' },
+      ] },
+    { id:'g2', n:'朝活 6:00 スタート', m:12, live:1, today:'14h', cs:['#C9952A','#8C3B6E','#2E6B3F','#3E4FC9'], rank:'グループ内 2位', join:'公開',
+      msgs:[ { sys:'れん が 世界史 を 30分 コミットしました' }, { n:'れん', c:'#2E6B3F', text:'おはよう。今日は論述1題から' }, { me:true, text:'おはよう、古文単語80個やる' } ],
+      shares:[ { type:'plan', title:'朝30分 ルーティン表', by:'れん', when:'先週', meta:'ToDo 7件' } ],
+      events:[ { mo:'10', d:'26', dow:'月', title:'1週間 毎朝6時チャレンジ', time:'10/26 – 11/1', type:'時間チャレンジ', joined:false, count:8, goal:35, done:0 } ] },
+    { id:'g3', n:'英語長文 毎日1題', m:41, live:5, today:'52h', cs:['#0F5E5A','#E8663D','#8C3B6E','#2E6B3F'], rank:'グループ内 11位', join:'公開',
+      msgs:[ { sys:'今日のお題：やっておきたい英語長文 700 · 第8講' }, { n:'みお', c:'#E8663D', text:'第8講、設問3の指示語がむずかしい' } ],
+      shares:[], events:[] },
   ];
+  const PUBLIC_GROUPS = [
+    { n:'共通テスト 数IA 毎日1セット', m:86, cs:['#E8663D','#3E4FC9','#C9952A','#0F5E5A'] },
+    { n:'夜22時から 一緒に自習', m:132, cs:['#8C3B6E','#2E6B3F','#3E4FC9','#E8663D'] },
+  ];
+
 
   // ---------- helpers ----------
   function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const jk = (s, extra = '') => `<span class="jk" data-art="${s.art}" style="--c:${s.c};${extra}"><b>${s.code}</b></span>`;
   const av = (c, n, size = '') => `<span class="av" style="--c:${c};${size}">${n[0]}</span>`;
   const pad = n => String(n).padStart(2, '0');
+  const esc = t => String(t).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
   const hms = s => `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
   const level = r => r < .18 ? 0 : r < .38 ? 1 : r < .62 ? 2 : r < .84 ? 3 : 4;
   const ico = {
@@ -798,7 +955,11 @@ h2.sec{font:700 15px var(--f-body)}
     </article>`;
   $('#feed').innerHTML = FEED.map(p => postHTML(p)).join('');
   $('#myPosts').innerHTML = MYPOSTS.map(p => postHTML(p, true)).join('');
-  $('#groups').innerHTML = GROUPS.map(g => `<div class="group"><div class="gicon">${g.cs.map(c => `<i style="--c:${c}"></i>`).join('')}</div><div style="flex:1;min-width:0"><div style="font-weight:700">${g.n}</div><div class="mono dim" style="font-size:11px">${g.m}人 · 今日の合計 ${g.today}</div></div><span class="chip">${g.rank}</span></div>`).join('');
+  const gicon = cs => cs.map(c => `<i style="--c:${c}"></i>`).join('');
+  function renderGroups(){
+    $('#groups').innerHTML = GROUPS.map(g => `<button class="group" data-gid="${g.id}"><span class="gicon">${gicon(g.cs)}</span><span style="flex:1;min-width:0"><span style="display:block;font-weight:700">${esc(g.n)}</span><span class="mono dim" style="display:block;font-size:11px">${g.m}人 · 今日の合計 ${g.today} · ${g.join}</span></span><span class="chip">${g.rank}</span></button>`).join('');
+    $('#pubGroups').innerHTML = PUBLIC_GROUPS.map(g => `<div class="group"><span class="gicon">${gicon(g.cs)}</span><span style="flex:1;min-width:0"><span style="display:block;font-weight:700">${g.n}</span><span class="mono dim" style="display:block;font-size:11px">${g.m}人 · 公開</span></span><button class="followbtn" data-on="参加中" data-off="参加">参加</button></div>`).join('');
+  }
   const personRow = (p, btn) => `<div class="person">${av(p.c, p.n)}<div class="t"><div>${p.n} <span class="mono dim" style="font-size:11px;font-weight:400">@${p.h}</span></div><div class="mono dim" style="font-size:11px">${p.g} · 今日 ${(p.t / 3600 + 1.2).toFixed(1)}h</div></div>${btn}</div>`;
   $('#following').innerHTML = PEOPLE.map(p => personRow(p, '<button class="followbtn on">フォロー中</button>')).join('');
   $('#followers').innerHTML = PEOPLE.slice().reverse().map((p, i) => personRow(p, i % 2 ? '<button class="followbtn on">フォロー中</button>' : '<button class="followbtn">フォロー</button>')).join('');
@@ -821,6 +982,8 @@ h2.sec{font:700 15px var(--f-body)}
   let current = 'home';
   function show(id){
     if (id === 'study') { openStudy(); return; }
+    if (id === 'group') { show('social'); selectSeg('soc', 'groups'); openGroup('g1'); return; }
+    if (typeof closeGroup === 'function' && !gview.hidden) closeGroup();
     if (!VIEWS.includes(id)) id = 'home';
     current = id;
     VIEWS.forEach(v => { $('#' + v).hidden = v !== id; });
@@ -838,11 +1001,12 @@ h2.sec{font:700 15px var(--f-body)}
   function selectSeg(group, name){
     $$(`[data-seg="${group}"] button`).forEach(x => x.setAttribute('aria-selected', String(x.dataset.panel === name)));
     $$(`[data-group="${group}"]`).forEach(p => p.hidden = p.dataset.name !== name);
+    if (group === 'grp') $('#composer').hidden = name !== 'chat';
   }
   $$('[data-me]').forEach(b => b.addEventListener('click', () => selectSeg('me', b.dataset.me)));
   $$('.range .rail button').forEach(b => b.addEventListener('click', () => $$('.range .rail button').forEach(x => x.setAttribute('aria-selected', String(x === b)))));
   document.addEventListener('click', e => { const u = e.target.closest('.useful'); if (!u) return; const on = u.getAttribute('aria-pressed') !== 'true'; u.setAttribute('aria-pressed', String(on)); u.classList.toggle('on', on); const sp = u.querySelector('span'); const n = parseInt(sp.textContent.replace(/\D/g, ''), 10) + (on ? 1 : -1); sp.textContent = '役に立った ' + n; });
-  document.addEventListener('click', e => { const f = e.target.closest('.followbtn'); if (!f) return; const on = !f.classList.contains('on'); f.classList.toggle('on', on); f.textContent = on ? 'フォロー中' : 'フォロー'; });
+  document.addEventListener('click', e => { const f = e.target.closest('.followbtn'); if (!f) return; const on = !f.classList.contains('on'); f.classList.toggle('on', on); f.textContent = on ? (f.dataset.on || 'フォロー中') : (f.dataset.off || 'フォロー'); });
   $$('.choices[data-single]').forEach(c => c.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('button', c).forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
 
   // study session
@@ -894,6 +1058,80 @@ h2.sec{font:700 15px var(--f-body)}
     $$('[data-live]').forEach(el => { const v = +el.dataset.live + (force ? 0 : 1); el.dataset.live = v; el.textContent = hms(v); });
   }
   setInterval(() => tick(false), 1000);
+
+  // ---------- groups ----------
+  const screen = $('#screen'), gview = $('#gview');
+  let curG = null;
+  const SHARE_TYPES = [
+    { type:'note', label:'ノートの写真', title:'数学 まとめノート（積分）', meta:'画像 1枚' },
+    { type:'link', label:'リンク・動画', title:'わかりやすかった解説動画', meta:'YouTube' },
+    { type:'book', label:'問題集の進め方', title:'青チャート 数III の回し方', meta:'問題集の進め方' },
+    { type:'plan', label:'ToDoテンプレ', title:'共通テストまでの英語 ToDo', meta:'ToDo 18件 · コピーできます' },
+    { type:'record', label:'今日の記録カード', title:'', meta:'草 23日連続' },
+  ];
+  const thIcon = t => t === 'book' ? 'B' : t === 'plan' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>' : t === 'record' ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="5" rx="1.2"/><rect x="9.5" y="3" width="5" height="5" rx="1.2" opacity=".5"/><rect x="16" y="3" width="5" height="5" rx="1.2"/><rect x="3" y="9.5" width="5" height="5" rx="1.2" opacity=".5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/><rect x="16" y="9.5" width="5" height="5" rx="1.2" opacity=".3"/><rect x="3" y="16" width="5" height="5" rx="1.2"/><rect x="9.5" y="16" width="5" height="5" rx="1.2" opacity=".3"/><rect x="16" y="16" width="5" height="5" rx="1.2"/></svg>' : '';
+  const attach = sh => `<div class="attach"><span class="th th-${sh.type}">${thIcon(sh.type)}</span><div><div class="b">${esc(sh.title)}</div><div class="mono dim" style="font-size:10.5px">${esc(sh.meta || '')}</div></div></div>`;
+  const msgHTML = m => {
+    if (m.sys) return `<div class="sys">${esc(m.sys)}</div>`;
+    const body = (m.text ? `<div class="bubble">${esc(m.text)}</div>` : '') + (m.share ? attach(m.share) : '');
+    if (m.me) return `<div class="msg me"><div>${body}</div></div>`;
+    return `<div class="msg">${av(m.c, m.n, 'width:30px;height:30px;font-size:12px')}<div><span class="who">${esc(m.n)}</span>${body}</div></div>`;
+  };
+  function renderChat(){ $('#gChat').innerHTML = curG.msgs.map(msgHTML).join(''); const b = $('#gbody'); b.scrollTop = b.scrollHeight; }
+  function renderShared(){ $('#gShared').innerHTML = curG.shares.length ? curG.shares.map(sh => `<div class="sharerow"><span class="th th-${sh.type}">${thIcon(sh.type)}</span><div class="t"><div style="font-weight:700;line-height:1.35">${esc(sh.title)}</div><div class="mono dim" style="font-size:10.5px">${esc(sh.by)} · ${esc(sh.when)} · ${esc(sh.meta)}</div></div><button class="followbtn" data-on="保存済み" data-off="保存">保存</button></div>`).join('') : '<p class="dim" style="font-size:13px">まだ何も共有されていません。ノートの写真や役に立った動画を共有してみましょう。</p>'; }
+  function renderEvents(){ $('#gEvents').innerHTML = curG.events.length ? curG.events.map((e, i) => {
+      const goal = e.goal ? `<div class="bar"><i style="width:${Math.min(100, Math.round(e.done / e.goal * 100))}%"></i></div><div class="mono dim" style="font-size:11px">${e.done}h / ${e.goal}h · みんなの合計</div>` : '';
+      const faces = PEOPLE.slice(0, Math.min(4, e.count)).map(p => av(p.c, p.n)).join('');
+      return `<article class="ev"><div class="evdate"><span>${e.mo}月</span><b>${e.d}</b><span>${e.dow}</span></div><div class="t"><div class="row wrap"><span class="chip">${esc(e.type)}</span><span class="mono dim" style="font-size:11px">${esc(e.time)}</span></div><h4>${esc(e.title)}</h4>${e.desc ? `<p>${esc(e.desc)}</p>` : ''}${goal}<div class="row between"><div class="avs">${faces}<span>${e.count}人 参加</span></div><button class="followbtn ${e.joined ? 'on' : ''} js-join" data-ev="${i}">${e.joined ? '参加中' : '参加する'}</button></div></div></article>`; }).join('')
+      : '<p class="dim" style="font-size:13px">予定されているイベントはありません。もくもく会やチャレンジを企画してみましょう。</p>'; }
+  function renderMembers(){ const rows = [...PEOPLE.map((p, i) => ({ n:p.n, h:p.h, c:p.c, w:[31.2, 27.5, 22.8, 19.4, 12.6][i] })), { n:'あなた', h:'haru_study', c:'#6E56CF', w:24.4, me:true }].sort((a, b) => b.w - a.w);
+    $('#gMembers').innerHTML = rows.map((p, i) => `<div class="person ${p.me ? 'me' : ''}"><span class="rank ${i < 3 ? 'top' : ''}">${i + 1}</span>${av(p.c, p.n)}<div class="t"><div>${esc(p.n)}</div><div class="mono dim" style="font-size:11px">@${esc(p.h)}</div></div><div class="r">${p.w.toFixed(1)}h</div></div>`).join('');
+    $('#gTotal').textContent = '合計 ' + rows.reduce((a, b) => a + b.w, 0).toFixed(1) + 'h'; }
+  function openGroup(id){
+    curG = GROUPS.find(g => g.id === id) || GROUPS[0];
+    $('#gIcon').innerHTML = gicon(curG.cs); $('#gTitle').textContent = curG.n; $('#gMeta').textContent = `${curG.m}人 · ${curG.join} · 今日 ${curG.today}`; $('#gLive').textContent = curG.live;
+    renderShared(); renderEvents(); renderMembers();
+    gview.hidden = false; screen.classList.add('ingroup'); selectSeg('grp', 'chat'); renderChat();
+  }
+  function closeGroup(){ gview.hidden = true; screen.classList.remove('ingroup'); curG = null; }
+  $('#gBack').addEventListener('click', closeGroup);
+  document.addEventListener('click', e => { const g = e.target.closest('[data-gid]'); if (g) openGroup(g.dataset.gid); });
+  const REPLIES = ['いいね、一緒にやろう', '了解！', 'それ助かる、ありがとう', 'おつかれ！こっちもあと1ポモ'];
+  $('#composer').addEventListener('submit', e => {
+    e.preventDefault(); const inp = $('#msgInput'); const text = inp.value.trim(); if (!text || !curG) return;
+    curG.msgs.push({ me:true, text }); inp.value = ''; renderChat();
+    const g = curG; setTimeout(() => { if (curG !== g) return; const p = PEOPLE[Math.floor(Math.random() * 4)]; g.msgs.push({ n:p.n, c:p.c, text:REPLIES[Math.floor(Math.random() * REPLIES.length)] }); renderChat(); }, 1400);
+  });
+  $('#shareGrid').innerHTML = SHARE_TYPES.map(t => `<button type="button" data-share-type="${t.type}"><span class="th th-${t.type}">${thIcon(t.type)}</span>${t.label}</button>`).join('');
+  document.addEventListener('click', e => { if (e.target.closest('[data-open-share]')) openSheet('#shareSheet'); });
+  $('#shareGrid').addEventListener('click', e => { const b = e.target.closest('[data-share-type]'); if (!b || !curG) return;
+    const t = SHARE_TYPES.find(x => x.type === b.dataset.shareType); const h = Math.floor(state.todayMin / 60), m = state.todayMin % 60;
+    const item = { type:t.type, title:t.type === 'record' ? `今日の記録 ${h}h ${pad(m)}m` : t.title, meta:t.meta, by:'あなた', when:'たった今' };
+    curG.shares.unshift(item); curG.msgs.push({ me:true, share:item }); closeSheets(); renderShared(); selectSeg('grp', 'chat'); renderChat(); toast('グループに共有しました'); });
+  document.addEventListener('click', e => { const j = e.target.closest('.js-join'); if (!j || !curG) return; e.stopImmediatePropagation(); const ev = curG.events[+j.dataset.ev]; ev.joined = !ev.joined; ev.count += ev.joined ? 1 : -1; renderEvents(); }, true);
+  $('#newEventBtn').addEventListener('click', () => { openSheet('#eventSheet'); setTimeout(() => $('#efTitle').focus(), 50); });
+  $('#createGroupBtn').addEventListener('click', () => { openSheet('#groupSheet'); setTimeout(() => $('#gfName').focus(), 50); });
+  const picked = id => $(`#${id} [aria-pressed="true"]`).textContent;
+  const DAYS = { '今日':['10','21','水'], '明日':['10','22','木'], '今週末':['10','25','日'], '来週':['10','28','水'] };
+  $('#eventSheet').addEventListener('submit', e => {
+    e.preventDefault(); if (!curG) return; const title = $('#efTitle').value.trim(); if (!title) return;
+    const [mo, d, dow] = DAYS[picked('efDay')]; const goal = parseInt($('#efGoal').value, 10);
+    curG.events.unshift({ mo, d, dow, title, time:$('#efTime').value || '20:00', type:picked('efType'), joined:true, count:1, desc:$('#efDesc').value.trim(), ...(goal > 0 ? { goal, done:0 } : {}) });
+    curG.msgs.push({ sys:`あなた がイベント「${title}」を企画しました` });
+    e.target.reset(); closeSheets(); renderEvents(); renderChat(); selectSeg('grp', 'events'); toast('イベントを企画しました');
+  });
+  const PALETTE = ['#0F5E5A','#E8663D','#3E4FC9','#C9952A','#8C3B6E','#2E6B3F','#6E56CF'];
+  $('#groupSheet').addEventListener('submit', e => {
+    e.preventDefault(); const name = $('#gfName').value.trim(); if (!name) return;
+    const desc = $('#gfDesc').value.trim(); const join = picked('gfJoin').startsWith('公開') ? '公開' : '招待制';
+    const cs = Array.from({ length:4 }, (_, i) => PALETTE[(GROUPS.length * 3 + i * 2) % PALETTE.length]);
+    const g = { id:'g' + Date.now(), n:name, m:1, live:0, today:'0h', cs, rank:'作成者', join,
+      msgs:[ { sys:`グループ「${name}」を作りました · テーマ：${picked('gfTheme')} · 定員 ${picked('gfMax')}` }, ...(desc ? [{ me:true, text:desc }] : []), { sys:'メンバー タブから招待リンクを送れます' } ], shares:[], events:[] };
+    GROUPS.unshift(g); renderGroups(); e.target.reset(); closeSheets(); openGroup(g.id); toast('グループを作りました');
+  });
+  $('#copyInvite').addEventListener('click', async () => { const link = $('#inviteLink').textContent;
+    try { await navigator.clipboard.writeText(link); toast('招待リンクをコピーしました'); } catch (err) { const r = document.createRange(); r.selectNodeContents($('#inviteLink')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('リンクを選択しました。コピーしてください'); } });
+  renderGroups();
 
   // ---------- boot ----------
   paintSubject(); paintToday(); tick(true);
