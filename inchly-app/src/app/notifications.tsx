@@ -4,19 +4,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NOTIFS, Notif, PERSON_COLOR, ROOM } from '@/data';
 import { getState, setState, startStudy, toggleFollow, toggleIn, useStore } from '@/store';
-import { hair, lift, radius, useT } from '@/theme';
+import { hair, radius, useT } from '@/theme';
 import { Avatar, Btn, Empty, haptic, IconBtn, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
-import { IconName } from '@/ui/Icon';
-import { Sticker, StickerName } from '@/ui/Sticker';
+import { Icon, IconName } from '@/ui/Icon';
 import { SwipeRow } from '@/ui/SwipeRow';
 import { Segmented } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 
 type Filter = 'all' | 'imp' | 'study';
 
-// Each kind of notice wears a pop sticker instead of a line icon.
-const STICKER: Partial<Record<IconName, StickerName>> = { flag: 'flag', bulb: 'bulb', cal: 'cal', target: 'target', clock: 'pencil', userPlus: 'pencil', users: 'heart' };
+// Colour of each kind's square, from the system palette.
+const SQUARE: Partial<Record<IconName, string>> = { flag: '#FF9500', target: '#FF9500', bulb: '#FFCC00', cal: '#FF3B30' };
 
 const markRead = (id: number) => setState((s) => (s.notifRead.includes(id) ? {} : { notifRead: [...s.notifRead, id] }));
 
@@ -32,30 +31,24 @@ function Row({ n, unread, joined, onJoin }: { n: Notif; unread: boolean; joined:
   };
   return (
     <Pressable onPress={() => markRead(n.id)} accessibilityLabel={`${unread ? '未読 ' : ''}${n.title}`}
-      style={{ flexDirection: 'row', gap: 10, paddingVertical: 12, paddingHorizontal: 14 }}>
+      style={{ flexDirection: 'row', gap: 12, paddingVertical: 12, paddingLeft: 16, paddingRight: 16 }}>
+      {unread ? <View style={{ position: 'absolute', left: 5, top: 26, width: 7, height: 7, borderRadius: 4, backgroundColor: t.tint }} /> : null}
       {who ? (
-        // about a person: show the person, with a sticker for what happened
-        <View style={{ width: 36, height: 36 }}>
-          <Avatar name={who} color={PERSON_COLOR[who] ?? t.ink3} size={34} />
-          <Sticker name={STICKER[n.icon] ?? 'pencil'} size={22} tilt={-8} style={{ position: 'absolute', right: -8, bottom: -7 }} />
-        </View>
+        <Avatar name={who} color={PERSON_COLOR[who] ?? t.ink3} size={36} />
       ) : (
-        <Sticker name={STICKER[n.icon] ?? 'bell'} size={40} tilt={n.id % 2 ? -6 : 5} style={{ margin: -2 }} />
+        // the Settings-style square: a white symbol on its colour
+        <View style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: SQUARE[n.icon] ?? t.tint, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name={n.icon} size={19} color="#fff" filled width={2} />
+        </View>
       )}
       <View style={{ flex: 1, minWidth: 0 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Txt size={13.5} w={unread ? '600' : '500'} lh={19} style={{ flex: 1 }}>{n.title}</Txt>
-          {unread ? <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: t.blue, alignSelf: 'flex-start', marginTop: 6 }} /> : null}
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+          <Txt size={15} w={unread ? '600' : '400'} lh={20} style={{ flex: 1 }}>{n.title}</Txt>
+          <Txt size={13} tone="ink3">{n.time}</Txt>
         </View>
-        {n.kind === 'imp' ? (
-          <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, height: 18, paddingHorizontal: 6, borderRadius: 5, backgroundColor: t.amberSoft }}>
-            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: t.amber }} />
-            <Txt size={10.5} w="700" tone="amber" lh={13}>大事</Txt>
-          </View>
-        ) : null}
-        <Txt size={11.5} tone="ink3" lh={16} style={{ marginTop: 2 }}>{n.sub} · {n.time}</Txt>
+        <Txt size={13} tone="ink2" lh={18} style={{ marginTop: 2 }}>{n.sub}</Txt>
         {n.cta || n.join || n.follow ? (
-          <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
             {n.join ? <Btn small kind="primary" icon="play" label={joined ? '勉強中' : '一緒に始める'} disabled={joined} onPress={onJoin} /> : null}
             {n.cta ? <Btn small kind="tint" label={n.cta} onPress={cta} /> : null}
             {n.follow ? (
@@ -101,7 +94,7 @@ export default function Notifications() {
 
   return (
     <Screen>
-      <NavBar title="お知らせ" right={<IconBtn name="check" label="すべて既読にする" onPress={readAll} />} />
+      <NavBar title="お知らせ" right={<IconBtn filled name="check" label="すべて既読にする" onPress={readAll} />} />
       <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 4 }}>
         <Segmented value={filter} onChange={setFilter} options={[{ v: 'all', label: 'すべて' }, { v: 'imp', label: '大事なこと' }, { v: 'study', label: '仲間の勉強' }]} />
       </View>
@@ -109,11 +102,12 @@ export default function Notifications() {
         {list.length === 0 ? <Empty title={emptyTitle} sub="仲間が勉強を始めると、ここに届きます" /> : null}
         {days.map((d) => (
           <View key={d}>
-            <Txt size={12} w="600" tone="ink2" style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 8 }}>{d}</Txt>
-            <View style={[{ marginHorizontal: 16, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
+            <Txt size={20} w="700" style={{ paddingHorizontal: 20, paddingTop: 22, paddingBottom: 8 }}>{d}</Txt>
+            <View style={{ marginHorizontal: 16, borderRadius: radius.card, backgroundColor: t.surface }}>
               <View style={{ borderRadius: radius.card, overflow: 'hidden' }}>
                 {list.filter((n) => n.day === d).map((n, i) => (
-                  <View key={n.id} style={{ borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
+                  <View key={n.id}>
+                    {i ? <View style={{ height: hair, backgroundColor: t.line, marginLeft: 64, zIndex: 1 }} /> : null}
                     <SwipeRow bg={t.surface} onRead={() => { markRead(n.id); toast('既読にしました'); }} onDelete={() => remove(n.id)}>
                       <Row n={n} unread={!read.includes(n.id)} joined={joined.includes(n.id)} onJoin={() => join(n)} />
                     </SwipeRow>
@@ -123,9 +117,6 @@ export default function Notifications() {
             </View>
           </View>
         ))}
-        {list.length ? (
-          <Txt size={11} tone="ink3" style={{ textAlign: 'center', marginTop: 16 }}>右へスワイプで既読、左へスワイプで削除</Txt>
-        ) : null}
       </ScrollView>
     </Screen>
   );

@@ -6,11 +6,10 @@ import Svg, { G, Path } from 'react-native-svg';
 import { font } from '../theme';
 
 // Pop stickers: one bold, flat colour per part, a thick white die-cut border
-// and a soft shadow under it — like a sticker sheet. Drawn on a 48×48 grid.
+// and a soft shadow under it — like a sticker sheet. Drawn on a 64×64 grid.
 // `base` parts make the silhouette (they get the border and shadow); `top`
 // parts are details printed on the sticker.
 type Part = { d: string; fill?: string; stroke?: string; w?: number; o?: number };
-type Spec = { base: Part[]; top?: Part[]; rot?: number };
 
 const circ = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0z`;
 const rr = (x: number, y: number, w: number, h: number, r: number) =>
@@ -25,191 +24,158 @@ const star = (cx: number, cy: number, R: number, r: number, n = 5) =>
 const W = '#FFFFFF';
 const shine = (d: string, w = 3.2, o = 0.5): Part => ({ d, stroke: W, w, o });
 
-export const POP = {
-  blue: '#2F7BFF',
-  sky: '#38A6FF',
-  red: '#FF4458',
-  pink: '#FF5C8A',
-  orange: '#FF7A1A',
-  yellow: '#FFC23D',
-  green: '#1FC16B',
-  violet: '#7B5CFF',
-  navy: '#1E2A44',
-  brown: '#C9773A',
-};
+// ---------- Inch, the inchworm ----------
+// Inchly's one character. An inchworm moves by arching its body and measures
+// the world one inch at a time — the app's idea in a body. Every stamp is Inch
+// in a pose with a face and one prop; same die-cut border and shadow as above.
+export type InchPose = 'arch' | 'up' | 'flat';
+export type InchEyes = 'dot' | 'happy' | 'closed' | 'sparkle' | 'sad' | 'wink';
+export type InchMouth = 'smile' | 'open' | 'o';
+export type InchProp = 'none' | 'heart' | 'star' | 'zzz' | 'sweat' | 'phone' | 'coffee' | 'book' | 'sun' | 'flame' | 'bulb' | 'check' | 'party';
 
-const SPECS = {
-  check: { base: [{ d: circ(24, 24, 19), fill: POP.blue }], top: [{ d: 'M15.5 24.5l6 6 11-12', stroke: W, w: 5 }, shine('M13.5 17.5a12.5 12.5 0 0 1 6.5-6.2')] },
-  done: { base: [{ d: circ(24, 24, 19), fill: POP.green }], top: [{ d: 'M15.5 24.5l6 6 11-12', stroke: W, w: 5 }, shine('M13.5 17.5a12.5 12.5 0 0 1 6.5-6.2')] },
-  x: { base: [{ d: circ(24, 24, 19), fill: POP.red }], top: [{ d: 'M17.5 17.5l13 13M30.5 17.5l-13 13', stroke: W, w: 5 }, shine('M13.5 17.5a12.5 12.5 0 0 1 6.5-6.2')] },
-  heart: {
-    base: [{ d: 'M24 41C14.5 34.5 6.5 27.6 6.5 18.8 6.5 13 10.8 8.5 16.3 8.5c3.4 0 6.1 1.7 7.7 4.4 1.6-2.7 4.3-4.4 7.7-4.4 5.5 0 9.8 4.5 9.8 10.3C41.5 27.6 33.5 34.5 24 41z', fill: POP.red }],
-    top: [shine('M12 17a5.5 5.5 0 0 1 4.5-4.2', 3.4, 0.55)],
-  },
-  sun: {
-    base: [
-      { d: 'M24 7v4.5M11 12.5l3.2 3.2M37 12.5l-3.2 3.2M5.5 24.5H10M42.5 24.5H38', stroke: POP.yellow, w: 4 },
-      { d: 'M10.5 31a13.5 13.5 0 0 1 27 0z', fill: POP.yellow },
-      { d: rr(4.5, 31, 39, 7.5, 3.75), fill: POP.orange },
-      { d: rr(12, 40, 24, 4.5, 2.25), fill: POP.orange },
-    ],
-    top: [shine('M16 26a9 9 0 0 1 5-5', 3, 0.6)],
-  },
-  globe: {
-    base: [{ d: circ(24, 24, 19), fill: POP.sky }],
-    top: [
-      { d: 'M24 5c-5.5 5-8.2 11.3-8.2 19s2.7 14 8.2 19c5.5-5 8.2-11.3 8.2-19S29.5 10 24 5z', stroke: W, w: 2.4, o: 0.9 },
-      { d: 'M5.5 24h37M8.5 14.5h31M8.5 33.5h31', stroke: W, w: 2.4, o: 0.9 },
-    ],
-  },
-  share: {
-    base: [{ d: rr(5.5, 5.5, 37, 37, 11), fill: POP.violet }],
-    top: [{ d: 'M14.5 34c0-9 5.5-14 14-14h4.5', stroke: W, w: 4.5 }, { d: 'M27.5 13.5l7 6.5-7 6.5', stroke: W, w: 4.5 }, shine('M11.5 15a5.5 5.5 0 0 1 3.5-3.5', 3, 0.45)],
-  },
-  person: {
-    base: [{ d: circ(24, 15.5, 8.5), fill: POP.orange }, { d: 'M8.5 41.5c0-9.3 6.8-15.5 15.5-15.5s15.5 6.2 15.5 15.5z', fill: POP.orange }],
-    top: [shine('M18.5 12.5a6 6 0 0 1 3.5-3', 2.6, 0.55)],
-  },
-  phone: {
-    rot: -12,
-    base: [{ d: rr(13, 3.5, 22, 41, 6), fill: POP.navy }],
-    top: [{ d: rr(16, 8.5, 16, 28.5, 2.5), fill: POP.sky }, { d: rr(21, 39.5, 6, 2, 1), fill: W, o: 0.65 }, { d: 'M19 12l4.5-0M18.5 16.5l9-4.5', stroke: W, w: 2.2, o: 0.45 }],
-  },
-  fire: {
-    base: [{ d: 'M24 44.5c-8.8 0-15-5.9-15-13.8 0-6.4 3.4-10.2 6.1-13.3.4 3 1.9 5 4 6-1-7 2.3-14 8.9-19.4 0 5.6 2.6 8.7 5.6 11.7 3.1 3.1 6.4 7.1 6.4 14.6 0 8.1-6.4 14.2-16 14.2z', fill: POP.orange }],
-    top: [{ d: 'M24 44.5c-4.5 0-7.5-3-7.5-7 0-4 2.5-6.6 5-8.6 0 2.5 1.2 4 3 4.5-.4-3.6 1.1-6.6 3.6-8.6.5 3.6 3.4 5.6 3.4 10.1 0 5.5-3 9.6-7.5 9.6z', fill: POP.yellow }],
-  },
-  star: { base: [{ d: star(24, 25.5, 20.5, 9.8), fill: POP.yellow, stroke: POP.yellow, w: 3 }], top: [shine('M17.5 20.5l3-6', 2.8, 0.6)] },
-  sparkle: {
-    base: [{ d: 'M21 5c1.4 8.4 4.1 11.1 12.5 12.5C25.1 18.9 22.4 21.6 21 30c-1.4-8.4-4.1-11.1-12.5-12.5C16.9 16.1 19.6 13.4 21 5z', fill: POP.yellow }, { d: 'M35 27c.9 5 2.6 6.6 7.5 7.5-4.9.9-6.6 2.6-7.5 7.5-.9-4.9-2.6-6.6-7.5-7.5 4.9-.9 6.6-2.5 7.5-7.5z', fill: POP.pink }],
-  },
-  bulb: {
-    base: [
-      { d: 'M24 4.5a13.3 13.3 0 0 0-8 24c1.6 1.2 2.7 3 2.7 5v1.8h10.6v-1.8c0-2 1.1-3.8 2.7-5a13.3 13.3 0 0 0-8-24z', fill: POP.yellow },
-      { d: rr(18.5, 35, 11, 8.5, 3.2), fill: '#8E9AAF' },
-    ],
-    top: [{ d: 'M20.5 24.5l3.5 3.5 3.5-3.5', stroke: POP.orange, w: 2.4 }, shine('M15 15a9 9 0 0 1 5-5', 3, 0.6), { d: 'M19 39h10', stroke: W, w: 1.6, o: 0.5 }],
-  },
-  book: {
-    rot: -8,
-    base: [{ d: rr(10, 5.5, 28, 37, 5), fill: POP.green }],
-    top: [{ d: rr(13.5, 34, 24.5, 5.5, 2), fill: W }, { d: rr(16, 12, 16, 7, 2), fill: W, o: 0.9 }, { d: 'M15 6v28', stroke: '#000', w: 1.6, o: 0.12 }],
-  },
-  pencil: {
-    rot: 40,
-    base: [
-      { d: rr(19, 2.5, 10, 6.5, 2.5), fill: POP.pink },
-      { d: 'M19 8.5h10V34H19z', fill: POP.yellow },
-      { d: 'M19 34h10l-5 10z', fill: '#F6D7A7' },
-    ],
-    top: [{ d: 'M19 8.5h10V11H19z', fill: '#B4BDCB' }, { d: 'M22.3 40.6h3.4L24 44z', fill: POP.navy }, { d: 'M24 11v23', stroke: '#000', w: 1.2, o: 0.12 }],
-  },
-  coffee: {
-    base: [
-      { d: 'M33.5 20.5h3a5.5 5.5 0 0 1 0 11h-3.5', stroke: POP.brown, w: 4 },
-      { d: 'M8.5 17.5h26v12a10.5 10.5 0 0 1-10.5 10.5h-5A10.5 10.5 0 0 1 8.5 29.5z', fill: POP.brown },
-      { d: 'M17 5c-2 3 2 5 0 8M25 5c-2 3 2 5 0 8', stroke: '#B8C1CF', w: 3 },
-    ],
-    top: [{ d: rr(8.5, 17.5, 26, 4, 2), fill: W, o: 0.3 }, shine('M13 26v4', 2.6, 0.45)],
-  },
-  moon: { base: [{ d: 'M29.5 5.5a18.5 18.5 0 1 0 13 31A15.5 15.5 0 0 1 29.5 5.5z', fill: POP.yellow }], top: [shine('M12 20a12 12 0 0 1 5-7', 3, 0.5)] },
-  trophy: {
-    base: [
-      { d: 'M14 10H9.5a5 5 0 0 0 5.5 8M34 10h4.5a5 5 0 0 1-5.5 8', stroke: POP.yellow, w: 3.5 },
-      { d: 'M13.5 6.5h21v10.5a10.5 10.5 0 0 1-21 0z', fill: POP.yellow },
-      { d: rr(21.5, 26, 5, 8, 1), fill: '#F2A900' },
-      { d: rr(14.5, 33, 19, 8, 3), fill: POP.navy },
-    ],
-    top: [shine('M18 10v6', 2.8, 0.55)],
-  },
-  cal: {
-    base: [{ d: rr(6.5, 8.5, 35, 33, 8), fill: '#F2F4F8' }, { d: rr(14.5, 4.5, 4.5, 9, 2.25), fill: POP.navy }, { d: rr(29, 4.5, 4.5, 9, 2.25), fill: POP.navy }],
-    top: [
-      { d: 'M6.5 16.5a8 8 0 0 1 8-8h19a8 8 0 0 1 8 8v2.5h-35z', fill: POP.red },
-      { d: rr(14.5, 4.5, 4.5, 9, 2.25), fill: POP.navy }, { d: rr(29, 4.5, 4.5, 9, 2.25), fill: POP.navy },
-      { d: rr(13, 24, 5.5, 5, 1.5), fill: '#C9D0DC' }, { d: rr(21.25, 24, 5.5, 5, 1.5), fill: '#C9D0DC' }, { d: rr(29.5, 24, 5.5, 5, 1.5), fill: POP.red },
-      { d: rr(13, 31.5, 5.5, 5, 1.5), fill: '#C9D0DC' }, { d: rr(21.25, 31.5, 5.5, 5, 1.5), fill: '#C9D0DC' },
-    ],
-  },
-  target: {
-    base: [{ d: circ(24, 24, 19), fill: POP.red }],
-    top: [{ d: circ(24, 24, 12.5), fill: W }, { d: circ(24, 24, 6.5), fill: POP.red }, shine('M13.5 17.5a12.5 12.5 0 0 1 6.5-6.2', 3, 0.45)],
-  },
-  flag: {
-    base: [{ d: 'M12.5 6v36', stroke: '#5A6478', w: 4 }, { d: 'M14 7.5h23l-5 8 5 8H14z', fill: POP.red, stroke: POP.red, w: 2 }],
-    top: [shine('M18 11.5h8', 2.6, 0.5)],
-  },
-  bell: {
-    base: [{ d: circ(24, 37.5, 4.5), fill: '#F2A900' }, { d: 'M24 5.5a11.5 11.5 0 0 0-11.5 11.5v7.5l-3.5 6.5h30l-3.5-6.5V17A11.5 11.5 0 0 0 24 5.5z', fill: POP.yellow }],
-    top: [shine('M17 17a7 7 0 0 1 4-5.5', 2.8, 0.55)],
-  },
-  chat: {
-    base: [{ d: 'M9 8.5h30a5 5 0 0 1 5 5v16a5 5 0 0 1-5 5H23l-9 7.5v-7.5H9a5 5 0 0 1-5-5v-16a5 5 0 0 1 5-5z', fill: POP.blue }],
-    top: [{ d: circ(15.5, 21.5, 2.6), fill: W }, { d: circ(24, 21.5, 2.6), fill: W }, { d: circ(32.5, 21.5, 2.6), fill: W }],
-  },
-  play: { base: [{ d: circ(24, 24, 19), fill: POP.green }], top: [{ d: 'M20 15.5v17l13.5-8.5z', fill: W, stroke: W, w: 2.5 }, shine('M13.5 17.5a12.5 12.5 0 0 1 6.5-6.2', 3, 0.45)] },
-  clap: {
-    // a party popper: cone and confetti
-    base: [
-      { d: 'M7 41.5l9-25 16 16z', fill: POP.yellow, stroke: POP.yellow, w: 2 },
-      { d: circ(37.5, 9.5, 3.2), fill: POP.pink }, { d: circ(41, 22, 2.6), fill: POP.blue }, { d: circ(26, 7.5, 2.6), fill: POP.green },
-      { d: 'M27 18c2-4 6-5 9-3', stroke: POP.violet, w: 3 },
-    ],
-    top: [{ d: 'M11.5 29l7.5 7.5M14.5 21.5l12 12', stroke: POP.orange, w: 3 }],
-  },
-} satisfies Record<string, Spec>;
+const BODY = ['#86D35A', '#99DE6C'];
+const HEAD = '#A2E476';
+const EDGE = '#4F9E36';
+const FACE = '#1E2B14';
 
-export type StickerName = keyof typeof SPECS;
+function inch(pose: InchPose, eyes: InchEyes, mouth: InchMouth, prop: InchProp) {
+  const base: Part[] = [];
+  const top: Part[] = [];
+  let segs: [number, number][] = [];
+  let head: [number, number, number];
+  let front = true; // face the viewer (up) or look right (arch, flat)
+  if (pose === 'arch') {
+    segs = Array.from({ length: 10 }, (_, i) => { const u = i / 9; return [7 + 40 * u, 54 - 30 * Math.pow(Math.sin(Math.PI * u), 0.85)]; });
+    head = [54, 44, 9.5];
+    front = false;
+  } else if (pose === 'up') {
+    segs = Array.from({ length: 7 }, (_, i) => [32 + 1.6 * Math.sin(i * 0.9), 59 - 5.2 * i]);
+    head = [32, 19, 10.5];
+  } else {
+    segs = Array.from({ length: 8 }, (_, i) => [5 + 5.6 * i, 53 - 1.4 * Math.sin(i * 1.1)]);
+    head = [52, 48, 9.5];
+    front = false;
+  }
+  const [hx, hy, hr] = head;
+  // feet: little dark prolegs where the body meets the ground
+  const feet: [number, number][] = pose === 'arch' ? [[7, 60], [12, 60], [44, 60], [49, 60]] : pose === 'up' ? [[29, 64], [35, 64]] : [[6, 59.5], [16, 59.5], [28, 59.5], [40, 59.5]];
+  feet.forEach(([x, y]) => base.push({ d: circ(x, y, 2.2), fill: EDGE }));
+  segs.forEach(([x, y], i) => base.push({ d: circ(x, y, 6.4), fill: BODY[i % 2], stroke: EDGE, w: 1.2 }));
+  // antennae
+  const ant = front ? [[hx - 4, hy - hr + 1.5, -2.5], [hx + 4, hy - hr + 1.5, 2.5]] : [[hx - 1, hy - hr + 1.5, 0.5], [hx + 5, hy - hr + 2.5, 3.5]];
+  ant.forEach(([x, y, dx]) => {
+    base.push({ d: `M${x} ${y}l${dx} -6`, stroke: EDGE, w: 1.6 });
+    base.push({ d: circ(x + dx, y - 6.5, 1.8), fill: '#FFCC00', stroke: EDGE, w: 1 });
+  });
+  base.push({ d: circ(hx, hy, hr), fill: HEAD, stroke: EDGE, w: 1.2 });
 
-const BORDER = 3.4; // white die-cut, in grid units
+  // face
+  const ex = front ? [hx - 3.8, hx + 3.8] : [hx - 1, hx + 5];
+  const ey = hy - 1;
+  const mx = (ex[0] + ex[1]) / 2;
+  const my = hy + 3.6;
+  top.push({ d: circ(ex[0] - 1.6, hy + 2.8, 1.7), fill: '#FF8FA3', o: 0.6 }, { d: circ(ex[1] + 1.6, hy + 2.8, 1.7), fill: '#FF8FA3', o: 0.6 });
+  const dotEye = (x: number) => { top.push({ d: circ(x, ey, 1.8), fill: FACE }, { d: circ(x + 0.6, ey - 0.6, 0.6), fill: '#fff' }); };
+  const arcUp = (x: number) => top.push({ d: `M${x - 2} ${ey + 0.8}q2 -2.8 4 0`, stroke: FACE, w: 1.5 });
+  const arcDown = (x: number) => top.push({ d: `M${x - 2} ${ey - 0.4}q2 2.4 4 0`, stroke: FACE, w: 1.5 });
+  ex.forEach((x, i) => {
+    if (eyes === 'dot') dotEye(x);
+    else if (eyes === 'happy') arcUp(x);
+    else if (eyes === 'closed') arcDown(x);
+    else if (eyes === 'sparkle') top.push({ d: `M${x} ${ey - 2.6}l.8 1.8 1.8.8-1.8.8-.8 1.8-.8-1.8-1.8-.8 1.8-.8z`, fill: FACE });
+    else if (eyes === 'sad') { dotEye(x); top.push({ d: i ? `M${x - 2} ${ey - 3.4}l3.4 1.2` : `M${x + 2} ${ey - 3.4}l-3.4 1.2`, stroke: FACE, w: 1.2 }); }
+    else if (eyes === 'wink') { if (i) arcUp(x); else dotEye(x); }
+  });
+  if (mouth === 'smile') top.push({ d: `M${mx - 2.2} ${my}q2.2 2.4 4.4 0`, stroke: FACE, w: 1.4 });
+  else if (mouth === 'open') top.push({ d: `M${mx - 2.4} ${my - 0.4}h4.8a2.4 2.4 0 0 1-4.8 0z`, fill: '#C2453A', stroke: FACE, w: 1 });
+  else top.push({ d: circ(mx, my + 0.6, 1.3), fill: FACE });
 
-/** One sticker. `tilt` rotates it a little, like it was stuck on by hand. */
-export function Sticker({ name, size = 40, tilt = 0, style }: { name: StickerName; size?: number; tilt?: number; style?: StyleProp<ViewStyle> }) {
-  const spec: Spec = SPECS[name];
-  const rot = (spec.rot ?? 0) + tilt;
+  // one prop, in the empty corner of the pose
+  const [ax, ay] = pose === 'arch' ? [52, 21] : pose === 'up' ? [52, 30] : [32, 24];
+  const add = (b: Part[], t: Part[] = []) => { base.push(...b); top.push(...t); };
+  if (prop === 'heart') add([{ d: `M${ax} ${ay + 7}c-5-3.4-8-6.3-8-9.6 0-2.4 1.8-4.2 4-4.2 1.7 0 3 .9 4 2.3 1-1.4 2.3-2.3 4-2.3 2.2 0 4 1.8 4 4.2 0 3.3-3 6.2-8 9.6z`, fill: '#FF3B5C' }], [shine(`M${ax - 5} ${ay - 2}a2.5 2.5 0 0 1 2-2`, 1.6, 0.6)]);
+  if (prop === 'star') add([{ d: star(ax, ay, 9, 4.2), fill: '#FFC93C', stroke: '#FFC93C', w: 2 }]);
+  if (prop === 'zzz') add([{ d: `M${ax - 9} ${ay - 2}h5l-5 5h5M${ax} ${ay - 9}h6.5l-6.5 6.5h6.5M${ax + 10} ${ay - 15}h4l-4 4h4`, stroke: '#5856D6', w: 2 }]);
+  if (prop === 'sweat') add([{ d: `M${hx - hr - 1} ${hy - hr - 2}c-2.6 3.4-3.6 5.4-3.6 6.8a3.6 3.6 0 0 0 7.2 0c0-1.4-1-3.4-3.6-6.8z`, fill: '#5AC8FA' }]);
+  if (prop === 'phone') add([{ d: rr(ax - 6, ay - 10, 12, 20, 3), fill: '#1C1C1E' }], [{ d: rr(ax - 4.2, ay - 7.6, 8.4, 14.6, 1.5), fill: '#3A3A3C' }, { d: `M${ax - 3} ${ay + 9}h6`, stroke: '#8E8E93', w: 1 }]);
+  if (prop === 'coffee') add([
+    { d: `M${ax + 4.5} ${ay - 1}h1.8a3 3 0 0 1 0 6h-2.2`, stroke: '#C9773A', w: 2.2 },
+    { d: `M${ax - 7} ${ay - 3}h12v6a5.5 5.5 0 0 1-5.5 5.5h-1A5.5 5.5 0 0 1 ${ax - 7} ${ay + 3}z`, fill: '#C9773A' },
+    { d: `M${ax - 3} ${ay - 12}c-1.5 2 1.5 3 0 5M${ax + 1.5} ${ay - 12}c-1.5 2 1.5 3 0 5`, stroke: '#C7C7CC', w: 1.6 },
+  ], [{ d: rr(ax - 7, ay - 3, 12, 2.2, 1.1), fill: '#fff', o: 0.35 }]);
+  if (prop === 'book') add([{ d: `M${ax} ${ay + 6}c-3-2-7-2-10 0v-12c3-2 7-2 10 0 3-2 7-2 10 0v12c-3-2-7-2-10 0z`, fill: '#5856D6' }], [
+    { d: `M${ax} ${ay + 4}c-2.6-1.6-5.8-1.6-8.2-.2v-9.8c2.4-1.4 5.6-1.4 8.2.2 2.6-1.6 5.8-1.6 8.2-.2v9.8c-2.4-1.4-5.6-1.4-8.2.2z`, fill: '#fff' },
+    { d: `M${ax} ${ay - 5.8}v9.8`, stroke: '#C7C7CC', w: 0.8 },
+  ]);
+  if (prop === 'sun') add([
+    { d: `M${ax} ${ay - 13}v3M${ax - 9} ${ay - 9}l2 2M${ax + 9} ${ay - 9}l-2 2M${ax - 13} ${ay}h3M${ax + 13} ${ay}h-3M${ax - 9} ${ay + 9}l2-2M${ax + 9} ${ay + 9}l-2-2`, stroke: '#FF9500', w: 2.2 },
+    { d: circ(ax, ay, 6.5), fill: '#FFC93C' },
+  ]);
+  if (prop === 'flame') add([{ d: `M${ax} ${ay + 9}c-5 0-8-3.3-8-7.6 0-3.6 2-5.6 3.4-7.3.2 1.6 1 2.7 2.2 3.3-.5-3.8 1.3-7.6 4.8-10.4 0 3 1.4 4.7 3 6.3 1.7 1.7 3.6 3.9 3.6 7.9 0 4.6-3.6 7.8-9 7.8z`, fill: '#FF7A1A' }],
+    [{ d: `M${ax} ${ay + 9}c-2.4 0-4-1.6-4-3.8 0-2.2 1.4-3.6 2.7-4.6 0 1.3.7 2.2 1.6 2.4-.2-1.9.6-3.5 1.9-4.6.3 1.9 1.8 3 1.8 5.4 0 3-1.6 5.2-4 5.2z`, fill: '#FFC93C' }]);
+  if (prop === 'bulb') add([
+    { d: `M${ax} ${ay - 11}a7.4 7.4 0 0 0-4.4 13.3c.9.7 1.5 1.7 1.5 2.8v1h5.8v-1c0-1.1.6-2.1 1.5-2.8A7.4 7.4 0 0 0 ${ax} ${ay - 11}z`, fill: '#FFD23F' },
+    { d: rr(ax - 3, ay + 6.1, 6, 4.4, 1.6), fill: '#8E8E93' },
+  ], [shine(`M${ax - 4} ${ay - 5}a4.5 4.5 0 0 1 2.6-2.8`, 1.6, 0.7)]);
+  if (prop === 'check') add([{ d: circ(ax, ay, 8.5), fill: '#2AA05A' }], [{ d: `M${ax - 4} ${ay}l2.8 2.8 5.2-5.4`, stroke: '#fff', w: 2.4 }]);
+  if (prop === 'party') add([
+    { d: `M${ax - 9} ${ay + 9}l4.5-12.5 8 8z`, fill: '#FFC93C', stroke: '#FFC93C', w: 1.5 },
+    { d: circ(ax + 6, ay - 9, 2), fill: '#FF2D55' }, { d: circ(ax + 9, ay - 1, 1.7), fill: '#5856D6' }, { d: circ(ax - 1, ay - 11, 1.7), fill: '#30B0C7' },
+    { d: `M${ax - 1} ${ay - 4}c1.2-2.6 3.8-3.2 5.8-2`, stroke: '#FF9500', w: 1.8 },
+  ]);
+  return { base, top };
+}
+
+/** Inch on its own (empty states, the record stamp, the home ruler). */
+export function Inch({ pose = 'arch', eyes = 'dot', mouth = 'smile', prop = 'none', size = 64, tilt = 0, border = true, style }: {
+  pose?: InchPose; eyes?: InchEyes; mouth?: InchMouth; prop?: InchProp; size?: number; tilt?: number; border?: boolean; style?: StyleProp<ViewStyle>;
+}) {
+  const { base, top } = inch(pose, eyes, mouth, prop);
+  const B = 3.2;
   const outline = (p: Part, k: number, color: string, extra = 0) => (
-    <Path key={k} d={p.d} fill={p.fill ? color : 'none'} stroke={color} strokeWidth={(p.w ?? 0) + BORDER * 2 + extra} strokeLinejoin="round" strokeLinecap="round" />
+    <Path key={k} d={p.d} fill={p.fill ? color : 'none'} stroke={color} strokeWidth={(p.w ?? 0) + B * 2 + extra} strokeLinejoin="round" strokeLinecap="round" />
   );
   const paint = (p: Part, k: number) => (
     <Path key={k} d={p.d} fill={p.fill ?? 'none'} stroke={p.stroke ?? 'none'} strokeWidth={p.w ?? 0} strokeLinejoin="round" strokeLinecap="round" opacity={p.o ?? 1} />
   );
   return (
     <View style={[{ width: size, height: size }, style]} pointerEvents="none">
-      <Svg width={size} height={size} viewBox="-5 -5 58 58">
-        {/* soft shadow: two offset copies of the silhouette, always straight down */}
-        <G opacity={0.08} transform={`translate(0 3.5) rotate(${rot} 24 24)`}>{spec.base.map((p, k) => outline(p, k, '#0F172A', 2.5))}</G>
-        <G opacity={0.1} transform={`translate(0 1.6) rotate(${rot} 24 24)`}>{spec.base.map((p, k) => outline(p, k, '#0F172A'))}</G>
-        <G transform={`rotate(${rot} 24 24)`}>
-          {spec.base.map((p, k) => outline(p, k, W))}
-          {spec.base.map(paint)}
-          {spec.top?.map(paint)}
+      <Svg width={size} height={size} viewBox="-6 -8 76 76">
+        {border ? (
+          <>
+            <G opacity={0.07} transform={`translate(0 3.5) rotate(${tilt} 32 32)`}>{base.map((p, k) => outline(p, k, '#000', 2.5))}</G>
+            <G opacity={0.09} transform={`translate(0 1.6) rotate(${tilt} 32 32)`}>{base.map((p, k) => outline(p, k, '#000'))}</G>
+          </>
+        ) : null}
+        <G transform={`rotate(${tilt} 32 32)`}>
+          {border ? base.map((p, k) => outline(p, k, W)) : null}
+          {base.map(paint)}
+          {top.map(paint)}
         </G>
       </Svg>
     </View>
   );
 }
 
-/**
- * A chat stamp: a sticker with a word on a tilted label, LINE-style.
- * `pop` plays the slap-on animation once when it mounts.
- */
+// ---------- chat stamps: Inch with a word, LINE-style ----------
 export const STAMPS = [
-  { id: 'ganbaro', s: 'fire', label: 'がんばろ', c: POP.orange },
-  { id: 'phone', s: 'phone', label: 'スマホ置いた', c: POP.navy },
-  { id: 'wakatta', s: 'bulb', label: 'わかった！', c: '#F2A900' },
-  { id: 'erai', s: 'star', label: 'えらい！', c: '#F2A900' },
-  { id: 'ohayo', s: 'sun', label: 'おはよ', c: POP.orange },
-  { id: 'otsu', s: 'coffee', label: 'おつかれ', c: POP.brown },
-  { id: 'arigato', s: 'heart', label: 'ありがと', c: POP.red },
-  { id: 'muri', s: 'x', label: 'むり〜', c: POP.red },
-  { id: 'issho', s: 'person', label: '一緒にやろ', c: POP.orange },
-  { id: 'oyasumi', s: 'moon', label: 'おやすみ', c: '#E5A800' },
-  { id: 'gokaku', s: 'clap', label: '合格！', c: POP.pink },
-  { id: 'ok', s: 'check', label: 'OK', c: POP.blue },
-] as const satisfies readonly { id: string; s: StickerName; label: string; c: string }[];
+  { id: 'ganbaro', pose: 'arch', eyes: 'dot', mouth: 'open', prop: 'flame', label: 'がんばろ', c: '#FF7A1A' },
+  { id: 'phone', pose: 'flat', eyes: 'happy', mouth: 'smile', prop: 'phone', label: 'スマホ置いた', c: '#1C1C1E' },
+  { id: 'wakatta', pose: 'up', eyes: 'sparkle', mouth: 'open', prop: 'bulb', label: 'わかった！', c: '#E0A100' },
+  { id: 'erai', pose: 'up', eyes: 'happy', mouth: 'open', prop: 'star', label: 'えらい！', c: '#E0A100' },
+  { id: 'ohayo', pose: 'up', eyes: 'dot', mouth: 'smile', prop: 'sun', label: 'おはよ', c: '#FF9500' },
+  { id: 'otsu', pose: 'flat', eyes: 'happy', mouth: 'smile', prop: 'coffee', label: 'おつかれ', c: '#A2643A' },
+  { id: 'arigato', pose: 'arch', eyes: 'happy', mouth: 'smile', prop: 'heart', label: 'ありがと', c: '#FF3B5C' },
+  { id: 'muri', pose: 'flat', eyes: 'sad', mouth: 'o', prop: 'sweat', label: 'むり〜', c: '#5856D6' },
+  { id: 'issho', pose: 'arch', eyes: 'dot', mouth: 'smile', prop: 'book', label: '一緒にやろ', c: '#2AA05A' },
+  { id: 'oyasumi', pose: 'flat', eyes: 'closed', mouth: 'smile', prop: 'zzz', label: 'おやすみ', c: '#5856D6' },
+  { id: 'gokaku', pose: 'up', eyes: 'sparkle', mouth: 'open', prop: 'party', label: '合格！', c: '#FF2D55' },
+  { id: 'ok', pose: 'up', eyes: 'wink', mouth: 'smile', prop: 'check', label: 'OK', c: '#2AA05A' },
+] as const satisfies readonly { id: string; pose: InchPose; eyes: InchEyes; mouth: InchMouth; prop: InchProp; label: string; c: string }[];
 export type StampId = (typeof STAMPS)[number]['id'];
 export const stamp = (id: string) => STAMPS.find((x) => x.id === id) ?? STAMPS[0];
 
+/** A stamp. `pop` plays the slap-on once when it mounts. */
 export function Stamp({ id, size = 96, pop, delay = 0 }: { id: string; size?: number; pop?: boolean; delay?: number }) {
   const st = stamp(id);
   const s = useSharedValue(pop ? 0.2 : 1);
@@ -220,12 +186,12 @@ export function Stamp({ id, size = 96, pop, delay = 0 }: { id: string; size?: nu
     r.set(withDelay(delay, withSpring(0, { duration: 520, dampingRatio: 0.5 })));
   }, [pop, delay, s, r]);
   const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }, { rotate: `${r.value}deg` }] }));
-  const fs = Math.max(11, Math.round(size * 0.15));
+  const fs = Math.max(11, Math.round(size * 0.14));
   return (
     <Animated.View style={[{ minWidth: size, alignItems: 'center' }, a]} accessible accessibilityLabel={`スタンプ「${st.label}」`}>
-      <Sticker name={st.s} size={size * 0.82} />
-      <View style={{ marginTop: -size * 0.16, transform: [{ rotate: '-5deg' }], paddingHorizontal: fs * 0.7, paddingVertical: fs * 0.22, borderRadius: fs,
-        backgroundColor: st.c, borderWidth: Math.max(2, size * 0.03), borderColor: '#fff', boxShadow: '0px 2px 4px rgba(15,23,42,0.18)' }}>
+      <Inch pose={st.pose} eyes={st.eyes} mouth={st.mouth} prop={st.prop} size={size * 0.86} />
+      <View style={{ marginTop: -size * 0.14, transform: [{ rotate: '-4deg' }], paddingHorizontal: fs * 0.7, paddingVertical: fs * 0.2, borderRadius: fs,
+        backgroundColor: st.c, borderWidth: Math.max(2, size * 0.03), borderColor: '#fff', boxShadow: '0px 2px 4px rgba(0,0,0,0.16)' }}>
         <Text numberOfLines={1} style={{ fontFamily: font.rounded, fontSize: fs, lineHeight: Math.round(fs * 1.25), fontWeight: '800', color: '#fff', letterSpacing: 0.2 }}>{st.label}</Text>
       </View>
     </Animated.View>

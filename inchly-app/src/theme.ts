@@ -1,72 +1,51 @@
-import { Platform, StyleSheet, TextStyle, useColorScheme } from 'react-native';
+import { Platform, StyleSheet, TextStyle } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 
-// Cool blue-white canvas, white cards that float on a soft shadow, near-black
-// navy for text and primary buttons. Green is for study and gains, blue for
-// actions and accents.
+// Light only, in iOS system colours: grouped background, white groups, black
+// labels with two lighter steps, hairline separators. One app colour — the
+// grass green — marks everything you can press. See docs/design/apple-feel.md.
 const light = {
-  canvas: '#F4F5F8',
-  surface: '#FFFFFF',
-  sunken: '#EFF1F5',
-  line: 'rgba(15,23,42,0.07)',
-  line2: 'rgba(15,23,42,0.14)',
-  ink: '#111827',
-  ink2: '#4F5868',
-  ink3: '#848C9A',
+  canvas: '#F2F2F7', // systemGroupedBackground
+  surface: '#FFFFFF', // secondarySystemGroupedBackground
+  sunken: 'rgba(118,118,128,0.12)', // tertiarySystemFill
+  line: 'rgba(60,60,67,0.18)', // separator (a touch lighter)
+  line2: 'rgba(60,60,67,0.29)', // separator
+  ink: '#000000', // label
+  ink2: '#6C6C70', // secondaryLabel, kept readable
+  ink3: '#8A8A8E', // tertiary, still 3.4:1 on white
   onInk: '#FFFFFF',
-  green: '#16A34A',
-  greenInk: '#11843B',
-  greenSoft: '#E6F6EC',
-  amber: '#E58A00',
-  amberSoft: '#FFF2DC',
-  red: '#EF4444',
-  redSoft: '#FDECEC',
-  blue: '#2F6BFF',
-  blueSoft: '#EAF0FF',
-  grass: ['#E6EAF0', '#B5EBC8', '#5ED18A', '#1FAA57', '#0F7F3C'],
-  scrim: 'rgba(15,23,42,0.36)',
+  tint: '#2AA05A', // Inchly green: the one interactive colour
+  tintSoft: 'rgba(42,160,90,0.12)',
+  green: '#2AA05A',
+  greenInk: '#1E8449',
+  greenSoft: 'rgba(42,160,90,0.12)',
+  amber: '#C46F00', // deadlines close: text-safe orange
+  amberSoft: 'rgba(255,149,0,0.14)',
+  red: '#FF3B30',
+  redSoft: 'rgba(255,59,48,0.12)',
+  blue: '#2AA05A', // legacy name: actions use the tint
+  blueSoft: 'rgba(42,160,90,0.12)',
+  grass: ['#E5E5EA', '#BCE6C8', '#73CC90', '#2AA05A', '#17733D'],
+  scrim: 'rgba(0,0,0,0.25)',
   dark: false,
-};
-
-const dark: typeof light = {
-  canvas: '#0B0F17',
-  surface: '#151A24',
-  sunken: '#1F2531',
-  line: 'rgba(255,255,255,0.07)',
-  line2: 'rgba(255,255,255,0.14)',
-  ink: '#F1F4F9',
-  ink2: '#A4ADBD',
-  ink3: '#6C7588',
-  onInk: '#0B0F17',
-  green: '#22C55E',
-  greenInk: '#4ADE80',
-  greenSoft: '#11291B',
-  amber: '#F7A928',
-  amberSoft: '#33250E',
-  red: '#F87171',
-  redSoft: '#3A1A1C',
-  blue: '#5B8CFF',
-  blueSoft: '#17223D',
-  grass: ['#1D2330', '#14532D', '#16803D', '#22C55E', '#4ADE80'],
-  scrim: 'rgba(0,0,0,0.55)',
-  dark: true,
 };
 
 export type Theme = typeof light;
 
+/** The app is light only (app.json: userInterfaceStyle "light"). */
 export function useT(): Theme {
-  return useColorScheme() === 'dark' ? dark : light;
+  return light;
 }
 
-// The focus timer is always dark, whatever the system setting.
+// The focus timer, light like the rest: a quiet grey room, black thin digits.
 export const focus = {
-  bg: '#0B0F17',
-  ink: '#F3F5F9',
-  ink2: 'rgba(243,245,249,0.62)',
-  ink3: 'rgba(243,245,249,0.38)',
-  line: 'rgba(255,255,255,0.08)',
-  raise: 'rgba(255,255,255,0.08)',
-  green: '#22C55E',
+  bg: '#F2F2F7',
+  ink: '#000000',
+  ink2: '#6C6C70',
+  ink3: '#8A8A8E',
+  line: 'rgba(60,60,67,0.18)',
+  raise: 'rgba(118,118,128,0.12)',
+  green: '#2AA05A',
 };
 
 // Apple's system face everywhere: SF Pro for Latin and figures, Hiragino Sans
@@ -83,22 +62,28 @@ export const font = {
 /** SF Pro Display from 20pt up, SF Pro Text below — the same switch iOS makes. */
 export const face = (size: number) => (size >= 20 ? font.display : font.text);
 
-// Type scale, after the wallet reference: compact objects, one figure per card,
-// quiet everything else.
+// iOS text styles.
 export const type = {
-  hero: 32, // the one number a screen leads with
-  figure: 24, // card totals
-  title: 22, // tab titles
-  head: 15, // section and card titles
-  body: 14,
-  sub: 12,
-  cap: 11,
+  large: 34, // Large Title
+  title2: 22,
+  title3: 20,
+  head: 17, // Headline (semibold)
+  body: 17,
+  callout: 16,
+  sub: 15, // Subheadline
+  foot: 13, // Footnote
+  cap: 12, // Caption 1
+  // kept for older call sites
+  hero: 34,
+  figure: 28,
+  title: 34,
 };
 
-/** Cards sit on a faint edge and a short, soft shadow (none in dark mode). */
-export const lift = (t: { dark: boolean }, k: 1 | 2 = 1) =>
-  t.dark ? null : { boxShadow: k === 1 ? '0px 0px 0px 0.5px rgba(15,23,42,0.06), 0px 1px 2px rgba(15,23,42,0.04), 0px 4px 14px rgba(15,23,42,0.045)' : '0px 0px 0px 0.5px rgba(15,23,42,0.06), 0px 2px 6px rgba(15,23,42,0.06), 0px 12px 28px rgba(15,23,42,0.12)' };
-export const radius = { card: 16, inner: 12 };
+/** Content does not float; only glass does. k=2 is for small floating tags. */
+export const lift = (_t: { dark: boolean }, k: 1 | 2 = 1) =>
+  k === 1 ? null : { boxShadow: '0px 2px 6px rgba(0,0,0,0.08), 0px 10px 24px rgba(0,0,0,0.12)' };
+// Concentric corners: screen → group 26 → inner 14; buttons are capsules.
+export const radius = { card: 26, inner: 14 };
 
 // Motion measured on bencho.dev: press = .2s (.3,.9,.4,1), springy round buttons = .24s (.28,1.3,.36,1).
 export const ease = {
@@ -108,7 +93,7 @@ export const ease = {
 };
 
 // Separators: two device pixels on iOS, and the same on a retina browser.
-export const hair = Platform.OS === 'web' ? 0.75 : StyleSheet.hairlineWidth * 2;
+export const hair = Platform.OS === 'web' ? 0.5 : StyleSheet.hairlineWidth;
 
 // Web only: the field draws its own focus border, so drop the browser outline.
 export const noOutline: TextStyle | null = Platform.OS === 'web' ? { outlineWidth: 0 } : null;

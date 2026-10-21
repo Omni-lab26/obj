@@ -4,7 +4,7 @@ import { GROUPS, Group, subj } from './data';
 
 // One small global store. Updates are immutable so selectors can return
 // existing references without re-render loops.
-export type Todo = { s: string; t: string; d: boolean };
+export type Todo = { s: string; t: string; d: boolean; carried?: number }; // carried: days it has slid
 export type State = {
   running: boolean;
   paused: boolean;
@@ -35,9 +35,9 @@ let state: State = {
   goalMin: 180,
   targetMin: 60,
   todos: [
+    { s: 'ph', t: '名問の森 15', d: false, carried: 2 },
     { s: 'ma', t: '青チャート 数III 例題41〜50', d: false },
     { s: 'en', t: '長文読解 第3講（時間を測る）', d: true },
-    { s: 'ph', t: '名問の森 15', d: false },
     { s: 'ja', t: '古文単語 61〜80', d: true },
     { s: 'ma', t: '復習キュー 4問', d: false },
   ],

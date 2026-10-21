@@ -3,7 +3,7 @@ import { PanResponder, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 import { dayLog, pad, SUBJ, TODAY } from '../data';
-import { ease, hair, lift, radius, type, useT } from '../theme';
+import { ease, lift, radius, useT } from '../theme';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
 import { Segmented } from './Tabs';
@@ -116,16 +116,14 @@ export function StackedBars() {
   const ringBottom = c ? BASE + (c.short ? down(c.short) + 2 : 0) + 4 : 0;
 
   return (
-    <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, padding: 14, gap: 12 }, lift(t)]}>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-        <View style={{ flex: 1 }}>
-          <Txt size={12} w="500" tone="ink2" lh={16}>{mode === 'day' ? '勉強時間 · 直近20日' : '勉強時間 · 直近20週'}</Txt>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginTop: 2 }}>
-            <Rolling value={total.toFixed(1)} size={type.figure + 2} weight="700" />
-            <Txt size={12} w="600" tone="ink3" style={{ marginBottom: 4 }}>時間</Txt>
-          </View>
+    <View style={{ backgroundColor: t.surface, borderRadius: radius.card, padding: 16, gap: 14 }}>
+      <Segmented small value={mode} onChange={(m) => { setHot(null); setMode(m); }} options={[{ v: 'day', label: '日' }, { v: 'week', label: '週' }]} />
+      <View>
+        <Txt size={13} tone="ink2" lh={18}>{mode === 'day' ? '直近20日の合計' : '直近20週の合計'}</Txt>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 4 }}>
+          <Rolling value={total.toFixed(1)} size={44} weight="300" />
+          <Txt size={17} tone="ink2" style={{ marginBottom: 7 }}>時間</Txt>
         </View>
-        <Segmented small value={mode} onChange={(m) => { setHot(null); setMode(m); }} options={[{ v: 'day', label: '日' }, { v: 'week', label: '週' }]} style={{ width: 76 }} />
       </View>
 
       <View style={{ height: PLOT }} onLayout={(e) => setW(e.nativeEvent.layout.width)} {...pan.panHandlers}
@@ -185,16 +183,16 @@ export function StackedBars() {
         <Txt size={10} tone="ink3" num lh={12}>{cols[N - 1].label}</Txt>
       </View>
       {/* legend, storage-style */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4, paddingTop: 10, borderTopWidth: hair, borderTopColor: t.line }} pointerEvents="none">
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 6 }} pointerEvents="none">
         {SUBJ.map((x) => (
           <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: x.c }} />
-            <Txt size={11} tone="ink2" lh={14}>{x.name}</Txt>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: x.c }} />
+            <Txt size={13} tone="ink2" lh={17}>{x.name}</Txt>
           </View>
         ))}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.red }} />
-          <Txt size={11} tone="ink2" lh={14}>目標に足りない分</Txt>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.red }} />
+          <Txt size={13} tone="ink2" lh={17}>目標に足りない分</Txt>
         </View>
       </View>
     </View>

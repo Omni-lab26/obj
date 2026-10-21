@@ -1,3 +1,5 @@
+import { SFSymbol, SymbolView } from 'expo-symbols';
+import { Platform } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 // 24px line icons, same geometry as the HTML mock.
@@ -43,10 +45,29 @@ const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
-export function Icon({ name, size = 22, color, width }: { name: IconName; size?: number; color: string; width?: number }) {
+// On iPhone these are the real SF Symbols (expo-symbols); elsewhere the line
+// drawings above, drawn to the same shapes. `filled` = the .fill variant
+// (selected tabs).
+const SF: Record<IconName, string> = {
+  back: 'chevron.left', search: 'magnifyingglass', bell: 'bell', play: 'play.fill', pause: 'pause.fill', stop: 'stop.fill',
+  check: 'checkmark', arrow: 'arrow.right', chev: 'chevron.right', x: 'xmark', clock: 'clock', flag: 'flag',
+  userPlus: 'person.badge.plus', users: 'person.2', user: 'person', home: 'house', bars: 'chart.bar', cal: 'calendar',
+  bulb: 'lightbulb', chat: 'bubble.left', send: 'arrow.up', q: 'questionmark', target: 'target', book: 'book',
+  sun: 'sun.max', cert: 'rosette', heart: 'heart', pin: 'mappin', note: 'note.text', share: 'square.and.arrow.up',
+  plus: 'plus', minus: 'minus', edit: 'pencil', gear: 'gearshape',
+};
+const HAS_FILL = new Set<IconName>(['bell', 'flag', 'users', 'user', 'home', 'bars', 'bulb', 'chat', 'book', 'heart', 'gear', 'cal', 'clock', 'note']);
+
+export function Icon({ name, size = 22, color, width, filled }: { name: IconName; size?: number; color: string; width?: number; filled?: boolean }) {
   const spec: Spec = ICONS[name];
   const sw = width ?? spec.w ?? 1.6;
-  const fill = spec.fill ? color : 'none';
+  if (Platform.OS === 'ios') {
+    const sym = SF[name] + (filled && HAS_FILL.has(name) && name !== 'cal' && name !== 'clock' ? '.fill' : '');
+    const weight = sw >= 2.4 ? 'bold' : sw >= 2 ? 'semibold' : sw >= 1.8 ? 'medium' : 'regular';
+    return <SymbolView name={sym as SFSymbol} size={size * 0.92} tintColor={color} weight={weight} style={{ width: size, height: size }} />;
+  }
+  const solid = spec.fill || (filled && HAS_FILL.has(name) && name !== 'cal' && name !== 'clock');
+  const fill = solid ? color : 'none';
   const stroke = spec.fill ? 'none' : color;
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">

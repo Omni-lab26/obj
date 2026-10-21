@@ -80,11 +80,11 @@ export default function PlanEvent() {
                 const on = i === day;
                 return (
                   <Press key={i} onPress={() => setDay(i)} scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }}
-                    style={{ width: 46, paddingVertical: 6, borderRadius: radius.inner, alignItems: 'center', backgroundColor: on ? t.ink : t.surface,
-                      borderWidth: hair, borderColor: on ? t.ink : t.line2 }}>
-                    <Txt size={10.5} color={on ? t.onInk : t.ink3} lh={14}>{WD[x.getDay()]}</Txt>
-                    <Txt num size={16} w="700" color={on ? t.onInk : t.ink} lh={20}>{x.getDate()}</Txt>
-                    <Txt size={10} color={on ? t.onInk : t.ink3} lh={13}>{i === 0 ? '今日' : `${x.getMonth() + 1}月`}</Txt>
+                    style={{ width: 52, paddingVertical: 8, borderRadius: radius.inner, alignItems: 'center', backgroundColor: on ? t.tint : t.surface,
+                      borderWidth: on ? 0 : hair, borderColor: t.line2 }}>
+                    <Txt size={12} color={on ? t.onInk : t.ink2} lh={15}>{WD[x.getDay()]}</Txt>
+                    <Txt num size={20} w="500" color={on ? t.onInk : t.ink} lh={24}>{x.getDate()}</Txt>
+                    <Txt size={11} color={on ? t.onInk : t.ink2} lh={14}>{i === 0 ? '今日' : `${x.getMonth() + 1}月`}</Txt>
                   </Press>
                 );
               })}

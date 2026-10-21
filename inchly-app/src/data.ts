@@ -2,11 +2,11 @@
 
 export type Subject = { id: string; name: string; c: string; task: string; week: number; goal: number };
 export const SUBJ: Subject[] = [
-  { id: 'en', name: '英語', c: '#3B82F6', task: '長文読解 第3講', week: 6.5, goal: 7 },
-  { id: 'ma', name: '数学', c: '#F97316', task: '青チャート 数III 例題41〜50', week: 5.8, goal: 8 },
-  { id: 'ph', name: '物理', c: '#8B5CF6', task: '名問の森 電磁気 15', week: 4.1, goal: 5 },
-  { id: 'ch', name: '化学', c: '#06B6D4', task: '有機 構造決定 演習', week: 2.9, goal: 3 },
-  { id: 'ja', name: '国語', c: '#EAB308', task: '古文単語 315 · 61〜80', week: 1.6, goal: 3 },
+  { id: 'en', name: '英語', c: '#5856D6', task: '長文読解 第3講', week: 6.5, goal: 7 },
+  { id: 'ma', name: '数学', c: '#FF9500', task: '青チャート 数III 例題41〜50', week: 5.8, goal: 8 },
+  { id: 'ph', name: '物理', c: '#30B0C7', task: '名問の森 電磁気 15', week: 4.1, goal: 5 },
+  { id: 'ch', name: '化学', c: '#FF2D55', task: '有機 構造決定 演習', week: 2.9, goal: 3 },
+  { id: 'ja', name: '国語', c: '#FFCC00', task: '古文単語 315 · 61〜80', week: 1.6, goal: 3 },
 ];
 export const subj = (id: string) => SUBJ.find((s) => s.id === id) ?? SUBJ[0];
 
@@ -37,13 +37,14 @@ export const RANK = [
   { n: 'そら', c: '#4A5BD4', h: 35.9 },
 ];
 
-export type Post = { n: string; c: string; m: string; t: string; tags: string[]; u: number; r: number; img?: 'noteBook' | 'noteDesk' };
+export type Post = { n: string; c: string; m: string; w: string; t: string; tags: string[]; u: number; r: number; img?: 'noteBook' | 'noteDesk' };
 export const POSTS: Post[] = [
-  { n: 'mio', c: '#C47A55', m: '高3 · 12分前', t: '古文の参考書、やっと1周。2周目は音読しながらやる', tags: ['#古文'], u: 23, r: 4, img: 'noteBook' },
-  { n: 'りん', c: '#4B7A3B', m: '東大 理一 1年 · 先輩 · 2時間前', t: '東大英語の要約(1A)は毎年出るので、過去問15年分を1日1題。要約したあと音読までやると、本番で時間が余った。量より回数。', tags: ['#東京大学', '#英語'], u: 128, r: 14 },
-  { n: 'taku', c: '#8A6D3B', m: '京大志望 · 3時間前', t: 'もう無理、今日は寝る。明日5時起き', tags: [], u: 7, r: 2 },
-  { n: 'そら', c: '#5D6DB8', m: '高3 · 5時間前', t: '置換積分、何を t に置くかから説明してる15分の動画でやっとわかった。休憩中にちょうどいい長さ', tags: ['#数学', '#おすすめ動画'], u: 86, r: 9 },
-  { n: 'kaito', c: '#3E8C78', m: '高3 · 昨日', t: '電磁気、エッセンスと名問の森どっちから入るのがいい？ 力学はエッセンスでなんとかなった', tags: ['#物理', '#質問'], u: 21, r: 17 },
+  { n: 'mio', c: '#C47A55', m: '高3', w: '12分前', t: '古文の参考書、やっと1周。2周目は音読しながらやる', tags: ['#古文'], u: 23, r: 4, img: 'noteBook' },
+  { n: 'nnn_0w0', c: '#8A8A8E', m: '浪人', w: '40分前', t: 'ベクトル全然わからん　内積のとこから誰か助けて', tags: [], u: 0, r: 1 },
+  { n: 'りん', c: '#4B7A3B', m: '東大 理一 1年（先輩）', w: '2時間前', t: '東大英語の要約(1A)は毎年出るので、過去問15年分を1日1題。要約したあと音読までやると、本番で時間が余った。量より回数。', tags: ['#東京大学', '#英語'], u: 128, r: 14 },
+  { n: 'taku', c: '#8A6D3B', m: '京大志望', w: '3時間前', t: 'もう無理、今日は寝る。明日5時起き', tags: [], u: 7, r: 2 },
+  { n: 'そら', c: '#5D6DB8', m: '高3', w: '5時間前', t: '置換積分、何を t に置くかから説明してる15分の動画でやっとわかった。休憩中にちょうどいい長さ', tags: ['#数学', '#おすすめ動画'], u: 86, r: 9 },
+  { n: 'kaito', c: '#3E8C78', m: '高3', w: '昨日', t: '電磁気、エッセンスと名問の森どっちから入るのがいい？ 力学はエッセンスでなんとかなった', tags: ['#物理', '#質問'], u: 21, r: 17 },
 ];
 
 export type IconName = 'flag' | 'clock' | 'users' | 'bulb' | 'cal' | 'target' | 'userPlus';
@@ -77,9 +78,9 @@ export const JUKU = [
 ];
 
 export const DEADLINES = [
-  { t: '第4回 記述模試', d: '11月8日（日）', todo: [4, 6], days: 18, urgent: true },
-  { t: '共通テスト', d: '1月16日（土）', todo: [7, 12], days: 87, urgent: false },
-  { t: '東大 二次試験', d: '2月25日（木）', todo: [3, 12], days: 127, urgent: false },
+  { t: '第4回 記述模試', d: '11月8日（日）', mo: 11, day: 8, todo: [4, 6], days: 18, urgent: true },
+  { t: '共通テスト', d: '1月16日（土）', mo: 1, day: 16, todo: [7, 12], days: 87, urgent: false },
+  { t: '東大 二次試験', d: '2月25日（木）', mo: 2, day: 25, todo: [3, 12], days: 127, urgent: false },
 ];
 
 // Fixed "today" for the mock so dates and countdowns stay consistent.

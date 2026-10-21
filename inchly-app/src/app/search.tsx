@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { hoursIn, JUKU, PEOPLE, Uni, UNIS } from '@/data';
 import { toggleFollow, toggleIn, useStore } from '@/store';
 import { ease, font, hair, noOutline, radius, useT } from '@/theme';
-import { Avatar, Btn, Empty, haptic, Press, Txt } from '@/ui/base';
+import { Avatar, Btn, Card, Empty, haptic, ListRow, Press, SectionHead, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Checkbox } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
@@ -114,7 +114,6 @@ export default function Search() {
   const [text, setText] = useState('');
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
-  const [focused, setFocused] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const following = useStore((s) => s.following);
   const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
@@ -137,15 +136,13 @@ export default function Search() {
   let body: React.ReactNode = null;
   if (!q && kind !== 'uni' && !text) {
     body = (
-      <View style={{ paddingHorizontal: 20, paddingTop: 6 }}>
-        <Txt size={12} w="600" tone="ink2" style={{ paddingTop: 12, paddingBottom: 4 }}>最近の検索</Txt>
-        {RECENT.map((r) => (
-          <Pressable key={r} onPress={() => { haptic.tap(); changeText(r.split(' ')[0]); }}
-            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, borderBottomWidth: hair, borderBottomColor: t.line, opacity: pressed ? 0.6 : 1 })}>
-            <Icon name="clock" size={14} color={t.ink3} />
-            <Txt size={13.5} tone="ink2">{r}</Txt>
-          </Pressable>
-        ))}
+      <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
+        <SectionHead title="最近の検索" />
+        <Card pad={0}>
+          {RECENT.map((r, i) => (
+            <ListRow key={r} first={i === 0} lead={<Icon name="clock" size={18} color={t.ink3} />} title={r} onPress={() => changeText(r.split(' ')[0])} a11y={r} />
+          ))}
+        </Card>
       </View>
     );
   } else if (loading) {
@@ -153,12 +150,12 @@ export default function Search() {
   } else if (kind === 'uni') {
     const list = UNIS.filter((u) => !q || (u.n + u.f).includes(q));
     body = list.length ? (
-      <Animated.View entering={FadeIn.duration(180)}>
-        {list.map((u) => (
-          <View key={u.n} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: hair, borderBottomColor: t.line }}>
+      <Animated.View entering={FadeIn.duration(180)} style={{ marginHorizontal: 16, backgroundColor: t.surface, borderRadius: radius.card, overflow: 'hidden' }}>
+        {list.map((u, i) => (
+          <View key={u.n} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 11, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Txt size={13.5} w="600" numberOfLines={1}>{u.n}</Txt>
-              <Txt size={11} tone="ink3" numberOfLines={1}>{u.f} · {u.p}</Txt>
+              <Txt size={16} w="600" lh={21} numberOfLines={1}>{u.n}</Txt>
+              <Txt size={13} tone="ink2" numberOfLines={1}>{u.f}</Txt>
             </View>
             <NumCell w={COLS[0]} v={u.dev.toFixed(1)} />
             <NumCell w={COLS[1]} v={u.fans.toLocaleString()} unit="人" />
@@ -168,52 +165,39 @@ export default function Search() {
             </View>
           </View>
         ))}
-        <Txt size={11} tone="ink3" style={{ paddingHorizontal: 20, paddingVertical: 12 }}>偏差値は河合塾の目安（サンプル）</Txt>
+        <Txt size={13} tone="ink2" style={{ paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: hair, borderTopColor: t.line }}>偏差値は河合塾の目安（サンプル）</Txt>
       </Animated.View>
     ) : <Empty title={`「${q}」に合う大学はありません`} sub="「東大」「工学部」みたいに短くすると見つかりやすい" />;
   } else if (kind === 'user') {
     const list = PEOPLE.filter((p) => !q || (p.n + p.h + p.g).includes(q));
     body = list.length ? (
-      <Animated.View entering={FadeIn.duration(180)} style={{ paddingTop: 4 }}>
-        {list.map((p) => {
-          const on = following.includes(p.h);
-          return (
-            <View key={p.h} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 }}>
-              <Avatar name={p.n} color={p.c} size={32} />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Txt size={13.5} w="600">{p.n}</Txt>
-                <Txt size={11} tone="ink3" numberOfLines={1}>@{p.h} · {p.g} · 今週 {(p.t / 400).toFixed(1)}時間</Txt>
-              </View>
-              <Btn small kind={on ? 'quiet' : 'primary'} label={on ? 'フォロー中' : 'フォロー'} onPress={() => toggleFollow(p.h)} />
-            </View>
-          );
-        })}
+      <Animated.View entering={FadeIn.duration(180)} style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+        <Card pad={0}>
+          {list.map((p, i) => {
+            const on = following.includes(p.h);
+            return (
+              <ListRow key={p.h} first={i === 0} lead={<Avatar name={p.n} color={p.c} size={36} />} title={p.n} sub={`@${p.h}　${p.g}　今週 ${(p.t / 400).toFixed(1)}時間`}
+                trail={<Btn small kind={on ? 'quiet' : 'primary'} label={on ? 'フォロー中' : 'フォロー'} onPress={() => toggleFollow(p.h)} />} />
+            );
+          })}
+        </Card>
       </Animated.View>
     ) : <Empty title={`「${q}」に合うユーザーはいません`} sub="ニックネーム、@ID、志望校でも探せます" />;
   } else {
     const list = JUKU.filter((j) => !q || j.n.includes(q));
     body = list.length ? (
-      <Animated.View entering={FadeIn.duration(180)} style={{ paddingTop: 4 }}>
-        {list.map((j) => (
-          <Press key={j.n} scale={0.985} onPress={() => toast(`${j.n}`, '塾の詳細ページはこれから作ります')}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 }}>
-            <View style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="pin" size={15} color={t.ink2} />
-            </View>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Txt size={13.5} w="600" numberOfLines={1} style={{ flexShrink: 1 }}>{j.n}</Txt>
-                {j.pr ? (
-                  <View style={{ borderWidth: hair, borderColor: t.line2, borderRadius: 4, paddingHorizontal: 4 }}>
-                    <Txt size={10.5} w="600" tone="ink3" lh={16}>PR</Txt>
-                  </View>
-                ) : null}
-              </View>
-              <Txt size={11} tone="ink3" numberOfLines={1}>{j.sub}</Txt>
-            </View>
-            <Icon name="chev" size={14} color={t.ink3} />
-          </Press>
-        ))}
+      <Animated.View entering={FadeIn.duration(180)} style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+        <Card pad={0}>
+          {list.map((j, i) => (
+            <ListRow key={j.n} first={i === 0} chevron onPress={() => toast(`${j.n}`, '塾の詳細ページはこれから作ります')} a11y={j.n}
+              lead={<View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#FF3B30', alignItems: 'center', justifyContent: 'center' }}><Icon name="pin" size={17} color="#fff" filled /></View>}
+              title={<View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Txt size={17} numberOfLines={1} style={{ flexShrink: 1 }}>{j.n}</Txt>
+                {j.pr ? <Txt size={11} w="600" tone="ink3" style={{ borderWidth: hair, borderColor: t.line2, borderRadius: 4, paddingHorizontal: 4 }}>PR</Txt> : null}
+              </View>}
+              sub={j.sub} />
+          ))}
+        </Card>
       </Animated.View>
     ) : <Empty title={`「${q}」に合う塾は見つかりませんでした`} sub="駅名や教室名でも探せます" />;
   }
@@ -223,12 +207,11 @@ export default function Search() {
   return (
     <Screen>
       <NavBar title="さがす" />
-      <View style={{ marginHorizontal: 16, marginTop: 2, height: 42, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, borderRadius: radius.inner, backgroundColor: t.surface,
-        borderWidth: focused ? 1.25 : hair, borderColor: focused ? t.ink : t.line2 }}>
-        <Icon name="search" size={16} color={t.ink3} />
+      <View style={{ marginHorizontal: 16, marginTop: 2, height: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, borderRadius: 22, backgroundColor: t.sunken }}>
+        <Icon name="search" size={17} color={t.ink2} />
         <TextInput ref={inputRef} value={text} onChangeText={changeText} autoFocus placeholder="大学・ユーザー・塾・投稿" placeholderTextColor={t.ink3}
-          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} returnKeyType="search" clearButtonMode="never" autoCorrect={false}
-          accessibilityLabel="検索" style={[{ flex: 1, minWidth: 0, fontSize: 16, color: t.ink, fontFamily: font.text, height: 42 }, noOutline]} />
+          returnKeyType="search" clearButtonMode="never" autoCorrect={false}
+          accessibilityLabel="検索" style={[{ flex: 1, minWidth: 0, fontSize: 17, color: t.ink, fontFamily: font.text, height: 44 }, noOutline]} />
         {text ? (
           <Pressable onPress={() => { changeText(''); inputRef.current?.focus(); }} hitSlop={10} accessibilityLabel="消す"
             style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
@@ -236,17 +219,17 @@ export default function Search() {
           </Pressable>
         ) : null}
       </View>
-      <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}>
         <Segmented value={kind} onChange={changeKind} options={[{ v: 'uni', label: '大学' }, { v: 'user', label: 'ユーザー' }, { v: 'juku', label: '塾' }]} />
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" stickyHeaderIndices={showHeader ? [0] : undefined}
         contentContainerStyle={{ paddingBottom: insets.bottom + (picked.length >= 2 ? 96 : 24) }}>
         {showHeader ? (
-          <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6, backgroundColor: t.canvas, borderBottomWidth: hair, borderBottomColor: t.line }}>
-            <Txt size={11.5} tone="ink3" style={{ flex: 1 }}>大学・学部</Txt>
-            <Txt size={11.5} tone="ink3" style={{ width: COLS[0], textAlign: 'right' }}>偏差値</Txt>
-            <Txt size={11.5} tone="ink3" style={{ width: COLS[1], textAlign: 'right' }}>志望者</Txt>
-            <Txt size={11.5} tone="ink3" style={{ width: COLS[2], textAlign: 'right' }}>二次まで</Txt>
+          <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 32, paddingTop: 10, paddingBottom: 6, backgroundColor: t.canvas }}>
+            <Txt size={13} tone="ink2" style={{ flex: 1 }}>大学・学部</Txt>
+            <Txt size={13} tone="ink2" style={{ width: COLS[0], textAlign: 'right' }}>偏差値</Txt>
+            <Txt size={13} tone="ink2" style={{ width: COLS[1], textAlign: 'right' }}>志望者</Txt>
+            <Txt size={13} tone="ink2" style={{ width: COLS[2], textAlign: 'right' }}>二次まで</Txt>
             <View style={{ width: COLS[3] }} />
           </View>
         ) : null}

@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } fro
 
 import { ease, font, useT } from '../theme';
 import { haptic, Txt } from './base';
+import { Inch } from './Sticker';
 
 // Inch-ly: "a little at a time". The brand's one motif is the measuring tape —
 // the same ticks as the timer's ruler — used for the wordmark and for today's progress.
@@ -39,6 +40,8 @@ export function InchTape({ minutes, goal, parts }: { minutes: number; goal: numb
   const reveal = useSharedValue(0);
   useEffect(() => { if (w) reveal.set(withDelay(150, withTiming(x(Math.min(minutes, end)), { duration: 900, easing: ease.out }))); }, [w, minutes]); // eslint-disable-line react-hooks/exhaustive-deps
   const ra = useAnimatedStyle(() => ({ width: reveal.value }));
+  // Inch rides the end of today's bar: the brand's two halves, the worm and the ruler, in one place.
+  const ia = useAnimatedStyle(() => ({ transform: [{ translateX: reveal.value - 30 }] }));
   const segs = parts.filter((p) => p.min > 0);
   const starts = segs.map((_, i) => segs.slice(0, i).reduce((a, p) => a + p.min, 0));
   const reached = minutes >= goal;
@@ -104,6 +107,9 @@ export function InchTape({ minutes, goal, parts }: { minutes: number; goal: numb
             {/* goal: a hairline notch through the bar */}
             <View style={{ position: 'absolute', top: 3, left: x(goal) - 0.75, width: 1.5, height: BAR + 13, borderRadius: 1, backgroundColor: reached ? t.greenInk : t.ink }} />
             <Txt size={10} w="700" lh={12} tone={reached ? 'greenInk' : 'ink'} style={{ position: 'absolute', top: 30, left: Math.min(w - 50, x(goal) - 25), width: 50, textAlign: 'center' }}>{`目標 ${goal / 60}h`}</Txt>
+            <Animated.View style={[{ position: 'absolute', left: 0, top: -27 }, ia]}>
+              <Inch pose="arch" eyes={reached ? 'happy' : 'dot'} size={36} border={false} />
+            </Animated.View>
             {/* tag over the pressed segment */}
             {hot !== null && segs[hot] ? (
               <View style={{ position: 'absolute', top: -26, left: Math.max(0, Math.min(w - 112, x(starts[hot] + segs[hot].min / 2) - 56)), width: 112, alignItems: 'center' }}>
@@ -118,21 +124,14 @@ export function InchTape({ minutes, goal, parts }: { minutes: number; goal: numb
         ) : null}
       </View>
       {/* legend */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4, marginTop: 6 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 4, marginTop: 8 }}>
         {segs.map((p) => (
           <View key={p.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: p.c }} />
-            <Txt size={11} tone="ink2" lh={14}>{p.name}</Txt>
-            <Txt num size={11} tone="ink3" lh={14}>{fmt(p.min)}</Txt>
+            <Txt size={13} tone="ink2" lh={17}>{p.name}</Txt>
+            <Txt num size={13} tone="ink3" lh={17}>{fmt(p.min)}</Txt>
           </View>
         ))}
-        {!reached ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, borderWidth: 1, borderColor: t.ink3 }} />
-            <Txt size={11} tone="ink2" lh={14}>目標まで</Txt>
-            <Txt num size={11} tone="ink3" lh={14}>{fmt(goal - minutes)}</Txt>
-          </View>
-        ) : null}
       </View>
     </View>
   );

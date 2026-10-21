@@ -7,12 +7,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChatMsg, GEvent, Group, hms, subj } from '@/data';
 import { PHOTO } from '@/photos';
 import { elapsedOf, getState, startStudy, updateGroup, useStore } from '@/store';
-import { font, hair, lift, noOutline, radius, useT } from '@/theme';
+import { font, hair, noOutline, radius, useT } from '@/theme';
 import { Avatar, AvatarStack, Btn, Empty, haptic, IconBtn, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Bar, LiveDot, PeoplePill, takePendingGroupTab } from '@/ui/GroupParts';
-import { Icon } from '@/ui/Icon';
-import { Stamp, STAMPS, Sticker, StickerName } from '@/ui/Sticker';
+import { Icon, IconName } from '@/ui/Icon';
+import { Glass } from '@/ui/Glass';
+import { DateTile } from '@/ui/HomeParts';
+import { Inch, Stamp, STAMPS } from '@/ui/Sticker';
 import { UnderTabs } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 
@@ -29,7 +31,7 @@ export default function GroupScreen() {
   useFocusEffect(useCallback(() => { const p = takePendingGroupTab(); if (p) setTab(p as Tab); }, []));
   return (
     <Screen>
-      <NavBar title={g.n} right={<IconBtn name="userPlus" label="メンバーを招待" onPress={() => toast('招待リンクをコピーしました', `${g.n} · ${g.join}`)} />} />
+      <NavBar title={g.n} right={<IconBtn filled name="userPlus" label="メンバーを招待" onPress={() => toast('招待リンクをコピーしました', `${g.n} · ${g.join}`)} />} />
       <UnderTabs value={tab} onChange={setTab} options={[{ v: 'chat', label: 'チャット' }, { v: 'events', label: 'イベント' }, { v: 'shared', label: '共有' }]} />
       {tab === 'chat' ? <Chat g={g} /> : tab === 'events' ? <Events g={g} /> : <Shared g={g} />}
     </Screen>
@@ -102,61 +104,65 @@ function Chat({ g }: { g: Group }) {
     if (q === 'ask') { setText(`【質問・${subj(s.subj).name}】`); input.current?.focus(); }
   };
 
-  const QA: { q: string; label: string; s: StickerName }[] = [
-    { q: 'start', label: '勉強を始める', s: 'play' },
-    { q: 'together', label: '一緒に勉強する', s: 'person' },
-    { q: 'goal', label: '今日の目標を宣言', s: 'target' },
-    { q: 'quiz', label: '問題を出す', s: 'bulb' },
-    { q: 'ask', label: '質問する', s: 'chat' },
+  const QA: { q: string; label: string; icon: IconName }[] = [
+    { q: 'start', label: '勉強を始める', icon: 'play' },
+    { q: 'together', label: '一緒に勉強する', icon: 'userPlus' },
+    { q: 'goal', label: '今日の目標', icon: 'target' },
+    { q: 'quiz', label: '問題を出す', icon: 'q' },
+    { q: 'ask', label: '質問する', icon: 'chat' },
   ];
+  const can = !!text.trim();
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      {/* who's studying right now */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: t.surface, borderBottomWidth: hair, borderBottomColor: t.line }}>
-        <LiveDot size={6} />
-        <AvatarStack people={present.map((p) => ({ n: p[0], c: p[1] }))} size={24} ring={t.surface} max={3} />
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Txt size={12.5} w="600" lh={17}>{present.length}人が勉強中</Txt>
-          <Txt size={11} tone="ink3" numberOfLines={1} lh={15}>{present.map((p) => `${p[0]} ${p[2]}`).join(' · ')}</Txt>
-        </View>
-      </View>
-      <ScrollView ref={scroll} style={{ flex: 1 }} contentContainerStyle={{ padding: 14, gap: 10 }}
+      <ScrollView ref={scroll} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 6, paddingBottom: 16, gap: 8 }}
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: mounted.current })} keyboardDismissMode="interactive">
-        {g.msgs.map((m, i) => <Msg key={i} m={m} i={i} g={g} onJoin={join} />)}
+        {/* who's studying right now */}
+        <View style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <AvatarStack people={present.map((p) => ({ n: p[0], c: p[1] }))} size={22} ring={t.canvas} max={4} />
+          <LiveDot size={6} />
+          <Txt size={13} tone="ink2">{`${present.length}人が勉強中`}</Txt>
+        </View>
+        {g.msgs.map((m, i) => <Msg key={i} m={m} i={i} g={g} onJoin={join} prev={g.msgs[i - 1]} />)}
       </ScrollView>
-      {/* dock: quick study actions above the composer */}
-      <View style={{ backgroundColor: t.surface, borderTopWidth: hair, borderTopColor: t.line, paddingBottom: Math.max(insets.bottom, 8) }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={{ gap: 6, paddingHorizontal: 12, paddingTop: 8 }}>
+      {/* the composer floats on glass, quick study actions above it */}
+      <View style={{ paddingBottom: Math.max(insets.bottom, 10), gap: 8 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={{ gap: 8, paddingHorizontal: 12, paddingVertical: 4 }}>
           {QA.map((a) => (
-            <Press key={a.q} onPress={() => quick(a.q)} scale={0.94}
-              hitSlop={{ top: 6, bottom: 6 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 3, height: 32, paddingLeft: 3, paddingRight: 11, borderRadius: 16, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line2 }}>
-              <Sticker name={a.s} size={26} />
-              <Txt size={12} w="600">{a.label}</Txt>
+            <Press key={a.q} onPress={() => quick(a.q)} scale={0.94} hitSlop={{ top: 4, bottom: 4 }}>
+              <Glass interactive style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 38, paddingHorizontal: 14 }}>
+                <Icon name={a.icon} size={16} color={t.tint} width={2} />
+                <Txt size={15}>{a.label}</Txt>
+              </Glass>
             </Press>
           ))}
         </ScrollView>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingTop: 8 }}>
-          <Press onPress={() => { haptic.tap(); setTray((x) => !x); }} haptics={false} scale={0.86} accessibilityLabel={tray ? 'スタンプを閉じる' : 'スタンプ'} accessibilityState={{ expanded: tray }}
-            style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: tray ? t.blueSoft : 'transparent' }}>
-            <Sticker name="heart" size={30} tilt={tray ? 0 : -10} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12 }}>
+          <Press onPress={() => { haptic.tap(); setTray((x) => !x); }} haptics={false} scale={0.88} accessibilityLabel={tray ? 'スタンプを閉じる' : 'スタンプ'} accessibilityState={{ expanded: tray }}>
+            <Glass interactive style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+              {tray ? <Icon name="x" size={17} color={t.ink} width={2.2} /> : <Inch pose="up" eyes="happy" size={36} border={false} />}
+            </Glass>
           </Press>
-          <TextInput ref={input} onFocus={() => setTray(false)} value={text} onChangeText={setText} placeholder="メッセージ" placeholderTextColor={t.ink3} onSubmitEditing={send} returnKeyType="send" accessibilityLabel="メッセージ"
-            style={[{ flex: 1, height: 40, borderRadius: 20, paddingHorizontal: 14, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line2, color: t.ink, fontSize: 15, fontFamily: font.text }, noOutline]} />
-          <Press onPress={send} disabled={!text.trim()} scale={0.88} accessibilityLabel="送信"
-            style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: text.trim() ? t.ink : t.sunken }}>
-            <Icon name="send" size={16} color={text.trim() ? t.onInk : t.ink3} />
-          </Press>
+          <Glass style={{ flex: 1, height: 44, flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 4 }}>
+            <TextInput ref={input} onFocus={() => setTray(false)} value={text} onChangeText={setText} placeholder="メッセージ" placeholderTextColor={t.ink3} onSubmitEditing={send} returnKeyType="send" accessibilityLabel="メッセージ"
+              style={[{ flex: 1, height: 44, color: t.ink, fontSize: 17, fontFamily: font.text }, noOutline]} />
+            <Press onPress={send} disabled={!can} scale={0.88} accessibilityLabel="送信"
+              style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: can ? t.tint : 'rgba(118,118,128,0.18)' }}>
+              <Icon name="send" size={17} color="#fff" width={2.4} />
+            </Press>
+          </Glass>
         </View>
         {tray ? (
-          <Animated.View entering={FadeInDown.duration(200)} style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8, paddingTop: 10 }}>
-            {STAMPS.map((x) => (
-              <View key={x.id} style={{ width: '25%', alignItems: 'center', paddingVertical: 6 }}>
-                <Press onPress={() => sendStamp(x.id)} haptics={false} scale={0.86} accessibilityLabel={`スタンプ「${x.label}」を送る`}>
-                  <Stamp id={x.id} size={72} />
-                </Press>
-              </View>
-            ))}
+          <Animated.View entering={FadeInDown.duration(200)} style={{ marginHorizontal: 8 }}>
+            <Glass radius={30} style={{ flexDirection: 'row', flexWrap: 'wrap', paddingVertical: 8, paddingHorizontal: 4 }}>
+              {STAMPS.map((x) => (
+                <View key={x.id} style={{ width: '25%', alignItems: 'center', paddingVertical: 4 }}>
+                  <Press onPress={() => sendStamp(x.id)} haptics={false} scale={0.86} accessibilityLabel={`スタンプ「${x.label}」を送る`}>
+                    <Stamp id={x.id} size={72} />
+                  </Press>
+                </View>
+              ))}
+            </Glass>
           </Animated.View>
         ) : null}
       </View>
@@ -164,36 +170,33 @@ function Chat({ g }: { g: Group }) {
   );
 }
 
-function Msg({ m, i, g, onJoin }: { m: ChatMsg; i: number; g: Group; onJoin: (w: string) => void }) {
+// Messages-style thread: your bubbles in the tint, others' in system grey,
+// system lines as small grey text, stamps without a bubble.
+function Msg({ m, i, g, onJoin, prev }: { m: ChatMsg; i: number; g: Group; onJoin: (w: string) => void; prev?: ChatMsg }) {
   const t = useT();
   const enter = FadeInDown.duration(260);
   if (m.kind === 'sys') {
     return (
-      <Animated.View entering={enter} style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: m.join ? 3 : 4, paddingLeft: 10, paddingRight: m.join ? 3 : 10, borderRadius: 16, backgroundColor: t.dark ? t.sunken : 'rgba(15,23,42,0.05)' }}>
-        {m.join ? <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: t.green }} /> : null}
-        <Txt size={11.5} tone="ink2">{m.t}</Txt>
-        {m.join ? (
-          <Press onPress={() => onJoin(m.join!)} scale={0.92} haptics={false} hitSlop={8} style={{ height: 26, paddingHorizontal: 10, borderRadius: 13, backgroundColor: t.ink, justifyContent: 'center' }}>
-            <Txt size={11.5} w="600" color={t.onInk}>一緒に始める</Txt>
-          </Press>
-        ) : null}
+      <Animated.View entering={enter} style={{ alignSelf: 'center', alignItems: 'center', gap: 6, marginVertical: 6 }}>
+        <Txt size={13} tone="ink2" style={{ textAlign: 'center' }}>{m.t}</Txt>
+        {m.join ? <Btn small kind="tint" icon="play" label="一緒に始める" onPress={() => onJoin(m.join!)} /> : null}
       </Animated.View>
     );
   }
-  const body = m.kind === 'card' ? <Card m={m} i={i} g={g} /> : m.kind === 'stamp' ? <Stamp id={m.s} size={100} pop /> : (
-    <View style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, maxWidth: 250,
-      backgroundColor: m.kind === 'me' ? t.ink : t.surface,
-      borderBottomRightRadius: m.kind === 'me' ? 5 : 16, borderBottomLeftRadius: m.kind === 'me' ? 16 : 5 }, m.kind === 'me' ? null : lift(t)]}>
-      <Txt size={14} lh={20} color={m.kind === 'me' ? t.onInk : t.ink}>{m.t}</Txt>
+  const mine = m.kind === 'me' || (m.kind === 'card' && m.me) || (m.kind === 'stamp' && !m.n);
+  const body = m.kind === 'card' ? <Card m={m} i={i} g={g} /> : m.kind === 'stamp' ? <Stamp id={m.s} size={104} pop /> : (
+    <View style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 19, maxWidth: 264, backgroundColor: mine ? t.tint : '#E9E9EB' }}>
+      <Txt size={17} lh={22} color={mine ? '#fff' : t.ink}>{m.t}</Txt>
     </View>
   );
-  if (m.kind === 'me' || (m.kind === 'card' && m.me) || (m.kind === 'stamp' && !m.n)) return <Animated.View entering={enter} style={{ alignItems: 'flex-end' }}>{body}</Animated.View>;
+  if (mine) return <Animated.View entering={enter} style={{ alignItems: 'flex-end' }}>{body}</Animated.View>;
   const who = m.kind === 'msg' ? m : m.kind === 'stamp' && m.n ? { n: m.n, c: m.c ?? '#4A5BD4' } : { n: 'そら', c: '#4A5BD4' };
+  const prevWho = prev && (prev.kind === 'msg' || (prev.kind === 'stamp' && prev.n)) ? (prev as { n: string }).n : null;
   return (
     <Animated.View entering={enter} style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
-      <Avatar name={who.n} color={who.c} size={26} />
+      <Avatar name={who.n} color={who.c} size={28} />
       <View>
-        <Txt size={11} tone="ink3" style={{ marginLeft: 4, marginBottom: 2 }}>{who.n}</Txt>
+        {prevWho === who.n ? null : <Txt size={12} tone="ink2" style={{ marginLeft: 12, marginBottom: 2 }}>{who.n}</Txt>}
         {body}
       </View>
     </Animated.View>
@@ -205,15 +208,15 @@ function Card({ m, i, g }: { m: Extract<ChatMsg, { kind: 'card' }>; i: number; g
   const todayMin = useStore((s) => s.todayMin);
   const subjId = useStore((s) => s.subj);
   const set = (fn: (c: typeof m) => typeof m) => updateGroup(g.id, (x) => ({ ...x, msgs: x.msgs.map((y, k) => (k === i && y.kind === 'card' ? fn(y) : y)) }));
-  const box = [{ width: 252, padding: 12, gap: 10, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)];
+  const box = { width: 264, padding: 14, gap: 10, borderRadius: 20, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line } as const;
   if (m.card === 'together') {
     const joined = m.joined ?? [];
     const mine = joined.includes(ME);
     return (
       <View style={box}>
         <View>
-          <Txt size={13.5} w="700">一緒に勉強しよう</Txt>
-          <Txt size={11.5} tone="ink3">{subj(subjId).name} · 25分×2 · 今から</Txt>
+          <Txt size={17} w="600">一緒に勉強しよう</Txt>
+          <Txt size={13} tone="ink3">{subj(subjId).name} · 25分×2 · 今から</Txt>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <PeoplePill names={joined} ring={t.sunken} />
@@ -227,11 +230,11 @@ function Card({ m, i, g }: { m: Extract<ChatMsg, { kind: 'card' }>; i: number; g
     return (
       <View style={box}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <Txt size={13.5} w="700">今日の目標：3時間</Txt>
+          <Txt size={17} w="600">今日の目標：3時間</Txt>
           <Txt num size={13} w="600" tone="greenInk">{p}%</Txt>
         </View>
         <Bar pct={p} h={6} />
-        <Txt size={11} tone="ink3">達成するとグループにお知らせします</Txt>
+        <Txt size={13} tone="ink3">達成するとグループにお知らせします</Txt>
       </View>
     );
   }
@@ -239,8 +242,8 @@ function Card({ m, i, g }: { m: Extract<ChatMsg, { kind: 'card' }>; i: number; g
   return (
     <View style={box}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <Txt size={13.5} w="700">{QUIZ.q}</Txt>
-        <Txt size={11} tone="ink3">英単語</Txt>
+        <Txt size={17} w="600">{QUIZ.q}</Txt>
+        <Txt size={13} tone="ink3">英単語</Txt>
       </View>
       <View style={{ gap: 6 }}>
         {QUIZ.o.map((o, k) => {
@@ -251,7 +254,7 @@ function Card({ m, i, g }: { m: Extract<ChatMsg, { kind: 'card' }>; i: number; g
               onPress={() => { if (ans !== undefined) return; if (k === QUIZ.a) haptic.success(); else haptic.warn(); set((c) => ({ ...c, answered: k })); }}
               style={{ height: 40, paddingHorizontal: 12, borderRadius: 10, justifyContent: 'center', flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: hair, borderColor: t.line,
                 backgroundColor: right ? t.greenSoft : wrong ? t.redSoft : t.sunken }}>
-              <Txt size={13} w={right || wrong ? '600' : '500'} tone={right ? 'greenInk' : wrong ? 'red' : 'ink'} style={{ flex: 1 }}>{o}</Txt>
+              <Txt size={16} w={right || wrong ? '600' : '500'} tone={right ? 'greenInk' : wrong ? 'red' : 'ink'} style={{ flex: 1 }}>{o}</Txt>
               {right ? <Icon name="check" size={16} color={t.greenInk} width={2.6} /> : wrong ? <Icon name="x" size={14} color={t.red} /> : null}
             </Press>
           );
@@ -299,27 +302,23 @@ function EventRow({ e, onToggle }: { e: GEvent; onToggle: () => void }) {
   const names = (e.me ? [ME] : []).concat(e.joined);
   return (
     <Animated.View entering={e.fresh ? FadeInDown.duration(360) : undefined} layout={LinearTransition.duration(240)}
-      style={[{ flexDirection: 'row', gap: 12, marginHorizontal: 16, marginBottom: 10, padding: 14, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
+      style={{ flexDirection: 'row', gap: 12, marginHorizontal: 16, marginBottom: 10, padding: 16, borderRadius: radius.card, backgroundColor: t.surface }}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.greenSoft, borderRadius: radius.card }, ga]} />
-      <View style={{ width: 42, height: 46, borderRadius: 10, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line, alignItems: 'center', justifyContent: 'center' }}>
-        <Txt size={9.5} w="700" lh={11} color={t.red}>{`${e.mo}月`}</Txt>
-        <Txt num size={17} w="700" lh={20}>{e.d}</Txt>
-        <Txt size={9.5} tone="ink3" lh={11}>{e.w}</Txt>
-      </View>
+      <DateTile mo={e.mo} d={e.d} />
       <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
-        <Txt size={14} w="600">{e.t}</Txt>
-        <Txt size={11.5} tone="ink3">{e.type} · {e.time} · 定員{e.cap}人</Txt>
+        <Txt size={17} w="600">{e.t}</Txt>
+        <Txt size={13} tone="ink3">{e.type} · {e.time} · 定員{e.cap}人</Txt>
         {e.goal ? (
           <View style={{ marginTop: 6, gap: 5 }}>
             <Bar pct={((e.done ?? 0) / e.goal) * 100} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Txt size={11} tone="ink2">みんなの合計 {e.done}時間</Txt>
-              <Txt num size={11} tone="ink3">{e.goal}時間</Txt>
+              <Txt size={13} tone="ink2">みんなの合計 {e.done}時間</Txt>
+              <Txt num size={13} tone="ink3">{e.goal}時間</Txt>
             </View>
           </View>
         ) : null}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-          {names.length ? <PeoplePill names={names} ring={t.sunken} /> : <Txt size={11.5} tone="ink3">まだ誰も参加していません</Txt>}
+          {names.length ? <PeoplePill names={names} ring={t.sunken} /> : <Txt size={13} tone="ink3">まだ誰も参加していません</Txt>}
           <Btn small kind={e.me ? 'quiet' : 'primary'} label={e.me ? '参加中' : '参加する'} onPress={onToggle} />
         </View>
       </View>
@@ -344,8 +343,8 @@ function Shared({ g }: { g: Group }) {
               <Image source={SHARED_PHOTO[i % SHARED_PHOTO.length]} style={{ width: cell, height: cell, borderRadius: radius.inner, backgroundColor: t.sunken }} resizeMode="cover" />
               {kind === 'video' ? (
                 <View style={{ position: 'absolute', left: 8, bottom: 8, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.55)' }}>
-                  <Icon name="play" size={11} color="#fff" />
-                  <Txt num size={11.5} w="600" color="#fff">15:02</Txt>
+                  <Icon name="play" size={13} color="#fff" />
+                  <Txt num size={13} w="600" color="#fff">15:02</Txt>
                 </View>
               ) : null}
               <Press onPress={() => { if (on) { setSaved(saved.filter((x) => x !== title)); return; } setSaved([...saved, title]); haptic.success(); toast('保存しました'); }}
@@ -354,8 +353,8 @@ function Shared({ g }: { g: Group }) {
                 <Icon name={on ? 'check' : 'plus'} size={15} color="#fff" width={2.4} />
               </Press>
             </View>
-            <Txt size={13} w="600" numberOfLines={2} lh={18} style={{ marginTop: 7 }}>{title}</Txt>
-            <Txt size={11} tone="ink3">{meta}</Txt>
+            <Txt size={15} w="600" numberOfLines={2} lh={20} style={{ marginTop: 7 }}>{title}</Txt>
+            <Txt size={13} tone="ink3">{meta}</Txt>
           </View>
         );
       }) : <View style={{ width: '100%' }}><Empty title="まだ何も共有されていません" sub="ノートの写真や、役に立った動画をここに" /></View>}

@@ -116,10 +116,10 @@ function ThemeTile({ label, icon, on, dim, onPress }: { label: string; icon: Ico
   return (
     <Animated.View style={[{ width: '31.8%' }, a]}>
       <Press onPress={onPress} scale={0.95} accessibilityRole="radio" accessibilityState={{ checked: on }}
-        style={{ height: 64, borderRadius: radius.inner, alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: on ? t.ink : t.surface,
-          borderWidth: hair, borderColor: on ? t.ink : t.line2 }}>
-        <Icon name={icon} size={19} color={on ? t.onInk : t.ink} />
-        <Txt size={12} w="600" color={on ? t.onInk : t.ink}>{label}</Txt>
+        style={{ height: 76, borderRadius: radius.inner, alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: on ? t.tint : t.surface,
+          borderWidth: on ? 0 : hair, borderColor: t.line2 }}>
+        <Icon name={icon} size={22} color={on ? t.onInk : t.ink} />
+        <Txt size={15} w="500" color={on ? t.onInk : t.ink}>{label}</Txt>
       </Press>
     </Animated.View>
   );

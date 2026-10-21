@@ -74,7 +74,7 @@ function Col({ d, dir, h, w, delay, style, grow, blur }: { d: number; dir: numbe
 
 export function Rolling({
   value, size = 22, weight = '600', color, style, blur = true,
-}: { value: string; size?: number; weight?: '500' | '600' | '700' | '800'; color?: string; style?: StyleProp<TextStyle>; blur?: boolean }) {
+}: { value: string; size?: number; weight?: '200' | '300' | '400' | '500' | '600' | '700' | '800'; color?: string; style?: StyleProp<TextStyle>; blur?: boolean }) {
   const t = useT();
   const h = Math.round(size * 1.2);
   const ts: StyleProp<TextStyle> = [{ fontSize: size, fontFamily: face(size), fontWeight: weight, color: color ?? t.ink, fontVariant: ['tabular-nums'], letterSpacing: size >= 22 ? -size * 0.025 : 0 }, style];

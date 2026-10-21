@@ -1,17 +1,17 @@
-import { useEffect, useMemo } from 'react';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { hoursIn, SUBJ, Subject } from '@/data';
-import { ease, hair, useT } from '@/theme';
-import { Card, SectionHead, SubjCoin, Txt } from '@/ui/base';
-import { Screen, TopBar } from '@/ui/Chrome';
+import { DEADLINES, hoursIn, SUBJ, Subject } from '@/data';
+import { ease, useT } from '@/theme';
+import { Card, ListRow, SectionHead, Txt } from '@/ui/base';
+import { Page } from '@/ui/Chrome';
+import { DateTile } from '@/ui/HomeParts';
 import { Heatmap } from '@/ui/Heatmap';
 import { PullCard } from '@/ui/PullCard';
 import { StackedBars } from '@/ui/StackedBars';
 
-/** One subject, like a token row in a wallet: coin, name and pace, hours on the right. */
+/** One subject, as a list row: its colour, hours this week against the goal, a thin bar. */
 function SubjRow({ s, i }: { s: Subject; i: number }) {
   const t = useT();
   const p = Math.min(100, Math.round((s.week / s.goal) * 100));
@@ -20,82 +20,67 @@ function SubjRow({ s, i }: { s: Subject; i: number }) {
   useEffect(() => { w.value = withDelay(i * 50, withTiming(p, { duration: 700, easing: ease.out })); }, [p, i, w]);
   const a = useAnimatedStyle(() => ({ width: `${w.value}%` }));
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14 }}>
-      {i ? <View style={{ position: 'absolute', top: 0, left: 52, right: 0, height: hair, backgroundColor: t.line }} /> : null}
-      <SubjCoin name={s.name} color={s.c} size={28} />
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-          <Txt size={13.5} w="600" style={{ flex: 1 }}>{s.name}</Txt>
-          <Txt num size={13.5} w="600">{s.week}<Txt size={11} tone="ink3" num>{` / ${s.goal}h`}</Txt></Txt>
+    <ListRow first={i === 0} lead={<View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: s.c }} />}
+      title={s.name} a11y={`${s.name} 今週${s.week}時間 目標${s.goal}時間`}
+      detail={<Txt size={17} num>{s.week}<Txt size={13} tone="ink2">{` / ${s.goal}時間`}</Txt></Txt>}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
+        <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: t.sunken, overflow: 'hidden' }}>
+          <Animated.View style={[{ height: 4, borderRadius: 2, backgroundColor: low ? '#FF9500' : t.tint }, a]} />
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 }}>
-          {/* green while on pace, amber when behind */}
-          <View style={{ flex: 1, height: 3, borderRadius: 1.5, backgroundColor: t.sunken, overflow: 'hidden' }}>
-            <Animated.View style={[{ height: 3, borderRadius: 1.5, backgroundColor: low ? t.amber : t.green }, a]} />
-          </View>
-          <Txt size={10.5} w="600" num tone={low ? 'amber' : 'greenInk'} style={{ minWidth: 64, textAlign: 'right' }}>{low ? `あと${(s.goal - s.week).toFixed(1)}時間` : `${p}%`}</Txt>
-        </View>
+        {low ? <Txt size={13} color={t.amber}>{`あと${(s.goal - s.week).toFixed(1)}時間`}</Txt> : null}
       </View>
-    </View>
+    </ListRow>
   );
 }
 
 export default function Records() {
-  // The pull card refreshes only when the page is at the top, so it needs the scroll offset
-  // and the scroll view's native gesture to run alongside it.
-  const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
-  const native = useMemo(() => Gesture.Native(), []);
+  const t = useT();
   return (
-    <Screen>
-      <TopBar title="記録" sub={<Summary />} />
-      <GestureDetector gesture={native}>
-        <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-          <View style={{ paddingHorizontal: 16, paddingTop: 6 }}>
-            <StackedBars />
-          </View>
+    <Page title="記録" sub={<Summary />}>
+      <View style={{ paddingHorizontal: 16, gap: 30 }}>
+        <StackedBars />
 
-          <View style={{ paddingHorizontal: 16, paddingTop: 22 }}>
-            <View style={{ paddingHorizontal: 4 }}>
-              <SectionHead title="模試の偏差値" aux="最終更新 10月14日" />
-            </View>
-            <PullCard scrollY={scrollY} scroll={native} />
-          </View>
+        <View>
+          <SectionHead title="科目" aux="今週" />
+          <Card pad={0}>{SUBJ.map((s, i) => <SubjRow key={s.id} s={s} i={i} />)}</Card>
+        </View>
 
-          <View style={sec}>
-            <View style={{ paddingHorizontal: 4 }}>
-              <SectionHead title="今週の科目" aux="目標に対して" />
-            </View>
-            <Card pad={0} style={{ paddingVertical: 4 }}>
-              {SUBJ.map((s, i) => <SubjRow key={s.id} s={s} i={i} />)}
-            </Card>
-          </View>
+        <View>
+          <SectionHead title="模試" />
+          <PullCard />
+        </View>
 
-          <View style={sec}>
-            <View style={{ paddingHorizontal: 4 }}>
-              <SectionHead title="この半年" aux={`${Math.round(hoursIn(182))}時間`} />
-            </View>
-            <Card>
-              <Heatmap weeks={26} seed={3} todayLevel={3} gap={3} />
-            </Card>
-          </View>
-        </Animated.ScrollView>
-      </GestureDetector>
-    </Screen>
+        <View>
+          <SectionHead title="締切" />
+          <Card pad={0}>
+            {DEADLINES.map((d, i) => (
+              <ListRow key={d.t} first={i === 0} lead={<DateTile mo={d.mo} d={d.day} />} title={d.t} sub={`ToDo ${d.todo[0]} / ${d.todo[1]} 終わった`}
+                detail={<Txt size={17} color={d.urgent ? t.amber : t.ink2}>{`あと${d.days}日`}</Txt>} a11y={`${d.t} あと${d.days}日`} />
+            ))}
+          </Card>
+        </View>
+
+        <View>
+          <SectionHead title="この半年" aux={`${Math.round(hoursIn(182))}時間`} />
+          <Card>
+            <Heatmap weeks={26} seed={3} todayLevel={3} gap={3} />
+          </Card>
+        </View>
+      </View>
+    </Page>
   );
 }
 
-const sec = { paddingHorizontal: 16, paddingTop: 22 } as const;
-
 /** One sentence instead of a dashboard header: this week, and how it compares. */
 function Summary() {
+  const t = useT();
   const now = hoursIn(7);
   const prev = hoursIn(14) - now;
   const d = Math.round((now - prev) * 10) / 10;
   return (
-    <Txt size={13} tone="ink2" lh={19}>
-      {'今週は '}<Txt size={13} w="700" num>{now.toFixed(1)}時間</Txt>
-      {'。先週より '}<Txt size={13} w="700" num tone={d >= 0 ? 'greenInk' : 'amber'}>{`${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}時間`}</Txt>
+    <Txt size={15} tone="ink2" lh={21}>
+      {`今週は ${now.toFixed(1)}時間。`}
+      <Txt size={15} color={d >= 0 ? t.greenInk : t.ink2}>{`先週より ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}時間`}</Txt>
     </Txt>
   );
 }
