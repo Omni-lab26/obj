@@ -3,10 +3,10 @@ import { PanResponder, Pressable, View } from 'react-native';
 import { Gesture, GestureDetector, NativeGesture } from 'react-native-gesture-handler';
 import Animated, { Easing, FadeIn, SharedValue, useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { rng, TODAY } from '../data';
-import { useT } from '../theme';
+import { lift, radius, type, useT } from '../theme';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
 import { toast } from './Toast';
@@ -15,7 +15,8 @@ import { toast } from './Toast';
 // and pull-to-refresh — pull the card down and it stretches, six dots gather
 // at the top; let go past the line and it refreshes, then springs back.
 // Here: weekly mock-test deviation scores.
-const PLOT_H = 104;
+const PLOT_H = 112;
+const AXIS = 30; // right gutter for the value labels
 const THRESH = 70; // pull past this to refresh
 const HOLD = 58; // where the card waits while refreshing
 const DOTS = 6;
@@ -84,7 +85,9 @@ export function PullCard({ scrollY, scroll }: { scrollY: SharedValue<number>; sc
 
   // ---- line geometry
   const lo = Math.min(...pts) - 0.6, hi = Math.max(...pts) + 0.6;
-  const X = (i: number) => (w - 12) * (i / (pts.length - 1)) + 2;
+  const X = (i: number) => (w - AXIS - 8) * (i / (pts.length - 1)) + 2;
+  // three quiet gridlines with their values, like a trading chart
+  const grid = [hi - 0.6, (lo + hi) / 2, lo + 0.6].map((v) => ({ v, y: 6 + (PLOT_H - 12) * (1 - (v - lo) / (hi - lo)) }));
   const Y = (v: number) => 6 + (PLOT_H - 12) * (1 - (v - lo) / (hi - lo));
   const xy = useMemo(() => pts.map((v, i) => [X(i), Y(v)] as [number, number]), [pts, w]); // eslint-disable-line react-hooks/exhaustive-deps
   const path = w ? smoothPath(xy) : '';
@@ -101,7 +104,7 @@ export function PullCard({ scrollY, scroll }: { scrollY: SharedValue<number>; sc
     let last: number | null = null;
     const at = (x: number) => {
       const { w: ww, n } = geo.current;
-      return ww ? Math.max(0, Math.min(n - 1, Math.round(((x - 2) / (ww - 12)) * (n - 1)))) : null;
+      return ww ? Math.max(0, Math.min(n - 1, Math.round(((x - 2) / (ww - AXIS - 8)) * (n - 1)))) : null;
     };
     const show = (i: number | null) => { if (i !== null && i !== last) haptic.tap(); last = i; setHot(i); };
     return PanResponder.create({
@@ -193,42 +196,71 @@ export function PullCard({ scrollY, scroll }: { scrollY: SharedValue<number>; sc
 
   const [whole, dec] = shown.toFixed(1).split('.');
   return (
+    <View style={[{ borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
     <GestureDetector gesture={pan}>
-      <Animated.View style={[{ backgroundColor: t.surface, borderRadius: 20, overflow: 'hidden' }, card]}>
+      <Animated.View style={[{ backgroundColor: t.surface, borderRadius: radius.card, overflow: 'hidden' }, card]}>
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: '50%', marginLeft: -15, width: 30, height: 30 }, spinner]}>
           {Array.from({ length: DOTS }, (_, i) => <Dot key={i} i={i} pull={pull} spinning={refreshing} />)}
         </Animated.View>
         <Animated.View style={sheet} onLayout={(e) => !baseH && setBaseH(e.nativeEvent.layout.height)}>
-          <View style={{ paddingTop: 22, paddingHorizontal: 14, paddingBottom: 12, backgroundColor: t.surface }}>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end' }} accessible accessibilityLabel={`偏差値 ${shown}`}>
-              <Rolling value={whole} size={30} weight="500" />
-              <Txt num size={20} w="500" color={t.ink} style={{ opacity: 0.34, marginBottom: 2 }}>.{dec}</Txt>
+          <View style={{ paddingTop: 14, paddingHorizontal: 14, paddingBottom: 12, backgroundColor: t.surface }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.green }} />
+              <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>全統記述模試 · 偏差値</Txt>
+              <Txt size={11} tone="ink3">{hot === null ? '最新' : weekLabel(pts.length - 1 - idx)}</Txt>
             </View>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
-              <Txt num size={12} lh={18} color={delta >= 0 ? t.greenInk : t.red}>{`${delta >= 0 ? '+' : '−'}${Math.abs(delta).toFixed(1)} · ${W.from}`}</Txt>
-              <Txt size={12} lh={18} tone="ink3">{hot === null ? '最新' : weekLabel(pts.length - 1 - idx)}</Txt>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 4 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end' }} accessible accessibilityLabel={`偏差値 ${shown}`}>
+                <Rolling value={whole} size={type.figure + 2} weight="700" />
+                <Txt num size={18} w="700" tone="ink3" style={{ marginBottom: 2 }}>.{dec}</Txt>
+              </View>
+              <Txt num size={12} w="600" lh={16} color={delta >= 0 ? t.greenInk : t.red} style={{ marginBottom: 5 }}>{`${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta).toFixed(1)}`}</Txt>
+              <Txt size={11} lh={16} tone="ink3" style={{ marginBottom: 5 }}>{W.from}</Txt>
             </View>
 
-            <View style={{ height: PLOT_H, marginTop: 20, marginBottom: 6 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} {...scrub.panHandlers}
+            <View style={{ height: PLOT_H, marginTop: 16, marginBottom: 4 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} {...scrub.panHandlers}
               accessible accessibilityLabel={`偏差値の推移。${W.label}で${delta >= 0 ? '+' : '−'}${Math.abs(delta).toFixed(1)}`}>
               {w ? (
                 <Animated.View key={win + data.length + data[data.length - 1]} entering={FadeIn.duration(260)} pointerEvents="none" style={{ flex: 1 }}>
                   <Svg width={w} height={PLOT_H}>
-                    <Path d={path} fill="none" stroke={t.green} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                    <Defs>
+                      <LinearGradient id="pullArea" x1="0" y1="0" x2="0" y2="1">
+                        <Stop offset="0" stopColor={t.green} stopOpacity={0.18} />
+                        <Stop offset="1" stopColor={t.green} stopOpacity={0} />
+                      </LinearGradient>
+                    </Defs>
+                    {grid.map((g) => <Line key={g.v} x1={0} x2={w - AXIS + 2} y1={g.y} y2={g.y} stroke={t.line2} strokeWidth={0.75} strokeDasharray="2 4" />)}
+                    <Path d={`${path}L${xy[xy.length - 1][0]} ${PLOT_H}L${xy[0][0]} ${PLOT_H}Z`} fill="url(#pullArea)" />
+                    <Path d={path} fill="none" stroke={t.green} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+                    {hot !== null ? <Line x1={xy[idx][0]} x2={xy[idx][0]} y1={0} y2={PLOT_H} stroke={t.ink} strokeWidth={0.75} strokeDasharray="2 3" opacity={0.5} /> : null}
                   </Svg>
-                  {hot !== null ? <View style={{ position: 'absolute', left: xy[idx][0] - 0.5, top: 0, bottom: 0, width: 1, backgroundColor: t.green, opacity: 0.28 }} /> : null}
-                  <View style={{ position: 'absolute', left: xy[idx][0] - 4.5, top: xy[idx][1] - 4.5, width: 9, height: 9, borderRadius: 5, backgroundColor: t.surface, borderWidth: 2, borderColor: t.green,
-                    transform: [{ scale: hot !== null ? 1.25 : 1 }] }} />
+                  {grid.map((g) => (
+                    <Txt key={g.v} num size={10} lh={12} tone="ink3" style={{ position: 'absolute', right: 0, top: g.y - 6, width: AXIS - 4, textAlign: 'right' }}>{g.v.toFixed(1)}</Txt>
+                  ))}
+                  <View style={{ position: 'absolute', left: xy[idx][0] - 4, top: xy[idx][1] - 4, width: 8, height: 8, borderRadius: 4, backgroundColor: t.green, borderWidth: 1.5, borderColor: t.surface,
+                    boxShadow: `0px 0px 0px 3px ${t.greenSoft}` }} />
+                  {/* the value under your finger, in a small dark tag */}
+                  {hot !== null ? (
+                    <View pointerEvents="none" style={{ position: 'absolute', top: Math.max(-14, xy[idx][1] - 34), left: Math.max(0, Math.min(w - AXIS - 104, xy[idx][0] - 52)), width: 104, alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, height: 22, borderRadius: 6, backgroundColor: t.ink }}>
+                        <Txt size={10.5} lh={13} color={t.dark ? t.ink3 : 'rgba(255,255,255,0.6)'}>{weekLabel(pts.length - 1 - idx)}</Txt>
+                        <Txt num size={11} w="700" lh={13} color={t.onInk}>{shown.toFixed(1)}</Txt>
+                      </View>
+                    </View>
+                  ) : null}
                 </Animated.View>
               ) : null}
             </View>
 
-            <View style={{ flexDirection: 'row', height: 32, marginTop: 10 }} onLayout={(e) => setBoxW(e.nativeEvent.layout.width)} accessibilityRole="tablist">
-              {boxW ? <Animated.View style={[{ position: 'absolute', left: 0, top: 0, width: boxW / 3, height: 32, borderRadius: 12, backgroundColor: t.sunken }, pill]} /> : null}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginRight: AXIS }} pointerEvents="none">
+              {[pts.length - 1, Math.floor((pts.length - 1) / 2), 0].map((b) => <Txt key={b} size={10} lh={12} tone="ink3">{weekLabel(b)}</Txt>)}
+            </View>
+            <View style={{ flexDirection: 'row', height: 28, marginTop: 12, padding: 2, borderRadius: 14, backgroundColor: t.sunken }} onLayout={(e) => setBoxW(e.nativeEvent.layout.width - 4)} accessibilityRole="tablist">
+              {boxW ? <Animated.View style={[{ position: 'absolute', left: 2, top: 2, width: boxW / 3, height: 24, borderRadius: 12, backgroundColor: t.surface, boxShadow: '0px 1px 2px rgba(15,23,42,0.12)' }, pill]} /> : null}
               {WINS.map((x) => (
                 <Pressable key={x.v} onPress={() => { if (x.v !== win) { haptic.tap(); setHot(null); setWin(x.v); } }} accessibilityRole="tab" accessibilityState={{ selected: x.v === win }}
                   style={({ pressed }) => ({ flex: 1, alignItems: 'center', justifyContent: 'center', transform: [{ scale: pressed ? 0.94 : 1 }] })}>
-                  <Txt size={12} w="500" tone={x.v === win ? 'ink' : 'ink3'}>{x.label}</Txt>
+                  <Txt size={11.5} w="600" color={x.v === win ? t.ink : t.ink3}>{x.label}</Txt>
                 </Pressable>
               ))}
             </View>
@@ -236,6 +268,7 @@ export function PullCard({ scrollY, scroll }: { scrollY: SharedValue<number>; sc
         </Animated.View>
       </Animated.View>
     </GestureDetector>
+    </View>
   );
 }
 

@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ScrollView, Switch, View } from 'react-native';
 
 import { PEOPLE, YEAR_HOURS } from '@/data';
 import { setState, toggleFollow, useStore } from '@/store';
-import { useT } from '@/theme';
-import { Avatar, Btn, haptic, IconBtn, Press, Txt } from '@/ui/base';
+import { hair, useT } from '@/theme';
+import { Avatar, Btn, Card, haptic, IconBtn, Press, Txt } from '@/ui/base';
 import { Screen, TopBar } from '@/ui/Chrome';
 import { HoloCard } from '@/ui/MeCard';
 import { openSheet } from '@/ui/Sheet';
 import { UnderTabs } from '@/ui/Tabs';
+import { Sticker } from '@/ui/Sticker';
 import { toast } from '@/ui/Toast';
 
 type Tab = 'posts' | 'following' | 'followers';
@@ -17,10 +18,10 @@ function Setting({ label, sub, k }: { label: string; sub: string; k: 'showLive' 
   const t = useT();
   const on = useStore((x) => x[k]);
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: t.line }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: hair, borderBottomColor: t.line }}>
       <View style={{ flex: 1 }}>
-        <Txt size={15} w="500">{label}</Txt>
-        <Txt size={12.5} tone="ink3">{sub}</Txt>
+        <Txt size={14} w="500">{label}</Txt>
+        <Txt size={11.5} tone="ink3">{sub}</Txt>
       </View>
       <Switch value={on} onValueChange={(v) => { haptic.tap(); setState({ [k]: v }); }} trackColor={{ true: t.green, false: t.line2 }} thumbColor="#fff" ios_backgroundColor={t.line2} accessibilityLabel={label} />
     </View>
@@ -45,8 +46,8 @@ function FollowBtn({ h, back }: { h: string; back?: boolean }) {
   const on = useStore((s) => s.following.includes(h));
   return (
     <Press onPress={() => { haptic.soft(); toggleFollow(h); }} scale={0.95} accessibilityRole="button" accessibilityState={{ selected: on }}
-      style={{ height: 32, paddingHorizontal: 14, borderRadius: 9, justifyContent: 'center', backgroundColor: on ? t.sunken : t.ink }}>
-      <Txt size={13} w="700" color={on ? t.ink2 : t.onInk}>{on ? 'フォロー中' : back ? 'フォローを返す' : 'フォロー'}</Txt>
+      hitSlop={{ top: 7, bottom: 7 }} style={{ height: 30, paddingHorizontal: 12, borderRadius: 15, justifyContent: 'center', backgroundColor: on ? t.surface : t.ink, borderWidth: hair, borderColor: on ? t.line2 : t.ink }}>
+      <Txt size={12} w="600" color={on ? t.ink2 : t.onInk}>{on ? 'フォロー中' : back ? 'フォローを返す' : 'フォロー'}</Txt>
     </Press>
   );
 }
@@ -74,50 +75,58 @@ export default function Me() {
 
   const count = (n: string, label: string, v: Tab) => (
     <Press onPress={() => setTab(v)} scale={0.95} style={{ flexDirection: 'row', alignItems: 'baseline', gap: 5 }} accessibilityLabel={`${n}${label}`}>
-      <Txt num size={16} w="600">{n}</Txt>
-      <Txt size={13} tone="ink3">{label}</Txt>
+      <Txt num size={15} w="700">{n}</Txt>
+      <Txt size={12} tone="ink3">{label}</Txt>
     </Press>
   );
 
   return (
     <Screen>
-      <TopBar title="マイページ" right={<IconBtn name="gear" label="設定" onPress={openSettings} />} />
+      <TopBar title="マイページ" right={<IconBtn filled name="gear" label="設定" onPress={openSettings} />} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         <HoloCard name="はる" handle="haru_study" goal="東大 理一 志望"
           stats={[{ v: shown ? String(Math.round(YEAR_HOURS)) : '000', from: '000', label: '時間 / 1年' }, { v: shown ? '23' : '00', from: '00', label: '日連続' }, { v: shown ? '57' : '00', from: '00', label: '位 / 今週' }]} />
-        <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
-          <Txt size={14} tone="ink2" lh={22}>高3。数学は青チャート2周目。朝型にしたい（今は夜型）。</Txt>
-          <View style={{ flexDirection: 'row', gap: 18, paddingTop: 10 }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 14 }}>
+          <Txt size={13} tone="ink2" lh={20}>高3。数学は青チャート2周目。朝型にしたい（今は夜型）。</Txt>
+          <View style={{ flexDirection: 'row', gap: 16, paddingTop: 8 }}>
             {count('56', '投稿', 'posts')}
             {count(String(following.length + 125), 'フォロー', 'following')}
             {count('342', 'フォロワー', 'followers')}
           </View>
         </View>
-        <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingTop: 14 }}>
+        <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 12 }}>
           <ActionBtn label="プロフィールを編集" doneLabel="保存しました" msg="プロフィールを保存しました" />
           <ActionBtn label="カードを共有" doneLabel="画像を保存しました" msg="カードの画像を保存しました" />
         </View>
-        <View style={{ marginTop: 18 }}>
+        <View style={{ marginTop: 14 }}>
           <UnderTabs value={tab} onChange={setTab} options={[{ v: 'posts', label: '投稿' }, { v: 'following', label: 'フォロー' }, { v: 'followers', label: 'フォロワー' }]} />
         </View>
         {tab === 'posts'
           ? MY_POSTS.map((p, i) => (
-              <View key={i} style={{ paddingHorizontal: 20, paddingVertical: 16, borderTopWidth: i ? StyleSheet.hairlineWidth * 2 : 0, borderTopColor: t.line }}>
-                <Txt size={12} tone="ink3">{p.w}</Txt>
-                <Txt size={14.5} lh={25} style={{ marginTop: 6 }}>{p.t}</Txt>
-                <Txt size={12} tone="ink3" style={{ marginTop: 8 }}>役に立った {p.u}</Txt>
-              </View>
-            ))
-          : (tab === 'following' ? PEOPLE : [...PEOPLE].reverse()).map((p) => (
-              <View key={p.h} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 }}>
-                <Avatar name={p.n} color={p.c} size={38} />
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Txt size={14.5} w="500">{p.n}</Txt>
-                  <Txt size={12} tone="ink3" numberOfLines={1}>@{p.h} · {p.g}</Txt>
+              <Card key={i} style={{ marginHorizontal: 16, marginTop: 10 }}>
+                <Txt size={11} tone="ink3">{p.w}</Txt>
+                <Txt size={13.5} lh={22} style={{ marginTop: 4 }}>{p.t}</Txt>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 6, marginLeft: -4 }}>
+                  <Sticker name="bulb" size={24} tilt={-8} />
+                  <Txt size={11.5} w="600" tone="ink2">役に立った {p.u}</Txt>
                 </View>
-                <FollowBtn h={p.h} back={tab === 'followers'} />
-              </View>
-            ))}
+              </Card>
+            ))
+          : (
+            <Card style={{ marginHorizontal: 16, marginTop: 10, paddingVertical: 2 }} pad={0}>
+              {(tab === 'following' ? PEOPLE : [...PEOPLE].reverse()).map((p, i) => (
+                <View key={p.h} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 9 }}>
+                  {i ? <View style={{ position: 'absolute', top: 0, left: 56, right: 0, height: hair, backgroundColor: t.line }} /> : null}
+                  <Avatar name={p.n} color={p.c} size={32} />
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Txt size={13.5} w="600">{p.n}</Txt>
+                    <Txt size={11} tone="ink3" numberOfLines={1}>@{p.h} · {p.g}</Txt>
+                  </View>
+                  <FollowBtn h={p.h} back={tab === 'followers'} />
+                </View>
+              ))}
+            </Card>
+          )}
       </ScrollView>
     </Screen>
   );

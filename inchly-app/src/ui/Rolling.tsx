@@ -3,7 +3,7 @@ import { StyleProp, Text, TextStyle, View } from 'react-native';
 import Animated, { FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withDelay, withSpring } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { font, useT } from '../theme';
+import { face, useT } from '../theme';
 
 // Odometer digits, after bencho's "rolling counter":
 // - each digit is a strip that springs to its value with a small overshoot (bounce),
@@ -74,11 +74,10 @@ function Col({ d, dir, h, w, delay, style, grow, blur }: { d: number; dir: numbe
 
 export function Rolling({
   value, size = 22, weight = '600', color, style, blur = true,
-}: { value: string; size?: number; weight?: '500' | '600' | '700'; color?: string; style?: StyleProp<TextStyle>; blur?: boolean }) {
+}: { value: string; size?: number; weight?: '500' | '600' | '700' | '800'; color?: string; style?: StyleProp<TextStyle>; blur?: boolean }) {
   const t = useT();
-  const h = Math.round(size * 1.18);
-  const fam = weight === '700' ? font.num7 : weight === '600' ? font.num6 : font.num;
-  const ts: StyleProp<TextStyle> = [{ fontSize: size, fontFamily: fam, color: color ?? t.ink, fontVariant: ['tabular-nums'], letterSpacing: size > 24 ? -size * 0.02 : 0 }, style];
+  const h = Math.round(size * 1.2);
+  const ts: StyleProp<TextStyle> = [{ fontSize: size, fontFamily: face(size), fontWeight: weight, color: color ?? t.ink, fontVariant: ['tabular-nums'], letterSpacing: size >= 22 ? -size * 0.025 : 0 }, style];
 
   // Direction of change decides carry vs. roll-back (derived state, updated during render).
   const [roll, setRoll] = useState({ shown: value, n: num(value), dir: 0, len0: [...value].length });

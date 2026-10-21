@@ -1,11 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { pad, TODAY } from '@/data';
 import { updateGroup, useStore } from '@/store';
-import { useT } from '@/theme';
+import { hair, lift, radius, type, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Field, Label, RadioCards, Stepper } from '@/ui/Form';
@@ -63,8 +63,8 @@ export default function PlanEvent() {
     <Screen>
       <NavBar title="イベントを企画" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingVertical: 20, gap: 28, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-          <View style={{ paddingHorizontal: 20 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingVertical: 16, gap: 22, paddingBottom: 36 }} keyboardShouldPersistTaps="handled">
+          <View style={{ paddingHorizontal: 16 }}>
             <Label>1. 何をする？</Label>
             <RadioCards value={kind} onChange={setKind} options={[
               { v: 'もくもく自習', title: 'もくもく自習', sub: '時間を決めて、みんなで一斉に始める。カメラなし' },
@@ -74,26 +74,26 @@ export default function PlanEvent() {
           </View>
 
           <View>
-            <View style={{ paddingHorizontal: 20 }}><Label>2. いつ？</Label></View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
+            <View style={{ paddingHorizontal: 16 }}><Label>2. いつ？</Label></View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
               {DAYS.map((x, i) => {
                 const on = i === day;
                 return (
                   <Press key={i} onPress={() => setDay(i)} scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }}
-                    style={{ width: 52, paddingVertical: 8, borderRadius: 12, alignItems: 'center', backgroundColor: on ? t.ink : t.surface,
-                      borderWidth: on ? 0 : StyleSheet.hairlineWidth * 2, borderColor: t.line }}>
-                    <Txt size={11.5} color={on ? t.onInk : t.ink3}>{WD[x.getDay()]}</Txt>
-                    <Txt num size={19} w="700" color={on ? t.onInk : t.ink} lh={24}>{x.getDate()}</Txt>
-                    <Txt size={10.5} color={on ? t.onInk : t.ink3}>{i === 0 ? '今日' : `${x.getMonth() + 1}月`}</Txt>
+                    style={{ width: 46, paddingVertical: 6, borderRadius: radius.inner, alignItems: 'center', backgroundColor: on ? t.ink : t.surface,
+                      borderWidth: hair, borderColor: on ? t.ink : t.line2 }}>
+                    <Txt size={10.5} color={on ? t.onInk : t.ink3} lh={14}>{WD[x.getDay()]}</Txt>
+                    <Txt num size={16} w="700" color={on ? t.onInk : t.ink} lh={20}>{x.getDate()}</Txt>
+                    <Txt size={10} color={on ? t.onInk : t.ink3} lh={13}>{i === 0 ? '今日' : `${x.getMonth() + 1}月`}</Txt>
                   </Press>
                 );
               })}
             </ScrollView>
             {/* bencho time scrubber: readout on top, fisheye ruler below */}
-            <View style={{ marginHorizontal: 20, marginTop: 12, borderRadius: 20, backgroundColor: t.surface, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 12 }}>
+            <View style={[{ marginHorizontal: 16, marginTop: 10, borderRadius: radius.card, backgroundColor: t.surface, paddingTop: 14, paddingHorizontal: 14, paddingBottom: 10 }, lift(t)]}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 6 }}>
-                <Rolling value={time} size={30} weight="500" />
-                <Txt size={14} w="500" tone="ink3" style={{ marginBottom: 4 }}>から</Txt>
+                <Rolling value={time} size={type.figure + 2} weight="700" />
+                <Txt size={12} w="600" tone="ink3" style={{ marginBottom: 4 }}>から</Txt>
               </View>
               <View style={{ marginTop: 16 }}>
                 <TimeScrubber value={minutes} onChange={setMinutes} min={START} max={END} step={15} tick={5} mid={15} major={60}
@@ -102,7 +102,7 @@ export default function PlanEvent() {
             </View>
           </View>
 
-          <View style={{ paddingHorizontal: 20 }}>
+          <View style={{ paddingHorizontal: 16 }}>
             <Label>3. だれと？</Label>
             <RadioCards value={who} onChange={setWho} options={[
               { v: 'all', title: 'グループの全員', sub: `${members}人にお知らせが届きます` },
@@ -113,19 +113,19 @@ export default function PlanEvent() {
             </View>
           </View>
 
-          <View style={{ paddingHorizontal: 20, gap: 14 }}>
+          <View style={{ paddingHorizontal: 16, gap: 14 }}>
             <Label>4. 名前とひとこと</Label>
             <Field label="イベント名" value={title} onChangeText={setTitle} max={30} />
             <Field label="ひとこと（任意）" value={note} onChangeText={setNote} multiline max={120} />
           </View>
         </ScrollView>
 
-        <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: Math.max(insets.bottom, 12), backgroundColor: t.canvas, borderTopWidth: StyleSheet.hairlineWidth * 2, borderTopColor: t.line, gap: 10 }}>
-          <Txt size={13} tone="ink2" numberOfLines={1}>
-            <Txt size={13} w="700">{`${d.getMonth() + 1}月${d.getDate()}日（${WD[d.getDay()]}）${time}`}</Txt>
+        <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: Math.max(insets.bottom, 12), backgroundColor: t.canvas, borderTopWidth: hair, borderTopColor: t.line, gap: 10 }}>
+          <Txt size={12} tone="ink2" numberOfLines={1}>
+            <Txt size={12} w="700">{`${d.getMonth() + 1}月${d.getDate()}日（${WD[d.getDay()]}）${time}`}</Txt>
             {`  · ${kind} · ${cap}人まで`}
           </Txt>
-          <Btn kind="primary" wide label={phase === 'done' ? '企画しました' : '企画する'} disabled={!title.trim()} loading={phase === 'saving'} done={phase === 'done'} onPress={plan} style={{ height: 52 }} />
+          <Btn kind="primary" wide label={phase === 'done' ? '企画しました' : '企画する'} disabled={!title.trim()} loading={phase === 'saving'} done={phase === 'done'} onPress={plan} />
         </View>
       </KeyboardAvoidingView>
     </Screen>

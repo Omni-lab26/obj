@@ -50,7 +50,7 @@ function Tick({ m, cur, ppm, half, R1, R2, kind, color, label, labelColor }: {
       <Animated.View style={[{ position: 'absolute', top: 8, left: 0, width: 2, height: h, borderRadius: 1, backgroundColor: color, transformOrigin: 'top' }, a]} />
       {label ? (
         <Animated.View style={[{ position: 'absolute', top: 38, left: 0, width: 80, alignItems: 'center' }, la]}>
-          <Text style={{ fontSize: 11, color: labelColor, fontFamily: font.num }}>{label}</Text>
+          <Text style={{ fontSize: 11, color: labelColor, fontFamily: font.text, fontWeight: '500', fontVariant: ['tabular-nums'] }}>{label}</Text>
         </Animated.View>
       ) : null}
     </>

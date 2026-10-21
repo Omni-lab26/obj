@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { PanResponder, StyleSheet, View } from 'react-native';
+import { PanResponder, View } from 'react-native';
 
-import { useT } from '../theme';
+import { hair, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
 import { Icon, IconName } from './Icon';
 import { Rolling } from './Rolling';
@@ -72,7 +72,7 @@ export function Counter({ value, min, max, onChange, unit, label }: { value: num
     </Press>
   );
   return (
-    <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', padding: 5, borderRadius: 16, backgroundColor: t.surface, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line }}
+    <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', padding: 5, borderRadius: 16, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line }}
       accessibilityRole="adjustable" accessibilityLabel={label} accessibilityValue={{ min, max, now: value, text: `${value}${unit ?? ''}` }}
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       onAccessibilityAction={(e) => step(e.nativeEvent.actionName === 'increment' ? 1 : -1)}>

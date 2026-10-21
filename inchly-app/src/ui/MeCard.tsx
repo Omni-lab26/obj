@@ -7,12 +7,13 @@ import { grass } from '@/data';
 import { Avatar, haptic, Txt } from '@/ui/base';
 import { Wordmark } from '@/ui/Brand';
 import { Rolling } from '@/ui/Rolling';
+import { hair } from '@/theme';
 
-const CARD_GRASS = ['rgba(255,255,255,0.1)', '#1B5E3A', '#258A50', '#36B86B', '#6DE09E'];
+const CARD_GRASS = ['rgba(255,255,255,0.1)', '#14532D', '#16803D', '#22C55E', '#6EE7A0'];
 
 // The study card — the page's centerpiece, sized like a student ID. The sheen
 // drifts on its own; drag a finger across it and the sheen follows while the card tilts.
-const CARD_H = 212;
+const CARD_H = 196;
 export function HoloCard({ name, handle, goal, stats }: { name: string; handle: string; goal: string; stats: { v: string; from: string; label: string }[] }) {
   const [w, setW] = useState(0);
   const cells = useMemo(() => grass(12, 5, 3), []);
@@ -68,12 +69,12 @@ export function HoloCard({ name, handle, goal, stats }: { name: string; handle: 
     <Animated.View style={[{ marginHorizontal: 16, marginTop: 6 }, cardA]}>
       <View onLayout={(e) => setW(e.nativeEvent.layout.width)} {...pan.panHandlers}
         accessibilityLabel={`${name}の勉強カード。指でなぞると光が動きます`}
-        style={{ height: CARD_H, borderRadius: 22, backgroundColor: '#141716', overflow: 'hidden', padding: 18, justifyContent: 'space-between' }}>
+        style={{ height: CARD_H, borderRadius: 20, backgroundColor: '#0B0D12', overflow: 'hidden', padding: 16, justifyContent: 'space-between', borderWidth: hair, borderColor: 'rgba(255,255,255,0.08)' }}>
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: 0, bottom: 0, left: -w * 0.25, width: w * 1.5 }, sheenA]}>
           {w ? (
             <Svg width={w * 1.5} height={CARD_H}>
               <Defs>
-                <LinearGradient id="holo" x1="0" y1="0" x2="1" y2="0.45">
+                <LinearGradient id="holo" x1="0" y1="0" x2="1" y2="0">
                   <Stop offset="0.3" stopColor="#78FFB4" stopOpacity="0" />
                   <Stop offset="0.44" stopColor="#78FFB4" stopOpacity="0.2" />
                   <Stop offset="0.52" stopColor="#8CB4FF" stopOpacity="0.22" />
@@ -88,14 +89,14 @@ export function HoloCard({ name, handle, goal, stats }: { name: string; handle: 
 
         <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Wordmark size={15} color="#F2F3F1" />
-          <Txt num size={11} color="rgba(255,255,255,0.5)">No. 0412 · PLUS</Txt>
+          <Txt num size={10} color="rgba(255,255,255,0.5)">No. 0412 · PLUS</Txt>
         </View>
 
         <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Avatar name={name} color="#6E56CF" size={46} ring="rgba(255,255,255,0.18)" />
+          <Avatar name={name} color="#6E56CF" size={40} ring="rgba(255,255,255,0.18)" />
           <View style={{ flex: 1 }}>
-            <Txt size={20} w="700" lh={26} color="#fff">{name}</Txt>
-            <Txt size={12} color="rgba(255,255,255,0.6)" numberOfLines={1}>{`@${handle} · ${goal}`}</Txt>
+            <Txt size={17} w="700" lh={22} color="#fff">{name}</Txt>
+            <Txt size={11} color="rgba(255,255,255,0.6)" numberOfLines={1}>{`@${handle} · ${goal}`}</Txt>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 12 * 6 + 11 * 2, gap: 2, transform: [{ rotate: '0deg' }] }}>
             {cells.slice(-48).map((l, i) => (
@@ -107,8 +108,8 @@ export function HoloCard({ name, handle, goal, stats }: { name: string; handle: 
         <View pointerEvents="none" style={{ flexDirection: 'row', gap: 22 }}>
           {stats.map((x) => (
             <View key={x.label}>
-              <Rolling value={x.v} size={22} weight="600" color="#fff" />
-              <Txt size={11} color="rgba(255,255,255,0.55)">{x.label}</Txt>
+              <Rolling value={x.v} size={20} weight="700" color="#fff" />
+              <Txt size={10.5} color="rgba(255,255,255,0.55)">{x.label}</Txt>
             </View>
           ))}
         </View>

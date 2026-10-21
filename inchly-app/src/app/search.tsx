@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { hoursIn, JUKU, PEOPLE, Uni, UNIS } from '@/data';
 import { toggleFollow, toggleIn, useStore } from '@/store';
-import { ease, font, useT, noOutline } from '@/theme';
+import { ease, font, hair, noOutline, radius, useT } from '@/theme';
 import { Avatar, Btn, Empty, haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Checkbox } from '@/ui/Form';
@@ -26,7 +26,7 @@ function Skeleton() {
   return (
     <Animated.View style={a} accessibilityLabel="読み込み中">
       {[0, 1, 2, 3].map((i) => (
-        <View key={i} style={{ paddingHorizontal: 20, paddingVertical: 14, gap: 8, borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: t.line }}>
+        <View key={i} style={{ paddingHorizontal: 20, paddingVertical: 14, gap: 8, borderBottomWidth: hair, borderBottomColor: t.line }}>
           <View style={{ width: '60%', height: 12, borderRadius: 6, backgroundColor: t.sunken }} />
           <View style={{ width: '35%', height: 12, borderRadius: 6, backgroundColor: t.sunken }} />
         </View>
@@ -38,7 +38,7 @@ function Skeleton() {
 function NumCell({ v, unit, w }: { v: string; unit?: string; w: number }) {
   return (
     <View style={{ width: w, alignItems: 'flex-end' }}>
-      <Txt num size={15} w="600">{v}</Txt>
+      <Txt num size={14} w="600">{v}</Txt>
       {unit ? <Txt size={10.5} tone="ink3" lh={14}>{unit}</Txt> : null}
     </View>
   );
@@ -59,7 +59,7 @@ function CompareTable({ us, close }: { us: Uni[]; close: () => void }) {
     { k: 'あなたとの差', cells: us.map((u) => { const d = me - u.avg; return { v: `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}時間`, best: u.avg === minAvg }; }) },
     { k: '二次試験まで', cells: us.map((u) => ({ v: `${u.days}日` })) },
   ];
-  const line = { borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: t.line };
+  const line = { borderBottomWidth: hair, borderBottomColor: t.line };
   return (
     <View>
       <Txt size={18} w="700">{us.length}校を比べる</Txt>
@@ -95,12 +95,12 @@ function Tray({ picked, onGo }: { picked: string[]; onGo: () => void }) {
   const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   return (
     <Animated.View pointerEvents={show ? 'auto' : 'none'}
-      style={[{ position: 'absolute', left: 12, right: 12, bottom: insets.bottom + 12, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingRight: 10, paddingLeft: 14, borderRadius: 14, backgroundColor: t.ink }, a]}>
+      style={[{ position: 'absolute', left: 12, right: 12, bottom: insets.bottom + 12, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingRight: 8, paddingLeft: 14, borderRadius: radius.card, backgroundColor: t.ink }, a]}>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Txt size={13} w="700" color={t.onInk}>{picked.length}校を比べる</Txt>
         <Txt size={12} color={t.onInk} style={{ opacity: 0.6 }} numberOfLines={1}>{picked.join(' · ')}</Txt>
       </View>
-      <Press onPress={onGo} scale={0.94} style={{ height: 36, paddingHorizontal: 14, borderRadius: 10, backgroundColor: t.onInk, justifyContent: 'center' }}>
+      <Press onPress={onGo} scale={0.94} style={{ height: 34, paddingHorizontal: 14, borderRadius: 17, backgroundColor: t.onInk, justifyContent: 'center' }}>
         <Txt size={13} w="700" color={t.ink}>比べる</Txt>
       </Press>
     </Animated.View>
@@ -138,12 +138,12 @@ export default function Search() {
   if (!q && kind !== 'uni' && !text) {
     body = (
       <View style={{ paddingHorizontal: 20, paddingTop: 6 }}>
-        <Txt size={13} w="700" tone="ink3" style={{ paddingTop: 12, paddingBottom: 6 }}>最近の検索</Txt>
+        <Txt size={12} w="600" tone="ink2" style={{ paddingTop: 12, paddingBottom: 4 }}>最近の検索</Txt>
         {RECENT.map((r) => (
           <Pressable key={r} onPress={() => { haptic.tap(); changeText(r.split(' ')[0]); }}
-            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: t.line, opacity: pressed ? 0.6 : 1 })}>
-            <Icon name="clock" size={16} color={t.ink3} />
-            <Txt size={14.5} tone="ink2">{r}</Txt>
+            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, borderBottomWidth: hair, borderBottomColor: t.line, opacity: pressed ? 0.6 : 1 })}>
+            <Icon name="clock" size={14} color={t.ink3} />
+            <Txt size={13.5} tone="ink2">{r}</Txt>
           </Pressable>
         ))}
       </View>
@@ -155,10 +155,10 @@ export default function Search() {
     body = list.length ? (
       <Animated.View entering={FadeIn.duration(180)}>
         {list.map((u) => (
-          <View key={u.n} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: t.line }}>
+          <View key={u.n} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: hair, borderBottomColor: t.line }}>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Txt size={14.5} w="500" numberOfLines={1}>{u.n}</Txt>
-              <Txt size={12} tone="ink3" numberOfLines={1}>{u.f} · {u.p}</Txt>
+              <Txt size={13.5} w="600" numberOfLines={1}>{u.n}</Txt>
+              <Txt size={11} tone="ink3" numberOfLines={1}>{u.f} · {u.p}</Txt>
             </View>
             <NumCell w={COLS[0]} v={u.dev.toFixed(1)} />
             <NumCell w={COLS[1]} v={u.fans.toLocaleString()} unit="人" />
@@ -168,7 +168,7 @@ export default function Search() {
             </View>
           </View>
         ))}
-        <Txt size={12} tone="ink3" style={{ paddingHorizontal: 20, paddingVertical: 12 }}>偏差値は河合塾の目安（サンプル）</Txt>
+        <Txt size={11} tone="ink3" style={{ paddingHorizontal: 20, paddingVertical: 12 }}>偏差値は河合塾の目安（サンプル）</Txt>
       </Animated.View>
     ) : <Empty title={`「${q}」に合う大学はありません`} sub="「東大」「工学部」みたいに短くすると見つかりやすい" />;
   } else if (kind === 'user') {
@@ -179,10 +179,10 @@ export default function Search() {
           const on = following.includes(p.h);
           return (
             <View key={p.h} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 }}>
-              <Avatar name={p.n} color={p.c} size={38} />
+              <Avatar name={p.n} color={p.c} size={32} />
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Txt size={14.5} w="500">{p.n}</Txt>
-                <Txt size={12} tone="ink3" numberOfLines={1}>@{p.h} · {p.g} · 今週 {(p.t / 400).toFixed(1)}時間</Txt>
+                <Txt size={13.5} w="600">{p.n}</Txt>
+                <Txt size={11} tone="ink3" numberOfLines={1}>@{p.h} · {p.g} · 今週 {(p.t / 400).toFixed(1)}時間</Txt>
               </View>
               <Btn small kind={on ? 'quiet' : 'primary'} label={on ? 'フォロー中' : 'フォロー'} onPress={() => toggleFollow(p.h)} />
             </View>
@@ -197,19 +197,19 @@ export default function Search() {
         {list.map((j) => (
           <Press key={j.n} scale={0.985} onPress={() => toast(`${j.n}`, '塾の詳細ページはこれから作ります')}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 }}>
-            <View style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="pin" size={18} color={t.ink2} />
+            <View style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="pin" size={15} color={t.ink2} />
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Txt size={14.5} w="500" numberOfLines={1} style={{ flexShrink: 1 }}>{j.n}</Txt>
+                <Txt size={13.5} w="600" numberOfLines={1} style={{ flexShrink: 1 }}>{j.n}</Txt>
                 {j.pr ? (
-                  <View style={{ borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line2, borderRadius: 4, paddingHorizontal: 4 }}>
+                  <View style={{ borderWidth: hair, borderColor: t.line2, borderRadius: 4, paddingHorizontal: 4 }}>
                     <Txt size={10.5} w="600" tone="ink3" lh={16}>PR</Txt>
                   </View>
                 ) : null}
               </View>
-              <Txt size={12} tone="ink3" numberOfLines={1}>{j.sub}</Txt>
+              <Txt size={11} tone="ink3" numberOfLines={1}>{j.sub}</Txt>
             </View>
             <Icon name="chev" size={14} color={t.ink3} />
           </Press>
@@ -223,12 +223,12 @@ export default function Search() {
   return (
     <Screen>
       <NavBar title="さがす" />
-      <View style={{ marginHorizontal: 20, marginTop: 2, height: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, borderRadius: 12, backgroundColor: t.surface,
-        borderWidth: focused ? 1.6 : StyleSheet.hairlineWidth * 2, borderColor: focused ? t.ink : t.line }}>
-        <Icon name="search" size={18} color={t.ink3} />
+      <View style={{ marginHorizontal: 16, marginTop: 2, height: 42, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, borderRadius: radius.inner, backgroundColor: t.surface,
+        borderWidth: focused ? 1.25 : hair, borderColor: focused ? t.ink : t.line2 }}>
+        <Icon name="search" size={16} color={t.ink3} />
         <TextInput ref={inputRef} value={text} onChangeText={changeText} autoFocus placeholder="大学・ユーザー・塾・投稿" placeholderTextColor={t.ink3}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} returnKeyType="search" clearButtonMode="never" autoCorrect={false}
-          accessibilityLabel="検索" style={[{ flex: 1, minWidth: 0, fontSize: 16, color: t.ink, fontFamily: font.ui, height: 44 }, noOutline]} />
+          accessibilityLabel="検索" style={[{ flex: 1, minWidth: 0, fontSize: 16, color: t.ink, fontFamily: font.text, height: 42 }, noOutline]} />
         {text ? (
           <Pressable onPress={() => { changeText(''); inputRef.current?.focus(); }} hitSlop={10} accessibilityLabel="消す"
             style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
@@ -242,7 +242,7 @@ export default function Search() {
       <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" stickyHeaderIndices={showHeader ? [0] : undefined}
         contentContainerStyle={{ paddingBottom: insets.bottom + (picked.length >= 2 ? 96 : 24) }}>
         {showHeader ? (
-          <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6, backgroundColor: t.canvas, borderBottomWidth: StyleSheet.hairlineWidth * 2, borderBottomColor: t.line }}>
+          <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6, backgroundColor: t.canvas, borderBottomWidth: hair, borderBottomColor: t.line }}>
             <Txt size={11.5} tone="ink3" style={{ flex: 1 }}>大学・学部</Txt>
             <Txt size={11.5} tone="ink3" style={{ width: COLS[0], textAlign: 'right' }}>偏差値</Txt>
             <Txt size={11.5} tone="ink3" style={{ width: COLS[1], textAlign: 'right' }}>志望者</Txt>

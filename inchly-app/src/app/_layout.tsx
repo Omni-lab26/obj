@@ -1,17 +1,13 @@
-import { Inter_500Medium, Inter_600SemiBold, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { getState, startStudy } from '@/store';
-import { useT } from '@/theme';
+import { focus, useT } from '@/theme';
 import { SheetHost } from '@/ui/Sheet';
 import { toast, ToastHost } from '@/ui/Toast';
-
-SplashScreen.preventAutoHideAsync();
 
 // Simulated "someone started studying" pushes, so the live layer is visible in the mock.
 const FEED: [string, string][] = [['kaito', '物理'], ['れん', '世界史'], ['ひなた', '数学']];
@@ -39,19 +35,17 @@ function useFeed() {
 
 export default function RootLayout() {
   const t = useT();
-  const [loaded] = useFonts({ Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
-  useEffect(() => { if (loaded) SplashScreen.hideAsync(); }, [loaded]);
+  // No font files to wait for: the app uses the system face (SF Pro / Hiragino Sans).
   useFeed();
-  if (!loaded) return null;
   const nav = t.dark ? DarkTheme : DefaultTheme;
   return (
-    <ThemeProvider value={{ ...nav, colors: { ...nav.colors, background: t.canvas, card: t.surface, text: t.ink, border: t.line, primary: t.green } }}>
+    <ThemeProvider value={{ ...nav, colors: { ...nav.colors, background: t.canvas, card: t.surface, text: t.ink, border: t.line, primary: t.ink } }}>
       <StatusBar style={t.dark ? 'light' : 'dark'} />
       {/* userSelect: dragging sliders and charts with a mouse shouldn't select text on web */}
       <GestureHandlerRootView style={[{ flex: 1, backgroundColor: t.canvas }, Platform.OS === 'web' && ({ userSelect: 'none' } as object)]}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="timer" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: '#0F1110' } }} />
+          <Stack.Screen name="timer" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: focus.bg } }} />
           <Stack.Screen name="notifications" />
           <Stack.Screen name="search" />
           <Stack.Screen name="create-group" />

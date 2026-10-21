@@ -3,7 +3,7 @@ import { PanResponder, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 import { dayLog, pad, SUBJ, TODAY } from '../data';
-import { ease, useT } from '../theme';
+import { ease, hair, lift, radius, type, useT } from '../theme';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
 import { Segmented } from './Tabs';
@@ -116,18 +116,16 @@ export function StackedBars() {
   const ringBottom = c ? BASE + (c.short ? down(c.short) + 2 : 0) + 4 : 0;
 
   return (
-    <View style={{ backgroundColor: t.surface, borderRadius: 20, padding: 16, gap: 16 }}>
+    <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, padding: 14, gap: 12 }, lift(t)]}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
         <View style={{ flex: 1 }}>
-          <Txt size={14} w="500" lh={18}>勉強時間</Txt>
-          <Txt size={12} tone="ink3" lh={16}>{mode === 'day' ? '直近20日' : '直近20週'}</Txt>
+          <Txt size={12} w="500" tone="ink2" lh={16}>{mode === 'day' ? '勉強時間 · 直近20日' : '勉強時間 · 直近20週'}</Txt>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginTop: 2 }}>
+            <Rolling value={total.toFixed(1)} size={type.figure + 2} weight="700" />
+            <Txt size={12} w="600" tone="ink3" style={{ marginBottom: 4 }}>時間</Txt>
+          </View>
         </View>
-        <Segmented small value={mode} onChange={(m) => { setHot(null); setMode(m); }} options={[{ v: 'day', label: '日' }, { v: 'week', label: '週' }]} style={{ width: 96 }} />
-      </View>
-
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginBottom: -4 }}>
-        <Rolling value={total.toFixed(1)} size={30} weight="500" />
-        <Txt size={13} tone="ink3" style={{ marginBottom: 4 }}>時間</Txt>
+        <Segmented small value={mode} onChange={(m) => { setHot(null); setMode(m); }} options={[{ v: 'day', label: '日' }, { v: 'week', label: '週' }]} style={{ width: 76 }} />
       </View>
 
       <View style={{ height: PLOT }} onLayout={(e) => setW(e.nativeEvent.layout.width)} {...pan.panHandlers}
@@ -158,7 +156,7 @@ export function StackedBars() {
         </View>
 
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: 0, left: 0, width: TIP_W, paddingVertical: 8, paddingHorizontal: 10, gap: 4,
-          borderRadius: 10, backgroundColor: t.surface, borderWidth: 1, borderColor: t.line2 }, tipA]}>
+          borderRadius: 12, backgroundColor: t.surface, borderWidth: t.dark ? 1 : 0, borderColor: t.line2 }, lift(t, 2), tipA]}>
           {c ? (
             <>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -182,9 +180,22 @@ export function StackedBars() {
         </Animated.View>
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -8 }} pointerEvents="none">
-        <Txt size={11} tone="ink3" num lh={14}>{cols[0].label}</Txt>
-        <Txt size={11} tone="ink3" num lh={14}>{cols[N - 1].label}</Txt>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -6 }} pointerEvents="none">
+        <Txt size={10} tone="ink3" num lh={12}>{cols[0].label}</Txt>
+        <Txt size={10} tone="ink3" num lh={12}>{cols[N - 1].label}</Txt>
+      </View>
+      {/* legend, storage-style */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4, paddingTop: 10, borderTopWidth: hair, borderTopColor: t.line }} pointerEvents="none">
+        {SUBJ.map((x) => (
+          <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: x.c }} />
+            <Txt size={11} tone="ink2" lh={14}>{x.name}</Txt>
+          </View>
+        ))}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.red }} />
+          <Txt size={11} tone="ink2" lh={14}>目標に足りない分</Txt>
+        </View>
       </View>
     </View>
   );

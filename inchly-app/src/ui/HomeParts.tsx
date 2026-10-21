@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Defs, Line, Pattern, Rect } from 'react-native-svg';
 
 import { subj } from '@/data';
 import { Todo } from '@/store';
-import { ease, useT } from '@/theme';
+import { ease, hair, useT } from '@/theme';
 import { haptic, Txt } from '@/ui/base';
 import { Icon } from '@/ui/Icon';
 
@@ -16,24 +16,26 @@ export function TodoRow({ todo, onToggle, first }: { todo: Todo; onToggle: () =>
   const p = useSharedValue(todo.d ? 1 : 0);
   const [tw, setTw] = useState(0);
   useEffect(() => { p.value = withTiming(todo.d ? 1 : 0, { duration: 320, easing: ease.out }); }, [todo.d, p]);
-  const box = useAnimatedStyle(() => ({ backgroundColor: p.value > 0.5 ? t.green : 'transparent', borderWidth: p.value > 0.5 ? 0 : 1.6, transform: [{ scale: 0.9 + 0.1 * Math.min(1, p.value * 1.4) }] }));
+  const box = useAnimatedStyle(() => ({ backgroundColor: p.value > 0.5 ? t.green : 'transparent', borderWidth: p.value > 0.5 ? 0 : 1.25, transform: [{ scale: 0.9 + 0.1 * Math.min(1, p.value * 1.4) }] }));
   const tick = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ scale: 0.4 + 0.6 * p.value }] }));
   const strike = useAnimatedStyle(() => ({ width: tw * p.value }));
   const sj = subj(todo.s);
   return (
     <Pressable onPress={() => { haptic.soft(); onToggle(); }} accessibilityRole="checkbox" accessibilityState={{ checked: todo.d }} accessibilityLabel={todo.t}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, borderTopWidth: first ? 0 : StyleSheet.hairlineWidth * 2, borderTopColor: t.line }}>
-      <Animated.View style={[{ width: 22, height: 22, borderRadius: 6, borderColor: t.line2, alignItems: 'center', justifyContent: 'center' }, box]}>
-        <Animated.View style={tick}><Icon name="check" size={15} color="#fff" width={3} /></Animated.View>
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, paddingHorizontal: 14 }}>
+      {first ? null : <View style={{ position: 'absolute', top: 0, left: 42, right: 0, height: hair, backgroundColor: t.line }} />}
+      <Animated.View style={[{ width: 18, height: 18, borderRadius: 9, borderColor: t.ink3, alignItems: 'center', justifyContent: 'center' }, box]}>
+        <Animated.View style={tick}><Icon name="check" size={12} color="#fff" width={3} /></Animated.View>
       </Animated.View>
       <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-start' }}>
         <View onLayout={(e: LayoutChangeEvent) => setTw(e.nativeEvent.layout.width)}>
-          <Txt size={15} tone={todo.d ? 'ink3' : 'ink'} numberOfLines={1}>{todo.t}</Txt>
-          <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: '52%', height: 1.5, backgroundColor: t.ink3 }, strike]} />
+          <Txt size={13.5} tone={todo.d ? 'ink3' : 'ink'} numberOfLines={1}>{todo.t}</Txt>
+          <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: '52%', height: 1, backgroundColor: t.ink3 }, strike]} />
         </View>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-        <Txt size={12} tone="ink3">{sj.name}</Txt>
+        <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: sj.c }} />
+        <Txt size={11} tone="ink3">{sj.name}</Txt>
       </View>
     </Pressable>
   );
@@ -52,7 +54,7 @@ export function DayTile({ level, ticket, label, today, index }: { level: number;
   return (
     <View style={{ flex: 1, alignItems: 'center', gap: 5 }}>
       <Animated.View style={[{ width: '100%', aspectRatio: 1, borderRadius: 8, overflow: 'hidden', backgroundColor: ticket ? 'transparent' : t.grass[level],
-        borderWidth: ticket ? StyleSheet.hairlineWidth * 2 : today ? 1.5 : 0, borderColor: ticket ? t.line2 : t.ink }, a]}>
+        borderWidth: ticket ? hair : today ? 1.5 : 0, borderColor: ticket ? t.line2 : t.ink }, a]}>
         {ticket ? (
           <Svg width="100%" height="100%">
             <Defs>
@@ -72,8 +74,8 @@ export function DayTile({ level, ticket, label, today, index }: { level: number;
 export function MiniSeg({ done, total }: { done: number; total: number }) {
   const t = useT();
   return (
-    <View style={{ flexDirection: 'row', gap: 2, marginTop: 6, width: 140 }}>
-      {Array.from({ length: total }, (_, i) => <View key={i} style={{ flex: 1, height: 3, borderRadius: 2, backgroundColor: i < done ? t.ink2 : t.grass[0] }} />)}
+    <View style={{ flexDirection: 'row', gap: 2, width: 56 }}>
+      {Array.from({ length: total }, (_, i) => <View key={i} style={{ flex: 1, height: 3, borderRadius: 1.5, backgroundColor: i < done ? t.ink : t.sunken }} />)}
     </View>
   );
 }

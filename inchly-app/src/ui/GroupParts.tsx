@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
 import { PERSON_COLOR } from '@/data';
 import { AVATAR, PHOTO } from '@/photos';
 import { Avatar } from '@/ui/base';
-import { ease, useT } from '@/theme';
+import { ease, hair, useT } from '@/theme';
 
 // Pieces shared by the community, group and plan-event screens.
 
@@ -38,7 +38,7 @@ export function GroupMark({ colors, size = 40, members, icon }: { colors: string
   const cs = colors.slice(0, 4);
   // Two explicit rows: a wrapped flex row can drop to one column when it rounds.
   return (
-    <View style={{ width: size, height: size, flexShrink: 0, borderRadius: r, backgroundColor: t.surface, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line,
+    <View style={{ width: size, height: size, flexShrink: 0, borderRadius: r, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line,
       alignItems: 'center', justifyContent: 'center', gap: size * 0.07 }}>
       {[cs.slice(0, 2), cs.slice(2, 4)].map((row, k) => (
         <View key={k} style={{ flexDirection: 'row', gap: size * 0.07 }}>
@@ -50,12 +50,12 @@ export function GroupMark({ colors, size = 40, members, icon }: { colors: string
 }
 
 /** Small pulsing green dot for "live" counts. */
-export function LiveDot({ size = 7 }: { size?: number }) {
+export function LiveDot({ size = 7, color }: { size?: number; color?: string }) {
   const t = useT();
   const o = useSharedValue(1);
   useEffect(() => { o.value = withRepeat(withTiming(0.35, { duration: 900, easing: ease.out }), -1, true); }, [o]);
   const a = useAnimatedStyle(() => ({ opacity: o.value }));
-  return <Animated.View style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: t.green }, a]} />;
+  return <Animated.View style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: color ?? t.green }, a]} />;
 }
 
 /** Thin progress bar (green fill on a sunken track). */

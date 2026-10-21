@@ -45,7 +45,7 @@ export type IconName = keyof typeof ICONS;
 
 export function Icon({ name, size = 22, color, width }: { name: IconName; size?: number; color: string; width?: number }) {
   const spec: Spec = ICONS[name];
-  const sw = width ?? spec.w ?? 1.8;
+  const sw = width ?? spec.w ?? 1.6;
   const fill = spec.fill ? color : 'none';
   const stroke = spec.fill ? 'none' : color;
   return (

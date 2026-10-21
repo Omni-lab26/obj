@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { elapsedOf, useNow, useStore } from '@/store';
-import { useT } from '@/theme';
+import { hair, useT } from '@/theme';
 import { Press, Txt } from '@/ui/base';
 import { Icon, IconName } from '@/ui/Icon';
 
@@ -31,27 +31,27 @@ function TabBar({ state, navigation, insets }: BottomTabBarProps) {
         const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
         if (!on && !e.defaultPrevented) navigation.navigate(r.name, r.params);
       }} scale={0.88} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={meta.label}
-        style={{ flex: 1, alignItems: 'center', gap: 3, paddingTop: 2 }}>
-        <Icon name={meta.icon} size={23} color={on ? t.ink : t.ink3} width={on ? 2 : 1.8} />
-        <Txt size={10.5} w={on ? '600' : '500'} tone={on ? 'ink' : 'ink3'} lh={13}>{meta.label}</Txt>
+        style={{ flex: 1, alignItems: 'center', gap: 2, paddingTop: 2 }}>
+        <Icon name={meta.icon} size={21} color={on ? t.ink : t.ink3} width={on ? 1.9 : 1.6} />
+        <Txt size={10} w={on ? '600' : '500'} tone={on ? 'ink' : 'ink3'} lh={12}>{meta.label}</Txt>
       </Press>
     );
   };
   return (
-    <View style={{ backgroundColor: t.surface, borderTopWidth: StyleSheet.hairlineWidth * 2, borderTopColor: t.line }}>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingTop: 8, paddingBottom: Math.max(insets.bottom, 10), paddingHorizontal: 6 }}>
+    <View style={{ backgroundColor: t.surface, borderTopWidth: t.dark ? hair : 0, borderTopColor: t.line, boxShadow: t.dark ? undefined : '0px -1px 0px rgba(15,23,42,0.05), 0px -8px 24px rgba(15,23,42,0.04)' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingTop: 7, paddingBottom: Math.max(insets.bottom - 6, 8), paddingHorizontal: 6 }}>
         {btn(0)}
         {btn(1)}
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Press onPress={() => router.push('/timer')} scale={0.9} accessibilityLabel={running ? `勉強中 ${mins}分。タイマーを開く` : '勉強を始める'}
-            style={{ height: 38, minWidth: 56, paddingHorizontal: running ? 12 : 0, borderRadius: 19, backgroundColor: running ? t.ink : t.green, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            hitSlop={{ top: 8, bottom: 8 }} style={{ height: 34, minWidth: 50, paddingHorizontal: running ? 11 : 0, borderRadius: 17, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
             {running ? (
               <>
-                <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: paused ? t.amber : '#2EC471' }} />
-                <Txt num size={14} w="600" color={t.onInk}>{mins}<Txt size={11} color={t.onInk}>分</Txt></Txt>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: paused ? t.amber : '#22C55E' }} />
+                <Txt num size={12.5} w="600" color={t.onInk}>{mins}<Txt size={10} color={t.onInk}>分</Txt></Txt>
               </>
             ) : (
-              <Icon name="play" size={19} color="#fff" />
+              <Icon name="play" size={15} color={t.onInk} />
             )}
           </Press>
         </View>

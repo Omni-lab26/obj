@@ -68,7 +68,7 @@ export function SheetHost() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '90%' }} pointerEvents="box-none">
         <Animated.View
           onLayout={(e) => { height.set(e.nativeEvent.layout.height); }}
-          style={[{ backgroundColor: t.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22 }, sa]}
+          style={[{ backgroundColor: t.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28 }, sa]}
           accessibilityViewIsModal>
           <View {...pan.panHandlers} style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>
             <View style={{ width: 38, height: 5, borderRadius: 3, backgroundColor: t.line2 }} />

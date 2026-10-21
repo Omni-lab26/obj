@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { hm, pad, subj, SUBJ } from '@/data';
 import { elapsedOf, getState, setSubject, setTarget, startStudy, togglePause, useNow, useStore } from '@/store';
-import { focus } from '@/theme';
+import { focus, hair } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
@@ -88,9 +88,11 @@ export default function Timer() {
         {SUBJ.map((x) => {
           const on = x.id === s.subj;
           return (
-            <Pressable key={x.id} onPress={() => pickSubject(x.id)} accessibilityRole="radio" accessibilityState={{ checked: on }}
-              style={({ pressed }) => ({ height: 32, paddingHorizontal: 12, borderRadius: 9, justifyContent: 'center', backgroundColor: on ? 'rgba(255,255,255,0.1)' : 'transparent', transform: [{ scale: pressed ? 0.95 : 1 }] })}>
-              <Txt size={13} w={on ? '700' : '400'} color={on ? '#fff' : 'rgba(255,255,255,0.6)'}>{x.name}</Txt>
+            <Pressable key={x.id} onPress={() => pickSubject(x.id)} accessibilityRole="radio" accessibilityState={{ checked: on }} hitSlop={{ top: 8, bottom: 8 }}
+              style={({ pressed }) => ({ height: 30, paddingHorizontal: 10, borderRadius: 15, flexDirection: 'row', alignItems: 'center', gap: 5,
+                backgroundColor: on ? 'rgba(255,255,255,0.08)' : 'transparent', borderWidth: hair, borderColor: on ? 'rgba(255,255,255,0.16)' : 'transparent', transform: [{ scale: pressed ? 0.95 : 1 }] })}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: x.c, opacity: on ? 1 : 0.6 }} />
+              <Txt size={12} w="600" color={on ? '#fff' : 'rgba(255,255,255,0.55)'}>{x.name}</Txt>
             </Pressable>
           );
         })}
@@ -102,10 +104,10 @@ export default function Timer() {
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 8, opacity: s.paused ? 0.5 : 1 }}
         accessible accessibilityLabel={`${side} ${fmt(over ? -rem : s.running ? rem : s.targetMin * 60)}`}>
         {over ? <Txt num size={40} w="500" color={focus.green} style={{ marginBottom: 6 }}>+</Txt> : null}
-        <Rolling value={fmt(over ? -rem : s.running ? rem : s.targetMin * 60)} size={64} weight="500" color={over ? focus.green : focus.ink} />
-        <Txt size={16} w="500" color={over ? focus.green : focus.ink2} style={{ marginBottom: 12 }}>{side}</Txt>
+        <Rolling value={fmt(over ? -rem : s.running ? rem : s.targetMin * 60)} size={60} weight="600" color={over ? focus.green : focus.ink} />
+        <Txt size={13} w="600" color={over ? focus.green : focus.ink2} style={{ marginBottom: 11 }}>{side}</Txt>
       </View>
-      <Txt size={12.5} color={focus.ink3} style={{ textAlign: 'center', marginTop: 2 }}>
+      <Txt size={11.5} color={focus.ink3} style={{ textAlign: 'center', marginTop: 2 }}>
         {s.paused ? '一時停止中' : s.running ? `${sj.name} · ${sj.task}` : 'ルーラーを動かして、集中する時間を決めます'}
       </Txt>
 
@@ -115,14 +117,14 @@ export default function Timer() {
       </View>
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 22, marginTop: 14 }}>
-        <Txt size={12.5} color={focus.ink2}>今日 <Txt num size={13} w="600" color="#fff">{hm(s.todayMin)}</Txt></Txt>
-        <Txt size={12.5} color={focus.ink2}>目標 <Txt num size={13} w="600" color="#fff">{hm(s.goalMin).replace('00分', '')}</Txt></Txt>
+        <Txt size={11.5} color={focus.ink2}>今日 <Txt num size={12} w="600" color="#fff">{hm(s.todayMin)}</Txt></Txt>
+        <Txt size={11.5} color={focus.ink2}>目標 <Txt num size={12} w="600" color="#fff">{hm(s.goalMin).replace('00分', '')}</Txt></Txt>
       </View>
 
       <View style={{ alignItems: 'center', marginTop: 26 }}>
         <Press onPress={main} haptics={false} scale={0.92} accessibilityLabel={playing ? '一時停止' : s.running ? '再開' : '開始'}
-          style={{ width: 82, height: 82, borderRadius: 41, backgroundColor: focus.ink, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name={playing ? 'pause' : 'play'} size={30} color={focus.bg} />
+          style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: focus.ink, alignItems: 'center', justifyContent: 'center', boxShadow: '0px 0px 0px 6px rgba(255,255,255,0.06)' }}>
+          <Icon name={playing ? 'pause' : 'play'} size={24} color={focus.bg} />
         </Press>
       </View>
 

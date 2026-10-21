@@ -2,11 +2,11 @@
 
 export type Subject = { id: string; name: string; c: string; task: string; week: number; goal: number };
 export const SUBJ: Subject[] = [
-  { id: 'en', name: '英語', c: '#3E8C78', task: '長文読解 第3講', week: 6.5, goal: 7 },
-  { id: 'ma', name: '数学', c: '#C47A55', task: '青チャート 数III 例題41〜50', week: 5.8, goal: 8 },
-  { id: 'ph', name: '物理', c: '#5D6DB8', task: '名問の森 電磁気 15', week: 4.1, goal: 5 },
-  { id: 'ch', name: '化学', c: '#B39548', task: '有機 構造決定 演習', week: 2.9, goal: 3 },
-  { id: 'ja', name: '国語', c: '#8E6283', task: '古文単語 315 · 61〜80', week: 1.6, goal: 3 },
+  { id: 'en', name: '英語', c: '#3B82F6', task: '長文読解 第3講', week: 6.5, goal: 7 },
+  { id: 'ma', name: '数学', c: '#F97316', task: '青チャート 数III 例題41〜50', week: 5.8, goal: 8 },
+  { id: 'ph', name: '物理', c: '#8B5CF6', task: '名問の森 電磁気 15', week: 4.1, goal: 5 },
+  { id: 'ch', name: '化学', c: '#06B6D4', task: '有機 構造決定 演習', week: 2.9, goal: 3 },
+  { id: 'ja', name: '国語', c: '#EAB308', task: '古文単語 315 · 61〜80', week: 1.6, goal: 3 },
 ];
 export const subj = (id: string) => SUBJ.find((s) => s.id === id) ?? SUBJ[0];
 
@@ -89,6 +89,7 @@ export type ChatMsg =
   | { kind: 'sys'; t: string; join?: string }
   | { kind: 'msg'; n: string; c: string; t: string }
   | { kind: 'me'; t: string }
+  | { kind: 'stamp'; s: string; n?: string; c?: string } // n: sender (none = you)
   | { kind: 'card'; me: boolean; card: 'together' | 'goal' | 'quiz'; joined?: string[]; answered?: number };
 
 export type GEvent = {
@@ -113,6 +114,7 @@ export const GROUPS: Group[] = [
       { kind: 'msg', n: 'そら', c: '#4A5BD4', t: '段落ごとに一文メモを先に作ると速くなるよ' },
       { kind: 'me', t: '日曜のもくもく会、9時からでいい？' },
       { kind: 'msg', n: 'ゆなっぴ', c: '#9A4D7E', t: 'OK、参加する' },
+      { kind: 'stamp', s: 'ganbaro', n: 'mio', c: '#D9653B' },
       { kind: 'sys', t: 'kaito が 物理 を始めました', join: 'kaito' },
     ],
     events: [
@@ -125,7 +127,7 @@ export const GROUPS: Group[] = [
   {
     id: 'g2', n: '朝活 6:00 スタート', m: 12, join: '公開', icon: 'morning', cs: ['#C99A22', '#9A4D7E', '#4B7A3B', '#4A5BD4'],
     studying: [['れん', '#4B7A3B', '世界史']],
-    msgs: [{ kind: 'sys', t: 'れん が 世界史 を30分 記録しました' }, { kind: 'msg', n: 'れん', c: '#4B7A3B', t: 'おはよう。今日は論述1題から' }],
+    msgs: [{ kind: 'sys', t: 'れん が 世界史 を30分 記録しました' }, { kind: 'stamp', s: 'ohayo', n: 'れん', c: '#4B7A3B' }, { kind: 'msg', n: 'れん', c: '#4B7A3B', t: '今日は論述1題から' }],
     events: [], shared: [],
   },
   {

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, { FadeOutUp, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ease, useT } from '../theme';
+import { ease, hair, lift, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
-import { Icon } from './Icon';
+import { Sticker } from './Sticker';
 
 // Toast stack (bencho "notification stack"): newest in front, the two behind
 // peek out above it. Tapping the stack spreads it into a list; it collapses
@@ -57,19 +57,16 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
   return (
     <Animated.View exiting={FadeOutUp.duration(220)} style={[{ position: 'absolute', left: 0, right: 0, zIndex: 10 - index }, a]}>
       <Pressable onPress={onPress}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, paddingLeft: 12, paddingRight: item.action ? 8 : 14, borderRadius: 16,
-          backgroundColor: t.surface, borderWidth: StyleSheet.hairlineWidth * 2, borderColor: t.line2,
-          shadowColor: '#000', shadowOpacity: t.dark ? 0.4 : 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 4 }}>
-        <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: t.greenSoft, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="check" size={14} color={t.greenInk} width={2.8} />
-        </View>
+        style={[{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingLeft: 8, paddingRight: item.action ? 8 : 14, borderRadius: 20,
+          backgroundColor: t.surface, borderWidth: t.dark ? hair : 0, borderColor: t.line2 }, t.dark ? { boxShadow: '0px 8px 24px rgba(0,0,0,0.5)' } : lift(t, 2)]}>
+        <Sticker name="done" size={32} tilt={-6} />
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Txt size={13.5} w="600" numberOfLines={1}>{item.title}</Txt>
+          <Txt size={14} w="600" numberOfLines={1}>{item.title}</Txt>
           {item.sub ? <Txt size={12} tone="ink3" numberOfLines={1}>{item.sub}</Txt> : null}
         </View>
         {item.action ? (
-          <Press onPress={() => { item.action!.run(); dismiss(item.id); }} style={{ height: 32, paddingHorizontal: 12, borderRadius: 9, backgroundColor: t.sunken, justifyContent: 'center' }}>
-            <Txt size={12.5} w="600">{item.action.label}</Txt>
+          <Press onPress={() => { item.action!.run(); dismiss(item.id); }} style={{ height: 32, paddingHorizontal: 13, borderRadius: 16, backgroundColor: t.ink, justifyContent: 'center' }}>
+            <Txt size={12.5} w="600" color={t.onInk}>{item.action.label}</Txt>
           </Press>
         ) : null}
       </Pressable>
