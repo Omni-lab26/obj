@@ -28,7 +28,7 @@ export function Field({
     }
     prevErr.current = error;
   }, [error, sx]);
-  const h = multiline ? 100 : 52;
+  const h = multiline ? 88 : 48;
   const la = useAnimatedStyle(() => ({
     transform: [{ translateY: (1 - p.value) * (multiline ? 15 : 14) - p.value * 9 }, { scale: 1 - p.value * 0.16 }],
   }));
@@ -37,7 +37,7 @@ export function Field({
   const surface = bg ?? t.surface;
   return (
     <Animated.View style={sh}>
-      <View style={{ minHeight: h, borderRadius: radius.inner, borderWidth: focus || error ? 1.5 : 0, borderColor: error ? border : t.tint, backgroundColor: surface }}>
+      <View style={{ minHeight: h, borderRadius: radius.inner, borderWidth: focus || error ? 1.25 : hair, borderColor: border, backgroundColor: surface }}>
         <TextInput
           ref={inputRef}
           {...rest}
@@ -48,16 +48,16 @@ export function Field({
           multiline={multiline}
           autoFocus={autoFocus}
           placeholderTextColor={t.ink3}
-          style={[{ flex: 1, minHeight: h, paddingHorizontal: 14, paddingTop: multiline ? 20 : 12, paddingBottom: multiline ? 10 : 0, fontSize: 17, color: t.ink, fontFamily: font.text, textAlignVertical: multiline ? 'top' : 'center' }, noOutline]}
+          style={[{ flex: 1, minHeight: h, paddingHorizontal: 14, paddingTop: multiline ? 20 : 12, paddingBottom: multiline ? 10 : 0, fontSize: 16, color: t.ink, fontFamily: font.text, textAlignVertical: multiline ? 'top' : 'center' }, noOutline]}
         />
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 10, top: 0, paddingHorizontal: 4, backgroundColor: up ? surface : 'transparent', transformOrigin: 'left center' }, la]}>
-          <Txt size={17} tone={error ? 'red' : 'ink3'} w="400">{label}</Txt>
+          <Txt size={14} tone={error ? 'red' : focus ? 'ink' : 'ink3'} w={up ? '500' : '400'}>{label}</Txt>
         </Animated.View>
       </View>
       {error || helper || max ? (
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 2, paddingTop: 5 }}>
-          <Txt size={13} tone={error ? 'red' : 'ink2'}>{error ?? helper ?? ''}</Txt>
-          {max ? <Txt size={13} tone="ink3" num>{value.length} / {max}</Txt> : null}
+          <Txt size={11} tone={error ? 'red' : 'ink3'}>{error ?? helper ?? ''}</Txt>
+          {max ? <Txt size={11} tone="ink3" num>{value.length} / {max}</Txt> : null}
         </View>
       ) : null}
     </Animated.View>
@@ -69,25 +69,36 @@ export function Stepper({ value, min, max, onChange, unit, label = '数' }: { va
   return <Counter value={value} min={min} max={max} onChange={onChange} unit={unit} label={label} />;
 }
 
-// ---------- radio list: an inset grouped list with a checkmark on the choice ----------
+// ---------- radio cards ----------
 export function RadioCards<K extends string>({ options, value, onChange }: { options: { v: K; title: string; sub: string }[]; value: K; onChange: (v: K) => void }) {
   const t = useT();
   return (
-    <View style={{ backgroundColor: t.surface, borderRadius: radius.card, overflow: 'hidden' }} accessibilityRole="radiogroup">
-      {options.map((o, i) => {
+    <View style={{ gap: 8 }} accessibilityRole="radiogroup">
+      {options.map((o) => {
         const on = o.v === value;
         return (
-          <Pressable key={o.v} onPress={() => { haptic.tap(); onChange(o.v); }} accessibilityRole="radio" accessibilityState={{ checked: on }}
-            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 16, minHeight: 56, backgroundColor: pressed ? 'rgba(60,60,67,0.08)' : 'transparent' })}>
-            {i ? <View style={{ position: 'absolute', top: 0, left: 16, right: 0, height: hair, backgroundColor: t.line }} /> : null}
+          <Press key={o.v} onPress={() => onChange(o.v)} scale={0.985} accessibilityRole="radio" accessibilityState={{ checked: on }}
+            style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 11, paddingHorizontal: 12, borderRadius: radius.inner, backgroundColor: t.surface,
+              borderWidth: on ? 1.25 : hair, borderColor: on ? t.ink : t.line2 }}>
+            <Dot on={on} />
             <View style={{ flex: 1 }}>
-              <Txt size={17} lh={22}>{o.title}</Txt>
-              <Txt size={13} tone="ink2" lh={18}>{o.sub}</Txt>
+              <Txt size={13.5} w="600" lh={19}>{o.title}</Txt>
+              <Txt size={11.5} tone="ink3" lh={16}>{o.sub}</Txt>
             </View>
-            {on ? <Icon name="check" size={18} color={t.tint} width={2.4} /> : null}
-          </Pressable>
+          </Press>
         );
       })}
+    </View>
+  );
+}
+function Dot({ on }: { on: boolean }) {
+  const t = useT();
+  const s = useSharedValue(on ? 1 : 0);
+  useEffect(() => { s.value = withTiming(on ? 1 : 0, { duration: 260, easing: ease.spring }); }, [on, s]);
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
+  return (
+    <View style={{ width: 18, height: 18, marginTop: 1, borderRadius: 9, borderWidth: 1.25, borderColor: on ? t.ink : t.ink3, alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View style={[{ width: 9, height: 9, borderRadius: 5, backgroundColor: t.ink }, a]} />
     </View>
   );
 }
@@ -101,8 +112,8 @@ export function Choice<K extends string>({ options, value, onChange }: { options
         const on = o.v === value;
         return (
           <Press key={o.v} onPress={() => onChange(o.v)} scale={0.94} accessibilityRole="radio" accessibilityState={{ checked: on }} hitSlop={{ top: 6, bottom: 6 }}
-            style={{ height: 36, paddingHorizontal: 15, borderRadius: 18, justifyContent: 'center', backgroundColor: on ? t.tint : t.sunken }}>
-            <Txt size={15} w={on ? '600' : '400'} color={on ? '#fff' : t.ink}>{o.label}</Txt>
+            style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, justifyContent: 'center', backgroundColor: on ? t.ink : t.surface, borderWidth: hair, borderColor: on ? t.ink : t.line2 }}>
+            <Txt size={12.5} w={on ? '600' : '500'} color={on ? t.onInk : t.ink2}>{o.label}</Txt>
           </Press>
         );
       })}
@@ -112,9 +123,9 @@ export function Choice<K extends string>({ options, value, onChange }: { options
 
 export function Label({ children, sub }: { children: ReactNode; sub?: string }) {
   return (
-    <View style={{ marginBottom: 8, paddingHorizontal: 4 }}>
-      <Txt size={20} w="700" lh={25}>{children}</Txt>
-      {sub ? <Txt size={13} tone="ink2">{sub}</Txt> : null}
+    <View style={{ marginBottom: 8 }}>
+      <Txt size={13.5} w="600">{children}</Txt>
+      {sub ? <Txt size={11} tone="ink3">{sub}</Txt> : null}
     </View>
   );
 }
@@ -123,8 +134,8 @@ export function Checkbox({ on, onPress, label }: { on: boolean; onPress: () => v
   const t = useT();
   return (
     <Pressable onPress={onPress} hitSlop={8} accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={label}
-      style={{ width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.tint : 'transparent', borderWidth: on ? 0 : 1.5, borderColor: 'rgba(60,60,67,0.3)' }}>
-      {on ? <Icon name="check" size={13} color="#fff" width={2.8} /> : null}
+      style={{ width: 22, height: 22, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.ink : 'transparent', borderWidth: on ? 0 : 1.25, borderColor: t.ink3 }}>
+      {on ? <Icon name="check" size={13} color={t.onInk} width={2.6} /> : null}
     </Pressable>
   );
 }

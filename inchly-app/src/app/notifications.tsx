@@ -4,18 +4,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NOTIFS, Notif, PERSON_COLOR, ROOM } from '@/data';
 import { getState, setState, startStudy, toggleFollow, toggleIn, useStore } from '@/store';
-import { hair, radius, useT } from '@/theme';
-import { Avatar, Btn, Empty, haptic, IconBtn, Txt } from '@/ui/base';
+import { hair, lift, radius, useT } from '@/theme';
+import { Btn, Empty, haptic, IconBtn, RingAvatar, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
-import { Icon, IconName } from '@/ui/Icon';
+import { Inch } from '@/ui/Sticker';
 import { SwipeRow } from '@/ui/SwipeRow';
 import { Segmented } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 
 type Filter = 'all' | 'imp' | 'study';
 
-// Colour of each kind's square, from the system palette.
-const SQUARE: Partial<Record<IconName, string>> = { flag: '#FF9500', target: '#FF9500', bulb: '#FFCC00', cal: '#FF3B30' };
 
 const markRead = (id: number) => setState((s) => (s.notifRead.includes(id) ? {} : { notifRead: [...s.notifRead, id] }));
 
@@ -29,35 +27,29 @@ function Row({ n, unread, joined, onJoin }: { n: Notif; unread: boolean; joined:
     else toast('外部のページを開きます', '申込は河合塾のサイトで行います');
     markRead(n.id);
   };
+  // Instagram's activity row: the face (or Inch, for notices from the app),
+  // one line with the name in bold and the time in grey, one button on the right.
   return (
     <Pressable onPress={() => markRead(n.id)} accessibilityLabel={`${unread ? '未読 ' : ''}${n.title}`}
-      style={{ flexDirection: 'row', gap: 12, paddingVertical: 12, paddingLeft: 16, paddingRight: 16 }}>
-      {unread ? <View style={{ position: 'absolute', left: 5, top: 26, width: 7, height: 7, borderRadius: 4, backgroundColor: t.tint }} /> : null}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 10, paddingLeft: 14, paddingRight: 12, backgroundColor: unread ? '#F5FAFF' : 'transparent' }}>
       {who ? (
-        <Avatar name={who} color={PERSON_COLOR[who] ?? t.ink3} size={36} />
+        <RingAvatar name={who} color={PERSON_COLOR[who] ?? t.ink3} size={40} live={!!n.join} />
       ) : (
-        // the Settings-style square: a white symbol on its colour
-        <View style={{ width: 36, height: 36, borderRadius: 9, backgroundColor: SQUARE[n.icon] ?? t.tint, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name={n.icon} size={19} color="#fff" filled width={2} />
+        <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: n.kind === 'imp' ? t.amberSoft : t.tintSoft, alignItems: 'center', justifyContent: 'center' }}>
+          <Inch pose="up" eyes={n.kind === 'imp' ? 'dot' : 'happy'} mouth={n.kind === 'imp' ? 'o' : 'smile'} prop={n.icon === 'bulb' ? 'bulb' : n.icon === 'cal' ? 'book' : n.kind === 'imp' ? 'sweat' : 'none'} size={42} border={false} />
         </View>
       )}
       <View style={{ flex: 1, minWidth: 0 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-          <Txt size={15} w={unread ? '600' : '400'} lh={20} style={{ flex: 1 }}>{n.title}</Txt>
-          <Txt size={13} tone="ink3">{n.time}</Txt>
-        </View>
-        <Txt size={13} tone="ink2" lh={18} style={{ marginTop: 2 }}>{n.sub}</Txt>
-        {n.cta || n.join || n.follow ? (
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-            {n.join ? <Btn small kind="primary" icon="play" label={joined ? '勉強中' : '一緒に始める'} disabled={joined} onPress={onJoin} /> : null}
-            {n.cta ? <Btn small kind="tint" label={n.cta} onPress={cta} /> : null}
-            {n.follow ? (
-              <Btn small kind={following ? 'quiet' : 'primary'} label={following ? 'フォロー中' : 'フォローを返す'}
-                onPress={() => { toggleFollow(n.follow!); markRead(n.id); }} />
-            ) : null}
-          </View>
-        ) : null}
+        <Txt size={13.5} lh={19}>
+          {who ? <Txt size={13.5} w="600">{who}</Txt> : null}
+          {who ? n.title.replace(who, '') : n.title}
+          <Txt size={13} tone="ink3">{`  ${n.time}`}</Txt>
+        </Txt>
+        <Txt size={12} tone="ink3" lh={16} numberOfLines={1}>{n.sub}</Txt>
       </View>
+      {n.join ? <Btn small kind={joined ? 'quiet' : 'blue'} label={joined ? '勉強中' : '一緒に始める'} disabled={joined} onPress={onJoin} /> : null}
+      {n.follow ? <Btn small kind={following ? 'quiet' : 'blue'} label={following ? 'フォロー中' : 'フォローバック'} onPress={() => { toggleFollow(n.follow!); markRead(n.id); }} /> : null}
+      {n.cta ? <Btn small kind="quiet" label={n.id === 6 ? '始める' : '開く'} onPress={cta} /> : null}
     </Pressable>
   );
 }
@@ -94,7 +86,7 @@ export default function Notifications() {
 
   return (
     <Screen>
-      <NavBar title="お知らせ" right={<IconBtn filled name="check" label="すべて既読にする" onPress={readAll} />} />
+      <NavBar title="お知らせ" right={<IconBtn name="check" label="すべて既読にする" onPress={readAll} />} />
       <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 4 }}>
         <Segmented value={filter} onChange={setFilter} options={[{ v: 'all', label: 'すべて' }, { v: 'imp', label: '大事なこと' }, { v: 'study', label: '仲間の勉強' }]} />
       </View>
@@ -102,12 +94,12 @@ export default function Notifications() {
         {list.length === 0 ? <Empty title={emptyTitle} sub="仲間が勉強を始めると、ここに届きます" /> : null}
         {days.map((d) => (
           <View key={d}>
-            <Txt size={20} w="700" style={{ paddingHorizontal: 20, paddingTop: 22, paddingBottom: 8 }}>{d}</Txt>
-            <View style={{ marginHorizontal: 16, borderRadius: radius.card, backgroundColor: t.surface }}>
+            <Txt size={15} w="700" style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 8 }}>{d}</Txt>
+            <View style={[{ marginHorizontal: 16, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
               <View style={{ borderRadius: radius.card, overflow: 'hidden' }}>
                 {list.filter((n) => n.day === d).map((n, i) => (
                   <View key={n.id}>
-                    {i ? <View style={{ height: hair, backgroundColor: t.line, marginLeft: 64, zIndex: 1 }} /> : null}
+                    {i ? <View style={{ height: hair, backgroundColor: t.line, marginLeft: 70, zIndex: 1 }} /> : null}
                     <SwipeRow bg={t.surface} onRead={() => { markRead(n.id); toast('既読にしました'); }} onDelete={() => remove(n.id)}>
                       <Row n={n} unread={!read.includes(n.id)} joined={joined.includes(n.id)} onJoin={() => join(n)} />
                     </SwipeRow>

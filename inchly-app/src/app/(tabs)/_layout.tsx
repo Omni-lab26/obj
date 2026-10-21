@@ -1,74 +1,72 @@
 import { router } from 'expo-router';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
-import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { elapsedOf, useNow, useStore } from '@/store';
 import { useT } from '@/theme';
-import { haptic, Press, Txt } from '@/ui/base';
+import { Avatar, Press, Txt } from '@/ui/base';
 import { Glass } from '@/ui/Glass';
 import { Icon, IconName } from '@/ui/Icon';
 
-const TABS: Record<string, { label: string; icon: IconName }> = {
-  index: { label: '今日', icon: 'home' },
+const TABS: Record<string, { label: string; icon: IconName | 'me' }> = {
+  index: { label: 'ホーム', icon: 'home' },
   records: { label: '記録', icon: 'bars' },
   community: { label: 'みんな', icon: 'users' },
-  me: { label: 'マイページ', icon: 'user' },
+  me: { label: 'マイページ', icon: 'me' },
 };
 
-// iOS 26 tab bar: a floating glass capsule over the content, the selected tab
-// sitting in a lighter lens that slides between items. The timer is its own
-// glass button beside it (where Music keeps search): tinted when idle, showing
-// the running minutes while you study.
+// Instagram's tab bar — icons only, the profile tab is your own photo — on a
+// floating glass capsule. The middle slot is the timer: a dark pill that
+// shows the running minutes with a live dot while you study.
 function TabBar({ state, navigation, insets }: BottomTabBarProps) {
   const t = useT();
   useNow();
   const st = useStore((s) => s);
   const running = st.running, paused = st.paused;
   const mins = Math.floor(elapsedOf(st) / 60);
-  const [w, setW] = useState(0);
-  const item = w ? (w - 8) / 4 : 0;
-  const x = useSharedValue(0);
-  useEffect(() => { if (item) x.set(withSpring(4 + state.index * item, { duration: 420, dampingRatio: 0.78 })); }, [state.index, item, x]);
-  const lens = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
-
-  return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: Math.max(insets.bottom - 8, 10), flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16 }}>
-      <Glass style={{ flex: 1, height: 64 }}>
-        <View style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 4, alignItems: 'center' }} onLayout={(e) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist">
-          {item ? <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 4, bottom: 4, width: item, borderRadius: 28, backgroundColor: 'rgba(118,118,128,0.14)' }, lens]} /> : null}
-          {state.routes.map((r, i) => {
-            const meta = TABS[r.name];
-            if (!meta) return null;
-            const on = state.index === i;
-            return (
-              <Press key={r.key} scale={0.9} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={meta.label}
-                onPress={() => {
-                  const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
-                  if (!on && !e.defaultPrevented) navigation.navigate(r.name, r.params);
-                }}
-                style={{ flex: 1, height: 56, alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                <Icon name={meta.icon} size={23} color={on ? t.tint : t.ink} filled={on} width={1.7} />
-                <Txt size={10} w={on ? '600' : '500'} lh={12} color={on ? t.tint : t.ink}>{meta.label}</Txt>
-              </Press>
-            );
-          })}
-        </View>
-      </Glass>
-      <Press onPress={() => { haptic.soft(); router.push('/timer'); }} haptics={false} scale={0.9}
-        accessibilityLabel={running ? `勉強中 ${mins}分。タイマーを開く` : 'タイマーを開いて勉強を始める'}>
-        <Glass interactive tint={running ? undefined : 'rgba(42,160,90,0.92)'} style={{ width: 64, height: 64, alignItems: 'center', justifyContent: 'center' }}>
-          {running ? (
-            <View style={{ alignItems: 'center' }}>
-              <Txt num size={19} w="600" lh={22} color={paused ? t.amber : t.tint}>{mins}</Txt>
-              <Txt size={9.5} w="600" lh={11} color={paused ? t.amber : t.tint}>{paused ? '停止中' : '分'}</Txt>
-            </View>
-          ) : (
-            <Icon name="play" size={22} color="#fff" />
-          )}
-        </Glass>
+  const btn = (i: number) => {
+    const r = state.routes[i];
+    const meta = TABS[r.name];
+    if (!meta) return null;
+    const on = state.index === i;
+    return (
+      <Press key={r.key} scale={0.86} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={meta.label}
+        onPress={() => {
+          const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
+          if (!on && !e.defaultPrevented) navigation.navigate(r.name, r.params);
+        }}
+        style={{ flex: 1, height: 52, alignItems: 'center', justifyContent: 'center' }}>
+        {meta.icon === 'me' ? (
+          <View style={{ padding: 1.5, borderRadius: 16, borderWidth: on ? 1.6 : 0, borderColor: t.ink }}>
+            <Avatar name="はる" color="#6E56CF" size={on ? 24 : 26} />
+          </View>
+        ) : (
+          <Icon name={meta.icon} size={25} color={t.ink} filled={on} width={on ? 2.1 : 1.7} />
+        )}
       </Press>
+    );
+  };
+  return (
+    <View pointerEvents="box-none" style={{ position: 'absolute', left: 14, right: 14, bottom: Math.max(insets.bottom - 10, 10) }}>
+      <Glass radius={30} style={{ height: 60, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 }}>
+        {btn(0)}
+        {btn(1)}
+        <View style={{ flex: 1.2, alignItems: 'center' }}>
+          <Press onPress={() => router.push('/timer')} scale={0.9} hitSlop={{ top: 8, bottom: 8 }} accessibilityLabel={running ? `勉強中 ${mins}分。タイマーを開く` : '勉強を始める'}
+            style={{ height: 38, minWidth: 54, paddingHorizontal: running ? 12 : 0, borderRadius: 19, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            {running ? (
+              <>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: paused ? t.amber : '#2FD07A' }} />
+                <Txt num size={13} w="600" color={t.onInk}>{mins}<Txt size={10} color={t.onInk}>分</Txt></Txt>
+              </>
+            ) : (
+              <Icon name="play" size={16} color={t.onInk} />
+            )}
+          </Press>
+        </View>
+        {btn(2)}
+        {btn(3)}
+      </Glass>
     </View>
   );
 }

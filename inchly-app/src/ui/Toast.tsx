@@ -3,10 +3,9 @@ import { Pressable, View } from 'react-native';
 import Animated, { FadeOutUp, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ease, useT } from '../theme';
+import { ease, hair, lift, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
-import { Glass } from './Glass';
-import { Icon } from './Icon';
+import { Inch } from './Sticker';
 
 // Toast stack (bencho "notification stack"): newest in front, the two behind
 // peek out above it. Tapping the stack spreads it into a list; it collapses
@@ -57,22 +56,19 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
   const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateY: y.value }, { scale: s.value }] }));
   return (
     <Animated.View exiting={FadeOutUp.duration(220)} style={[{ position: 'absolute', left: 0, right: 0, zIndex: 10 - index }, a]}>
-      <Pressable onPress={onPress}>
-        {/* an iOS banner: glass, the app's square on the left, one action as a tinted capsule */}
-        <Glass radius={26} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingLeft: 10, paddingRight: item.action ? 8 : 16 }}>
-          <View style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: t.tint, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="check" size={17} color="#fff" width={2.6} />
-          </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Txt size={15} w="600" lh={20} numberOfLines={1}>{item.title}</Txt>
-            {item.sub ? <Txt size={13} tone="ink2" lh={17} numberOfLines={1}>{item.sub}</Txt> : null}
-          </View>
-          {item.action ? (
-            <Press onPress={() => { item.action!.run(); dismiss(item.id); }} hitSlop={6} style={{ height: 32, paddingHorizontal: 13, borderRadius: 16, backgroundColor: t.tintSoft, justifyContent: 'center' }}>
-              <Txt size={14} w="600" color={t.tint}>{item.action.label}</Txt>
-            </Press>
-          ) : null}
-        </Glass>
+      <Pressable onPress={onPress}
+        style={[{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingLeft: 8, paddingRight: item.action ? 8 : 14, borderRadius: 20,
+          backgroundColor: t.surface, borderWidth: t.dark ? hair : 0, borderColor: t.line2 }, t.dark ? { boxShadow: '0px 8px 24px rgba(0,0,0,0.5)' } : lift(t, 2)]}>
+        <Inch pose="up" eyes="happy" prop="check" size={34} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Txt size={14} w="600" numberOfLines={1}>{item.title}</Txt>
+          {item.sub ? <Txt size={12} tone="ink3" numberOfLines={1}>{item.sub}</Txt> : null}
+        </View>
+        {item.action ? (
+          <Press onPress={() => { item.action!.run(); dismiss(item.id); }} style={{ height: 32, paddingHorizontal: 13, borderRadius: 16, backgroundColor: t.ink, justifyContent: 'center' }}>
+            <Txt size={12.5} w="600" color={t.onInk}>{item.action.label}</Txt>
+          </Press>
+        ) : null}
       </Pressable>
     </Animated.View>
   );

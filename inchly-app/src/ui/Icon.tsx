@@ -41,6 +41,9 @@ const ICONS = {
   minus: { els: [['p', 'M5 12h14']], w: 2.2 },
   edit: { els: [['p', 'M4 20h4L19 9l-4-4L4 16z']] },
   gear: { els: [['c', 12, 12, 3], ['p', 'M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z']] },
+  plane: { els: [['p', 'M21 3 3 10.2l7 2.8 2.8 7z'], ['p', 'M21 3l-11 10']] },
+  bookmark: { els: [['p', 'M6.5 3.5h11v17L12 16.2l-5.5 4.3z']] },
+  more: { els: [['c', 5.5, 12, 1.4], ['c', 12, 12, 1.4], ['c', 18.5, 12, 1.4]], fill: true },
 } satisfies Record<string, Spec>;
 
 export type IconName = keyof typeof ICONS;
@@ -54,9 +57,9 @@ const SF: Record<IconName, string> = {
   userPlus: 'person.badge.plus', users: 'person.2', user: 'person', home: 'house', bars: 'chart.bar', cal: 'calendar',
   bulb: 'lightbulb', chat: 'bubble.left', send: 'arrow.up', q: 'questionmark', target: 'target', book: 'book',
   sun: 'sun.max', cert: 'rosette', heart: 'heart', pin: 'mappin', note: 'note.text', share: 'square.and.arrow.up',
-  plus: 'plus', minus: 'minus', edit: 'pencil', gear: 'gearshape',
+  plus: 'plus', minus: 'minus', edit: 'pencil', gear: 'gearshape', plane: 'paperplane', bookmark: 'bookmark', more: 'ellipsis',
 };
-const HAS_FILL = new Set<IconName>(['bell', 'flag', 'users', 'user', 'home', 'bars', 'bulb', 'chat', 'book', 'heart', 'gear', 'cal', 'clock', 'note']);
+const HAS_FILL = new Set<IconName>(['bell', 'flag', 'users', 'user', 'home', 'bars', 'bulb', 'chat', 'book', 'heart', 'gear', 'cal', 'clock', 'note', 'plane', 'bookmark']);
 
 export function Icon({ name, size = 22, color, width, filled }: { name: IconName; size?: number; color: string; width?: number; filled?: boolean }) {
   const spec: Spec = ICONS[name];

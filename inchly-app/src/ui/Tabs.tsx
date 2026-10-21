@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { LayoutChangeEvent, Pressable, View, ViewStyle } from 'react-native';
+import { LayoutChangeEvent, Pressable, ScrollView, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { ease, useT } from '../theme';
+import { ease, hair, useT } from '../theme';
 import { haptic, Txt } from './base';
 
 type Opt<K extends string> = { v: K; label: string };
@@ -26,8 +26,8 @@ function useIndicator(index: number, boxes: Box[]) {
 }
 
 /**
- * The iOS segmented control: a grey track, a white thumb with a soft shadow
- * that slides to the choice. Labels stay black (semibold when chosen).
+ * Segmented control, wallet style: the choice sits in a navy pill that slides.
+ * On a pale track by default; `small` drops the track (for use inside cards).
  */
 export function Segmented<K extends string>({ options, value, onChange, style, small }: { options: Opt<K>[]; value: K; onChange: (v: K) => void; style?: ViewStyle; small?: boolean }) {
   const t = useT();
@@ -38,17 +38,17 @@ export function Segmented<K extends string>({ options, value, onChange, style, s
     const { x, width } = e.nativeEvent.layout;
     setBoxes((b) => { const n = [...b]; n[i] = { x, w: width }; return n; });
   };
+  const pad = small ? 0 : 2;
   return (
-    <View style={[{ flexDirection: 'row', backgroundColor: t.sunken, borderRadius: 999, padding: 2 }, style]} accessibilityRole="tablist">
-      <Animated.View style={[{ position: 'absolute', top: 2, bottom: 2, left: 0, borderRadius: 999, backgroundColor: '#fff',
-        boxShadow: '0px 3px 8px rgba(0,0,0,0.12), 0px 3px 1px rgba(0,0,0,0.04), 0px 0px 0px 0.5px rgba(0,0,0,0.04)' }, a]} />
+    <View style={[{ flexDirection: 'row', backgroundColor: small ? 'transparent' : t.sunken, borderRadius: 999, padding: pad }, style]} accessibilityRole="tablist">
+      <Animated.View style={[{ position: 'absolute', top: pad, bottom: pad, left: 0, borderRadius: 999, backgroundColor: t.ink }, a]} />
       {options.map((o, i) => {
         const on = o.v === value;
         return (
           <Pressable key={o.v} onLayout={onLayout(i)} onPress={() => { if (!on) { haptic.tap(); onChange(o.v); } }}
-            accessibilityRole="tab" accessibilityState={{ selected: on }} hitSlop={{ top: 6, bottom: 6 }}
-            style={{ flex: 1, height: small ? 28 : 32, paddingHorizontal: small ? 12 : 4, alignItems: 'center', justifyContent: 'center' }}>
-            <Txt size={small ? 13 : 13.5} w={on ? '600' : '500'} lh={18} numberOfLines={1}>{o.label}</Txt>
+            accessibilityRole="tab" accessibilityState={{ selected: on }} hitSlop={small ? { top: 10, bottom: 10 } : { top: 7, bottom: 7 }}
+            style={{ flex: 1, height: small ? 24 : 30, paddingHorizontal: small ? 10 : 0, alignItems: 'center', justifyContent: 'center' }}>
+            <Txt size={small ? 11 : 12} w="600" color={on ? t.onInk : t.ink3}>{o.label}</Txt>
           </Pressable>
         );
       })}
@@ -56,11 +56,27 @@ export function Segmented<K extends string>({ options, value, onChange, style, s
   );
 }
 
-/** Section switcher for a screen: the same segmented control, full width. */
+/** Underline tabs for switching sections of a screen. Scrolls if labels overflow. */
 export function UnderTabs<K extends string>({ options, value, onChange }: { options: Opt<K>[]; value: K; onChange: (v: K) => void }) {
+  const t = useT();
+  const [boxes, setBoxes] = useState<Box[]>([]);
+  const index = options.findIndex((o) => o.v === value);
+  const { a } = useIndicator(index, boxes);
+  const onLayout = (i: number) => (e: LayoutChangeEvent) => {
+    const { x, width } = e.nativeEvent.layout;
+    setBoxes((b) => { const n = [...b]; n[i] = { x, w: width }; return n; });
+  };
   return (
-    <View style={{ paddingHorizontal: 16, paddingBottom: 6 }}>
-      <Segmented options={options} value={value} onChange={onChange} />
+    <View style={{ borderBottomWidth: hair, borderBottomColor: t.line }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 20 }}>
+        {options.map((o, i) => (
+          <Pressable key={o.v} onLayout={onLayout(i)} onPress={() => { if (o.v !== value) { haptic.tap(); onChange(o.v); } }}
+            accessibilityRole="tab" accessibilityState={{ selected: o.v === value }} style={{ paddingVertical: 10 }}>
+            <Txt size={13.5} w="600" tone={o.v === value ? 'ink' : 'ink3'}>{o.label}</Txt>
+          </Pressable>
+        ))}
+        <Animated.View style={[{ position: 'absolute', bottom: 0, left: 0, height: 2, borderRadius: 1, backgroundColor: t.ink }, a]} />
+      </ScrollView>
     </View>
   );
 }

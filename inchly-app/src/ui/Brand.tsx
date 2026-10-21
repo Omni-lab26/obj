@@ -124,12 +124,12 @@ export function InchTape({ minutes, goal, parts }: { minutes: number; goal: numb
         ) : null}
       </View>
       {/* legend */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 4, marginTop: 8 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4, marginTop: 6 }}>
         {segs.map((p) => (
           <View key={p.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: p.c }} />
-            <Txt size={13} tone="ink2" lh={17}>{p.name}</Txt>
-            <Txt num size={13} tone="ink3" lh={17}>{fmt(p.min)}</Txt>
+            <Txt size={11} tone="ink2" lh={14}>{p.name}</Txt>
+            <Txt num size={11} tone="ink3" lh={14}>{fmt(p.min)}</Txt>
           </View>
         ))}
       </View>

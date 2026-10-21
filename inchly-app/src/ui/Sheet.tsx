@@ -5,7 +5,6 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ease, useT } from '../theme';
-import { Glass } from './Glass';
 
 // Bottom sheet. openSheet(close => <Content/>) from anywhere; drag the grabber
 // (or the top of the sheet) down to dismiss, or tap the scrim.
@@ -66,17 +65,17 @@ export function SheetHost() {
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: t.scrim }, ka]}>
         <Pressable style={{ flex: 1 }} onPress={close} accessibilityLabel="閉じる" />
       </Animated.View>
-      {/* iOS 26 sheet: a glass panel floating 8pt in from the edges, corners concentric with the screen */}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ position: 'absolute', left: 8, right: 8, bottom: Math.max(insets.bottom, 8), maxHeight: '88%' }} pointerEvents="box-none">
-        <Animated.View onLayout={(e) => { height.set(e.nativeEvent.layout.height); }} style={sa} accessibilityViewIsModal>
-          <Glass radius={34} tint="rgba(255,255,255,0.86)">
-            <View {...pan.panHandlers} style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>
-              <View style={{ width: 36, height: 5, borderRadius: 3, backgroundColor: 'rgba(60,60,67,0.3)' }} />
-            </View>
-            <ScrollView bounces={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}>
-              {render(close)}
-            </ScrollView>
-          </Glass>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '90%' }} pointerEvents="box-none">
+        <Animated.View
+          onLayout={(e) => { height.set(e.nativeEvent.layout.height); }}
+          style={[{ backgroundColor: t.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28 }, sa]}
+          accessibilityViewIsModal>
+          <View {...pan.panHandlers} style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>
+            <View style={{ width: 38, height: 5, borderRadius: 3, backgroundColor: t.line2 }} />
+          </View>
+          <ScrollView bounces={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 20 }}>
+            {render(close)}
+          </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
     </View>
