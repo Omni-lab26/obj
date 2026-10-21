@@ -1,14 +1,14 @@
 import { router } from 'expo-router';
 import { ComponentRef, useEffect, useRef, useState } from 'react';
-import { Image, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import { hms, hoursIn, PERSON_COLOR, Post, POSTS, RANK, ROOM, subj } from '@/data';
-import { PHOTO } from '@/photos';
 import { elapsedOf, getState, setState, toggleHelpful, useNow, useStore } from '@/store';
 import { ease, hair, lift, radius, type, useT } from '@/theme';
 import { Avatar, Btn, Card, haptic, Press, Txt } from '@/ui/base';
 import { Screen, SearchBtn, TopBar } from '@/ui/Chrome';
+import { personSheet } from '@/ui/Editors';
 import { Choice, Field } from '@/ui/Form';
 import { GroupMark, LiveDot } from '@/ui/GroupParts';
 import { Icon } from '@/ui/Icon';
@@ -47,6 +47,9 @@ function Live() {
   const [f, setF] = useState<RoomFilter>('all');
   const following = useStore((x) => x.following);
   const me = useStore((x) => x.running && x.showLive);
+  const scope = useStore((x) => x.liveScope);
+  const myName = useStore((x) => x.account?.name ?? 'はる');
+  const blocked = useStore((x) => x.blocked);
   const mineMin = useStore((x) => Math.floor(elapsedOf(x) / 60));
   useEffect(() => {
     const first = setTimeout(() => setCount(1263), 60);
@@ -54,7 +57,7 @@ function Live() {
     const id = setInterval(() => setCount((c) => c + 1 + Math.floor(Math.random() * 3)), 4200);
     return () => { clearTimeout(first); clearInterval(id); };
   }, []);
-  const people = ROOM.filter((p) => (f === 'follow' ? following.includes(p.h) : f === 'todai' ? p.g.startsWith('東大') : true));
+  const people = ROOM.filter((p) => !blocked.includes(p.n)).filter((p) => (f === 'follow' ? following.includes(p.h) : f === 'todai' ? p.g.startsWith('東大') : true));
   const chip = (v: RoomFilter, label: string) => (
     <Press key={v} onPress={() => setF(v)} scale={0.94} accessibilityRole="radio" accessibilityState={{ checked: f === v }} hitSlop={{ top: 9, bottom: 9, left: 3, right: 3 }}
       style={{ height: 26, paddingHorizontal: 11, borderRadius: 13, justifyContent: 'center', backgroundColor: f === v ? t.ink : t.surface, borderWidth: hair, borderColor: f === v ? t.ink : t.line2 }}>
@@ -74,9 +77,13 @@ function Live() {
         {chip('todai', '東大志望')}
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: 16, marginTop: 8, paddingVertical: 2, borderRadius: radius.card, backgroundColor: t.surface, ...lift(t) }}>
-        {me ? <Seat name="はる" color={PERSON_COLOR['はる']} label="あなた" sub={subj(getState().subj).name} time={`${mineMin}分`} you /> : null}
+        {me && (scope === 'all' || f === 'follow') ? <Seat name={myName} color={PERSON_COLOR['はる']} label="あなた" sub={subj(getState().subj).name} time={`${mineMin}分`} you /> : null}
         {people.map((p) => <Seat key={p.h} name={p.n} color={p.c} label={p.n} sub={p.s} time={hms(p.t + since).replace(/^00:/, '')} />)}
       </View>
+      <Press onPress={() => router.push('/settings')} hitSlop={6} style={{ paddingHorizontal: 20, paddingTop: 10, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Txt size={11.5} tone="ink3">{scope === 'all' ? '勉強中は全員に見えています' : scope === 'followers' ? '勉強中はフォロワーにだけ見えています' : '勉強中は誰にも見えていません'}</Txt>
+        <Txt size={11.5} w="600" color={t.blue}>変更</Txt>
+      </Press>
     </Animated.View>
   );
 }
@@ -84,13 +91,15 @@ function Live() {
 function Seat({ name, color, label, sub, time, you }: { name: string; color: string; label: string; sub: string; time: string; you?: boolean }) {
   const t = useT();
   return (
-    <View style={{ width: '25%', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 2 }} accessible accessibilityLabel={`${label} ${sub} ${time}`}>
-      <View style={{ padding: 2, borderRadius: 40, borderWidth: 1.5, borderColor: you ? t.green : t.dark ? '#1F4A30' : '#B5EBC8' }}>
-        <Avatar name={name} color={color} size={44} />
-      </View>
-      <Txt size={12} w="600" lh={16} numberOfLines={1} style={{ marginTop: 5 }}>{label}</Txt>
-      <Txt size={11} tone="ink3" lh={14} numberOfLines={1}>{sub}</Txt>
-      <Txt num size={11} tone="ink2" lh={14}>{time}</Txt>
+    <View style={{ width: '25%' }}>
+      <Press onPress={you ? undefined : () => personSheet(name, color)} disabled={you} scale={0.95} style={{ alignItems: 'center', paddingVertical: 10, paddingHorizontal: 2 }} accessibilityLabel={`${label} ${sub} ${time}`}>
+        <View style={{ padding: 2, borderRadius: 40, borderWidth: 1.5, borderColor: you ? t.green : t.dark ? '#1F4A30' : '#B5EBC8' }}>
+          <Avatar name={name} color={color} size={44} />
+        </View>
+        <Txt size={12} w="600" lh={16} numberOfLines={1} style={{ marginTop: 5 }}>{label}</Txt>
+        <Txt size={11} tone="ink3" lh={14} numberOfLines={1}>{sub}</Txt>
+        <Txt num size={11} tone="ink2" lh={14}>{time}</Txt>
+      </Press>
     </View>
   );
 }
@@ -108,6 +117,8 @@ function Rank() {
   const t = useT();
   const [p, setP] = useState<'w' | 'm' | 't'>('w');
   const r = RANK_BY[p];
+  const blocked = useStore((x) => x.blocked);
+  const myName = useStore((x) => x.account?.name ?? 'はる');
   return (
     <Animated.View entering={FadeIn.duration(200)}>
       <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
@@ -125,17 +136,17 @@ function Rank() {
         <Dist pos={Math.round(14 - (r.rank - 57) / 12)} />
       </Card>
       <Card style={{ marginHorizontal: 16, marginTop: 10, paddingVertical: 4 }} pad={0}>
-        {RANK.map((x, i) => (
-          <View key={x.n} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 7 }}>
+        {RANK.filter((x) => !blocked.includes(x.n)).map((x, i) => (
+          <Press key={x.n} onPress={() => personSheet(x.n, x.c)} scale={0.99} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 7 }}>
             {i < 3 ? <Sticker name={i === 0 ? 'trophy' : 'star'} size={24} tilt={i === 2 ? 8 : -6} /> : <Txt num size={12} w="600" tone="ink3" style={{ width: 24, textAlign: 'center' }}>{i + 1}</Txt>}
             <Avatar name={x.n} color={x.c} size={30} />
             <Txt size={13.5} w="600" style={{ flex: 1 }}>{x.n}</Txt>
             <Txt num size={13.5} w="600">{(x.h * r.scale).toFixed(1)}<Txt size={11} tone="ink3"> 時間</Txt></Txt>
-          </View>
+          </Press>
         ))}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10, paddingVertical: 7, marginHorizontal: 4, marginTop: 2, marginBottom: 0, borderRadius: radius.inner, backgroundColor: t.greenSoft }}>
           <Txt num size={12} w="700" tone="greenInk" style={{ width: 24, textAlign: 'center' }}>{r.rank}</Txt>
-          <Avatar name="はる" color={PERSON_COLOR['はる']} size={30} />
+          <Avatar name={myName} color={PERSON_COLOR['はる']} size={30} />
           <Txt size={13.5} w="600" style={{ flex: 1 }}>あなた</Txt>
           <Txt num size={13.5} w="700">{r.me.toFixed(1)}<Txt size={11} tone="ink3"> 時間</Txt></Txt>
         </View>
@@ -167,27 +178,28 @@ function Posts() {
   const t = useT();
   const [, force] = useState(0);
   useEffect(() => { const f = () => force((x) => x + 1); mineSubs.add(f); return () => { mineSubs.delete(f); }; }, []);
-  const list = [...mine, ...POSTS];
+  const blocked = useStore((x) => x.blocked);
+  const myName = useStore((x) => x.account?.name ?? 'はる');
+  const list = [...mine, ...POSTS].filter((p) => !blocked.includes(p.n));
   return (
     <Animated.View entering={FadeIn.duration(200)}>
       <Press onPress={compose} scale={0.985}
         style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, margin: 16, marginBottom: 10, paddingVertical: 8, paddingHorizontal: 10, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
-        <Avatar name="はる" color={PERSON_COLOR['はる']} size={28} />
+        <Avatar name={myName} color={PERSON_COLOR['はる']} size={28} />
         <Txt size={13} tone="ink3" style={{ flex: 1 }} numberOfLines={1}>いま何してる？</Txt>
         <Sticker name="pencil" size={28} />
       </Press>
       {list.map((p, i) => (
         <Animated.View key={p.n + p.t.slice(0, 12)} entering={i < mine.length ? FadeInDown.duration(320) : undefined}
           style={[{ marginHorizontal: 16, marginBottom: 10, padding: 14, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+          <Press onPress={p.mine ? undefined : () => personSheet(p.n, p.c)} disabled={p.mine} scale={0.99} hitSlop={4} style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
             <Avatar name={p.n} color={p.c} size={30} />
             <View style={{ flex: 1 }}>
               <Txt size={13} w="600" lh={17}>{p.n}</Txt>
               <Txt size={11} tone="ink3" lh={14}>{`${p.m} · ${p.w}`}</Txt>
             </View>
-          </View>
+          </Press>
           <Txt size={13.5} lh={22} style={{ marginTop: 8 }}>{p.t}</Txt>
-          {p.img ? <Image source={PHOTO[p.img]} style={{ width: 168, height: 168, borderRadius: radius.inner, marginTop: 8, backgroundColor: t.sunken }} resizeMode="cover" /> : null}
           {p.tags.length ? <Txt size={12} w="500" color={t.blue} style={{ marginTop: 6 }}>{p.tags.join(' ')}</Txt> : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 8 }}>
             <Helpful i={i} base={p.u} />
@@ -256,7 +268,8 @@ function Compose({ close }: { close: () => void }) {
     if (!text.trim()) { setTouched(true); return; }
     setBusy(true);
     setTimeout(() => {
-      mine = [{ n: 'はる', c: PERSON_COLOR['はる'], m: '高3', w: 'たった今', t: text.trim(), tags: [tag], u: 0, r: 0 }, ...mine];
+      const a = getState().account;
+      mine = [{ n: a?.name ?? 'はる', c: PERSON_COLOR['はる'], m: a?.grade ?? '高3', mine: true, w: 'たった今', t: text.trim(), tags: [tag], u: 0, r: 0 }, ...mine];
       // "Helpful" marks are stored by list position, so shift them past the new post.
       setState((s) => ({ helpful: s.helpful.map((x) => x + 1) }));
       mineSubs.forEach((f) => f());

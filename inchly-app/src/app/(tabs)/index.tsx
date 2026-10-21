@@ -1,19 +1,18 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
-import { dayLog, DEADLINES, hms, pad, PEOPLE, STREAK, SUBJ, subj, TODAY } from '@/data';
-import { PHOTO } from '@/photos';
-import { elapsedOf, setSubject, startStudy, togglePause, toggleTodo, useNow, useStore } from '@/store';
+import { dayLog, hms, pad, PEOPLE, STREAK, SUBJ, subj, TODAY } from '@/data';
+import { elapsedOf, setSubject, startStudy, togglePause, updateTodo, useNow, useStore } from '@/store';
 import { hair, lift, radius, type, useT } from '@/theme';
 import { Avatar, AvatarStack, Btn, Card, haptic, IconBtn, Press, SubjCoin, Txt } from '@/ui/base';
 import { InchTape, Wordmark } from '@/ui/Brand';
 import { Screen, useUnread } from '@/ui/Chrome';
 import { MiniSeg, TodoRow } from '@/ui/HomeParts';
+import { daysUntil, deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon } from '@/ui/Icon';
 import { Rolling } from '@/ui/Rolling';
-import { openSheet } from '@/ui/Sheet';
 import { LiveDot } from '@/ui/GroupParts';
 import { Sticker } from '@/ui/Sticker';
 import { toast } from '@/ui/Toast';
@@ -30,6 +29,7 @@ export default function Home() {
   const sj = subj(s.subj);
   const e = elapsedOf(s);
   const done = s.todos.filter((x) => x.d).length;
+  const me = s.account?.name ?? 'はる';
 
   // Hero digits roll up from zero once the screen is shown.
   const [shown, setShown] = useState(false);
@@ -38,9 +38,10 @@ export default function Home() {
   const M = shown ? pad(s.todayMin % 60) : '00';
   const [joined, setJoined] = useState(false);
 
-  const onToggle = (i: number) => {
-    const willAll = s.todos.every((x, j) => (j === i ? !x.d : x.d));
-    toggleTodo(i);
+  const onToggle = (id: string) => {
+    const willAll = s.todos.every((x) => (x.id === id ? !x.d : x.d));
+    const td = s.todos.find((x) => x.id === id);
+    if (td) updateTodo(id, { d: !td.d });
     if (willAll) { haptic.success(); toast('今日のToDo、ぜんぶ終わり'); }
   };
   const joinPeers = () => {
@@ -50,27 +51,20 @@ export default function Home() {
     haptic.success();
     toast('みんなと一緒に始めました');
   };
-  const breakRead = () =>
-    openSheet((close) => (
-      <View>
-        <Galaxy size={180} wide />
-        <Txt size={20} w="700" lh={29} style={{ marginTop: 14 }}>宇宙の物質の約85%は、まだ誰も見たことがない</Txt>
-        <Txt size={12.5} tone="ink3" style={{ marginTop: 4, marginBottom: 14 }}>ひとやすみ · 物理 · 2分</Txt>
-        <Txt size={15} lh={28}>
-          1970年代、天文学者ヴェラ・ルービンは、銀河の外側の星が内側と同じ速さで回っていることを見つけました。見えている物質だけでは、重力が足りません。
-        </Txt>
-        <Txt size={15} lh={28} style={{ marginTop: 14 }}>
-          これは高校物理の「円運動」と「万有引力」の式で確かめられます。足りない重力の正体は、まだわかっていません。
-        </Txt>
-        <Btn label="机に戻る" kind="quiet" wide onPress={close} style={{ marginTop: 22 }} />
-      </View>
-    ));
-
-  const next = DEADLINES[1]; // the exam everyone is counting down to
-  const diff = s.todayMin - dayLog(1).min;
-  // today's minutes by subject; whatever was recorded since the morning goes to the current subject
-  const today0 = dayLog(0);
-  const parts = SUBJ.map((x, k) => ({ name: x.name, c: x.c, min: today0.parts[k] + (x.id === s.subj ? Math.max(0, s.todayMin - today0.min) : 0) }));
+  // deadlines, nearest first; progress comes from the ToDos tied to each
+  const deadlines = s.deadlines
+    .map((d) => {
+      const linked = s.todos.filter((x) => x.dl === d.id);
+      return { ...d, days: daysUntil(d.mo, d.day), done: linked.filter((x) => x.d).length, total: linked.length };
+    })
+    .sort((a, b) => a.days - b.days);
+  const next = deadlines[0];
+  const yesterday = s.sessions.filter((x) => x.day === 1).reduce((a, x) => a + x.min, 0);
+  const diff = s.todayMin - yesterday;
+  // today's minutes by subject, straight from today's records
+  const today = s.sessions.filter((x) => x.day === 0);
+  const parts = SUBJ.map((x) => ({ name: x.name, c: x.c, min: today.filter((r) => r.s === x.id).reduce((a, r) => a + r.min, 0) }));
+  const peers = PEOPLE.filter((p) => !s.blocked.includes(p.n)).slice(0, 3);
   return (
     <Screen>
       {/* header: brand, not a page title */}
@@ -80,7 +74,7 @@ export default function Home() {
         <IconBtn outline name="search" label="さがす" onPress={() => router.push('/search')} />
         <IconBtn outline name="bell" label="お知らせ" dot={unread > 0} onPress={() => router.push('/notifications')} />
         <Press onPress={() => router.navigate('/me')} scale={0.9} accessibilityLabel="マイページ" style={{ marginLeft: 2 }}>
-          <Avatar name="はる" color="#6E56CF" size={34} />
+          <Avatar name={me} color="#6E56CF" size={34} />
         </Press>
       </View>
 
@@ -89,10 +83,10 @@ export default function Home() {
         <Card style={{ marginHorizontal: 16, marginTop: 6 }} pad={14}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>{`今日の勉強 · ${TODAY.getMonth() + 1}月${TODAY.getDate()}日（${WD[TODAY.getDay()]}）`}</Txt>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, height: 20, borderRadius: 6, backgroundColor: t.sunken }}>
+            {next ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, height: 20, borderRadius: 6, backgroundColor: t.sunken }}>
               <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: t.amber }} />
               <Txt size={10.5} tone="ink2" lh={13}>{`${next.t}まで `}<Txt size={10.5} w="700" num lh={13}>{next.days}</Txt>日</Txt>
-            </View>
+            </View> : null}
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 }} accessible accessibilityLabel={`今日 ${Math.floor(s.todayMin / 60)}時間${s.todayMin % 60}分。昨日より${diff}分`}>
             <Rolling value={H} size={type.hero} weight="700" />
@@ -159,66 +153,75 @@ export default function Home() {
         {/* today's list */}
         <View style={{ paddingHorizontal: 20, paddingTop: 22, paddingBottom: 8, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
           <Txt size={type.head} w="600">今日やること</Txt>
-          <Txt size={12} w="500" tone="ink3" num>{`${done}/${s.todos.length}`}</Txt>
+          <Txt size={12} w="500" tone="ink3" num style={{ flex: 1 }}>{`${done}/${s.todos.length}`}</Txt>
+          <AddLink label="追加" onPress={() => todoSheet()} />
         </View>
         <Card style={{ marginHorizontal: 16 }} pad={0}>
-          {s.todos.map((td, i) => <TodoRow key={i} todo={td} first={i === 0} onToggle={() => onToggle(i)} />)}
+          {s.todos.map((td, i) => <TodoRow key={td.id} todo={td} first={i === 0} onToggle={() => onToggle(td.id)} onEdit={() => todoSheet(td)} />)}
+          {s.todos.length ? null : (
+            <Press onPress={() => todoSheet()} style={{ paddingVertical: 16, alignItems: 'center' }}>
+              <Txt size={13} tone="ink3">やることを1つ決めておくと、始めるのが早くなります</Txt>
+            </Press>
+          )}
         </Card>
 
         {/* deadlines: a portfolio-style list */}
         <View style={{ paddingHorizontal: 20, paddingTop: 22, paddingBottom: 8, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
           <Txt size={type.head} w="600">締切</Txt>
-          <Txt size={12} w="500" tone="ink3">ToDoの進み具合</Txt>
+          <Txt size={12} w="500" tone="ink3" style={{ flex: 1 }}>ToDoの進み具合</Txt>
+          <AddLink label="追加" onPress={deadlineSheet} />
         </View>
         <Card style={{ marginHorizontal: 16 }} pad={0}>
-          {DEADLINES.map((d, i) => (
-            <View key={d.t} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12 }}>
+          {deadlines.length ? null : (
+            <Press onPress={deadlineSheet} style={{ paddingVertical: 16, alignItems: 'center' }}>
+              <Txt size={13} tone="ink3">模試や申込の日を入れておきましょう</Txt>
+            </Press>
+          )}
+          {deadlines.map((d, i) => (
+            <Press key={d.id} onPress={() => deadlineActions(d.id, d.t)} scale={0.99} accessibilityLabel={`${d.t} あと${d.days}日`}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12 }}>
               {i ? <View style={{ position: 'absolute', top: 0, left: 58, right: 0, height: hair, backgroundColor: t.line }} /> : null}
-              <Sticker name={d.urgent ? 'flag' : i === 1 ? 'cal' : 'trophy'} size={36} tilt={i % 2 ? 6 : -6} />
+              <Sticker name={d.days <= 21 ? 'flag' : i === 1 ? 'cal' : 'trophy'} size={36} tilt={i % 2 ? 6 : -6} />
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Txt size={13.5} w="600" lh={18} numberOfLines={1}>{d.t}</Txt>
-                <Txt size={11} tone="ink3" lh={15}>{d.d}</Txt>
+                <Txt size={11} tone="ink3" lh={15}>{`${d.mo}月${d.day}日 · ${d.total ? `ToDo ${d.done}/${d.total}` : 'ToDoなし'}`}</Txt>
               </View>
               <View style={{ alignItems: 'flex-end', gap: 3 }}>
-                <Txt num size={14} w="700" lh={17} color={d.urgent ? t.amber : t.ink}>{d.days}<Txt size={11} w="500" tone="ink3"> 日</Txt></Txt>
-                <MiniSeg done={d.todo[0]} total={Math.min(d.todo[1], 8)} />
+                <Txt num size={14} w="700" lh={17} color={d.days <= 21 ? t.amber : t.ink}>{d.days}<Txt size={11} w="500" tone="ink3"> 日</Txt></Txt>
+                {d.total ? <MiniSeg done={d.done} total={Math.min(d.total, 8)} /> : null}
               </View>
-            </View>
+            </Press>
           ))}
         </Card>
 
         {/* peers */}
         <Press onPress={() => router.navigate('/community')} scale={0.985}
           style={[{ marginHorizontal: 16, marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
-          <AvatarStack ring={t.surface} size={28} max={4} people={[...(joined ? [{ n: 'はる', c: '#6E56CF' }] : []), ...PEOPLE.slice(0, 3)]} />
+          <AvatarStack ring={t.surface} size={28} max={4} people={[...(joined ? [{ n: me, c: '#6E56CF' }] : []), ...peers]} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <LiveDot size={5} />
-              <Txt size={13} w="600" lh={18}>{joined ? 5 : 4}人が勉強中</Txt>
+              <Txt size={13} w="600" lh={18}>{peers.length + 1 + (joined ? 1 : 0)}人が勉強中</Txt>
             </View>
-            <Txt size={11} tone="ink3" numberOfLines={1}>mio 英語 · そら 数学 · kaito 物理</Txt>
+            <Txt size={11} tone="ink3" numberOfLines={1}>{peers.map((p) => p.n).join(' · ')}</Txt>
           </View>
           <Btn label={joined ? '勉強中' : '一緒に始める'} kind="tint" small onPress={joinPeers} disabled={joined} />
         </Press>
 
-        {/* a break, with a picture */}
-        <Press onPress={breakRead} scale={0.985}
-          style={[{ marginHorizontal: 16, marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, backgroundColor: t.surface, padding: 8 }, lift(t)]}>
-          <Galaxy size={64} />
-          <View style={{ flex: 1, minWidth: 0, paddingRight: 6 }}>
-            <Txt size={11} tone="ink3" lh={15}>ひとやすみ · 2分で読める</Txt>
-            <Txt size={13.5} w="600" lh={19} numberOfLines={2}>宇宙の物質の約85%は、まだ誰も見たことがない</Txt>
-          </View>
-          <Icon name="chev" size={14} color={t.ink3} />
-        </Press>
       </ScrollView>
     </Screen>
   );
 }
 
-/** The break card's picture: a real photo of the Milky Way. */
-function Galaxy({ size, wide }: { size: number; wide?: boolean }) {
-  return <Image source={PHOTO.space} style={{ width: wide ? '100%' : size, height: size, borderRadius: wide ? 12 : 10 }} resizeMode="cover" accessibilityIgnoresInvertColors />;
+function AddLink({ label, onPress }: { label: string; onPress: () => void }) {
+  const t = useT();
+  return (
+    <Press onPress={onPress} hitSlop={12} scale={0.94} accessibilityRole="button" accessibilityLabel={label}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 3, alignSelf: 'center' }}>
+      <Icon name="plus" size={12} color={t.greenInk} />
+      <Txt size={12.5} w="600" color={t.greenInk}>{label}</Txt>
+    </Press>
+  );
 }
 
 /**

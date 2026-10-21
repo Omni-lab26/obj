@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,7 +7,7 @@ import { NOTIFS, Notif, PERSON_COLOR, ROOM } from '@/data';
 import { getState, setState, startStudy, toggleFollow, toggleIn, useStore } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
 import { Avatar, Btn, Empty, haptic, IconBtn, Txt } from '@/ui/base';
-import { NavBar, Screen } from '@/ui/Chrome';
+import { allowed, NavBar, Screen } from '@/ui/Chrome';
 import { IconName } from '@/ui/Icon';
 import { Sticker, StickerName } from '@/ui/Sticker';
 import { SwipeRow } from '@/ui/SwipeRow';
@@ -76,7 +77,10 @@ export default function Notifications() {
   const [joined, setJoined] = useState<number[]>([]);
   const read = useStore((s) => s.notifRead);
   const gone = useStore((s) => s.notifGone);
-  const list = NOTIFS.filter((n) => !gone.includes(n.id) && (filter === 'all' || n.kind === filter));
+  const notify = useStore((s) => s.notify);
+  const blocked = useStore((s) => s.blocked);
+  const off = [!notify.peers && '仲間', !notify.deadlines && '締切', !notify.goal && '目標'].filter(Boolean);
+  const list = NOTIFS.filter(allowed({ notify, blocked })).filter((n) => !gone.includes(n.id) && (filter === 'all' || n.kind === filter));
   const days = [...new Set(list.map((n) => n.day))];
 
   const readAll = () => {
@@ -101,7 +105,12 @@ export default function Notifications() {
 
   return (
     <Screen>
-      <NavBar title="お知らせ" right={<IconBtn name="check" label="すべて既読にする" onPress={readAll} />} />
+      <NavBar title="お知らせ" right={
+        <View style={{ flexDirection: 'row' }}>
+          <IconBtn name="check" label="すべて既読にする" onPress={readAll} />
+          <IconBtn name="gear" label="お知らせの設定" onPress={() => router.push('/settings')} />
+        </View>
+      } />
       <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 4 }}>
         <Segmented value={filter} onChange={setFilter} options={[{ v: 'all', label: 'すべて' }, { v: 'imp', label: '大事なこと' }, { v: 'study', label: '仲間の勉強' }]} />
       </View>
@@ -125,6 +134,11 @@ export default function Notifications() {
         ))}
         {list.length ? (
           <Txt size={11} tone="ink3" style={{ textAlign: 'center', marginTop: 16 }}>右へスワイプで既読、左へスワイプで削除</Txt>
+        ) : null}
+        {off.length ? (
+          <Pressable onPress={() => router.push('/settings')} hitSlop={6} style={{ alignSelf: 'center', marginTop: 8, paddingVertical: 6 }}>
+            <Txt size={11.5} tone="ink3">{`${off.join('・')}のお知らせはオフです `}<Txt size={11.5} w="600" color={t.blue}>設定</Txt></Txt>
+          </Pressable>
         ) : null}
       </ScrollView>
     </Screen>

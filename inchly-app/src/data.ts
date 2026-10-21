@@ -37,9 +37,9 @@ export const RANK = [
   { n: 'そら', c: '#4A5BD4', h: 35.9 },
 ];
 
-export type Post = { n: string; c: string; m: string; w: string; t: string; tags: string[]; u: number; r: number; img?: 'noteBook' | 'noteDesk' };
+export type Post = { n: string; c: string; m: string; w: string; t: string; tags: string[]; u: number; r: number; mine?: boolean };
 export const POSTS: Post[] = [
-  { n: 'mio', c: '#C47A55', m: '高3', w: '12分前', t: '古文の参考書、やっと1周。2周目は音読しながらやる', tags: ['#古文'], u: 23, r: 4, img: 'noteBook' },
+  { n: 'mio', c: '#C47A55', m: '高3', w: '12分前', t: '古文の参考書、やっと1周。2周目は音読しながらやる', tags: ['#古文'], u: 23, r: 4 },
   { n: 'nnn_0w0', c: '#8A8A8E', m: '浪人', w: '40分前', t: 'ベクトル全然わからん　内積のとこから誰か助けて', tags: [], u: 0, r: 1 },
   { n: 'りん', c: '#4B7A3B', m: '東大 理一 1年（先輩）', w: '2時間前', t: '東大英語の要約(1A)は毎年出るので、過去問15年分を1日1題。要約したあと音読までやると、本番で時間が余った。量より回数。', tags: ['#東京大学', '#英語'], u: 128, r: 14 },
   { n: 'taku', c: '#8A6D3B', m: '京大志望', w: '3時間前', t: 'もう無理、今日は寝る。明日5時起き', tags: [], u: 7, r: 2 },
@@ -51,14 +51,15 @@ export type IconName = 'flag' | 'clock' | 'users' | 'bulb' | 'cal' | 'target' | 
 export type Notif = {
   id: number; day: string; kind: '' | 'imp' | 'study'; icon: IconName; title: string; sub: string; time: string;
   cta?: string; join?: string; follow?: string;
+  topic?: 'peers' | 'deadlines' | 'goal'; // which setting turns it off
 };
 export const NOTIFS: Notif[] = [
-  { id: 1, day: '今日', kind: 'imp', icon: 'flag', title: '第4回 記述模試の申込締切まで あと2日', sub: '10月23日（金）23:59まで · 河合塾', cta: '申込ページを開く', time: '9:00' },
-  { id: 2, day: '今日', kind: 'study', icon: 'clock', title: 'kaito が 物理 を始めました', sub: '東大 理一 2027 · いま5人が勉強中', join: 'kaito', time: '21:12' },
-  { id: 3, day: '今日', kind: 'study', icon: 'userPlus', title: 'そら と mio が勉強を始めました', sub: '数学 · 英語 · まとめて表示しています', join: 'そら', time: '20:48' },
+  { id: 1, day: '今日', kind: 'imp', icon: 'flag', title: '第4回 記述模試の申込締切まで あと2日', sub: '10月23日（金）23:59まで · 河合塾', cta: '申込ページを開く', time: '9:00', topic: 'deadlines' },
+  { id: 2, day: '今日', kind: 'study', icon: 'clock', title: 'kaito が 物理 を始めました', sub: '東大 理一 2027 · いま5人が勉強中', join: 'kaito', time: '21:12', topic: 'peers' },
+  { id: 3, day: '今日', kind: 'study', icon: 'userPlus', title: 'そら と mio が勉強を始めました', sub: '数学 · 英語 · まとめて表示しています', join: 'そら', time: '20:48', topic: 'peers' },
   { id: 4, day: '今日', kind: '', icon: 'bulb', title: 'あなたの投稿に「役に立った」が12件', sub: '「模試の偏差値、3か月で +6.6…」', time: '19:30' },
   { id: 5, day: '昨日', kind: '', icon: 'cal', title: '日曜もくもく会 に参加が決まりました', sub: '10月25日（日）9:00〜12:00 · 前日にお知らせします', time: '22:05' },
-  { id: 6, day: '昨日', kind: 'imp', icon: 'target', title: '今週の英語がペースより遅れています', sub: '目標7時間のうち 6.5時間 · あと30分', cta: '英語を始める', time: '21:00' },
+  { id: 6, day: '昨日', kind: 'imp', icon: 'target', title: '今週の英語がペースより遅れています', sub: '目標7時間のうち 6.5時間 · あと30分', cta: '英語を始める', time: '21:00', topic: 'goal' },
   { id: 7, day: '昨日', kind: '', icon: 'users', title: 'ゆなっぴ があなたをフォローしました', sub: '東大 理二志望', follow: 'yuna', time: '18:12' },
 ];
 
@@ -69,12 +70,6 @@ export const UNIS: Uni[] = [
   { n: '東京科学大学', f: '工学院', dev: 62.5, fans: 980, days: 127, avg: 23.9, p: '東京都目黒区' },
   { n: '東北大学', f: '工学部', dev: 60.0, fans: 640, days: 127, avg: 21.7, p: '宮城県仙台市' },
   { n: '大阪大学', f: '基礎工学部', dev: 62.5, fans: 870, days: 127, avg: 23.2, p: '大阪府吹田市' },
-];
-
-export const JUKU = [
-  { n: '明星ゼミ 本郷教室', sub: '高校生 · 東大対策 · 徒歩8分', pr: true },
-  { n: '個別指導 ソラノ', sub: '中高生 · 自習室あり · 徒歩12分', pr: false },
-  { n: '理数アカデミー 駒込校', sub: '高校生 · 理系専門 · 徒歩15分', pr: false },
 ];
 
 export const DEADLINES = [
@@ -91,7 +86,7 @@ export type ChatMsg =
   | { kind: 'msg'; n: string; c: string; t: string }
   | { kind: 'me'; t: string }
   | { kind: 'stamp'; s: string; n?: string; c?: string } // n: sender (none = you)
-  | { kind: 'card'; me: boolean; card: 'together' | 'goal' | 'quiz'; joined?: string[]; answered?: number };
+  | { kind: 'card'; me: boolean; card: 'together' | 'goal'; joined?: string[] };
 
 export type GEvent = {
   id: string; mo: number; d: number; w: string; t: string; time: string; type: string;

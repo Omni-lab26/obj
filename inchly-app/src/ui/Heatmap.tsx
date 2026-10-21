@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { dayLog, grass, pad, TODAY } from '../data';
+import { grass, pad, TODAY } from '../data';
+import { dayOf, useStore } from '../store';
 import { useT } from '../theme';
 import { haptic, Txt } from './base';
 
@@ -14,6 +15,7 @@ const MONTH_H = 16; // month labels
 
 export function Heatmap({ weeks, seed, todayLevel = 3, gap = 3, legend = true, labels = true }: { weeks: number; seed: number; todayLevel?: number; gap?: number; legend?: boolean; labels?: boolean }) {
   const t = useT();
+  const sessions = useStore((s) => s.sessions);
   const cells = useMemo(() => grass(weeks, seed, todayLevel), [weeks, seed, todayLevel]);
   const [w, setW] = useState(0);
   const [hot, setHot] = useState<number | null>(null);
@@ -55,7 +57,7 @@ export function Heatmap({ weeks, seed, todayLevel = 3, gap = 3, legend = true, l
     const d = new Date(TODAY);
     d.setDate(TODAY.getDate() - (n - 1 - hot));
     const l = cells[hot];
-    const m = l ? dayLog(n - 1 - hot).min : 0;
+    const m = l ? dayOf(sessions, n - 1 - hot).min : 0;
     const col = Math.floor(hot / 7), row = hot % 7;
     tip = {
       text: `${d.getMonth() + 1}月${d.getDate()}日 · ${m ? `${Math.floor(m / 60)}時間${pad(m % 60)}分` : '記録なし'}`,

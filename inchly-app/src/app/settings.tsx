@@ -1,0 +1,128 @@
+import { router } from 'expo-router';
+import { ReactNode } from 'react';
+import { ScrollView, Switch, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { DmFrom, isMinor, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
+import { hair, lift, radius, useT } from '@/theme';
+import { Btn, haptic, Press, Txt } from '@/ui/base';
+import { NavBar, Screen } from '@/ui/Chrome';
+import { Choice, RadioCards } from '@/ui/Form';
+import { openSheet } from '@/ui/Sheet';
+import { toast } from '@/ui/Toast';
+
+// Settings: who sees you, who can message you, which notices, and your data.
+function Section({ title, foot, children }: { title: string; foot?: string; children: ReactNode }) {
+  const t = useT();
+  return (
+    <View style={{ paddingHorizontal: 16, paddingTop: 22 }}>
+      <Txt size={12} w="600" tone="ink2" style={{ paddingHorizontal: 4, paddingBottom: 8 }}>{title}</Txt>
+      <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, paddingHorizontal: 14 }, lift(t)]}>{children}</View>
+      {foot ? <Txt size={11.5} tone="ink3" lh={17} style={{ paddingHorizontal: 4, paddingTop: 6 }}>{foot}</Txt> : null}
+    </View>
+  );
+}
+function Row({ label, sub, right, first }: { label: string; sub?: string; right?: ReactNode; first?: boolean }) {
+  const t = useT();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10, borderTopWidth: first ? 0 : hair, borderTopColor: t.line }}>
+      <View style={{ flex: 1 }}>
+        <Txt size={14} w="500">{label}</Txt>
+        {sub ? <Txt size={12} tone="ink3">{sub}</Txt> : null}
+      </View>
+      {right}
+    </View>
+  );
+}
+function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
+  const t = useT();
+  return <Switch value={on} onValueChange={(v) => { haptic.tap(); onChange(v); }} trackColor={{ true: t.green, false: t.line2 }} thumbColor="#fff" ios_backgroundColor={t.line2} accessibilityLabel={label} />;
+}
+
+const ago = (ms: number) => (ms < 60_000 ? 'たった今' : `${Math.floor(ms / 60_000)}分前`);
+
+export default function Settings() {
+  const t = useT();
+  const insets = useSafeAreaInsets();
+  const now = useNow(30_000);
+  const s = useStore((x) => x);
+  const a = s.account;
+  const minor = isMinor(a);
+
+  const del = () =>
+    openSheet((close) => (
+      <View>
+        <Txt size={18} w="700">アカウントとデータを削除</Txt>
+        <Txt size={13.5} tone="ink2" lh={21} style={{ marginTop: 6 }}>
+          記録、ToDo、締切、フォロー、グループへの参加がすべて消えます。元には戻せません。先にデータを書き出しておくこともできます。
+        </Txt>
+        <Btn kind="primary" wide label="削除する" style={{ marginTop: 18, backgroundColor: t.red }} onPress={() => {
+          close();
+          wipe();
+          router.replace('/welcome');
+          toast('削除しました');
+        }} />
+        <Btn kind="quiet" wide label="やめる" style={{ marginTop: 8 }} onPress={close} />
+      </View>
+    ));
+
+  return (
+    <Screen>
+      <NavBar title="設定" />
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+        <Section title="アカウント">
+          <Row first label={a?.name ?? '—'} sub={`@${a?.handle ?? ''} · ${a?.grade ?? ''}${a?.aim ? ` · ${a.aim} 志望` : ''}`} />
+          <Row label="ログイン" sub={a?.via === 'apple' ? 'Appleでサインイン' : a?.via === 'mail' ? 'メールアドレス' : 'サンプルのアカウント'} />
+        </Section>
+
+        <Section title="勉強中を見せる相手" foot={minor ? '18歳未満のため「全員」は選べません。' : '見せない場合も、自分の記録とグループのチャットは使えます。'}>
+          <View style={{ paddingVertical: 12 }}>
+            <RadioCards<LiveScope> value={s.liveScope} onChange={(v) => { if (v === 'all' && minor) { haptic.warn(); toast('18歳未満は「全員」にできません'); return; } setState({ liveScope: v }); }}
+              options={[
+                { v: 'all', title: '全員', sub: '「みんな」の自習室に並びます' },
+                { v: 'followers', title: 'フォロワーだけ', sub: 'フォローしてくれている人にだけ見えます' },
+                { v: 'none', title: '見せない', sub: '勉強中は誰にも表示されません' },
+              ]} />
+          </View>
+          <Row label="順位を公開する" sub="オフでも自分の順位は見られます" right={<Toggle on={s.showRank} onChange={(v) => setState({ showRank: v })} label="順位を公開する" />} />
+        </Section>
+
+        <Section title="メッセージを受け取る相手" foot={minor ? '18歳未満のため「全員」は選べません。' : undefined}>
+          <View style={{ paddingVertical: 12 }}>
+            <Choice<DmFrom> value={s.dmFrom} onChange={(v) => { if (v === 'all' && minor) { haptic.warn(); toast('18歳未満は「全員」にできません'); return; } setState({ dmFrom: v }); }}
+              options={[{ v: 'following', label: 'フォロー中の人' }, { v: 'groups', label: 'グループのメンバーまで' }, { v: 'all', label: '全員' }]} />
+          </View>
+        </Section>
+
+        <Section title="お知らせ">
+          <Row first label="仲間が勉強を始めた" right={<Toggle on={s.notify.peers} onChange={(v) => setState({ notify: { ...s.notify, peers: v } })} label="仲間が勉強を始めた" />} />
+          <Row label="締切が近い" sub="3日前と前日" right={<Toggle on={s.notify.deadlines} onChange={(v) => setState({ notify: { ...s.notify, deadlines: v } })} label="締切が近い" />} />
+          <Row label="目標まであと少し" sub="あと15分のとき" right={<Toggle on={s.notify.goal} onChange={(v) => setState({ notify: { ...s.notify, goal: v } })} label="目標まであと少し" />} />
+        </Section>
+
+        <Section title="1日の目標">
+          <View style={{ paddingVertical: 12 }}>
+            <Choice value={String(s.goalMin)} onChange={(v) => setState({ goalMin: Number(v) })} options={[60, 120, 180, 240, 300].map((m) => ({ v: String(m), label: `${m / 60}時間` }))} />
+          </View>
+        </Section>
+
+        <Section title="ブロック中の人">
+          {s.blocked.length ? s.blocked.map((n, i) => (
+            <Row key={n} first={i === 0} label={n} right={<Btn small kind="line" label="解除" onPress={() => { unblock(n); toast(`${n} のブロックを解除しました`); }} />} />
+          )) : <Row first label="いません" sub="人の名前を押すと、ブロックや通報ができます" />}
+        </Section>
+
+        <Section title="データ" foot="記録はまずこの端末に保存されます。圏外でも記録でき、つながったときにまとめて送ります。">
+          <Row first label="この端末に保存済み" sub={`最終同期 ${ago(now - s.syncedAt)}`} right={<Btn small kind="line" label="今すぐ同期" onPress={() => { setState({ syncedAt: Date.now() }); haptic.success(); toast('同期しました'); }} />} />
+          <Row label="データを書き出す" sub={`記録 ${s.sessions.length}件、ToDo ${s.todos.length}件（CSV）`} right={<Btn small kind="line" label="書き出す" onPress={() => toast('CSVを書き出しました', 'ファイルアプリに保存されます')} />} />
+          <View style={{ borderTopWidth: hair, borderTopColor: t.line, paddingVertical: 12 }}>
+            <Press onPress={del} hitSlop={6} accessibilityRole="button" style={{ height: 40, alignItems: 'center', justifyContent: 'center' }}>
+              <Txt size={14} w="600" color={t.red}>アカウントとデータを削除</Txt>
+            </Press>
+          </View>
+        </Section>
+        <Txt size={11.5} tone="ink3" style={{ textAlign: 'center', marginTop: 18 }}>Inchly 2.0（モック）</Txt>
+      </ScrollView>
+    </Screen>
+  );
+}

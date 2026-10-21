@@ -3,7 +3,7 @@ import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { hoursIn, JUKU, PEOPLE, Uni, UNIS } from '@/data';
+import { hoursIn, PEOPLE, Uni, UNIS } from '@/data';
 import { toggleFollow, toggleIn, useStore } from '@/store';
 import { ease, font, hair, noOutline, radius, useT } from '@/theme';
 import { Avatar, Btn, Empty, haptic, Press, Txt } from '@/ui/base';
@@ -14,7 +14,7 @@ import { openSheet } from '@/ui/Sheet';
 import { Segmented } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 
-type Kind = 'uni' | 'user' | 'juku';
+type Kind = 'uni' | 'user';
 const RECENT = ['東京大学 理科一類', '青チャート 数III', 'もくもく会'];
 const COLS = [56, 64, 54, 30];
 
@@ -117,6 +117,7 @@ export default function Search() {
   const [focused, setFocused] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const following = useStore((s) => s.following);
+  const blocked = useStore((s) => s.blocked);
   const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   // Debounced search with a short skeleton, like a real request.
@@ -171,8 +172,8 @@ export default function Search() {
         <Txt size={11} tone="ink3" style={{ paddingHorizontal: 20, paddingVertical: 12 }}>偏差値は河合塾の目安（サンプル）</Txt>
       </Animated.View>
     ) : <Empty title={`「${q}」に合う大学はありません`} sub="「東大」「工学部」みたいに短くすると見つかりやすい" />;
-  } else if (kind === 'user') {
-    const list = PEOPLE.filter((p) => !q || (p.n + p.h + p.g).includes(q));
+  } else {
+    const list = PEOPLE.filter((p) => !blocked.includes(p.n) && (!q || (p.n + p.h + p.g).includes(q)));
     body = list.length ? (
       <Animated.View entering={FadeIn.duration(180)} style={{ paddingTop: 4 }}>
         {list.map((p) => {
@@ -190,32 +191,6 @@ export default function Search() {
         })}
       </Animated.View>
     ) : <Empty title={`「${q}」に合うユーザーはいません`} sub="ニックネーム、@ID、志望校でも探せます" />;
-  } else {
-    const list = JUKU.filter((j) => !q || j.n.includes(q));
-    body = list.length ? (
-      <Animated.View entering={FadeIn.duration(180)} style={{ paddingTop: 4 }}>
-        {list.map((j) => (
-          <Press key={j.n} scale={0.985} onPress={() => toast(`${j.n}`, '塾の詳細ページはこれから作ります')}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 }}>
-            <View style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="pin" size={15} color={t.ink2} />
-            </View>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Txt size={13.5} w="600" numberOfLines={1} style={{ flexShrink: 1 }}>{j.n}</Txt>
-                {j.pr ? (
-                  <View style={{ borderWidth: hair, borderColor: t.line2, borderRadius: 4, paddingHorizontal: 4 }}>
-                    <Txt size={10.5} w="600" tone="ink3" lh={16}>PR</Txt>
-                  </View>
-                ) : null}
-              </View>
-              <Txt size={11} tone="ink3" numberOfLines={1}>{j.sub}</Txt>
-            </View>
-            <Icon name="chev" size={14} color={t.ink3} />
-          </Press>
-        ))}
-      </Animated.View>
-    ) : <Empty title={`「${q}」に合う塾は見つかりませんでした`} sub="駅名や教室名でも探せます" />;
   }
 
   const showHeader = kind === 'uni' && !loading && UNIS.some((u) => !q || (u.n + u.f).includes(q));
@@ -226,7 +201,7 @@ export default function Search() {
       <View style={{ marginHorizontal: 16, marginTop: 2, height: 42, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, borderRadius: radius.inner, backgroundColor: t.surface,
         borderWidth: focused ? 1.25 : hair, borderColor: focused ? t.ink : t.line2 }}>
         <Icon name="search" size={16} color={t.ink3} />
-        <TextInput ref={inputRef} value={text} onChangeText={changeText} autoFocus placeholder="大学・ユーザー・塾・投稿" placeholderTextColor={t.ink3}
+        <TextInput ref={inputRef} value={text} onChangeText={changeText} autoFocus placeholder="大学・ユーザー" placeholderTextColor={t.ink3}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} returnKeyType="search" clearButtonMode="never" autoCorrect={false}
           accessibilityLabel="検索" style={[{ flex: 1, minWidth: 0, fontSize: 16, color: t.ink, fontFamily: font.text, height: 42 }, noOutline]} />
         {text ? (
@@ -237,7 +212,7 @@ export default function Search() {
         ) : null}
       </View>
       <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 }}>
-        <Segmented value={kind} onChange={changeKind} options={[{ v: 'uni', label: '大学' }, { v: 'user', label: 'ユーザー' }, { v: 'juku', label: '塾' }]} />
+        <Segmented value={kind} onChange={changeKind} options={[{ v: 'uni', label: '大学' }, { v: 'user', label: 'ユーザー' }]} />
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" stickyHeaderIndices={showHeader ? [0] : undefined}
         contentContainerStyle={{ paddingBottom: insets.bottom + (picked.length >= 2 ? 96 : 24) }}>

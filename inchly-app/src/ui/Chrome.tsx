@@ -3,15 +3,23 @@ import { ReactNode } from 'react';
 import { View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { NOTIFS } from '../data';
-import { useStore } from '../store';
+import { Notif, NOTIFS, ROOM } from '../data';
+import { State, useStore } from '../store';
 import { hair, type, useT } from '../theme';
 import { IconBtn, Txt } from './base';
 
+/** Notices the settings let through: the kind is switched on and nobody in it is blocked. */
+export const allowed = (s: Pick<State, 'notify' | 'blocked'>) => (n: Notif) => {
+  if (n.topic && !s.notify[n.topic]) return false;
+  const who = n.join ?? (n.follow ? ROOM.find((p) => p.h === n.follow)?.n : undefined);
+  return !who || !s.blocked.includes(who);
+};
 export function useUnread() {
   const read = useStore((s) => s.notifRead);
   const gone = useStore((s) => s.notifGone);
-  return NOTIFS.filter((n) => !read.includes(n.id) && !gone.includes(n.id)).length;
+  const notify = useStore((s) => s.notify);
+  const blocked = useStore((s) => s.blocked);
+  return NOTIFS.filter(allowed({ notify, blocked })).filter((n) => !read.includes(n.id) && !gone.includes(n.id)).length;
 }
 
 /** Full-height screen on the canvas colour with the top safe area applied. */

@@ -11,7 +11,7 @@ import { Icon } from '@/ui/Icon';
 
 // Checklist row: the box fills, the tick draws in, and a line strikes across
 // the text (bencho "checklist"), sized to the text rather than the row.
-export function TodoRow({ todo, onToggle, first }: { todo: Todo; onToggle: () => void; first: boolean }) {
+export function TodoRow({ todo, onToggle, onEdit, first }: { todo: Todo; onToggle: () => void; onEdit?: () => void; first: boolean }) {
   const t = useT();
   const p = useSharedValue(todo.d ? 1 : 0);
   const [tw, setTw] = useState(0);
@@ -21,7 +21,7 @@ export function TodoRow({ todo, onToggle, first }: { todo: Todo; onToggle: () =>
   const strike = useAnimatedStyle(() => ({ width: tw * p.value }));
   const sj = subj(todo.s);
   return (
-    <Pressable onPress={() => { haptic.soft(); onToggle(); }} accessibilityRole="checkbox" accessibilityState={{ checked: todo.d }} accessibilityLabel={todo.t}
+    <Pressable onPress={() => { haptic.soft(); onToggle(); }} onLongPress={onEdit} accessibilityRole="checkbox" accessibilityState={{ checked: todo.d }} accessibilityLabel={todo.t}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, paddingHorizontal: 14 }}>
       {first ? null : <View style={{ position: 'absolute', top: 0, left: 42, right: 0, height: hair, backgroundColor: t.line }} />}
       <Animated.View style={[{ width: 18, height: 18, borderRadius: 9, borderColor: t.ink3, alignItems: 'center', justifyContent: 'center' }, box]}>
@@ -40,6 +40,12 @@ export function TodoRow({ todo, onToggle, first }: { todo: Todo; onToggle: () =>
         </View>
         {todo.carried && !todo.d ? <Txt size={10.5} w="600" tone="amber" lh={13}>{`${todo.carried}日前から`}</Txt> : null}
       </View>
+      {onEdit ? (
+        <Pressable onPress={onEdit} hitSlop={{ top: 12, bottom: 12, left: 6, right: 10 }} accessibilityRole="button" accessibilityLabel={`${todo.t} を編集`}
+          style={({ pressed }) => ({ width: 22, height: 22, marginRight: -4, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.5 : 1 })}>
+          <Icon name="more" size={15} color={t.ink3} />
+        </Pressable>
+      ) : null}
     </Pressable>
   );
 }

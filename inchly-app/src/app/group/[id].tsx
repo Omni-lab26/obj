@@ -1,7 +1,7 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ComponentRef, useCallback, useEffect, useRef, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, LinearTransition, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, LinearTransition, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChatMsg, GEvent, Group, hms, subj } from '@/data';
@@ -10,6 +10,7 @@ import { elapsedOf, getState, startStudy, updateGroup, useStore } from '@/store'
 import { font, hair, lift, noOutline, radius, useT } from '@/theme';
 import { Avatar, AvatarStack, Btn, Empty, haptic, IconBtn, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
+import { personSheet } from '@/ui/Editors';
 import { Bar, LiveDot, PeoplePill, takePendingGroupTab } from '@/ui/GroupParts';
 import { Icon } from '@/ui/Icon';
 import { Stamp, STAMPS, Sticker, StickerName } from '@/ui/Sticker';
@@ -18,7 +19,6 @@ import { toast } from '@/ui/Toast';
 
 type Tab = 'chat' | 'events' | 'shared';
 const ME = 'あなた';
-const QUIZ = { q: 'inevitable の意味は？', o: ['避けられない', 'ありえない', '目に見えない'], a: 0 };
 
 const push = (id: string, ...m: ChatMsg[]) => updateGroup(id, (g) => ({ ...g, msgs: [...g.msgs, ...m] }));
 
@@ -98,7 +98,6 @@ function Chat({ g }: { g: Group }) {
       }, 1800);
     }
     if (q === 'goal') push(g.id, { kind: 'card', me: true, card: 'goal' });
-    if (q === 'quiz') push(g.id, { kind: 'card', me: true, card: 'quiz' });
     if (q === 'ask') { setText(`【質問・${subj(s.subj).name}】`); input.current?.focus(); }
   };
 
@@ -106,7 +105,6 @@ function Chat({ g }: { g: Group }) {
     { q: 'start', label: '勉強を始める', s: 'play' },
     { q: 'together', label: '一緒に勉強する', s: 'person' },
     { q: 'goal', label: '今日の目標を宣言', s: 'target' },
-    { q: 'quiz', label: '問題を出す', s: 'bulb' },
     { q: 'ask', label: '質問する', s: 'chat' },
   ];
 
@@ -166,6 +164,7 @@ function Chat({ g }: { g: Group }) {
 
 function Msg({ m, i, g, onJoin }: { m: ChatMsg; i: number; g: Group; onJoin: (w: string) => void }) {
   const t = useT();
+  const blocked = useStore((x) => x.blocked);
   const enter = FadeInDown.duration(260);
   if (m.kind === 'sys') {
     return (
@@ -189,9 +188,12 @@ function Msg({ m, i, g, onJoin }: { m: ChatMsg; i: number; g: Group; onJoin: (w:
   );
   if (m.kind === 'me' || (m.kind === 'card' && m.me) || (m.kind === 'stamp' && !m.n)) return <Animated.View entering={enter} style={{ alignItems: 'flex-end' }}>{body}</Animated.View>;
   const who = m.kind === 'msg' ? m : m.kind === 'stamp' && m.n ? { n: m.n, c: m.c ?? '#4A5BD4' } : { n: 'そら', c: '#4A5BD4' };
+  if (blocked.includes(who.n)) return null;
   return (
     <Animated.View entering={enter} style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
-      <Avatar name={who.n} color={who.c} size={26} />
+      <Press onPress={() => personSheet(who.n, who.c)} scale={0.9} hitSlop={8} accessibilityLabel={`${who.n}のプロフィール`}>
+        <Avatar name={who.n} color={who.c} size={26} />
+      </Press>
       <View>
         <Txt size={11} tone="ink3" style={{ marginLeft: 4, marginBottom: 2 }}>{who.n}</Txt>
         {body}
@@ -235,35 +237,7 @@ function Card({ m, i, g }: { m: Extract<ChatMsg, { kind: 'card' }>; i: number; g
       </View>
     );
   }
-  const ans = m.answered;
-  return (
-    <View style={box}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <Txt size={13.5} w="700">{QUIZ.q}</Txt>
-        <Txt size={11} tone="ink3">英単語</Txt>
-      </View>
-      <View style={{ gap: 6 }}>
-        {QUIZ.o.map((o, k) => {
-          const right = ans !== undefined && k === QUIZ.a;
-          const wrong = ans !== undefined && k === ans && k !== QUIZ.a;
-          return (
-            <Press key={o} disabled={ans !== undefined && !right && !wrong} scale={0.97}
-              onPress={() => { if (ans !== undefined) return; if (k === QUIZ.a) haptic.success(); else haptic.warn(); set((c) => ({ ...c, answered: k })); }}
-              style={{ height: 40, paddingHorizontal: 12, borderRadius: 10, justifyContent: 'center', flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: hair, borderColor: t.line,
-                backgroundColor: right ? t.greenSoft : wrong ? t.redSoft : t.sunken }}>
-              <Txt size={13} w={right || wrong ? '600' : '500'} tone={right ? 'greenInk' : wrong ? 'red' : 'ink'} style={{ flex: 1 }}>{o}</Txt>
-              {right ? <Icon name="check" size={16} color={t.greenInk} width={2.6} /> : wrong ? <Icon name="x" size={14} color={t.red} /> : null}
-            </Press>
-          );
-        })}
-      </View>
-      {ans !== undefined ? (
-        <Animated.View entering={FadeIn.duration(200)}>
-          <Txt size={12} w="600" tone={ans === QUIZ.a ? 'greenInk' : 'red'}>{ans === QUIZ.a ? '正解' : `惜しい。正解は「${QUIZ.o[QUIZ.a]}」`}</Txt>
-        </Animated.View>
-      ) : null}
-    </View>
-  );
+  return null;
 }
 
 // ---------- events ----------

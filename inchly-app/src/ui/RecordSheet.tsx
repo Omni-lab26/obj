@@ -34,7 +34,9 @@ function RecordBody({ close, leaveTimer }: { close: () => void; leaveTimer?: boo
   const sj = subj(s.subj);
   const e = elapsedOf(s);
   const min = Math.max(1, Math.round(e / 60));
-  const [todo, setTodo] = useState<'task' | 'review' | 'none'>('task');
+  // undone ToDos, this subject's first; the pick is marked done when you record
+  const open = [...s.todos.filter((x) => !x.d && x.s === s.subj), ...s.todos.filter((x) => !x.d && x.s !== s.subj)].slice(0, 4);
+  const [todo, setTodo] = useState<string>(open[0]?.id ?? 'none');
   const [next, setNext] = useState<'tomorrow' | 'dinner' | 'later'>('tomorrow');
   const [phase, setPhase] = useState<'idle' | 'saving' | 'done'>('idle');
   const [h, setH] = useState(0);
@@ -47,16 +49,19 @@ function RecordBody({ close, leaveTimer }: { close: () => void; leaveTimer?: boo
   const commit = () => {
     setPhase('saving');
     setTimeout(() => {
-      const m = commitRecord();
+      const m = commitRecord({ todoId: todo === 'none' ? undefined : todo });
       haptic.success();
       setPhase('done');
       setTimeout(() => {
         close();
         if (leaveTimer && router.canGoBack()) router.back();
-        toast(`${sj.name} ${m}分を記録しました`, '今日の草が1段濃くなりました');
+        const when = next === 'tomorrow' ? `明日の${clock}` : next === 'dinner' ? '夕食のあと' : null;
+        toast(`${sj.name} ${m}分を記録しました`, when ? `${when}にお知らせします` : '今日の草が1段濃くなりました');
       }, 1300); // long enough to see the stamp land
     }, 600);
   };
+  const d = new Date();
+  const clock = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
   const date = TODAY.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' });
   return (
     <View>
@@ -65,7 +70,7 @@ function RecordBody({ close, leaveTimer }: { close: () => void; leaveTimer?: boo
       <View style={{ overflow: 'hidden', marginHorizontal: 14 }}>
         <Animated.View onLayout={(ev) => !h && setH(ev.nativeEvent.layout.height)} style={[{ backgroundColor: t.dark ? t.sunken : '#FAFBFD', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 18, borderBottomLeftRadius: 4, borderBottomRightRadius: 4, borderWidth: hair, borderTopWidth: 0, borderColor: t.line }, pa]}>
           <Txt size={17} w="700">この勉強を記録</Txt>
-          <Txt size={12.5} tone="ink3">{date} · 21:30</Txt>
+          <Txt size={12.5} tone="ink3">{`${date} · ${clock}`}</Txt>
           <View style={{ marginTop: 10 }}>
             <Row k="科目" v={sj.name} />
             <Row k="勉強した時間" v={`${min}分`} num />
@@ -81,8 +86,8 @@ function RecordBody({ close, leaveTimer }: { close: () => void; leaveTimer?: boo
         </Animated.View>
       </View>
       <View style={{ marginTop: 22 }}>
-        <Label>どのToDoを進めた？</Label>
-        <Choice value={todo} onChange={setTodo} options={[{ v: 'task', label: sj.task }, { v: 'review', label: '復習キュー' }, { v: 'none', label: 'なし' }]} />
+        <Label sub={todo === 'none' ? undefined : '選んだToDoは完了になります'}>どのToDoを進めた？</Label>
+        <Choice value={todo} onChange={setTodo} options={[...open.map((x) => ({ v: x.id, label: x.t.length > 14 ? `${x.t.slice(0, 13)}…` : x.t })), { v: 'none', label: 'なし' }]} />
       </View>
       <View style={{ marginTop: 18 }}>
         <Label>次はいつやる？</Label>

@@ -1,18 +1,19 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { getState, startStudy } from '@/store';
+import { getState, hydrate, startStudy, useStore } from '@/store';
 import { focus, useT } from '@/theme';
 import { SheetHost } from '@/ui/Sheet';
 import { toast, ToastHost } from '@/ui/Toast';
 
 // Simulated "someone started studying" pushes, so the live layer is visible in the mock.
 const FEED: [string, string][] = [['kaito', '物理'], ['れん', '世界史'], ['ひなた', '数学']];
-function useFeed() {
+function useFeed(on: boolean) {
   useEffect(() => {
+    if (!on) return;
     let i = 0;
     let id: ReturnType<typeof setTimeout>;
     const next = () => {
@@ -30,13 +31,18 @@ function useFeed() {
     };
     id = setTimeout(next, 9000);
     return () => clearTimeout(id);
-  }, []);
+  }, [on]);
 }
 
 export default function RootLayout() {
   const t = useT();
   // No font files to wait for: the app uses the system face (SF Pro / Hiragino Sans).
-  useFeed();
+  // We only wait for what is saved on this phone.
+  const [ready, setReady] = useState(false);
+  useEffect(() => { hydrate().then(() => setReady(true)); }, []);
+  const signedIn = useStore((s) => !!s.account);
+  useFeed(ready && signedIn);
+  if (!ready) return null;
   const nav = t.dark ? DarkTheme : DefaultTheme;
   return (
     <ThemeProvider value={{ ...nav, colors: { ...nav.colors, background: t.canvas, card: t.surface, text: t.ink, border: t.line, primary: t.ink } }}>
@@ -51,6 +57,8 @@ export default function RootLayout() {
           <Stack.Screen name="create-group" />
           <Stack.Screen name="plan-event" />
           <Stack.Screen name="group/[id]" />
+          <Stack.Screen name="settings" />
+          <Stack.Screen name="welcome" options={{ animation: 'fade', gestureEnabled: false }} />
         </Stack>
         <SheetHost />
         <ToastHost />

@@ -1,41 +1,19 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, Switch, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { PEOPLE, YEAR_HOURS } from '@/data';
-import { setState, toggleFollow, useStore } from '@/store';
+import { toggleFollow, useStore } from '@/store';
 import { hair, useT } from '@/theme';
 import { Avatar, Btn, Card, haptic, IconBtn, Press, Txt } from '@/ui/base';
 import { Screen, TopBar } from '@/ui/Chrome';
 import { HoloCard } from '@/ui/MeCard';
-import { openSheet } from '@/ui/Sheet';
 import { UnderTabs } from '@/ui/Tabs';
 import { Sticker } from '@/ui/Sticker';
 import { toast } from '@/ui/Toast';
 
 type Tab = 'posts' | 'following' | 'followers';
 
-function Setting({ label, sub, k }: { label: string; sub: string; k: 'showLive' | 'showRank' }) {
-  const t = useT();
-  const on = useStore((x) => x[k]);
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: hair, borderBottomColor: t.line }}>
-      <View style={{ flex: 1 }}>
-        <Txt size={14} w="500">{label}</Txt>
-        <Txt size={11.5} tone="ink3">{sub}</Txt>
-      </View>
-      <Switch value={on} onValueChange={(v) => { haptic.tap(); setState({ [k]: v }); }} trackColor={{ true: t.green, false: t.line2 }} thumbColor="#fff" ios_backgroundColor={t.line2} accessibilityLabel={label} />
-    </View>
-  );
-}
-const openSettings = () =>
-  openSheet(() => (
-    <View>
-      <Txt size={18} w="700" style={{ marginBottom: 4 }}>見せ方</Txt>
-      <Setting k="showLive" label="勉強中をみんなに見せる" sub="「みんな」の自習室に並びます" />
-      <Setting k="showRank" label="順位を公開する" sub="オフでも自分の順位は見られます" />
-      <Txt size={12.5} tone="ink3" style={{ marginTop: 14 }}>Inchly 1.0（モック）</Txt>
-    </View>
-  ));
 const MY_POSTS = [
   { t: '模試の偏差値、3か月で +6.6。数学の「次にやること」を毎回決めるようにしてから、机に向かうまでが早くなった。', w: '2時間前', u: 54 },
   { t: '古文単語、朝の10分だけでも草が埋まるのがうれしい。', w: '昨日', u: 31 },
@@ -69,6 +47,7 @@ function ActionBtn({ label, doneLabel, msg }: { label: string; doneLabel: string
 export default function Me() {
   const t = useT();
   const following = useStore((s) => s.following);
+  const a = useStore((s) => s.account);
   const [tab, setTab] = useState<Tab>('posts');
   const [shown, setShown] = useState(false);
   useEffect(() => { const id = setTimeout(() => setShown(true), 150); return () => clearTimeout(id); }, []);
@@ -82,12 +61,12 @@ export default function Me() {
 
   return (
     <Screen>
-      <TopBar title="マイページ" right={<IconBtn filled name="gear" label="設定" onPress={openSettings} />} />
+      <TopBar title="マイページ" right={<IconBtn filled name="gear" label="設定" onPress={() => router.push('/settings')} />} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-        <HoloCard name="はる" handle="haru_study" goal="東大 理一 志望"
+        <HoloCard name={a?.name ?? 'はる'} handle={a?.handle ?? 'haru_study'} goal={a?.aim ? `${a.aim} 志望` : `${a?.grade ?? ''}`}
           stats={[{ v: shown ? String(Math.round(YEAR_HOURS)) : '000', from: '000', label: '時間 / 1年' }, { v: shown ? '23' : '00', from: '00', label: '日連続' }, { v: shown ? '57' : '00', from: '00', label: '位 / 今週' }]} />
         <View style={{ paddingHorizontal: 20, paddingTop: 14 }}>
-          <Txt size={13} tone="ink2" lh={20}>高3。数学は青チャート2周目。朝型にしたい（今は夜型）。</Txt>
+          <Txt size={13} tone="ink2" lh={20}>{a?.via === 'demo' || !a ? '高3。数学は青チャート2周目。朝型にしたい（今は夜型）。' : `${a.grade}。`}</Txt>
           <View style={{ flexDirection: 'row', gap: 16, paddingTop: 8 }}>
             {count('56', '投稿', 'posts')}
             {count(String(following.length + 125), 'フォロー', 'following')}

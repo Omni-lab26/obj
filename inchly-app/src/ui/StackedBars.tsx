@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { dayLog, pad, SUBJ, TODAY } from '../data';
+import { pad, SUBJ, TODAY } from '../data';
+import { dayOf, Session, useStore } from '../store';
 import { ease, hair, lift, radius, type, useT } from '../theme';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
@@ -23,12 +24,12 @@ const TIP_W = 172;
 type Mode = 'day' | 'week';
 type Col = { label: string; parts: number[]; total: number; short: number };
 
-function build(mode: Mode): Col[] {
+function build(mode: Mode, sessions: Session[]): Col[] {
   const goal = mode === 'day' ? 180 : 1260;
   return Array.from({ length: N }, (_, i) => {
     const back = N - 1 - i;
     const span = mode === 'day' ? 1 : 7;
-    const days = Array.from({ length: span }, (_, k) => dayLog(back * span + k));
+    const days = Array.from({ length: span }, (_, k) => dayOf(sessions, back * span + k));
     const parts = SUBJ.map((_, k) => days.reduce((a, d) => a + d.parts[k], 0));
     const total = parts.reduce((a, b) => a + b, 0);
     const d = new Date(TODAY);
@@ -54,7 +55,8 @@ function Seg({ h, bottom, color, delay, dim }: { h: number; bottom: number; colo
 export function StackedBars() {
   const t = useT();
   const [mode, setMode] = useState<Mode>('day');
-  const data = useMemo(() => ({ day: build('day'), week: build('week') }), []);
+  const sessions = useStore((s) => s.sessions);
+  const data = useMemo(() => ({ day: build('day', sessions), week: build('week', sessions) }), [sessions]);
   const cols = data[mode];
   const [w, setW] = useState(0);
   const [hot, setHot] = useState<number | null>(null);

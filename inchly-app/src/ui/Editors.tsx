@@ -1,0 +1,200 @@
+import { useState } from 'react';
+import { View } from 'react-native';
+
+import { ROOM, SUBJ, TODAY } from '../data';
+import { addDeadline, addSession, addTodo, block, getState, moveTodo, removeDeadline, removeSession, removeTodo, Session, Todo, toggleFollow, updateSession, updateTodo, useStore } from '../store';
+import { hair, useT } from '../theme';
+import { Avatar, Btn, haptic, Txt } from './base';
+import { Choice, Field, Label, RadioCards, Stepper } from './Form';
+import { openSheet } from './Sheet';
+import { toast } from './Toast';
+
+// The sheets that turn the mock into a tool: add and fix records, manage the
+// ToDo list and deadlines, and act on a person (follow, block, report).
+
+const clockNow = () => { const d = new Date(); return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const subjOpts = SUBJ.map((x) => ({ v: x.id, label: x.name }));
+
+// ---------- a session: add by hand, or fix one ----------
+export function sessionSheet(existing?: Session) {
+  openSheet((close) => <SessionForm close={close} existing={existing} />);
+}
+function SessionForm({ close, existing }: { close: () => void; existing?: Session }) {
+  const [s, setS] = useState(existing?.s ?? getState().subj);
+  const [min, setMin] = useState(existing?.min ?? 30);
+  const [day, setDay] = useState<'0' | '1'>(existing ? (String(existing.day) as '0' | '1') : '0');
+  const [note, setNote] = useState(existing?.note ?? '');
+  const save = () => {
+    if (existing) updateSession(existing.id, { s, min, day: Number(day), note: note.trim() || undefined });
+    else addSession({ s, min, day: Number(day), at: day === '0' ? clockNow() : '—', note: note.trim() || undefined, manual: true });
+    haptic.success();
+    close();
+    toast(existing ? '記録を直しました' : `${SUBJ.find((x) => x.id === s)?.name} ${min}分を追加しました`, day === '1' ? '昨日の記録に入りました' : '今日の合計に入りました');
+  };
+  return (
+    <View style={{ gap: 18 }}>
+      <Txt size={18} w="700">{existing ? '記録を直す' : '記録を手で追加'}</Txt>
+      <View>
+        <Label>科目</Label>
+        <Choice value={s} onChange={setS} options={subjOpts} />
+      </View>
+      <View>
+        <Label sub="長押しで早送り、数字を上下にドラッグしても変えられます">勉強した時間</Label>
+        <Stepper value={min} min={1} max={600} onChange={setMin} unit="分" label="勉強した時間" />
+        <View style={{ marginTop: 10 }}>
+          <Choice value={String(min)} onChange={(v) => setMin(Number(v))} options={[15, 30, 45, 60, 90].map((m) => ({ v: String(m), label: `${m}分` }))} />
+        </View>
+      </View>
+      <View>
+        <Label>いつ</Label>
+        <Choice value={day} onChange={setDay} options={[{ v: '0', label: '今日' }, { v: '1', label: '昨日' }]} />
+      </View>
+      <Field label="メモ（任意）" value={note} onChangeText={setNote} max={40} />
+      <Btn kind="primary" wide label={existing ? '保存する' : '追加する'} onPress={save} />
+      {existing ? (
+        <Btn kind="ghost" wide label="この記録を削除" onPress={() => { removeSession(existing.id); haptic.warn(); close(); toast('記録を削除しました'); }} />
+      ) : null}
+    </View>
+  );
+}
+
+// ---------- a ToDo ----------
+export function todoSheet(existing?: Todo) {
+  openSheet((close) => <TodoForm close={close} existing={existing} />);
+}
+function TodoForm({ close, existing }: { close: () => void; existing?: Todo }) {
+  const deadlines = useStore((x) => x.deadlines);
+  const [text, setText] = useState(existing?.t ?? '');
+  const [s, setS] = useState(existing?.s ?? getState().subj);
+  const [dl, setDl] = useState(existing?.dl ?? 'none');
+  const [touched, setTouched] = useState(false);
+  const err = touched && !text.trim() ? 'やることを入れてください' : undefined;
+  const save = () => {
+    if (!text.trim()) { setTouched(true); return; }
+    const patch = { t: text.trim(), s, dl: dl === 'none' ? undefined : dl };
+    if (existing) updateTodo(existing.id, patch);
+    else addTodo(patch);
+    haptic.success();
+    close();
+    if (!existing) toast('ToDoに追加しました');
+  };
+  return (
+    <View style={{ gap: 18 }}>
+      <Txt size={18} w="700">{existing ? 'ToDoを編集' : 'ToDoを追加'}</Txt>
+      <Field label="やること" value={text} onChangeText={setText} max={40} error={err} onBlur={() => setTouched(true)} autoFocus={!existing} />
+      <View>
+        <Label>科目</Label>
+        <Choice value={s} onChange={setS} options={subjOpts} />
+      </View>
+      <View>
+        <Label sub="締切の進み具合に数えます">どの締切に向けて？</Label>
+        <Choice value={dl} onChange={setDl} options={[{ v: 'none', label: 'なし' }, ...deadlines.map((d) => ({ v: d.id, label: d.t }))]} />
+      </View>
+      <Btn kind="primary" wide label={existing ? '保存する' : '追加する'} onPress={save} />
+      {existing ? (
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Btn kind="quiet" label="上へ" style={{ flex: 1 }} onPress={() => { moveTodo(existing.id, -1); haptic.tap(); }} />
+          <Btn kind="quiet" label="下へ" style={{ flex: 1 }} onPress={() => { moveTodo(existing.id, 1); haptic.tap(); }} />
+          <Btn kind="quiet" label="削除" style={{ flex: 1 }} onPress={() => { removeTodo(existing.id); haptic.warn(); close(); toast('ToDoを削除しました'); }} />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+// ---------- a deadline ----------
+const daysUntil = (mo: number, day: number) => {
+  const y = TODAY.getFullYear() + (mo < TODAY.getMonth() + 1 || (mo === TODAY.getMonth() + 1 && day < TODAY.getDate()) ? 1 : 0);
+  return Math.round((new Date(y, mo - 1, day).getTime() - TODAY.getTime()) / 86_400_000);
+};
+export { daysUntil };
+
+export function deadlineSheet() {
+  openSheet((close) => <DeadlineForm close={close} />);
+}
+function DeadlineForm({ close }: { close: () => void }) {
+  const [t, setT] = useState('');
+  const [mo, setMo] = useState(TODAY.getMonth() + 2 > 12 ? 1 : TODAY.getMonth() + 2);
+  const [day, setDay] = useState(15);
+  const [touched, setTouched] = useState(false);
+  const err = touched && !t.trim() ? '名前を入れてください' : undefined;
+  const save = () => {
+    if (!t.trim()) { setTouched(true); return; }
+    addDeadline({ t: t.trim(), mo, day, urgent: daysUntil(mo, day) <= 21 });
+    haptic.success();
+    close();
+    toast('締切を追加しました', `あと${daysUntil(mo, day)}日`);
+  };
+  return (
+    <View style={{ gap: 18 }}>
+      <Txt size={18} w="700">締切を追加</Txt>
+      <Field label="名前（例：英検 申込）" value={t} onChangeText={setT} max={24} error={err} onBlur={() => setTouched(true)} autoFocus />
+      <View style={{ flexDirection: 'row', gap: 16 }}>
+        <View style={{ flex: 1 }}>
+          <Label>月</Label>
+          <Stepper value={mo} min={1} max={12} onChange={setMo} unit="月" label="月" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Label>日</Label>
+          <Stepper value={day} min={1} max={31} onChange={setDay} unit="日" label="日" />
+        </View>
+      </View>
+      <Txt size={13} tone="ink2">{`今日から あと${daysUntil(mo, day)}日`}</Txt>
+      <Btn kind="primary" wide label="追加する" onPress={save} />
+    </View>
+  );
+}
+export function deadlineActions(id: string, name: string) {
+  openSheet((close) => (
+    <View style={{ gap: 12 }}>
+      <Txt size={18} w="700">{name}</Txt>
+      <Btn kind="quiet" wide label="この締切を削除" onPress={() => { removeDeadline(id); haptic.warn(); close(); toast('締切を削除しました', 'ひも付いていたToDoは残ります'); }} />
+      <Btn kind="ghost" wide label="やめる" onPress={close} />
+    </View>
+  ));
+}
+
+// ---------- a person: follow, block, report ----------
+export function personSheet(name: string, color: string) {
+  openSheet((close) => <Person name={name} color={color} close={close} />);
+}
+type Reason = 'spam' | 'harass' | 'adult' | 'other';
+function Person({ name, color, close }: { name: string; color: string; close: () => void }) {
+  const t = useT();
+  const p = ROOM.find((x) => x.n === name);
+  const following = useStore((s) => (p ? s.following.includes(p.h) : false));
+  const [reporting, setReporting] = useState(false);
+  const [reason, setReason] = useState<Reason>('harass');
+  if (reporting) {
+    return (
+      <View style={{ gap: 16 }}>
+        <Txt size={18} w="700">{`${name} を通報`}</Txt>
+        <RadioCards<Reason> value={reason} onChange={setReason} options={[
+          { v: 'harass', title: 'いやがらせ・悪口', sub: '人を傷つけるメッセージや投稿' },
+          { v: 'spam', title: 'スパム・宣伝', sub: '勧誘、外部サイトへの誘導' },
+          { v: 'adult', title: '不適切な内容', sub: '性的・暴力的な内容、出会い目的' },
+          { v: 'other', title: 'その他', sub: '運営に伝えたいこと' },
+        ]} />
+        <Txt size={12} tone="ink3" lh={18}>通報したことは相手に伝わりません。内容を確認して、必要なら運営が対応します。</Txt>
+        <Btn kind="primary" wide label="通報する" onPress={() => { block(name); haptic.success(); close(); toast('通報しました', `${name} はブロックもしました`); }} />
+      </View>
+    );
+  }
+  return (
+    <View style={{ alignItems: 'center', gap: 4 }}>
+      <Avatar name={name} color={color} size={64} />
+      <Txt size={17} w="700" style={{ marginTop: 6 }}>{name}</Txt>
+      {p ? <Txt size={12.5} tone="ink3">{`@${p.h} · ${p.g} 志望`}</Txt> : null}
+      <View style={{ alignSelf: 'stretch', gap: 8, marginTop: 16 }}>
+        {p ? <Btn kind={following ? 'quiet' : 'primary'} wide label={following ? 'フォロー中' : 'フォローする'} onPress={() => { toggleFollow(p.h); haptic.soft(); }} /> : null}
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Btn kind="line" label="ブロック" style={{ flex: 1 }} onPress={() => { block(name); haptic.warn(); close(); toast(`${name} をブロックしました`, '勉強中・投稿・チャットに表示されません'); }} />
+          <Btn kind="line" label="通報" style={{ flex: 1 }} onPress={() => setReporting(true)} />
+        </View>
+      </View>
+      <View style={{ alignSelf: 'stretch', marginTop: 12, paddingTop: 10, borderTopWidth: hair, borderTopColor: t.line }}>
+        <Txt size={11.5} tone="ink3" style={{ textAlign: 'center' }}>ブロックは 設定 › ブロック中の人 から解除できます</Txt>
+      </View>
+    </View>
+  );
+}

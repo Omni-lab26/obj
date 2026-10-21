@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { View } from 'react-native';
 
@@ -63,6 +63,9 @@ function TabBar({ state, navigation, insets }: BottomTabBarProps) {
 }
 
 export default function TabLayout() {
+  // first launch (or after deleting the account): set up before anything else
+  const signedIn = useStore((s) => !!s.account);
+  if (!signedIn) return <Redirect href="/welcome" />;
   return (
     <Tabs tabBar={(p) => <TabBar {...p} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index" />
