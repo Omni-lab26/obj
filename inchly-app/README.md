@@ -25,8 +25,8 @@ Expo SDK 57 / Expo Router / React Native。App Store 版の Expo Go が対応し
 
 ### 「Project is incompatible with this version of Expo Go」と出たら
 
-Expo Go が対応する SDK とプロジェクトの SDK が合っていません。App Store / Google Play の Expo Go を最新にしてから、
-このフォルダで `npx expo install --fix` を実行してください（Expo Go 側の SDK が上がったときも同じ手順です）。
+Expo Go が対応する SDK とプロジェクトの SDK（いまは 57）が合っていません。まず App Store / Google Play で Expo Go を最新にしてください。
+それでも出る場合は、Expo Go の対応 SDK が上がっています。このフォルダで `npx expo install expo@latest --fix` を実行すると、プロジェクトもその SDK に上がります。
 
 ## 画面
 
