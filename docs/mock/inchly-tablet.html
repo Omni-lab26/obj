@@ -1,0 +1,705 @@
+<title>Inchly Tablet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=IBM+Plex+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&family=Klee+One:wght@600&display=swap">
+<style>
+/* Layout: an iPad (landscape or portrait) scaled to fit the window; inside, a floating top tab bar, optional sidebar,
+   and five views built around studying on the tablet itself: home widgets, a handwriting desk, flashcards, a live study room, groups. */
+:root{
+  --bg:#EFE9F1; --a1:#F7DFD0; --a2:#DCD9F2; --a3:#D7E6F6; --a4:#F4DCE2;
+  --ink:#1E1A33; --ink-2:#5F5A78; --ink-3:#9A97A8;
+  --glass:rgba(255,255,255,.58); --glass-strong:rgba(255,255,255,.82); --line:rgba(255,255,255,.9); --hi:rgba(255,255,255,.9); --hair:rgba(30,26,51,.09);
+  --chip:rgba(255,255,255,.7); --paper:#FFFEFB; --rule:rgba(79,125,243,.13);
+  --solid:#1E1A33; --on-solid:#FFFFFF;
+  --pos:#12A06A; --pos-bg:rgba(18,160,106,.12); --neg:#E5484D; --neg-bg:rgba(229,72,77,.12); --warn:#C98A12; --warn-bg:rgba(201,138,18,.13);
+  --accent:#4F7DF3; --accent-bg:rgba(79,125,243,.12);
+  --g0:rgba(30,26,51,.07); --g1:#9BE9A8; --g2:#40C463; --g3:#30A14E; --g4:#216E39;
+  --frame:#1E1A33; --shadow:0 10px 30px rgba(70,50,110,.10);
+  --f-display:"Outfit","IBM Plex Sans JP","Hiragino Sans",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans JP","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --f-hand:"Klee One","Hiragino Maru Gothic ProN",cursive;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141127; --a1:#3A2944; --a2:#252249; --a3:#1B2F4D; --a4:#3B2235;
+  --ink:#EEEAF8; --ink-2:#B9B4D0; --ink-3:#8C87A5;
+  --glass:rgba(38,34,64,.58); --glass-strong:rgba(44,40,72,.88); --line:rgba(255,255,255,.10); --hi:rgba(255,255,255,.07); --hair:rgba(255,255,255,.08);
+  --chip:rgba(255,255,255,.07); --paper:#1D1A33; --rule:rgba(127,162,255,.14);
+  --solid:#EEEAF8; --on-solid:#1E1A33;
+  --pos:#3DD68C; --pos-bg:rgba(61,214,140,.14); --neg:#FF6B70; --neg-bg:rgba(255,107,112,.14); --warn:#F2B74B; --warn-bg:rgba(242,183,75,.14);
+  --accent:#7FA2FF; --accent-bg:rgba(127,162,255,.15);
+  --g0:rgba(255,255,255,.07); --g1:#0E4429; --g2:#006D32; --g3:#26A641; --g4:#39D353;
+  --frame:#07060D; --shadow:0 10px 30px rgba(0,0,0,.35);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#141127; --a1:#3A2944; --a2:#252249; --a3:#1B2F4D; --a4:#3B2235;
+  --ink:#EEEAF8; --ink-2:#B9B4D0; --ink-3:#8C87A5;
+  --glass:rgba(38,34,64,.58); --glass-strong:rgba(44,40,72,.88); --line:rgba(255,255,255,.10); --hi:rgba(255,255,255,.07); --hair:rgba(255,255,255,.08);
+  --chip:rgba(255,255,255,.07); --paper:#1D1A33; --rule:rgba(127,162,255,.14);
+  --solid:#EEEAF8; --on-solid:#1E1A33;
+  --pos:#3DD68C; --pos-bg:rgba(61,214,140,.14); --neg:#FF6B70; --neg-bg:rgba(255,107,112,.14); --warn:#F2B74B; --warn-bg:rgba(242,183,75,.14);
+  --accent:#7FA2FF; --accent-bg:rgba(127,162,255,.15);
+  --g0:rgba(255,255,255,.07); --g1:#0E4429; --g2:#006D32; --g3:#26A641; --g4:#39D353;
+  --frame:#07060D; --shadow:0 10px 30px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:12px}
+h1,h2,h3,h4,p{margin:0}
+.mono,.label,.big,.num{font-variant-numeric:tabular-nums}
+.aurora{background:
+  radial-gradient(55% 40% at 6% 4%, var(--a1) 0%, transparent 70%),
+  radial-gradient(50% 40% at 96% 14%, var(--a3) 0%, transparent 70%),
+  radial-gradient(55% 45% at 88% 86%, var(--a4) 0%, transparent 70%),
+  radial-gradient(60% 45% at 4% 94%, var(--a2) 0%, transparent 72%), var(--bg)}
+
+/* ---------- stage ---------- */
+.stage{height:100%;display:flex;gap:28px;align-items:stretch;padding-block:18px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.info{width:260px;flex:none;display:flex;flex-direction:column;gap:18px;justify-content:center}
+.info .brand{display:flex;align-items:center;gap:10px}
+.info h1{font:800 28px/1 var(--f-display);letter-spacing:-.02em}
+.info p{color:var(--ink-2);font-size:13px}
+.info .role{padding:12px 14px;border-radius:16px;background:var(--glass);box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+.info .role div{display:flex;justify-content:space-between;gap:8px}
+.info .role b{font-weight:700}
+.info .role .now{color:var(--accent)}
+.orient{display:flex;padding:4px;border-radius:999px;background:var(--glass);box-shadow:inset 0 0 0 1px var(--line)}
+.orient button{flex:1;padding:8px;border-radius:999px;font:500 12.5px var(--f-body);color:var(--ink-2)}
+.orient button[aria-pressed="true"]{background:var(--solid);color:var(--on-solid)}
+.info nav{display:flex;flex-direction:column;gap:3px}
+.info nav button{display:flex;justify-content:space-between;padding:8px 12px;border-radius:12px;text-align:left;color:var(--ink-2)}
+.info nav button span:last-child{font:500 10.5px var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
+.info nav button[aria-current="true"]{background:var(--glass);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.info .note{font:400 11px/1.6 var(--f-mono);color:var(--ink-3)}
+.fit{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center}
+.fitbox{position:relative;flex:none}
+.device{position:absolute;left:0;top:0;transform-origin:0 0;width:var(--w);height:var(--h);border-radius:46px;padding:16px;background:var(--frame);box-shadow:0 40px 100px rgba(40,25,80,.28),inset 0 0 0 1px rgba(255,255,255,.06)}
+.device[data-o="land"]{--w:1226px;--h:866px}
+.device[data-o="port"]{--w:866px;--h:1226px}
+.device .cam{position:absolute;width:8px;height:8px;border-radius:50%;background:#2a2840}
+.device[data-o="land"] .cam{left:7px;top:50%;margin-top:-4px}
+.device[data-o="port"] .cam{top:7px;left:50%;margin-left:-4px}
+.screen{position:relative;width:100%;height:100%;border-radius:32px;overflow:hidden;isolation:isolate;container-type:inline-size;container-name:pad}
+
+/* status + top tab bar */
+.status{position:absolute;top:0;left:0;right:0;height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font:600 13px var(--f-display);z-index:30;pointer-events:none}
+.status .icons{display:flex;gap:5px;align-items:center}
+.status .icons i{display:block;background:currentColor;border-radius:2px}
+.topnav{position:absolute;top:36px;left:20px;right:20px;z-index:25;display:flex;align-items:center;gap:10px}
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);box-shadow:var(--shadow),inset 0 0 0 1px var(--line),inset 0 1px 0 var(--hi)}
+.circle{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none}
+.circle svg{width:20px;height:20px}
+.tabs{display:flex;gap:2px;padding:4px;border-radius:999px;margin:0 auto}
+.tabs button{padding:9px 16px;border-radius:999px;font:500 13.5px var(--f-body);color:var(--ink-2);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tabs button svg{width:17px;height:17px}
+.tabs button[aria-current="true"]{background:var(--glass-strong);color:var(--ink);box-shadow:0 2px 8px rgba(40,30,80,.08),inset 0 0 0 1px var(--line)}
+.livepill{display:flex;align-items:center;gap:8px;padding:8px 13px 8px 9px;border-radius:999px;font:500 12.5px var(--f-mono);flex:none}
+.livepill .jk{width:26px;--fs:10px;border-radius:7px}
+.livedot{width:8px;height:8px;border-radius:50%;background:#3CC48A;box-shadow:0 0 0 4px rgba(60,196,138,.18);animation:pulse 2s infinite;flex:none}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(60,196,138,0)}}
+.meav{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 16px var(--f-display);background:#6E56CF;flex:none;box-shadow:0 0 0 3px var(--glass-strong)}
+
+/* sidebar */
+.sidebar{position:absolute;top:96px;left:20px;bottom:20px;width:250px;z-index:24;border-radius:26px;padding:16px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.sidebar .sec{font:500 10.5px var(--f-mono);letter-spacing:.14em;color:var(--ink-3);padding:10px 10px 4px}
+.sidebar button{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;text-align:left;font-size:13.5px;color:var(--ink-2)}
+.sidebar button svg{width:18px;height:18px}
+.sidebar button[aria-current="true"]{background:var(--solid);color:var(--on-solid)}
+.sidebar .jk{width:24px;--fs:9px;border-radius:7px}
+.sidebar .meta{margin-left:auto;font:500 10.5px var(--f-mono);color:var(--ink-3)}
+.screen.withside .pv{padding-left:290px}
+
+/* views */
+.pv{position:absolute;inset:0;padding:102px 22px 22px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;display:flex;flex-direction:column;gap:16px}
+.pv::-webkit-scrollbar{display:none}
+.vhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 4px}
+.vhead h1{font:800 34px/1.05 var(--f-display);letter-spacing:-.02em}
+.vhead p{color:var(--ink-2);font-size:13px;margin-top:2px}
+.card{border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.row{display:flex;align-items:center;gap:8px;min-width:0}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.label{font:500 10.5px/1.2 var(--f-mono);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+.mono{font-family:var(--f-mono)}
+.dim{color:var(--ink-3)}
+.dim2{color:var(--ink-2)}
+.big{font:800 46px/.95 var(--f-display);letter-spacing:-.03em}
+.big small{font-size:.5em;color:var(--ink-3);font-weight:600;margin-left:3px;letter-spacing:0}
+.chip{display:inline-flex;align-items:center;gap:5px;font:500 11px/1 var(--f-mono);padding:6px 10px;border-radius:999px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);white-space:nowrap;color:var(--ink-2)}
+.chip.pos{background:var(--pos-bg);color:var(--pos);box-shadow:none}
+.chip.neg{background:var(--neg-bg);color:var(--neg);box-shadow:none}
+.chip.warn{background:var(--warn-bg);color:var(--warn);box-shadow:none}
+.chip.acc{background:var(--accent-bg);color:var(--accent);box-shadow:none}
+.chip.solid{background:var(--solid);color:var(--on-solid);box-shadow:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 16px;border-radius:999px;font:600 13.5px var(--f-body);background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);white-space:nowrap}
+.btn.solid{background:var(--solid);color:var(--on-solid);box-shadow:none}
+.btn svg{width:16px;height:16px}
+
+/* jackets */
+.jk{position:relative;aspect-ratio:1;border-radius:12px;background:var(--c);overflow:hidden;color:#fff;flex:none;display:block}
+.jk b{position:absolute;left:10%;bottom:8%;font:800 var(--fs,18px)/1 var(--f-display);letter-spacing:-.03em}
+.jk[data-art="rings"]::before{content:"";position:absolute;inset:0;background:repeating-radial-gradient(circle at 100% 0, transparent 0 7%, rgba(255,255,255,.28) 7% 8%)}
+.jk[data-art="dots"]::before{content:"";position:absolute;inset:0;background:radial-gradient(rgba(255,255,255,.35) 18%, transparent 20%) 0 0/16% 16%}
+.jk[data-art="stripes"]::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg, rgba(255,255,255,.26) 0 3%, transparent 3% 7%)}
+.jk[data-art="sun"]::before{content:"";position:absolute;width:70%;aspect-ratio:1;right:-12%;top:-12%;border-radius:50%;background:rgba(255,255,255,.25)}
+
+/* ---------- home ---------- */
+.hgrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.kpi{min-height:150px}
+.kpi h4{font:600 13px var(--f-body)}
+.kpi svg{width:100%;height:46px;display:block;overflow:visible;margin-top:auto}
+.heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:3px}
+.heat i{display:block;aspect-ratio:1;border-radius:3px;background:var(--g0)}
+.l1{background:var(--g1)!important}.l2{background:var(--g2)!important}.l3{background:var(--g3)!important}.l4{background:var(--g4)!important}
+.heat i.today{outline:2px solid var(--pos);outline-offset:1px}
+.legend{display:flex;align-items:center;gap:3px;font:400 10.5px var(--f-mono);color:var(--ink-3)}
+.legend i{width:10px;height:10px;border-radius:2.5px;display:inline-block;background:var(--g0)}
+.ms{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--hair)}
+.ms:first-of-type{border-top:0;padding-top:0}
+.ms .dd{width:54px;text-align:center;flex:none}
+.ms .dd b{font:800 24px/1 var(--f-display);display:block}
+.ms .dd span{font:500 9.5px var(--f-mono);color:var(--ink-3)}
+.segbar{display:flex;gap:3px;margin-top:5px}
+.segbar i{flex:1;height:6px;border-radius:6px;background:var(--hair)}
+.segbar i.on{background:var(--solid)}
+.todo{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--hair)}
+.todo:first-of-type{border-top:0;padding-top:0}
+.check{width:24px;height:24px;border-radius:8px;box-shadow:inset 0 0 0 1.6px var(--ink-3);display:grid;place-items:center;flex:none}
+.check svg{width:14px;height:14px;opacity:0}
+.todo.done .check{background:var(--pos);box-shadow:none;color:#fff}
+.todo.done .check svg{opacity:1}
+.todo.done .tt{text-decoration:line-through;color:var(--ink-3)}
+.todo .tt{flex:1;min-width:0}
+.todo .jk{width:24px;--fs:9px;border-radius:7px}
+.person{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--hair)}
+.person:first-of-type{border-top:0;padding-top:0}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 13px var(--f-display);flex:none;background:var(--c)}
+.person .t{flex:1;min-width:0}
+.person .t b{display:block;font-size:13.5px}
+.person .t span{font:500 10.5px var(--f-mono);color:var(--ink-3)}
+.person .r{font:500 12.5px var(--f-mono)}
+.deskcta{background:linear-gradient(140deg,color-mix(in srgb,#0F5E5A 88%,#000),#0F5E5A 60%,color-mix(in srgb,#0F5E5A 70%,#9fe8ff));color:#fff;box-shadow:var(--shadow)}
+.deskcta .label{color:rgba(255,255,255,.7)}
+.deskcta .btn{background:#fff;color:#1E1A33;box-shadow:none}
+
+/* ---------- desk ---------- */
+.deskgrid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px}
+.paper{border-radius:24px;background:var(--paper);box-shadow:var(--shadow),inset 0 0 0 1px var(--hair);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.toolbar{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--hair);flex-wrap:wrap}
+.tool{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--ink-2)}
+.tool svg{width:20px;height:20px}
+.tool[aria-pressed="true"]{background:var(--solid);color:var(--on-solid)}
+.sw{width:22px;height:22px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px var(--paper),0 0 0 3px var(--hair)}
+.swb{width:34px;height:34px;border-radius:50%;display:grid;place-items:center}
+.swb[aria-pressed="true"] .sw{box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--ink)}
+.tsep{width:1px;height:24px;background:var(--hair);margin:0 4px}
+.problem{padding:14px 18px 10px;display:flex;gap:14px;align-items:flex-start;border-bottom:1px dashed var(--hair)}
+.problem .no{font:800 13px var(--f-mono);padding:6px 9px;border-radius:9px;background:var(--solid);color:var(--on-solid);flex:none}
+.problem .q{font-size:16px;line-height:1.7;flex:1}
+.problem .q em{font-style:normal;font-family:"Times New Roman",serif;font-size:19px}
+.ans{font:600 13px var(--f-body);padding:6px 10px;border-radius:10px;background:var(--pos-bg);color:var(--pos)}
+.canvaswrap{position:relative;flex:1;min-height:0;background:
+  linear-gradient(var(--rule) 1px, transparent 1px) 0 0/100% 34px,
+  linear-gradient(90deg, rgba(229,72,77,.18) 1px, transparent 1px) 46px 0/100% 100% no-repeat}
+.canvaswrap canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.pencilnote{position:absolute;right:14px;bottom:12px;font:500 11px var(--f-mono);color:var(--ink-3);pointer-events:none;background:var(--paper);padding:4px 8px;border-radius:8px}
+.deskside{display:flex;flex-direction:column;gap:14px;min-height:0;overflow-y:auto;scrollbar-width:none}
+.deskside::-webkit-scrollbar{display:none}
+.focus{border-radius:24px;padding:16px;color:#fff;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow);
+  background:radial-gradient(80% 60% at 20% 10%,color-mix(in srgb,var(--sc) 75%,#9fe8ff),transparent 70%),radial-gradient(70% 60% at 90% 90%,color-mix(in srgb,var(--sc) 70%,#ffd0e6),transparent 70%),linear-gradient(180deg,color-mix(in srgb,var(--sc) 85%,#000),color-mix(in srgb,var(--sc) 65%,#000))}
+.focus .jk{width:46px;--fs:16px;box-shadow:0 6px 14px rgba(0,0,0,.25)}
+.focus .tm{font:600 52px/1 var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pomo{display:flex;gap:4px}
+.pomo i{flex:1;height:7px;border-radius:7px;background:rgba(255,255,255,.22);overflow:hidden;position:relative}
+.pomo i b{position:absolute;inset:0 auto 0 0;background:#fff;border-radius:7px}
+.wbtn{flex:1;padding:11px;border-radius:999px;background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.24);font:600 13px var(--f-body);color:#fff;text-align:center}
+.wbtn.main{background:#fff;color:#1E1A33}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.strip button{aspect-ratio:1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font:500 10px var(--f-mono);color:var(--ink-3);background:var(--chip);box-shadow:inset 0 0 0 1px var(--line)}
+.strip button b{font:800 16px/1 var(--f-display)}
+.strip button[aria-current="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
+.strip button[data-s="o"]{background:var(--pos-bg);color:var(--pos);box-shadow:none}
+.strip button[data-s="t"]{background:var(--warn-bg);color:var(--warn);box-shadow:none}
+.strip button[data-s="x"]{background:var(--neg-bg);color:var(--neg);box-shadow:none}
+.strip button[data-s][aria-current="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
+.judge{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.judge button{padding:12px 0;border-radius:16px;font:800 20px var(--f-display);display:flex;flex-direction:column;align-items:center;gap:2px}
+.judge button span{font:500 10.5px var(--f-body)}
+.judge .o{background:var(--pos-bg);color:var(--pos)}
+.judge .t{background:var(--warn-bg);color:var(--warn)}
+.judge .x{background:var(--neg-bg);color:var(--neg)}
+
+/* ---------- flashcards ---------- */
+.fcwrap{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}
+.fcstage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;min-height:0}
+.fcprog{width:min(560px,100%);display:flex;align-items:center;gap:10px}
+.fcprog .bar{flex:1}
+.bar{height:7px;border-radius:7px;background:var(--hair);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:7px;background:var(--pos);transition:width .3s}
+.deck{position:relative;width:min(560px,100%);aspect-ratio:1.5;perspective:1400px}
+.deck .under{position:absolute;inset:14px -10px -14px;border-radius:30px;background:var(--glass);box-shadow:inset 0 0 0 1px var(--line);transform:scale(.94)}
+.fc{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.8,.2,1);cursor:pointer;touch-action:pan-y}
+.fc.flip{transform:rotateY(180deg)}
+.fc .face{position:absolute;inset:0;border-radius:30px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px;text-align:center;background:var(--glass-strong);box-shadow:0 24px 60px rgba(40,30,80,.16),inset 0 0 0 1px var(--line)}
+.fc .back{transform:rotateY(180deg)}
+.fc .word{font:800 54px/1 var(--f-display);letter-spacing:-.02em}
+.fc .pos{font:500 12px var(--f-mono);color:var(--ink-3)}
+.fc .mean{font:700 30px/1.3 var(--f-body)}
+.fc .ex{font-size:14.5px;color:var(--ink-2);line-height:1.6;max-width:440px}
+.fc .ex b{color:var(--ink)}
+.fc .hint{position:absolute;bottom:16px;font:500 11px var(--f-mono);color:var(--ink-3)}
+.fc .tag{position:absolute;top:18px;left:20px}
+.fcbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(560px,100%)}
+.fcbtns button{padding:14px 0;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:2px;font:700 15px var(--f-body)}
+.fcbtns button kbd{font:500 10px var(--f-mono);opacity:.7}
+.fcbtns .x{background:var(--neg-bg);color:var(--neg)}.fcbtns .t{background:var(--warn-bg);color:var(--warn)}.fcbtns .o{background:var(--pos-bg);color:var(--pos)}
+.fcdone{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.fclist .li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--hair);font-size:13px}
+.fclist .li:first-of-type{border-top:0;padding-top:0}
+.fclist .li b{flex:1;min-width:0}
+.mark{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font:800 13px var(--f-display);background:var(--chip);color:var(--ink-3);box-shadow:inset 0 0 0 1px var(--line)}
+.mark.o{background:var(--pos-bg);color:var(--pos);box-shadow:none}.mark.t{background:var(--warn-bg);color:var(--warn);box-shadow:none}.mark.x{background:var(--neg-bg);color:var(--neg);box-shadow:none}
+
+/* ---------- study room ---------- */
+.roomhead{border-radius:26px;padding:18px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.roomhead .big{font-size:40px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.tile{position:relative;border-radius:24px;padding:14px;min-height:170px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;
+  background:radial-gradient(90% 70% at 15% 10%,color-mix(in srgb,var(--c) 70%,#9fe8ff),transparent 70%),linear-gradient(170deg,color-mix(in srgb,var(--c) 80%,#000),color-mix(in srgb,var(--c) 62%,#000));box-shadow:var(--shadow)}
+.tile.rest{filter:saturate(.35) brightness(1.05)}
+.tile .top{display:flex;align-items:center;gap:8px}
+.tile .av{width:38px;height:38px;box-shadow:0 0 0 2px rgba(255,255,255,.7)}
+.tile .nm{font:700 14px var(--f-body);line-height:1.2}
+.tile .nm span{display:block;font:500 10.5px var(--f-mono);opacity:.8}
+.tile .st{margin-left:auto;font:600 10px var(--f-mono);padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.2)}
+.tile .tm{font:600 30px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.tile .sub{font-size:12px;opacity:.85}
+.tile.me{box-shadow:0 0 0 3px var(--accent),var(--shadow)}
+.tile .float{position:absolute;right:14px;bottom:14px;font:700 12px var(--f-body);padding:6px 10px;border-radius:999px;background:#fff;color:#1E1A33;animation:rise 1.6s ease-out forwards;pointer-events:none}
+@keyframes rise{0%{opacity:0;transform:translateY(10px)}15%{opacity:1}100%{opacity:0;transform:translateY(-60px)}}
+.stamps{display:flex;gap:8px;flex-wrap:wrap}
+.stamps button{padding:10px 14px;border-radius:999px;font:600 13px var(--f-body);background:var(--chip);box-shadow:inset 0 0 0 1px var(--line)}
+
+/* ---------- groups ---------- */
+.gsplit{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.gpane{display:flex;flex-direction:column;min-height:0}
+.chat{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px}
+.sys{align-self:center;font:500 10.5px/1.4 var(--f-mono);color:var(--ink-3);padding:5px 10px;border-radius:999px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);text-align:center}
+.msg{display:flex;gap:8px;align-items:flex-end}
+.msg>div{display:flex;flex-direction:column;gap:3px;min-width:0;max-width:76%}
+.msg .who{font:500 10.5px var(--f-mono);color:var(--ink-3)}
+.bubble{padding:10px 14px;border-radius:18px 18px 18px 6px;background:var(--glass-strong);box-shadow:inset 0 0 0 1px var(--line);font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.msg.mine{justify-content:flex-end}
+.msg.mine>div{align-items:flex-end}
+.msg.mine .bubble{border-radius:18px 18px 6px 18px;background:var(--solid);color:var(--on-solid);box-shadow:none}
+.composer{display:flex;align-items:center;gap:8px;padding:7px;border-radius:999px;margin-top:10px}
+.composer input{flex:1;min-width:0;border:0;background:none;outline:none;padding:6px 10px;font-size:15px}
+.round{width:40px;height:40px;border-radius:50%;background:var(--solid);color:var(--on-solid);display:grid;place-items:center;flex:none}
+.round svg{width:16px;height:16px}
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.thumb{border-radius:16px;overflow:hidden;background:var(--glass-strong);box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;text-align:left}
+.thumb .pv2{aspect-ratio:4/3;position:relative;background:linear-gradient(var(--rule) 1px,transparent 1px) 0 0/100% 14px,var(--paper)}
+.thumb .pv2 svg{position:absolute;inset:0;width:100%;height:100%}
+.thumb .pv2.link{background:linear-gradient(135deg,#2A2550,#5B4BA8);display:grid;place-items:center}
+.thumb .pv2.link::after{content:"";border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent}
+.thumb .pv2.plan{background:var(--pos-bg)}
+.thumb div.t{padding:8px 10px}
+.thumb b{display:block;font-size:12.5px;line-height:1.35}
+.thumb span{font:500 10px var(--f-mono);color:var(--ink-3)}
+.ev{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--hair)}
+.ev:first-of-type{border-top:0;padding-top:0}
+.evd{width:48px;flex:none;align-self:flex-start;border-radius:12px;background:var(--solid);color:var(--on-solid);display:flex;flex-direction:column;align-items:center;padding:6px 0;line-height:1.15}
+.evd span{font:500 9.5px var(--f-mono);opacity:.75}
+.evd b{font:800 19px var(--f-display)}
+.ev .t{flex:1;min-width:0}
+.ev h4{font:700 14px/1.35 var(--f-body)}
+.joinbtn{font:600 12px var(--f-body);padding:8px 13px;border-radius:999px;background:var(--solid);color:var(--on-solid);align-self:center}
+.joinbtn.on{background:var(--chip);color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line)}
+
+.toast{position:absolute;left:50%;top:96px;transform:translateX(-50%);z-index:60;padding:11px 16px;border-radius:999px;background:var(--solid);color:var(--on-solid);font:600 13px var(--f-body);white-space:nowrap;box-shadow:0 10px 30px rgba(30,20,60,.25)}
+
+/* ---------- portrait (container query on the iPad screen) ---------- */
+@container pad (max-width: 900px){
+  .tabs button span.lbl{display:none}
+  .tabs button{padding:10px 14px}
+  .hgrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .s3{grid-column:span 3}.s4,.s5,.s7,.s8,.s6{grid-column:span 6}
+  .deskgrid{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+  .deskside{display:grid;grid-template-columns:1fr 1fr;overflow:visible}
+  .fcwrap{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+  .tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .gsplit{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+  .gallery{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .screen.withside .pv{padding-left:22px}
+}
+
+/* ---------- small windows: info panel collapses into a top bar ---------- */
+@media (max-width:1100px){
+  .stage{flex-direction:column;gap:12px}
+  .info{width:auto;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+  .info p,.info .role,.info nav,.info .note{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="stage aurora">
+  <aside class="info" aria-label="モックの案内">
+    <div class="brand"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="10" fill="#1E1A33"/><g fill="#40C463"><rect x="7" y="7" width="5.5" height="5.5" rx="1.4" fill="#30A14E"/><rect x="14.25" y="7" width="5.5" height="5.5" rx="1.4" fill="#216E39"/><rect x="21.5" y="7" width="5.5" height="5.5" rx="1.4"/><rect x="7" y="14.25" width="5.5" height="5.5" rx="1.4" fill="#216E39"/><rect x="14.25" y="14.25" width="5.5" height="5.5" rx="1.4"/><rect x="21.5" y="14.25" width="5.5" height="5.5" rx="1.4" fill="#9BE9A8"/><rect x="7" y="21.5" width="5.5" height="5.5" rx="1.4"/><rect x="14.25" y="21.5" width="5.5" height="5.5" rx="1.4" fill="#9BE9A8"/><rect x="21.5" y="21.5" width="5.5" height="5.5" rx="1.4" fill="#30A14E"/></g></svg><h1>Inchly <span style="font-weight:500;font-size:16px;color:var(--ink-3)">for iPad</span></h1></div>
+    <p>タブレットは「勉強する机」。Apple Pencilで解いて、暗記して、みんなと一緒に勉強する場所として作っています。</p>
+    <div class="role" aria-label="端末ごとの役割">
+      <div><span>スマホ</span><b>記録する</b></div>
+      <div class="now"><span>タブレット</span><b>勉強する</b></div>
+      <div><span>PC</span><b>計画・分析する</b></div>
+    </div>
+    <div class="orient" role="group" aria-label="向き"><button id="oLand" aria-pressed="true">横向き</button><button id="oPort" aria-pressed="false">縦向き</button></div>
+    <nav id="infoNav">
+      <button data-go="home"><span>ホーム</span><span>HOME</span></button>
+      <button data-go="desk"><span>デスク（手書き）</span><span>DESK</span></button>
+      <button data-go="cards"><span>暗記カード</span><span>CARDS</span></button>
+      <button data-go="room"><span>自習室（ライブ）</span><span>ROOM</span></button>
+      <button data-go="groups"><span>グループ</span><span>GROUPS</span></button>
+    </nav>
+    <div class="note">MOCK v0.1 · 2026-10-21<br>数字・人物・投稿はすべてサンプルです<br>デスクはマウスや指でも書けます</div>
+  </aside>
+
+  <div class="fit" id="fit"><div class="fitbox" id="fitbox"><div class="device" id="device" data-o="land"><span class="cam"></span>
+    <div class="screen aurora" id="screen">
+      <div class="status" aria-hidden="true"><span>9:41&nbsp;&nbsp;10月21日(水)</span><span class="icons"><i style="width:3px;height:5px"></i><i style="width:3px;height:7px"></i><i style="width:3px;height:9px"></i><i style="width:3px;height:11px;margin-right:4px"></i><span style="font:600 12px var(--f-display);margin-right:3px">82%</span><i style="width:24px;height:11px;border-radius:3.5px"></i></span></div>
+
+      <div class="topnav">
+        <button class="circle glass" id="sideToggle" aria-label="サイドバーを開く" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><path d="M9.5 4.5v15"/></svg></button>
+        <nav class="tabs glass" aria-label="タブ">
+          <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg><span class="lbl">ホーム</span></button>
+          <button data-tab="desk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8a2.1 2.1 0 0 0-3-3L5 16z"/><path d="M14 7l3 3"/></svg><span class="lbl">デスク</span></button>
+          <button data-tab="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3.5" y="7" width="13" height="13" rx="2.5"/><path d="M8 4h10.5A2.5 2.5 0 0 1 21 6.5V17"/></svg><span class="lbl">暗記カード</span></button>
+          <button data-tab="room"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3.5" y="4" width="7" height="7" rx="2"/><rect x="13.5" y="4" width="7" height="7" rx="2"/><rect x="3.5" y="13" width="7" height="7" rx="2"/><rect x="13.5" y="13" width="7" height="7" rx="2"/></svg><span class="lbl">自習室</span></button>
+          <button data-tab="groups"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="lbl">グループ</span></button>
+        </nav>
+        <button class="livepill glass" id="livePill" data-tab-go="desk" aria-label="デスクを開く"><span class="livedot"></span><span class="jk js-jk" data-art="dots" style="--c:#E8663D"><b>Σ</b></span><span class="js-clock">00:39:10</span></button>
+        <span class="meav" aria-label="はる">H</span>
+      </div>
+
+      <aside class="sidebar glass" id="sidebar" hidden aria-label="サイドバー">
+        <div class="sec">STUDY</div>
+        <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>ホーム</button>
+        <button data-tab="desk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8a2.1 2.1 0 0 0-3-3L5 16z"/></svg>デスク</button>
+        <button data-tab="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3.5" y="7" width="13" height="13" rx="2.5"/><path d="M8 4h10.5A2.5 2.5 0 0 1 21 6.5V17"/></svg>暗記カード<span class="meta">32</span></button>
+        <div class="sec">COMMUNITY</div>
+        <button data-tab="room"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3.5" y="4" width="7" height="7" rx="2"/><rect x="13.5" y="4" width="7" height="7" rx="2"/><rect x="3.5" y="13" width="7" height="7" rx="2"/><rect x="13.5" y="13" width="7" height="7" rx="2"/></svg>自習室<span class="meta">9 LIVE</span></button>
+        <button data-tab="groups"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>グループ</button>
+        <div class="sec">MY SUBJECTS</div>
+        <div id="sideSubj" style="display:flex;flex-direction:column;gap:2px"></div>
+      </aside>
+
+      <!-- ===== HOME ===== -->
+      <section class="pv" id="home" aria-label="ホーム">
+        <div class="vhead"><div><h1>おかえり、はる</h1><p>今日は 2h 45m。あと 15分で目標です。</p></div><div class="row"><span class="chip pos">23-DAY STREAK</span><span class="chip">共通テストまで 87日</span></div></div>
+        <div class="hgrid">
+          <article class="card glass kpi s3"><div class="row between"><h4>今日の勉強時間</h4><span class="chip pos">▲ 32m</span></div><b class="big js-today">2h<small>45m</small></b><div id="kToday"></div></article>
+          <article class="card glass kpi s3"><div class="row between"><h4>今週</h4><span class="chip acc">▲ 12%</span></div><b class="big">24.4<small>h</small></b><div id="kWeek"></div></article>
+          <article class="card deskcta kpi s6"><span class="label">NOW · デスクで続きから</span><div class="row" style="gap:14px"><span class="jk" data-art="dots" style="--c:#E8663D;width:64px;--fs:22px;box-shadow:0 8px 20px rgba(0,0,0,.25)"><b>Σ</b></span><div style="min-width:0"><b style="font-size:18px;display:block">数学 · 青チャート 数III</b><span style="font-size:13px;opacity:.85">例題41〜50 · 積分法 · 手書きノート 3ページ</span></div></div><div class="row" style="margin-top:auto"><button class="btn" data-tab-go="desk">デスクを開く</button><span class="mono" style="font-size:12px;opacity:.85">POMODORO <span class="js-pomo">2/4</span> · <span class="js-clock">00:39:10</span></span></div></article>
+          <article class="card glass s8"><div class="row between"><span class="label">CONTRIBUTIONS · 1 YEAR</span><span class="legend">Less <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> More</span></div><div class="row" style="align-items:baseline;gap:10px"><b class="big" style="font-size:34px">1,284<small>h</small></b><span class="dim2" style="font-size:12.5px">今年の積み上げ</span></div><div class="heat" id="heat"></div></article>
+          <article class="card glass s4"><span class="label">MILESTONES</span>
+            <div class="ms"><div class="dd"><b>18</b><span>DAYS</span></div><div style="flex:1;min-width:0"><b style="font-size:13.5px">第4回 記述模試</b><div class="mono dim" style="font-size:10.5px">11/8 · ToDo 4/6</div><div class="segbar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div></div></div>
+            <div class="ms"><div class="dd"><b>87</b><span>DAYS</span></div><div style="flex:1;min-width:0"><b style="font-size:13.5px">共通テスト</b><div class="mono dim" style="font-size:10.5px">1/16 · ToDo 7/12</div><div class="segbar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+            <div class="ms"><div class="dd"><b>127</b><span>DAYS</span></div><div style="flex:1;min-width:0"><b style="font-size:13.5px">東大 二次試験</b><div class="mono dim" style="font-size:10.5px">2/25 · ToDo 3/12</div><div class="segbar"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div></article>
+          <article class="card glass s5"><div class="row between"><span class="label">TODAY · TODO</span><span class="chip" id="todoCount">2 / 5</span></div><div id="todos"></div></article>
+          <article class="card glass s4"><div class="row between"><span class="label">暗記カード · 今日</span><span class="chip warn">32枚</span></div><b style="font-size:15px">システム英単語 Section 4</b><div class="bar"><i style="width:35%"></i></div><span class="mono dim" style="font-size:11px">復習 22 · 新しい 10 · 約8分</span><button class="btn solid" data-tab-go="cards">暗記を始める</button></article>
+          <article class="card glass s3"><div class="row between"><span class="label">自習室</span><span class="chip pos"><span class="livedot" style="width:6px;height:6px"></span>9人</span></div><b style="font-size:14px;line-height:1.45">日曜もくもく会 · 東大 理一 2027</b><span class="mono dim" style="font-size:11px">残り 1:12:40</span><button class="btn" data-tab-go="room">入る</button></article>
+        </div>
+      </section>
+
+      <!-- ===== DESK ===== -->
+      <section class="pv" id="desk" aria-label="デスク" hidden>
+        <div class="deskgrid">
+          <div class="paper">
+            <div class="toolbar" role="toolbar" aria-label="ペン">
+              <button class="tool" data-tool="pen" aria-pressed="true" aria-label="ペン"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8a2.1 2.1 0 0 0-3-3L5 16z"/></svg></button>
+              <button class="tool" data-tool="marker" aria-pressed="false" aria-label="マーカー"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M9 15l-4 4h5l2-2M9 15l6-10 4 3-6 10z"/></svg></button>
+              <button class="tool" data-tool="eraser" aria-pressed="false" aria-label="消しゴム"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M8 20h12M5 15l9-9 5 5-8 8H8z"/></svg></button>
+              <span class="tsep"></span>
+              <button class="swb" data-color="#1E1A33" aria-pressed="false" aria-label="黒"><span class="sw" style="--c:#1E1A33"></span></button>
+              <button class="swb" data-color="#2F5BD8" aria-pressed="true" aria-label="青"><span class="sw" style="--c:#2F5BD8"></span></button>
+              <button class="swb" data-color="#D83A3F" aria-pressed="false" aria-label="赤"><span class="sw" style="--c:#D83A3F"></span></button>
+              <button class="swb" data-color="#12A06A" aria-pressed="false" aria-label="緑"><span class="sw" style="--c:#12A06A"></span></button>
+              <span class="tsep"></span>
+              <button class="tool" id="undo" aria-label="元に戻す"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7L4 12l5 5"/><path d="M4 12h10a6 6 0 0 1 0 12"/></svg></button>
+              <button class="tool" id="clear" aria-label="ページを消す"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/></svg></button>
+              <span style="margin-left:auto" class="row"><button class="btn" id="showAns" style="padding:8px 13px">答えを見る</button><button class="btn" id="shareNote" style="padding:8px 13px">共有タブへ</button></span>
+            </div>
+            <div class="problem"><span class="no" id="pNo">例題41</span><div class="q" id="pQ"></div><span class="ans" id="pAns" hidden></span></div>
+            <div class="canvaswrap" id="cw"><canvas id="ink" aria-label="手書きノート"></canvas><span class="pencilnote">Apple Pencil で書けます · このモックはマウスや指でもOK</span></div>
+          </div>
+          <div class="deskside">
+            <div class="focus" id="focus" style="--sc:#E8663D">
+              <div class="row"><span class="jk js-jk" data-art="dots" style="--c:#E8663D"><b>Σ</b></span><div style="min-width:0"><b style="display:block">数学 · 積分法</b><span style="font-size:12px;opacity:.85">ISSUE #41 · 青チャート 例題41〜50</span></div></div>
+              <div class="tm js-clock">00:39:10</div>
+              <div class="pomo" id="pomo"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+              <div class="row between" style="font:500 11px var(--f-mono);opacity:.85"><span>POMODORO <span class="js-pomo">2/4</span></span><span>休憩まで <span id="toBreak">10:50</span></span></div>
+              <div class="row"><button class="wbtn main" id="pauseBtn">一時停止</button><button class="wbtn" id="stopBtn">終了して記録</button></div>
+            </div>
+            <div class="card glass"><div class="row between"><span class="label">例題41〜52 · ○×</span><span class="chip" id="deskRate">—</span></div>
+              <div class="strip" id="strip"></div>
+              <div class="judge"><button class="o" data-j="o">○<span>解けた</span></button><button class="t" data-j="t">△<span>あやしい</span></button><button class="x" data-j="x">×<span>解けない</span></button></div>
+              <span class="dim" style="font-size:11.5px">つけると次の問題へ。△と×は復習キューに入ります。</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== CARDS ===== -->
+      <section class="pv" id="cards" aria-label="暗記カード" hidden>
+        <div class="fcwrap">
+          <div class="fcstage" id="fcstage">
+            <div class="fcprog"><span class="mono dim" style="font-size:12px" id="fcCount">1 / 10</span><div class="bar"><i id="fcBar" style="width:0%"></i></div><span class="chip warn">復習 7 · 新しい 3</span></div>
+            <div class="deck"><div class="under"></div>
+              <div class="fc" id="fc" role="button" tabindex="0" aria-label="カードをめくる">
+                <div class="face front"><span class="tag chip" id="fcTag">復習 · 3回目</span><span class="pos" id="fcPos">動詞</span><div class="word" id="fcWord">abandon</div><span class="hint">タップでめくる · Space</span></div>
+                <div class="face back"><span class="tag chip">意味</span><div class="mean" id="fcMean">捨てる・断念する</div><div class="ex" id="fcEx"></div><span class="hint">左右にスワイプでも答えられます</span></div>
+              </div>
+            </div>
+            <div class="fcbtns"><button class="x" data-a="x">わからない<kbd>1 · ←</kbd></button><button class="t" data-a="t">あいまい<kbd>2</kbd></button><button class="o" data-a="o">わかった<kbd>3 · →</kbd></button></div>
+          </div>
+          <div class="fcdone card glass" id="fcdone" hidden><span class="label">SESSION DONE</span><b class="big" id="fcScore">7<small>/10</small></b><p class="dim2" id="fcMsg"></p><div class="row"><button class="btn" id="fcAgain">もう一度</button><button class="btn solid" data-tab-go="home">ホームへ</button></div></div>
+          <aside class="card glass fclist" style="align-self:start"><div class="row between"><span class="label">DECK · システム英単語 S4</span><span class="chip">10枚</span></div><div id="fcList"></div><span class="dim" style="font-size:11.5px">×と△のカードは、1日後・3日後・1週間後にもう一度出ます。</span></aside>
+        </div>
+      </section>
+
+      <!-- ===== ROOM ===== -->
+      <section class="pv" id="room" aria-label="自習室" hidden>
+        <div class="roomhead glass">
+          <div style="min-width:0;flex:1"><span class="label">LIVE ROOM · 東大 理一 2027</span><h2 style="font:800 24px var(--f-display);margin-top:4px">日曜もくもく会</h2><span class="dim2" style="font-size:12.5px">カメラなし。休憩中だけチャットで話せます。終わったら一言報告。</span></div>
+          <div style="text-align:right"><span class="label">残り</span><div class="big" id="roomLeft">1:12:40</div></div>
+          <div style="text-align:right"><span class="label">みんなの合計</span><div class="big" id="roomTotal">14.2<small>h</small></div></div>
+        </div>
+        <div class="tiles" id="tiles"></div>
+        <div class="row between wrap"><div class="stamps" id="stamps"><button>ナイス</button><button>おつかれ</button><button>がんばろ</button><button>あと1ポモ</button></div><span class="mono dim" style="font-size:11.5px">スタンプは全員のタイルに表示されます</span></div>
+      </section>
+
+      <!-- ===== GROUPS ===== -->
+      <section class="pv" id="groups" aria-label="グループ" hidden>
+        <div class="vhead"><div><h1>東大 理一 2027</h1><p>24人 · 招待制 · 今日 68h</p></div><div class="row"><button class="btn">イベントを企画</button><button class="btn solid" id="shareNote2">ノートを共有</button></div></div>
+        <div class="gsplit">
+          <div class="card glass gpane"><span class="label">CHAT · 画像は「共有」から</span><div class="chat" id="chat"></div>
+            <form class="composer glass" id="chatForm"><input id="chatInput" placeholder="メッセージ" autocomplete="off" aria-label="メッセージ"><button class="round" type="submit" aria-label="送信"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11.2 19.2 4.4c.7-.3 1.4.4 1.1 1.1L13.5 20.7c-.3.7-1.3.6-1.5-.1l-1.6-5.9-5.9-1.6c-.7-.2-.8-1.2-.1-1.5z"/></svg></button></form></div>
+          <div style="display:flex;flex-direction:column;gap:14px;min-height:0;overflow-y:auto">
+            <div class="card glass"><div class="row between"><span class="label">SHARED · ノート</span><span class="chip" id="sharedCount">4</span></div><div class="gallery" id="gallery"></div></div>
+            <div class="card glass"><span class="label">EVENTS</span><div id="events"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="toast" id="toast" hidden></div>
+    </div>
+  </div></div></div>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const pad = n => String(n).padStart(2, '0');
+  const hms = s => `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const level = r => r < .18 ? 0 : r < .38 ? 1 : r < .62 ? 2 : r < .84 ? 3 : 4;
+  const jk = (s, st = '') => `<span class="jk" data-art="${s.art}" style="--c:${s.c};${st}"><b>${s.code}</b></span>`;
+  const av = (c, n, st = '') => `<span class="av" style="--c:${c};${st}">${esc(n[0])}</span>`;
+  let tId; const toast = m => { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tId); tId = setTimeout(() => t.hidden = true, 2400); };
+
+  const SUBJ = [
+    { id:'en', name:'英語', code:'EN', c:'#0F5E5A', art:'rings', week:'6.5h' },
+    { id:'ma', name:'数学', code:'Σ', c:'#E8663D', art:'dots', week:'5.8h' },
+    { id:'ph', name:'物理', code:'Φ', c:'#3E4FC9', art:'stripes', week:'4.1h' },
+    { id:'ch', name:'化学', code:'Ch', c:'#C9952A', art:'sun', week:'2.9h' },
+    { id:'ja', name:'国語', code:'国', c:'#8C3B6E', art:'stripes', week:'1.6h' },
+  ];
+  const sOf = id => SUBJ.find(s => s.id === id);
+
+  // ---------- device fit & orientation ----------
+  const device = $('#device'), fitbox = $('#fitbox'), fit = $('#fit');
+  function doFit(){ const W = parseFloat(getComputedStyle(device).width), H = parseFloat(getComputedStyle(device).height);
+    const bw = fit.clientWidth, bh = fit.clientHeight; const s = Math.max(.2, Math.min(bw / W, bh / H, 1));
+    device.style.transform = `scale(${s})`; fitbox.style.width = W * s + 'px'; fitbox.style.height = H * s + 'px'; }
+  new ResizeObserver(doFit).observe(fit);
+  function setOrient(o){ device.dataset.o = o; $('#oLand').setAttribute('aria-pressed', String(o === 'land')); $('#oPort').setAttribute('aria-pressed', String(o === 'port')); doFit(); requestAnimationFrame(sizeCanvas); }
+  $('#oLand').addEventListener('click', () => setOrient('land'));
+  $('#oPort').addEventListener('click', () => setOrient('port'));
+
+  // ---------- navigation ----------
+  const VIEWS = ['home','desk','cards','room','groups'];
+  function show(v){ if (!VIEWS.includes(v)) v = 'home';
+    VIEWS.forEach(x => $('#' + x).hidden = x !== v);
+    $$('[data-tab]').forEach(b => b.setAttribute('aria-current', String(b.dataset.tab === v)));
+    $$('#infoNav button').forEach(b => b.setAttribute('aria-current', String(b.dataset.go === v)));
+    if (v === 'desk') requestAnimationFrame(sizeCanvas);
+    try { history.replaceState(null, '', '#' + v); } catch (e) {} }
+  document.addEventListener('click', e => { const b = e.target.closest('[data-tab],[data-tab-go],[data-go]'); if (b) show(b.dataset.tab || b.dataset.tabGo || b.dataset.go); });
+  $('#sideToggle').addEventListener('click', () => { const sb = $('#sidebar'); sb.hidden = !sb.hidden; $('#screen').classList.toggle('withside', !sb.hidden); $('#sideToggle').setAttribute('aria-pressed', String(!sb.hidden)); requestAnimationFrame(sizeCanvas); });
+  $('#sideSubj').innerHTML = SUBJ.map(s => `<button data-tab="desk">${jk(s)}${s.name}<span class="meta">${s.week}</span></button>`).join('');
+
+  // ---------- home ----------
+  (() => { const W = 220, H = 46; const pts = [0,0,0,0,0,0,10,30,30,30,30,30,30,30,30,45,70,95,110,110,140,165,165,165]; const X = i => i / 23 * W, Y = v => H - v / 180 * H;
+    const d = pts.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+    $('#kToday').innerHTML = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><path d="${d} L${W} ${H} L0 ${H}Z" fill="var(--pos)" opacity=".12"/><path d="${d}" fill="none" stroke="var(--pos)" stroke-width="2"/><circle cx="${X(21)}" cy="${Y(165)}" r="4" fill="var(--pos)" stroke="var(--glass-strong)" stroke-width="2"/></svg>`;
+    const wk = [3.2,2.5,4.1,3.6,2.8,5.4,2.75], bw = 18, g = (W - bw * 7) / 6;
+    $('#kWeek').innerHTML = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${wk.map((v, i) => `<rect x="${i * (bw + g)}" y="${H - v / 6 * H}" width="${bw}" height="${v / 6 * H}" rx="4" fill="var(--accent)" opacity="${i === 6 ? 1 : .4}"/>`).join('')}</svg>`;
+    const r = rng(7); let h = ''; for (let i = 0; i < 52 * 7; i++) { const today = i === 52 * 7 - 1; const lv = today ? 3 : level(r() * (.55 + i / 600)); h += `<i class="${lv ? 'l' + lv : ''}${today ? ' today' : ''}"></i>`; } $('#heat').innerHTML = h; })();
+  const TODOS = [ { s:'ma', t:'青チャート 数III 例題41〜50', d:false }, { s:'en', t:'長文読解 第3講（時間を測る）', d:true }, { s:'ph', t:'名問の森 15', d:false }, { s:'ja', t:'古文単語 315 · 61〜80', d:true }, { s:'en', t:'暗記カード 32枚', d:false } ];
+  function renderTodos(){ $('#todos').innerHTML = TODOS.map((x, i) => `<div class="todo ${x.d ? 'done' : ''}"><button class="check" data-todo="${i}" aria-pressed="${x.d}" aria-label="完了"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>${jk(sOf(x.s))}<span class="tt">${esc(x.t)}</span></div>`).join(''); $('#todoCount').textContent = `${TODOS.filter(x => x.d).length} / ${TODOS.length}`; }
+  document.addEventListener('click', e => { const b = e.target.closest('[data-todo]'); if (!b) return; TODOS[+b.dataset.todo].d = !TODOS[+b.dataset.todo].d; renderTodos(); });
+  renderTodos();
+
+  // ---------- desk: problems ----------
+  const PROBS = [
+    { q:'次の定積分を求めよ。<em>∫<sub>0</sub><sup>1</sup> x e<sup>x</sup> dx</em>', a:'答え：1' },
+    { q:'次の定積分を求めよ。<em>∫<sub>0</sub><sup>π/2</sup> x cos x dx</em>', a:'答え：π/2 − 1' },
+    { q:'次の定積分を求めよ。<em>∫<sub>1</sub><sup>e</sup> log x dx</em>', a:'答え：1' },
+    { q:'次の定積分を求めよ。<em>∫<sub>0</sub><sup>1</sup> x<sup>2</sup> e<sup>x</sup> dx</em>', a:'答え：e − 2' },
+    { q:'次の定積分を求めよ。<em>∫<sub>0</sub><sup>π</sup> x sin x dx</em>', a:'答え：π' },
+    { q:'次の定積分を求めよ。<em>∫<sub>0</sub><sup>1</sup> log(1 + x) dx</em>', a:'答え：2 log 2 − 1' },
+  ];
+  const marks = Array(12).fill(''); let cur = 0;
+  const pages = {}; // problem index -> strokes
+  function renderStrip(){ const sym = { o:'○', t:'△', x:'×', '':'·' };
+    $('#strip').innerHTML = marks.map((m, i) => `<button data-p="${i}" data-s="${m}" aria-current="${i === cur}" aria-label="例題${41 + i}">${41 + i}<b>${sym[m]}</b></button>`).join('');
+    const done = marks.filter(Boolean); $('#deskRate').textContent = done.length ? `正答率 ${Math.round(done.filter(m => m === 'o').length / done.length * 100)}%` : '—'; }
+  function loadProblem(i){ pages[cur] = strokes; cur = i; const p = PROBS[i % PROBS.length]; $('#pNo').textContent = '例題' + (41 + i); $('#pQ').innerHTML = p.q; $('#pAns').textContent = p.a; $('#pAns').hidden = true; $('#showAns').textContent = '答えを見る'; strokes = pages[i] || []; redraw(); renderStrip(); }
+  $('#strip').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) loadProblem(+b.dataset.p); });
+  $$('.judge [data-j]').forEach(b => b.addEventListener('click', () => { marks[cur] = b.dataset.j; const lbl = { o:'○ 解けた', t:'△ あやしい（復習へ）', x:'× 解けない（復習へ）' }[b.dataset.j]; toast(`例題${41 + cur} を ${lbl}`); if (cur < 11) loadProblem(cur + 1); else renderStrip(); }));
+  $('#showAns').addEventListener('click', () => { const a = $('#pAns'); a.hidden = !a.hidden; $('#showAns').textContent = a.hidden ? '答えを見る' : '答えを隠す'; });
+  ['#shareNote', '#shareNote2'].forEach(s => $(s).addEventListener('click', () => toast('ノートをグループの「共有」タブに追加しました')));
+
+  // ---------- desk: handwriting canvas ----------
+  const canvas = $('#ink'), ctx = canvas.getContext('2d'), cw = $('#cw');
+  let strokes = [], tool = 'pen', color = '#2F5BD8', drawing = null, cssW = 1, cssH = 1;
+  function sizeCanvas(){ const r = cw.getBoundingClientRect(); const s = r.width / cw.offsetWidth || 1; cssW = cw.offsetWidth; cssH = cw.offsetHeight; if (!cssW || !cssH) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1) * Math.max(1, s); canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr); redraw(); }
+  function drawStroke(st){
+    const W = canvas.width, H = canvas.height, k = W / 1000;
+    ctx.save();
+    if (st.type === 'text') { ctx.fillStyle = st.color; ctx.font = `600 ${st.size * k}px "Klee One", cursive`; ctx.fillText(st.text, st.x * W, st.y * H); ctx.restore(); return; }
+    ctx.globalCompositeOperation = st.tool === 'eraser' ? 'destination-out' : 'source-over';
+    ctx.globalAlpha = st.tool === 'marker' ? .32 : 1; ctx.strokeStyle = st.color; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const p = st.pts; if (!p.length) { ctx.restore(); return; }
+    if (st.tool === 'pen') { for (let i = 1; i < p.length; i++) { const a = p[i - 1], b = p[i]; ctx.lineWidth = st.w * k * (0.55 + b.p * 0.9); ctx.beginPath(); ctx.moveTo(a.x * W, a.y * H); ctx.lineTo(b.x * W, b.y * H); ctx.stroke(); } }
+    else { ctx.lineWidth = st.w * k; ctx.beginPath(); ctx.moveTo(p[0].x * W, p[0].y * H); for (let i = 1; i < p.length - 1; i++) { const mx = (p[i].x + p[i + 1].x) / 2 * W, my = (p[i].y + p[i + 1].y) / 2 * H; ctx.quadraticCurveTo(p[i].x * W, p[i].y * H, mx, my); } const l = p[p.length - 1]; ctx.lineTo(l.x * W, l.y * H); ctx.stroke(); }
+    ctx.restore();
+  }
+  function redraw(){ ctx.clearRect(0, 0, canvas.width, canvas.height); strokes.forEach(drawStroke); }
+  const pos = e => { const r = canvas.getBoundingClientRect(); return { x:(e.clientX - r.left) / r.width, y:(e.clientY - r.top) / r.height, p:e.pointerType === 'pen' ? (e.pressure || .5) : .5 }; };
+  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); drawing = { tool, color: tool === 'marker' ? '#F2C94C' : color, w: tool === 'pen' ? 2.6 : tool === 'marker' ? 16 : 22, pts:[pos(e)] }; strokes.push(drawing); });
+  canvas.addEventListener('pointermove', e => { if (!drawing) return; const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e]; evs.forEach(ev => drawing.pts.push(pos(ev))); redraw(); });
+  const end = () => { drawing = null; };
+  canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  $$('[data-tool]').forEach(b => b.addEventListener('click', () => { tool = b.dataset.tool; $$('[data-tool]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
+  $$('[data-color]').forEach(b => b.addEventListener('click', () => { color = b.dataset.color; $$('[data-color]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); if (tool === 'eraser') { tool = 'pen'; $$('[data-tool]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.tool === 'pen'))); } }));
+  $('#undo').addEventListener('click', () => { const i = strokes.map(s => s.type).lastIndexOf(undefined); if (i >= 0) { strokes.splice(i, 1); redraw(); } });
+  $('#clear').addEventListener('click', () => { strokes = strokes.filter(s => s.type === 'text'); redraw(); toast('手書きを消しました'); });
+  new ResizeObserver(() => sizeCanvas()).observe(cw);
+  // sample ink for 例題41 (worked solution in handwriting)
+  const sample = [
+    ['部分積分で', .07, .14, 30, '#2F5BD8'],
+    ['∫ x eˣ dx = x eˣ − ∫ eˣ dx', .07, .28, 36, '#2F5BD8'],
+    ['= [ x eˣ − eˣ ]₀¹', .14, .42, 36, '#2F5BD8'],
+    ['= (e − e) − (0 − 1)', .14, .56, 36, '#2F5BD8'],
+    ['= 1', .14, .70, 40, '#D83A3F'],
+  ].map(([text, x, y, size, color]) => ({ type:'text', text, x, y, size, color }));
+  const box = { tool:'pen', color:'#D83A3F', w:2.4, pts:[] }; for (let i = 0; i <= 40; i++) { const t = i / 40 * Math.PI * 2; box.pts.push({ x:.17 + Math.cos(t) * .06, y:.672 + Math.sin(t) * .075, p:.5 }); }
+  const mark = { tool:'marker', color:'#F2C94C', w:16, pts:[{ x:.065, y:.255, p:.5 }, { x:.6, y:.255, p:.5 }] };
+  strokes = [...sample, box, mark]; pages[0] = strokes;
+  (document.fonts && document.fonts.load ? document.fonts.load('600 30px "Klee One"', '部分積分') : Promise.resolve()).then(() => redraw(), () => redraw());
+  loadProblem(0); marks[0] = ''; renderStrip();
+
+  // ---------- timer ----------
+  const state = { studying:true, paused:false, elapsed:2350 };
+  function tick(force){ if (state.studying && !state.paused && !force) state.elapsed++;
+    const e = state.elapsed; $$('.js-clock').forEach(x => x.textContent = hms(e));
+    const blk = 1500, idx = Math.min(3, Math.floor(e / blk)), w = e - idx * blk; $$('.js-pomo').forEach(x => x.textContent = `${idx + 1}/4`);
+    $$('#pomo b').forEach((b, i) => b.style.width = (i < idx ? 100 : i === idx ? Math.min(100, w / blk * 100) : 0) + '%');
+    const left = Math.max(0, blk - w); $('#toBreak').textContent = `${pad(Math.floor(left / 60))}:${pad(left % 60)}`;
+    if (!force) tickRoom(); }
+  setInterval(() => tick(false), 1000);
+  $('#pauseBtn').addEventListener('click', () => { state.paused = !state.paused; $('#pauseBtn').textContent = state.paused ? '再開' : '一時停止'; });
+  $('#stopBtn').addEventListener('click', () => { const m = Math.max(1, Math.round(state.elapsed / 60)); state.elapsed = 0; state.paused = true; $('#pauseBtn').textContent = '再開'; tick(true); toast(`記録しました · 数学 ${m}分 · ○${marks.filter(x => x === 'o').length} △${marks.filter(x => x === 't').length} ×${marks.filter(x => x === 'x').length}`); });
+
+  // ---------- flashcards ----------
+  const DECK = [
+    ['abandon','動詞','捨てる・断念する','They had to <b>abandon</b> the plan.<br>その計画を断念せざるを得なかった。','復習 · 3回目'],
+    ['inevitable','形容詞','避けられない','Change is <b>inevitable</b>.<br>変化は避けられない。','復習 · 2回目'],
+    ['subsequent','形容詞','その後の','<b>subsequent</b> events proved him right.<br>その後の出来事で彼が正しいとわかった。','復習 · 2回目'],
+    ['conceive','動詞','思いつく・想像する','I can’t <b>conceive</b> of such a thing.<br>そんなことは想像もできない。','新しい'],
+    ['deliberate','形容詞','故意の・慎重な','It was a <b>deliberate</b> choice.<br>それは意図的な選択だった。','復習 · 1回目'],
+    ['substantial','形容詞','かなりの・十分な','a <b>substantial</b> increase<br>かなりの増加','復習 · 4回目'],
+    ['undergo','動詞','（変化などを）経験する・受ける','The city <b>underwent</b> major changes.<br>その町は大きく変わった。','新しい'],
+    ['comprehensive','形容詞','包括的な','a <b>comprehensive</b> study<br>包括的な研究','復習 · 1回目'],
+    ['ambiguous','形容詞','あいまいな','an <b>ambiguous</b> answer<br>あいまいな答え','新しい'],
+    ['reluctant','形容詞','気が進まない','She was <b>reluctant</b> to leave.<br>彼女は帰りたがらなかった。','復習 · 2回目'],
+  ];
+  let fi = 0; const res = Array(DECK.length).fill('');
+  const fc = $('#fc');
+  function renderCard(){ const [w, p, m, ex, tag] = DECK[fi]; fc.classList.remove('flip'); $('#fcWord').textContent = w; $('#fcPos').textContent = p; $('#fcMean').textContent = m; $('#fcEx').innerHTML = ex; $('#fcTag').textContent = tag;
+    $('#fcCount').textContent = `${Math.min(fi + 1, DECK.length)} / ${DECK.length}`; $('#fcBar').style.width = (fi / DECK.length * 100) + '%'; renderFcList(); }
+  function renderFcList(){ const sym = { o:'○', t:'△', x:'×', '':'' }; $('#fcList').innerHTML = DECK.map((d, i) => `<div class="li"><span class="mark ${res[i]}">${sym[res[i]] || (i === fi ? '›' : '')}</span><b>${d[0]}</b><span class="dim" style="font-size:12px">${d[2].split('・')[0]}</span></div>`).join(''); }
+  function answer(a){ if (fi >= DECK.length) return; res[fi] = a; fi++; if (fi >= DECK.length) finish(); else renderCard(); }
+  function finish(){ $('#fcstage').hidden = true; const o = res.filter(r => r === 'o').length; const back = res.filter(r => r !== 'o').length; $('#fcScore').innerHTML = `${o}<small>/${DECK.length}</small>`; $('#fcMsg').textContent = `${back}枚を復習に回しました。次は明日、もう一度出ます。`; $('#fcdone').hidden = false; $('#fcBar').style.width = '100%'; renderFcList(); }
+  fc.addEventListener('click', () => { if (!dragged) fc.classList.toggle('flip'); });
+  fc.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); fc.classList.toggle('flip'); } });
+  $$('.fcbtns [data-a]').forEach(b => b.addEventListener('click', () => answer(b.dataset.a)));
+  $('#fcAgain').addEventListener('click', () => { fi = 0; res.fill(''); $('#fcdone').hidden = true; $('#fcstage').hidden = false; renderCard(); });
+  let sx = null, dragged = false;
+  fc.addEventListener('pointerdown', e => { sx = e.clientX; dragged = false; });
+  fc.addEventListener('pointermove', e => { if (sx === null) return; const dx = e.clientX - sx; if (Math.abs(dx) > 8) dragged = true; if (dragged) fc.style.transform = `translateX(${dx}px) rotate(${dx / 30}deg)${fc.classList.contains('flip') ? ' rotateY(180deg)' : ''}`; });
+  const release = e => { if (sx === null) return; const dx = e.clientX - sx; sx = null; fc.style.transform = ''; if (Math.abs(dx) > 120) answer(dx > 0 ? 'o' : 'x'); setTimeout(() => dragged = false, 0); };
+  fc.addEventListener('pointerup', release); fc.addEventListener('pointercancel', () => { sx = null; fc.style.transform = ''; });
+  document.addEventListener('keydown', e => { if ($('#cards').hidden || /INPUT/.test(document.activeElement.tagName)) return; if (e.key === '1' || e.key === 'ArrowLeft') answer('x'); if (e.key === '2') answer('t'); if (e.key === '3' || e.key === 'ArrowRight') answer('o'); if (e.key === ' ' && document.activeElement !== fc) { e.preventDefault(); fc.classList.toggle('flip'); } });
+  renderCard();
+
+  // ---------- study room ----------
+  const ROOM = [
+    { n:'あなた', c:'#E8663D', s:'数学', t:'青チャート 例題41〜', sec:2350, me:true },
+    { n:'みお', c:'#0F5E5A', s:'英語', t:'要約 過去問 2018', sec:4380 },
+    { n:'そら', c:'#3E4FC9', s:'物理', t:'電磁気 名問の森', sec:2885 },
+    { n:'かいと', c:'#3E4FC9', s:'物理', t:'力学 エッセンス', sec:1730, rest:true },
+    { n:'ゆな', c:'#C9952A', s:'化学', t:'有機 構造決定', sec:3950 },
+    { n:'れん', c:'#2E6B3F', s:'世界史', t:'近現代 論述', sec:520 },
+    { n:'ひなた', c:'#E8663D', s:'数学', t:'整数 過去問', sec:5120 },
+    { n:'つばさ', c:'#8C3B6E', s:'国語', t:'古文 読解', sec:2210, rest:true },
+    { n:'あおい', c:'#0F5E5A', s:'英語', t:'英作文 自由英作', sec:3330 },
+  ];
+  let roomLeft = 4360;
+  function renderRoom(){ $('#tiles').innerHTML = ROOM.map((p, i) => `<div class="tile ${p.me ? 'me' : ''} ${p.rest ? 'rest' : ''}" style="--c:${p.c}" data-tile="${i}"><div class="top">${av('rgba(255,255,255,.25)', p.n)}<div class="nm">${p.n}<span>${p.s}</span></div><span class="st">${p.rest ? '休憩中' : '集中'}</span></div><div><div class="tm" data-sec="${i}">${hms(p.sec)}</div><div class="sub">${esc(p.t)}</div></div></div>`).join(''); }
+  function tickRoom(){ roomLeft = Math.max(0, roomLeft - 1); $('#roomLeft').textContent = `${Math.floor(roomLeft / 3600)}:${pad(Math.floor(roomLeft / 60) % 60)}:${pad(roomLeft % 60)}`;
+    let total = 0; ROOM.forEach((p, i) => { if (!p.rest) p.sec++; if (p.me) p.sec = state.elapsed; total += p.sec; const el = $(`[data-sec="${i}"]`); if (el) el.textContent = hms(p.sec); });
+    $('#roomTotal').innerHTML = `${(total / 3600).toFixed(1)}<small>h</small>`; }
+  renderRoom();
+  $('#stamps').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('.tile').forEach((t, i) => { if (i === 0) return; setTimeout(() => { const f = document.createElement('span'); f.className = 'float'; f.textContent = b.textContent; t.appendChild(f); setTimeout(() => f.remove(), 1700); }, i * 90); }); });
+
+  // ---------- groups ----------
+  const MSGS = [ { sys:'そら が 数学 を 45分 コミットしました' }, { n:'みお', c:'#E8663D', t:'今日の英語の要約、時間を測ったら18分だった…目標は15分' }, { n:'そら', c:'#3E4FC9', t:'段落ごとに一文メモを先に作ると速くなるよ。最初は遅くても大丈夫' }, { sys:'かいと が 共有 に「電磁気 まとめノート p.12」を追加しました' }, { me:true, t:'日曜のもくもく会、9時からでいい？' }, { n:'ゆな', c:'#8C3B6E', t:'OK！参加する' }, { sys:'もくもく会が始まりました · 自習室に 9人' } ];
+  function renderChat(){ const c = $('#chat'); c.innerHTML = MSGS.map(m => m.sys ? `<div class="sys">${esc(m.sys)}</div>` : m.me ? `<div class="msg mine"><div><div class="bubble">${esc(m.t)}</div></div></div>` : `<div class="msg">${av(m.c, m.n, 'width:30px;height:30px;font-size:12px')}<div><span class="who">${esc(m.n)}</span><div class="bubble">${esc(m.t)}</div></div></div>`).join(''); c.scrollTop = c.scrollHeight; }
+  renderChat();
+  const REPLIES = ['いいね、一緒にやろう', '了解！', 'それ助かる、ありがとう', 'おつかれ！こっちもあと1ポモ'];
+  $('#chatForm').addEventListener('submit', e => { e.preventDefault(); const v = $('#chatInput').value.trim(); if (!v) return; MSGS.push({ me:true, t:v }); $('#chatInput').value = ''; renderChat(); setTimeout(() => { const p = [['みお','#E8663D'],['そら','#3E4FC9'],['ゆな','#8C3B6E']][Math.floor(Math.random() * 3)]; MSGS.push({ n:p[0], c:p[1], t:REPLIES[Math.floor(Math.random() * REPLIES.length)] }); renderChat(); }, 1300); });
+  const ink = seed => { const r = rng(seed); let s = ''; for (let l = 0; l < 5; l++) { const y = 18 + l * 15; let x = 10; let d = `M${x} ${y}`; while (x < 70 + r() * 25) { x += 3 + r() * 5; d += ` L${x.toFixed(1)} ${(y + (r() - .5) * 5).toFixed(1)}`; } s += `<path d="${d}" fill="none" stroke="${l === 4 ? '#D83A3F' : '#2F5BD8'}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>`; } return `<svg viewBox="0 0 100 90" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`; };
+  const SHARED = [ ['note','電磁気 まとめノート p.12','かいと · 今日',3], ['note','例題41 積分 解き方','あなた · たった今',9], ['link','置換積分の「置き方」がわかる15分','そら · 昨日',0], ['note','東大英語 要約メモ','みお · 2日前',5], ['plan','11月の二次対策 ToDoテンプレ','あなた · 先週',0], ['note','有機 構造決定 フロー','ゆな · 3日前',7] ];
+  $('#gallery').innerHTML = SHARED.map(s => `<button class="thumb"><div class="pv2 ${s[0] !== 'note' ? s[0] : ''}">${s[0] === 'note' ? ink(s[3]) : ''}</div><div class="t"><b>${esc(s[1])}</b><span>${esc(s[2])}</span></div></button>`).join('');
+  $('#sharedCount').textContent = SHARED.length;
+  const EVENTS = [ ['10','25','日','日曜もくもく会','9:00 – 12:00 · もくもく自習',true,9], ['10','31','土','10月 合計200時間チャレンジ','142h / 200h · 時間チャレンジ',true,17], ['11','08','日','模試の振り返り会','20:00 – 21:00 · 振り返り会',false,6] ];
+  function renderEvents(){ $('#events').innerHTML = EVENTS.map((e, i) => `<div class="ev"><div class="evd"><span>${e[0]}月</span><b>${e[1]}</b><span>${e[2]}</span></div><div class="t"><h4>${e[3]}</h4><span class="mono dim" style="font-size:11px">${e[4]} · ${e[6]}人</span></div><button class="joinbtn ${e[5] ? 'on' : ''}" data-ev="${i}">${e[5] ? '参加中' : '参加する'}</button></div>`).join(''); }
+  renderEvents();
+  $('#events').addEventListener('click', e => { const b = e.target.closest('[data-ev]'); if (!b) return; const ev = EVENTS[+b.dataset.ev]; ev[5] = !ev[5]; ev[6] += ev[5] ? 1 : -1; renderEvents(); });
+
+  // ---------- boot ----------
+  tick(true); doFit();
+  const h = (location.hash || '').slice(1); show(VIEWS.includes(h) ? h : 'home');
+  requestAnimationFrame(sizeCanvas);
+})();
+</script>
