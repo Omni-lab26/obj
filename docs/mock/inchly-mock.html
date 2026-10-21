@@ -402,7 +402,7 @@ h2.sec{font:700 15px var(--f-body)}
 .gbody{flex:1;overflow-y:auto;padding:4px 16px 110px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
 .gbody::-webkit-scrollbar{display:none}
 .chat{display:flex;flex-direction:column;gap:10px}
-.sys{align-self:center;font:500 10.5px/1.4 var(--f-mono);color:var(--ink-3);padding:5px 10px;border-radius:999px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);text-align:center;max-width:90%}
+.sys{align-self:center;font-family:inherit;font:500 10.5px/1.4 var(--f-mono);color:var(--ink-3);padding:5px 10px;border-radius:999px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--line);text-align:center;max-width:90%}
 .msg{display:flex;gap:8px;align-items:flex-end}
 .msg>div{display:flex;flex-direction:column;gap:4px;min-width:0;max-width:78%}
 .msg .who{font:500 10.5px var(--f-mono);color:var(--ink-3)}
@@ -713,7 +713,7 @@ h2.sec{font:700 15px var(--f-body)}
           <div data-group="grp" data-name="chat" class="chat" id="gChat"></div>
           <div data-group="grp" data-name="shared" hidden style="display:flex;flex-direction:column;gap:12px">
             <button class="btn solid" data-open-share>グループに共有する</button>
-            <section class="card glass"><div class="label">SHARED · ノート・リンク・問題集・テンプレ</div><div id="gShared"></div></section>
+            <section class="card glass"><div class="label">SHARED · ノート・リンク・問題集・テンプレ</div><div class="dim" style="font-size:12px">画像（ノートの写真など）はここからだけ共有できます。共有するとチャットにお知らせが流れます。</div><div id="gShared"></div></section>
           </div>
           <div data-group="grp" data-name="events" hidden style="display:flex;flex-direction:column;gap:12px">
             <button class="btn solid" id="newEventBtn">イベントを企画する</button>
@@ -725,7 +725,7 @@ h2.sec{font:700 15px var(--f-body)}
           </div>
         </div>
         <form class="composer glass" id="composer">
-          <button type="button" class="plusbtn" data-open-share aria-label="ノートやリンクを共有"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button type="button" class="plusbtn" data-grp-go="shared" aria-label="共有タブを開く"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
           <input id="msgInput" type="text" placeholder="メッセージ" autocomplete="off" aria-label="メッセージ">
           <button type="submit" class="roundbtn" aria-label="送信"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11.2 19.2 4.4c.7-.3 1.4.4 1.1 1.1L13.5 20.7c-.3.7-1.3.6-1.5-.1l-1.6-5.9-5.9-1.6c-.7-.2-.8-1.2-.1-1.5z"/></svg></button>
         </form>
@@ -850,7 +850,7 @@ h2.sec{font:700 15px var(--f-body)}
         { sys:'そら が 数学 を 45分 コミットしました' },
         { n:'みお', c:'#E8663D', text:'今日の英語の要約、時間を測ったら18分だった…目標は15分' },
         { n:'そら', c:'#3E4FC9', text:'段落ごとに一文メモを先に作ると速くなるよ。最初は遅くても大丈夫' },
-        { n:'かいと', c:'#0F5E5A', share:{ type:'note', title:'電磁気 まとめノート p.12', meta:'画像 2枚' } },
+        { sys:'かいと が 共有 に「電磁気 まとめノート p.12」を追加しました', go:'shared' },
         { me:true, text:'日曜のもくもく会、9時からでいい？' },
         { n:'ゆな', c:'#8C3B6E', text:'OK！参加する' },
         { sys:'あなた がイベント「日曜もくもく会」を企画しました' },
@@ -1072,7 +1072,7 @@ h2.sec{font:700 15px var(--f-body)}
   const thIcon = t => t === 'book' ? 'B' : t === 'plan' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>' : t === 'record' ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="5" rx="1.2"/><rect x="9.5" y="3" width="5" height="5" rx="1.2" opacity=".5"/><rect x="16" y="3" width="5" height="5" rx="1.2"/><rect x="3" y="9.5" width="5" height="5" rx="1.2" opacity=".5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/><rect x="16" y="9.5" width="5" height="5" rx="1.2" opacity=".3"/><rect x="3" y="16" width="5" height="5" rx="1.2"/><rect x="9.5" y="16" width="5" height="5" rx="1.2" opacity=".3"/><rect x="16" y="16" width="5" height="5" rx="1.2"/></svg>' : '';
   const attach = sh => `<div class="attach"><span class="th th-${sh.type}">${thIcon(sh.type)}</span><div><div class="b">${esc(sh.title)}</div><div class="mono dim" style="font-size:10.5px">${esc(sh.meta || '')}</div></div></div>`;
   const msgHTML = m => {
-    if (m.sys) return `<div class="sys">${esc(m.sys)}</div>`;
+    if (m.sys) return m.go ? `<button class="sys" data-grp-go="${m.go}">${esc(m.sys)} · 見る →</button>` : `<div class="sys">${esc(m.sys)}</div>`;
     const body = (m.text ? `<div class="bubble">${esc(m.text)}</div>` : '') + (m.share ? attach(m.share) : '');
     if (m.me) return `<div class="msg me"><div>${body}</div></div>`;
     return `<div class="msg">${av(m.c, m.n, 'width:30px;height:30px;font-size:12px')}<div><span class="who">${esc(m.n)}</span>${body}</div></div>`;
@@ -1095,6 +1095,7 @@ h2.sec{font:700 15px var(--f-body)}
   }
   function closeGroup(){ gview.hidden = true; screen.classList.remove('ingroup'); curG = null; }
   $('#gBack').addEventListener('click', closeGroup);
+  document.addEventListener('click', e => { const g = e.target.closest('[data-grp-go]'); if (g) selectSeg('grp', g.dataset.grpGo); });
   document.addEventListener('click', e => { const g = e.target.closest('[data-gid]'); if (g) openGroup(g.dataset.gid); });
   const REPLIES = ['いいね、一緒にやろう', '了解！', 'それ助かる、ありがとう', 'おつかれ！こっちもあと1ポモ'];
   $('#composer').addEventListener('submit', e => {
@@ -1107,7 +1108,7 @@ h2.sec{font:700 15px var(--f-body)}
   $('#shareGrid').addEventListener('click', e => { const b = e.target.closest('[data-share-type]'); if (!b || !curG) return;
     const t = SHARE_TYPES.find(x => x.type === b.dataset.shareType); const h = Math.floor(state.todayMin / 60), m = state.todayMin % 60;
     const item = { type:t.type, title:t.type === 'record' ? `今日の記録 ${h}h ${pad(m)}m` : t.title, meta:t.meta, by:'あなた', when:'たった今' };
-    curG.shares.unshift(item); curG.msgs.push({ me:true, share:item }); closeSheets(); renderShared(); selectSeg('grp', 'chat'); renderChat(); toast('グループに共有しました'); });
+    curG.shares.unshift(item); curG.msgs.push({ sys:`あなた が 共有 に「${item.title}」を追加しました`, go:'shared' }); closeSheets(); renderShared(); renderChat(); selectSeg('grp', 'shared'); toast('共有タブに追加しました'); });
   document.addEventListener('click', e => { const j = e.target.closest('.js-join'); if (!j || !curG) return; e.stopImmediatePropagation(); const ev = curG.events[+j.dataset.ev]; ev.joined = !ev.joined; ev.count += ev.joined ? 1 : -1; renderEvents(); }, true);
   $('#newEventBtn').addEventListener('click', () => { openSheet('#eventSheet'); setTimeout(() => $('#efTitle').focus(), 50); });
   $('#createGroupBtn').addEventListener('click', () => { openSheet('#groupSheet'); setTimeout(() => $('#gfName').focus(), 50); });
