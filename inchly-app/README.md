@@ -1,7 +1,7 @@
 # Inchly（Expo アプリ）
 
 勉強時間を草として積み上げ、仲間と一緒に勉強する学習コミュニティアプリのモック実装です。
-Expo SDK 58 / Expo Router / React Native。データはすべてサンプルで、サーバーにはつながっていません。
+Expo SDK 57 / Expo Router / React Native。App Store 版の Expo Go が対応している SDK に合わせています。データはすべてサンプルで、サーバーにはつながっていません。
 
 ## スマホで見る（Expo Go）
 
@@ -22,6 +22,11 @@ Expo SDK 58 / Expo Router / React Native。データはすべてサンプルで�
    `npx expo start --tunnel` を試してください（初回は Expo アカウントへのログインを求められます）。
 
 ブラウザで見るだけなら `npx expo start --web`。
+
+### 「Project is incompatible with this version of Expo Go」と出たら
+
+Expo Go が対応する SDK とプロジェクトの SDK が合っていません。App Store / Google Play の Expo Go を最新にしてから、
+このフォルダで `npx expo install --fix` を実行してください（Expo Go 側の SDK が上がったときも同じ手順です）。
 
 ## 画面
 

@@ -15,7 +15,7 @@ const TABS: Record<string, { label: string; icon: IconName }> = {
   me: { label: 'マイページ', icon: 'user' },
 };
 
-function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
+function TabBar({ state, navigation, insets }: BottomTabBarProps) {
   const t = useT();
   const running = useStore((s) => s.running);
   const routes = state.routes;
@@ -25,7 +25,10 @@ function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
     if (!meta) return null;
     const on = state.index === i;
     return (
-      <Press key={r.key} onPress={() => navigateToTab(r.key)} scale={0.88} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={meta.label}
+      <Press key={r.key} onPress={() => {
+        const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
+        if (!on && !e.defaultPrevented) navigation.navigate(r.name, r.params);
+      }} scale={0.88} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={meta.label}
         style={{ flex: 1, alignItems: 'center', gap: 3, paddingTop: 2 }}>
         <Icon name={meta.icon} size={23} color={on ? t.ink : t.ink3} width={on ? 2 : 1.8} />
         <Txt size={10.5} w={on ? '600' : '500'} tone={on ? 'ink' : 'ink3'} lh={13}>{meta.label}</Txt>
