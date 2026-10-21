@@ -97,3 +97,20 @@ J-PlatPat の称呼検索（完全一致と類似）、App Store（日本）、�
 | ドメイン | mossday.app・getmossday.com は空き、mossday.com は登録済み |
 
 **注意**：「DAY」は一般的な言葉なので、審査で「MOSS」の部分が主な部分（要部）と判断されると、読み「モス」が付いて、株式会社モスの登録（42類「電子計算機用プログラムの提供」など）と似ているとされるおそれがある。出願前に弁理士に確認すること。
+
+---
+
+# 決定：Inchly（2026-10-21）
+
+| ドメイン | 状態 |
+|---|---|
+| inchly.com | 登録済み（駐車ページ。売りに出ている可能性あり） |
+| inchly.app | 登録済み |
+| getinchly.com・inchlyapp.com・useinchly.com・inchly.study | 空き（RDAPで未登録） |
+| inchly.jp・inchly.co・inchly.io | RDAPで確認できず。レジストラで要確認 |
+
+## 次にやること
+1. ドメインを取る（例：getinchly.com、inchly.jp）
+2. 商標を出願する：第9類（アプリ）、第41類（教育・オンライン学習）、第42類（オンラインのソフト提供）、第45類（SNS）。読み「インチリー」
+3. X・Instagram・TikTok のアカウント名を押さえる（@inchly、@inchly_app など）
+4. App Store Connect でアプリ名「Inchly」を予約する（副題に「勉強時間・勉強記録」など）
