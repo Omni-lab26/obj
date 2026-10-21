@@ -1,27 +1,26 @@
 import { router } from 'expo-router';
 import { ComponentRef, useEffect, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Image, ScrollView, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
-import { hms, hoursIn, PERSON_COLOR, Post, POSTS, RANK, RECS, ROOM, subj } from '@/data';
-import { elapsedOf, getState, setState, useNow, useStore } from '@/store';
+import { hms, hoursIn, PERSON_COLOR, Post, POSTS, RANK, ROOM, subj } from '@/data';
+import { PHOTO } from '@/photos';
+import { elapsedOf, getState, setState, toggleHelpful, useNow, useStore } from '@/store';
 import { ease, hair, lift, radius, type, useT } from '@/theme';
-import { Avatar, Btn, Card, haptic, Press, RingAvatar, Txt } from '@/ui/base';
-import { Screen, SearchBtn, TopBar, useTabSpace } from '@/ui/Chrome';
+import { Avatar, Btn, Card, haptic, Press, Txt } from '@/ui/base';
+import { Screen, SearchBtn, TopBar } from '@/ui/Chrome';
 import { Choice, Field } from '@/ui/Form';
 import { GroupMark, LiveDot } from '@/ui/GroupParts';
 import { Icon } from '@/ui/Icon';
 import { Rolling } from '@/ui/Rolling';
 import { openSheet } from '@/ui/Sheet';
 import { Segmented, UnderTabs } from '@/ui/Tabs';
-import { PhotoPost, RecordPost } from '@/ui/Post';
-import { Inch } from '@/ui/Sticker';
+import { Sticker } from '@/ui/Sticker';
 import { toast } from '@/ui/Toast';
 
 type Tab = 'live' | 'rank' | 'posts' | 'groups';
 
 export default function Community() {
-  const tabSpace = useTabSpace();
   const t = useT();
   const [tab, setTab] = useState<Tab>('live');
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -30,7 +29,7 @@ export default function Community() {
     <Screen>
       <TopBar title="みんな" right={<SearchBtn />} />
       <UnderTabs value={tab} onChange={go} options={[{ v: 'live', label: 'いま勉強中' }, { v: 'rank', label: 'ランキング' }, { v: 'posts', label: '投稿' }, { v: 'groups', label: 'グループ' }]} />
-      <ScrollView ref={scroll} style={{ flex: 1, backgroundColor: t.canvas }} contentContainerStyle={{ paddingBottom: tabSpace }}>
+      <ScrollView ref={scroll} style={{ flex: 1, backgroundColor: t.canvas }} contentContainerStyle={{ paddingBottom: 40 }}>
         {tab === 'live' ? <Live /> : tab === 'rank' ? <Rank /> : tab === 'posts' ? <Posts /> : <Groups />}
       </ScrollView>
     </Screen>
@@ -82,10 +81,13 @@ function Live() {
   );
 }
 /** One seat in the room: the person's icon with a live ring, what and how long. */
-function Seat({ name, color, label, sub, time }: { name: string; color: string; label: string; sub: string; time: string; you?: boolean }) {
+function Seat({ name, color, label, sub, time, you }: { name: string; color: string; label: string; sub: string; time: string; you?: boolean }) {
+  const t = useT();
   return (
     <View style={{ width: '25%', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 2 }} accessible accessibilityLabel={`${label} ${sub} ${time}`}>
-      <RingAvatar name={name} color={color} size={46} live />
+      <View style={{ padding: 2, borderRadius: 40, borderWidth: 1.5, borderColor: you ? t.green : t.dark ? '#1F4A30' : '#B5EBC8' }}>
+        <Avatar name={name} color={color} size={44} />
+      </View>
       <Txt size={12} w="600" lh={16} numberOfLines={1} style={{ marginTop: 5 }}>{label}</Txt>
       <Txt size={11} tone="ink3" lh={14} numberOfLines={1}>{sub}</Txt>
       <Txt num size={11} tone="ink2" lh={14}>{time}</Txt>
@@ -125,7 +127,7 @@ function Rank() {
       <Card style={{ marginHorizontal: 16, marginTop: 10, paddingVertical: 4 }} pad={0}>
         {RANK.map((x, i) => (
           <View key={x.n} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 7 }}>
-            <Txt num size={13} w={i < 3 ? '700' : '600'} color={i < 3 ? t.ink : t.ink3} style={{ width: 24, textAlign: 'center' }}>{i + 1}</Txt>
+            {i < 3 ? <Sticker name={i === 0 ? 'trophy' : 'star'} size={24} tilt={i === 2 ? 8 : -6} /> : <Txt num size={12} w="600" tone="ink3" style={{ width: 24, textAlign: 'center' }}>{i + 1}</Txt>}
             <Avatar name={x.n} color={x.c} size={30} />
             <Txt size={13.5} w="600" style={{ flex: 1 }}>{x.n}</Txt>
             <Txt num size={13.5} w="600">{(x.h * r.scale).toFixed(1)}<Txt size={11} tone="ink3"> 時間</Txt></Txt>
@@ -167,21 +169,78 @@ function Posts() {
   useEffect(() => { const f = () => force((x) => x + 1); mineSubs.add(f); return () => { mineSubs.delete(f); }; }, []);
   const list = [...mine, ...POSTS];
   return (
-    <Animated.View entering={FadeIn.duration(200)} style={{ paddingHorizontal: 16, paddingTop: 12, gap: 14 }}>
+    <Animated.View entering={FadeIn.duration(200)}>
       <Press onPress={compose} scale={0.985}
-        style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 10, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
-        <Avatar name="はる" color={PERSON_COLOR['はる']} size={30} />
-        <Txt size={13.5} tone="ink3" style={{ flex: 1 }} numberOfLines={1}>いま何してる？</Txt>
-        <Inch pose="up" eyes="dot" prop="none" size={30} border={false} />
+        style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, margin: 16, marginBottom: 10, paddingVertical: 8, paddingHorizontal: 10, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
+        <Avatar name="はる" color={PERSON_COLOR['はる']} size={28} />
+        <Txt size={13} tone="ink3" style={{ flex: 1 }} numberOfLines={1}>いま何してる？</Txt>
+        <Sticker name="pencil" size={28} />
       </Press>
       {list.map((p, i) => (
-        <Animated.View key={p.n + p.t.slice(0, 12)} entering={i < mine.length ? FadeInDown.duration(320) : undefined}>
-          {i === 2 ? <View style={{ marginBottom: 14 }}><RecordPost r={RECS[0]} /></View> : null}
-          <PhotoPost p={p} />
+        <Animated.View key={p.n + p.t.slice(0, 12)} entering={i < mine.length ? FadeInDown.duration(320) : undefined}
+          style={[{ marginHorizontal: 16, marginBottom: 10, padding: 14, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+            <Avatar name={p.n} color={p.c} size={30} />
+            <View style={{ flex: 1 }}>
+              <Txt size={13} w="600" lh={17}>{p.n}</Txt>
+              <Txt size={11} tone="ink3" lh={14}>{`${p.m} · ${p.w}`}</Txt>
+            </View>
+          </View>
+          <Txt size={13.5} lh={22} style={{ marginTop: 8 }}>{p.t}</Txt>
+          {p.img ? <Image source={PHOTO[p.img]} style={{ width: 168, height: 168, borderRadius: radius.inner, marginTop: 8, backgroundColor: t.sunken }} resizeMode="cover" /> : null}
+          {p.tags.length ? <Txt size={12} w="500" color={t.blue} style={{ marginTop: 6 }}>{p.tags.join(' ')}</Txt> : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 8 }}>
+            <Helpful i={i} base={p.u} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Icon name="chat" size={14} color={t.ink3} />
+              <Txt size={11.5} tone="ink3">返信 {p.r}</Txt>
+            </View>
+          </View>
         </Animated.View>
       ))}
     </Animated.View>
   );
+}
+
+function Helpful({ i, base }: { i: number; base: number }) {
+  const t = useT();
+  const on = useStore((s) => s.helpful.includes(i));
+  const s = useSharedValue(1);
+  const [burst, setBurst] = useState(0);
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
+  const press = () => {
+    if (!on) { haptic.soft(); s.set(withSequence(withTiming(1.5, { duration: 120, easing: ease.out }), withSpring(1, { damping: 7, stiffness: 260 }))); setBurst((b) => b + 1); }
+    toggleHelpful(i);
+  };
+  return (
+    <Press onPress={press} haptics={false} scale={0.94} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel="役に立った" hitSlop={8}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 28, paddingLeft: on ? 1 : 9, paddingRight: 10, marginLeft: -4, borderRadius: 14, backgroundColor: on ? t.amberSoft : 'transparent', borderWidth: hair, borderColor: on ? 'transparent' : t.line2 }}>
+      <View style={{ width: on ? 26 : 14, alignItems: 'center' }}>
+        {/* a pop sticker slaps on when you mark it */}
+        <Animated.View style={a}>{on ? <Sticker name="bulb" size={26} tilt={-8} /> : <Icon name="bulb" size={14} color={t.ink3} />}</Animated.View>
+        {burst ? <Burst key={burst} color="#FFC23D" /> : null}
+      </View>
+      <Txt size={11.5} w="600" color={on ? '#B86E00' : t.ink3}>役に立った</Txt>
+      <Rolling value={String(base + (on ? 1 : 0))} size={11.5} weight="600" color={on ? '#B86E00' : t.ink3} />
+    </Press>
+  );
+}
+
+function Burst({ color }: { color: string }) {
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left: '50%', top: '50%' }}>
+      {Array.from({ length: 8 }, (_, k) => <Spark key={k} a={(k / 8) * Math.PI * 2} color={color} />)}
+    </View>
+  );
+}
+function Spark({ a, color }: { a: number; color: string }) {
+  const p = useSharedValue(0);
+  useEffect(() => { p.value = withTiming(1, { duration: 480, easing: ease.out }); }, [p]);
+  const st = useAnimatedStyle(() => ({
+    opacity: 1 - p.value,
+    transform: [{ translateX: Math.cos(a) * 18 * p.value }, { translateY: Math.sin(a) * 18 * p.value }, { scale: 1 - p.value * 0.5 }],
+  }));
+  return <Animated.View style={[{ position: 'absolute', left: -2, top: -2, width: 4, height: 4, borderRadius: 2, backgroundColor: color }, st]} />;
 }
 
 function compose() {

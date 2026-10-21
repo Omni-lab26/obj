@@ -2,12 +2,10 @@ import * as Haptics from 'expo-haptics';
 import { ReactNode } from 'react';
 import { ActivityIndicator, Image, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 import { AVATAR } from '../photos';
 import { ease, face, hair, lift, radius, Theme, useT } from '../theme';
 import { Icon, IconName } from './Icon';
-import { Inch } from './Sticker';
 
 export const haptic = {
   tap: () => Platform.OS !== 'web' && Haptics.selectionAsync().catch(() => {}),
@@ -67,13 +65,13 @@ export function Press({ style, scale = 0.96, children, onPressIn, onPressOut, on
 }
 
 // ---------- buttons ----------
-type BtnKind = 'primary' | 'go' | 'ghost' | 'quiet' | 'line' | 'tint' | 'blue';
+type BtnKind = 'primary' | 'go' | 'ghost' | 'quiet' | 'line' | 'tint';
 export function Btn({
   label, kind = 'quiet', icon, onPress, small, wide, disabled, loading, done, style,
 }: { label: string; kind?: BtnKind; icon?: IconName; onPress?: () => void; small?: boolean; wide?: boolean; disabled?: boolean; loading?: boolean; done?: boolean; style?: StyleProp<ViewStyle> }) {
   const t = useT();
-  const bg = { primary: t.ink, go: t.green, ghost: 'transparent', quiet: t.sunken, line: t.surface, tint: t.tintSoft, blue: t.blue }[kind];
-  const fg = { primary: t.onInk, go: '#FFFFFF', ghost: t.ink, quiet: t.ink, line: t.ink, tint: t.greenInk, blue: '#FFFFFF' }[kind];
+  const bg = { primary: t.ink, go: t.green, ghost: 'transparent', quiet: t.sunken, line: t.surface, tint: t.blueSoft }[kind];
+  const fg = { primary: t.onInk, go: '#FFFFFF', ghost: t.ink, quiet: t.ink, line: t.ink, tint: t.blue }[kind];
   const h = small ? 30 : 44;
   return (
     <Press
@@ -193,65 +191,11 @@ export function Divider({ inset = 0 }: { inset?: number }) {
 }
 export const dot = (c: string, s = 7) => <View style={{ width: s, height: s, borderRadius: s / 2, backgroundColor: c }} />;
 
-/** Empty state: Inch, the inchworm, resting — and one plain sentence. */
 export function Empty({ title, sub }: { title: string; sub?: string }) {
   return (
-    <View style={{ paddingVertical: 40, paddingHorizontal: 32, alignItems: 'center', gap: 4 }}>
-      <Inch pose="flat" eyes="closed" prop="zzz" size={76} />
-      <Txt size={14} w="600" style={{ textAlign: 'center', marginTop: 4 }}>{title}</Txt>
+    <View style={{ paddingVertical: 56, paddingHorizontal: 32, alignItems: 'center', gap: 6 }}>
+      <Txt size={14} w="600" style={{ textAlign: 'center' }}>{title}</Txt>
       {sub ? <Txt size={12} tone="ink3" style={{ textAlign: 'center' }}>{sub}</Txt> : null}
-    </View>
-  );
-}
-
-/** A compact list row inside a card: lead, title / sub, detail, trail, chevron. 44pt or taller. */
-export function ListRow({ lead, title, sub, detail, trail, chevron, onPress, first, children, a11y }: {
-  lead?: ReactNode; title?: ReactNode; sub?: ReactNode; detail?: ReactNode; trail?: ReactNode; chevron?: boolean; onPress?: () => void;
-  first?: boolean; children?: ReactNode; a11y?: string;
-}) {
-  const t = useT();
-  const inner = (
-    <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingVertical: 9, paddingHorizontal: 14, gap: 10 }}>
-      {first ? null : <View style={{ position: 'absolute', top: 0, right: 0, left: lead ? 56 : 14, height: hair, backgroundColor: t.line }} />}
-      {lead ? <View style={{ width: 32, alignItems: 'center' }}>{lead}</View> : null}
-      <View style={{ flex: 1, minWidth: 0 }}>
-        {typeof title === 'string' ? <Txt size={14} w="600" lh={19} numberOfLines={1}>{title}</Txt> : title}
-        {typeof sub === 'string' ? <Txt size={12} tone="ink3" lh={16} numberOfLines={2}>{sub}</Txt> : sub}
-        {children}
-      </View>
-      {typeof detail === 'string' ? <Txt size={13.5} w="600" num>{detail}</Txt> : detail}
-      {trail}
-      {chevron ? <Icon name="chev" size={13} color={t.ink3} /> : null}
-    </View>
-  );
-  return onPress ? (
-    <Pressable onPress={() => { haptic.tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={a11y}
-      style={({ pressed }) => ({ backgroundColor: pressed ? 'rgba(17,20,23,0.04)' : 'transparent' })}>{inner}</Pressable>
-  ) : <View accessible={!!a11y} accessibilityLabel={a11y}>{inner}</View>;
-}
-
-/**
- * An avatar with an Instagram-style ring: the green story gradient while the
- * person is studying, a hairline grey ring when they are not.
- */
-export function RingAvatar({ name, color, size = 56, live, seen }: { name: string; color: string; size?: number; live?: boolean; seen?: boolean }) {
-  const t = useT();
-  const outer = size + 8;
-  const id = `ring${name.length}${size}`;
-  return (
-    <View style={{ width: outer, height: outer, alignItems: 'center', justifyContent: 'center' }}>
-      <Svg width={outer} height={outer} style={{ position: 'absolute' }}>
-        <Defs>
-          <LinearGradient id={id} x1="0" y1="1" x2="1" y2="0">
-            <Stop offset="0" stopColor={t.ring[0]} />
-            <Stop offset="0.55" stopColor={t.ring[1]} />
-            <Stop offset="1" stopColor={t.ring[2]} />
-          </LinearGradient>
-        </Defs>
-        <Circle cx={outer / 2} cy={outer / 2} r={outer / 2 - (live && !seen ? 1.4 : 0.6)} fill="none"
-          stroke={live && !seen ? `url(#${id})` : t.line2} strokeWidth={live && !seen ? 2.6 : 1.2} />
-      </Svg>
-      <Avatar name={name} color={color} size={size} />
     </View>
   );
 }

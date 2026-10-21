@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ease, hair, lift, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
-import { Inch } from './Sticker';
+import { Sticker } from './Sticker';
 
 // Toast stack (bencho "notification stack"): newest in front, the two behind
 // peek out above it. Tapping the stack spreads it into a list; it collapses
@@ -59,7 +59,7 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
       <Pressable onPress={onPress}
         style={[{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingLeft: 8, paddingRight: item.action ? 8 : 14, borderRadius: 20,
           backgroundColor: t.surface, borderWidth: t.dark ? hair : 0, borderColor: t.line2 }, t.dark ? { boxShadow: '0px 8px 24px rgba(0,0,0,0.5)' } : lift(t, 2)]}>
-        <Inch pose="up" eyes="happy" prop="check" size={34} />
+        <Sticker name="done" size={32} tilt={-6} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Txt size={14} w="600" numberOfLines={1}>{item.title}</Txt>
           {item.sub ? <Txt size={12} tone="ink3" numberOfLines={1}>{item.sub}</Txt> : null}

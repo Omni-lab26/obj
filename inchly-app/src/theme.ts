@@ -3,8 +3,7 @@ import { Easing } from 'react-native-reanimated';
 
 // Light only. A cool blue-white canvas, white cards on a faint edge and a
 // short soft shadow, near-black ink for text and primary buttons. Green is for
-// study and gains; Instagram's blue for follow and links; red for likes and
-// shortfalls. Rings around people who are studying use the story gradient.
+// study and gains, blue for actions, red for shortfalls.
 const light = {
   canvas: '#F4F5F8',
   surface: '#FFFFFF',
@@ -24,12 +23,9 @@ const light = {
   amberSoft: '#FFF2DC',
   red: '#F0443A',
   redSoft: '#FDECEB',
-  like: '#FF3040', // Instagram's heart
-  blue: '#0095F6', // Instagram's follow blue
-  blueSoft: '#E6F4FE',
+  blue: '#2F6BFF',
+  blueSoft: '#EAF0FF',
   grass: ['#E6EAF0', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C'],
-  // a studying ring: grass green into lime, the way a story ring reads "new"
-  ring: ['#0F9F59', '#5BD16A', '#C9E94B'],
   scrim: 'rgba(17,20,23,0.36)',
   dark: false,
 };

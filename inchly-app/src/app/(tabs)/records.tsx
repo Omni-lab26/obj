@@ -6,7 +6,7 @@ import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, w
 import { hoursIn, SUBJ, Subject } from '@/data';
 import { ease, hair, useT } from '@/theme';
 import { Card, SectionHead, SubjCoin, Txt } from '@/ui/base';
-import { Screen, TopBar, useTabSpace } from '@/ui/Chrome';
+import { Screen, TopBar } from '@/ui/Chrome';
 import { Heatmap } from '@/ui/Heatmap';
 import { PullCard } from '@/ui/PullCard';
 import { StackedBars } from '@/ui/StackedBars';
@@ -41,7 +41,6 @@ function SubjRow({ s, i }: { s: Subject; i: number }) {
 }
 
 export default function Records() {
-  const tabSpace = useTabSpace();
   // The pull card refreshes only when the page is at the top, so it needs the scroll offset
   // and the scroll view's native gesture to run alongside it.
   const scrollY = useSharedValue(0);
@@ -51,7 +50,7 @@ export default function Records() {
     <Screen>
       <TopBar title="記録" sub={<Summary />} />
       <GestureDetector gesture={native}>
-        <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: tabSpace }}>
+        <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           <View style={{ paddingHorizontal: 16, paddingTop: 6 }}>
             <StackedBars />
           </View>

@@ -3,70 +3,61 @@ import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { View } from 'react-native';
 
 import { elapsedOf, useNow, useStore } from '@/store';
-import { useT } from '@/theme';
-import { Avatar, Press, Txt } from '@/ui/base';
-import { Glass } from '@/ui/Glass';
+import { hair, useT } from '@/theme';
+import { Press, Txt } from '@/ui/base';
 import { Icon, IconName } from '@/ui/Icon';
 
-const TABS: Record<string, { label: string; icon: IconName | 'me' }> = {
+const TABS: Record<string, { label: string; icon: IconName }> = {
   index: { label: 'ホーム', icon: 'home' },
   records: { label: '記録', icon: 'bars' },
   community: { label: 'みんな', icon: 'users' },
-  me: { label: 'マイページ', icon: 'me' },
+  me: { label: 'マイページ', icon: 'user' },
 };
 
-// Instagram's tab bar — icons only, the profile tab is your own photo — on a
-// floating glass capsule. The middle slot is the timer: a dark pill that
-// shows the running minutes with a live dot while you study.
 function TabBar({ state, navigation, insets }: BottomTabBarProps) {
   const t = useT();
   useNow();
   const st = useStore((s) => s);
   const running = st.running, paused = st.paused;
   const mins = Math.floor(elapsedOf(st) / 60);
+  const routes = state.routes;
   const btn = (i: number) => {
-    const r = state.routes[i];
+    const r = routes[i];
     const meta = TABS[r.name];
     if (!meta) return null;
     const on = state.index === i;
     return (
-      <Press key={r.key} scale={0.86} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={meta.label}
-        onPress={() => {
-          const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
-          if (!on && !e.defaultPrevented) navigation.navigate(r.name, r.params);
-        }}
-        style={{ flex: 1, height: 52, alignItems: 'center', justifyContent: 'center' }}>
-        {meta.icon === 'me' ? (
-          <View style={{ padding: 1.5, borderRadius: 16, borderWidth: on ? 1.6 : 0, borderColor: t.ink }}>
-            <Avatar name="はる" color="#6E56CF" size={on ? 24 : 26} />
-          </View>
-        ) : (
-          <Icon name={meta.icon} size={25} color={t.ink} filled={on} width={on ? 2.1 : 1.7} />
-        )}
+      <Press key={r.key} onPress={() => {
+        const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
+        if (!on && !e.defaultPrevented) navigation.navigate(r.name, r.params);
+      }} scale={0.88} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={meta.label}
+        style={{ flex: 1, alignItems: 'center', gap: 2, paddingTop: 2 }}>
+        <Icon name={meta.icon} size={21} color={on ? t.ink : t.ink3} width={on ? 1.9 : 1.6} />
+        <Txt size={10} w={on ? '600' : '500'} tone={on ? 'ink' : 'ink3'} lh={12}>{meta.label}</Txt>
       </Press>
     );
   };
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 14, right: 14, bottom: Math.max(insets.bottom - 10, 10) }}>
-      <Glass radius={30} style={{ height: 60, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 }}>
+    <View style={{ backgroundColor: t.surface, borderTopWidth: t.dark ? hair : 0, borderTopColor: t.line, boxShadow: t.dark ? undefined : '0px -1px 0px rgba(15,23,42,0.05), 0px -8px 24px rgba(15,23,42,0.04)' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingTop: 7, paddingBottom: Math.max(insets.bottom - 6, 8), paddingHorizontal: 6 }}>
         {btn(0)}
         {btn(1)}
-        <View style={{ flex: 1.2, alignItems: 'center' }}>
-          <Press onPress={() => router.push('/timer')} scale={0.9} hitSlop={{ top: 8, bottom: 8 }} accessibilityLabel={running ? `勉強中 ${mins}分。タイマーを開く` : '勉強を始める'}
-            style={{ height: 38, minWidth: 54, paddingHorizontal: running ? 12 : 0, borderRadius: 19, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Press onPress={() => router.push('/timer')} scale={0.9} accessibilityLabel={running ? `勉強中 ${mins}分。タイマーを開く` : '勉強を始める'}
+            hitSlop={{ top: 8, bottom: 8 }} style={{ height: 34, minWidth: 50, paddingHorizontal: running ? 11 : 0, borderRadius: 17, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
             {running ? (
               <>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: paused ? t.amber : '#2FD07A' }} />
-                <Txt num size={13} w="600" color={t.onInk}>{mins}<Txt size={10} color={t.onInk}>分</Txt></Txt>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: paused ? t.amber : '#22C55E' }} />
+                <Txt num size={12.5} w="600" color={t.onInk}>{mins}<Txt size={10} color={t.onInk}>分</Txt></Txt>
               </>
             ) : (
-              <Icon name="play" size={16} color={t.onInk} />
+              <Icon name="play" size={15} color={t.onInk} />
             )}
           </Press>
         </View>
         {btn(2)}
         {btn(3)}
-      </Glass>
+      </View>
     </View>
   );
 }

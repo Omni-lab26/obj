@@ -1,26 +1,27 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Image, ScrollView, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
-import { dayLog, DEADLINES, hms, pad, POSTS, RECS, STREAK, SUBJ, subj, TODAY } from '@/data';
+import { dayLog, DEADLINES, hms, pad, PEOPLE, STREAK, SUBJ, subj, TODAY } from '@/data';
+import { PHOTO } from '@/photos';
 import { elapsedOf, setSubject, startStudy, togglePause, toggleTodo, useNow, useStore } from '@/store';
-import { hair, radius, type, useT } from '@/theme';
-import { Card, haptic, IconBtn, Press, SubjCoin, Txt } from '@/ui/base';
+import { hair, lift, radius, type, useT } from '@/theme';
+import { Avatar, AvatarStack, Btn, Card, haptic, IconBtn, Press, SubjCoin, Txt } from '@/ui/base';
 import { InchTape, Wordmark } from '@/ui/Brand';
-import { Page, useUnread } from '@/ui/Chrome';
-import { LiveDot } from '@/ui/GroupParts';
-import { DateTile, MiniSeg, TodoRow } from '@/ui/HomeParts';
+import { Screen, useUnread } from '@/ui/Chrome';
+import { MiniSeg, TodoRow } from '@/ui/HomeParts';
 import { Icon } from '@/ui/Icon';
-import { PhotoPost, RecordPost, Stories } from '@/ui/Post';
 import { Rolling } from '@/ui/Rolling';
-import { Inch } from '@/ui/Sticker';
+import { openSheet } from '@/ui/Sheet';
+import { LiveDot } from '@/ui/GroupParts';
+import { Sticker } from '@/ui/Sticker';
 import { toast } from '@/ui/Toast';
 
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
 
-// Home reads like Instagram: stories of who is studying, then your own card
-// for today, your list, and a feed of what the people you follow recorded.
+// Home has one lead: how much you studied today, on the tape. Everything else
+// is smaller and shaped differently, so the eye has an order to follow.
 export default function Home() {
   const t = useT();
   useNow();
@@ -35,27 +36,55 @@ export default function Home() {
   useEffect(() => { const id = setTimeout(() => setShown(true), 120); return () => clearTimeout(id); }, []);
   const H = shown ? String(Math.floor(s.todayMin / 60)) : '0';
   const M = shown ? pad(s.todayMin % 60) : '00';
+  const [joined, setJoined] = useState(false);
+
   const onToggle = (i: number) => {
     const willAll = s.todos.every((x, j) => (j === i ? !x.d : x.d));
     toggleTodo(i);
     if (willAll) { haptic.success(); toast('今日のToDo、ぜんぶ終わり'); }
   };
+  const joinPeers = () => {
+    if (s.running) { toast('もう勉強中です', `${sj.name} ${hms(e)}`); return; }
+    startStudy();
+    setJoined(true);
+    haptic.success();
+    toast('みんなと一緒に始めました');
+  };
+  const breakRead = () =>
+    openSheet((close) => (
+      <View>
+        <Galaxy size={180} wide />
+        <Txt size={20} w="700" lh={29} style={{ marginTop: 14 }}>宇宙の物質の約85%は、まだ誰も見たことがない</Txt>
+        <Txt size={12.5} tone="ink3" style={{ marginTop: 4, marginBottom: 14 }}>ひとやすみ · 物理 · 2分</Txt>
+        <Txt size={15} lh={28}>
+          1970年代、天文学者ヴェラ・ルービンは、銀河の外側の星が内側と同じ速さで回っていることを見つけました。見えている物質だけでは、重力が足りません。
+        </Txt>
+        <Txt size={15} lh={28} style={{ marginTop: 14 }}>
+          これは高校物理の「円運動」と「万有引力」の式で確かめられます。足りない重力の正体は、まだわかっていません。
+        </Txt>
+        <Btn label="机に戻る" kind="quiet" wide onPress={close} style={{ marginTop: 22 }} />
+      </View>
+    ));
+
   const next = DEADLINES[1]; // the exam everyone is counting down to
   const diff = s.todayMin - dayLog(1).min;
   // today's minutes by subject; whatever was recorded since the morning goes to the current subject
   const today0 = dayLog(0);
   const parts = SUBJ.map((x, k) => ({ name: x.name, c: x.c, min: today0.parts[k] + (x.id === s.subj ? Math.max(0, s.todayMin - today0.min) : 0) }));
   return (
-    <Page brand={<Wordmark size={21} />}
-      right={(
-        <>
-          <IconBtn name="search" label="さがす" onPress={() => router.push('/search')} />
-          <IconBtn name="heart" label="お知らせ" dot={unread > 0} onPress={() => router.push('/notifications')} />
-        </>
-      )}>
-        {/* stories: who is at their desk right now */}
-        <Stories running={s.running} />
+    <Screen>
+      {/* header: brand, not a page title */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 18, paddingRight: 16, paddingTop: 6, height: 52 }}>
+        <Wordmark size={19} />
+        <View style={{ flex: 1 }} />
+        <IconBtn outline name="search" label="さがす" onPress={() => router.push('/search')} />
+        <IconBtn outline name="bell" label="お知らせ" dot={unread > 0} onPress={() => router.push('/notifications')} />
+        <Press onPress={() => router.navigate('/me')} scale={0.9} accessibilityLabel="マイページ" style={{ marginLeft: 2 }}>
+          <Avatar name="はる" color="#6E56CF" size={34} />
+        </Press>
+      </View>
 
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         {/* the lead: today's total, like a wallet's balance card */}
         <Card style={{ marginHorizontal: 16, marginTop: 6 }} pad={14}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -145,7 +174,7 @@ export default function Home() {
           {DEADLINES.map((d, i) => (
             <View key={d.t} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12 }}>
               {i ? <View style={{ position: 'absolute', top: 0, left: 58, right: 0, height: hair, backgroundColor: t.line }} /> : null}
-              <DateTile mo={d.mo} d={d.day} />
+              <Sticker name={d.urgent ? 'flag' : i === 1 ? 'cal' : 'trophy'} size={36} tilt={i % 2 ? 6 : -6} />
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Txt size={13.5} w="600" lh={18} numberOfLines={1}>{d.t}</Txt>
                 <Txt size={11} tone="ink3" lh={15}>{d.d}</Txt>
@@ -158,17 +187,38 @@ export default function Home() {
           ))}
         </Card>
 
-        {/* the feed: what the people you follow recorded */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 22, paddingBottom: 8, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-          <Txt size={type.head} w="600">フォロー中の記録</Txt>
-        </View>
-        <View style={{ paddingHorizontal: 16, gap: 14 }}>
-          {RECS.slice(0, 2).map((r) => <RecordPost key={r.n} r={r} />)}
-          <PhotoPost p={POSTS[0]} />
-          <RecordPost r={RECS[2]} />
-        </View>
-    </Page>
+        {/* peers */}
+        <Press onPress={() => router.navigate('/community')} scale={0.985}
+          style={[{ marginHorizontal: 16, marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
+          <AvatarStack ring={t.surface} size={28} max={4} people={[...(joined ? [{ n: 'はる', c: '#6E56CF' }] : []), ...PEOPLE.slice(0, 3)]} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <LiveDot size={5} />
+              <Txt size={13} w="600" lh={18}>{joined ? 5 : 4}人が勉強中</Txt>
+            </View>
+            <Txt size={11} tone="ink3" numberOfLines={1}>mio 英語 · そら 数学 · kaito 物理</Txt>
+          </View>
+          <Btn label={joined ? '勉強中' : '一緒に始める'} kind="tint" small onPress={joinPeers} disabled={joined} />
+        </Press>
+
+        {/* a break, with a picture */}
+        <Press onPress={breakRead} scale={0.985}
+          style={[{ marginHorizontal: 16, marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, backgroundColor: t.surface, padding: 8 }, lift(t)]}>
+          <Galaxy size={64} />
+          <View style={{ flex: 1, minWidth: 0, paddingRight: 6 }}>
+            <Txt size={11} tone="ink3" lh={15}>ひとやすみ · 2分で読める</Txt>
+            <Txt size={13.5} w="600" lh={19} numberOfLines={2}>宇宙の物質の約85%は、まだ誰も見たことがない</Txt>
+          </View>
+          <Icon name="chev" size={14} color={t.ink3} />
+        </Press>
+      </ScrollView>
+    </Screen>
   );
+}
+
+/** The break card's picture: a real photo of the Milky Way. */
+function Galaxy({ size, wide }: { size: number; wide?: boolean }) {
+  return <Image source={PHOTO.space} style={{ width: wide ? '100%' : size, height: size, borderRadius: wide ? 12 : 10 }} resizeMode="cover" accessibilityIgnoresInvertColors />;
 }
 
 /**
@@ -192,7 +242,7 @@ function StreakPill() {
     <Press onPress={jump} haptics={false} scale={0.98} accessibilityLabel={`${STREAK}日連続で勉強中。休みチケット2枚`}
       style={{ marginHorizontal: 16, marginTop: 12, height: 58, borderRadius: 29, backgroundColor: t.dark ? '#000' : '#0B0D12', flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 18,
         borderWidth: t.dark ? hair : 0, borderColor: t.line2 }}>
-      <Animated.View style={a}><Inch pose="arch" eyes="dot" mouth="open" prop="flame" size={46} /></Animated.View>
+      <Animated.View style={a}><Sticker name="fire" size={42} /></Animated.View>
       <View style={{ marginLeft: 4 }}>
         <Rolling value={pad(STREAK)} size={17} weight="700" color="#fff" />
         <Txt size={11} color={dim} lh={14}>日連続 · 休み券 2</Txt>

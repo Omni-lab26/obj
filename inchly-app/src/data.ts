@@ -47,14 +47,6 @@ export const POSTS: Post[] = [
   { n: 'kaito', c: '#3E8C78', m: '高3', w: '昨日', t: '電磁気、エッセンスと名問の森どっちから入るのがいい？ 力学はエッセンスでなんとかなった', tags: ['#物理', '#質問'], u: 21, r: 17 },
 ];
 
-// The home feed: what people you follow recorded, Instagram-style.
-export type Rec = { n: string; c: string; m: string; w: string; s: string; min: number; note: string; likes: number; comments: number; live?: boolean };
-export const RECS: Rec[] = [
-  { n: 'そら', c: '#5D6DB8', m: '東大 理一志望', w: '18分前', s: 'ma', min: 95, note: '置換積分、やっと手が勝手に動くようになってきた', likes: 31, comments: 4, live: true },
-  { n: 'mio', c: '#C47A55', m: '東大 文一志望', w: '1時間前', s: 'en', min: 140, note: '要約3題。2題目で時間切れ、悔しい', likes: 52, comments: 7, live: true },
-  { n: 'taku', c: '#8A6D3B', m: '京大 工志望', w: '3時間前', s: 'ph', min: 40, note: '', likes: 9, comments: 0 },
-];
-
 export type IconName = 'flag' | 'clock' | 'users' | 'bulb' | 'cal' | 'target' | 'userPlus';
 export type Notif = {
   id: number; day: string; kind: '' | 'imp' | 'study'; icon: IconName; title: string; sub: string; time: string;
