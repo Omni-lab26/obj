@@ -1,73 +1,78 @@
 import { useEffect, useRef, useState } from 'react';
-import { PanResponder, View } from 'react-native';
-import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import { View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { ease, focus } from '../theme';
 import { haptic, Txt } from './base';
 import { Icon } from './Icon';
 
 // Slide-to-confirm on the dark timer. The track fills behind the knob and the
-// label fades as you drag; past 70% it finishes by itself, otherwise it springs back.
+// label fades as you drag; past 70% it finishes by itself, otherwise it springs
+// back. The drag runs on the UI thread; React hears only "passed the line" and "done".
 const KNOB = 48;
 const PADDING = 6;
 
 export function SlideToRecord({ onDone, disabled, label = '右へスライドして記録する' }: { onDone: () => void; disabled?: boolean; label?: string }) {
   const [w, setW] = useState(0);
-  const max = Math.max(1, w - KNOB - PADDING * 2);
-  const maxSv = useSharedValue(1);
+  const max = useSharedValue(1);
   const x = useSharedValue(0);
-  const start = useRef(0);
-  const passed = useRef(false);
+  const off = useSharedValue(disabled ? 1 : 0);
+  const start = useSharedValue(0);
   const doneRef = useRef(onDone);
-  const disabledRef = useRef(disabled);
-  useEffect(() => { doneRef.current = onDone; disabledRef.current = disabled; }, [onDone, disabled]);
+  useEffect(() => { doneRef.current = onDone; off.set(disabled ? 1 : 0); }, [onDone, disabled, off]);
 
-  // The responder is created once; its handlers read refs only when a gesture fires, never during render.
+  const finish = () => {
+    haptic.success();
+    doneRef.current();
+    // put the knob back once the next screen covers this one
+    setTimeout(() => x.set(withSpring(0, { damping: 18, stiffness: 180 })), 700);
+  };
+  // one tick as the knob crosses the line, either way
+  useAnimatedReaction(() => x.get() > max.get() * 0.7, (over, prev) => { if (prev !== null && over !== prev) scheduleOnRN(haptic.tap); });
+
+  // The gesture is built once; its worklets read shared values, and finish reads onDone from a ref when it fires.
   // eslint-disable-next-line react-hooks/refs
-  const [pan] = useState(() =>
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !disabledRef.current,
-      onMoveShouldSetPanResponder: (_, g) => !disabledRef.current && Math.abs(g.dx) > Math.abs(g.dy),
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: () => { start.current = x.get(); passed.current = false; haptic.tap(); },
-      onPanResponderMove: (_, g) => {
-        const m = maxSv.get();
-        const v = Math.max(0, Math.min(m, start.current + g.dx));
-        x.set(v);
-        const over = v > m * 0.7;
-        if (over !== passed.current) { passed.current = over; haptic.tap(); }
-      },
-      onPanResponderRelease: () => {
-        const m = maxSv.get();
-        if (x.get() > m * 0.7) {
-          x.set(withTiming(m, { duration: 220, easing: ease.out }));
-          haptic.success();
-          setTimeout(() => doneRef.current(), 260);
-          setTimeout(() => { x.set(withSpring(0, { damping: 18, stiffness: 180 })); }, 900);
-        } else {
-          x.set(withSpring(0, { damping: 16, stiffness: 220 }));
-        }
-      },
-      onPanResponderTerminate: () => { x.set(withSpring(0, { damping: 16, stiffness: 220 })); },
-    }),
-  );
+  const [pan] = useState(() => Gesture.Pan()
+    .activeOffsetX([-2, 2])
+    .onBegin(() => { start.set(x.get()); })
+    .onUpdate((e) => {
+      if (off.get()) return;
+      x.set(Math.max(0, Math.min(max.get(), start.get() + e.translationX)));
+    })
+    .onEnd((e) => {
+      if (off.get()) return;
+      const m = max.get(), v = x.get();
+      // a quick flick counts too
+      if (v > m * 0.7 || (e.velocityX > 900 && v > m * 0.35)) {
+        x.set(withTiming(m, { duration: 180, easing: ease.out }, (done) => { if (done) scheduleOnRN(finish); }));
+      } else {
+        x.set(withSpring(0, { damping: 16, stiffness: 220 }));
+      }
+    }));
 
   const knob = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   const fill = useAnimatedStyle(() => ({ width: x.value + KNOB + PADDING * 2 }));
-  const lbl = useAnimatedStyle(() => ({ opacity: interpolate(x.value, [0, max * 0.7], [1, 0], 'clamp') }));
+  const lbl = useAnimatedStyle(() => ({ opacity: interpolate(x.value, [0, max.value * 0.7], [1, 0], 'clamp') }));
 
   return (
-    <View onLayout={(e) => { const lw = e.nativeEvent.layout.width; setW(lw); maxSv.set(Math.max(1, lw - KNOB - PADDING * 2)); }} accessibilityRole="adjustable" accessibilityLabel={label}
+    <View onLayout={(e) => { const lw = e.nativeEvent.layout.width; setW(lw); max.set(Math.max(1, lw - KNOB - PADDING * 2)); }}
+      accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
       accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={() => !disabled && onDone()}
       style={{ height: 60, borderRadius: 18, backgroundColor: focus.raise, overflow: 'hidden', opacity: disabled ? 0.35 : 1 }}>
       <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: 'rgba(46,196,113,0.22)' }, fill]} />
       <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: KNOB + PADDING, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }, lbl]}>
         <Txt size={14} color={focus.ink2}>{label}</Txt>
       </Animated.View>
-      <Animated.View {...pan.panHandlers} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-        style={[{ position: 'absolute', top: PADDING, left: PADDING, width: KNOB, height: KNOB, borderRadius: 13, backgroundColor: focus.green, alignItems: 'center', justifyContent: 'center' }, knob]}>
-        <Icon name="arrow" size={22} color={focus.bg} />
-      </Animated.View>
+      {w ? (
+        <GestureDetector gesture={pan}>
+          <Animated.View hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            style={[{ position: 'absolute', top: PADDING, left: PADDING, width: KNOB, height: KNOB, borderRadius: 13, backgroundColor: focus.green, alignItems: 'center', justifyContent: 'center' }, knob]}>
+            <Icon name="arrow" size={22} color={focus.bg} />
+          </Animated.View>
+        </GestureDetector>
+      ) : null}
     </View>
   );
 }

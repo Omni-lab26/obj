@@ -1,79 +1,53 @@
-import { useEffect, useRef, useState } from 'react';
-import { PanResponder, Text, View } from 'react-native';
-import Animated, { cancelAnimation, Easing, SharedValue, useAnimatedReaction, useAnimatedStyle, useSharedValue, withDecay, withTiming } from 'react-native-reanimated';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { cancelAnimation, Easing, useAnimatedReaction, useAnimatedStyle, useSharedValue, withDecay, withTiming } from 'react-native-reanimated';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { font, useT } from '../theme';
 import { haptic } from './base';
 
-// bencho "time scrubber": drag the ruler to set a time; fling it and it coasts
-// to the nearest step. Ticks shrink and fade away from the red centre needle
-// (measured on bencho: opacity 1-(d/146)², height 1-(d/197)² over a 260 px ruler).
-const PX = 10; // px per tick
+// A ruler you drag to set a time; fling it and it coasts, then snaps to the
+// nearest step. Everything that moves runs on the UI thread: the ticks are one
+// static strip slid by a single transform, and the edges fade under a gradient,
+// so a drag never waits on React. React only hears about whole steps (for the
+// readout and a haptic tick) and the final value when the ruler comes to rest.
 const NEEDLE = '#E5484D';
 const SNAP = Easing.bezier(0.24, 1.34, 0.38, 1);
+const H = 58;
 
 type Props = {
-  value: number; // minutes
-  onChange: (m: number) => void; // called with whole minutes while the user moves the ruler
+  value: number; // in the ruler's unit (minutes or hours)
+  onChange: (v: number) => void; // once, when the ruler comes to rest after the user moved it
+  onPreview?: (v: number | null) => void; // whole steps while the user moves it; null when done
   min: number;
   max: number;
-  step: number; // snap step, minutes
-  tick: number; // minutes per tick
-  mid: number; // taller tick every N minutes
-  major: number; // tallest, labelled tick every N minutes
-  label: (m: number) => string;
-  dark?: boolean;
+  step: number; // snap step
+  px: number; // px per unit
+  minor: number; // units per tick
+  mid: number; // taller tick every N units
+  major: number; // labelled tick every N units
+  label: (v: number) => string;
+  bg: string; // the background the edges fade into
+  dark?: boolean; // light ticks for a dark background
   a11y: string;
 };
 
-function Tick({ m, cur, ppm, half, R1, R2, kind, color, label, labelColor }: {
-  m: number; cur: SharedValue<number>; ppm: number; half: number; R1: number; R2: number;
-  kind: 0 | 1 | 2; color: string; label?: string; labelColor: string;
-}) {
-  const h = kind === 2 ? 25 : kind === 1 ? 17 : 10;
-  const a = useAnimatedStyle(() => {
-    const x = (m - cur.value) * ppm;
-    const d = Math.abs(x);
-    return {
-      opacity: Math.max(0.18, 1 - (d / R1) ** 2),
-      transform: [{ translateX: half + x - 1 }, { scaleY: Math.max(0.55, 1 - (d / R2) ** 2) }],
-    };
-  });
-  const la = useAnimatedStyle(() => {
-    const x = (m - cur.value) * ppm;
-    const d = Math.abs(x);
-    return { opacity: Math.max(0, 0.95 - (d / R1) ** 2), transform: [{ translateX: half + x - 40 }] };
-  });
-  return (
-    <>
-      <Animated.View style={[{ position: 'absolute', top: 8, left: 0, width: 2, height: h, borderRadius: 1, backgroundColor: color, transformOrigin: 'top' }, a]} />
-      {label ? (
-        <Animated.View style={[{ position: 'absolute', top: 38, left: 0, width: 80, alignItems: 'center' }, la]}>
-          <Text style={{ fontSize: 11, color: labelColor, fontFamily: font.text, fontWeight: '500', fontVariant: ['tabular-nums'] }}>{label}</Text>
-        </Animated.View>
-      ) : null}
-    </>
-  );
-}
-
-export function TimeScrubber({ value, onChange, min, max, step, tick, mid, major, label, dark, a11y }: Props) {
+export const TimeScrubber = memo(function TimeScrubber({ value, onChange, onPreview, min, max, step, px, minor, mid, major, label, bg, dark, a11y }: Props) {
   const t = useT();
   const ink = dark ? '#F2F3F1' : t.ink;
-  const labelColor = dark ? 'rgba(242,243,241,0.55)' : t.ink3;
-  const ppm = PX / tick;
+  const soft = dark ? 'rgba(242,243,241,0.7)' : t.ink2;
+  const labelColor = dark ? 'rgba(242,243,241,0.6)' : t.ink3;
   const [w, setW] = useState(0);
   const half = w / 2;
-  const R1 = 146 * (w / 260 || 1);
-  const R2 = 197 * (w / 260 || 1);
-
   const cur = useSharedValue(value);
-  const touching = useSharedValue(0); // 1 while dragging or coasting
-  const [center, setCenter] = useState(Math.round(value));
-  const cb = useRef({ onChange, min, max, step });
-  useEffect(() => { cb.current = { onChange, min, max, step }; }, [onChange, min, max, step]);
+  const touching = useSharedValue(0); // 1 while the user drags or the ruler coasts
+  const start = useSharedValue(0);
+  const cb = useRef({ onChange, onPreview });
+  useEffect(() => { cb.current = { onChange, onPreview }; }, [onChange, onPreview]);
 
-  // Follow the value from outside (e.g. a countdown) unless the user is holding the ruler.
+  // Follow the value from outside (a countdown, or a change elsewhere) unless the user holds the ruler.
   useEffect(() => {
     if (touching.get()) return;
     const diff = Math.abs(cur.get() - value);
@@ -81,67 +55,101 @@ export function TimeScrubber({ value, onChange, min, max, step, tick, mid, major
     cur.set(diff <= 0.05 ? withTiming(value, { duration: 1000, easing: Easing.linear }) : withTiming(value, { duration: 420, easing: SNAP }));
   }, [value, cur, touching]);
 
-  // Keep the rendered window of ticks around the needle; report whole minutes while the user moves it.
-  const onMinute = (m: number, user: boolean) => {
-    setCenter(m);
-    if (user) {
-      if (m % tick === 0) haptic.tap();
-      cb.current.onChange(m);
-    }
-  };
+  const stepTo = (v: number) => { haptic.tap(); cb.current.onPreview?.(v); };
+  const settle = (v: number) => { cb.current.onPreview?.(null); cb.current.onChange(v); };
   useAnimatedReaction(
-    () => Math.round(cur.value),
-    (m, prev) => { if (m !== prev) scheduleOnRN(onMinute, m, touching.value === 1); },
+    () => Math.round(cur.value / step) * step,
+    (v, prev) => { if (prev !== null && v !== prev && touching.value === 1) scheduleOnRN(stepTo, v); },
   );
 
-  const settle = (m: number) => { touching.set(0); cb.current.onChange(m); };
-  // The responder is created once; its handlers read refs and shared values only when a gesture fires.
-  // eslint-disable-next-line react-hooks/refs
-  const [pan] = useState(() => {
-    let start = 0;
-    const clamp = (x: number) => Math.max(cb.current.min, Math.min(cb.current.max, x));
-    return PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > Math.abs(g.dy),
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: () => { cancelAnimation(cur); touching.set(1); start = cur.get(); },
-      onPanResponderMove: (_, g) => { cur.set(clamp(start - g.dx / ppm)); },
-      onPanResponderRelease: (_, g) => {
-        const { min: lo, max: hi, step: st } = cb.current;
-        // px/ms → minutes/s, opposite to the finger
-        cur.set(withDecay({ velocity: (-g.vx * 1000) / ppm, deceleration: 0.996, clamp: [lo, hi] }, (finished) => {
-          'worklet';
+  const pan = useMemo(() => {
+    return Gesture.Pan()
+      .activeOffsetX([-3, 3])
+      .failOffsetY([-14, 14])
+      .onBegin(() => {
+        cancelAnimation(cur);
+        touching.value = 1;
+        start.value = cur.value;
+      })
+      .onUpdate((e) => {
+        cur.value = Math.max(min, Math.min(max, start.value - e.translationX / px));
+      })
+      .onEnd((e) => {
+        cur.value = withDecay({ velocity: -e.velocityX / px, deceleration: 0.995, clamp: [min, max] }, (finished) => {
           if (!finished) return; // a new touch took over
-          const target = Math.max(lo, Math.min(hi, Math.round(cur.value / st) * st));
-          cur.value = withTiming(target, { duration: 260, easing: SNAP }, (done) => { if (done) scheduleOnRN(settle, target); });
-        }));
-      },
-    });
-  });
+          const target = Math.max(min, Math.min(max, Math.round(cur.value / step) * step));
+          cur.value = withTiming(target, { duration: 260, easing: SNAP }, (done) => {
+            if (!done) return;
+            touching.value = 0;
+            scheduleOnRN(settle, target);
+          });
+        });
+      })
+      .onFinalize((_, ok) => {
+        if (ok) return;
+        // a tap without a drag: snap where it is
+        const target = Math.max(min, Math.min(max, Math.round(cur.value / step) * step));
+        cur.value = withTiming(target, { duration: 200, easing: SNAP }, (done) => { if (done) { touching.value = 0; } });
+      });
+    // gesture callbacks are worklets; settle/stepTo read the latest callbacks from a ref
+  }, [min, max, step, px, cur, touching, start]);
 
-  // Ticks inside the visible window (plus a margin), recalculated as the needle moves.
-  const span = w ? Math.ceil(half / ppm) + tick * 3 : 0;
-  const first = Math.max(min, Math.ceil((center - span) / tick) * tick);
-  const ticks: number[] = [];
-  for (let m = first; m <= Math.min(max, center + span); m += tick) ticks.push(m);
+  const strip = useAnimatedStyle(() => ({ transform: [{ translateX: -(cur.value - min) * px }] }));
 
+  // The ticks are drawn once per size; only the strip's transform moves.
+  const ticks = useMemo(() => {
+    const n = Math.round((max - min) / minor);
+    const per = (k: number) => Math.round(k / minor);
+    const out = [];
+    for (let i = 0; i <= n; i++) {
+      const v = min + i * minor;
+      const big = i % per(major) === 0, middle = i % per(mid) === 0;
+      out.push(
+        <View key={i} style={{ position: 'absolute', left: i * minor * px - 1, top: 8, width: 2, height: big ? 26 : middle ? 17 : 10, borderRadius: 1, backgroundColor: big ? ink : soft }} />,
+      );
+      if (big) {
+        out.push(
+          <Text key={'l' + i} style={{ position: 'absolute', left: i * minor * px - 40, top: 38, width: 80, textAlign: 'center', fontSize: 11, color: labelColor, fontFamily: font.text, fontWeight: '500', fontVariant: ['tabular-nums'] }}>
+            {label(Math.round(v * 100) / 100)}
+          </Text>,
+        );
+      }
+    }
+    return out;
+  }, [min, max, minor, mid, major, px, label, ink, soft, labelColor]);
+
+  const fade = Math.min(110, half * 0.8);
   return (
-    <View onLayout={(e) => setW(e.nativeEvent.layout.width)} {...pan.panHandlers}
-      style={{ height: 58, overflow: 'hidden' }}
-      accessible accessibilityRole="adjustable" accessibilityLabel={a11y} accessibilityValue={{ text: label(Math.round(value)) }}
-      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
-      onAccessibilityAction={(e) => {
-        const d = e.nativeEvent.actionName === 'increment' ? step : -step;
-        const nv = Math.max(min, Math.min(max, Math.round(value / step) * step + d));
-        onChange(nv);
-      }}>
-      {w
-        ? ticks.map((m) => (
-            <Tick key={m} m={m} cur={cur} ppm={ppm} half={half} R1={R1} R2={R2} color={ink} labelColor={labelColor}
-              kind={m % major === 0 ? 2 : m % mid === 0 ? 1 : 0} label={m % major === 0 ? label(m) : undefined} />
-          ))
-        : null}
-      <View pointerEvents="none" style={{ position: 'absolute', top: 2, left: half - 1.5, width: 3, height: 32, borderRadius: 2, backgroundColor: NEEDLE }} />
-    </View>
+    <GestureDetector gesture={pan}>
+      <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ height: H, overflow: 'hidden' }}
+        accessible accessibilityRole="adjustable" accessibilityLabel={a11y} accessibilityValue={{ text: label(Math.round(value / step) * step) }}
+        accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+        onAccessibilityAction={(e) => {
+          const d = e.nativeEvent.actionName === 'increment' ? step : -step;
+          onChange(Math.max(min, Math.min(max, Math.round(value / step) * step + d)));
+        }}>
+        {w ? (
+          <>
+            <Animated.View style={[{ position: 'absolute', left: half, top: 0, bottom: 0 }, strip]}>{ticks}</Animated.View>
+            {/* the ends fade out, so the ruler reads as a dial under the needle */}
+            <Svg pointerEvents="none" width={w} height={H} style={{ position: 'absolute' }}>
+              <Defs>
+                <LinearGradient id="fadeL" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0" stopColor={bg} stopOpacity={1} />
+                  <Stop offset="1" stopColor={bg} stopOpacity={0} />
+                </LinearGradient>
+                <LinearGradient id="fadeR" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0" stopColor={bg} stopOpacity={0} />
+                  <Stop offset="1" stopColor={bg} stopOpacity={1} />
+                </LinearGradient>
+              </Defs>
+              <Rect x={0} y={0} width={fade} height={H} fill="url(#fadeL)" />
+              <Rect x={w - fade} y={0} width={fade} height={H} fill="url(#fadeR)" />
+            </Svg>
+            <View pointerEvents="none" style={{ position: 'absolute', top: 2, left: half - 1.5, width: 3, height: 34, borderRadius: 2, backgroundColor: NEEDLE }} />
+          </>
+        ) : null}
+      </View>
+    </GestureDetector>
   );
-}
+});

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,21 +10,42 @@ import { focus, hair } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
-import { recordSheet } from '@/ui/RecordSheet';
 import { Rolling } from '@/ui/Rolling';
 import { SlideToRecord } from '@/ui/SlideToRecord';
 import { TimeScrubber } from '@/ui/TimeScrubber';
 import { toast } from '@/ui/Toast';
 
-// Focus timer: always dark. The readout counts down the planned session;
-// the ruler (bencho "time scrubber") shows the remaining minutes and drifts as
-// time passes — drag or fling it to plan or adjust the session.
+// Focus timer: always dark. The readout counts down the planned session; two
+// rulers (hours above, minutes below) show the remaining time and drift as it
+// passes — drag or fling either to plan or adjust the session. Slide to record
+// pauses the clock and opens the record page.
 const fmt = (sec: number) => {
   const v = Math.max(0, Math.round(sec));
   const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60, x = v % 60;
   return h ? `${h}:${pad(m)}:${pad(x)}` : `${pad(m)}:${pad(x)}`;
 };
-const rulerLabel = (m: number) => (m < 60 ? `${m}分` : m % 60 ? `${Math.floor(m / 60)}:${pad(m % 60)}` : `${m / 60}時間`);
+const hourLabel = (h: number) => `${h}時間`;
+const minLabel = (m: number) => `${m}分`;
+type Preview = { h: number | null; m: number | null };
+
+/** The big countdown. It redraws on its own while a ruler moves, so the screen around it stays still. */
+function Readout({ sec, over, paused, side, parts, register }: {
+  sec: number; over: boolean; paused: boolean; side: string; parts: { h: number; m: number };
+  register: (set: (p: Preview) => void) => void;
+}) {
+  const [p, setP] = useState<Preview>({ h: null, m: null });
+  useEffect(() => register(setP), [register]);
+  const moving = p.h !== null || p.m !== null;
+  const shown = moving ? ((p.h ?? parts.h) * 60 + (p.m ?? Math.floor(parts.m))) * 60 : sec;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 8, opacity: paused && !moving ? 0.5 : 1 }}
+      accessible accessibilityLabel={`${side} ${fmt(shown)}`}>
+      {over && !moving ? <Txt num size={40} w="500" color={focus.green} style={{ marginBottom: 6 }}>+</Txt> : null}
+      <Rolling value={fmt(shown)} size={60} weight="600" color={over && !moving ? focus.green : focus.ink} />
+      <Txt size={13} w="600" color={over && !moving ? focus.green : focus.ink2} style={{ marginBottom: 11 }}>{moving ? 'に設定' : side}</Txt>
+    </View>
+  );
+}
 
 export default function Timer() {
   const insets = useSafeAreaInsets();
@@ -63,14 +84,37 @@ export default function Timer() {
     if (!s.running) startStudy(s.subj);
     else togglePause();
   };
-  // Ruler: planned length while idle, remaining minutes while running.
-  const rulerValue = s.running ? Math.max(0, rem) / 60 : s.targetMin;
-  const onRuler = (m: number) => {
-    const cur = getState();
-    if (cur.running) setTarget(elapsedOf(cur) / 60 + m);
-    else setTarget(Math.max(5, m));
-  };
+  // Rulers: the planned length while idle, the remaining time while running, split into hours and minutes.
+  const left = s.running ? Math.max(0, rem) / 60 : s.targetMin;
+  const parts = { h: Math.min(5, Math.floor(left / 60)), m: left - Math.min(5, Math.floor(left / 60)) * 60 };
   const side = over ? '超過' : s.running ? '残り' : 'に集中';
+
+  // While a ruler moves, only the readout hears about it.
+  const preview = useRef<Preview>({ h: null, m: null });
+  const pushPreview = useRef<(p: Preview) => void>(() => {});
+  const register = useCallback((set: (p: Preview) => void) => { pushPreview.current = set; }, []);
+  const onHoursPreview = useCallback((v: number | null) => { preview.current = { ...preview.current, h: v }; pushPreview.current(preview.current); }, []);
+  const onMinsPreview = useCallback((v: number | null) => { preview.current = { ...preview.current, m: v }; pushPreview.current(preview.current); }, []);
+  const setTotal = (total: number) => {
+    const cur = getState();
+    if (cur.running) setTarget(elapsedOf(cur) / 60 + total);
+    else setTarget(Math.max(5, total));
+  };
+  const partsNow = () => {
+    const cur = getState();
+    const l = cur.running ? Math.max(0, cur.targetMin * 60 - elapsedOf(cur)) / 60 : cur.targetMin;
+    const h = Math.min(5, Math.floor(l / 60));
+    return { h, m: l - h * 60 };
+  };
+  const onHours = useCallback((h: number) => setTotal(h * 60 + Math.round(partsNow().m)), []);
+  const onMins = useCallback((m: number) => setTotal(partsNow().h * 60 + m), []);
+
+  // Slide to record: stop the clock where it is and fill in the record page.
+  const toRecord = useCallback(() => {
+    const cur = getState();
+    if (cur.running && !cur.paused) togglePause();
+    router.push('/record');
+  }, []);
 
   return (
     <Screen bg={focus.bg} style={{ paddingBottom: insets.bottom + 16 }}>
@@ -100,20 +144,18 @@ export default function Timer() {
 
       <View style={{ flex: 1, minHeight: 24 }} />
 
-      {/* readout: the time, with a small word on the right like bencho's "AM" */}
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 8, opacity: s.paused ? 0.5 : 1 }}
-        accessible accessibilityLabel={`${side} ${fmt(over ? -rem : s.running ? rem : s.targetMin * 60)}`}>
-        {over ? <Txt num size={40} w="500" color={focus.green} style={{ marginBottom: 6 }}>+</Txt> : null}
-        <Rolling value={fmt(over ? -rem : s.running ? rem : s.targetMin * 60)} size={60} weight="600" color={over ? focus.green : focus.ink} />
-        <Txt size={13} w="600" color={over ? focus.green : focus.ink2} style={{ marginBottom: 11 }}>{side}</Txt>
-      </View>
+      <Readout sec={over ? -rem : s.running ? rem : s.targetMin * 60} over={over} paused={s.paused} side={side} parts={parts} register={register} />
       <Txt size={11.5} color={focus.ink3} style={{ textAlign: 'center', marginTop: 2 }}>
-        {s.paused ? '一時停止中' : s.running ? `${sj.name} · ${sj.task}` : 'ルーラーを動かして、集中する時間を決めます'}
+        {s.paused ? '一時停止中' : s.running ? `${sj.name} · ${sj.task}` : '目盛りを動かして、集中する時間を決めます'}
       </Txt>
 
-      <View style={{ marginTop: 26, marginHorizontal: 20 }}>
-        <TimeScrubber value={rulerValue} onChange={onRuler} min={s.running ? 0 : 5} max={180} step={5} tick={1} mid={5} major={15}
-          label={rulerLabel} dark a11y={s.running ? '残り時間' : '集中する時間'} />
+      <View style={{ marginTop: 22, marginHorizontal: 20, gap: 4 }}>
+        <Txt size={11} w="600" color={focus.ink3}>時間</Txt>
+        <TimeScrubber value={parts.h} onChange={onHours} onPreview={onHoursPreview} min={0} max={5} step={1} px={56} minor={0.25} mid={0.5} major={1}
+          label={hourLabel} bg={focus.bg} dark a11y={s.running ? '残り時間の時間' : '集中する時間の時間'} />
+        <Txt size={11} w="600" color={focus.ink3} style={{ marginTop: 4 }}>分</Txt>
+        <TimeScrubber value={parts.m} onChange={onMins} onPreview={onMinsPreview} min={0} max={59} step={5} px={10} minor={1} mid={5} major={15}
+          label={minLabel} bg={focus.bg} dark a11y={s.running ? '残り時間の分' : '集中する時間の分'} />
       </View>
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 22, marginTop: 14 }}>
@@ -130,7 +172,7 @@ export default function Timer() {
 
       <View style={{ flex: 1, minHeight: 24 }} />
       <View style={{ marginHorizontal: 24 }}>
-        <SlideToRecord disabled={!s.running} onDone={() => recordSheet({ leaveTimer: true })} />
+        <SlideToRecord disabled={!s.running} onDone={toRecord} />
       </View>
     </Screen>
   );

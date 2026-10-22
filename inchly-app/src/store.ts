@@ -171,9 +171,9 @@ export function setSubject(id: string) {
 const clock = () => { const d = new Date(); return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
 
 /** Stops the timer and saves the session. Marks the ToDo you moved forward as done. Returns the minutes. */
-export function commitRecord(opts?: { todoId?: string; note?: string }): number {
+export function commitRecord(opts?: { todoId?: string; note?: string; min?: number }): number {
   const s = state;
-  const min = Math.max(1, Math.round(elapsedOf(s) / 60));
+  const min = Math.max(1, Math.round(opts?.min ?? elapsedOf(s) / 60));
   const todo = s.todos.find((x) => x.id === opts?.todoId);
   setState({
     running: false, paused: false, base: 0,

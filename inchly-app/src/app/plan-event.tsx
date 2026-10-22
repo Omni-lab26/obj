@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -22,6 +22,7 @@ type Who = 'all' | 'invited';
 // Start time: 6:00–24:00, snapping to 15 minutes.
 const START = 6 * 60;
 const END = 24 * 60;
+const hourMark = (m: number) => `${m / 60}時`;
 
 export default function PlanEvent() {
   const t = useT();
@@ -31,6 +32,7 @@ export default function PlanEvent() {
   const [kind, setKind] = useState<Kind>('もくもく自習');
   const [day, setDay] = useState(4);
   const [minutes, setMinutes] = useState(21 * 60);
+  const showMinutes = useCallback((v: number | null) => { if (v !== null) setMinutes(v); }, []);
   const [who, setWho] = useState<Who>('all');
   const [cap, setCap] = useState(12);
   const [title, setTitle] = useState('');
@@ -96,8 +98,8 @@ export default function PlanEvent() {
                 <Txt size={12} w="600" tone="ink3" style={{ marginBottom: 4 }}>から</Txt>
               </View>
               <View style={{ marginTop: 16 }}>
-                <TimeScrubber value={minutes} onChange={setMinutes} min={START} max={END} step={15} tick={5} mid={15} major={60}
-                  label={(m) => `${m / 60}時`} a11y="開始時刻" />
+                <TimeScrubber value={minutes} onChange={setMinutes} onPreview={showMinutes} min={START} max={END} step={15} px={2} minor={5} mid={15} major={60}
+                  label={hourMark} bg={t.surface} a11y="開始時刻" />
               </View>
             </View>
           </View>
