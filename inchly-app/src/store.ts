@@ -4,6 +4,8 @@ import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { demoHistory, GROUPS, Group, Post, POSTS, subj } from './data';
+import { cancelReminder, configureNotifications, notificationsAllowed, replaceReminders, scheduleReminder } from './lib/notify';
+import { deadlineReminders, goalReminderAt } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
 import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 
@@ -311,6 +313,31 @@ export function useDayRollover() {
     return () => { clearInterval(id); sub.remove(); };
   }, []);
 }
+/**
+ * Mount once: keeps the phone's scheduled reminders in step with your data —
+ * deadlines (3 days and 1 day before) and, while the timer runs, a nudge when
+ * today's total is 15 minutes from the goal. Never asks for permission itself.
+ */
+export function useReminders() {
+  const signedIn = useStore((s) => !!s.account);
+  const deadlines = useStore((s) => s.deadlines);
+  const onDeadlines = useStore((s) => s.notify.deadlines);
+  const onGoal = useStore((s) => s.notify.goal);
+  const running = useStore((s) => s.running && !s.paused);
+  const startedAt = useStore((s) => s.startedAt);
+  const todayMin = useStore((s) => s.todayMin);
+  const goalMin = useStore((s) => s.goalMin);
+  useEffect(() => { configureNotifications(); }, []);
+  useEffect(() => {
+    notificationsAllowed(false).then((ok) => replaceReminders('dl-', ok && signedIn && onDeadlines ? deadlineReminders(deadlines) : []));
+  }, [signedIn, deadlines, onDeadlines]);
+  useEffect(() => {
+    const at = running && onGoal ? goalReminderAt(todayMin, elapsedOf(getState()), goalMin) : null;
+    if (!at) { cancelReminder('goal'); return; }
+    notificationsAllowed(false).then((ok) => { if (ok) scheduleReminder({ id: 'goal', at, title: '目標まであと15分', body: `今日の目標 ${goalMin / 60}時間 まで、もう少しです` }); });
+  }, [running, startedAt, todayMin, goalMin, onGoal]);
+}
+
 /** The current run of study days. */
 export const useStreak = () => useStore((s) => streakOf(s.sessions, s.restDays));
 

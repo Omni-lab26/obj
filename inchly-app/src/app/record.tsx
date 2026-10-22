@@ -13,6 +13,8 @@ import { Choice, Field } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
 import { Rolling } from '@/ui/Rolling';
 import { Stamp } from '@/ui/Sticker';
+import { canNotify, notificationsAllowed, scheduleReminder } from '@/lib/notify';
+import { NextChoice as Next, nextTimeAt, nextTimeLabel } from '@/lib/reminders';
 import { toast } from '@/ui/Toast';
 
 // "Record this study": opened by sliding to record on the timer (the clock is
@@ -21,7 +23,6 @@ import { toast } from '@/ui/Toast';
 // when you'll come back to it. One button at the bottom saves it all.
 
 const clock = (d: Date) => `${d.getHours()}:${pad(d.getMinutes())}`;
-type Next = 'tomorrow' | 'tonight' | 'weekend' | 'none';
 
 export default function Record() {
   const t = useT();
@@ -30,7 +31,6 @@ export default function Record() {
   const todos = useStore((s) => s.todos);
   const goal = useStore((s) => s.goalMin);
   const before = useStore((s) => s.todayMin);
-  const notify = useStore((s) => s.notify);
   const [sid] = useState(() => getState().subj);
   const sj = subj(sid);
   const [min, setMin] = useState(() => Math.max(1, Math.round(elapsedOf(getState()) / 60)));
@@ -57,20 +57,30 @@ export default function Record() {
 
   const after = before + min;
   const picked = todos.find((x) => x.id === todo);
-  const when = next === 'tomorrow' ? `明日 ${clock(start)}` : next === 'tonight' ? '今夜 22:00' : next === 'weekend' ? '土曜 9:00' : null;
+  const when = nextTimeLabel(next, start);
+  const choices: { v: Next; label: string }[] = [];
+  for (const v of ['tomorrow', 'tonight', 'weekend'] as const) {
+    const label = nextTimeLabel(v, start);
+    if (label) choices.push({ v, label }); // 'tonight' drops out after 22:00
+  }
   const adjust = (d: number) => { haptic.tap(); setMin((m) => Math.max(1, Math.min(600, m + d))); };
 
-  const save = () => {
+  const save = async () => {
     setPhase('saving');
+    // the "next time" reminder: asks for permission here, the moment it's needed
+    const at = nextTimeAt(next, start);
+    let reminded: boolean | null = null;
+    if (at && when) {
+      reminded = (await notificationsAllowed(true)) && (await scheduleReminder({ id: 'next', at, title: `${sj.name}の続きの時間です`, body: picked ? picked.t : `${when}にやると決めた勉強` }));
+    }
+    const { min: m, coins } = commitRecord({ todoId: picked?.id, note: note.trim() || undefined, min });
+    haptic.success();
+    setPhase('done');
     setTimeout(() => {
-      const { min: m, coins } = commitRecord({ todoId: picked?.id, note: note.trim() || undefined, min });
-      haptic.success();
-      setPhase('done');
-      setTimeout(() => {
-        router.dismissAll();
-        toast(`${sj.name} ${m}分を記録しました`, `+${coins} コイン${when ? ` · 次は${when}` : ''}`);
-      }, 1100); // long enough to see the stamp land
-    }, 350);
+      router.dismissAll();
+      const tail = reminded === null ? '' : reminded ? ` · ${when}にお知らせします` : canNotify ? ' · 通知が許可されていないので、お知らせは届きません' : '';
+      toast(`${sj.name} ${m}分を記録しました`, `+${coins} コイン${tail}`);
+    }, 1100); // long enough to see the stamp land
   };
 
   return (
@@ -144,13 +154,8 @@ export default function Record() {
           </Section>
 
           {/* when next */}
-          <Section n={3} title="次はいつやる？" sub={when ? (notify.goal || notify.deadlines || notify.peers ? `${when}にお知らせします` : `${when}（お知らせは設定でオフになっています）`) : '決めずに記録します'}>
-            <Choice<Next> value={next} onChange={setNext} options={[
-              { v: 'tomorrow', label: `明日 ${clock(start)}` },
-              { v: 'tonight', label: '今夜 22:00' },
-              { v: 'weekend', label: '土曜 9:00' },
-              { v: 'none', label: '決めない' },
-            ]} />
+          <Section n={3} title="次はいつやる？" sub={when ? (canNotify ? `${when}にこのスマホへお知らせします` : `${when}（このブラウザではお知らせは届きません）`) : '決めずに記録します'}>
+            <Choice<Next> value={next} onChange={setNext} options={[...choices, { v: 'none', label: '決めない' }]} />
           </Section>
         </ScrollView>
 

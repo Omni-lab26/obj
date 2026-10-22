@@ -5,6 +5,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SUBJ } from '@/data';
+import { notificationsAllowed } from '@/lib/notify';
 import { ageThisYear } from '@/lib/time';
 import { Account, setState, signIn } from '@/store';
 import { hair, useT } from '@/theme';
@@ -41,6 +42,8 @@ export default function Welcome() {
   const finish = (a: Account) => {
     signIn(a);
     setState({ goalMin: goal, notify });
+    // the system asks once, right after you chose which notices you want
+    if (a.via !== 'demo' && (notify.deadlines || notify.goal)) notificationsAllowed(true);
     haptic.success();
     router.replace('/');
     toast(`ようこそ、${a.name}さん`, '最初の記録はホームの「始める」から');

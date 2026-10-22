@@ -107,7 +107,7 @@ export default function Settings() {
         </Section>
 
         <Section title="お知らせ">
-          <Row first label="仲間が勉強を始めた" right={<Toggle on={s.notify.peers} onChange={(v) => setState({ notify: { ...s.notify, peers: v } })} label="仲間が勉強を始めた" />} />
+          <Row first label="仲間が勉強を始めた" sub="サーバーにつながると届きます（準備中）" right={<Toggle on={s.notify.peers} onChange={(v) => setState({ notify: { ...s.notify, peers: v } })} label="仲間が勉強を始めた" />} />
           <Row label="締切が近い" sub="3日前と前日" right={<Toggle on={s.notify.deadlines} onChange={(v) => setState({ notify: { ...s.notify, deadlines: v } })} label="締切が近い" />} />
           <Row label="目標まであと少し" sub="あと15分のとき" right={<Toggle on={s.notify.goal} onChange={(v) => setState({ notify: { ...s.notify, goal: v } })} label="目標まであと少し" />} />
         </Section>
