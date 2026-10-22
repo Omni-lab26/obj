@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
-import { buy, claimMission, commitRecord, getState, INITIAL, levelOf, migrate, missionsOf, rollDay, setState } from '../../store';
-import { dateKey } from '../time';
+import { commitRecord, getState, INITIAL, MAX_TICKETS, migrate, rollDay, setState } from '../../store';
+import { addDays, dateKey } from '../time';
 
 const reset = (patch = {}) => setState({ ...INITIAL, ...patch });
 
@@ -36,48 +36,27 @@ describe('a new day', () => {
 });
 
 describe('recording', () => {
-  it('saves on today’s date and pays a coin a minute', () => {
-    reset({ running: true, base: 25 * 60, startedAt: Date.now(), coins: 10 });
-    const r = commitRecord();
-    expect(r).toEqual({ min: 25, coins: 25 });
+  // the six days before today, each with a record
+  const week = () => Array.from({ length: 6 }, (_, i) => ({ id: `w${i}`, s: 'en', min: 30, date: addDays(dateKey(), -(i + 1)), at: '20:00' }));
+  it('saves on today’s date and stops the clock', () => {
+    reset({ running: true, base: 25 * 60, startedAt: Date.now() });
+    expect(commitRecord()).toEqual({ min: 25, ticket: false });
     const s = getState();
     expect(s.sessions.at(-1)?.date).toBe(dateKey());
-    expect(s.coins).toBe(35);
     expect(s.running).toBe(false);
     expect(s.todayMin).toBe(25);
   });
-  it('a boost doubles the coins and is used up', () => {
-    reset({ running: true, base: 10 * 60, startedAt: Date.now(), boost: 1 });
-    expect(commitRecord().coins).toBe(20);
-    expect(getState().boost).toBe(0);
+  it('the 7th day in a row earns a rest ticket', () => {
+    reset({ running: true, base: 10 * 60, startedAt: Date.now(), restTickets: 0, sessions: week() });
+    expect(commitRecord().ticket).toBe(true);
+    expect(getState().restTickets).toBe(1);
   });
-});
-
-describe('missions and the store', () => {
-  it('a mission pays once, only when complete', () => {
-    reset({ coins: 0, sessions: [{ id: 'x', s: 'en', min: 30, date: dateKey(), at: '20:00' }] });
-    expect(missionsOf(getState()).find((m) => m.id === 'm30')?.cur).toBe(30);
-    expect(claimMission('m30')).toBe(30);
-    expect(claimMission('m30')).toBe(0);
-    expect(claimMission('todo2')).toBe(0);
-    expect(getState().coins).toBe(30);
-  });
-  it('buying needs the coins; a rest ticket adds a ticket', () => {
-    reset({ coins: 150, restTickets: 0 });
-    expect(buy('rest')).toBe(false);
-    setState({ coins: 450 });
-    expect(buy('rest')).toBe(true);
-    expect(getState()).toMatchObject({ coins: 250, restTickets: 1 });
-  });
-  it('one-off items can be bought once', () => {
-    reset({ coins: 2000 });
-    expect(buy('card-aurora')).toBe(true);
-    expect(buy('card-aurora')).toBe(false);
-  });
-  it('levels grow with hours', () => {
-    expect(levelOf(0).lv).toBe(1);
-    expect(levelOf(662.5).lv).toBe(23);
-    expect(levelOf(691.2).lv).toBe(24);
+  it('only the day’s first record counts, and tickets stop at the cap', () => {
+    reset({ running: true, base: 10 * 60, startedAt: Date.now(), restTickets: 0, sessions: [...week(), { id: 't', s: 'ma', min: 5, date: dateKey(), at: '6:00' }] });
+    expect(commitRecord().ticket).toBe(false);
+    reset({ running: true, base: 10 * 60, startedAt: Date.now(), restTickets: MAX_TICKETS, sessions: week() });
+    expect(commitRecord().ticket).toBe(false);
+    expect(getState().restTickets).toBe(MAX_TICKETS);
   });
 });
 
@@ -96,5 +75,9 @@ describe('migrate', () => {
     const out = migrate({ v: 3, sessions: [{ id: 'a', s: 'en', min: 30, date: '2026-10-21', at: '7:00' }] });
     expect(out.sessions).toHaveLength(1);
     expect('v' in out).toBe(false);
+  });
+  it('drops the coins and store that older saves kept', () => {
+    const out = migrate({ v: 3, coins: 1240, boost: 1, owned: ['x'], claimed: { day: '', ids: [] }, restTickets: 2 });
+    expect(out).toEqual({ restTickets: 2 });
   });
 });

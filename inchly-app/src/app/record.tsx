@@ -73,13 +73,14 @@ export default function Record() {
     if (at && when) {
       reminded = (await notificationsAllowed(true)) && (await scheduleReminder({ id: 'next', at, title: `${sj.name}の続きの時間です`, body: picked ? picked.t : `${when}にやると決めた勉強` }));
     }
-    const { min: m, coins } = commitRecord({ todoId: picked?.id, note: note.trim() || undefined, min });
+    const { min: m, ticket } = commitRecord({ todoId: picked?.id, note: note.trim() || undefined, min });
     haptic.success();
     setPhase('done');
     setTimeout(() => {
       router.dismissAll();
-      const tail = reminded === null ? '' : reminded ? ` · ${when}にお知らせします` : canNotify ? ' · 通知が許可されていないので、お知らせは届きません' : '';
-      toast(`${sj.name} ${m}分を記録しました`, `+${coins} コイン${tail}`);
+      const notice = reminded === null ? '' : reminded ? `${when}にお知らせします` : canNotify ? '通知が許可されていないので、お知らせは届きません' : '';
+      const sub = [ticket ? '7日連続！休み券を1枚もらいました' : '', notice].filter(Boolean).join(' · ');
+      toast(`${sj.name} ${m}分を記録しました`, sub || undefined);
     }, 1100); // long enough to see the stamp land
   };
 

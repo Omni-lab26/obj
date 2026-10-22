@@ -59,12 +59,8 @@ export type State = {
   savedAt: number; // ms, last write to this device
   lastDay: string; // the last calendar day the app saw, for rolling over at midnight
   // the game layer
-  coins: number;
-  owned: string[]; // store items bought once
   restTickets: number;
   restDays: string[]; // days a rest ticket covered
-  boost: number; // records left whose coins are doubled
-  claimed: { day: string; ids: string[] }; // missions claimed today
   extraTab: ExtraTab | null; // what the right-hand tab became; null = not chosen yet
   chart: Chart; // how home draws the study-time graph
   timetable: Block[]; // study blocks planned by the clock, repeating weekly
@@ -106,12 +102,8 @@ export const INITIAL: State = {
   blocked: [],
   savedAt: 0,
   lastDay: dateKey(),
-  coins: 0,
-  owned: [],
   restTickets: 1, // one to start with, so a single missed day doesn't undo the first week
   restDays: [],
-  boost: 0,
-  claimed: { day: '', ids: [] },
   extraTab: null,
   chart: { range: 'day', kind: 'stack', palette: 'ink' },
   timetable: [],
@@ -157,7 +149,6 @@ export function demoState(now: Date = new Date()): Partial<State> {
     ],
     following: ['mio.k', 'sora_06', 'kaito'],
     posts: POSTS,
-    coins: 1240,
     restTickets: 2,
     lastDay: today,
   };
@@ -259,28 +250,29 @@ export function setChart(patch: Partial<Chart>) {
   setState((s) => ({ chart: { ...s.chart, ...patch } }));
 }
 
-/** Coins a record earns: a coin a minute (doubled while a boost lasts). */
-export const coinsFor = (min: number, boosted: boolean) => min * (boosted ? 2 : 1);
-
+/** A rest ticket for every 7 days in a row, holding at most this many. */
+export const MAX_TICKETS = 3;
 /**
- * Stops the timer and saves the session on today's date. Marks the ToDo you moved
- * forward as done, and pays coins. Returns the minutes and the coins earned.
+ * Ends the session and saves it on today's date. The chosen ToDo is marked
+ * done. The day's first record that brings the run to a multiple of 7 days
+ * earns a rest ticket. Returns the minutes and whether a ticket was earned.
  */
-export function commitRecord(opts?: { todoId?: string; note?: string; min?: number }): { min: number; coins: number } {
+export function commitRecord(opts?: { todoId?: string; note?: string; min?: number }): { min: number; ticket: boolean } {
   const s = state;
   const now = new Date();
   const today = dateKey(now);
   const min = Math.max(1, Math.round(opts?.min ?? elapsedOf(s) / 60));
   const todo = s.todos.find((x) => x.id === opts?.todoId);
-  const coins = coinsFor(min, s.boost > 0);
+  const sessions = [...s.sessions, { id: newId('s'), s: s.subj, min, date: today, at: clockOf(now), note: opts?.note ?? todo?.t }];
+  const run = streakOf(sessions, s.restDays, now);
+  const ticket = !byDay(s.sessions).has(today) && run > 0 && run % 7 === 0 && s.restTickets < MAX_TICKETS;
   setState({
     running: false, paused: false, base: 0, studyTodo: null,
-    sessions: [...s.sessions, { id: newId('s'), s: s.subj, min, date: today, at: clockOf(now), note: opts?.note ?? todo?.t }],
+    sessions,
     todos: todo ? s.todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x)) : s.todos,
-    coins: s.coins + coins,
-    boost: Math.max(0, s.boost - 1),
+    restTickets: s.restTickets + (ticket ? 1 : 0),
   });
-  return { min, coins };
+  return { min, ticket };
 }
 
 // ---------- sessions ----------
@@ -393,63 +385,6 @@ export function useReminders() {
 /** The current run of study days. */
 export const useStreak = () => useStore((s) => streakOf(s.sessions, s.restDays));
 
-// ---------- the game layer ----------
-export type Mission = { id: string; t: string; cur: number; tot: number; coin: number; sticker: 'clock' | 'done' | 'sun' | 'target' };
-/** Today's missions and how far along each is, from today's records and ToDos. */
-export function missionsOf(s: State, now: Date = new Date()): Mission[] {
-  const today = dateKey(now);
-  const recs = s.sessions.filter((x) => x.date === today);
-  const done = s.todos.filter((x) => x.doneOn === today).length;
-  // a record's clock is when it ended; it started `min` earlier
-  const early = recs.some((x) => {
-    const [h, m] = x.at.split(':').map(Number);
-    return h * 60 + m - x.min < 7 * 60;
-  });
-  return [
-    { id: 'm30', t: '30分勉強する', cur: Math.min(30, s.todayMin), tot: 30, coin: 30, sticker: 'clock' },
-    { id: 'todo2', t: 'ToDoを2つ完了', cur: Math.min(2, done), tot: 2, coin: 50, sticker: 'done' },
-    { id: 'early', t: '7時までに始める', cur: early ? 1 : 0, tot: 1, coin: 40, sticker: 'sun' },
-    { id: 'goal', t: `1日の目標（${s.goalMin / 60}時間）を達成`, cur: Math.min(s.goalMin, s.todayMin), tot: s.goalMin, coin: 50, sticker: 'target' },
-  ];
-}
-export const isClaimed = (s: State, id: string) => s.claimed.day === dateKey() && s.claimed.ids.includes(id);
-export function claimMission(id: string): number {
-  const s = state;
-  const m = missionsOf(s).find((x) => x.id === id);
-  if (!m || m.cur < m.tot || isClaimed(s, id)) return 0;
-  const today = dateKey();
-  setState({ coins: s.coins + m.coin, claimed: { day: today, ids: [...(s.claimed.day === today ? s.claimed.ids : []), id] } });
-  return m.coin;
-}
-/** Level from total hours: Lv.n needs 1.2·n² hours (Lv.10 ≈ 120h, Lv.24 ≈ 690h). */
-export function levelOf(totalHours: number) {
-  const lv = Math.max(1, Math.floor(Math.sqrt(totalHours / 1.2)));
-  const from = 1.2 * lv * lv, to = 1.2 * (lv + 1) * (lv + 1);
-  return { lv, p: Math.min(1, Math.max(0, (totalHours - from) / (to - from))), left: to - totalHours };
-}
-export type StoreItem = { id: string; name: string; sub: string; price: number; sticker: string; kind: 'ticket' | 'boost' | 'once' };
-export const STORE: StoreItem[] = [
-  { id: 'rest', name: '休み券', sub: '勉強できなかった日も、連続日数を1日守る', price: 200, sticker: 'x', kind: 'ticket' },
-  { id: 'boost', name: 'コイン2倍', sub: '次の記録3回ぶん、もらえるコインが2倍', price: 350, sticker: 'star', kind: 'boost' },
-  { id: 'theme-night', name: 'タイマーのテーマ「深夜の図書館」', sub: '集中画面の色が変わります', price: 500, sticker: 'moon', kind: 'once' },
-  { id: 'card-aurora', name: 'カードのデザイン「オーロラ」', sub: 'マイページのカード', price: 800, sticker: 'sparkle', kind: 'once' },
-  { id: 'stamps-erai', name: 'スタンプ「えらい！」セット', sub: 'チャットで使える、ほめるスタンプ', price: 250, sticker: 'clap', kind: 'once' },
-  { id: 'bg-morning', name: 'ホームの背景「朝」', sub: '6時台だけ明るくなる', price: 400, sticker: 'sun', kind: 'once' },
-];
-/** Buys an item with coins. Returns false when it can't be bought (not enough coins, or already owned). */
-export function buy(id: string): boolean {
-  const s = state;
-  const it = STORE.find((x) => x.id === id);
-  if (!it || s.coins < it.price || (it.kind === 'once' && s.owned.includes(id))) return false;
-  setState({
-    coins: s.coins - it.price,
-    restTickets: s.restTickets + (it.kind === 'ticket' ? 1 : 0),
-    boost: s.boost + (it.kind === 'boost' ? 3 : 0),
-    owned: it.kind === 'once' ? [...s.owned, id] : s.owned,
-  });
-  return true;
-}
-
 // ---------- safety ----------
 export function block(name: string) {
   setState((s) => ({ blocked: s.blocked.includes(name) ? s.blocked : [...s.blocked, name] }));
@@ -508,6 +443,8 @@ export function migrate(saved: Record<string, unknown>, now: Date = new Date()):
     out.lastDay = today;
     delete out.syncedAt;
   }
+  // coins, the store and missions are gone; drop what older saves kept for them
+  for (const k of ['coins', 'boost', 'owned', 'claimed', 'eventsClaimed']) delete out[k];
   delete out.v;
   return out as Partial<State>;
 }
