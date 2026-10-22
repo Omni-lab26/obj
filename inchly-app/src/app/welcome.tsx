@@ -4,7 +4,8 @@ import { KeyboardAvoidingView, Platform, ScrollView, Switch, View } from 'react-
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { SUBJ, TODAY } from '@/data';
+import { SUBJ } from '@/data';
+import { ageThisYear } from '@/lib/time';
 import { Account, setState, signIn } from '@/store';
 import { hair, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
@@ -32,7 +33,7 @@ export default function Welcome() {
   const [notify, setNotify] = useState({ peers: true, deadlines: true, goal: true });
   const [touched, setTouched] = useState(false);
 
-  const age = TODAY.getFullYear() - year;
+  const age = ageThisYear(year);
   const tooYoung = age < 13;
   const minor = age < 18;
   const nameErr = touched && !name.trim() ? 'ニックネームを入れてください' : undefined;

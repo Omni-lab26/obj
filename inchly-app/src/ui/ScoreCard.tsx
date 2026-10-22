@@ -3,7 +3,7 @@ import { PanResponder, Pressable, View } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import Svg, { Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
-import { rng, TODAY } from '../data';
+import { rng } from '../data';
 import { lift, radius, type, useT } from '../theme';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
@@ -33,8 +33,8 @@ function series(): number[] {
   return out.map((x, i) => Math.round((x + (shift * i) / 51) * 10) / 10);
 }
 const weekLabel = (back: number) => {
-  const d = new Date(TODAY);
-  d.setDate(TODAY.getDate() - back * 7);
+  const d = new Date();
+  d.setDate(d.getDate() - back * 7);
   return `${d.getMonth() + 1}月${d.getDate()}日`;
 };
 

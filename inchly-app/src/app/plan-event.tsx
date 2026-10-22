@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { pad, TODAY } from '@/data';
+import { pad } from '@/data';
 import { updateGroup, useStore } from '@/store';
 import { hair, lift, radius, type, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
@@ -15,7 +15,7 @@ import { TimeScrubber } from '@/ui/TimeScrubber';
 import { toast } from '@/ui/Toast';
 
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
-const DAYS = Array.from({ length: 7 }, (_, i) => { const d = new Date(TODAY); d.setDate(TODAY.getDate() + i); return d; });
+const DAYS = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return d; });
 type Kind = 'もくもく自習' | '時間チャレンジ' | '振り返り会';
 type Who = 'all' | 'invited';
 

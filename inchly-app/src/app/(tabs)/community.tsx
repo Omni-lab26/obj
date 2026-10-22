@@ -3,7 +3,8 @@ import { ComponentRef, useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { hms, hoursIn, PERSON_COLOR, RANK, ROOM, subj } from '@/data';
+import { hms, PERSON_COLOR, RANK, ROOM, subj } from '@/data';
+import { minutesIn } from '@/lib/history';
 import { elapsedOf, getState, setState, toggleFollow, useNow, useStore } from '@/store';
 import { ease, hair, lift, radius, type, useT } from '@/theme';
 import { Avatar, Btn, Card, haptic, Press, Txt } from '@/ui/base';
@@ -172,14 +173,16 @@ const comma = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 // ---------- ランキング ----------
 const DIST = [2, 4, 7, 11, 16, 22, 27, 31, 33, 32, 29, 25, 21, 17, 13, 10, 7, 5, 3, 2];
 const RANK_BY: Record<'w' | 'm' | 't', { rank: number; delta: string; me: number; scale: number }> = {
-  w: { rank: 57, delta: '上位18% · 先週から9つ上がりました', me: hoursIn(7), scale: 1 },
+  w: { rank: 57, delta: '上位18% · 先週から9つ上がりました', me: 0, scale: 1 }, // me: from your records
   m: { rank: 71, delta: '上位23% · 先月から4つ上がりました', me: 69.3, scale: 3.1 },
   t: { rank: 38, delta: '上位12% · 今日はいい調子です', me: 2.8, scale: 0.13 },
 };
 function Rank() {
   const t = useT();
   const [p, setP] = useState<'w' | 'm' | 't'>('w');
-  const r = RANK_BY[p];
+  const weekH = useStore((s) => minutesIn(s.sessions, 7)) / 60;
+  const todayH = useStore((s) => s.todayMin) / 60;
+  const r = { ...RANK_BY[p], me: p === 'w' ? weekH : p === 't' ? todayH : RANK_BY[p].me };
   const blocked = useStore((x) => x.blocked);
   const myName = useStore((x) => x.account?.name ?? 'はる');
   return (

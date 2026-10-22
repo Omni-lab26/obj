@@ -63,12 +63,12 @@ export default function Record() {
   const save = () => {
     setPhase('saving');
     setTimeout(() => {
-      const m = commitRecord({ todoId: picked?.id, note: note.trim() || undefined, min });
+      const { min: m, coins } = commitRecord({ todoId: picked?.id, note: note.trim() || undefined, min });
       haptic.success();
       setPhase('done');
       setTimeout(() => {
         router.dismissAll();
-        toast(`${sj.name} ${m}分を記録しました`, when ? `次は${when}にお知らせします` : '今日の草が1段濃くなりました');
+        toast(`${sj.name} ${m}分を記録しました`, `+${coins} コイン${when ? ` · 次は${when}` : ''}`);
       }, 1100); // long enough to see the stamp land
     }, 350);
   };

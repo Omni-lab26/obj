@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
-import { dayLog, hms, pad, PEOPLE, STREAK, SUBJ, subj, TODAY } from '@/data';
-import { elapsedOf, setSubject, startStudy, togglePause, updateTodo, useNow, useStore } from '@/store';
+import { hms, pad, PEOPLE, SUBJ, subj } from '@/data';
+import { dayOf, studiedOn } from '@/lib/history';
+import { jpDate } from '@/lib/time';
+import { elapsedOf, setSubject, startStudy, togglePause, updateTodo, useNow, useStore, useStreak } from '@/store';
 import { hair, lift, radius, type, useT } from '@/theme';
 import { Avatar, AvatarStack, Btn, Card, haptic, IconBtn, Press, SubjCoin, Txt } from '@/ui/base';
 import { InchTape, Wordmark } from '@/ui/Brand';
@@ -17,7 +19,6 @@ import { LiveDot } from '@/ui/GroupParts';
 import { Sticker } from '@/ui/Sticker';
 import { toast } from '@/ui/Toast';
 
-const WD = ['日', '月', '火', '水', '木', '金', '土'];
 
 // Home has one lead: how much you studied today, on the tape. Everything else
 // is smaller and shaped differently, so the eye has an order to follow.
@@ -60,10 +61,10 @@ export default function Home() {
     })
     .sort((a, b) => a.days - b.days);
   const next = deadlines[0];
-  const yesterday = s.sessions.filter((x) => x.day === 1).reduce((a, x) => a + x.min, 0);
+  const yesterday = dayOf(s.sessions, 1).min;
   const diff = s.todayMin - yesterday;
   // today's minutes by subject, straight from today's records
-  const today = s.sessions.filter((x) => x.day === 0);
+  const today = s.sessions.filter((x) => x.date === s.lastDay);
   const parts = SUBJ.map((x) => ({ name: x.name, c: x.c, min: today.filter((r) => r.s === x.id).reduce((a, r) => a + r.min, 0) }));
   const peers = PEOPLE.filter((p) => !s.blocked.includes(p.n)).slice(0, 3);
   return (
@@ -83,7 +84,7 @@ export default function Home() {
         {/* the lead: today's total, like a wallet's balance card */}
         <Card style={{ marginHorizontal: 16, marginTop: 6 }} pad={14}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>{`今日の勉強 · ${TODAY.getMonth() + 1}月${TODAY.getDate()}日（${WD[TODAY.getDay()]}）`}</Txt>
+            <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>{`今日の勉強 · ${jpDate(new Date())}`}</Txt>
             {next ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, height: 20, borderRadius: 6, backgroundColor: t.sunken }}>
               <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: t.amber }} />
               <Txt size={10.5} tone="ink2" lh={13}>{`${next.t}まで `}<Txt size={10.5} w="700" num lh={13}>{next.days}</Txt>日</Txt>
@@ -232,7 +233,10 @@ function AddLink({ label, onPress }: { label: string; onPress: () => void }) {
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 function StreakPill() {
   const t = useT();
-  const back = (TODAY.getDay() + 6) % 7; // days since Monday
+  const back = (new Date().getDay() + 6) % 7; // days since Monday
+  const sessions = useStore((x) => x.sessions);
+  const streak = useStreak();
+  const tickets = useStore((x) => x.restTickets);
   const s = useSharedValue(1);
   const r = useSharedValue(0);
   const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }, { rotate: `${r.value}deg` }] }));
@@ -243,20 +247,20 @@ function StreakPill() {
   };
   const dim = 'rgba(255,255,255,0.55)';
   return (
-    <Press onPress={jump} haptics={false} scale={0.98} accessibilityLabel={`${STREAK}日連続で勉強中。休みチケット2枚`}
+    <Press onPress={jump} haptics={false} scale={0.98} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}
       style={{ marginHorizontal: 16, marginTop: 12, height: 58, borderRadius: 29, backgroundColor: t.dark ? '#000' : '#0B0D12', flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 18,
         borderWidth: t.dark ? hair : 0, borderColor: t.line2 }}>
       <Animated.View style={a}><Sticker name="fire" size={42} /></Animated.View>
       <View style={{ marginLeft: 4 }}>
-        <Rolling value={pad(STREAK)} size={17} weight="700" color="#fff" />
-        <Txt size={11} color={dim} lh={14}>日連続 · 休み券 2</Txt>
+        <Rolling value={pad(streak)} size={17} weight="700" color="#fff" />
+        <Txt size={11} color={dim} lh={14}>{`日連続 · 休み券 ${tickets}`}</Txt>
       </View>
       <View style={{ flex: 1 }} />
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {DOW.map((w, i) => {
           const ago = back - i;
           const future = ago < 0;
-          const studied = !future && dayLog(ago).min > 0;
+          const studied = !future && studiedOn(sessions, ago);
           const today = ago === 0;
           return (
             <View key={w} style={{ alignItems: 'center', gap: 5 }}>

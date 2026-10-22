@@ -3,7 +3,8 @@ import { PanResponder, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { grass } from '@/data';
+import { grassOf } from '@/lib/history';
+import { useStore } from '@/store';
 import { Avatar, haptic, Txt } from '@/ui/base';
 import { Wordmark } from '@/ui/Brand';
 import { Rolling } from '@/ui/Rolling';
@@ -19,7 +20,8 @@ export const CARD_RATIO = 85.6 / 53.98;
 export function HoloCard({ name, handle, goal, since, stats }: { name: string; handle: string; goal: string; since: string; stats: { v: string; from: string; label: string }[] }) {
   const [w, setW] = useState(0);
   const CARD_H = w / CARD_RATIO;
-  const cells = useMemo(() => grass(5, 5, 3), []);
+  const sessions = useStore((s) => s.sessions);
+  const cells = useMemo(() => grassOf(sessions, 5), [sessions]);
   const sheen = useSharedValue(-1); // -1..1 across the card
   const rx = useSharedValue(0);
   const ry = useSharedValue(0);

@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { grass, pad, TODAY } from '../data';
-import { dayOf, useStore } from '../store';
+import { pad } from '../data';
+import { dayOf, grassOf } from '../lib/history';
+import { useStore } from '../store';
 import { useT } from '../theme';
 import { haptic, Txt } from './base';
 
@@ -13,10 +14,11 @@ import { haptic, Txt } from './base';
 const GUTTER = 18; // weekday labels
 const MONTH_H = 16; // month labels
 
-export function Heatmap({ weeks, seed, todayLevel = 3, gap = 3, legend = true, labels = true }: { weeks: number; seed: number; todayLevel?: number; gap?: number; legend?: boolean; labels?: boolean }) {
+export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { weeks: number; gap?: number; legend?: boolean; labels?: boolean }) {
   const t = useT();
   const sessions = useStore((s) => s.sessions);
-  const cells = useMemo(() => grass(weeks, seed, todayLevel), [weeks, seed, todayLevel]);
+  const lastDay = useStore((s) => s.lastDay); // a new day redraws the grass
+  const cells = useMemo(() => grassOf(sessions, weeks), [sessions, weeks, lastDay]); // eslint-disable-line react-hooks/exhaustive-deps
   const [w, setW] = useState(0);
   const [hot, setHot] = useState<number | null>(null);
   const size = w ? (w - gap * (weeks - 1)) / weeks : 0;
@@ -54,8 +56,8 @@ export function Heatmap({ weeks, seed, todayLevel = 3, gap = 3, legend = true, l
   let tip: { text: string; x: number; y: number } | null = null;
   if (hot !== null && size) {
     const n = weeks * 7;
-    const d = new Date(TODAY);
-    d.setDate(TODAY.getDate() - (n - 1 - hot));
+    const d = new Date();
+    d.setDate(d.getDate() - (n - 1 - hot));
     const l = cells[hot];
     const m = l ? dayOf(sessions, n - 1 - hot).min : 0;
     const col = Math.floor(hot / 7), row = hot % 7;
@@ -68,8 +70,8 @@ export function Heatmap({ weeks, seed, todayLevel = 3, gap = 3, legend = true, l
 
   // Axis labels, like GitHub: month names over the first column of each month, 月・水・金 on the left.
   const n = weeks * 7;
-  const start = new Date(TODAY);
-  start.setDate(TODAY.getDate() - (n - 1));
+  const start = new Date();
+  start.setDate(start.getDate() - (n - 1));
   const months: { x: number; label: string }[] = [];
   if (labels && size) {
     let prev = -1;

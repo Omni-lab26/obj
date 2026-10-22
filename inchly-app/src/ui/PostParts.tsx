@@ -123,7 +123,7 @@ export function composeSheet() {
   openSheet((close) => <Compose close={close} />);
 }
 function Compose({ close }: { close: () => void }) {
-  const last = useStore((s) => s.sessions.filter((x) => x.day === 0).slice(-1)[0]);
+  const last = useStore((s) => s.sessions.filter((x) => x.date === s.lastDay).slice(-1)[0]);
   const [text, setText] = useState('');
   const [tag, setTag] = useState<'' | '#質問' | '#おすすめ'>('');
   const [attach, setAttach] = useState<'none' | 'last'>(last ? 'last' : 'none');

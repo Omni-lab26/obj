@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { pad, SUBJ, TODAY } from '../data';
-import { dayOf, Session, useStore } from '../store';
+import { pad, SUBJ } from '../data';
+import { dayOf } from '../lib/history';
+import { Session, useStore } from '../store';
 import { ease, hair, lift, radius, type, useT } from '../theme';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
@@ -32,8 +33,8 @@ function build(mode: Mode, sessions: Session[]): Col[] {
     const days = Array.from({ length: span }, (_, k) => dayOf(sessions, back * span + k));
     const parts = SUBJ.map((_, k) => days.reduce((a, d) => a + d.parts[k], 0));
     const total = parts.reduce((a, b) => a + b, 0);
-    const d = new Date(TODAY);
-    d.setDate(TODAY.getDate() - back * span);
+    const d = new Date();
+    d.setDate(d.getDate() - back * span);
     return { label: `${d.getMonth() + 1}月${d.getDate()}日`, parts, total, short: Math.max(0, goal - total) };
   });
 }

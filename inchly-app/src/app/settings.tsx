@@ -1,9 +1,11 @@
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
-import { ScrollView, Switch, View } from 'react-native';
+import { ScrollView, Share, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DmFrom, isMinor, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
+import { subj } from '@/data';
+import { recordsCsv } from '@/lib/csv';
+import { DmFrom, getState, isMinor, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
@@ -49,6 +51,16 @@ export default function Settings() {
   const a = s.account;
   const minor = isMinor(a);
 
+  // the share sheet: save to Files, mail it, or paste it into a spreadsheet
+  const exportCsv = async () => {
+    const csv = recordsCsv(getState().sessions, (id) => subj(id).name);
+    try {
+      const r = await Share.share({ title: 'Inchly の記録', message: csv });
+      if (r.action === Share.sharedAction) toast('記録を書き出しました', `${getState().sessions.length}件`);
+    } catch {
+      toast('書き出せませんでした', 'もう一度試してください');
+    }
+  };
   const del = () =>
     openSheet((close) => (
       <View>
@@ -112,9 +124,9 @@ export default function Settings() {
           )) : <Row first label="いません" sub="人の名前を押すと、ブロックや通報ができます" />}
         </Section>
 
-        <Section title="データ" foot="記録はまずこの端末に保存されます。圏外でも記録でき、つながったときにまとめて送ります。">
-          <Row first label="この端末に保存済み" sub={`最終同期 ${ago(now - s.syncedAt)}`} right={<Btn small kind="line" label="今すぐ同期" onPress={() => { setState({ syncedAt: Date.now() }); haptic.success(); toast('同期しました'); }} />} />
-          <Row label="データを書き出す" sub={`記録 ${s.sessions.length}件、ToDo ${s.todos.length}件（CSV）`} right={<Btn small kind="line" label="書き出す" onPress={() => toast('CSVを書き出しました', 'ファイルアプリに保存されます')} />} />
+        <Section title="データ" foot="記録はこの端末に保存されています。圏外でも記録できます。サーバーとの同期はまだありません。機種変更の前に書き出しておいてください。">
+          <Row first label="この端末に保存" sub={s.savedAt ? `最後に保存 ${ago(now - s.savedAt)}` : 'まだ保存していません'} />
+          <Row label="記録を書き出す（CSV）" sub={`${s.sessions.length}件 · メールやファイルに保存できます`} right={<Btn small kind="line" label="書き出す" onPress={exportCsv} />} />
           <View style={{ borderTopWidth: hair, borderTopColor: t.line, paddingVertical: 12 }}>
             <Press onPress={del} hitSlop={6} accessibilityRole="button" style={{ height: 40, alignItems: 'center', justifyContent: 'center' }}>
               <Txt size={14} w="600" color={t.red}>アカウントとデータを削除</Txt>

@@ -3,8 +3,8 @@ import { ScrollView, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
-import { STREAK, TODAY } from '../data';
-import { dayOf, Session, useStore } from '../store';
+import { dayOf } from '../lib/history';
+import { Session, useStore, useStreak } from '../store';
 import { ease, useT } from '../theme';
 import { Card, Txt } from './base';
 import { Rolling } from './Rolling';
@@ -30,8 +30,8 @@ export function useGrowth(sessions: Session[]) {
     const next = MILESTONES.find((m) => m * 60 > totalMin) ?? MILESTONES[MILESTONES.length - 1];
     const prev = [...MILESTONES].reverse().find((m) => m * 60 <= totalMin) ?? 0;
     const pace = sum(0, 14) / 14; // minutes a day lately
-    const eta = new Date(TODAY);
-    eta.setDate(TODAY.getDate() + Math.ceil((next * 60 - totalMin) / Math.max(1, pace)));
+    const eta = new Date();
+    eta.setDate(eta.getDate() + Math.ceil((next * 60 - totalMin) / Math.max(1, pace)));
     return {
       total: totalMin / 60, curve, next, prev, eta,
       vsYesterday: days[0] - days[1],
@@ -166,9 +166,10 @@ function Versus({ label, up, value }: { label: string; up: boolean; value: strin
 
 /** Collected badges, pop stickers; the next ones wait in grey with what's left. */
 function Badges({ total }: { total: number }) {
+  const streak = useStreak();
   const list: { s: StickerName; label: string; got: boolean; left?: string }[] = [
     ...[100, 300, 500, 700, 1000].map((m) => ({ s: 'trophy' as StickerName, label: `${m}時間`, got: total >= m, left: total < m ? `あと${Math.ceil(m - total)}時間` : undefined })),
-    ...[7, 21, 30, 100].map((d) => ({ s: 'fire' as StickerName, label: `${d}日連続`, got: STREAK >= d, left: STREAK < d ? `あと${d - STREAK}日` : undefined })),
+    ...[7, 21, 30, 100].map((d) => ({ s: 'fire' as StickerName, label: `${d}日連続`, got: streak >= d, left: streak < d ? `あと${d - streak}日` : undefined })),
     { s: 'star', label: '1日5時間', got: true },
     { s: 'sun', label: '朝勉10回', got: true },
   ];

@@ -5,8 +5,9 @@ import Animated, { Easing, SharedValue, useAnimatedStyle, useSharedValue, withTi
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Line, Rect } from 'react-native-svg';
 
-import { grass, SUBJ, TODAY } from '../data';
-import { dayOf, useStore } from '../store';
+import { SUBJ } from '../data';
+import { dayOf, grassOf } from '../lib/history';
+import { useStore } from '../store';
 import { lift, radius, useT } from '../theme';
 import { haptic, Txt } from './base';
 
@@ -155,8 +156,8 @@ function WeekPage({ w, h }: { w: number; h: number }) {
         </Svg>
         <View style={{ flexDirection: 'row', gap, marginTop: 4 }}>
           {days.map((_, i) => {
-            const dt = new Date(TODAY);
-            dt.setDate(TODAY.getDate() - (6 - i));
+            const dt = new Date();
+            dt.setDate(dt.getDate() - (6 - i));
             return <Txt key={i} size={11} w={i === 6 ? '700' : '500'} tone={i === 6 ? 'ink' : 'ink3'} style={{ width: bw, textAlign: 'center' }}>{i === 6 ? '今日' : WD[dt.getDay()]}</Txt>;
           })}
         </View>
@@ -214,12 +215,12 @@ function SubjectsPage({ w }: { w: number }) {
 /** 4: the grass, as many weeks as fit. */
 function GrassPage({ w, h }: { w: number; h: number }) {
   const t = useT();
-  const todayMin = useStore((s) => s.todayMin);
   const gap = 3;
   const room = Math.max(90, h - 28 - 62 - 12 - 26); // card minus padding, head, gap, legend
   const size = Math.max(7, Math.min(16, Math.floor((room - gap * 6) / 7)));
   const weeks = Math.max(8, Math.floor((w + gap) / (size + gap)));
-  const cells = useMemo(() => grass(weeks, 0, todayMin ? Math.min(4, 1 + Math.floor(todayMin / 60)) : 0), [weeks, todayMin]);
+  const sessions = useStore((s) => s.sessions);
+  const cells = useMemo(() => grassOf(sessions, weeks), [sessions, weeks]);
   const studied = cells.filter((l) => l > 0).length;
   return (
     <View style={{ flex: 1 }}>

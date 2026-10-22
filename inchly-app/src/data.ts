@@ -80,15 +80,6 @@ export const UNIS: Uni[] = [
   { n: '大阪大学', f: '基礎工学部', dev: 62.5, fans: 870, days: 127, avg: 23.2, p: '大阪府吹田市' },
 ];
 
-export const DEADLINES = [
-  { t: '第4回 記述模試', d: '11月8日（日）', mo: 11, day: 8, todo: [4, 6], days: 18, urgent: true },
-  { t: '共通テスト', d: '1月16日（土）', mo: 1, day: 16, todo: [7, 12], days: 87, urgent: false },
-  { t: '東大 二次試験', d: '2月25日（木）', mo: 2, day: 25, todo: [3, 12], days: 127, urgent: false },
-];
-
-// Fixed "today" for the mock so dates and countdowns stay consistent.
-export const TODAY = new Date(2026, 9, 21);
-
 export type ChatMsg =
   | { kind: 'sys'; t: string; join?: string }
   | { kind: 'msg'; n: string; c: string; t: string }
@@ -156,54 +147,42 @@ export function rng(seed: number) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-// ---------- the study diary ----------
-// One deterministic record per day, shared by the grass, the bars and the totals, so every
-// screen tells the same story: lighter in spring, a family trip in August, a mock-exam week,
-// longer weekends, one to three subjects a day, and a 23-day streak up to today.
-const SUBJ_WEIGHT = [0.3, 0.3, 0.17, 0.13, 0.1]; // en, ma, ph, ch, ja
-const TODAY_PARTS = [95, 40, 0, 0, 30]; // today's 165 minutes
-export const STREAK = 23;
-export type Day = { min: number; parts: number[] };
-const cache = new Map<number, Day>();
-export function dayLog(daysAgo: number): Day {
-  const hit = cache.get(daysAgo);
-  if (hit) return hit;
-  let out: Day;
-  if (daysAgo === 0) out = { min: 165, parts: TODAY_PARTS };
-  else {
+// ---------- the sample account's past ----------
+// Only the sample account starts with a history. One deterministic diary,
+// counted back from the real today: lighter in spring, a family trip in the
+// summer, a mock-exam week, longer weekends, one to three subjects a day, and a
+// rest day 23 days ago so the streak reads 23 with today's study.
+const SUBJ_IDS = ['en', 'ma', 'ph', 'ch', 'ja'];
+const SUBJ_WEIGHT = [0.3, 0.3, 0.17, 0.13, 0.1];
+export const DEMO_STREAK_GAP = 23;
+export function demoHistory(now: Date): { s: string; min: number; daysAgo: number; at: string }[] {
+  const out: { s: string; min: number; daysAgo: number; at: string }[] = [];
+  for (let daysAgo = 2; daysAgo < 365; daysAgo++) {
     const r = rng(2026 + daysAgo * 7919);
-    const d = new Date(TODAY);
-    d.setDate(TODAY.getDate() - daysAgo);
+    const d = new Date(now);
+    d.setDate(now.getDate() - daysAgo);
     const weekend = d.getDay() === 0 || d.getDay() === 6;
-    const rest = daysAgo === STREAK || (daysAgo > STREAK && (r() < 0.13 || (daysAgo >= 61 && daysAgo <= 66)));
-    if (rest) out = { min: 0, parts: [0, 0, 0, 0, 0] };
-    else {
-      let min = weekend ? 140 + r() * 200 : 50 + r() * 150;
-      if (daysAgo > 150) min *= 0.55 + r() * 0.2; // still building the habit in spring
-      if (daysAgo >= 16 && daysAgo <= 19) min += 70; // the week before the mock exam
-      min = Math.round(min / 5) * 5 + (r() < 0.4 ? 3 : 0);
-      // pick 1–3 subjects, weighted, without repeats
-      const k = 1 + (r() < 0.6 ? 1 : 0) + (weekend && r() < 0.5 ? 1 : 0);
-      const pool = SUBJ_WEIGHT.map((w, idx) => ({ w: w * (0.5 + r()), idx })).sort((a, b) => b.w - a.w).slice(0, k);
-      const tot = pool.reduce((a, b) => a + b.w, 0);
-      const parts = [0, 0, 0, 0, 0];
-      let left = min;
-      pool.forEach((p, n) => { const m = n === pool.length - 1 ? left : Math.round((p.w / tot) * min / 5) * 5; parts[p.idx] = m; left -= m; });
-      out = { min, parts };
-    }
+    const rest = daysAgo === DEMO_STREAK_GAP || (daysAgo > DEMO_STREAK_GAP && (r() < 0.13 || (daysAgo >= 61 && daysAgo <= 66)));
+    if (rest) continue;
+    let min = weekend ? 140 + r() * 200 : 50 + r() * 150;
+    if (daysAgo > 150) min *= 0.55 + r() * 0.2; // still building the habit in spring
+    if (daysAgo >= 16 && daysAgo <= 19) min += 70; // the week before the mock exam
+    min = Math.round(min / 5) * 5 + (r() < 0.4 ? 3 : 0);
+    // 1–3 subjects, weighted, without repeats
+    const k = 1 + (r() < 0.6 ? 1 : 0) + (weekend && r() < 0.5 ? 1 : 0);
+    const pool = SUBJ_WEIGHT.map((w, idx) => ({ w: w * (0.5 + r()), idx })).sort((a, b) => b.w - a.w).slice(0, k);
+    const tot = pool.reduce((a, b) => a + b.w, 0);
+    let left = min;
+    let hour = weekend ? 9 : 17;
+    pool.forEach((p, n) => {
+      const m = n === pool.length - 1 ? left : Math.round(((p.w / tot) * min) / 5) * 5;
+      left -= m;
+      if (m > 0) out.push({ s: SUBJ_IDS[p.idx], min: m, daysAgo, at: `${hour}:${n % 2 ? '30' : '00'}` });
+      hour += Math.max(1, Math.round(m / 60));
+    });
   }
-  cache.set(daysAgo, out);
   return out;
 }
-const levelOf = (min: number) => (min === 0 ? 0 : min < 60 ? 1 : min < 120 ? 2 : min < 200 ? 3 : 4);
-/** Grass levels for the last `weeks` weeks, oldest first, ending today. */
-export function grass(weeks: number, _seed?: number, todayLevel?: number): number[] {
-  const n = weeks * 7;
-  return Array.from({ length: n }, (_, i) => (i === n - 1 && todayLevel !== undefined ? todayLevel : levelOf(dayLog(n - 1 - i).min)));
-}
-/** Total hours in the last `days` days. */
-export const hoursIn = (days: number) => Math.round(Array.from({ length: days }, (_, i) => dayLog(i).min).reduce((a, b) => a + b, 0) / 6) / 10;
-export const YEAR_HOURS = hoursIn(365);
 
 export const pad = (n: number) => String(n).padStart(2, '0');
 export const hms = (s: number) => `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(Math.floor(s) % 60)}`;

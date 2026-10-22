@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { getState, hydrate, startStudy, useStore } from '@/store';
+import { getState, hydrate, startStudy, useDayRollover, useStore } from '@/store';
 import { focus, useT } from '@/theme';
 import { SheetHost } from '@/ui/Sheet';
 import { toast, ToastHost } from '@/ui/Toast';
@@ -42,6 +42,7 @@ export default function RootLayout() {
   useEffect(() => { hydrate().then(() => setReady(true)); }, []);
   const signedIn = useStore((s) => !!s.account);
   useFeed(ready && signedIn);
+  useDayRollover();
   if (!ready) return null;
   const nav = t.dark ? DarkTheme : DefaultTheme;
   return (

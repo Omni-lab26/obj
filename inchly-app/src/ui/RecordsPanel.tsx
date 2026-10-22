@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { hoursIn, SUBJ, subj, Subject } from '@/data';
-import { dayOf, Session, useStore } from '@/store';
+import { SUBJ, subj, Subject } from '@/data';
+import { dayOf, minutesIn } from '@/lib/history';
+import { Session, useStore } from '@/store';
 import { ease, hair, useT } from '@/theme';
 import { Card, Press, SectionHead, SubjCoin, Txt } from '@/ui/base';
 import { sessionSheet } from '@/ui/Editors';
@@ -64,7 +65,8 @@ function SessionRow({ x, first }: { x: Session; first: boolean }) {
 function TodayLog() {
   const t = useT();
   const sessions = useStore((s) => s.sessions);
-  const today = sessions.filter((x) => x.day === 0);
+  const lastDay = useStore((s) => s.lastDay);
+  const today = sessions.filter((x) => x.date === lastDay);
   const total = today.reduce((a, x) => a + x.min, 0);
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
@@ -97,7 +99,7 @@ function TodayLog() {
 // can be fixed, and the half-year grass). グラフ: how it adds up (days and weeks,
 // subjects against their goals, the mock-test line).
 export function LogPage() {
-  const todayMin = useStore((s) => s.todayMin);
+  const sessions = useStore((s) => s.sessions);
   return (
     <View>
       <View style={{ paddingHorizontal: 20, paddingTop: 14 }}>
@@ -108,10 +110,10 @@ export function LogPage() {
 
       <View style={sec}>
         <View style={{ paddingHorizontal: 4 }}>
-          <SectionHead title="この半年" aux={`${Math.round(hoursIn(182))}時間`} />
+          <SectionHead title="この半年" aux={`${Math.round(minutesIn(sessions, 182) / 60)}時間`} />
         </View>
         <Card>
-          <Heatmap weeks={26} seed={3} todayLevel={todayMin ? Math.min(4, 1 + Math.floor(todayMin / 60)) : 0} gap={3} />
+          <Heatmap weeks={26} gap={3} />
         </Card>
       </View>
     </View>

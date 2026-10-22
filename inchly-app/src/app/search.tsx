@@ -3,8 +3,9 @@ import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { hoursIn, PEOPLE, Uni, UNIS } from '@/data';
-import { toggleFollow, toggleIn, useStore } from '@/store';
+import { PEOPLE, Uni, UNIS } from '@/data';
+import { minutesIn } from '@/lib/history';
+import { getState, toggleFollow, toggleIn, useStore } from '@/store';
 import { ease, font, hair, noOutline, radius, useT } from '@/theme';
 import { Avatar, Btn, Empty, haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
@@ -49,7 +50,7 @@ function compareSheet(us: Uni[]) {
 }
 function CompareTable({ us, close }: { us: Uni[]; close: () => void }) {
   const t = useT();
-  const me = hoursIn(7);
+  const me = minutesIn(getState().sessions, 7) / 60;
   const maxFans = Math.max(...us.map((u) => u.fans));
   const minAvg = Math.min(...us.map((u) => u.avg));
   const rows: { k: string; cells: { v: string; best?: boolean }[] }[] = [

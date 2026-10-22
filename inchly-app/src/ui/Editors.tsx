@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { ROOM, SUBJ, TODAY } from '../data';
+import { ROOM, SUBJ } from '../data';
+import { addDays, dateKey, daysUntil as untilDate, jpDate, parseKey } from '../lib/time';
 import { addDeadline, addSession, addTodo, block, getState, moveTodo, removeDeadline, removeSession, removeTodo, Session, Todo, toggleFollow, updateSession, updateTodo, useStore } from '../store';
 import { hair, useT } from '../theme';
 import { Avatar, Btn, haptic, Txt } from './base';
@@ -22,14 +23,18 @@ export function sessionSheet(existing?: Session) {
 function SessionForm({ close, existing }: { close: () => void; existing?: Session }) {
   const [s, setS] = useState(existing?.s ?? getState().subj);
   const [min, setMin] = useState(existing?.min ?? 30);
-  const [day, setDay] = useState<'0' | '1'>(existing ? (String(existing.day) as '0' | '1') : '0');
+  const today = dateKey();
+  const yesterday = addDays(today, -1);
+  const [date, setDate] = useState(existing?.date ?? today);
   const [note, setNote] = useState(existing?.note ?? '');
+  // today and yesterday, plus the record's own day when it's older
+  const days = [{ v: today, label: '今日' }, { v: yesterday, label: '昨日' }, ...(existing && existing.date < yesterday ? [{ v: existing.date, label: jpDate(parseKey(existing.date), false) }] : [])];
   const save = () => {
-    if (existing) updateSession(existing.id, { s, min, day: Number(day), note: note.trim() || undefined });
-    else addSession({ s, min, day: Number(day), at: day === '0' ? clockNow() : '—', note: note.trim() || undefined, manual: true });
+    if (existing) updateSession(existing.id, { s, min, date, note: note.trim() || undefined });
+    else addSession({ s, min, date, at: date === today ? clockNow() : '—', note: note.trim() || undefined, manual: true });
     haptic.success();
     close();
-    toast(existing ? '記録を直しました' : `${SUBJ.find((x) => x.id === s)?.name} ${min}分を追加しました`, day === '1' ? '昨日の記録に入りました' : '今日の合計に入りました');
+    toast(existing ? '記録を直しました' : `${SUBJ.find((x) => x.id === s)?.name} ${min}分を追加しました`, date === today ? '今日の合計に入りました' : `${date === yesterday ? '昨日' : jpDate(parseKey(date), false)}の記録に入りました`);
   };
   return (
     <View style={{ gap: 18 }}>
@@ -47,7 +52,7 @@ function SessionForm({ close, existing }: { close: () => void; existing?: Sessio
       </View>
       <View>
         <Label>いつ</Label>
-        <Choice value={day} onChange={setDay} options={[{ v: '0', label: '今日' }, { v: '1', label: '昨日' }]} />
+        <Choice value={date} onChange={setDate} options={days} />
       </View>
       <Field label="メモ（任意）" value={note} onChangeText={setNote} max={40} />
       <Btn kind="primary" wide label={existing ? '保存する' : '追加する'} onPress={save} />
@@ -103,10 +108,7 @@ function TodoForm({ close, existing }: { close: () => void; existing?: Todo }) {
 }
 
 // ---------- a deadline ----------
-const daysUntil = (mo: number, day: number) => {
-  const y = TODAY.getFullYear() + (mo < TODAY.getMonth() + 1 || (mo === TODAY.getMonth() + 1 && day < TODAY.getDate()) ? 1 : 0);
-  return Math.round((new Date(y, mo - 1, day).getTime() - TODAY.getTime()) / 86_400_000);
-};
+const daysUntil = (mo: number, day: number) => untilDate(mo, day);
 export { daysUntil };
 
 export function deadlineSheet() {
@@ -114,7 +116,7 @@ export function deadlineSheet() {
 }
 function DeadlineForm({ close }: { close: () => void }) {
   const [t, setT] = useState('');
-  const [mo, setMo] = useState(TODAY.getMonth() + 2 > 12 ? 1 : TODAY.getMonth() + 2);
+  const [mo, setMo] = useState(() => (new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2));
   const [day, setDay] = useState(15);
   const [touched, setTouched] = useState(false);
   const err = touched && !t.trim() ? '名前を入れてください' : undefined;
