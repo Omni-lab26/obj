@@ -1,6 +1,8 @@
-import { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
-import Animated, { SharedValue, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { Easing, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Line, Rect } from 'react-native-svg';
 
 import { grass, SUBJ, TODAY } from '../data';
@@ -9,42 +11,78 @@ import { lift, radius, useT } from '../theme';
 import { haptic, Txt } from './base';
 
 // The graph card on My Page's 成長 page, as a deck: swipe it sideways for a
-// different graph. Every card has the size of the first one (the running
-// total); dots under the deck say which one you're on.
+// different graph. It moves one card per swipe and clicks into place — no
+// free scrolling — and every card takes the first card's size. The swipe runs
+// on the UI thread; dots under the deck say which card you're on.
 
 const GAP = 10;
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
+const PAGES = 4;
+const CLICK = { duration: 260, easing: Easing.bezier(0.2, 0.9, 0.25, 1) };
 
 export function GraphDeck({ first }: { first: ReactNode }) {
   const t = useT();
   const [w, setW] = useState(0);
   const [h, setH] = useState(0); // the first card's height, which the others take
   const cardW = Math.max(0, w - 32);
-  const x = useSharedValue(0);
-  const [page, setPage] = useState(0);
-  const onScroll = useAnimatedScrollHandler((e) => { x.value = e.contentOffset.x; });
+  const step = cardW + GAP;
+  const x = useSharedValue(0); // how far the row has moved, in px (0, -step, -2·step…)
+  const page = useSharedValue(0);
+  const start = useSharedValue(0);
+  const [shown, setShown] = useState(0);
+  const turned = (p: number) => { setShown(p); haptic.tap(); };
+
+  const pan = useMemo(() => Gesture.Pan()
+    .activeOffsetX([-12, 12])
+    .failOffsetY([-10, 10])
+    .onBegin(() => { start.value = x.value; })
+    .onUpdate((e) => {
+      const next = start.value + e.translationX;
+      // past either end it pulls back like a rubber band
+      const minX = -(PAGES - 1) * step;
+      x.value = next > 0 ? next * 0.3 : next < minX ? minX + (next - minX) * 0.3 : next;
+    })
+    .onEnd((e) => {
+      // one card per swipe: a short drag or a flick turns it, never more
+      let p = page.value;
+      if (e.translationX < -step * 0.18 || e.velocityX < -500) p += 1;
+      else if (e.translationX > step * 0.18 || e.velocityX > 500) p -= 1;
+      p = Math.max(0, Math.min(PAGES - 1, p));
+      if (p !== page.value) { page.value = p; scheduleOnRN(turned, p); }
+      x.value = withTiming(-p * step, CLICK);
+    }), [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  const row = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
+  // keep the current card in place if the width changes (rotation, split view)
+  useEffect(() => { x.set(-page.get() * step); }, [step, x, page]);
+
+  const go = (d: number) => {
+    const p = Math.max(0, Math.min(PAGES - 1, page.get() + d));
+    page.set(p);
+    x.set(withTiming(-p * step, CLICK));
+    setShown(p);
+  };
+
   const card = { width: cardW, borderRadius: radius.card, backgroundColor: t.surface, padding: 14, ...lift(t) };
   const sized = { ...card, height: h || undefined };
-  const pages = 4;
   return (
     <View onLayout={(e) => setW(e.nativeEvent.layout.width)}>
       {cardW ? (
         <>
-          <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false} onScroll={onScroll} scrollEventThrottle={16}
-            snapToInterval={cardW + GAP} decelerationRate="fast" disableIntervalMomentum
-            contentContainerStyle={{ paddingHorizontal: 16, gap: GAP, alignItems: 'flex-start', paddingBottom: 4 }}
-            onMomentumScrollEnd={(e) => {
-              const p = Math.round(e.nativeEvent.contentOffset.x / (cardW + GAP));
-              if (p !== page) { setPage(p); haptic.tap(); }
-            }}
-            accessibilityLabel={`グラフ ${page + 1}/${pages}。横にスワイプで切り替え`}>
-            <View style={card} onLayout={(e) => setH(e.nativeEvent.layout.height)}>{first}</View>
-            <View style={sized}><WeekPage w={cardW - 28} h={h} /></View>
-            <View style={sized}><SubjectsPage w={cardW - 28} /></View>
-            <View style={sized}><GrassPage w={cardW - 28} h={h} /></View>
-          </Animated.ScrollView>
-          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 8 }} pointerEvents="none">
-            {Array.from({ length: pages }, (_, i) => <Dot key={i} i={i} x={x} step={cardW + GAP} />)}
+          <GestureDetector gesture={pan}>
+            <View style={{ overflow: 'hidden', paddingBottom: 6 }} accessible accessibilityRole="adjustable"
+              accessibilityLabel={`グラフ ${shown + 1}/${PAGES}。左右にスワイプで切り替え`}
+              accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+              onAccessibilityAction={(e) => go(e.nativeEvent.actionName === 'increment' ? 1 : -1)}>
+              <Animated.View style={[{ flexDirection: 'row', alignItems: 'flex-start', gap: GAP, paddingHorizontal: 16 }, row]}>
+                <View style={card} onLayout={(e) => setH(e.nativeEvent.layout.height)}>{first}</View>
+                <View style={sized}><WeekPage w={cardW - 28} h={h} /></View>
+                <View style={sized}><SubjectsPage w={cardW - 28} /></View>
+                <View style={sized}><GrassPage w={cardW - 28} h={h} /></View>
+              </Animated.View>
+            </View>
+          </GestureDetector>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 6 }} pointerEvents="none">
+            {Array.from({ length: PAGES }, (_, i) => <Dot key={i} i={i} x={x} step={step} />)}
           </View>
         </>
       ) : null}
@@ -55,7 +93,7 @@ export function GraphDeck({ first }: { first: ReactNode }) {
 function Dot({ i, x, step }: { i: number; x: SharedValue<number>; step: number }) {
   const t = useT();
   const a = useAnimatedStyle(() => {
-    const d = Math.min(1, Math.abs(x.value / step - i));
+    const d = Math.min(1, Math.abs(-x.value / step - i));
     return { width: 6 + 12 * (1 - d), opacity: 0.25 + 0.75 * (1 - d) };
   });
   return <Animated.View style={[{ height: 6, borderRadius: 3, backgroundColor: t.ink }, a]} />;
@@ -67,7 +105,7 @@ function Head({ label, aside, value, unit, delta, up = true }: { label: string; 
   return (
     <View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.green }} />
+        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />
         <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>{label}</Txt>
         {aside ? <Txt size={11} tone="ink3">{aside}</Txt> : null}
       </View>

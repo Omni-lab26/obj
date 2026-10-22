@@ -36,7 +36,7 @@ function Readout({ sec, over, paused, side, parts, register }: {
   const [p, setP] = useState<Preview>({ h: null, m: null });
   useEffect(() => register(setP), [register]);
   const moving = p.h !== null || p.m !== null;
-  const shown = moving ? ((p.h ?? parts.h) * 60 + (p.m ?? Math.floor(parts.m))) * 60 : sec;
+  const shown = moving ? Math.min(300, (p.h ?? parts.h) * 60 + (p.m ?? Math.floor(parts.m))) * 60 : sec;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 8, opacity: paused && !moving ? 0.5 : 1 }}
       accessible accessibilityLabel={`${side} ${fmt(shown)}`}>
@@ -95,7 +95,9 @@ export default function Timer() {
   const register = useCallback((set: (p: Preview) => void) => { pushPreview.current = set; }, []);
   const onHoursPreview = useCallback((v: number | null) => { preview.current = { ...preview.current, h: v }; pushPreview.current(preview.current); }, []);
   const onMinsPreview = useCallback((v: number | null) => { preview.current = { ...preview.current, m: v }; pushPreview.current(preview.current); }, []);
-  const setTotal = (total: number) => {
+  // A session is at most 5:00; a 5 on the hours ruler takes the minutes back to 0.
+  const setTotal = (raw: number) => {
+    const total = Math.min(300, raw);
     const cur = getState();
     if (cur.running) setTarget(elapsedOf(cur) / 60 + total);
     else setTarget(Math.max(5, total));

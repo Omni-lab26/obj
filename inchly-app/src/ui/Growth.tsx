@@ -58,7 +58,7 @@ export function Growth() {
       {/* the graph card: swipe it for the week, the subjects and the grass */}
       <GraphDeck first={<>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.green }} />
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />
           <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>これまでの勉強時間</Txt>
           <Txt size={11} tone="ink3">直近1年</Txt>
         </View>
@@ -76,7 +76,7 @@ export function Growth() {
         <View style={{ marginTop: 12, padding: 10, borderRadius: 12, backgroundColor: t.canvas, gap: 7 }}>
           <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
             <Txt size={12.5} w="600" style={{ flex: 1 }}>{`次のバッジ · ${g.next}時間`}</Txt>
-            <Txt num size={12.5} w="700" color={t.greenInk}>{`あと${left.toFixed(1)}時間`}</Txt>
+            <Txt num size={12.5} w="700">{`あと${left.toFixed(1)}時間`}</Txt>
           </View>
           <Meter p={p} />
           <Txt size={11} tone="ink3">{`このペースなら ${g.eta.getMonth() + 1}月${g.eta.getDate()}日に届きます`}</Txt>
@@ -116,23 +116,23 @@ function Climb({ curve, next, prev }: { curve: number[]; next: number; prev: num
         <>
           <Svg width={w} height={PLOT_H} style={{ position: 'absolute' }}>
             {[prev, next].filter((m) => m > lo).map((m) => (
-              <Line key={m} x1={0} x2={w} y1={Y(m)} y2={Y(m)} stroke={m === next ? t.green : t.line2} strokeWidth={0.75} strokeDasharray="3 4" />
+              <Line key={m} x1={0} x2={w} y1={Y(m)} y2={Y(m)} stroke={m === next ? t.ink2 : t.line2} strokeWidth={0.75} strokeDasharray="3 4" />
             ))}
           </Svg>
           <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, overflow: 'hidden' }, clip]}>
             <Svg width={w} height={PLOT_H}>
               <Defs>
                 <LinearGradient id="climb" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={t.green} stopOpacity={0.22} />
-                  <Stop offset="1" stopColor={t.green} stopOpacity={0} />
+                  <Stop offset="0" stopColor={t.ink} stopOpacity={0.12} />
+                  <Stop offset="1" stopColor={t.ink} stopOpacity={0} />
                 </LinearGradient>
               </Defs>
               <Path d={`${line} L${X(curve.length - 1)},${PLOT_H} L${X(0)},${PLOT_H} Z`} fill="url(#climb)" />
-              <Path d={line} fill="none" stroke={t.green} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-              <Circle cx={X(curve.length - 1)} cy={Y(end)} r={4} fill={t.green} stroke={t.surface} strokeWidth={1.5} />
+              <Path d={line} fill="none" stroke={t.ink} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              <Circle cx={X(curve.length - 1)} cy={Y(end)} r={4} fill={t.ink} stroke={t.surface} strokeWidth={1.5} />
             </Svg>
           </Animated.View>
-          <Txt num size={10} w="600" lh={12} color={t.greenInk} style={{ position: 'absolute', left: 0, top: Y(next) - 14 }}>{`${next}時間`}</Txt>
+          <Txt num size={10} w="600" lh={12} tone="ink2" style={{ position: 'absolute', left: 0, top: Y(next) - 14 }}>{`${next}時間`}</Txt>
           {prev > lo ? <Txt num size={10} lh={12} tone="ink3" style={{ position: 'absolute', left: 0, top: Y(prev) - 14 }}>{`${prev}時間 達成`}</Txt> : null}
           <Txt size={10} lh={12} tone="ink3" style={{ position: 'absolute', left: 0, bottom: -14 }}>半年前</Txt>
           <Txt size={10} lh={12} tone="ink3" style={{ position: 'absolute', right: 0, bottom: -14 }}>今日</Txt>
@@ -149,7 +149,7 @@ function Meter({ p }: { p: number }) {
   const a = useAnimatedStyle(() => ({ width: `${v.value * 100}%` }));
   return (
     <View style={{ height: 6, borderRadius: 3, backgroundColor: t.sunken, overflow: 'hidden' }}>
-      <Animated.View style={[{ height: 6, borderRadius: 3, backgroundColor: t.green }, a]} />
+      <Animated.View style={[{ height: 6, borderRadius: 3, backgroundColor: t.ink }, a]} />
     </View>
   );
 }

@@ -107,7 +107,7 @@ export function ScoreCard() {
     <View style={[{ borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
       <View style={{ paddingTop: 14, paddingHorizontal: 14, paddingBottom: 12, borderRadius: radius.card, backgroundColor: t.surface }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.green }} />
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />
           <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>全統記述模試 · 偏差値</Txt>
           <Txt size={11} tone="ink3">{hot === null ? '最新' : weekLabel(pts.length - 1 - idx)}</Txt>
         </View>
@@ -127,20 +127,20 @@ export function ScoreCard() {
               <Svg width={w} height={PLOT_H}>
                 <Defs>
                   <LinearGradient id="pullArea" x1="0" y1="0" x2="0" y2="1">
-                    <Stop offset="0" stopColor={t.green} stopOpacity={0.18} />
-                    <Stop offset="1" stopColor={t.green} stopOpacity={0} />
+                    <Stop offset="0" stopColor={t.ink} stopOpacity={0.12} />
+                    <Stop offset="1" stopColor={t.ink} stopOpacity={0} />
                   </LinearGradient>
                 </Defs>
                 {grid.map((g) => <Line key={g.v} x1={0} x2={w - AXIS + 2} y1={g.y} y2={g.y} stroke={t.line2} strokeWidth={0.75} strokeDasharray="2 4" />)}
                 <Path d={`${path}L${xy[xy.length - 1][0]} ${PLOT_H}L${xy[0][0]} ${PLOT_H}Z`} fill="url(#pullArea)" />
-                <Path d={path} fill="none" stroke={t.green} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+                <Path d={path} fill="none" stroke={t.ink} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
                 {hot !== null ? <Line x1={xy[idx][0]} x2={xy[idx][0]} y1={0} y2={PLOT_H} stroke={t.ink} strokeWidth={0.75} strokeDasharray="2 3" opacity={0.5} /> : null}
               </Svg>
               {grid.map((g) => (
                 <Txt key={g.v} num size={10} lh={12} tone="ink3" style={{ position: 'absolute', right: 0, top: g.y - 6, width: AXIS - 4, textAlign: 'right' }}>{g.v.toFixed(1)}</Txt>
               ))}
-              <View style={{ position: 'absolute', left: xy[idx][0] - 4, top: xy[idx][1] - 4, width: 8, height: 8, borderRadius: 4, backgroundColor: t.green, borderWidth: 1.5, borderColor: t.surface,
-                boxShadow: `0px 0px 0px 3px ${t.greenSoft}` }} />
+              <View style={{ position: 'absolute', left: xy[idx][0] - 4, top: xy[idx][1] - 4, width: 8, height: 8, borderRadius: 4, backgroundColor: t.ink, borderWidth: 1.5, borderColor: t.surface,
+                boxShadow: '0px 0px 0px 3px rgba(18,20,23,0.12)' }} />
               {/* the value under your finger, in a small dark tag */}
               {hot !== null ? (
                 <View pointerEvents="none" style={{ position: 'absolute', top: Math.max(-14, xy[idx][1] - 34), left: Math.max(0, Math.min(w - AXIS - 104, xy[idx][0] - 52)), width: 104, alignItems: 'center' }}>

@@ -25,7 +25,7 @@ const light = {
   redSoft: '#FDECEB',
   blue: '#2F6BFF',
   blueSoft: '#EAF0FF',
-  grass: ['#E6EAF0', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C'],
+  grass: ['#ECEEF2', '#C8CDD8', '#8C95A8', '#4A5367', '#15181E'], // ink, not green: more study = darker
   scrim: 'rgba(17,20,23,0.36)',
   dark: false,
 };
