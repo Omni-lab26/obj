@@ -53,7 +53,7 @@ export function Growth() {
   const p = (g.total - g.prev) / (g.next - g.prev);
 
   return (
-    <View style={{ paddingHorizontal: 16, paddingTop: 18, gap: 10 }}>
+    <View style={{ paddingHorizontal: 16, paddingTop: 14, gap: 10 }}>
       <Card pad={14}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.green }} />

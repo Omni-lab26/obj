@@ -93,9 +93,10 @@ function TodayLog() {
   );
 }
 
-// The 記録 tab on My Page: what used to be its own tab. Today's records
-// first (they can be fixed), then the week, the mock-test line, subjects and the grass.
-export function RecordsPanel() {
+// My Page's data, split into pages. 記録: what you did (today's records, which
+// can be fixed, and the half-year grass). グラフ: how it adds up (days and weeks,
+// subjects against their goals, the mock-test line).
+export function LogPage() {
   const todayMin = useStore((s) => s.todayMin);
   return (
     <View>
@@ -105,7 +106,22 @@ export function RecordsPanel() {
 
       <TodayLog />
 
-      <View style={{ paddingHorizontal: 16, paddingTop: 22 }}>
+      <View style={sec}>
+        <View style={{ paddingHorizontal: 4 }}>
+          <SectionHead title="この半年" aux={`${Math.round(hoursIn(182))}時間`} />
+        </View>
+        <Card>
+          <Heatmap weeks={26} seed={3} todayLevel={todayMin ? Math.min(4, 1 + Math.floor(todayMin / 60)) : 0} gap={3} />
+        </Card>
+      </View>
+    </View>
+  );
+}
+
+export function ChartsPage() {
+  return (
+    <View>
+      <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
         <StackedBars />
       </View>
 
@@ -123,15 +139,6 @@ export function RecordsPanel() {
           <SectionHead title="模試の偏差値" aux="最終更新 10月14日" />
         </View>
         <ScoreCard />
-      </View>
-
-      <View style={sec}>
-        <View style={{ paddingHorizontal: 4 }}>
-          <SectionHead title="この半年" aux={`${Math.round(hoursIn(182))}時間`} />
-        </View>
-        <Card>
-          <Heatmap weeks={26} seed={3} todayLevel={todayMin ? Math.min(4, 1 + Math.floor(todayMin / 60)) : 0} gap={3} />
-        </Card>
       </View>
     </View>
   );
