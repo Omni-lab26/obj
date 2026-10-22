@@ -65,7 +65,6 @@ export default function RootLayout() {
           <Stack.Screen name="group/[id]" />
           <Stack.Screen name="settings" />
           <Stack.Screen name="follows" />
-          <Stack.Screen name="me" />
           <Stack.Screen name="record" />
           <Stack.Screen name="welcome" options={{ animation: 'fade', gestureEnabled: false }} />
         </Stack>

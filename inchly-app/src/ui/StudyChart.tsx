@@ -88,7 +88,9 @@ export function StudyChartCard() {
   }, [chart.range, chart.kind, grow]);
   const growA = useAnimatedStyle(() => ({ transform: [{ scaleY: grow.get() }], transformOrigin: 'bottom' }));
 
-  const total = cols.reduce((a, c) => a + c.total, 0);
+  // the figure is what's recorded (the same as home's card); the running timer is shown beside it
+  const total = cols.reduce((a, c) => a + c.total - c.live, 0);
+  const liveNow = cols.reduce((a, c) => a + c.live, 0);
   const max = day ? 60 : Math.max(goalMin, ...cols.map((c) => c.total)) * 1.08;
   const yOf = (m: number) => (Math.min(m, max) / max) * PLOT;
   const main = PALETTES[chart.palette].c;
@@ -130,7 +132,7 @@ export function StudyChartCard() {
         <Txt size={12} w="600" tone="ink3">時間</Txt>
         <Txt num size={28} w="700" lh={34}>{pad(Math.floor(total) % 60)}</Txt>
         <Txt size={12} w="600" tone="ink3">分</Txt>
-        {running ? <Txt size={11} w="600" tone="ink3" style={{ marginLeft: 6 }}>勉強中の分をふくむ</Txt> : null}
+        {running && liveNow >= 1 ? <Txt size={11} w="600" tone="ink3" style={{ marginLeft: 6 }}>{`＋勉強中 ${jpHm(liveNow)}`}</Txt> : null}
       </View>
       <Txt size={11.5} tone={sel === null ? 'ink3' : 'ink'} w={sel === null ? '400' : '600'} numberOfLines={1} style={{ marginTop: 2 }}>{note}</Txt>
 

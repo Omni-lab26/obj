@@ -44,7 +44,7 @@ export function useGrowth(sessions: Session[]) {
 
 const hm = (m: number) => `${Math.floor(Math.abs(m) / 60)}:${String(Math.round(Math.abs(m) % 60)).padStart(2, '0')}`;
 
-export function Growth({ stacked, badges = true }: { stacked?: boolean; badges?: boolean }) {
+export function Growth() {
   const t = useT();
   const sessions = useStore((s) => s.sessions);
   const g = useGrowth(sessions);
@@ -56,7 +56,7 @@ export function Growth({ stacked, badges = true }: { stacked?: boolean; badges?:
   return (
     <View style={{ paddingTop: 14, gap: 10 }}>
       {/* the graph card: swipe it for the week, the subjects and the grass */}
-      <GraphDeck stacked={stacked} first={<>
+      <GraphDeck first={<>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />
           <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>これまでの勉強時間</Txt>
@@ -91,7 +91,7 @@ export function Growth({ stacked, badges = true }: { stacked?: boolean; badges?:
           <Versus label="1日平均 · 先月より" up={g.avgNow >= g.avgThen} value={`${Math.round(Math.abs(g.avgNow - g.avgThen))}分`} />
         </View>
 
-        {badges ? <Badges total={g.total} /> : null}
+        <Badges total={g.total} />
       </View>
     </View>
   );

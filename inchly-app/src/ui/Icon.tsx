@@ -45,9 +45,6 @@ const ICONS = {
   bookmark: { els: [['p', 'M6.5 3.5h11v17L12 16.2l-5.5 4.3z']] },
   more: { els: [['c', 5.5, 12, 1.4], ['c', 12, 12, 1.4], ['c', 18.5, 12, 1.4]], fill: true },
   feed: { els: [['p', 'M4.5 5.5h15v10h-9l-4.5 3.5v-3.5h-1.5z'], ['p', 'M8.5 9.2h7M8.5 12.2h4.5']] },
-  bag: { els: [['p', 'M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z'], ['p', 'M9 8V7a3 3 0 0 1 6 0v1']] },
-  medal: { els: [['c', 12, 14.5, 5.5], ['p', 'M8.6 10.2 6.2 3.5h4l1.8 4.2M15.4 10.2l2.4-6.7h-4L12 7.7']] },
-  gift: { els: [['r', 4, 9, 16, 11, 2], ['p', 'M3 9h18M12 9v11M12 9c-1.5-3.5-5.5-3.5-4.5-1 .5 1 2.5 1 4.5 1zM12 9c1.5-3.5 5.5-3.5 4.5-1-.5 1-2.5 1-4.5 1z']] },
 } satisfies Record<string, Spec>;
 
 export type IconName = keyof typeof ICONS;
@@ -61,9 +58,9 @@ const SF: Record<IconName, string> = {
   userPlus: 'person.badge.plus', users: 'person.2', user: 'person', home: 'house', bars: 'chart.bar', cal: 'calendar',
   bulb: 'lightbulb', chat: 'bubble.left', send: 'arrow.up', q: 'questionmark', target: 'target', book: 'book',
   sun: 'sun.max', cert: 'rosette', heart: 'heart', pin: 'mappin', note: 'note.text', share: 'square.and.arrow.up',
-  plus: 'plus', minus: 'minus', edit: 'pencil', gear: 'gearshape', plane: 'paperplane', bookmark: 'bookmark', more: 'ellipsis', feed: 'text.bubble', bag: 'bag', medal: 'medal', gift: 'gift',
+  plus: 'plus', minus: 'minus', edit: 'pencil', gear: 'gearshape', plane: 'paperplane', bookmark: 'bookmark', more: 'ellipsis', feed: 'text.bubble',
 };
-const HAS_FILL = new Set<IconName>(['bell', 'flag', 'users', 'user', 'home', 'bars', 'bulb', 'chat', 'book', 'heart', 'gear', 'cal', 'clock', 'note', 'plane', 'bookmark', 'feed', 'bag', 'medal', 'gift']);
+const HAS_FILL = new Set<IconName>(['bell', 'flag', 'users', 'user', 'home', 'bars', 'bulb', 'chat', 'book', 'heart', 'gear', 'cal', 'clock', 'note', 'plane', 'bookmark', 'feed']);
 
 export function Icon({ name, size = 22, color, width, filled }: { name: IconName; size?: number; color: string; width?: number; filled?: boolean }) {
   const spec: Spec = ICONS[name];
