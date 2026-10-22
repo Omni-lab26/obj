@@ -8,16 +8,17 @@ import { useStore } from '@/store';
 import { Avatar, haptic, Txt } from '@/ui/base';
 import { Wordmark } from '@/ui/Brand';
 import { Rolling } from '@/ui/Rolling';
-import { hair } from '@/theme';
+import { hair, lift, useT } from '@/theme';
 
-const CARD_GRASS = ['rgba(255,255,255,0.1)', '#14532D', '#16803D', '#22C55E', '#6EE7A0'];
+const CARD_GRASS = ['#E3E7EE', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C']; // the app's grass, on white
 
-// The study card — the page's centerpiece, cut to the size of a credit card
+// The study card, in pearl white — the page's centerpiece, cut to the size of a credit card
 // (ISO/IEC 7810 ID-1, 85.60 × 53.98 mm). The last five weeks of grass sit where
 // the IC chip would be. The sheen drifts on its own; drag a finger across it
 // and the sheen follows while the card tilts.
 export const CARD_RATIO = 85.6 / 53.98;
 export function HoloCard({ name, handle, goal, since, stats }: { name: string; handle: string; goal: string; since: string; stats: { v: string; from: string; label: string }[] }) {
+  const t = useT();
   const [w, setW] = useState(0);
   const CARD_H = w / CARD_RATIO;
   const sessions = useStore((s) => s.sessions);
@@ -75,17 +76,30 @@ export function HoloCard({ name, handle, goal, since, stats }: { name: string; h
     <Animated.View style={[{ marginHorizontal: 16, marginTop: 6 }, cardA]}>
       <View onLayout={(e) => setW(e.nativeEvent.layout.width)} {...pan.panHandlers}
         accessibilityLabel={`${name}の勉強カード。指でなぞると光が動きます`}
-        style={{ aspectRatio: CARD_RATIO, borderRadius: 14, backgroundColor: '#0B0D12', overflow: 'hidden', paddingHorizontal: 18, paddingVertical: 16, justifyContent: 'space-between', borderWidth: hair, borderColor: 'rgba(255,255,255,0.08)' }}>
+        style={[{ aspectRatio: CARD_RATIO, borderRadius: 14, backgroundColor: '#FFFFFF', overflow: 'hidden', paddingHorizontal: 18, paddingVertical: 16, justifyContent: 'space-between', borderWidth: hair, borderColor: 'rgba(17,20,23,0.1)' }, lift(t, 2)]}>
+        {/* pearl white: white at the top left, a cool grey at the bottom right */}
+        {w ? (
+          <Svg pointerEvents="none" width={w} height={CARD_H} style={{ position: 'absolute', top: 0, left: 0 }}>
+            <Defs>
+              <LinearGradient id="pearl" x1="0" y1="0" x2="1" y2="1">
+                <Stop offset="0" stopColor="#FFFFFF" />
+                <Stop offset="0.55" stopColor="#F6F7FA" />
+                <Stop offset="1" stopColor="#E9EDF3" />
+              </LinearGradient>
+            </Defs>
+            <Rect width={w} height={CARD_H} fill="url(#pearl)" />
+          </Svg>
+        ) : null}
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: 0, bottom: 0, left: -w * 0.25, width: w * 1.5 }, sheenA]}>
           {w ? (
             <Svg width={w * 1.5} height={CARD_H}>
               <Defs>
                 <LinearGradient id="holo" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0.3" stopColor="#78FFB4" stopOpacity="0" />
-                  <Stop offset="0.44" stopColor="#78FFB4" stopOpacity="0.2" />
-                  <Stop offset="0.52" stopColor="#8CB4FF" stopOpacity="0.22" />
-                  <Stop offset="0.6" stopColor="#D49CFF" stopOpacity="0.12" />
-                  <Stop offset="0.7" stopColor="#8CB4FF" stopOpacity="0" />
+                  <Stop offset="0.3" stopColor="#9EE8FF" stopOpacity="0" />
+                  <Stop offset="0.44" stopColor="#9EE8FF" stopOpacity="0.28" />
+                  <Stop offset="0.52" stopColor="#C9B6FF" stopOpacity="0.3" />
+                  <Stop offset="0.6" stopColor="#FFC2E2" stopOpacity="0.22" />
+                  <Stop offset="0.7" stopColor="#C9B6FF" stopOpacity="0" />
                 </LinearGradient>
               </Defs>
               <Rect width={w * 1.5} height={CARD_H} fill="url(#holo)" />
@@ -94,13 +108,13 @@ export function HoloCard({ name, handle, goal, since, stats }: { name: string; h
         </Animated.View>
 
         <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Wordmark size={16} color="#F2F3F1" />
-          <Txt num size={10} w="600" color="rgba(255,255,255,0.5)" style={{ letterSpacing: 1.2 }}>STUDENT · PLUS</Txt>
+          <Wordmark size={16} color="#121417" />
+          <Txt num size={10} w="600" color="rgba(17,20,23,0.45)" style={{ letterSpacing: 1.2 }}>STUDENT · PLUS</Txt>
         </View>
 
         {/* the chip: five weeks of grass in a gold frame */}
         <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <View style={{ padding: 4, borderRadius: 6, backgroundColor: 'rgba(214,180,106,0.16)', borderWidth: 1, borderColor: 'rgba(214,180,106,0.55)' }}>
+          <View style={{ padding: 4, borderRadius: 6, backgroundColor: 'rgba(214,180,106,0.14)', borderWidth: 1, borderColor: 'rgba(184,140,50,0.6)' }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 7 * 5 + 2 * 6, gap: 2 }}>
               {cells.map((l, i) => <View key={i} style={{ width: 5, height: 5, borderRadius: 1.2, backgroundColor: CARD_GRASS[l] }} />)}
             </View>
@@ -108,8 +122,8 @@ export function HoloCard({ name, handle, goal, since, stats }: { name: string; h
           <View style={{ flexDirection: 'row', gap: 20 }}>
             {stats.map((x) => (
               <View key={x.label}>
-                <Rolling value={x.v} size={21} weight="700" color="#fff" />
-                <Txt size={10} lh={13} color="rgba(255,255,255,0.55)">{x.label}</Txt>
+                <Rolling value={x.v} size={21} weight="700" color="#121417" />
+                <Txt size={10} lh={13} color="rgba(17,20,23,0.5)">{x.label}</Txt>
               </View>
             ))}
           </View>
@@ -117,14 +131,14 @@ export function HoloCard({ name, handle, goal, since, stats }: { name: string; h
 
         {/* holder and "valid from", where a card prints them */}
         <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Avatar name={name} color="#6E56CF" size={34} ring="rgba(255,255,255,0.18)" />
+          <Avatar name={name} color="#6E56CF" size={34} ring="#FFFFFF" />
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Txt size={15} w="700" lh={19} color="#fff" numberOfLines={1}>{name}</Txt>
-            <Txt size={10.5} color="rgba(255,255,255,0.6)" numberOfLines={1}>{`@${handle} · ${goal}`}</Txt>
+            <Txt size={15} w="700" lh={19} color="#121417" numberOfLines={1}>{name}</Txt>
+            <Txt size={10.5} color="rgba(17,20,23,0.55)" numberOfLines={1}>{`@${handle} · ${goal}`}</Txt>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Txt size={8} w="600" color="rgba(255,255,255,0.45)" style={{ letterSpacing: 1 }}>SINCE</Txt>
-            <Txt num size={13} w="600" color="rgba(255,255,255,0.85)">{since}</Txt>
+            <Txt size={8} w="600" color="rgba(17,20,23,0.4)" style={{ letterSpacing: 1 }}>SINCE</Txt>
+            <Txt num size={13} w="600" color="rgba(17,20,23,0.8)">{since}</Txt>
           </View>
         </View>
       </View>
