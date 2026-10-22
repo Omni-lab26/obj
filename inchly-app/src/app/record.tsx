@@ -36,12 +36,12 @@ export default function Record() {
   const [min, setMin] = useState(() => Math.max(1, Math.round(elapsedOf(getState()) / 60)));
   const [end] = useState(() => new Date());
   const start = new Date(end.getTime() - min * 60_000);
-  // undone ToDos, this subject's first; the first one is picked for you
+  // undone ToDos, this subject's first; the one you started from (else this subject's first) is picked for you
   const [open] = useState(() => {
     const s = getState();
     return [...s.todos.filter((x) => !x.d && x.s === s.subj), ...s.todos.filter((x) => !x.d && x.s !== s.subj)];
   });
-  const [todo, setTodo] = useState<string>(open[0]?.id ?? 'none');
+  const [todo, setTodo] = useState<string>(() => open.find((x) => x.id === getState().studyTodo)?.id ?? open.find((x) => x.s === getState().subj)?.id ?? 'none');
   const [note, setNote] = useState('');
   const [next, setNext] = useState<Next>('tomorrow');
   const [phase, setPhase] = useState<'idle' | 'saving' | 'done'>('idle');

@@ -15,9 +15,10 @@ import { SlideToRecord } from '@/ui/SlideToRecord';
 import { TimeScrubber } from '@/ui/TimeScrubber';
 import { toast } from '@/ui/Toast';
 
-// Focus timer: always dark. The readout counts down the planned session; two
-// rulers (hours above, minutes below) show the remaining time and drift as it
-// passes — drag or fling either to plan or adjust the session. Slide to record
+// Focus timer: always dark. The subject sits on top, large. By default the
+// readout counts up (the time that gets recorded) with the target as a thin
+// bar; in 目安 mode it counts down the planned session on two rulers (hours
+// above, minutes below) — drag or fling either to adjust. Slide to record
 // pauses the clock and opens the record page.
 const fmt = (sec: number) => {
   const v = Math.max(0, Math.round(sec));
@@ -56,6 +57,9 @@ export default function Timer() {
   const playing = s.running && !s.paused;
   const rem = s.targetMin * 60 - e;
   const over = s.running && rem < 0;
+  const up = s.timerMode === 'up';
+  const task = s.todos.find((x) => x.id === s.studyTodo && x.s === s.subj)?.t ?? sj.task;
+  const canSwitch = !s.running || e <= 60;
 
   // One nudge when the planned time is reached.
   const nudged = useRef(false);
@@ -130,7 +134,16 @@ export default function Timer() {
         </Press>
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, paddingHorizontal: 20, paddingTop: 4 }} accessibilityRole="radiogroup">
+      {/* what you're studying, first and large */}
+      <View style={{ alignItems: 'center', gap: 2, paddingHorizontal: 24, paddingTop: 4 }} accessible accessibilityLabel={`${sj.name} ${task}`}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: sj.c }} />
+          <Txt size={32} w="800" color={focus.ink}>{sj.name}</Txt>
+        </View>
+        <Txt size={13} color={focus.ink2} numberOfLines={1}>{task}</Txt>
+      </View>
+      {/* the subject can change before starting and in the first minute, so the chips show only then */}
+      {canSwitch ? <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, paddingHorizontal: 20, paddingTop: 12 }} accessibilityRole="radiogroup" accessibilityLabel="科目を変える">
         {SUBJ.map((x) => {
           const on = x.id === s.subj;
           return (
@@ -142,23 +155,40 @@ export default function Timer() {
             </Pressable>
           );
         })}
-      </View>
+      </View> : null}
 
       <View style={{ flex: 1, minHeight: 24 }} />
 
-      <Readout sec={over ? -rem : s.running ? rem : s.targetMin * 60} over={over} paused={s.paused} side={side} parts={parts} register={register} />
-      <Txt size={11.5} color={focus.ink3} style={{ textAlign: 'center', marginTop: 2 }}>
-        {s.paused ? '一時停止中' : s.running ? `${sj.name} · ${sj.task}` : '目盛りを動かして、集中する時間を決めます'}
-      </Txt>
+      {up ? (
+        <>
+          <Readout sec={e} over={false} paused={s.paused} side="勉強した時間" parts={parts} register={register} />
+          {/* the target as a thin bar under the count, in the subject's color */}
+          <View style={{ marginTop: 18, marginHorizontal: 40, gap: 6 }}>
+            <View style={{ height: 4, borderRadius: 2, backgroundColor: focus.raise, overflow: 'hidden' }}>
+              <View style={{ width: `${Math.min(100, (e / (s.targetMin * 60)) * 100)}%`, height: 4, borderRadius: 2, backgroundColor: over ? '#F2B705' : sj.c }} />
+            </View>
+            <Txt size={11.5} color={focus.ink3} style={{ textAlign: 'center' }}>
+              {s.paused ? '一時停止中' : over ? `目安の${Math.round(s.targetMin)}分をこえました` : `目安 ${Math.round(s.targetMin)}分まで あと ${fmt(Math.max(0, rem))}`}
+            </Txt>
+          </View>
+        </>
+      ) : (
+        <>
+          <Readout sec={over ? -rem : s.running ? rem : s.targetMin * 60} over={over} paused={s.paused} side={side} parts={parts} register={register} />
+          <Txt size={11.5} color={focus.ink3} style={{ textAlign: 'center', marginTop: 2 }}>
+            {s.paused ? '一時停止中' : s.running ? `勉強した時間 ${fmt(e)}` : '目盛りを動かして、集中する時間を決めます'}
+          </Txt>
+        </>
+      )}
 
-      <View style={{ marginTop: 22, marginHorizontal: 20, gap: 4 }}>
+      {up ? null : <View style={{ marginTop: 22, marginHorizontal: 20, gap: 4 }}>
         <Txt size={11} w="600" color={focus.ink3}>時間</Txt>
         <TimeScrubber value={parts.h} onChange={onHours} onPreview={onHoursPreview} min={0} max={5} step={1} px={56} minor={0.25} mid={0.5} major={1}
           label={hourLabel} bg={focus.bg} dark a11y={s.running ? '残り時間の時間' : '集中する時間の時間'} />
         <Txt size={11} w="600" color={focus.ink3} style={{ marginTop: 4 }}>分</Txt>
         <TimeScrubber value={parts.m} onChange={onMins} onPreview={onMinsPreview} min={0} max={59} step={5} px={10} minor={1} mid={5} major={15}
           label={minLabel} bg={focus.bg} dark a11y={s.running ? '残り時間の分' : '集中する時間の分'} />
-      </View>
+      </View>}
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 22, marginTop: 14 }}>
         <Txt size={11.5} color={focus.ink2}>今日 <Txt num size={12} w="600" color="#fff">{hm(s.todayMin)}</Txt></Txt>

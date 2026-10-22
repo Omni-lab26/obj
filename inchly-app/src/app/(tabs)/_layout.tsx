@@ -14,10 +14,11 @@ import { Icon, IconName } from '@/ui/Icon';
 const TABS: Record<string, { label: string; icon: IconName; slot: number }> = {
   index: { label: 'ホーム', icon: 'home', slot: 0 },
   timeline: { label: 'タイムライン', icon: 'feed', slot: 1 },
+  study: { label: '勉強', icon: 'play', slot: 2 },
   community: { label: 'みんな', icon: 'users', slot: 3 },
   me: { label: 'マイページ', icon: 'user', slot: 4 },
 };
-const SLOTS = 5; // slot 2 is the timer
+const SLOTS = 5; // slot 2 is the study page, drawn as the dark pill
 
 // A floating Liquid Glass capsule over the content, icons only. The selected
 // tab sits in a lighter lens that slides between items; the timer keeps the
@@ -35,6 +36,16 @@ function TabBar({ state, navigation, insets }: BottomTabBarProps) {
   useEffect(() => { if (item) x.set(withSpring(4 + slot * item, { duration: 420, dampingRatio: 0.78 })); }, [slot, item, x]);
   const lens = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
 
+  // the middle pill opens the study page (a second tap there opens the timer while studying)
+  const studyIdx = state.routes.findIndex((r) => r.name === 'study');
+  const onStudy = state.index === studyIdx;
+  const goStudy = () => {
+    const r = state.routes[studyIdx];
+    if (!r) return;
+    if (onStudy && running) { router.push('/timer'); return; }
+    const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
+    if (!onStudy && !e.defaultPrevented) navigation.navigate(r.name, r.params);
+  };
   const tab = (name: string) => {
     const i = state.routes.findIndex((r) => r.name === name);
     const r = state.routes[i];
@@ -61,8 +72,9 @@ function TabBar({ state, navigation, insets }: BottomTabBarProps) {
           {tab('index')}
           {tab('timeline')}
           <View style={{ flex: 1, alignItems: 'center' }}>
-            <Press onPress={() => { haptic.soft(); router.push('/timer'); }} haptics={false} scale={0.9} hitSlop={{ top: 10, bottom: 10 }}
-              accessibilityLabel={running ? `勉強中 ${mins}分。タイマーを開く` : 'タイマーを開いて勉強を始める'}
+            <Press onPress={() => { haptic.soft(); goStudy(); }} haptics={false} scale={0.9} hitSlop={{ top: 10, bottom: 10 }}
+              accessibilityRole="tab" accessibilityState={{ selected: onStudy }}
+              accessibilityLabel={running ? `勉強 · 勉強中 ${mins}分` : '勉強（時間割・ToDo・タイマー）'}
               style={{ height: 40, minWidth: 52, paddingHorizontal: running ? 12 : 0, borderRadius: 20, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
               {running ? (
                 <>
@@ -90,6 +102,7 @@ export default function TabLayout() {
     <Tabs tabBar={(p) => <TabBar {...p} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index" />
       <Tabs.Screen name="timeline" />
+      <Tabs.Screen name="study" />
       <Tabs.Screen name="community" />
       <Tabs.Screen name="me" />
     </Tabs>

@@ -7,6 +7,7 @@ import { demoHistory, GROUPS, Group, Post, POSTS, subj } from './data';
 import { cancelReminder, configureNotifications, notificationsAllowed, replaceReminders, scheduleReminder } from './lib/notify';
 import { deadlineReminders, goalReminderAt } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
+import { Block } from './lib/timetable';
 import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 
 // One small global store, saved on the device (see persist below). Updates
@@ -24,6 +25,9 @@ export type ExtraTab = 'events' | 'exams' | 'me';
 export type ChartKind = 'bar' | 'stack' | 'line';
 export type ChartPalette = 'ink' | 'blue' | 'orange' | 'grape';
 export type Chart = { range: 'day' | 'week'; kind: ChartKind; palette: ChartPalette };
+/** How the timer counts: up from zero (what gets recorded), or down to a planned length. */
+export type TimerMode = 'up' | 'goal';
+export type { Block };
 
 export type State = {
   account: Account | null; // null until onboarding is done
@@ -63,6 +67,9 @@ export type State = {
   claimed: { day: string; ids: string[] }; // missions claimed today
   extraTab: ExtraTab | null; // what the right-hand tab became; null = not chosen yet
   chart: Chart; // how home draws the study-time graph
+  timetable: Block[]; // study blocks planned by the clock, repeating weekly
+  timerMode: TimerMode;
+  studyTodo: string | null; // the ToDo this session works on (picked on the record page)
 };
 
 let seq = 100;
@@ -107,6 +114,9 @@ export const INITIAL: State = {
   claimed: { day: '', ids: [] },
   extraTab: null,
   chart: { range: 'day', kind: 'stack', palette: 'ink' },
+  timetable: [],
+  timerMode: 'up',
+  studyTodo: null,
 };
 
 /** The sample account: a year of history, a plan, people it follows, a session under way. */
@@ -131,6 +141,14 @@ export function demoState(now: Date = new Date()): Partial<State> {
       { id: 't3', s: 'en', t: '長文読解 第3講（時間を測る）', d: true, dl: 'd1', doneOn: today },
       { id: 't4', s: 'ja', t: '古文単語 61〜80', d: true, dl: 'd2', doneOn: today },
       { id: 't5', s: 'ma', t: '復習キュー 4問', d: false },
+    ],
+    timetable: [
+      { id: 'b1', s: 'ja', t: '古文単語', start: '6:30', min: 30, days: [0, 1, 2, 3, 4] },
+      { id: 'b2', s: 'en', t: '長文読解', start: '17:00', min: 60, days: [0, 1, 2, 3, 4] },
+      { id: 'b3', s: 'ma', t: '青チャート', start: '19:00', min: 60, days: [0, 1, 2, 3, 4] },
+      { id: 'b4', s: 'ph', t: '名問の森', start: '21:00', min: 45, days: [0, 2, 4] },
+      { id: 'b5', s: 'en', t: '過去問', start: '9:00', min: 120, days: [5, 6] },
+      { id: 'b6', s: 'ma', t: '模試の復習', start: '13:00', min: 90, days: [5, 6] },
     ],
     deadlines: [
       { id: 'd1', t: '第4回 記述模試', mo: 11, day: 8, urgent: true },
@@ -191,7 +209,33 @@ export function startStudy(id?: string) {
     if (s.paused) setState({ paused: false, startedAt: Date.now() });
     return;
   }
-  setState({ running: true, paused: false, startedAt: Date.now(), base: 0, subj: next });
+  setState({ running: true, paused: false, startedAt: Date.now(), base: 0, subj: next, studyTodo: null });
+}
+/**
+ * Start from something planned: a timetable block or a ToDo. The subject is
+ * set from it, the block's length becomes the target, and a ToDo is carried
+ * to the record page. While already studying, this switches only if the
+ * session is under a minute old (as the timer allows).
+ */
+export function startFrom(x: { s: string; todoId?: string; min?: number }): boolean {
+  const s = state;
+  if (s.running && elapsedOf(s) > 60 && x.s !== s.subj) return false;
+  setState({
+    running: true, paused: false, startedAt: Date.now(), base: s.running && x.s === s.subj ? elapsedOf(s) : 0,
+    subj: x.s, studyTodo: x.todoId ?? null, ...(x.min ? { targetMin: x.min } : {}),
+  });
+  return true;
+}
+export function setTimerMode(m: TimerMode) {
+  setState({ timerMode: m });
+}
+export function saveBlock(b: Omit<Block, 'id'> & { id?: string }) {
+  setState((s) => ({
+    timetable: b.id ? s.timetable.map((x) => (x.id === b.id ? { ...x, ...b, id: x.id } : x)) : [...s.timetable, { ...b, id: newId('b') }],
+  }));
+}
+export function removeBlock(id: string) {
+  setState((s) => ({ timetable: s.timetable.filter((x) => x.id !== id) }));
 }
 export function togglePause() {
   const s = state;
@@ -230,7 +274,7 @@ export function commitRecord(opts?: { todoId?: string; note?: string; min?: numb
   const todo = s.todos.find((x) => x.id === opts?.todoId);
   const coins = coinsFor(min, s.boost > 0);
   setState({
-    running: false, paused: false, base: 0,
+    running: false, paused: false, base: 0, studyTodo: null,
     sessions: [...s.sessions, { id: newId('s'), s: s.subj, min, date: today, at: clockOf(now), note: opts?.note ?? todo?.t }],
     todos: todo ? s.todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x)) : s.todos,
     coins: s.coins + coins,
