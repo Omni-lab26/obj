@@ -8,7 +8,7 @@ import { cancelReminder, configureNotifications, notificationsAllowed, replaceRe
 import { deadlineReminders, goalReminderAt } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
 import { Block } from './lib/timetable';
-import { expOf, levelOf } from './lib/exp';
+import { Done, expOf, levelOf, TODO_CAP, TODO_EXP } from './lib/exp';
 import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 
 // One small global store, saved on the device (see persist below). Updates
@@ -67,6 +67,7 @@ export type State = {
   timetable: Block[]; // study blocks planned by the clock, repeating weekly
   timerMode: TimerMode;
   studyTodo: string | null; // the ToDo this session works on (picked on the record page)
+  todoLog: Done[]; // every ToDo finished and when, kept after the list is cleared (for EXP)
 };
 
 let seq = 100;
@@ -110,6 +111,7 @@ export const INITIAL: State = {
   timetable: [],
   timerMode: 'up',
   studyTodo: null,
+  todoLog: [],
 };
 
 /** The sample account: a year of history, a plan, people it follows, a session under way. */
@@ -148,6 +150,7 @@ export function demoState(now: Date = new Date()): Partial<State> {
       { id: 'd2', t: '共通テスト', mo: 1, day: 16 },
       { id: 'd3', t: '東大 二次試験', mo: 2, day: 25 },
     ],
+    todoLog: [{ id: 't3', date: today }, { id: 't4', date: today }],
     following: ['mio.k', 'sora_06', 'kaito'],
     posts: POSTS,
     restTickets: 2,
@@ -272,9 +275,10 @@ export function commitRecord(opts?: { todoId?: string; note?: string; min?: numb
     running: false, paused: false, base: 0, studyTodo: null,
     sessions,
     todos: todo ? s.todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x)) : s.todos,
+    todoLog: todo && !todo.d ? [...s.todoLog, { id: todo.id, date: today }] : s.todoLog,
     restTickets: s.restTickets + (ticket ? 1 : 0),
   });
-  const before = expOf(s.sessions, s.goalMin), after = expOf(sessions, s.goalMin);
+  const before = expOf(s.sessions, s.goalMin, s.todoLog), after = expOf(sessions, s.goalMin, state.todoLog);
   const lv0 = levelOf(before).lv, lv1 = levelOf(after).lv;
   return { min, ticket, exp: after - before, levelUp: lv1 > lv0 ? lv1 : null };
 }
@@ -296,9 +300,27 @@ export function addTodo(t: Omit<Todo, 'id' | 'd'>) {
 }
 export function updateTodo(id: string, patch: Partial<Todo>) {
   const today = dateKey();
-  setState((s) => ({
-    todos: s.todos.map((x) => (x.id === id ? { ...x, ...patch, ...(patch.d === true ? { doneOn: today } : patch.d === false ? { doneOn: undefined } : {}) } : x)),
-  }));
+  setState((s) => {
+    const was = s.todos.find((x) => x.id === id);
+    // finishing logs it for EXP; un-finishing today takes today's entry back
+    const log = !was || patch.d === undefined || patch.d === was.d ? s.todoLog
+      : patch.d ? [...s.todoLog, { id, date: today }]
+      : s.todoLog.filter((x) => !(x.id === id && x.date === today));
+    return {
+      todos: s.todos.map((x) => (x.id === id ? { ...x, ...patch, ...(patch.d === true ? { doneOn: today } : patch.d === false ? { doneOn: undefined } : {}) } : x)),
+      todoLog: log,
+    };
+  });
+}
+/** Tick a ToDo on or off. Returns the EXP that finishing it earned (0 when un-ticking, or past the day's cap). */
+export function toggleTodo(id: string): number {
+  const s = state;
+  const td = s.todos.find((x) => x.id === id);
+  if (!td) return 0;
+  const today = dateKey();
+  const before = s.todoLog.filter((x) => x.date === today).length;
+  updateTodo(id, { d: !td.d });
+  return !td.d && before < TODO_CAP ? TODO_EXP : 0;
 }
 export function removeTodo(id: string) {
   setState((s) => ({ todos: s.todos.filter((x) => x.id !== id) }));
@@ -390,7 +412,8 @@ export function useReminders() {
 export const useLevel = () => {
   const sessions = useStore((s) => s.sessions);
   const goalMin = useStore((s) => s.goalMin);
-  return useMemo(() => levelOf(expOf(sessions, goalMin)), [sessions, goalMin]);
+  const todoLog = useStore((s) => s.todoLog);
+  return useMemo(() => levelOf(expOf(sessions, goalMin, todoLog)), [sessions, goalMin, todoLog]);
 };
 
 /** The current run of study days. */

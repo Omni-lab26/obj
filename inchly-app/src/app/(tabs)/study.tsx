@@ -5,7 +5,7 @@ import { ScrollView, View } from 'react-native';
 import { hms, SUBJ, subj } from '@/data';
 import { blocksOn, endOf, minutesUntil, slotsOf, suggestion, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
-import { elapsedOf, getState, setTarget, setTimerMode, startFrom, togglePause, updateTodo, useNow, useStore } from '@/store';
+import { elapsedOf, getState, setTarget, setTimerMode, startFrom, toggleTodo, togglePause, useNow, useStore } from '@/store';
 import { focus, hair, radius, type, useT } from '@/theme';
 import { Card, haptic, Press, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
@@ -230,7 +230,7 @@ function Todos() {
         {todos.map((td, i) => (
           <View key={td.id} style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <TodoRow todo={td} first={i === 0} onToggle={() => updateTodo(td.id, { d: !td.d })} onEdit={() => todoSheet(td)} />
+              <TodoRow todo={td} first={i === 0} onToggle={() => { const exp = toggleTodo(td.id); if (exp) toast('ToDoを完了しました', `+${exp} EXP`); }} onEdit={() => todoSheet(td)} />
             </View>
             {td.d ? <View style={{ width: 48 }} /> : (
               <Press onPress={() => go({ s: td.s, todoId: td.id })} haptics={false} scale={0.9} hitSlop={6} disabled={running}

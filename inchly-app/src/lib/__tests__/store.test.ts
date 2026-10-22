@@ -1,6 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
-import { commitRecord, getState, INITIAL, MAX_TICKETS, migrate, rollDay, setState } from '../../store';
+import { TODO_CAP, TODO_EXP } from '../exp';
+import { commitRecord, getState, INITIAL, MAX_TICKETS, migrate, rollDay, setState, toggleTodo } from '../../store';
 import { addDays, dateKey } from '../time';
 
 const reset = (patch = {}) => setState({ ...INITIAL, ...patch });
@@ -61,6 +62,30 @@ describe('recording', () => {
     reset({ running: true, base: 10 * 60, startedAt: Date.now(), restTickets: MAX_TICKETS, sessions: week() });
     expect(commitRecord().ticket).toBe(false);
     expect(getState().restTickets).toBe(MAX_TICKETS);
+  });
+});
+
+describe('ToDo EXP', () => {
+  const todos = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `t${i}`, s: 'en', t: `todo ${i}`, d: false }));
+  it('finishing pays, un-finishing today takes it back', () => {
+    reset({ todos: todos(1), todoLog: [] });
+    expect(toggleTodo('t0')).toBe(TODO_EXP);
+    expect(getState().todoLog).toEqual([{ id: 't0', date: dateKey() }]);
+    expect(toggleTodo('t0')).toBe(0);
+    expect(getState().todoLog).toEqual([]);
+  });
+  it('stops paying past the daily cap, and the log outlives the cleared list', () => {
+    reset({ todos: todos(TODO_CAP + 1), todoLog: [], lastDay: dateKey() });
+    const paid = getState().todos.map((x) => toggleTodo(x.id));
+    expect(paid.at(-1)).toBe(0);
+    expect(paid.filter(Boolean)).toHaveLength(TODO_CAP);
+    rollDay(new Date(Date.now() + 86_400_000));
+    expect(getState().todos).toEqual([]);
+    expect(getState().todoLog).toHaveLength(TODO_CAP + 1);
+  });
+  it('a record that finishes its ToDo counts it', () => {
+    reset({ running: true, base: 10 * 60, startedAt: Date.now(), todos: todos(1), todoLog: [] });
+    expect(commitRecord({ todoId: 't0' }).exp).toBe(10 + TODO_EXP);
   });
 });
 

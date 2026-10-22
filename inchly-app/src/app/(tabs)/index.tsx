@@ -6,7 +6,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, w
 import { hms, pad, PEOPLE, SUBJ, subj } from '@/data';
 import { dayOf, studiedOn } from '@/lib/history';
 import { jpDate } from '@/lib/time';
-import { elapsedOf, setSubject, startStudy, togglePause, updateTodo, useNow, useStore, useStreak } from '@/store';
+import { elapsedOf, setSubject, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '@/store';
 import { hair, lift, radius, type, useT } from '@/theme';
 import { Avatar, AvatarStack, Btn, Card, haptic, IconBtn, Press, SubjCoin, Txt } from '@/ui/base';
 import { InchTape, Wordmark } from '@/ui/Brand';
@@ -44,9 +44,9 @@ export default function Home() {
 
   const onToggle = (id: string) => {
     const willAll = s.todos.every((x) => (x.id === id ? !x.d : x.d));
-    const td = s.todos.find((x) => x.id === id);
-    if (td) updateTodo(id, { d: !td.d });
-    if (willAll) { haptic.success(); toast('今日のToDo、ぜんぶ終わり'); }
+    const exp = toggleTodo(id);
+    if (willAll) { haptic.success(); toast('今日のToDo、ぜんぶ終わり', exp ? `+${exp} EXP` : undefined); }
+    else if (exp) toast('ToDoを完了しました', `+${exp} EXP`);
   };
   const joinPeers = () => {
     if (s.running) { toast('もう勉強中です', `${sj.name} ${hms(e)}`); return; }

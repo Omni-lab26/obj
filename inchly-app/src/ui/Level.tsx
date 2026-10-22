@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-import { expOn, GOAL_BONUS } from '../lib/exp';
+import { expOn, GOAL_BONUS, TODO_CAP, TODO_EXP } from '../lib/exp';
 import { useLevel, useStore } from '../store';
 import { hair, useT } from '../theme';
 import { Btn, Press, Txt } from './base';
@@ -34,7 +34,8 @@ function LevelSheet({ close }: { close: () => void }) {
   const l = useLevel();
   const sessions = useStore((s) => s.sessions);
   const goalMin = useStore((s) => s.goalMin);
-  const today = expOn(sessions, goalMin);
+  const todoLog = useStore((s) => s.todoLog);
+  const today = expOn(sessions, goalMin, todoLog);
   return (
     <View style={{ gap: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -59,13 +60,13 @@ function LevelSheet({ close }: { close: () => void }) {
       </View>
       <View style={{ borderRadius: 14, backgroundColor: t.sunken, padding: 12, gap: 8 }}>
         <Txt size={13} w="700">EXP のもらい方</Txt>
-        {[['勉強 1分', '+1 EXP'], [`1日の目標（${goalMin / 60}時間）を達成した日`, `+${GOAL_BONUS} EXP`]].map(([k, v]) => (
+        {[['勉強 1分', '+1 EXP'], [`1日の目標（${goalMin / 60}時間）を達成した日`, `+${GOAL_BONUS} EXP`], [`ToDoを1つ完了（1日${TODO_CAP}つまで）`, `+${TODO_EXP} EXP`]].map(([k, v]) => (
           <View key={k} style={{ flexDirection: 'row' }}>
             <Txt size={13} tone="ink2" style={{ flex: 1 }}>{k}</Txt>
             <Txt num size={13} w="700">{v}</Txt>
           </View>
         ))}
-        <Txt size={11.5} tone="ink3">記録から計算するので、記録を直すとEXPも変わります。上のレベルほど、次までに少し多く必要です</Txt>
+        <Txt size={11.5} tone="ink3">記録と完了したToDoから計算するので、記録を直すとEXPも変わります。上のレベルほど、次までに少し多く必要です</Txt>
       </View>
       <Txt num size={12} tone="ink3">{`これまでの合計 ${n(l.exp)} EXP`}</Txt>
       <Btn kind="primary" wide label="閉じる" onPress={close} />
