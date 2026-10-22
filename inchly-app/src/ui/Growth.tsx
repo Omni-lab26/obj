@@ -8,6 +8,7 @@ import { dayOf, Session, useStore } from '../store';
 import { ease, useT } from '../theme';
 import { Card, Txt } from './base';
 import { Rolling } from './Rolling';
+import { GraphDeck } from './GraphDeck';
 import { Sticker, StickerName } from './Sticker';
 
 // "You are growing": the running total climbing toward the next milestone,
@@ -53,8 +54,9 @@ export function Growth() {
   const p = (g.total - g.prev) / (g.next - g.prev);
 
   return (
-    <View style={{ paddingHorizontal: 16, paddingTop: 14, gap: 10 }}>
-      <Card pad={14}>
+    <View style={{ paddingTop: 14, gap: 10 }}>
+      {/* the graph card: swipe it for the week, the subjects and the grass */}
+      <GraphDeck first={<>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.green }} />
           <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>これまでの勉強時間</Txt>
@@ -79,16 +81,18 @@ export function Growth() {
           <Meter p={p} />
           <Txt size={11} tone="ink3">{`このペースなら ${g.eta.getMonth() + 1}月${g.eta.getDate()}日に届きます`}</Txt>
         </View>
-      </Card>
+      </>} />
 
-      {/* you vs. your past self */}
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Versus label="昨日より" up={g.vsYesterday >= 0} value={hm(g.vsYesterday)} />
-        <Versus label="先週より" up={g.vsLastWeek >= 0} value={`${Math.abs(g.vsLastWeek).toFixed(1)}h`} />
-        <Versus label="1日平均 · 先月より" up={g.avgNow >= g.avgThen} value={`${Math.round(Math.abs(g.avgNow - g.avgThen))}分`} />
+      <View style={{ paddingHorizontal: 16, gap: 10 }}>
+        {/* you vs. your past self */}
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Versus label="昨日より" up={g.vsYesterday >= 0} value={hm(g.vsYesterday)} />
+          <Versus label="先週より" up={g.vsLastWeek >= 0} value={`${Math.abs(g.vsLastWeek).toFixed(1)}h`} />
+          <Versus label="1日平均 · 先月より" up={g.avgNow >= g.avgThen} value={`${Math.round(Math.abs(g.avgNow - g.avgThen))}分`} />
+        </View>
+
+        <Badges total={g.total} />
       </View>
-
-      <Badges total={g.total} />
     </View>
   );
 }
