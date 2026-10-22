@@ -1,12 +1,13 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { getState, hydrate, startStudy, useDayRollover, useReminders, useStore } from '@/store';
 import { focus, useT } from '@/theme';
 import { SheetHost } from '@/ui/Sheet';
+import { isRoomShape, StudyRoom } from '@/ui/StudyRoom';
 import { toast, ToastHost } from '@/ui/Toast';
 
 // Simulated "someone started studying" pushes, so the live layer is visible in the mock.
@@ -44,11 +45,14 @@ export default function RootLayout() {
   useFeed(ready && signedIn);
   useDayRollover();
   useReminders();
+  // sideways, the whole app becomes the study room (see StudyRoom)
+  const { width, height } = useWindowDimensions();
+  const room = ready && signedIn && isRoomShape(width, height);
   if (!ready) return null;
   const nav = t.dark ? DarkTheme : DefaultTheme;
   return (
     <ThemeProvider value={{ ...nav, colors: { ...nav.colors, background: t.canvas, card: t.surface, text: t.ink, border: t.line, primary: t.ink } }}>
-      <StatusBar style={t.dark ? 'light' : 'dark'} />
+      <StatusBar style={room ? 'light' : t.dark ? 'light' : 'dark'} hidden={room} />
       {/* userSelect: dragging sliders and charts with a mouse shouldn't select text on web */}
       <GestureHandlerRootView style={[{ flex: 1, backgroundColor: t.canvas }, Platform.OS === 'web' && ({ userSelect: 'none' } as object)]}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>
@@ -66,6 +70,7 @@ export default function RootLayout() {
           <Stack.Screen name="welcome" options={{ animation: 'fade', gestureEnabled: false }} />
         </Stack>
         <SheetHost />
+        {room ? <StudyRoom /> : null}
         <ToastHost />
       </GestureHandlerRootView>
     </ThemeProvider>

@@ -37,7 +37,8 @@ export default function Home() {
   };
   return (
     <Screen style={{ paddingTop: 0 }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: tabPad }}>
+      {/* phone-width column, centered, on a tablet or a wide window */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: tabPad, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', gap: 10, marginHorizontal: 16, marginTop: 6 }}>
           <View style={{ flex: 1.6 }}>
             <PocketCard name={a?.name ?? 'はる'} handle={a?.handle ?? 'haru_study'} lv={levelOf(hours).lv} hours={hours} onPress={() => router.push('/me')} />
