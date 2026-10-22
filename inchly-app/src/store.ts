@@ -6,6 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { demoHistory, GROUPS, Group, Post, POSTS, subj } from './data';
 import { cancelReminder, configureNotifications, notificationsAllowed, replaceReminders, scheduleReminder } from './lib/notify';
 import { deadlineReminders, goalReminderAt } from './lib/reminders';
+import { badgesOf } from './lib/badges';
+import { eventsOf } from './lib/events';
 import { byDay, streakOf, todayMinutes } from './lib/history';
 import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 
@@ -21,6 +23,9 @@ export type Account = { name: string; handle: string; grade: string; birthYear: 
 export type LiveScope = 'all' | 'followers' | 'none';
 export type DmFrom = 'following' | 'groups' | 'all';
 export type ExtraTab = 'events' | 'exams' | 'me';
+export type ChartKind = 'bar' | 'stack' | 'line';
+export type ChartPalette = 'ink' | 'blue' | 'orange' | 'grape';
+export type Chart = { range: 'day' | 'week'; kind: ChartKind; palette: ChartPalette };
 
 export type State = {
   account: Account | null; // null until onboarding is done
@@ -58,7 +63,10 @@ export type State = {
   restDays: string[]; // days a rest ticket covered
   boost: number; // records left whose coins are doubled
   claimed: { day: string; ids: string[] }; // missions claimed today
+  eventsClaimed: string[]; // weekly event keys already paid
+  todosDone: number; // ToDos completed, ever
   extraTab: ExtraTab | null; // what the right-hand tab became; null = not chosen yet
+  chart: Chart; // how home draws the study-time graph
 };
 
 let seq = 100;
@@ -101,7 +109,10 @@ export const INITIAL: State = {
   restDays: [],
   boost: 0,
   claimed: { day: '', ids: [] },
+  eventsClaimed: [],
+  todosDone: 0,
   extraTab: null,
+  chart: { range: 'day', kind: 'stack', palette: 'ink' },
 };
 
 /** The sample account: a year of history, a plan, people it follows, a session under way. */
@@ -111,7 +122,7 @@ export function demoState(now: Date = new Date()): Partial<State> {
   const past: Session[] = demoHistory(now).map((h, i) => ({ id: `h${i}`, s: h.s, min: h.min, date: addDays(today, -h.daysAgo), at: h.at }));
   const recent: Session[] = [
     { id: 's1', s: 'ja', min: 30, date: today, at: '6:30', note: '古文単語 61〜80' },
-    { id: 's2', s: 'en', min: 60, date: today, at: '7:10', note: '長文読解 第3講' },
+    { id: 's2', s: 'en', min: 60, date: today, at: '7:40', note: '長文読解 第3講' },
     { id: 's3', s: 'en', min: 35, date: today, at: '17:40' },
     { id: 's4', s: 'ma', min: 40, date: today, at: '19:00', note: '青チャート 例題38〜40' },
     { id: 's5', s: 'ph', min: 55, date: yesterday, at: '20:10' },
@@ -136,6 +147,7 @@ export function demoState(now: Date = new Date()): Partial<State> {
     posts: POSTS,
     coins: 1240,
     restTickets: 2,
+    todosDone: 64,
     lastDay: today,
   };
 }
@@ -206,6 +218,9 @@ export function setTarget(min: number) {
 export function setSubject(id: string) {
   setState({ subj: id });
 }
+export function setChart(patch: Partial<Chart>) {
+  setState((s) => ({ chart: { ...s.chart, ...patch } }));
+}
 
 /** Coins a record earns: a coin a minute (doubled while a boost lasts). */
 export const coinsFor = (min: number, boosted: boolean) => min * (boosted ? 2 : 1);
@@ -225,6 +240,7 @@ export function commitRecord(opts?: { todoId?: string; note?: string; min?: numb
     running: false, paused: false, base: 0,
     sessions: [...s.sessions, { id: newId('s'), s: s.subj, min, date: today, at: clockOf(now), note: opts?.note ?? todo?.t }],
     todos: todo ? s.todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x)) : s.todos,
+    todosDone: s.todosDone + (todo && !todo.d ? 1 : 0),
     coins: s.coins + coins,
     boost: Math.max(0, s.boost - 1),
   });
@@ -248,9 +264,14 @@ export function addTodo(t: Omit<Todo, 'id' | 'd'>) {
 }
 export function updateTodo(id: string, patch: Partial<Todo>) {
   const today = dateKey();
-  setState((s) => ({
-    todos: s.todos.map((x) => (x.id === id ? { ...x, ...patch, ...(patch.d === true ? { doneOn: today } : patch.d === false ? { doneOn: undefined } : {}) } : x)),
-  }));
+  setState((s) => {
+    const was = s.todos.find((x) => x.id === id);
+    const delta = was && patch.d !== undefined && patch.d !== was.d ? (patch.d ? 1 : -1) : 0;
+    return {
+      todos: s.todos.map((x) => (x.id === id ? { ...x, ...patch, ...(patch.d === true ? { doneOn: today } : patch.d === false ? { doneOn: undefined } : {}) } : x)),
+      todosDone: Math.max(0, s.todosDone + delta),
+    };
+  });
 }
 export function removeTodo(id: string) {
   setState((s) => ({ todos: s.todos.filter((x) => x.id !== id) }));
@@ -342,7 +363,7 @@ export function useReminders() {
 export const useStreak = () => useStore((s) => streakOf(s.sessions, s.restDays));
 
 // ---------- the game layer ----------
-export type Mission = { id: string; t: string; cur: number; tot: number; coin: number; sticker: 'clock' | 'done' | 'sun' | 'target' };
+export type Mission = { id: string; t: string; cur: number; tot: number; coin: number; sticker: 'pencil' | 'done' | 'sun' | 'target' };
 /** Today's missions and how far along each is, from today's records and ToDos. */
 export function missionsOf(s: State, now: Date = new Date()): Mission[] {
   const today = dateKey(now);
@@ -354,7 +375,7 @@ export function missionsOf(s: State, now: Date = new Date()): Mission[] {
     return h * 60 + m - x.min < 7 * 60;
   });
   return [
-    { id: 'm30', t: '30分勉強する', cur: Math.min(30, s.todayMin), tot: 30, coin: 30, sticker: 'clock' },
+    { id: 'm30', t: '30分勉強する', cur: Math.min(30, s.todayMin), tot: 30, coin: 30, sticker: 'pencil' },
     { id: 'todo2', t: 'ToDoを2つ完了', cur: Math.min(2, done), tot: 2, coin: 50, sticker: 'done' },
     { id: 'early', t: '7時までに始める', cur: early ? 1 : 0, tot: 1, coin: 40, sticker: 'sun' },
     { id: 'goal', t: `1日の目標（${s.goalMin / 60}時間）を達成`, cur: Math.min(s.goalMin, s.todayMin), tot: s.goalMin, coin: 50, sticker: 'target' },
@@ -369,6 +390,23 @@ export function claimMission(id: string): number {
   setState({ coins: s.coins + m.coin, claimed: { day: today, ids: [...(s.claimed.day === today ? s.claimed.ids : []), id] } });
   return m.coin;
 }
+/** Pays a weekly event's reward once it's complete. Returns the coins paid (0 if not). */
+export function claimEvent(id: string): number {
+  const s = state;
+  const e = eventsOf(s.sessions).find((x) => x.id === id);
+  if (!e || e.cur < e.tot || s.eventsClaimed.includes(e.key)) return 0;
+  setState({ coins: s.coins + e.coin, eventsClaimed: [...s.eventsClaimed.slice(-30), e.key] });
+  return e.coin;
+}
+/** Your badges, from your records. */
+export function badgesFor(s: State) {
+  return badgesOf({
+    sessions: s.sessions, restDays: s.restDays, goalMin: s.goalMin, todosDone: s.todosDone,
+    following: s.following.length, posts: s.posts.filter((p) => p.mine).length,
+    helpfulReceived: s.posts.filter((p) => p.mine).reduce((a, p) => a + p.u, 0),
+    groupsJoined: s.groups.length,
+  });
+}
 /** Level from total hours: Lv.n needs 1.2·n² hours (Lv.10 ≈ 120h, Lv.24 ≈ 690h). */
 export function levelOf(totalHours: number) {
   const lv = Math.max(1, Math.floor(Math.sqrt(totalHours / 1.2)));
@@ -377,7 +415,7 @@ export function levelOf(totalHours: number) {
 }
 export type StoreItem = { id: string; name: string; sub: string; price: number; sticker: string; kind: 'ticket' | 'boost' | 'once' };
 export const STORE: StoreItem[] = [
-  { id: 'rest', name: '休み券', sub: '勉強できなかった日も、連続日数を1日守る', price: 200, sticker: 'x', kind: 'ticket' },
+  { id: 'rest', name: '休み券', sub: '勉強できなかった日も、連続日数を1日守る', price: 200, sticker: 'coffee', kind: 'ticket' },
   { id: 'boost', name: 'コイン2倍', sub: '次の記録3回ぶん、もらえるコインが2倍', price: 350, sticker: 'star', kind: 'boost' },
   { id: 'theme-night', name: 'タイマーのテーマ「深夜の図書館」', sub: '集中画面の色が変わります', price: 500, sticker: 'moon', kind: 'once' },
   { id: 'card-aurora', name: 'カードのデザイン「オーロラ」', sub: 'マイページのカード', price: 800, sticker: 'sparkle', kind: 'once' },

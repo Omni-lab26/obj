@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { dayOf, grassOf, levelOf, minutesIn, streakOf, todayMinutes } from '../history';
+import { dayOf, grassOf, hourlyOf, levelOf, minutesIn, streakOf, todayMinutes, weekOf, withLive } from '../history';
 
 const now = new Date(2026, 9, 21, 12);
 const recs = [
@@ -40,5 +40,36 @@ describe('history', () => {
   });
   it('grass levels', () => {
     expect([0, 30, 90, 150, 240].map(levelOf)).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it('spreads a record over the hours it covered', () => {
+    // ended 7:10 after 60 min: 6:10–7:10 → 50 in the 6 o'clock hour, 10 in 7
+    const h = hourlyOf([{ s: 'en', min: 60, date: '2026-10-21', at: '7:10' }], '2026-10-21');
+    expect(h.min[6]).toBe(50);
+    expect(h.min[7]).toBe(10);
+    expect(h.parts[6]).toEqual([50, 0, 0, 0, 0]);
+    expect(h.min.reduce((a, b) => a + b, 0)).toBe(60);
+  });
+  it('puts the part before midnight on the day before', () => {
+    const r = [{ s: 'ma', min: 50, date: '2026-10-22', at: '0:20' }];
+    expect(hourlyOf(r, '2026-10-22').min[0]).toBe(20);
+    expect(hourlyOf(r, '2026-10-21').min[23]).toBe(30);
+    expect(hourlyOf(r, '2026-10-21').min.reduce((a, b) => a + b, 0)).toBe(30);
+  });
+  it('skips records without a clock time', () => {
+    expect(hourlyOf([{ s: 'en', min: 30, date: '2026-10-21' }], '2026-10-21').min.every((m) => m === 0)).toBe(true);
+  });
+  it('adds a running timer without touching the original', () => {
+    const base = hourlyOf([], '2026-10-21');
+    const live = withLive(base, new Date(2026, 9, 21, 9, 40).getTime(), new Date(2026, 9, 21, 10, 5).getTime(), '2026-10-21', 'ph');
+    expect(live.min[9]).toBe(20);
+    expect(live.min[10]).toBe(5);
+    expect(live.parts[9][2]).toBe(20);
+    expect(base.min[9]).toBe(0);
+  });
+  it('the week runs Monday to Sunday around today', () => {
+    const w = weekOf(recs, now); // 2026-10-21 is a Wednesday
+    expect(w.map((d) => d.date)).toEqual(['2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24', '2026-10-25']);
+    expect(w.map((d) => d.min)).toEqual([0, 55, 100, 0, 0, 0, 0]);
   });
 });

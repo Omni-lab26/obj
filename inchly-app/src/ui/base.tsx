@@ -44,6 +44,8 @@ function split(style: StyleProp<ViewStyle>) {
   const flat = { ...(StyleSheet.flatten(style) ?? {}) } as Record<string, unknown>;
   const outer: Record<string, unknown> = {};
   for (const k of OUTER) if (k in flat) { outer[k] = flat[k]; delete flat[k]; }
+  // a percentage width is of the parent, so it belongs outside too (the inner view stretches to it)
+  if (typeof flat.width === 'string' && flat.width.endsWith('%')) { outer.width = flat.width; delete flat.width; }
   return { outer: outer as ViewStyle, inner: flat as ViewStyle };
 }
 

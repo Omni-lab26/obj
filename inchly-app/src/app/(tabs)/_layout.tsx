@@ -1,97 +1,102 @@
 import { Redirect, router } from 'expo-router';
-import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
-import { useEffect, useState } from 'react';
+import TopTabs, { type MaterialTopTabBarProps } from 'expo-router/js-top-tabs';
 import { View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
-import { elapsedOf, useNow, useStore } from '@/store';
+import { elapsedOf, ExtraTab, useNow, useStore } from '@/store';
 import { useT } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
 import { TAB_BAR_H, tabBarBottom } from '@/ui/Chrome';
 import { Glass } from '@/ui/Glass';
+import { Hud } from '@/ui/Hud';
 import { Icon, IconName } from '@/ui/Icon';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const TABS: Record<string, { label: string; icon: IconName; slot: number }> = {
-  index: { label: 'ホーム', icon: 'home', slot: 0 },
-  timeline: { label: 'タイムライン', icon: 'feed', slot: 1 },
-  community: { label: 'みんな', icon: 'users', slot: 3 },
-  me: { label: 'マイページ', icon: 'user', slot: 4 },
+// The lobby. Five pages side by side with home in the middle, like a game's
+// main menu: swipe one page at a time, or tap the bar. The top bar (level,
+// streak, coins) stays put while the pages move underneath.
+
+const EXTRA: Record<ExtraTab | 'none', { label: string; icon: IconName }> = {
+  none: { label: '未定', icon: 'q' },
+  events: { label: 'イベント', icon: 'gift' },
+  exams: { label: '模試・締切', icon: 'cal' },
+  me: { label: 'マイページ', icon: 'user' },
 };
-const SLOTS = 5; // slot 2 is the timer
 
-// A floating Liquid Glass capsule over the content, icons only. The selected
-// tab sits in a lighter lens that slides between items; the timer keeps the
-// middle, a dark pill that shows the running minutes.
-function TabBar({ state, navigation, insets }: BottomTabBarProps) {
+function TabBar({ state, navigation }: MaterialTopTabBarProps) {
   const t = useT();
+  const insets = useSafeAreaInsets();
   useNow();
   const st = useStore((s) => s);
-  const running = st.running, paused = st.paused;
+  const extra = EXTRA[st.extraTab ?? 'none'];
+  const running = st.running;
   const mins = Math.floor(elapsedOf(st) / 60);
-  const [w, setW] = useState(0);
-  const item = w ? (w - 8) / SLOTS : 0;
-  const slot = TABS[state.routes[state.index]?.name]?.slot ?? 0;
-  const x = useSharedValue(0);
-  useEffect(() => { if (item) x.set(withSpring(4 + slot * item, { duration: 420, dampingRatio: 0.78 })); }, [slot, item, x]);
-  const lens = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
-
-  const tab = (name: string) => {
-    const i = state.routes.findIndex((r) => r.name === name);
-    const r = state.routes[i];
-    const meta = TABS[name];
-    if (!r) return null;
-    const on = state.index === i;
-    return (
-      <Press key={r.key} scale={0.86} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={meta.label}
-        onPress={() => {
-          const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
-          if (!on && !e.defaultPrevented) navigation.navigate(r.name, r.params);
-        }}
-        style={{ flex: 1, height: TAB_BAR_H - 8, alignItems: 'center', justifyContent: 'center' }}>
-        <Icon name={meta.icon} size={25} color={on ? t.ink : t.ink2} filled={on} width={on ? 1.9 : 1.6} />
-      </Press>
-    );
+  const META: Record<string, { label: string; icon: IconName }> = {
+    store: { label: 'ストア', icon: 'bag' },
+    collection: { label: 'バッジ', icon: 'medal' },
+    index: { label: 'ホーム', icon: 'home' },
+    community: { label: 'コミュニティ', icon: 'users' },
+    extra,
   };
-
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: tabBarBottom(insets.bottom), paddingHorizontal: 20 }}>
+    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: tabBarBottom(insets.bottom), paddingHorizontal: 14 }}>
       <Glass style={{ height: TAB_BAR_H }}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist">
-          {item ? <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 4, bottom: 4, width: item, borderRadius: 28, backgroundColor: 'rgba(118,118,128,0.14)' }, lens]} /> : null}
-          {tab('index')}
-          {tab('timeline')}
-          <View style={{ flex: 1, alignItems: 'center' }}>
-            <Press onPress={() => { haptic.soft(); router.push('/timer'); }} haptics={false} scale={0.9} hitSlop={{ top: 10, bottom: 10 }}
-              accessibilityLabel={running ? `勉強中 ${mins}分。タイマーを開く` : 'タイマーを開いて勉強を始める'}
-              style={{ height: 40, minWidth: 52, paddingHorizontal: running ? 12 : 0, borderRadius: 20, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-              {running ? (
-                <>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: paused ? t.amber : '#22C55E' }} />
-                  <Txt num size={13} w="600" color={t.onInk}>{mins}<Txt size={10} color={t.onInk}>分</Txt></Txt>
-                </>
-              ) : (
-                <Icon name="play" size={16} color={t.onInk} />
-              )}
-            </Press>
-          </View>
-          {tab('community')}
-          {tab('me')}
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 5, gap: 2 }} accessibilityRole="tablist">
+          {state.routes.map((r: { key: string; name: string; params?: object }, i: number) => {
+            const meta = META[r.name];
+            if (!meta) return null;
+            const on = state.index === i;
+            const home = r.name === 'index';
+            // home shows the running minutes, like the battle button showing a match in progress
+            const live = home && running;
+            return (
+              <Animated.View key={r.key} layout={LinearTransition.springify().dampingRatio(0.85).duration(300)} style={{ flex: on ? 2.6 : 1 }}>
+                <Press scale={0.9} haptics={false} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={live ? `ホーム 勉強中 ${mins}分` : meta.label}
+                  onPress={() => {
+                    haptic.tap();
+                    const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
+                    if (!on && !e.defaultPrevented) navigation.navigate(r.name, r.params);
+                    else if (on && live) router.push('/timer');
+                  }}
+                  style={{ height: TAB_BAR_H - 10, borderRadius: (TAB_BAR_H - 10) / 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    backgroundColor: on ? (home ? t.ink : 'rgba(118,118,128,0.16)') : 'transparent' }}>
+                  {live ? (
+                    <>
+                      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: st.paused ? t.amber : '#22C55E' }} />
+                      <Txt num size={14} w="700" color={on ? t.onInk : t.ink}>{mins}<Txt size={10} color={on ? t.onInk : t.ink}>分</Txt></Txt>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name={meta.icon} size={23} color={on ? (home ? t.onInk : t.ink) : t.ink2} filled={on} width={on ? 2 : 1.6} />
+                      {on ? <Txt size={12} w="700" numberOfLines={1} color={home ? t.onInk : t.ink}>{meta.label}</Txt> : null}
+                    </>
+                  )}
+                </Press>
+              </Animated.View>
+            );
+          })}
         </View>
       </Glass>
     </View>
   );
 }
 
-export default function TabLayout() {
+export default function LobbyLayout() {
+  const t = useT();
   // first launch (or after deleting the account): set up before anything else
   const signedIn = useStore((s) => !!s.account);
   if (!signedIn) return <Redirect href="/welcome" />;
   return (
-    <Tabs tabBar={(p) => <TabBar {...p} />} screenOptions={{ headerShown: false }}>
-      <Tabs.Screen name="index" />
-      <Tabs.Screen name="timeline" />
-      <Tabs.Screen name="community" />
-      <Tabs.Screen name="me" />
-    </Tabs>
+    <View style={{ flex: 1, backgroundColor: t.canvas }}>
+      <Hud onCoins={() => router.navigate('/store')} />
+      <TopTabs initialRouteName="index" tabBarPosition="bottom" tabBar={(p: MaterialTopTabBarProps) => <TabBar {...p} />}
+        screenOptions={{ swipeEnabled: true, lazy: true, lazyPreloadDistance: 1, sceneStyle: { backgroundColor: t.canvas } }}>
+        <TopTabs.Screen name="store" />
+        <TopTabs.Screen name="collection" />
+        <TopTabs.Screen name="index" />
+        <TopTabs.Screen name="community" />
+        <TopTabs.Screen name="extra" />
+      </TopTabs>
+    </View>
   );
 }

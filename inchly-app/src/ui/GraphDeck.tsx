@@ -21,7 +21,35 @@ const WD = ['日', '月', '火', '水', '木', '金', '土'];
 const PAGES = 4;
 const CLICK = { duration: 260, easing: Easing.bezier(0.2, 0.9, 0.25, 1) };
 
-export function GraphDeck({ first }: { first: ReactNode }) {
+export function GraphDeck({ first, stacked }: { first: ReactNode; stacked?: boolean }) {
+  if (stacked) return <GraphStack first={first} />;
+  return <Deck first={first} />;
+}
+
+/**
+ * The same cards one under another — for pages that already swipe sideways
+ * (the lobby's pages), where a second sideways swipe would fight the first.
+ */
+function GraphStack({ first }: { first: ReactNode }) {
+  const t = useT();
+  const [w, setW] = useState(0);
+  const card = { borderRadius: radius.card, backgroundColor: t.surface, padding: 14, ...lift(t) };
+  const inner = Math.max(0, w - 32 - 28);
+  return (
+    <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ paddingHorizontal: 16, gap: 12 }}>
+      <View style={card}>{first}</View>
+      {inner ? (
+        <>
+          <View style={card}><WeekPage w={inner} h={300} /></View>
+          <View style={card}><SubjectsPage w={inner} /></View>
+          <View style={card}><GrassPage w={inner} h={260} /></View>
+        </>
+      ) : null}
+    </View>
+  );
+}
+
+function Deck({ first }: { first: ReactNode }) {
   const t = useT();
   const [w, setW] = useState(0);
   const [h, setH] = useState(0); // the first card's height, which the others take

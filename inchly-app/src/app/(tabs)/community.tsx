@@ -15,10 +15,12 @@ import { GroupMark, LiveDot } from '@/ui/GroupParts';
 import { Icon } from '@/ui/Icon';
 import { Rolling } from '@/ui/Rolling';
 import { openSheet } from '@/ui/Sheet';
+import { composeSheet } from '@/ui/PostParts';
 import { Segmented, UnderTabs } from '@/ui/Tabs';
+import { TimelineFeed } from '@/ui/TimelineFeed';
 import { Sticker } from '@/ui/Sticker';
 
-type Tab = 'live' | 'rank' | 'groups';
+type Tab = 'live' | 'feed' | 'rank' | 'groups';
 
 export default function Community() {
   const t = useT();
@@ -27,12 +29,20 @@ export default function Community() {
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const go = (k: Tab) => { setTab(k); scroll.current?.scrollTo({ y: 0, animated: false }); };
   return (
-    <Screen>
-      <TopBar title="みんな" right={<SearchBtn />} />
-      <UnderTabs value={tab} onChange={go} options={[{ v: 'live', label: 'いま勉強中' }, { v: 'rank', label: 'ランキング' }, { v: 'groups', label: 'グループ' }]} />
-      <ScrollView ref={scroll} style={{ flex: 1, backgroundColor: t.canvas }} contentContainerStyle={{ paddingBottom: pad }}>
-        {tab === 'live' ? <Live /> : tab === 'rank' ? <Rank /> : <Groups />}
+    <Screen style={{ paddingTop: 0 }}>
+      <TopBar title="コミュニティ" right={<SearchBtn />} />
+      <UnderTabs value={tab} onChange={go} options={[{ v: 'live', label: '勉強中' }, { v: 'feed', label: 'タイムライン' }, { v: 'rank', label: 'ランキング' }, { v: 'groups', label: 'グループ' }]} />
+      <ScrollView ref={scroll} style={{ flex: 1, backgroundColor: t.canvas }} contentContainerStyle={{ paddingBottom: pad + (tab === 'feed' ? 60 : 0) }}>
+        {tab === 'live' ? <Live /> : tab === 'feed' ? <TimelineFeed /> : tab === 'rank' ? <Rank /> : <Groups />}
       </ScrollView>
+      {tab === 'feed' ? (
+        // write: a round button above the tab bar, where the thumb already is
+        <Press onPress={composeSheet} scale={0.9} accessibilityLabel="投稿する"
+          style={{ position: 'absolute', right: 20, bottom: pad - 6, width: 54, height: 54, borderRadius: 27, backgroundColor: t.ink,
+            alignItems: 'center', justifyContent: 'center', boxShadow: '0px 6px 18px rgba(18,20,23,0.28)' }}>
+          <Icon name="plus" size={24} color={t.onInk} width={2.4} />
+        </Press>
+      ) : null}
     </Screen>
   );
 }
