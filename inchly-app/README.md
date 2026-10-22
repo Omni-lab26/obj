@@ -27,6 +27,22 @@ Expo SDK 57 / Expo Router / React Native。App Store 版の Expo Go が対応し
 
 ブラウザで見るだけなら `npx expo start --web`。
 
+### 最新の変更を自動で取り込む（`npm run live`）
+
+`npx expo start` の代わりに次を使うと、このブランチに push された変更を20秒ごとに取り込みます。
+Metro が変更に気づくので、Expo Go は勝手に更新されます（変わらないときはスマホを振って Reload）。
+
+```bash
+cd inchly-app
+git checkout claude/loving-cannon-adjszv   # 変更が push されるブランチ
+npm install
+npm run live              # 同じ Wi-Fi でないときは npm run live -- --tunnel
+```
+
+- パッケージや app.json が変わったときは、自動で `npm install` して Expo を立ち上げ直します（QRコードは同じ。Expo Go で開き直してください）。
+- このフォルダのファイルを手で書き換えていると、取り込みを止めて知らせます（`git status` で確認）。
+- パソコンを閉じると止まります。
+
 ### 「Project is incompatible with this version of Expo Go」と出たら
 
 Expo Go が対応する SDK とプロジェクトの SDK（いまは 57）が合っていません。まず App Store / Google Play で Expo Go を最新にしてください。
