@@ -22,6 +22,14 @@ export function useUnread() {
   return NOTIFS.filter(allowed({ notify, blocked })).filter((n) => !read.includes(n.id) && !gone.includes(n.id)).length;
 }
 
+// The tab bar floats over the content, so tab screens leave room under their last item.
+export const TAB_BAR_H = 62;
+export const tabBarBottom = (inset: number) => Math.max(inset - 6, 12);
+export function useTabPad() {
+  const insets = useSafeAreaInsets();
+  return tabBarBottom(insets.bottom) + TAB_BAR_H + 20;
+}
+
 /** Full-height screen on the canvas colour with the top safe area applied. */
 export function Screen({ children, style, bg }: { children: ReactNode; style?: ViewStyle; bg?: string }) {
   const t = useT();

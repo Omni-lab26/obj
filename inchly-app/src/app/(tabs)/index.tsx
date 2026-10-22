@@ -8,7 +8,7 @@ import { elapsedOf, setSubject, startStudy, togglePause, updateTodo, useNow, use
 import { hair, lift, radius, type, useT } from '@/theme';
 import { Avatar, AvatarStack, Btn, Card, haptic, IconBtn, Press, SubjCoin, Txt } from '@/ui/base';
 import { InchTape, Wordmark } from '@/ui/Brand';
-import { Screen, useUnread } from '@/ui/Chrome';
+import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { MiniSeg, TodoRow } from '@/ui/HomeParts';
 import { daysUntil, deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon } from '@/ui/Icon';
@@ -26,6 +26,7 @@ export default function Home() {
   useNow();
   const s = useStore((x) => x);
   const unread = useUnread();
+  const tabPad = useTabPad();
   const sj = subj(s.subj);
   const e = elapsedOf(s);
   const done = s.todos.filter((x) => x.d).length;
@@ -78,7 +79,7 @@ export default function Home() {
         </Press>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: tabPad }}>
         {/* the lead: today's total, like a wallet's balance card */}
         <Card style={{ marginHorizontal: 16, marginTop: 6 }} pad={14}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

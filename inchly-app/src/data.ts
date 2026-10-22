@@ -37,14 +37,22 @@ export const RANK = [
   { n: 'そら', c: '#4A5BD4', h: 35.9 },
 ];
 
-export type Post = { n: string; c: string; m: string; w: string; t: string; tags: string[]; u: number; r: number; mine?: boolean };
+/** A post on the timeline. `rec` attaches a study record (subject id, minutes). `mine` = written by you. */
+export type Post = {
+  id: string; n: string; h: string; c: string; m: string; w: string; t: string; tags: string[]; u: number; r: number;
+  mine?: boolean; rec?: { s: string; min: number; note?: string };
+};
 export const POSTS: Post[] = [
-  { n: 'mio', c: '#C47A55', m: '高3', w: '12分前', t: '古文の参考書、やっと1周。2周目は音読しながらやる', tags: ['#古文'], u: 23, r: 4 },
-  { n: 'nnn_0w0', c: '#8A8A8E', m: '浪人', w: '40分前', t: 'ベクトル全然わからん　内積のとこから誰か助けて', tags: [], u: 0, r: 1 },
-  { n: 'りん', c: '#4B7A3B', m: '東大 理一 1年（先輩）', w: '2時間前', t: '東大英語の要約(1A)は毎年出るので、過去問15年分を1日1題。要約したあと音読までやると、本番で時間が余った。量より回数。', tags: ['#東京大学', '#英語'], u: 128, r: 14 },
-  { n: 'taku', c: '#8A6D3B', m: '京大志望', w: '3時間前', t: 'もう無理、今日は寝る。明日5時起き', tags: [], u: 7, r: 2 },
-  { n: 'そら', c: '#5D6DB8', m: '高3', w: '5時間前', t: '置換積分、何を t に置くかから説明してる15分の動画でやっとわかった。休憩中にちょうどいい長さ', tags: ['#数学', '#おすすめ動画'], u: 86, r: 9 },
-  { n: 'kaito', c: '#3E8C78', m: '高3', w: '昨日', t: '電磁気、エッセンスと名問の森どっちから入るのがいい？ 力学はエッセンスでなんとかなった', tags: ['#物理', '#質問'], u: 21, r: 17 },
+  { id: 'p1', n: 'kaito', h: 'kaito', c: '#3E8C78', m: '高3', w: '8分前', t: '電磁気、名問の森で流れがやっとつかめてきた。コンデンサーはまだあやしい', tags: ['#物理'], u: 12, r: 2, rec: { s: 'ph', min: 70, note: '名問の森 15〜18' } },
+  { id: 'p2', n: 'mio', h: 'mio.k', c: '#C47A55', m: '高3', w: '12分前', t: '古文の参考書、やっと1周。2周目は音読しながらやる', tags: ['#古文'], u: 23, r: 4 },
+  { id: 'p3', n: 'nnn_0w0', h: 'nnn_0w0', c: '#8A8A8E', m: '浪人', w: '40分前', t: 'ベクトル全然わからん　内積のとこから誰か助けて', tags: [], u: 0, r: 1 },
+  { id: 'p4', n: 'そら', h: 'sora_06', c: '#5D6DB8', m: '高3', w: '1時間前', t: '朝の数学おわり。例題60まで来た', tags: [], u: 31, r: 3, rec: { s: 'ma', min: 95, note: '青チャート 数III 例題52〜60' } },
+  { id: 'p5', n: 'りん', h: 'rin_todai', c: '#4B7A3B', m: '東大 理一 1年（先輩）', w: '2時間前', t: '東大英語の要約(1A)は毎年出るので、過去問15年分を1日1題。要約したあと音読までやると、本番で時間が余った。量より回数。', tags: ['#東京大学', '#英語'], u: 128, r: 14 },
+  { id: 'm1', n: 'はる', h: 'haru_study', c: '#6E56CF', m: '高3', w: '2時間前', t: '模試の偏差値、3か月で +6.6。数学の「次にやること」を毎回決めるようにしてから、机に向かうまでが早くなった。', tags: [], u: 54, r: 6, mine: true },
+  { id: 'p6', n: 'taku', h: 'taku_1203', c: '#8A6D3B', m: '京大志望', w: '3時間前', t: 'もう無理、今日は寝る。明日5時起き', tags: [], u: 7, r: 2 },
+  { id: 'p7', n: 'そら', h: 'sora_06', c: '#5D6DB8', m: '高3', w: '5時間前', t: '置換積分、何を t に置くかから説明してる15分の動画でやっとわかった。休憩中にちょうどいい長さ', tags: ['#数学', '#おすすめ動画'], u: 86, r: 9 },
+  { id: 'p8', n: 'kaito', h: 'kaito', c: '#3E8C78', m: '高3', w: '昨日', t: '電磁気、エッセンスと名問の森どっちから入るのがいい？ 力学はエッセンスでなんとかなった', tags: ['#物理', '#質問'], u: 21, r: 17 },
+  { id: 'm2', n: 'はる', h: 'haru_study', c: '#6E56CF', m: '高3', w: '昨日', t: '古文単語、朝の10分だけでも草が埋まるのがうれしい。', tags: [], u: 31, r: 1, mine: true, rec: { s: 'ja', min: 10, note: '古文単語 41〜60' } },
 ];
 
 export type IconName = 'flag' | 'clock' | 'users' | 'bulb' | 'cal' | 'target' | 'userPlus';

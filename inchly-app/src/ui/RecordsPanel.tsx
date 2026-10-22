@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 import { hoursIn, SUBJ, subj, Subject } from '@/data';
-import { Session, useStore } from '@/store';
+import { dayOf, Session, useStore } from '@/store';
 import { ease, hair, useT } from '@/theme';
 import { Card, Press, SectionHead, SubjCoin, Txt } from '@/ui/base';
-import { Screen, TopBar } from '@/ui/Chrome';
 import { sessionSheet } from '@/ui/Editors';
 import { Heatmap } from '@/ui/Heatmap';
 import { Icon } from '@/ui/Icon';
@@ -68,7 +67,7 @@ function TodayLog() {
   const today = sessions.filter((x) => x.day === 0);
   const total = today.reduce((a, x) => a + x.min, 0);
   return (
-    <View style={sec}>
+    <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', paddingHorizontal: 4, marginBottom: 8 }}>
         <Txt size={15} w="600" style={{ flex: 1 }}>今日の記録</Txt>
         <Press onPress={() => sessionSheet()} hitSlop={12} scale={0.94} accessibilityRole="button" accessibilityLabel="記録を手で追加"
@@ -94,44 +93,47 @@ function TodayLog() {
   );
 }
 
-export default function Records() {
+// The 記録 tab on My Page: what used to be its own tab. Today's records
+// first (they can be fixed), then the week, the mock-test line, subjects and the grass.
+export function RecordsPanel() {
   const todayMin = useStore((s) => s.todayMin);
   return (
-    <Screen>
-      <TopBar title="記録" sub={<Summary />} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-        <View style={{ paddingHorizontal: 16, paddingTop: 6 }}>
-          <StackedBars />
-        </View>
+    <View>
+      <View style={{ paddingHorizontal: 20, paddingTop: 14 }}>
+        <Summary />
+      </View>
 
-        <TodayLog />
+      <TodayLog />
 
-        <View style={{ paddingHorizontal: 16, paddingTop: 22 }}>
-          <View style={{ paddingHorizontal: 4 }}>
-            <SectionHead title="模試の偏差値" aux="最終更新 10月14日" />
-          </View>
-          <ScoreCard />
-        </View>
+      <View style={{ paddingHorizontal: 16, paddingTop: 22 }}>
+        <StackedBars />
+      </View>
 
-        <View style={sec}>
-          <View style={{ paddingHorizontal: 4 }}>
-            <SectionHead title="今週の科目" aux="目標に対して" />
-          </View>
-          <Card pad={0} style={{ paddingVertical: 4 }}>
-            {SUBJ.map((s, i) => <SubjRow key={s.id} s={s} i={i} />)}
-          </Card>
+      <View style={sec}>
+        <View style={{ paddingHorizontal: 4 }}>
+          <SectionHead title="今週の科目" aux="目標に対して" />
         </View>
+        <Card pad={0} style={{ paddingVertical: 4 }}>
+          {SUBJ.map((s, i) => <SubjRow key={s.id} s={s} i={i} />)}
+        </Card>
+      </View>
 
-        <View style={sec}>
-          <View style={{ paddingHorizontal: 4 }}>
-            <SectionHead title="この半年" aux={`${Math.round(hoursIn(182))}時間`} />
-          </View>
-          <Card>
-            <Heatmap weeks={26} seed={3} todayLevel={todayMin ? Math.min(4, 1 + Math.floor(todayMin / 60)) : 0} gap={3} />
-          </Card>
+      <View style={sec}>
+        <View style={{ paddingHorizontal: 4 }}>
+          <SectionHead title="模試の偏差値" aux="最終更新 10月14日" />
         </View>
-      </ScrollView>
-    </Screen>
+        <ScoreCard />
+      </View>
+
+      <View style={sec}>
+        <View style={{ paddingHorizontal: 4 }}>
+          <SectionHead title="この半年" aux={`${Math.round(hoursIn(182))}時間`} />
+        </View>
+        <Card>
+          <Heatmap weeks={26} seed={3} todayLevel={todayMin ? Math.min(4, 1 + Math.floor(todayMin / 60)) : 0} gap={3} />
+        </Card>
+      </View>
+    </View>
   );
 }
 
@@ -139,8 +141,10 @@ const sec = { paddingHorizontal: 16, paddingTop: 22 } as const;
 
 /** One sentence instead of a dashboard header: this week, and how it compares. */
 function Summary() {
-  const now = hoursIn(7);
-  const prev = hoursIn(14) - now;
+  const sessions = useStore((s) => s.sessions);
+  const week = (from: number) => Array.from({ length: 7 }, (_, i) => dayOf(sessions, from + i).min).reduce((x, y) => x + y, 0) / 60;
+  const now = week(0);
+  const prev = week(7);
   const d = Math.round((now - prev) * 10) / 10;
   return (
     <Txt size={13} tone="ink2" lh={19}>

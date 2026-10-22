@@ -1,43 +1,43 @@
 import { router } from 'expo-router';
 import { ComponentRef, useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { hms, hoursIn, PERSON_COLOR, Post, POSTS, RANK, ROOM, subj } from '@/data';
-import { elapsedOf, getState, setState, toggleHelpful, useNow, useStore } from '@/store';
+import { hms, hoursIn, PERSON_COLOR, RANK, ROOM, subj } from '@/data';
+import { elapsedOf, getState, setState, toggleFollow, useNow, useStore } from '@/store';
 import { ease, hair, lift, radius, type, useT } from '@/theme';
 import { Avatar, Btn, Card, haptic, Press, Txt } from '@/ui/base';
-import { Screen, SearchBtn, TopBar } from '@/ui/Chrome';
+import { Screen, SearchBtn, TopBar, useTabPad } from '@/ui/Chrome';
 import { personSheet } from '@/ui/Editors';
-import { Choice, Field } from '@/ui/Form';
+import { Field } from '@/ui/Form';
 import { GroupMark, LiveDot } from '@/ui/GroupParts';
 import { Icon } from '@/ui/Icon';
 import { Rolling } from '@/ui/Rolling';
 import { openSheet } from '@/ui/Sheet';
 import { Segmented, UnderTabs } from '@/ui/Tabs';
 import { Sticker } from '@/ui/Sticker';
-import { toast } from '@/ui/Toast';
 
-type Tab = 'live' | 'rank' | 'posts' | 'groups';
+type Tab = 'live' | 'rank' | 'groups';
 
 export default function Community() {
   const t = useT();
   const [tab, setTab] = useState<Tab>('live');
+  const pad = useTabPad();
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const go = (k: Tab) => { setTab(k); scroll.current?.scrollTo({ y: 0, animated: false }); };
   return (
     <Screen>
       <TopBar title="みんな" right={<SearchBtn />} />
-      <UnderTabs value={tab} onChange={go} options={[{ v: 'live', label: 'いま勉強中' }, { v: 'rank', label: 'ランキング' }, { v: 'posts', label: '投稿' }, { v: 'groups', label: 'グループ' }]} />
-      <ScrollView ref={scroll} style={{ flex: 1, backgroundColor: t.canvas }} contentContainerStyle={{ paddingBottom: 40 }}>
-        {tab === 'live' ? <Live /> : tab === 'rank' ? <Rank /> : tab === 'posts' ? <Posts /> : <Groups />}
+      <UnderTabs value={tab} onChange={go} options={[{ v: 'live', label: 'いま勉強中' }, { v: 'rank', label: 'ランキング' }, { v: 'groups', label: 'グループ' }]} />
+      <ScrollView ref={scroll} style={{ flex: 1, backgroundColor: t.canvas }} contentContainerStyle={{ paddingBottom: pad }}>
+        {tab === 'live' ? <Live /> : tab === 'rank' ? <Rank /> : <Groups />}
       </ScrollView>
     </Screen>
   );
 }
 
 // ---------- いま勉強中: a study room, not a list ----------
-type RoomFilter = 'all' | 'follow' | 'todai';
+type RoomFilter = string; // 'all' | 'follow' | a school, e.g. '東大'
 function Live() {
   const t = useT();
   const now = useNow();
@@ -45,6 +45,7 @@ function Live() {
   const since = Math.floor((now - start) / 1000);
   const [count, setCount] = useState(0);
   const [f, setF] = useState<RoomFilter>('all');
+  const extra = useStore((x) => x.roomFilters);
   const following = useStore((x) => x.following);
   const me = useStore((x) => x.running && x.showLive);
   const scope = useStore((x) => x.liveScope);
@@ -57,7 +58,7 @@ function Live() {
     const id = setInterval(() => setCount((c) => c + 1 + Math.floor(Math.random() * 3)), 4200);
     return () => { clearTimeout(first); clearInterval(id); };
   }, []);
-  const people = ROOM.filter((p) => !blocked.includes(p.n)).filter((p) => (f === 'follow' ? following.includes(p.h) : f === 'todai' ? p.g.startsWith('東大') : true));
+  const people = ROOM.filter((p) => !blocked.includes(p.n)).filter((p) => (f === 'follow' ? following.includes(p.h) : f === 'all' ? true : p.g.startsWith(f)));
   const chip = (v: RoomFilter, label: string) => (
     <Press key={v} onPress={() => setF(v)} scale={0.94} accessibilityRole="radio" accessibilityState={{ checked: f === v }} hitSlop={{ top: 9, bottom: 9, left: 3, right: 3 }}
       style={{ height: 26, paddingHorizontal: 11, borderRadius: 13, justifyContent: 'center', backgroundColor: f === v ? t.ink : t.surface, borderWidth: hair, borderColor: f === v ? t.ink : t.line2 }}>
@@ -71,11 +72,16 @@ function Live() {
         <Rolling value={count ? comma(count) : '0,000'} size={type.figure + 2} weight="700" />
         <Txt size={12} tone="ink2" style={{ marginTop: 8 }}>人が机に向かってる</Txt>
       </View>
-      <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4 }}>
         {chip('all', 'みんな')}
         {chip('follow', 'フォロー中')}
-        {chip('todai', '東大志望')}
-      </View>
+        {['東大', ...extra].map((x) => chip(x, `${x}志望`))}
+        {/* add: search a school to filter by, or people to follow */}
+        <Press onPress={() => roomSearch((v) => setF(v))} scale={0.9} hitSlop={9} accessibilityLabel="絞り込みを追加"
+          style={{ width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: t.surface, borderWidth: hair, borderColor: t.line2 }}>
+          <Icon name="plus" size={13} color={t.ink} width={2.2} />
+        </Press>
+      </ScrollView>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: 16, marginTop: 8, paddingVertical: 2, borderRadius: radius.card, backgroundColor: t.surface, ...lift(t) }}>
         {me && (scope === 'all' || f === 'follow') ? <Seat name={myName} color={PERSON_COLOR['はる']} label="あなた" sub={subj(getState().subj).name} time={`${mineMin}分`} you /> : null}
         {people.map((p) => <Seat key={p.h} name={p.n} color={p.c} label={p.n} sub={p.s} time={hms(p.t + since).replace(/^00:/, '')} />)}
@@ -87,6 +93,63 @@ function Live() {
     </Animated.View>
   );
 }
+// ---- "+" in the room: find a school to filter by, or someone to follow ----
+const SCHOOLS = ['東大', '京大', '一橋', '科学大', '阪大', '東北大', '早稲田', '慶應', '医学部'];
+function roomSearch(pick: (v: string) => void) {
+  openSheet((close) => <RoomSearch close={close} pick={pick} />);
+}
+function RoomSearch({ close, pick }: { close: () => void; pick: (v: string) => void }) {
+  const t = useT();
+  const [q, setQ] = useState('');
+  const extra = useStore((x) => x.roomFilters);
+  const following = useStore((x) => x.following);
+  const blocked = useStore((x) => x.blocked);
+  const schools = SCHOOLS.filter((x) => !q || x.includes(q));
+  const people = ROOM.filter((p) => !blocked.includes(p.n) && (!q || (p.n + p.h + p.g).includes(q)));
+  const added = (x: string) => x === '東大' || extra.includes(x);
+  const add = (x: string) => {
+    if (!added(x)) setState((s) => ({ roomFilters: [...s.roomFilters, x] }));
+    haptic.success();
+    pick(x);
+    close();
+  };
+  return (
+    <View style={{ gap: 14 }}>
+      <Txt size={17} w="700">絞り込みを追加</Txt>
+      <Field label="志望校・名前でさがす" value={q} onChangeText={setQ} max={20} autoFocus />
+      <View>
+        <Txt size={12} w="600" tone="ink2" style={{ marginBottom: 4 }}>志望校で絞り込む</Txt>
+        {schools.length ? schools.map((x, i) => {
+          const n = ROOM.filter((p) => p.g.startsWith(x)).length;
+          return (
+            <Press key={x} onPress={() => add(x)} scale={0.99} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
+              <Txt size={14} w="600" style={{ flex: 1 }}>{`${x}志望`}</Txt>
+              <Txt size={12} tone="ink3">{n ? `${n}人が勉強中` : 'いま勉強中の人はいません'}</Txt>
+              {added(x) ? <Icon name="check" size={16} color={t.greenInk} /> : <Icon name="plus" size={16} color={t.ink2} />}
+            </Press>
+          );
+        }) : <Txt size={13} tone="ink3">見つかりませんでした</Txt>}
+      </View>
+      <View>
+        <Txt size={12} w="600" tone="ink2" style={{ marginBottom: 4 }}>人をフォローする</Txt>
+        {people.slice(0, 6).map((p, i) => {
+          const on = following.includes(p.h);
+          return (
+            <View key={p.h} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
+              <Avatar name={p.n} color={p.c} size={32} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Txt size={13.5} w="600">{p.n}</Txt>
+                <Txt size={11.5} tone="ink3" numberOfLines={1}>{`@${p.h} · ${p.g}`}</Txt>
+              </View>
+              <Btn small kind={on ? 'quiet' : 'primary'} label={on ? 'フォロー中' : 'フォロー'} onPress={() => { haptic.soft(); toggleFollow(p.h); }} />
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 /** One seat in the room: the person's icon with a live ring, what and how long. */
 function Seat({ name, color, label, sub, time, you }: { name: string; color: string; label: string; sub: string; time: string; you?: boolean }) {
   const t = useT();
@@ -167,127 +230,6 @@ function DistBar({ h, color, delay, on }: { h: number; color: string; delay: num
   useEffect(() => { s.value = 0; s.value = withTiming(1, { duration: 500 + delay, easing: ease.out }); }, [s, delay, on]);
   const a = useAnimatedStyle(() => ({ height: Math.max(2, h * s.value) }));
   return <Animated.View style={[{ flex: 1, borderRadius: 1.5, backgroundColor: color }, a]} />;
-}
-
-// ---------- 投稿 ----------
-// New posts live at module level so they survive tab switches.
-let mine: Post[] = [];
-const mineSubs = new Set<() => void>();
-
-function Posts() {
-  const t = useT();
-  const [, force] = useState(0);
-  useEffect(() => { const f = () => force((x) => x + 1); mineSubs.add(f); return () => { mineSubs.delete(f); }; }, []);
-  const blocked = useStore((x) => x.blocked);
-  const myName = useStore((x) => x.account?.name ?? 'はる');
-  const list = [...mine, ...POSTS].filter((p) => !blocked.includes(p.n));
-  return (
-    <Animated.View entering={FadeIn.duration(200)}>
-      <Press onPress={compose} scale={0.985}
-        style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, margin: 16, marginBottom: 10, paddingVertical: 8, paddingHorizontal: 10, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
-        <Avatar name={myName} color={PERSON_COLOR['はる']} size={28} />
-        <Txt size={13} tone="ink3" style={{ flex: 1 }} numberOfLines={1}>いま何してる？</Txt>
-        <Sticker name="pencil" size={28} />
-      </Press>
-      {list.map((p, i) => (
-        <Animated.View key={p.n + p.t.slice(0, 12)} entering={i < mine.length ? FadeInDown.duration(320) : undefined}
-          style={[{ marginHorizontal: 16, marginBottom: 10, padding: 14, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
-          <Press onPress={p.mine ? undefined : () => personSheet(p.n, p.c)} disabled={p.mine} scale={0.99} hitSlop={4} style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
-            <Avatar name={p.n} color={p.c} size={30} />
-            <View style={{ flex: 1 }}>
-              <Txt size={13} w="600" lh={17}>{p.n}</Txt>
-              <Txt size={11} tone="ink3" lh={14}>{`${p.m} · ${p.w}`}</Txt>
-            </View>
-          </Press>
-          <Txt size={13.5} lh={22} style={{ marginTop: 8 }}>{p.t}</Txt>
-          {p.tags.length ? <Txt size={12} w="500" color={t.blue} style={{ marginTop: 6 }}>{p.tags.join(' ')}</Txt> : null}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 8 }}>
-            <Helpful i={i} base={p.u} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-              <Icon name="chat" size={14} color={t.ink3} />
-              <Txt size={11.5} tone="ink3">返信 {p.r}</Txt>
-            </View>
-          </View>
-        </Animated.View>
-      ))}
-    </Animated.View>
-  );
-}
-
-function Helpful({ i, base }: { i: number; base: number }) {
-  const t = useT();
-  const on = useStore((s) => s.helpful.includes(i));
-  const s = useSharedValue(1);
-  const [burst, setBurst] = useState(0);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
-  const press = () => {
-    if (!on) { haptic.soft(); s.set(withSequence(withTiming(1.5, { duration: 120, easing: ease.out }), withSpring(1, { damping: 7, stiffness: 260 }))); setBurst((b) => b + 1); }
-    toggleHelpful(i);
-  };
-  return (
-    <Press onPress={press} haptics={false} scale={0.94} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel="役に立った" hitSlop={8}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 28, paddingLeft: on ? 1 : 9, paddingRight: 10, marginLeft: -4, borderRadius: 14, backgroundColor: on ? t.amberSoft : 'transparent', borderWidth: hair, borderColor: on ? 'transparent' : t.line2 }}>
-      <View style={{ width: on ? 26 : 14, alignItems: 'center' }}>
-        {/* a pop sticker slaps on when you mark it */}
-        <Animated.View style={a}>{on ? <Sticker name="bulb" size={26} tilt={-8} /> : <Icon name="bulb" size={14} color={t.ink3} />}</Animated.View>
-        {burst ? <Burst key={burst} color="#FFC23D" /> : null}
-      </View>
-      <Txt size={11.5} w="600" color={on ? '#B86E00' : t.ink3}>役に立った</Txt>
-      <Rolling value={String(base + (on ? 1 : 0))} size={11.5} weight="600" color={on ? '#B86E00' : t.ink3} />
-    </Press>
-  );
-}
-
-function Burst({ color }: { color: string }) {
-  return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: '50%', top: '50%' }}>
-      {Array.from({ length: 8 }, (_, k) => <Spark key={k} a={(k / 8) * Math.PI * 2} color={color} />)}
-    </View>
-  );
-}
-function Spark({ a, color }: { a: number; color: string }) {
-  const p = useSharedValue(0);
-  useEffect(() => { p.value = withTiming(1, { duration: 480, easing: ease.out }); }, [p]);
-  const st = useAnimatedStyle(() => ({
-    opacity: 1 - p.value,
-    transform: [{ translateX: Math.cos(a) * 18 * p.value }, { translateY: Math.sin(a) * 18 * p.value }, { scale: 1 - p.value * 0.5 }],
-  }));
-  return <Animated.View style={[{ position: 'absolute', left: -2, top: -2, width: 4, height: 4, borderRadius: 2, backgroundColor: color }, st]} />;
-}
-
-function compose() {
-  openSheet((close) => <Compose close={close} />);
-}
-function Compose({ close }: { close: () => void }) {
-  const [text, setText] = useState('');
-  const [tag, setTag] = useState<'#勉強の記録' | '#質問' | '#おすすめ'>('#勉強の記録');
-  const [touched, setTouched] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const err = touched && !text.trim() ? 'なにか書いてね' : undefined;
-  const post = () => {
-    if (!text.trim()) { setTouched(true); return; }
-    setBusy(true);
-    setTimeout(() => {
-      const a = getState().account;
-      mine = [{ n: a?.name ?? 'はる', c: PERSON_COLOR['はる'], m: a?.grade ?? '高3', mine: true, w: 'たった今', t: text.trim(), tags: [tag], u: 0, r: 0 }, ...mine];
-      // "Helpful" marks are stored by list position, so shift them past the new post.
-      setState((s) => ({ helpful: s.helpful.map((x) => x + 1) }));
-      mineSubs.forEach((f) => f());
-      haptic.success();
-      close();
-      toast('投稿しました');
-    }, 700);
-  };
-  return (
-    <View>
-      <Txt size={17} w="700" style={{ marginBottom: 12 }}>投稿</Txt>
-      <Field label="本文" value={text} onChangeText={setText} multiline max={280} error={err} onBlur={() => setTouched(true)} autoFocus />
-      <View style={{ marginTop: 14 }}>
-        <Choice value={tag} onChange={setTag} options={[{ v: '#勉強の記録', label: '#勉強の記録' }, { v: '#質問', label: '#質問' }, { v: '#おすすめ', label: '#おすすめ' }]} />
-      </View>
-      <Btn kind="primary" wide label="投稿する" loading={busy} disabled={!text.trim()} onPress={post} style={{ marginTop: 20 }} />
-    </View>
-  );
 }
 
 // ---------- グループ ----------

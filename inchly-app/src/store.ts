@@ -2,7 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { Day, dayLog, GROUPS, Group, subj, SUBJ, TODAY } from './data';
+import { Day, dayLog, GROUPS, Group, Post, POSTS, subj, SUBJ, TODAY } from './data';
 
 const TODAY_YEAR = TODAY.getFullYear();
 
@@ -31,7 +31,9 @@ export type State = {
   todos: Todo[];
   deadlines: Deadline[];
   following: string[];
-  helpful: number[];
+  posts: Post[];
+  helpful: string[]; // post ids
+  roomFilters: string[]; // extra 志望校 chips in the study room
   notifRead: number[];
   notifGone: number[];
   groups: Group[];
@@ -83,7 +85,9 @@ export const INITIAL: State = {
     { id: 'd3', t: '東大 二次試験', mo: 2, day: 25 },
   ],
   following: ['mio.k', 'sora_06', 'kaito'],
+  posts: POSTS,
   helpful: [],
+  roomFilters: [],
   notifRead: [],
   notifGone: [],
   groups: GROUPS,
@@ -250,7 +254,7 @@ export function signIn(a: Account) {
 }
 /** Deletes the account and everything on this device. */
 export function wipe() {
-  state = { ...INITIAL, account: null, startedAt: Date.now(), running: false, base: 0, sessions: [], todos: [], following: [], blocked: [] };
+  state = { ...INITIAL, account: null, startedAt: Date.now(), running: false, base: 0, sessions: [], todos: [], following: [], blocked: [], posts: POSTS.filter((p) => !p.mine) };
   state.todayMin = 0;
   listeners.forEach((l) => l());
   AsyncStorage.removeItem(KEY).catch(() => {});
@@ -279,6 +283,7 @@ export async function hydrate() {
       state = { ...state, ...saved, syncedAt: Date.now() };
       state.todayMin = todayOf(state.sessions);
       state.showLive = state.liveScope !== 'none';
+      state.helpful = state.helpful.filter((x) => typeof x === 'string'); // older saves kept list positions
     }
   } catch {
     // a broken save starts fresh rather than blocking the app
@@ -289,8 +294,11 @@ export async function hydrate() {
 export function toggleFollow(h: string) {
   setState((s) => ({ following: toggleIn(s.following, h) }));
 }
-export function toggleHelpful(i: number) {
-  setState((s) => ({ helpful: toggleIn(s.helpful, i) }));
+export function toggleHelpful(id: string) {
+  setState((s) => ({ helpful: toggleIn(s.helpful, id) }));
+}
+export function addPost(p: Omit<Post, 'id'>) {
+  setState((s) => ({ posts: [{ ...p, id: newId('m') }, ...s.posts] }));
 }
 export function updateGroup(id: string, fn: (g: Group) => Group) {
   setState((s) => ({ groups: s.groups.map((g) => (g.id === id ? fn(g) : g)) }));
