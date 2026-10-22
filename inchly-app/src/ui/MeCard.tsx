@@ -17,7 +17,7 @@ const CARD_GRASS = ['#E3E7EE', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C']; // t
 // the IC chip would be. The sheen drifts on its own; drag a finger across it
 // and the sheen follows while the card tilts.
 export const CARD_RATIO = 85.6 / 53.98;
-export function HoloCard({ name, handle, goal, since, stats }: { name: string; handle: string; goal: string; since: string; stats: { v: string; from: string; label: string }[] }) {
+export function HoloCard({ name, handle, goal, since, stats, lv }: { name: string; handle: string; goal: string; since: string; stats: { v: string; from: string; label: string }[]; lv: number }) {
   const t = useT();
   const [w, setW] = useState(0);
   const CARD_H = w / CARD_RATIO;
@@ -109,7 +109,7 @@ export function HoloCard({ name, handle, goal, since, stats }: { name: string; h
 
         <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Wordmark size={16} color="#121417" />
-          <Txt num size={10} w="600" color="rgba(17,20,23,0.45)" style={{ letterSpacing: 1.2 }}>STUDENT · PLUS</Txt>
+          <Txt num size={12} w="800" color="#121417" style={{ letterSpacing: 0.6 }}>{`Lv.${lv}`}</Txt>
         </View>
 
         {/* the chip: five weeks of grass in a gold frame */}

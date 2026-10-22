@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,6 +8,7 @@ import { cancelReminder, configureNotifications, notificationsAllowed, replaceRe
 import { deadlineReminders, goalReminderAt } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
 import { Block } from './lib/timetable';
+import { expOf, levelOf } from './lib/exp';
 import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 
 // One small global store, saved on the device (see persist below). Updates
@@ -255,9 +256,10 @@ export const MAX_TICKETS = 3;
 /**
  * Ends the session and saves it on today's date. The chosen ToDo is marked
  * done. The day's first record that brings the run to a multiple of 7 days
- * earns a rest ticket. Returns the minutes and whether a ticket was earned.
+ * earns a rest ticket. Returns the minutes, whether a ticket was earned, the
+ * EXP it brought, and the new level if it went up.
  */
-export function commitRecord(opts?: { todoId?: string; note?: string; min?: number }): { min: number; ticket: boolean } {
+export function commitRecord(opts?: { todoId?: string; note?: string; min?: number }): { min: number; ticket: boolean; exp: number; levelUp: number | null } {
   const s = state;
   const now = new Date();
   const today = dateKey(now);
@@ -272,7 +274,9 @@ export function commitRecord(opts?: { todoId?: string; note?: string; min?: numb
     todos: todo ? s.todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x)) : s.todos,
     restTickets: s.restTickets + (ticket ? 1 : 0),
   });
-  return { min, ticket };
+  const before = expOf(s.sessions, s.goalMin), after = expOf(sessions, s.goalMin);
+  const lv0 = levelOf(before).lv, lv1 = levelOf(after).lv;
+  return { min, ticket, exp: after - before, levelUp: lv1 > lv0 ? lv1 : null };
 }
 
 // ---------- sessions ----------
@@ -381,6 +385,13 @@ export function useReminders() {
     notificationsAllowed(false).then((ok) => { if (ok) scheduleReminder({ id: 'goal', at, title: '目標まであと15分', body: `今日の目標 ${goalMin / 60}時間 まで、もう少しです` }); });
   }, [running, startedAt, todayMin, goalMin, onGoal]);
 }
+
+/** Your level, from all your records. */
+export const useLevel = () => {
+  const sessions = useStore((s) => s.sessions);
+  const goalMin = useStore((s) => s.goalMin);
+  return useMemo(() => levelOf(expOf(sessions, goalMin)), [sessions, goalMin]);
+};
 
 /** The current run of study days. */
 export const useStreak = () => useStore((s) => streakOf(s.sessions, s.restDays));

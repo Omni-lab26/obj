@@ -14,6 +14,7 @@ import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { MiniSeg, TodoRow } from '@/ui/HomeParts';
 import { daysUntil, deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon } from '@/ui/Icon';
+import { LevelChip } from '@/ui/Level';
 import { Rolling } from '@/ui/Rolling';
 import { LiveDot } from '@/ui/GroupParts';
 import { Sticker } from '@/ui/Sticker';
@@ -73,6 +74,7 @@ export default function Home() {
       {/* header: brand, not a page title */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 18, paddingRight: 16, paddingTop: 6, height: 52 }}>
         <Wordmark size={19} />
+        <LevelChip />
         <View style={{ flex: 1 }} />
         <IconBtn outline name="search" label="さがす" onPress={() => router.push('/search')} />
         <IconBtn outline name="bell" label="お知らせ" dot={unread > 0} onPress={() => router.push('/notifications')} />

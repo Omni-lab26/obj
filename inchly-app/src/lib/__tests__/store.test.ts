@@ -40,11 +40,15 @@ describe('recording', () => {
   const week = () => Array.from({ length: 6 }, (_, i) => ({ id: `w${i}`, s: 'en', min: 30, date: addDays(dateKey(), -(i + 1)), at: '20:00' }));
   it('saves on today’s date and stops the clock', () => {
     reset({ running: true, base: 25 * 60, startedAt: Date.now() });
-    expect(commitRecord()).toEqual({ min: 25, ticket: false });
+    expect(commitRecord()).toEqual({ min: 25, ticket: false, exp: 25, levelUp: null });
     const s = getState();
     expect(s.sessions.at(-1)?.date).toBe(dateKey());
     expect(s.running).toBe(false);
     expect(s.todayMin).toBe(25);
+  });
+  it('a record that crosses a level says so', () => {
+    reset({ running: true, base: 80 * 60, startedAt: Date.now() }); // 0 → 80 EXP: Lv.1 → Lv.2 at 72
+    expect(commitRecord()).toMatchObject({ exp: 80, levelUp: 2 });
   });
   it('the 7th day in a row earns a rest ticket', () => {
     reset({ running: true, base: 10 * 60, startedAt: Date.now(), restTickets: 0, sessions: week() });
