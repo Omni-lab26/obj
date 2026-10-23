@@ -83,7 +83,7 @@ export function HoloCard({ name, handle, goal, since, stats, lv }: { name: strin
     <Animated.View style={[{ marginHorizontal: 16, marginTop: 6 }, cardA]}>
       <View onLayout={(e) => setW(e.nativeEvent.layout.width)} {...pan.panHandlers}
         accessibilityLabel={`${name}の勉強カード。指でなぞると光が動きます`}
-        style={[{ aspectRatio: CARD_RATIO, borderRadius: 14, backgroundColor: look.grad[1], overflow: 'hidden', paddingHorizontal: 18, paddingVertical: 16, justifyContent: 'space-between', borderWidth: hair, borderColor: look.dark ? 'rgba(255,255,255,0.08)' : 'rgba(17,20,23,0.1)' }, lift(t, 2)]}>
+        style={[{ aspectRatio: CARD_RATIO, borderRadius: 14, backgroundColor: look.grad[1], overflow: 'hidden', paddingHorizontal: 18, paddingVertical: 16, justifyContent: 'space-between', borderWidth: hair, borderColor: look.dark ? 'rgba(255,255,255,0.08)' : 'rgba(17,20,23,0.1)' }, lift(t)]}>
         {/* the card's gradient, top left to bottom right */}
         {w ? (
           <Svg pointerEvents="none" width={w} height={CARD_H} style={{ position: 'absolute', top: 0, left: 0 }}>

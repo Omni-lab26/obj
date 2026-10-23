@@ -31,8 +31,10 @@ const light = {
   grass: ['#E6EAF0', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C'], // green: more study = deeper
   scrim: 'rgba(17,20,23,0.36)',
   dark: false,
-  // how cards are shaded and outlined (lift), and what lies behind screens
-  shadow1: '0px 0px 0px 0.5px rgba(15,23,42,0.06), 0px 1px 2px rgba(15,23,42,0.04), 0px 4px 14px rgba(15,23,42,0.045)',
+  // how cards are shaded and outlined (lift), and what lies behind screens: cards lie flat, with
+  // only a hairline edge (so a white card still shows on the white background); things that float
+  // over the page — toasts, tooltips — keep a shadow
+  shadow1: '0px 0px 0px 0.5px rgba(15,23,42,0.08)',
   shadow2: '0px 0px 0px 0.5px rgba(15,23,42,0.06), 0px 2px 6px rgba(15,23,42,0.06), 0px 12px 28px rgba(15,23,42,0.12)',
   texture: null as Texture | null,
   /** cards get the texture too (the painted themes) */
