@@ -1,5 +1,5 @@
 import { SFSymbol, SymbolView } from 'expo-symbols';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 // 24px line icons, same geometry as the HTML mock.
@@ -73,7 +73,7 @@ export function Icon({ name, size = 22, color, width, filled }: { name: IconName
   const solid = spec.fill || (filled && HAS_FILL.has(name) && name !== 'cal' && name !== 'clock');
   const fill = solid ? color : 'none';
   const stroke = spec.fill ? 'none' : color;
-  return (
+  const svg = (
     <Svg width={size} height={size} viewBox="0 0 24 24">
       {spec.els.map((e, i) => {
         const common = { fill, stroke, strokeWidth: sw, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -83,4 +83,6 @@ export function Icon({ name, size = 22, color, width, filled }: { name: IconName
       })}
     </Svg>
   );
+  // on the web a bare svg paints under a positioned shape beside it (a theme's button face); a view keeps it in order
+  return Platform.OS === 'web' ? <View style={{ width: size, height: size }}>{svg}</View> : svg;
 }

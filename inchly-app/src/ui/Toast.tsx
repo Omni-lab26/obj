@@ -82,6 +82,7 @@ export function ToastHost() {
   useEffect(() => {
     const f = (i: Item[]) => { setList(i); if (i.length < 2) setSpread(false); };
     subs.add(f);
+    f(items); // anything said between the first render and now
     return () => { subs.delete(f); };
   }, []);
   const onPress = () => {

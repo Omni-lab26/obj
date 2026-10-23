@@ -13,7 +13,16 @@ export type Moment =
 export type MomentKind = Moment['kind'];
 
 const listeners = new Set<(m: Moment) => void>();
-export const onMoment = (l: (m: Moment) => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
+// A moment said before anything listens (the app opening straight onto the
+// timer past its target) waits a little for the first listener.
+let waiting: { m: Moment; at: number } | null = null;
+export const onMoment = (l: (m: Moment) => void) => {
+  listeners.add(l);
+  if (waiting && Date.now() - waiting.at < 2000) l(waiting.m);
+  waiting = null;
+  return () => { listeners.delete(l); };
+};
 export function celebrate(m: Moment) {
+  if (!listeners.size) { waiting = { m, at: Date.now() }; return; }
   listeners.forEach((l) => l(m));
 }
