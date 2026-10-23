@@ -8,12 +8,12 @@ import { hourlyOf, weekOf, withLive } from '../lib/history';
 import { dateKey } from '../lib/time';
 import { ChartKind, ChartPalette, elapsedOf, setChart, useNow, useStore } from '../store';
 import { ease, hair, useT } from '../theme';
-import { Btn, Card, haptic, Press, Txt } from './base';
+import { Btn, haptic, Press, Txt } from './base';
 import { Icon } from './Icon';
 import { openSheet } from './Sheet';
 import { Segmented } from './Tabs';
 
-// Home's study-time card: today hour by hour (24 vertical bars) or this week
+// Home's study-time graph: today hour by hour (24 vertical bars) or this week
 // day by day (7), switched with 日 / 週. The gear at the top right picks the
 // chart (bars, by subject, line) and its color. Tap a bar for its numbers.
 // Never green: green is the grass.
@@ -42,7 +42,8 @@ const jpHm = (m: number) => {
 
 type Col = { label: string; parts: number[]; live: number; total: number; future: boolean; now: boolean };
 
-export function StudyChartCard() {
+/** The graph part of home's 今日の勉強 card: it sits under the day's total, so it shows no big figure of its own. */
+export function StudyChart() {
   const t = useT();
   const now = useNow(30_000);
   const chart = useStore((s) => s.chart);
@@ -117,22 +118,15 @@ export function StudyChartCard() {
   const usedSubj = SUBJ.map((x, k) => ({ ...x, c: SUBJ_C[k], on: cols.some((c) => c.parts[k] > 0) || (running && k === sk && liveMin > 0) })).filter((x) => x.on);
 
   return (
-    <Card style={{ marginHorizontal: 16, marginTop: 12 }} pad={14}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Txt size={13} w="600" tone="ink2" style={{ flex: 1 }}>{day ? '今日の勉強時間' : '今週の勉強時間'}</Txt>
+    <View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }} accessible accessibilityLabel={day ? '今日の1時間ごと' : `今週 ${jpHm(total)}`}>
+        <Txt size={12.5} w="600" tone="ink2" style={{ flex: 1 }}>{day ? '1時間ごと' : `今週 ${jpHm(total)}${running && liveNow >= 1 ? ` ＋勉強中 ${jpHm(liveNow)}` : ''}`}</Txt>
         <Segmented small value={chart.range} onChange={(v) => setChart({ range: v })} options={[{ v: 'day', label: '日' }, { v: 'week', label: '週' }]}
           style={{ backgroundColor: t.sunken, padding: 2 }} />
         <Press onPress={chartSettings} scale={0.9} hitSlop={8} accessibilityLabel="グラフの設定"
           style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="gear" size={15} color={t.ink2} />
         </Press>
-      </View>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 4 }} accessible accessibilityLabel={`${day ? '今日' : '今週'} ${jpHm(total)}`}>
-        <Txt num size={28} w="700" lh={34}>{Math.floor(total / 60)}</Txt>
-        <Txt size={12} w="600" tone="ink3">時間</Txt>
-        <Txt num size={28} w="700" lh={34}>{pad(Math.floor(total) % 60)}</Txt>
-        <Txt size={12} w="600" tone="ink3">分</Txt>
-        {running && liveNow >= 1 ? <Txt size={11} w="600" tone="ink3" style={{ marginLeft: 6 }}>{`＋勉強中 ${jpHm(liveNow)}`}</Txt> : null}
       </View>
       <Txt size={11.5} tone={sel === null ? 'ink3' : 'ink'} w={sel === null ? '400' : '600'} numberOfLines={1} style={{ marginTop: 2 }}>{note}</Txt>
 
@@ -195,7 +189,7 @@ export function StudyChartCard() {
           ) : null}
         </View>
       ) : null}
-    </Card>
+    </View>
   );
 }
 

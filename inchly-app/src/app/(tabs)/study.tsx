@@ -6,7 +6,7 @@ import { hms, SUBJ, subj } from '@/data';
 import { blocksOn, endOf, minutesUntil, slotsOf, suggestion, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
 import { elapsedOf, getState, setTarget, setTimerMode, startFrom, toggleTodo, togglePause, useNow, useStore } from '@/store';
-import { focus, hair, radius, type, useT } from '@/theme';
+import { focus, hair, onColor, radius, type, useT } from '@/theme';
 import { Card, haptic, Press, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
 import { blockSheet, todoSheet } from '@/ui/Editors';
@@ -112,8 +112,8 @@ function Now() {
           <Press onPress={() => go({ s: pick.s, min: 'min' in pick ? pick.min : undefined, todoId: 'todoId' in pick ? pick.todoId : undefined })} haptics={false} scale={0.97}
             accessibilityLabel={`${subj(pick.s).name}を始める`}
             style={{ height: 54, borderRadius: 27, backgroundColor: subj(pick.s).c, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <Icon name="play" size={16} color="#fff" />
-            <Txt size={16} w="800" color="#fff">{`${subj(pick.s).name}を始める`}</Txt>
+            <Icon name="play" size={16} color={onColor(subj(pick.s).c)} />
+            <Txt size={16} w="800" color={onColor(subj(pick.s).c)}>{`${subj(pick.s).name}を始める`}</Txt>
           </Press>
         </View>
       ) : (
@@ -197,7 +197,7 @@ function Timetable() {
                 <Press onPress={() => go({ s: b.s, min: b.min })} haptics={false} scale={0.9} hitSlop={6} disabled={running}
                   accessibilityLabel={`${sj.name}を始める`}
                   style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: live ? sj.c : t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="play" size={14} color={live ? '#fff' : t.ink} />
+                  <Icon name="play" size={14} color={live ? onColor(sj.c) : t.ink} />
                 </Press>
               )}
             </Press>

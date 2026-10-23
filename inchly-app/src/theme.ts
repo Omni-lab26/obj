@@ -91,3 +91,12 @@ export const hair = Platform.OS === 'web' ? 0.75 : StyleSheet.hairlineWidth * 2;
 
 // Web only: the field draws its own focus border, so drop the browser outline.
 export const noOutline: TextStyle | null = Platform.OS === 'web' ? { outlineWidth: 0 } : null;
+
+/** Text color for a filled button: white on deep colors, ink on light ones (国語's yellow, 数学's orange). */
+export function onColor(hex: string) {
+  const n = parseInt(hex.replace('#', ''), 16);
+  const lin = (c: number) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+  // pick whichever of white and ink contrasts more
+  return (1.05) / (L + 0.05) >= (L + 0.05) / (0.0074 + 0.05) ? '#FFFFFF' : '#121417';
+}

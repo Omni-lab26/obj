@@ -6,19 +6,20 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, w
 import { hms, pad, PEOPLE, SUBJ, subj } from '@/data';
 import { dayOf, studiedOn } from '@/lib/history';
 import { jpDate } from '@/lib/time';
-import { elapsedOf, setSubject, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '@/store';
-import { hair, lift, radius, type, useT } from '@/theme';
+import { endOf, suggestion } from '@/lib/timetable';
+import { elapsedOf, startFrom, startStudy, togglePause, useNow, useStore, useStreak } from '@/store';
+import { hair, lift, onColor, radius, type, useT } from '@/theme';
 import { Avatar, AvatarStack, Btn, Card, haptic, IconBtn, Press, SubjCoin, Txt } from '@/ui/base';
 import { InchTape, Wordmark } from '@/ui/Brand';
 import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
-import { MiniSeg, TodoRow } from '@/ui/HomeParts';
+import { MiniSeg } from '@/ui/HomeParts';
 import { daysUntil, deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon } from '@/ui/Icon';
 import { LevelChip } from '@/ui/Level';
 import { Rolling } from '@/ui/Rolling';
 import { LiveDot } from '@/ui/GroupParts';
 import { Sticker } from '@/ui/Sticker';
-import { StudyChartCard } from '@/ui/StudyChart';
+import { StudyChart } from '@/ui/StudyChart';
 import { toast } from '@/ui/Toast';
 
 
@@ -32,7 +33,6 @@ export default function Home() {
   const tabPad = useTabPad();
   const sj = subj(s.subj);
   const e = elapsedOf(s);
-  const done = s.todos.filter((x) => x.d).length;
   const me = s.account?.name ?? 'はる';
 
   // Hero digits roll up from zero once the screen is shown.
@@ -42,12 +42,6 @@ export default function Home() {
   const M = shown ? pad(s.todayMin % 60) : '00';
   const [joined, setJoined] = useState(false);
 
-  const onToggle = (id: string) => {
-    const willAll = s.todos.every((x) => (x.id === id ? !x.d : x.d));
-    const exp = toggleTodo(id);
-    if (willAll) { haptic.success(); toast('今日のToDo、ぜんぶ終わり', exp ? `+${exp} EXP` : undefined); }
-    else if (exp) toast('ToDoを完了しました', `+${exp} EXP`);
-  };
   const joinPeers = () => {
     if (s.running) { toast('もう勉強中です', `${sj.name} ${hms(e)}`); return; }
     startStudy();
@@ -111,69 +105,20 @@ export default function Home() {
             <InchTape minutes={s.todayMin} goal={s.goalMin} parts={parts} />
           </View>
 
-          {/* now: one live row when studying, a start button when not — never both */}
-          {s.running ? (
-            <Press onPress={() => router.push('/timer')} scale={0.98} accessibilityLabel={`${sj.name}を勉強中 ${hms(e)}。タイマーを開く`}
-              style={{ marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingLeft: 8, paddingRight: 6, borderRadius: radius.inner,
-                backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line }}>
-              <SubjCoin name={sj.name} color={sj.c} size={30} />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <LiveDot size={5} color={s.paused ? t.amber : undefined} />
-                  <Txt size={11} tone="ink3" lh={14}>{s.paused ? '一時停止中' : '勉強中'}</Txt>
-                </View>
-                <Txt size={13} w="600" lh={18} numberOfLines={1}>{sj.name}<Txt size={12} tone="ink2">{`  ${sj.task}`}</Txt></Txt>
-              </View>
-              <Txt num size={15} w="600">{hms(e)}</Txt>
-              <Press onPress={() => { haptic.soft(); togglePause(); }} haptics={false} scale={0.88} accessibilityLabel={s.paused ? '再開' : '一時停止'} hitSlop={7}
-                style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line2, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name={s.paused ? 'play' : 'pause'} size={13} color={t.ink} />
-              </Press>
-            </Press>
-          ) : (
-            <View style={{ marginTop: 14 }}>
-              <Press onPress={() => { haptic.firm(); startStudy(); }} haptics={false} scale={0.97} accessibilityLabel={`${sj.name}を始める`}
-                style={{ height: 44, borderRadius: radius.inner, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
-                <Icon name="play" size={13} color={t.onInk} />
-                <Txt size={14} w="600" color={t.onInk}>{sj.name}を始める</Txt>
-              </Press>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-                {SUBJ.map((x) => {
-                  const on = x.id === s.subj;
-                  return (
-                    <Press key={x.id} onPress={() => setSubject(x.id)} scale={0.94} accessibilityRole="radio" accessibilityState={{ checked: on }} hitSlop={{ top: 9, bottom: 9, left: 2, right: 2 }}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 26, paddingHorizontal: 9, borderRadius: 13,
-                        backgroundColor: on ? t.sunken : 'transparent', borderWidth: hair, borderColor: on ? t.line2 : 'transparent' }}>
-                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: x.c }} />
-                      <Txt size={12} w={on ? '600' : '500'} tone={on ? 'ink' : 'ink3'}>{x.name}</Txt>
-                    </Press>
-                  );
-                })}
-              </View>
-            </View>
-          )}
+          {/* the graph, under the total: today by the hour, or this week by the day */}
+          <View style={{ marginTop: 16, paddingTop: 14, borderTopWidth: hair, borderTopColor: t.line }}>
+            <StudyChart />
+          </View>
+
+          {/* now, in one line: the session under way, or what's next (starting lives on the study page) */}
+          <NowLine />
         </Card>
 
         {/* streak: a small black capsule, the week as dots */}
         <StreakPill />
 
-        {/* today hour by hour, or this week day by day */}
-        <StudyChartCard />
-
-        {/* today's list */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 22, paddingBottom: 8, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-          <Txt size={type.head} w="600">今日やること</Txt>
-          <Txt size={12} w="500" tone="ink3" num style={{ flex: 1 }}>{`${done}/${s.todos.length}`}</Txt>
-          <AddLink label="追加" onPress={() => todoSheet()} />
-        </View>
-        <Card style={{ marginHorizontal: 16 }} pad={0}>
-          {s.todos.map((td, i) => <TodoRow key={td.id} todo={td} first={i === 0} onToggle={() => onToggle(td.id)} onEdit={() => todoSheet(td)} />)}
-          {s.todos.length ? null : (
-            <Press onPress={() => todoSheet()} style={{ paddingVertical: 16, alignItems: 'center' }}>
-              <Txt size={13} tone="ink3">やることを1つ決めておくと、始めるのが早くなります</Txt>
-            </Press>
-          )}
-        </Card>
+        {/* ToDos live on the study page; here, how many are left and the next one */}
+        <TodoLine />
 
         {/* deadlines: a portfolio-style list */}
         <View style={{ paddingHorizontal: 20, paddingTop: 22, paddingBottom: 8, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
@@ -220,6 +165,95 @@ export default function Home() {
 
       </ScrollView>
     </Screen>
+  );
+}
+
+/** One line at the foot of the 今日の勉強 card: studying now, or what's next with a start button. */
+function NowLine() {
+  const t = useT();
+  const now = useNow();
+  const s = useStore((x) => x);
+  const sj = subj(s.subj);
+  const box = { marginTop: 14, flexDirection: 'row' as const, alignItems: 'center' as const, gap: 10, paddingVertical: 8, paddingLeft: 8, paddingRight: 6, borderRadius: radius.inner,
+    backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line };
+  if (s.running) {
+    const e = elapsedOf(s, now);
+    return (
+      <Press onPress={() => router.push('/timer')} scale={0.98} accessibilityLabel={`${sj.name}を勉強中 ${hms(e)}。タイマーを開く`} style={box}>
+        <SubjCoin name={sj.name} color={sj.c} size={30} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <LiveDot size={5} color={s.paused ? t.amber : undefined} />
+            <Txt size={11} tone="ink3" lh={14}>{s.paused ? '一時停止中' : '勉強中'}</Txt>
+          </View>
+          <Txt size={13} w="600" lh={18} numberOfLines={1}>{sj.name}<Txt size={12} tone="ink2">{`  ${s.todos.find((x) => x.id === s.studyTodo && x.s === s.subj)?.t ?? sj.task}`}</Txt></Txt>
+        </View>
+        <Txt num size={15} w="600">{hms(e)}</Txt>
+        <Press onPress={() => { haptic.soft(); togglePause(); }} haptics={false} scale={0.88} accessibilityLabel={s.paused ? '再開' : '一時停止'} hitSlop={7}
+          style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line2, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name={s.paused ? 'play' : 'pause'} size={13} color={t.ink} />
+        </Press>
+      </Press>
+    );
+  }
+  // the timetable's block, else the first open ToDo, else the last subject
+  const slot = suggestion(s.timetable, new Date(now));
+  const todo = s.todos.find((x) => !x.d);
+  const pick = slot ? { s: slot.block.s, what: slot.block.t ?? subj(slot.block.s).task, min: slot.block.min, when: slot.state === 'now' ? `いま · ${slot.block.start}〜${endOf(slot.block)}` : `次は · ${slot.block.start}から` }
+    : todo ? { s: todo.s, what: todo.t, todoId: todo.id, when: '次は · ToDo' }
+    : { s: s.subj, what: sj.task, when: '次は' };
+  const p = subj(pick.s);
+  const go = () => {
+    startFrom({ s: pick.s, min: 'min' in pick ? pick.min : undefined, todoId: 'todoId' in pick ? pick.todoId : undefined });
+    haptic.firm();
+    router.push('/timer');
+  };
+  return (
+    <Press onPress={() => router.navigate('/study')} scale={0.98} accessibilityLabel={`${pick.when} ${p.name} ${pick.what}。勉強のページを開く`} style={box}>
+      <SubjCoin name={p.name} color={p.c} size={30} />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Txt size={11} tone="ink3" lh={14}>{pick.when}</Txt>
+        <Txt size={13} w="600" lh={18} numberOfLines={1}>{p.name}<Txt size={12} tone="ink2">{`  ${pick.what}`}</Txt></Txt>
+      </View>
+      <Press onPress={go} haptics={false} scale={0.9} hitSlop={7} accessibilityLabel={`${p.name}を始める`}
+        style={{ height: 34, paddingHorizontal: 14, borderRadius: 17, backgroundColor: p.c, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+        <Icon name="play" size={11} color={onColor(p.c)} />
+        <Txt size={12.5} w="700" color={onColor(p.c)}>始める</Txt>
+      </Press>
+    </Press>
+  );
+}
+
+/** How many ToDos are left and the next one; the list itself is on the study page. */
+function TodoLine() {
+  const t = useT();
+  const todos = useStore((x) => x.todos);
+  const done = todos.filter((x) => x.d).length;
+  const next = todos.find((x) => !x.d);
+  if (!todos.length) {
+    return (
+      <Press onPress={() => todoSheet()} scale={0.985} accessibilityLabel="ToDoを追加"
+        style={[{ marginHorizontal: 16, marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
+        <Icon name="plus" size={14} color={t.ink} />
+        <Txt size={13.5} w="600" style={{ flex: 1 }}>ToDoを追加</Txt>
+        <Txt size={11.5} tone="ink3">やることを決めておくと始めやすい</Txt>
+      </Press>
+    );
+  }
+  return (
+    <Press onPress={() => router.navigate('/study')} scale={0.985} accessibilityLabel={`ToDo のこり${todos.length - done}つ。勉強のページを開く`}
+      style={[{ marginHorizontal: 16, marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
+      <View>
+        <Txt size={11} tone="ink3" lh={14}>ToDo</Txt>
+        <Txt num size={17} w="700" lh={21}>{done}<Txt size={12} tone="ink3">{` / ${todos.length}`}</Txt></Txt>
+      </View>
+      <View style={{ width: hair, alignSelf: 'stretch', backgroundColor: t.line }} />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Txt size={11} tone="ink3" lh={14}>{next ? '次のToDo' : 'ぜんぶ終わり'}</Txt>
+        <Txt size={13.5} w="600" lh={18} numberOfLines={1}>{next ? next.t : '今日のToDoは全部完了しました'}</Txt>
+      </View>
+      <Icon name="chev" size={14} color={t.ink3} />
+    </Press>
   );
 }
 
