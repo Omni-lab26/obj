@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
-import { ReactNode } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
+import { ReactNode, useRef } from 'react';
+import { ActivityIndicator, GestureResponderEvent, Image, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import type { Reaction } from '../design';
@@ -104,14 +104,21 @@ export function Press({ style, scale = 0.96, react, children, onPressIn, onPress
       default: p.set(withTiming(0, { duration: 240, easing: ease.spring }));
     }
   };
+  // where the finger came down: a finger that travelled (a swipe that happens to start and end on a wide button) isn't a tap
+  const start = useRef<{ x: number; y: number; at: number } | null>(null);
+  const travelled = (e: GestureResponderEvent) => {
+    const s0 = start.current;
+    start.current = null;
+    return !!s0 && Date.now() - s0.at < 3000 && Math.hypot(e.nativeEvent.pageX - s0.x, e.nativeEvent.pageY - s0.y) > 12;
+  };
   return (
     <Pressable
       {...rest}
       style={outer}
       disabled={disabled}
-      onPressIn={(e) => { down(); onPressIn?.(e); }}
+      onPressIn={(e) => { start.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY, at: Date.now() }; down(); onPressIn?.(e); }}
       onPressOut={(e) => { up(); onPressOut?.(e); }}
-      onPress={(e) => { if (haptics) haptic.tap(); onPress?.(e); }}>
+      onPress={(e) => { if (travelled(e)) return; if (haptics) haptic.tap(); onPress?.(e); }}>
       <Animated.View style={[inner, a]}>
         {children}
         {kind === 'select' ? (
