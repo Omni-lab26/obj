@@ -115,7 +115,7 @@ export default function Record() {
                 <Txt size={11} tone="ink3">5分ずつ直せます</Txt>
               </View>
             </View>
-            <TodayBar before={before} add={min} goal={goal} />
+            <TodayBar before={before} add={min} goal={goal} color={sj.c} />
             <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 8 }}>
               <Txt size={12.5} tone="ink2" style={{ flex: 1 }}>今日の合計</Txt>
               <Txt num size={12.5} tone="ink3">{`${hm(before)} → `}</Txt>
@@ -203,8 +203,8 @@ function Round({ icon, label, onPress }: { icon: 'plus' | 'minus'; label: string
   );
 }
 
-/** Today's bar: what was there before (ink), this session (green), and the goal line. */
-function TodayBar({ before, add, goal }: { before: number; add: number; goal: number }) {
+/** Today's bar: what was there before (ink), this session (in its subject's color — charts are never green), and the goal line. */
+function TodayBar({ before, add, goal, color }: { before: number; add: number; goal: number; color: string }) {
   const t = useT();
   const scale = Math.max(goal, before + add) * 1.08;
   const grow = useSharedValue(0);
@@ -214,12 +214,12 @@ function TodayBar({ before, add, goal }: { before: number; add: number; goal: nu
     <View style={{ marginTop: 16 }} accessible accessibilityLabel={`今日の合計 ${before + add}分、目標 ${goal}分`}>
       <View style={{ height: 12, borderRadius: 6, backgroundColor: t.sunken, flexDirection: 'row', overflow: 'hidden' }}>
         <View style={{ width: `${(before / scale) * 100}%`, backgroundColor: t.ink }} />
-        <Animated.View style={[{ backgroundColor: t.green }, a]} />
+        <Animated.View style={[{ backgroundColor: color }, a]} />
       </View>
       <View pointerEvents="none" style={{ position: 'absolute', left: `${(goal / scale) * 100}%`, top: -4, width: 2, height: 20, marginLeft: -1, borderRadius: 1, backgroundColor: t.amber }} />
       <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
         <Legend color={t.ink} label="今日これまで" />
-        <Legend color={t.green} label="この記録" />
+        <Legend color={color} label="この記録" />
         <Legend color={t.amber} label="目標" />
       </View>
     </View>
