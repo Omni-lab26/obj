@@ -1,5 +1,6 @@
 import { ThemeId, themeId, useDesign } from '../design';
 import bit8 from './bit8';
+import digital from './digital';
 import grid from './grid';
 import ink from './ink';
 import kawaii from './kawaii';
@@ -15,6 +16,7 @@ import type { ThemeKit } from './types';
 // (src/themes/<id>/, its kit) plus its line here and its tokens in design.ts THEMES.
 // A family's colorways share one kit.
 const KITS: Partial<Record<ThemeId, ThemeKit>> = {
+  lcd: digital, terminal: digital, cyber: digital,
   retro: bit8, dotnight: bit8, pico: bit8,
   yumekawa: kawaii, milktea: kawaii, soda: kawaii,
   sunflower: oil, starry: oil, lily: oil,
