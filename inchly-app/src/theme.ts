@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { Platform, StyleSheet, TextStyle } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 
-import { BGS, CORNERS, designVersion, getDesign, INKS, onDesign, TIMERS } from './design';
+import { BGS, CORNERS, designVersion, getDesign, INKS, onDesign, refreshDesign, Texture, themeOf, ThemeFont, TIMERS } from './design';
 
 // Light only. A cool blue-white canvas, white cards on a faint edge and a
 // short soft shadow, near-black ink for text and primary buttons. Green is for
@@ -31,6 +31,12 @@ const light = {
   grass: ['#E6EAF0', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C'], // green: more study = deeper
   scrim: 'rgba(17,20,23,0.36)',
   dark: false,
+  // how cards are shaded and outlined (lift), and what lies behind screens
+  shadow1: '0px 0px 0px 0.5px rgba(15,23,42,0.06), 0px 1px 2px rgba(15,23,42,0.04), 0px 4px 14px rgba(15,23,42,0.045)',
+  shadow2: '0px 0px 0px 0.5px rgba(15,23,42,0.06), 0px 2px 6px rgba(15,23,42,0.06), 0px 12px 28px rgba(15,23,42,0.12)',
+  texture: null as Texture | null,
+  /** cards get the texture too (the painted themes) */
+  cardTexture: false,
 };
 
 export type Theme = typeof light;
@@ -39,11 +45,18 @@ export type Theme = typeof light;
 let palette: Theme = light;
 function follow() {
   const d = getDesign();
-  palette = { ...light, canvas: BGS[d.bg].canvas, sunken: BGS[d.bg].sunken, ink: INKS[d.ink].ink };
-  // radius and focus are plain objects read during render; components that
-  // read them also read the theme, so they re-render with the new values
-  Object.assign(radius, { card: CORNERS[d.corners].card, inner: CORNERS[d.corners].inner });
-  focus.bg = TIMERS[d.timer].bg;
+  const th = themeOf(d.theme);
+  if (th.colors) {
+    palette = { ...light, ...th.colors, dark: th.dark, shadow1: th.shadow?.[0] ?? light.shadow1, shadow2: th.shadow?.[1] ?? light.shadow2,
+      texture: th.texture ?? null, cardTexture: th.family === 'oil', scrim: th.dark ? 'rgba(0,0,0,0.5)' : light.scrim };
+  } else {
+    palette = { ...light, canvas: BGS[d.bg].canvas, sunken: BGS[d.bg].sunken, ink: INKS[d.ink].ink };
+  }
+  // radius, focus and the typeface are plain values read during render;
+  // components that read them also read the theme, so they re-render with them
+  Object.assign(radius, th.corners ?? { card: CORNERS[d.corners].card, inner: CORNERS[d.corners].inner });
+  focus.bg = th.timer ?? TIMERS[d.timer].bg;
+  current = th.font;
 }
 onDesign(follow);
 
@@ -75,8 +88,38 @@ export const font = {
   // SF Pro Rounded, for stickers and the wordmark
   rounded: web ? `ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", ${JA}` : Platform.OS === 'ios' ? 'ui-rounded' : undefined,
 };
-/** SF Pro Display from 20pt up, SF Pro Text below — the same switch iOS makes. */
-export const face = (size: number) => (size >= 20 ? font.display : font.text);
+// The theme's typeface. Only faces that are always there (system fonts) or
+// bundled and already loaded are named: iOS stops on a font name it can't find.
+const MONO = Platform.select({ ios: 'Menlo', android: 'monospace', default: `"SF Mono", Menlo, Consolas, "Roboto Mono", monospace, ${JA}` });
+const ROUNDED = Platform.select({ ios: 'HiraMaruProN-W4', android: undefined, default: `"Hiragino Maru Gothic ProN", "Zen Maru Gothic", "M PLUS Rounded 1c", ui-rounded, ${JA}` });
+const SERIF = Platform.select({ ios: 'HiraMinProN-W3', android: 'serif', default: `"Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", "Noto Serif CJK JP", serif` });
+const SERIF_BOLD = Platform.select({ ios: 'HiraMinProN-W6', android: 'serif', default: SERIF });
+// Bundled faces (expo-font names). Japanese the grotesque lacks falls back to the system face.
+export const BUNDLED = { pixel: 'DotGothic16_400Regular', grotesk: 'BricolageGrotesque_500Medium', groteskBold: 'BricolageGrotesque_700Bold' };
+// On the web a face is a stack, so Japanese falls back to the same face as everywhere else (and keeps its width).
+const bundled = (name: string) => (web ? `"${name}", ${JA}` : name);
+let current: ThemeFont = 'system';
+let ready = false;
+/** The root layout calls this once the bundled faces have loaded; until then themes use the system face. */
+export function bundledFontsLoaded() {
+  if (ready) return;
+  ready = true;
+  refreshDesign();
+}
+/** A theme's face at a size (the デザイン page previews every theme in its own). */
+export const faceFor = (f: ThemeFont, size: number) => {
+  switch (f) {
+    case 'mono': return MONO;
+    case 'rounded': return ROUNDED;
+    case 'serif': return size >= 20 ? SERIF_BOLD : SERIF;
+    case 'pixel': if (ready) return bundled(BUNDLED.pixel); break;
+    // the grotesque has no Japanese, so it sets only headlines and figures; body text keeps the system face
+    case 'grotesk': if (ready && size >= 20) return bundled(BUNDLED.groteskBold); break;
+  }
+  return size >= 20 ? font.display : font.text;
+};
+/** SF Pro Display from 20pt up, SF Pro Text below — the same switch iOS makes — or the current theme's face. */
+export const face = (size: number) => faceFor(current, size);
 
 // Type scale, after the wallet reference: compact objects, one figure per card,
 // quiet everything else.
@@ -90,9 +133,11 @@ export const type = {
   cap: 11,
 };
 
-/** Cards sit on a faint edge and a short, soft shadow (none in dark mode). */
-export const lift = (t: { dark: boolean }, k: 1 | 2 = 1) =>
-  t.dark ? null : { boxShadow: k === 1 ? '0px 0px 0px 0.5px rgba(15,23,42,0.06), 0px 1px 2px rgba(15,23,42,0.04), 0px 4px 14px rgba(15,23,42,0.045)' : '0px 0px 0px 0.5px rgba(15,23,42,0.06), 0px 2px 6px rgba(15,23,42,0.06), 0px 12px 28px rgba(15,23,42,0.12)' };
+/**
+ * Cards sit on a faint edge and a short, soft shadow — or the theme's outline
+ * and shadow. Always a boxShadow, never a border, so it never takes room.
+ */
+export const lift = (t: { shadow1: string; shadow2: string }, k: 1 | 2 = 1) => ({ boxShadow: k === 1 ? t.shadow1 : t.shadow2 });
 export const radius = { card: 16, inner: 12 }; // follows the 角 you pick (applyDesign)
 
 // Motion measured on bencho.dev: press = .2s (.3,.9,.4,1), springy round buttons = .24s (.28,1.3,.36,1).

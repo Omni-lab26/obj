@@ -6,6 +6,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { AVATAR } from '../photos';
 import { ease, face, hair, lift, radius, Theme, useT } from '../theme';
 import { Icon, IconName } from './Icon';
+import { TextureFill } from './Texture';
 
 export const haptic = {
   tap: () => Platform.OS !== 'web' && Haptics.selectionAsync().catch(() => {}),
@@ -166,7 +167,12 @@ export function AvatarStack({ people, size = 28, ring, max = 4 }: { people: { n:
 /** White card on the cool canvas: rounded 20, soft shadow, no border. */
 export function Card({ children, style, pad = 14 }: { children?: ReactNode; style?: StyleProp<ViewStyle>; pad?: number }) {
   const t = useT();
-  return <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, padding: pad }, lift(t), style]}>{children}</View>;
+  return (
+    <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, padding: pad }, lift(t), style]}>
+      {t.cardTexture ? <TextureFill texture={t.texture} radius={radius.card} opacity={0.7} /> : null}
+      {children}
+    </View>
+  );
 }
 
 export function SectionHead({ title, aux, onAux }: { title: string; aux?: string; onAux?: () => void }) {

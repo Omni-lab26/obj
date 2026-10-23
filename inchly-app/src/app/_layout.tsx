@@ -1,3 +1,6 @@
+import { BricolageGrotesque_500Medium, BricolageGrotesque_700Bold } from '@expo-google-fonts/bricolage-grotesque';
+import { DotGothic16_400Regular } from '@expo-google-fonts/dotgothic16';
+import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -5,7 +8,7 @@ import { Platform, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { getState, hydrate, startStudy, useDayRollover, useReminders, useStore } from '@/store';
-import { focus, useT } from '@/theme';
+import { bundledFontsLoaded, focus, useT } from '@/theme';
 import { SheetHost } from '@/ui/Sheet';
 import { isRoomShape, StudyRoom } from '@/ui/StudyRoom';
 import { toast, ToastHost } from '@/ui/Toast';
@@ -37,10 +40,13 @@ function useFeed(on: boolean) {
 
 export default function RootLayout() {
   const t = useT();
-  // No font files to wait for: the app uses the system face (SF Pro / Hiragino Sans).
+  // Nothing to wait for before showing the app: it uses the system face (SF Pro / Hiragino Sans), and the themes' bundled faces (below) swap in when ready.
   // We only wait for what is saved on this phone.
   const [ready, setReady] = useState(false);
   useEffect(() => { hydrate().then(() => setReady(true)); }, []);
+  // the themes' bundled faces (8bit's pixel face, ポップ's grotesque); until they load, themes use the system face
+  const [fonts] = useFonts({ DotGothic16_400Regular, BricolageGrotesque_500Medium, BricolageGrotesque_700Bold });
+  useEffect(() => { if (fonts) bundledFontsLoaded(); }, [fonts]);
   const signedIn = useStore((s) => !!s.account);
   useFeed(ready && signedIn);
   useDayRollover();

@@ -6,13 +6,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, INKS, STREAKS, TIMERS, useDesign } from '@/design';
+import { BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAKS, THEMES, themeOf, ThemeId, TIMERS, useDesign } from '@/design';
 import { setDesign } from '@/store';
-import { focus, hair, lift, radius, useT } from '@/theme';
+import { faceFor, focus, hair, lift, radius, useT } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Wordmark } from '@/ui/Brand';
 import { Sticker } from '@/ui/Sticker';
+import { Segmented } from '@/ui/Tabs';
+import { TextureFill } from '@/ui/Texture';
 import { toast } from '@/ui/Toast';
 
 // デザイン: reached by swiping home to the right. Every choice applies at once
@@ -23,6 +25,8 @@ export default function DesignPage() {
   const d = useDesign();
   const insets = useSafeAreaInsets();
   const set = (patch: Partial<Design>) => { haptic.tap(); setDesign(patch); };
+  const standard = d.theme === 'standard';
+  const [family, setFamily] = useState<(typeof FAMILIES)[number]['id']>(themeOf(d.theme).family);
   // swipe left to go back to home
   const [back] = useState(() => Gesture.Pan().activeOffsetX(-24).failOffsetY([-14, 14])
     .onEnd((e) => { if (e.translationX < -70) scheduleOnRN(router.back); }));
@@ -37,6 +41,15 @@ export default function DesignPage() {
         <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
           <Preview />
 
+          <Section title="テーマ" sub="フォント・色・角・質感までまとめて変わります">
+            <Segmented value={family} onChange={setFamily} options={FAMILIES.map((f) => ({ v: f.id, label: f.label }))} />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
+              {keys(THEMES).filter((k) => THEMES[k].family === family).map((k) => <ThemeTile key={k} id={k} on={d.theme === k} onPress={() => set({ theme: k })} />)}
+            </View>
+          </Section>
+
+          {standard ? (
+          <>
           <Section title="背景">
             <Options value={d.bg} onChange={(bg) => set({ bg })} cols={5} items={keys(BGS).map((k) => ({ k, label: BGS[k].label, swatch: (
               <View style={{ width: '100%', aspectRatio: 1, borderRadius: 12, backgroundColor: BGS[k].canvas, borderWidth: hair, borderColor: t.line2, padding: 7, justifyContent: 'flex-end' }}>
@@ -58,6 +71,8 @@ export default function DesignPage() {
               <View style={{ width: '100%', height: 54, borderRadius: CORNERS[k].card, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line2, ...lift(t) }} />
             ) }))} />
           </Section>
+          </>
+          ) : <Txt size={11.5} tone="ink3" style={{ paddingHorizontal: 20, paddingTop: 12 }}>背景・メインの色・角・タイマーの色は、テーマで決まります（スタンダードを選ぶと自分で選べます）</Txt>}
 
           <Section title="マイページのカード">
             <Options value={d.card} onChange={(card) => set({ card })} cols={3} items={keys(CARDS).map((k) => ({ k, label: CARDS[k].label, swatch: <MiniCard look={k} /> }))} />
@@ -67,6 +82,7 @@ export default function DesignPage() {
             <Options value={d.streak} onChange={(streak) => set({ streak })} cols={3} items={keys(STREAKS).map((k) => ({ k, label: STREAKS[k].label, swatch: <MiniStreak look={k} /> }))} />
           </Section>
 
+          {standard ? (
           <Section title="タイマーの画面">
             <Options value={d.timer} onChange={(timer) => set({ timer })} cols={5} items={keys(TIMERS).map((k) => ({ k, label: TIMERS[k].label, swatch: (
               <View style={{ width: '100%', aspectRatio: 0.7, borderRadius: 10, backgroundColor: TIMERS[k].bg, alignItems: 'center', justifyContent: 'center' }}>
@@ -74,6 +90,7 @@ export default function DesignPage() {
               </View>
             ) }))} />
           </Section>
+          ) : null}
 
           <Txt size={11.5} tone="ink3" style={{ textAlign: 'center', paddingTop: 22, paddingHorizontal: 24 }}>ホームを右にスワイプすると、いつでもここに来られます。左にスワイプで戻ります</Txt>
         </ScrollView>
@@ -113,6 +130,32 @@ function Options<K extends string | number | symbol>({ value, onChange, items, c
         );
       })}
     </View>
+  );
+}
+
+/** A theme as a small picture: its canvas and texture, a card in its outline and corners, and text in its face. */
+function ThemeTile({ id, on, onPress }: { id: ThemeId; on: boolean; onPress: () => void }) {
+  const t = useT();
+  const th = themeOf(id);
+  const c = th.colors ?? { canvas: '#F4F5F8', surface: '#FFFFFF', ink: '#121417', ink3: '#848A96', sunken: '#EFF1F5' };
+  const r = th.corners ?? { card: 16, inner: 12 };
+  return (
+    <Press onPress={onPress} haptics={false} scale={0.96} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`テーマ ${th.label}`}
+      style={{ width: '31.5%', padding: 5, gap: 6, borderRadius: radius.inner + 4, backgroundColor: t.surface, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line, alignItems: 'center' }}>
+      <View style={{ width: '100%', aspectRatio: 0.82, borderRadius: radius.inner, backgroundColor: c.canvas, overflow: 'hidden', padding: 7, gap: 6 }}>
+        <TextureFill texture={th.texture ?? null} />
+        <View style={{ backgroundColor: c.surface, borderRadius: Math.min(r.card, 12), padding: 6, gap: 2, boxShadow: th.shadow?.[0] ?? '0px 1px 3px rgba(15,23,42,0.1)' }}>
+          <Txt size={8} color={c.ink3} style={{ fontFamily: faceFor(th.font, 8) }}>今日の勉強</Txt>
+          <Txt num size={15} w="700" lh={18} color={c.ink} style={{ fontFamily: faceFor(th.font, 20) }}>3:24</Txt>
+        </View>
+        <View style={{ height: 14, borderRadius: r.inner, backgroundColor: c.ink }} />
+        <View style={{ flexDirection: 'row', gap: 4 }}>
+          <View style={{ flex: 1, height: 14, borderRadius: r.inner, backgroundColor: c.sunken }} />
+          <View style={{ flex: 1, height: 14, borderRadius: r.inner, backgroundColor: c.sunken }} />
+        </View>
+      </View>
+      <Txt size={11} w={on ? '700' : '500'} tone={on ? 'ink' : 'ink2'} numberOfLines={1}>{th.label}</Txt>
+    </Press>
   );
 }
 

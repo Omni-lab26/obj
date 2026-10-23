@@ -87,14 +87,15 @@ export function Rolling({
   }
   const { dir, len0 } = roll;
 
-  // Digit width, measured once from a hidden "0" (tabular figures are all the same width).
+  // Digit width, measured from a hidden "0" (tabular figures are all the same width);
+  // measured again whenever it changes, e.g. when a theme switches the font.
   const [dw, setDw] = useState(0);
   const chars = [...roll.shown];
   const digits = chars.filter((c) => /\d/.test(c)).length;
   let di = 0;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-end' }} accessible accessibilityLabel={value}>
-      <Text style={[ts, { position: 'absolute', opacity: 0 }]} onLayout={(e) => !dw && setDw(e.nativeEvent.layout.width)}>0</Text>
+      <Text style={[ts, { position: 'absolute', opacity: 0 }]} onLayout={(e) => { const w = e.nativeEvent.layout.width; if (Math.abs(w - dw) > 0.5) setDw(w); }}>0</Text>
       {chars.map((ch, i) => {
         const fromRight = chars.length - i;
         if (!/\d/.test(ch)) {

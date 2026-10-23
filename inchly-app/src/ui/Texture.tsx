@@ -1,0 +1,27 @@
+import { Image, StyleSheet, View } from 'react-native';
+
+import type { Texture } from '../design';
+
+// The theme's texture (canvas weave, scan lines, pixels, polka dots), tiled
+// behind content. Absolutely placed and untouchable, so it never moves or
+// blocks anything.
+const TILES: Record<Texture, number> = {
+  oil: require('../../assets/textures/oil.png'),
+  'oil-dark': require('../../assets/textures/oil-dark.png'),
+  scan: require('../../assets/textures/scan.png'),
+  'scan-dark': require('../../assets/textures/scan-dark.png'),
+  pixel: require('../../assets/textures/pixel.png'),
+  'pixel-dark': require('../../assets/textures/pixel-dark.png'),
+  'dots-pink': require('../../assets/textures/dots-pink.png'),
+  'dots-brown': require('../../assets/textures/dots-brown.png'),
+  'dots-blue': require('../../assets/textures/dots-blue.png'),
+};
+
+export function TextureFill({ texture, radius = 0, opacity = 1 }: { texture: Texture | null; radius?: number; opacity?: number }) {
+  if (!texture) return null;
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius, overflow: 'hidden', opacity }]}>
+      <Image source={TILES[texture]} resizeMode="repeat" style={StyleSheet.absoluteFill} />
+    </View>
+  );
+}

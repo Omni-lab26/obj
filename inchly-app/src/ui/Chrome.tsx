@@ -7,6 +7,7 @@ import { Notif, NOTIFS, ROOM } from '../data';
 import { State, useStore } from '../store';
 import { hair, type, useT } from '../theme';
 import { IconBtn, Txt } from './base';
+import { TextureFill } from './Texture';
 
 /** Notices the settings let through: the kind is switched on and nobody in it is blocked. */
 export const allowed = (s: Pick<State, 'notify' | 'blocked'>) => (n: Notif) => {
@@ -34,7 +35,13 @@ export function useTabPad() {
 export function Screen({ children, style, bg }: { children: ReactNode; style?: ViewStyle; bg?: string }) {
   const t = useT();
   const insets = useSafeAreaInsets();
-  return <View style={[{ flex: 1, backgroundColor: bg ?? t.canvas, paddingTop: insets.top }, style]}>{children}</View>;
+  return (
+    <View style={[{ flex: 1, backgroundColor: bg ?? t.canvas, paddingTop: insets.top }, style]}>
+      {/* the theme's texture, behind everything (not on screens with their own color, like the timer) */}
+      {bg ? null : <TextureFill texture={t.texture} />}
+      {children}
+    </View>
+  );
 }
 
 /** Large title for tab roots. Each tab brings only the actions it needs (or none). */
