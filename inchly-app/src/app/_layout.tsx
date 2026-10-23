@@ -1,5 +1,13 @@
-import { BricolageGrotesque_500Medium, BricolageGrotesque_700Bold } from '@expo-google-fonts/bricolage-grotesque';
-import { DotGothic16_400Regular } from '@expo-google-fonts/dotgothic16';
+// one weight per import path, so only these files are bundled (not every weight of each family)
+import { BricolageGrotesque_500Medium } from '@expo-google-fonts/bricolage-grotesque/500Medium';
+import { BricolageGrotesque_800ExtraBold } from '@expo-google-fonts/bricolage-grotesque/800ExtraBold';
+import { DelaGothicOne_400Regular } from '@expo-google-fonts/dela-gothic-one/400Regular';
+import { DotGothic16_400Regular } from '@expo-google-fonts/dotgothic16/400Regular';
+import { IBMPlexMono_400Regular } from '@expo-google-fonts/ibm-plex-mono/400Regular';
+import { IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono/600SemiBold';
+import { Rajdhani_600SemiBold } from '@expo-google-fonts/rajdhani/600SemiBold';
+import { Rajdhani_700Bold } from '@expo-google-fonts/rajdhani/700Bold';
+import { Silkscreen_400Regular } from '@expo-google-fonts/silkscreen/400Regular';
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -7,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { MomentHost } from '@/screens/MomentHost';
 import { getState, hydrate, startStudy, useDayRollover, useReminders, useStore } from '@/store';
 import { bundledFontsLoaded, focus, useT } from '@/theme';
 import { SheetHost } from '@/ui/Sheet';
@@ -44,8 +53,11 @@ export default function RootLayout() {
   // We only wait for what is saved on this phone.
   const [ready, setReady] = useState(false);
   useEffect(() => { hydrate().then(() => setReady(true)); }, []);
-  // the themes' bundled faces (8bit's pixel face, ポップ's grotesque); until they load, themes use the system face
-  const [fonts] = useFonts({ DotGothic16_400Regular, BricolageGrotesque_500Medium, BricolageGrotesque_700Bold });
+  // the themes' bundled faces; until they load, themes use the system face
+  const [fonts] = useFonts({
+    DotGothic16_400Regular, BricolageGrotesque_500Medium, BricolageGrotesque_800ExtraBold, Silkscreen_400Regular,
+    Rajdhani_600SemiBold, Rajdhani_700Bold, DelaGothicOne_400Regular, IBMPlexMono_400Regular, IBMPlexMono_600SemiBold,
+  });
   useEffect(() => { if (fonts) bundledFontsLoaded(); }, [fonts]);
   const signedIn = useStore((s) => !!s.account);
   useFeed(ready && signedIn);
@@ -78,6 +90,7 @@ export default function RootLayout() {
         </Stack>
         <SheetHost />
         {room ? <StudyRoom /> : null}
+        <MomentHost />
         <ToastHost />
       </GestureHandlerRootView>
     </ThemeProvider>

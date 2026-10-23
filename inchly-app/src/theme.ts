@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { Platform, StyleSheet, TextStyle } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 
-import { BGS, CORNERS, designVersion, getDesign, INKS, onDesign, refreshDesign, Texture, themeOf, ThemeFont, TIMERS } from './design';
+import { BGS, CORNERS, designVersion, FAMILIES, getDesign, INKS, onDesign, Reaction, refreshDesign, Texture, themeOf, ThemeFont, TIMERS } from './design';
 
 // Light only. A cool blue-white canvas, white cards on a faint edge and a
 // short soft shadow, near-black ink for text and primary buttons. Green is for
@@ -37,6 +37,8 @@ const light = {
   texture: null as Texture | null,
   /** cards get the texture too (the painted themes) */
   cardTexture: false,
+  /** how things answer a tap (Press) */
+  press: 'scale' as Reaction,
 };
 
 export type Theme = typeof light;
@@ -46,11 +48,12 @@ let palette: Theme = light;
 function follow() {
   const d = getDesign();
   const th = themeOf(d.theme);
+  const press = th.press ?? FAMILIES.find((f) => f.id === th.family)?.press ?? 'scale';
   if (th.colors) {
     palette = { ...light, ...th.colors, dark: th.dark, shadow1: th.shadow?.[0] ?? light.shadow1, shadow2: th.shadow?.[1] ?? light.shadow2,
-      texture: th.texture ?? null, cardTexture: th.family === 'oil', scrim: th.dark ? 'rgba(0,0,0,0.5)' : light.scrim };
+      texture: th.texture ?? null, cardTexture: th.family === 'oil', scrim: th.dark ? 'rgba(0,0,0,0.5)' : light.scrim, press };
   } else {
-    palette = { ...light, canvas: BGS[d.bg].canvas, sunken: BGS[d.bg].sunken, ink: INKS[d.ink].ink };
+    palette = { ...light, canvas: BGS[d.bg].canvas, sunken: BGS[d.bg].sunken, ink: INKS[d.ink].ink, press };
   }
   // radius, focus and the typeface are plain values read during render;
   // components that read them also read the theme, so they re-render with them
@@ -95,11 +98,25 @@ const ROUNDED = Platform.select({ ios: 'HiraMaruProN-W4', android: undefined, de
 const SERIF = Platform.select({ ios: 'HiraMinProN-W3', android: 'serif', default: `"Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", "Noto Serif CJK JP", serif` });
 const SERIF_BOLD = Platform.select({ ios: 'HiraMinProN-W6', android: 'serif', default: SERIF });
 // Bundled faces (expo-font names). Japanese the grotesque lacks falls back to the system face.
-export const BUNDLED = { pixel: 'DotGothic16_400Regular', grotesk: 'BricolageGrotesque_500Medium', groteskBold: 'BricolageGrotesque_700Bold' };
+export const BUNDLED = {
+  pixel: 'DotGothic16_400Regular', // Japanese
+  grotesk: 'BricolageGrotesque_500Medium', groteskBold: 'BricolageGrotesque_800ExtraBold', // Latin only
+  label: 'Silkscreen_400Regular', // Latin capitals only, for tiny labels
+  condensed: 'Rajdhani_600SemiBold', condensedBold: 'Rajdhani_700Bold', // Latin only
+  heavy: 'DelaGothicOne_400Regular', // Japanese
+  plex: 'IBMPlexMono_400Regular', plexBold: 'IBMPlexMono_600SemiBold', // Latin only
+};
+export type BundledFace = keyof typeof BUNDLED;
 // On the web a face is a stack, so Japanese falls back to the same face as everywhere else (and keeps its width).
 const bundled = (name: string) => (web ? `"${name}", ${JA}` : name);
 let current: ThemeFont = 'system';
 let ready = false;
+/**
+ * A bundled face by name, once loaded (undefined until then, so the system
+ * face stands in). Theme apps read it while rendering; they also read the
+ * theme, so they render again when the faces arrive.
+ */
+export const bundledFace = (k: BundledFace): string | undefined => (ready ? bundled(BUNDLED[k]) : undefined);
 /** The root layout calls this once the bundled faces have loaded; until then themes use the system face. */
 export function bundledFontsLoaded() {
   if (ready) return;
@@ -115,6 +132,9 @@ export const faceFor = (f: ThemeFont, size: number) => {
     case 'pixel': if (ready) return bundled(BUNDLED.pixel); break;
     // the grotesque has no Japanese, so it sets only headlines and figures; body text keeps the system face
     case 'grotesk': if (ready && size >= 20) return bundled(BUNDLED.groteskBold); break;
+    // likewise Latin-only, or too heavy for small text: headlines and figures only
+    case 'condensed': if (ready && size >= 20) return bundled(BUNDLED.condensedBold); break;
+    case 'heavy': if (ready && size >= 20) return bundled(BUNDLED.heavy); break;
   }
   return size >= 20 ? font.display : font.text;
 };

@@ -1,8 +1,9 @@
 import * as Haptics from 'expo-haptics';
 import { ReactNode } from 'react';
 import { ActivityIndicator, Image, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
+import type { Reaction } from '../design';
 import { AVATAR } from '../photos';
 import { ease, face, hair, lift, radius, Theme, useT } from '../theme';
 import { Icon, IconName } from './Icon';
@@ -36,8 +37,9 @@ export function Txt({ size = 14, w = '400', tone = 'ink', color, num, lh, style,
   );
 }
 
-// ---------- press feedback: scale down on press (bencho: .2s, cubic-bezier(.3,.9,.4,1)) ----------
-type PressProps = Omit<PressableProps, 'style'> & { style?: StyleProp<ViewStyle>; scale?: number; children?: ReactNode; haptics?: boolean };
+// ---------- press feedback: each theme answers a tap its own way (design.ts Reaction) ----------
+type PressProps = Omit<PressableProps, 'style'> & { style?: StyleProp<ViewStyle>; scale?: number; children?: ReactNode; haptics?: boolean;
+  /** answer differently from the theme (a theme app's own objects) */ react?: Reaction };
 // Layout keys that must live on the outer Pressable, or flex/margins would apply inside it.
 const OUTER = ['flex', 'flexGrow', 'flexShrink', 'flexBasis', 'alignSelf', 'margin', 'marginTop', 'marginBottom', 'marginLeft', 'marginRight', 'marginHorizontal', 'marginVertical',
   'position', 'top', 'left', 'right', 'bottom', 'zIndex'] as const;
@@ -50,19 +52,73 @@ function split(style: StyleProp<ViewStyle>) {
   return { outer: outer as ViewStyle, inner: flat as ViewStyle };
 }
 
-export function Press({ style, scale = 0.96, children, onPressIn, onPressOut, onPress, haptics = true, disabled, ...rest }: PressProps) {
-  const s = useSharedValue(1);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
+const STEPS = Easing.steps(3);
+/**
+ * Something you tap. `scale` is how much it gives (0.86 for a small icon, 0.98
+ * for a big card); the theme decides how it gives — shrinking, sinking,
+ * flickering, wobbling … (bencho's press: .2s, cubic-bezier(.3,.9,.4,1)).
+ * Only movement and opacity, so nothing around it shifts.
+ */
+export function Press({ style, scale = 0.96, react, children, onPressIn, onPressOut, onPress, haptics = true, disabled, ...rest }: PressProps) {
+  const t = useT();
+  const kind = react ?? t.press;
+  const p = useSharedValue(0); // 0 at rest, 1 held down
+  const f = useSharedValue(1); // the flicker's brightness
   const { outer, inner } = split(style);
+  const give = 1 - scale;
+  // a disabled one is faded; otherwise it keeps the opacity it was given
+  const dim = disabled ? 0.4 : typeof inner.opacity === 'number' ? inner.opacity : 1;
+  const a = useAnimatedStyle(() => {
+    const v = p.value;
+    switch (kind) {
+      case 'sink': return { opacity: dim, transform: [{ translateY: 3 * v }] };
+      case 'misprint': return { opacity: dim * (1 - 0.16 * v), transform: [{ translateX: 1.5 * v }, { translateY: v }] };
+      case 'squish': return { opacity: dim, transform: [{ scaleX: 1 + give * 0.8 * v }, { scaleY: 1 - give * 1.4 * v }] };
+      case 'soft': return { opacity: dim, transform: [{ scale: 1 - give * 0.5 * v }] };
+      case 'flicker': return { opacity: dim * f.value, transform: [{ scale: 1 - give * 0.5 * v }] };
+      case 'select': return { opacity: dim, transform: [{ scale: 1 }] }; // the box says it
+      default: return { opacity: dim, transform: [{ scale: 1 - give * v }] }; // scale, step, bounce
+    }
+  }, [kind, give, dim]);
+  const box = useAnimatedStyle(() => ({ opacity: p.value }));
+  const down = () => {
+    switch (kind) {
+      case 'step': p.set(withTiming(1, { duration: 150, easing: STEPS })); break;
+      case 'sink': case 'misprint': case 'select': p.set(withTiming(1, { duration: 60 })); break;
+      case 'soft': p.set(withTiming(1, { duration: 240, easing: ease.out })); break;
+      case 'flicker':
+        p.set(withTiming(1, { duration: 90 }));
+        f.set(withSequence(withTiming(0.3, { duration: 40 }), withTiming(1, { duration: 40 }), withTiming(0.55, { duration: 50 }), withTiming(1, { duration: 70 })));
+        break;
+      default: p.set(withTiming(1, { duration: 120, easing: ease.press }));
+    }
+  };
+  const up = () => {
+    switch (kind) {
+      case 'squish': p.set(withSpring(0, { duration: 620, dampingRatio: 0.3 })); break;
+      case 'bounce': p.set(withSpring(0, { duration: 520, dampingRatio: 0.42 })); break;
+      case 'step': p.set(withTiming(0, { duration: 180, easing: STEPS })); break;
+      case 'sink': case 'misprint': p.set(withTiming(0, { duration: 90 })); break;
+      case 'select': p.set(withTiming(0, { duration: 160 })); break;
+      case 'soft': p.set(withTiming(0, { duration: 460, easing: ease.out })); break;
+      default: p.set(withTiming(0, { duration: 240, easing: ease.spring }));
+    }
+  };
   return (
     <Pressable
       {...rest}
       style={outer}
       disabled={disabled}
-      onPressIn={(e) => { s.set(withTiming(scale, { duration: 120, easing: ease.press })); onPressIn?.(e); }}
-      onPressOut={(e) => { s.set(withTiming(1, { duration: 240, easing: ease.spring })); onPressOut?.(e); }}
+      onPressIn={(e) => { down(); onPressIn?.(e); }}
+      onPressOut={(e) => { up(); onPressOut?.(e); }}
       onPress={(e) => { if (haptics) haptic.tap(); onPress?.(e); }}>
-      <Animated.View style={[inner, a, disabled && { opacity: 0.4 }]}>{children}</Animated.View>
+      <Animated.View style={[inner, a]}>
+        {children}
+        {kind === 'select' ? (
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: typeof inner.borderRadius === 'number' ? inner.borderRadius : 0,
+            borderWidth: 1, borderStyle: 'dashed', borderColor: t.ink, backgroundColor: t.dark ? 'rgba(255,255,255,0.08)' : 'rgba(16,16,22,0.06)' }, box]} />
+        ) : null}
+      </Animated.View>
     </Pressable>
   );
 }

@@ -5,6 +5,7 @@ import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withDelay, withTimi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { hm, pad, subj } from '@/data';
+import { celebrate } from '@/moments';
 import { commitRecord, elapsedOf, getState, useStore } from '@/store';
 import { ease, hair, lift, radius, useT } from '@/theme';
 import { Btn, Card, Empty, haptic, Press, SubjCoin, Txt } from '@/ui/base';
@@ -81,6 +82,7 @@ export default function Record() {
       const notice = reminded === null ? '' : reminded ? `${when}にお知らせします` : canNotify ? '通知が許可されていないので、お知らせは届きません' : '';
       const sub = [`+${exp} EXP`, ticket ? '7日連続！休み券を1枚もらいました' : '', notice].filter(Boolean).join(' · ');
       toast(levelUp ? `レベルアップ！ Lv.${levelUp}` : `${sj.name} ${m}分を記録しました`, levelUp ? `${sj.name} ${m}分を記録 · ${sub}` : sub);
+      celebrate({ kind: 'record', subject: sid, min: m, exp, level: levelUp, ticket });
     }, 1100); // long enough to see the stamp land
   };
 

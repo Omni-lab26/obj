@@ -8,8 +8,9 @@ import { cancelReminder, configureNotifications, notificationsAllowed, replaceRe
 import { deadlineReminders, goalReminderAt } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
 import { Block } from './lib/timetable';
-import { applyDesign, DEFAULT_DESIGN, Design } from './design';
+import { applyDesign, DEFAULT_DESIGN, Design, themeId } from './design';
 import { Done, expOf, levelOf, TODO_CAP, TODO_EXP } from './lib/exp';
+import { celebrate } from './moments';
 import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 
 // One small global store, saved on the device (see persist below). Updates
@@ -215,6 +216,7 @@ export function startStudy(id?: string) {
     return;
   }
   setState({ running: true, paused: false, startedAt: Date.now(), base: 0, subj: next, studyTodo: null });
+  if (!s.running) celebrate({ kind: 'start', subject: next });
 }
 /**
  * Start from something planned: a timetable block or a ToDo. The subject is
@@ -229,6 +231,7 @@ export function startFrom(x: { s: string; todoId?: string; min?: number }): bool
     running: true, paused: false, startedAt: Date.now(), base: s.running && x.s === s.subj ? elapsedOf(s) : 0,
     subj: x.s, studyTodo: x.todoId ?? null, ...(x.min ? { targetMin: x.min } : {}),
   });
+  if (!s.running) celebrate({ kind: 'start', subject: x.s });
   return true;
 }
 export function setTimerMode(m: TimerMode) {
@@ -377,7 +380,9 @@ export function toggleTodo(id: string): number {
   const today = dateKey();
   const before = s.todoLog.filter((x) => x.date === today).length;
   updateTodo(id, { d: !td.d });
-  return !td.d && before < TODO_CAP ? TODO_EXP : 0;
+  const exp = !td.d && before < TODO_CAP ? TODO_EXP : 0;
+  if (!td.d) celebrate({ kind: 'todo', exp, all: state.todos.every((x) => x.d) });
+  return exp;
 }
 export function removeTodo(id: string) {
   setState((s) => ({ todos: s.todos.filter((x) => x.id !== id) }));
@@ -536,7 +541,10 @@ export function migrate(saved: Record<string, unknown>, now: Date = new Date()):
   }
   // settings saved before a field existed get its default
   if (out.chart && typeof out.chart === 'object') out.chart = { ...INITIAL.chart, ...(out.chart as object) };
-  if (out.design && typeof out.design === 'object') out.design = { ...INITIAL.design, ...(out.design as object) };
+  if (out.design && typeof out.design === 'object') {
+    const d = { ...INITIAL.design, ...(out.design as object) } as Design;
+    out.design = { ...d, theme: themeId(d.theme) }; // a replaced theme becomes its successor
+  }
   // coins, the store and missions are gone; drop what older saves kept for them
   for (const k of ['coins', 'boost', 'owned', 'claimed', 'eventsClaimed']) delete out[k];
   delete out.v;

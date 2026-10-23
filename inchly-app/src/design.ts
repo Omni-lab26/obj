@@ -49,10 +49,18 @@ export const TIMERS = {
  * textures sit behind the content, and text keeps its size and line height.
  * 'standard' uses the 背景 / メインの色 / 角 picks below instead.
  */
-export type ThemeFont = 'system' | 'mono' | 'pixel' | 'rounded' | 'serif' | 'grotesk';
-export type Texture = 'oil' | 'oil-dark' | 'scan' | 'scan-dark' | 'pixel' | 'pixel-dark' | 'dots-pink' | 'dots-brown' | 'dots-blue';
+export type ThemeFont = 'system' | 'mono' | 'pixel' | 'rounded' | 'serif' | 'grotesk' | 'condensed' | 'heavy';
+/**
+ * How things answer a tap (ui/base Press): shrink a little (scale), sink into
+ * their shadow (sink), flicker like a bad neon tube (flicker), wobble like
+ * jelly (squish), shrink in hard steps (step), slip out of register like a
+ * misprint (misprint), pop back (bounce), give slowly (soft), or show a
+ * selection box (select). Movement and opacity only, so nothing shifts.
+ */
+export type Reaction = 'scale' | 'sink' | 'flicker' | 'squish' | 'step' | 'misprint' | 'bounce' | 'soft' | 'select';
+export type Texture = 'oil' | 'oil-dark' | 'scan' | 'scan-dark' | 'pixel' | 'pixel-dark' | 'dots-pink' | 'dots-brown' | 'dots-blue' | 'splat' | 'warp' | 'riso';
 export type ThemeDef = {
-  label: string; family: 'standard' | 'digital' | '8bit' | 'kawaii' | 'oil' | 'pop'; dark: boolean;
+  label: string; family: 'standard' | 'digital' | '8bit' | 'kawaii' | 'oil' | 'app'; dark: boolean;
   colors?: { canvas: string; surface: string; sunken: string; line: string; line2: string; ink: string; ink2: string; ink3: string; onInk: string };
   corners?: { card: number; inner: number };
   font: ThemeFont;
@@ -61,15 +69,17 @@ export type ThemeDef = {
   texture?: Texture;
   /** the timer's background, when the theme has its own */
   timer?: string;
+  /** how things answer a tap; otherwise the family's (FAMILIES) */
+  press?: Reaction;
 };
 export const FAMILIES = [
-  { id: 'standard', label: '基本' },
-  { id: 'digital', label: 'デジタル' },
-  { id: '8bit', label: '8bit' },
-  { id: 'kawaii', label: 'かわいい' },
-  { id: 'oil', label: '油絵' },
-  { id: 'pop', label: 'ポップ' },
-] as const;
+  { id: 'standard', label: '基本', press: 'scale' },
+  { id: 'digital', label: 'デジタル', press: 'flicker' },
+  { id: '8bit', label: '8bit', press: 'step' },
+  { id: 'kawaii', label: 'かわいい', press: 'bounce' },
+  { id: 'oil', label: '油絵', press: 'soft' },
+  { id: 'app', label: 'まるごと', press: 'scale' },
+] as const satisfies readonly { id: ThemeDef['family']; label: string; press: Reaction }[];
 const ring = (w: number, c: string) => `0px 0px 0px ${w}px ${c}`;
 export const THEMES = {
   standard: { label: 'スタンダード', family: 'standard', dark: false, font: 'system' },
@@ -137,26 +147,40 @@ export const THEMES = {
     colors: { canvas: '#DCE6E4', surface: '#EEF2EF', sunken: '#D2DEDC', line: 'rgba(37,58,78,0.14)', line2: 'rgba(37,58,78,0.28)', ink: '#253A4E', ink2: '#4F6577', ink3: '#7D8F9C', onInk: '#EEF2EF' },
     corners: { card: 8, inner: 6 }, shadow: [`${ring(1.5, 'rgba(37,58,78,0.2)')}, 2px 3px 0px rgba(37,58,78,0.16), 0px 8px 18px rgba(37,58,78,0.08)`, `${ring(1.5, 'rgba(37,58,78,0.26)')}, 3px 4px 0px rgba(37,58,78,0.2)`],
   },
-  // ポップ: after piixpal.dvkk.dev — warm paper, 2px ink outlines, a solid
-  // shadow dropped straight down, a grotesque face, and lime as the one accent
-  pop: {
-    label: 'クリーム', family: 'pop', dark: false, font: 'grotesk', timer: '#17121F',
+  // まるごと: each of these is drawn as its own app — its own home, timer and
+  // tab bar (src/themes/<id>/). The values here dress the screens they share
+  // with every theme (study page, records, settings …).
+  piix: {
+    label: 'ピクセル箱', family: 'app', dark: false, font: 'grotesk', timer: '#17121F', press: 'sink',
     colors: { canvas: '#F3EEE3', surface: '#FBF8F1', sunken: '#EBE4D4', line: '#D8CFBD', line2: '#C9BFAB', ink: '#17121F', ink2: '#2B2436', ink3: '#6C6477', onInk: '#FBF8F1' },
     corners: { card: 22, inner: 12 }, shadow: [`${ring(2, '#17121F')}, 0px 4px 0px 0px #17121F`, `${ring(2, '#17121F')}, 8px 8px 0px 0px #A8D81C`],
   },
-  popWhite: {
-    label: 'ホワイト', family: 'pop', dark: false, font: 'grotesk', timer: '#17121F',
-    colors: { canvas: '#FFFFFF', surface: '#FFFFFF', sunken: '#F3F3F1', line: '#E7E5E0', line2: '#D3D0C9', ink: '#17121F', ink2: '#2B2436', ink3: '#6C6477', onInk: '#FFFFFF' },
-    corners: { card: 22, inner: 12 }, shadow: [`${ring(2, '#17121F')}, 0px 4px 0px 0px #17121F`, `${ring(2, '#17121F')}, 8px 8px 0px 0px #6B4CFF`],
+  neon: {
+    label: 'ネオン', family: 'app', dark: true, font: 'condensed', texture: 'scan-dark', timer: '#050505', press: 'flicker',
+    colors: { canvas: '#0A0A0A', surface: '#121212', sunken: '#1B1B1B', line: 'rgba(0,240,255,0.16)', line2: 'rgba(0,240,255,0.34)', ink: '#F2F2F2', ink2: '#BDBDBD', ink3: '#7E7E7E', onInk: '#0A0A0A' },
+    corners: { card: 0, inner: 0 }, shadow: [`${ring(1, 'rgba(0,240,255,0.55)')}`, `${ring(1, '#00F0FF')}, 4px 4px 0px #FCEE0A`],
   },
-  popNight: {
-    label: 'ナイト', family: 'pop', dark: true, font: 'grotesk', timer: '#0E0C13',
-    colors: { canvas: '#0E0C13', surface: '#16131D', sunken: '#2A2534', line: '#2B2635', line2: '#3B3547', ink: '#F2EEF8', ink2: '#CDC6DA', ink3: '#8E869C', onInk: '#17121F' },
-    corners: { card: 22, inner: 12 }, shadow: [`${ring(2, '#F2EEF8')}, 0px 4px 0px 0px #C6F432`, `${ring(2, '#F2EEF8')}, 8px 8px 0px 0px #C6F432`],
+  ink: {
+    label: 'インク', family: 'app', dark: true, font: 'heavy', texture: 'splat', timer: '#161616', press: 'squish',
+    colors: { canvas: '#1E1E1E', surface: '#2A2A2A', sunken: '#343434', line: 'rgba(255,255,255,0.08)', line2: 'rgba(255,255,255,0.18)', ink: '#FFFFFF', ink2: '#D2D2D2', ink3: '#9A9A9A', onInk: '#1E1E1E' },
+    corners: { card: 18, inner: 14 }, shadow: ['3px 4px 0px rgba(0,0,0,0.45)', '4px 5px 0px #FF3E8A'],
+  },
+  grid: {
+    label: '方眼', family: 'app', dark: false, font: 'mono', texture: 'warp', timer: '#101016', press: 'select',
+    colors: { canvas: '#F3F3FF', surface: '#F8F8FF', sunken: '#E8E8F6', line: 'rgba(16,16,22,0.12)', line2: 'rgba(16,16,22,0.3)', ink: '#101016', ink2: '#3C3C48', ink3: '#6E6E7C', onInk: '#F3F3FF' },
+    corners: { card: 6, inner: 999 }, shadow: [ring(1, '#565656'), ring(1, '#101016')],
+  },
+  riso: {
+    label: 'ガリ版', family: 'app', dark: false, font: 'serif', texture: 'riso', timer: '#2E2149', press: 'misprint',
+    colors: { canvas: '#E5E0CF', surface: '#EAE5D6', sunken: '#DCD5C1', line: 'rgba(75,56,118,0.28)', line2: 'rgba(75,56,118,0.55)', ink: '#4B3876', ink2: '#5E4C88', ink3: '#857AA0', onInk: '#E5E0CF' },
+    corners: { card: 0, inner: 2 }, shadow: [ring(1, '#4B3876'), `${ring(1, '#4B3876')}, 3px 3px 0px #4B3876`],
   },
 } satisfies Record<string, ThemeDef>;
 export type ThemeId = keyof typeof THEMES;
-export const themeOf = (id: ThemeId): ThemeDef => THEMES[id] ?? THEMES.standard;
+/** Themes that were replaced, and what took their place. */
+const RENAMED: Record<string, ThemeId> = { pop: 'piix', popWhite: 'piix', popNight: 'piix' };
+export const themeId = (id: string): ThemeId => (id in THEMES ? (id as ThemeId) : RENAMED[id] ?? 'standard');
+export const themeOf = (id: ThemeId): ThemeDef => THEMES[themeId(id)];
 
 export type Design = { theme: ThemeId; bg: keyof typeof BGS; ink: keyof typeof INKS; corners: keyof typeof CORNERS; card: keyof typeof CARDS; streak: keyof typeof STREAKS; timer: keyof typeof TIMERS };
 export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'black', corners: 'm', card: 'pearl', streak: 'black', timer: 'night' };

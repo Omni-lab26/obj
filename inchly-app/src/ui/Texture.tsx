@@ -15,7 +15,12 @@ const TILES: Record<Texture, number> = {
   'dots-pink': require('../../assets/textures/dots-pink.png'),
   'dots-brown': require('../../assets/textures/dots-brown.png'),
   'dots-blue': require('../../assets/textures/dots-blue.png'),
+  splat: require('../../assets/textures/splat.png'),
+  warp: require('../../assets/textures/warp.png'),
+  riso: require('../../assets/textures/riso.png'),
 };
+/** White halftone dots, tiled over a colored fill (the ガリ版 theme's bars). */
+export const HALFTONE: number = require('../../assets/textures/halftone.png');
 
 export function TextureFill({ texture, radius = 0, opacity = 1 }: { texture: Texture | null; radius?: number; opacity?: number }) {
   if (!texture) return null;
