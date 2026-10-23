@@ -3,7 +3,7 @@ import { AppState } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { demoHistory, GROUPS, Group, Post, POSTS, subj } from './data';
+import { AreaId, demoHistory, GROUPS, Group, Post, POSTS, setSubjects, SUBJ, subj, SUBJECT_COLORS, Subject } from './data';
 import { cancelReminder, configureNotifications, notificationsAllowed, replaceReminders, scheduleReminder } from './lib/notify';
 import { deadlineReminders, goalReminderAt } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
@@ -24,8 +24,9 @@ export type LiveScope = 'all' | 'followers' | 'none';
 export type DmFrom = 'following' | 'groups' | 'all';
 export type ExtraTab = 'events' | 'exams' | 'me';
 export type ChartKind = 'bar' | 'stack' | 'line';
-export type ChartPalette = 'ink' | 'blue' | 'orange' | 'grape';
-export type Chart = { range: 'day' | 'week'; kind: ChartKind; palette: ChartPalette };
+export type ChartPalette = 'ink' | 'blue' | 'orange' | 'grape' | 'navy' | 'teal' | 'rose' | 'amber';
+/** detail: one color per subject, or subjects added up by 教科. */
+export type Chart = { range: 'day' | 'week'; kind: ChartKind; palette: ChartPalette; detail: 'subject' | 'area' };
 /** How the timer counts: up from zero (what gets recorded), or down to a planned length. */
 export type TimerMode = 'up' | 'goal';
 export type { Block };
@@ -64,6 +65,7 @@ export type State = {
   restDays: string[]; // days a rest ticket covered
   extraTab: ExtraTab | null; // what the right-hand tab became; null = not chosen yet
   chart: Chart; // how home draws the study-time graph
+  subjects: Subject[]; // what you study, in your order; hidden ones stay for old records
   timetable: Block[]; // study blocks planned by the clock, repeating weekly
   timerMode: TimerMode;
   studyTodo: string | null; // the ToDo this session works on (picked on the record page)
@@ -107,7 +109,8 @@ export const INITIAL: State = {
   restTickets: 1, // one to start with, so a single missed day doesn't undo the first week
   restDays: [],
   extraTab: null,
-  chart: { range: 'day', kind: 'stack', palette: 'ink' },
+  chart: { range: 'day', kind: 'stack', palette: 'ink', detail: 'subject' },
+  subjects: SUBJ,
   timetable: [],
   timerMode: 'up',
   studyTodo: null,
@@ -165,7 +168,10 @@ const subscribe = (l: () => void) => {
   listeners.add(l);
   return () => listeners.delete(l);
 };
-const derive = (s: State): State => ({ ...s, todayMin: todayMinutes(s.sessions), showLive: s.liveScope !== 'none' });
+const derive = (s: State): State => {
+  setSubjects(s.subjects); // so subj() anywhere sees renames and new subjects
+  return { ...s, todayMin: todayMinutes(s.sessions), showLive: s.liveScope !== 'none' };
+};
 
 export const getState = () => state;
 export function setState(patch: Partial<State> | ((s: State) => Partial<State>)) {
@@ -252,6 +258,50 @@ export function setSubject(id: string) {
 }
 export function setChart(patch: Partial<Chart>) {
   setState((s) => ({ chart: { ...s.chart, ...patch } }));
+}
+
+// ---------- subjects ----------
+/** Subjects you can pick (not hidden), in your order. */
+export const useSubjects = () => {
+  const list = useStore((s) => s.subjects);
+  return useMemo(() => list.filter((x) => !x.hidden), [list]);
+};
+/** Adds a subject; its color is the first one not taken yet. Returns its id. */
+export function addSubject(x: { name: string; area: AreaId; c?: string }): string {
+  const s = state;
+  const used = new Set(s.subjects.map((y) => y.c));
+  const id = newId('sj');
+  const c = x.c ?? SUBJECT_COLORS.find((k) => !used.has(k)) ?? SUBJECT_COLORS[s.subjects.length % SUBJECT_COLORS.length];
+  setState({ subjects: [...s.subjects, { id, name: x.name.trim(), area: x.area, c }] });
+  return id;
+}
+export function updateSubject(id: string, patch: Partial<Omit<Subject, 'id'>>) {
+  setState((s) => ({ subjects: s.subjects.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
+}
+/**
+ * Removes a subject. One with records is hidden instead, so old days keep
+ * their name and color. Never leaves you with no subject to pick.
+ */
+export function removeSubject(id: string): 'removed' | 'hidden' | 'last' {
+  const s = state;
+  if (s.subjects.filter((x) => !x.hidden && x.id !== id).length === 0) return 'last';
+  const used = s.sessions.some((r) => r.s === id) || s.timetable.some((b) => b.s === id) || s.todos.some((t) => t.s === id);
+  const fallback = s.subjects.find((x) => !x.hidden && x.id !== id)!.id;
+  setState({
+    subjects: used ? s.subjects.map((x) => (x.id === id ? { ...x, hidden: true } : x)) : s.subjects.filter((x) => x.id !== id),
+    subj: s.subj === id ? fallback : s.subj,
+  });
+  return used ? 'hidden' : 'removed';
+}
+export function moveSubject(id: string, by: -1 | 1) {
+  setState((s) => {
+    const i = s.subjects.findIndex((x) => x.id === id);
+    const j = i + by;
+    if (i < 0 || j < 0 || j >= s.subjects.length) return {};
+    const list = [...s.subjects];
+    [list[i], list[j]] = [list[j], list[i]];
+    return { subjects: list };
+  });
 }
 
 /** A rest ticket for every 7 days in a row, holding at most this many. */
@@ -477,6 +527,8 @@ export function migrate(saved: Record<string, unknown>, now: Date = new Date()):
     out.lastDay = today;
     delete out.syncedAt;
   }
+  // settings saved before a field existed get its default
+  if (out.chart && typeof out.chart === 'object') out.chart = { ...INITIAL.chart, ...(out.chart as object) };
   // coins, the store and missions are gone; drop what older saves kept for them
   for (const k of ['coins', 'boost', 'owned', 'claimed', 'eventsClaimed']) delete out[k];
   delete out.v;

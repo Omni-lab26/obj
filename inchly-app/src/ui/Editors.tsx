@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { ROOM, SUBJ } from '../data';
+import { ROOM, subj } from '../data';
 import { addDays, dateKey, daysUntil as untilDate, jpDate, parseKey } from '../lib/time';
 import { Block, toMin } from '../lib/timetable';
-import { addDeadline, addSession, addTodo, block, getState, moveTodo, removeBlock, removeDeadline, removeSession, removeTodo, saveBlock, Session, Todo, toggleFollow, toggleIn, updateSession, updateTodo, useStore } from '../store';
+import { addDeadline, addSession, addTodo, block, getState, moveTodo, removeBlock, removeDeadline, removeSession, removeTodo, saveBlock, Session, Todo, toggleFollow, toggleIn, updateSession, updateTodo, useStore, useSubjects } from '../store';
 import { hair, useT } from '../theme';
 import { Avatar, Btn, haptic, Press, Txt } from './base';
 import { Choice, Field, Label, RadioCards, Stepper } from './Form';
@@ -15,13 +15,15 @@ import { toast } from './Toast';
 // ToDo list and deadlines, and act on a person (follow, block, report).
 
 const clockNow = () => { const d = new Date(); return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
-const subjOpts = SUBJ.map((x) => ({ v: x.id, label: x.name }));
+/** Subjects to pick from, in your order. */
+const useSubjOpts = () => useSubjects().map((x) => ({ v: x.id, label: x.name }));
 
 // ---------- a session: add by hand, or fix one ----------
 export function sessionSheet(existing?: Session) {
   openSheet((close) => <SessionForm close={close} existing={existing} />);
 }
 function SessionForm({ close, existing }: { close: () => void; existing?: Session }) {
+  const subjOpts = useSubjOpts();
   const [s, setS] = useState(existing?.s ?? getState().subj);
   const [min, setMin] = useState(existing?.min ?? 30);
   const today = dateKey();
@@ -35,7 +37,7 @@ function SessionForm({ close, existing }: { close: () => void; existing?: Sessio
     else addSession({ s, min, date, at: date === today ? clockNow() : '—', note: note.trim() || undefined, manual: true });
     haptic.success();
     close();
-    toast(existing ? '記録を直しました' : `${SUBJ.find((x) => x.id === s)?.name} ${min}分を追加しました`, date === today ? '今日の合計に入りました' : `${date === yesterday ? '昨日' : jpDate(parseKey(date), false)}の記録に入りました`);
+    toast(existing ? '記録を直しました' : `${subj(s).name} ${min}分を追加しました`, date === today ? '今日の合計に入りました' : `${date === yesterday ? '昨日' : jpDate(parseKey(date), false)}の記録に入りました`);
   };
   return (
     <View style={{ gap: 18 }}>
@@ -69,6 +71,7 @@ export function todoSheet(existing?: Todo) {
   openSheet((close) => <TodoForm close={close} existing={existing} />);
 }
 function TodoForm({ close, existing }: { close: () => void; existing?: Todo }) {
+  const subjOpts = useSubjOpts();
   const deadlines = useStore((x) => x.deadlines);
   const [text, setText] = useState(existing?.t ?? '');
   const [s, setS] = useState(existing?.s ?? getState().subj);
@@ -114,6 +117,7 @@ export function blockSheet(existing?: Block) {
   openSheet((close) => <BlockForm close={close} existing={existing} />);
 }
 function BlockForm({ close, existing }: { close: () => void; existing?: Block }) {
+  const subjOpts = useSubjOpts();
   const t = useT();
   const startMin = existing ? toMin(existing.start) : 19 * 60;
   const [s, setS] = useState(existing?.s ?? getState().subj);

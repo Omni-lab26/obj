@@ -112,6 +112,20 @@ export default function Settings() {
           <Row label="目標まであと少し" sub="あと15分のとき" right={<Toggle on={s.notify.goal} onChange={(v) => setState({ notify: { ...s.notify, goal: v } })} label="目標まであと少し" />} />
         </Section>
 
+        <Section title="科目">
+          <Press onPress={() => router.push('/subjects')} scale={0.99} accessibilityRole="button" accessibilityLabel="科目と色を編集"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10 }}>
+            <View style={{ flexDirection: 'row' }}>
+              {s.subjects.filter((x) => !x.hidden).slice(0, 6).map((x, i) => <View key={x.id} style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: x.c, marginLeft: i ? -5 : 0, borderWidth: 1.5, borderColor: t.surface }} />)}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Txt size={14} w="500">科目と色</Txt>
+              <Txt size={12} tone="ink3" numberOfLines={1}>{s.subjects.filter((x) => !x.hidden).map((x) => x.name).join('・')}</Txt>
+            </View>
+            <Txt size={16} tone="ink3">›</Txt>
+          </Press>
+        </Section>
+
         <Section title="1日の目標">
           <View style={{ paddingVertical: 12 }}>
             <Choice value={String(s.goalMin)} onChange={(v) => setState({ goalMin: Number(v) })} options={[60, 120, 180, 240, 300].map((m) => ({ v: String(m), label: `${m / 60}時間` }))} />

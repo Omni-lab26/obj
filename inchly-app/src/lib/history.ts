@@ -4,9 +4,10 @@ import { addDays, dateKey, dayKeyAgo, parseKey, streak } from './time';
 // Pure functions over the session list, cached per list so a screen that asks
 // many questions of the same history does the grouping once.
 
-export const SUBJECT_IDS = ['en', 'ma', 'ph', 'ch', 'ja'] as const;
 export type Rec = { s: string; min: number; date: string };
-export type Day = { min: number; parts: number[] }; // parts in SUBJECT_IDS order
+/** Minutes by subject id. */
+export type Parts = Record<string, number>;
+export type Day = { min: number; parts: Parts };
 
 const cache = new WeakMap<readonly Rec[], Map<string, Day>>();
 export function byDay(recs: readonly Rec[]): Map<string, Day> {
@@ -14,17 +15,16 @@ export function byDay(recs: readonly Rec[]): Map<string, Day> {
   if (hit) return hit;
   const out = new Map<string, Day>();
   for (const r of recs) {
-    const d = out.get(r.date) ?? { min: 0, parts: [0, 0, 0, 0, 0] };
-    const k = SUBJECT_IDS.indexOf(r.s as (typeof SUBJECT_IDS)[number]);
+    const d = out.get(r.date) ?? { min: 0, parts: {} };
     d.min += r.min;
-    if (k >= 0) d.parts[k] += r.min;
+    d.parts[r.s] = (d.parts[r.s] ?? 0) + r.min;
     out.set(r.date, d);
   }
   cache.set(recs, out);
   return out;
 }
 
-const EMPTY: Day = { min: 0, parts: [0, 0, 0, 0, 0] };
+const EMPTY: Day = { min: 0, parts: {} };
 
 /** The day `daysAgo` before now. */
 export const dayOf = (recs: readonly Rec[], daysAgo: number, now: Date = new Date()): Day => byDay(recs).get(dayKeyAgo(daysAgo, now)) ?? EMPTY;
@@ -57,22 +57,21 @@ export function streakOf(recs: readonly Rec[], restDays: readonly string[] = [],
 export const studiedOn = (recs: readonly Rec[], daysAgo: number, now: Date = new Date()) => dayOf(recs, daysAgo, now).min > 0;
 
 /** Minutes in each clock hour of a day, by subject. */
-export type Hours = { min: number[]; parts: number[][] }; // 24 entries; parts in SUBJECT_IDS order
+export type Hours = { min: number[]; parts: Parts[] }; // 24 entries
 
 const clock = (at: string) => {
   const [h, m] = at.split(':').map(Number);
   return Number.isFinite(h) ? h * 60 + (m || 0) : NaN;
 };
-const emptyHours = (): Hours => ({ min: Array.from({ length: 24 }, () => 0), parts: Array.from({ length: 24 }, () => [0, 0, 0, 0, 0]) });
+const emptyHours = (): Hours => ({ min: Array.from({ length: 24 }, () => 0), parts: Array.from({ length: 24 }, () => ({})) });
 
 /** Add the span [from, to) minutes after midnight onto the hours it touches. */
 function spread(h: Hours, from: number, to: number, s: string) {
-  const k = SUBJECT_IDS.indexOf(s as (typeof SUBJECT_IDS)[number]);
   for (let i = Math.max(0, Math.floor(from / 60)); i < 24 && i * 60 < to; i++) {
     const m = Math.min(to, (i + 1) * 60) - Math.max(from, i * 60);
     if (m <= 0) continue;
     h.min[i] += m;
-    if (k >= 0) h.parts[i][k] += m;
+    h.parts[i][s] = (h.parts[i][s] ?? 0) + m;
   }
 }
 
@@ -97,7 +96,7 @@ export function hourlyOf(recs: readonly (Rec & { at?: string })[], date: string)
 /** The same hours with a live, unrecorded span (a running timer) added on. */
 export function withLive(h: Hours, startMs: number, endMs: number, date: string, s: string): Hours {
   const day = parseKey(date).getTime();
-  const out = { min: [...h.min], parts: h.parts.map((p) => [...p]) };
+  const out = { min: [...h.min], parts: h.parts.map((p) => ({ ...p })) };
   spread(out, (startMs - day) / 60_000, (endMs - day) / 60_000, s);
   return out;
 }
@@ -114,3 +113,10 @@ export function weekOf(recs: readonly Rec[], now: Date = new Date()): (Day & { d
 }
 
 export { dateKey };
+
+/** Add up minutes by subject into minutes by some other key (a subject's 教科, say). */
+export function regroup(parts: Parts, keyOf: (subjectId: string) => string): Parts {
+  const out: Parts = {};
+  for (const [id, m] of Object.entries(parts)) { const k = keyOf(id); out[k] = (out[k] ?? 0) + m; }
+  return out;
+}

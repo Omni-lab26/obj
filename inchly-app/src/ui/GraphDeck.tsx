@@ -5,11 +5,12 @@ import Animated, { Easing, SharedValue, useAnimatedStyle, useSharedValue, withTi
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Line, Rect } from 'react-native-svg';
 
-import { SUBJ } from '../data';
+import { subj } from '../data';
 import { dayOf, grassOf } from '../lib/history';
 import { useStore } from '../store';
 import { lift, radius, useT } from '../theme';
 import { haptic, Txt } from './base';
+import { useSeries } from './series';
 
 // The graph card on My Page's 成長 page, as a deck: swipe it sideways for a
 // different graph. It moves one card per swipe and clicks into place — no
@@ -130,7 +131,9 @@ function WeekPage({ w, h }: { w: number; h: number }) {
   const t = useT();
   const sessions = useStore((s) => s.sessions);
   const goal = useStore((s) => s.goalMin);
-  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => dayOf(sessions, 6 - i)), [sessions]);
+  const series = useSeries(useStore((s) => s.chart.detail));
+  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => { const x = dayOf(sessions, 6 - i); return { min: x.min, parts: series.of(x.parts) }; }), [sessions, series]);
+  const used = series.list.filter((x) => days.some((d) => (d.parts[x.key] ?? 0) > 0));
   const prev = useMemo(() => Array.from({ length: 7 }, (_, i) => dayOf(sessions, 7 + i).min).reduce((a, b) => a + b, 0), [sessions]);
   const total = days.reduce((a, d) => a + d.min, 0);
   const d = (total - prev) / 60;
@@ -146,10 +149,10 @@ function WeekPage({ w, h }: { w: number; h: number }) {
         <Svg width={w} height={ch}>
           {days.map((day, i) => {
             let y = ch;
-            return SUBJ.map((s, k) => {
-              const bh = (day.parts[k] / top) * ch;
+            return used.map((s) => {
+              const bh = ((day.parts[s.key] ?? 0) / top) * ch;
               y -= bh;
-              return bh > 0 ? <Rect key={`${i}-${k}`} x={i * (bw + gap)} y={y} width={bw} height={Math.max(0, bh - 1.5)} rx={3} fill={s.c} opacity={i === 6 ? 1 : 0.8} /> : null;
+              return bh > 0 ? <Rect key={`${i}-${s.key}`} x={i * (bw + gap)} y={y} width={bw} height={Math.max(0, bh - 1.5)} rx={3} fill={s.c} opacity={i === 6 ? 1 : 0.8} /> : null;
             });
           })}
           <Line x1={0} x2={w} y1={gy} y2={gy} stroke={t.amber} strokeWidth={1} strokeDasharray="3 4" />
@@ -164,8 +167,8 @@ function WeekPage({ w, h }: { w: number; h: number }) {
       </View>
       <View style={{ flex: 1 }} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-        {SUBJ.map((s) => (
-          <View key={s.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        {used.map((s) => (
+          <View key={s.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <View style={{ width: 7, height: 7, borderRadius: 2, backgroundColor: s.c }} />
             <Txt size={11} tone="ink3">{s.name}</Txt>
           </View>
@@ -179,34 +182,44 @@ function WeekPage({ w, h }: { w: number; h: number }) {
   );
 }
 
-/** 3: where this week's hours went, by subject, against each subject's weekly goal. */
+/** 3: where this week's hours went, by subject (or 教科), largest first. */
 function SubjectsPage({ w }: { w: number }) {
   const t = useT();
   const sessions = useStore((s) => s.sessions);
-  const mins = useMemo(() => SUBJ.map((_, k) => Array.from({ length: 7 }, (_, i) => dayOf(sessions, i).parts[k]).reduce((a, b) => a + b, 0)), [sessions]);
-  const total = mins.reduce((a, b) => a + b, 0) || 1;
-  const rows = SUBJ.map((s, k) => ({ s, m: mins[k] })).sort((a, b) => b.m - a.m);
+  const detail = useStore((s) => s.chart.detail);
+  const series = useSeries(detail);
+  const rows = useMemo(() => {
+    const sum: Record<string, number> = {};
+    for (let i = 0; i < 7; i++) for (const [k, m] of Object.entries(series.of(dayOf(sessions, i).parts))) sum[k] = (sum[k] ?? 0) + m;
+    return series.list.map((s) => ({ s, m: sum[s.key] ?? 0, goal: detail === 'subject' ? subj(s.key).goal : undefined })).filter((x) => x.m > 0).sort((a, b) => b.m - a.m);
+  }, [sessions, series, detail]);
+  const total = rows.reduce((a, x) => a + x.m, 0) || 1;
   const top = rows[0];
+  const max = top?.m || 1;
+  // the card has room for five rows; the rest are summed up
+  const shown = rows.slice(0, rows.length > 5 ? 4 : 5);
+  const rest = rows.slice(shown.length).reduce((a, x) => a + x.m, 0);
   return (
     <View style={{ flex: 1 }}>
-      <Head label="この7日間の内訳" aside="科目別" value={top.s.name} unit={`がいちばん · ${Math.round((top.m / total) * 100)}%`} />
-      <View style={{ flexDirection: 'row', height: 12, borderRadius: 6, overflow: 'hidden', gap: 2, marginTop: 12, width: w }}>
-        {rows.filter((x) => x.m > 0).map((x) => <View key={x.s.id} style={{ flex: x.m, backgroundColor: x.s.c }} />)}
+      <Head label="この7日間の内訳" aside={detail === 'area' ? '教科別' : '科目別'} value={top ? top.s.name : 'まだ記録なし'} unit={top ? `がいちばん · ${Math.round((top.m / total) * 100)}%` : ''} />
+      <View style={{ flexDirection: 'row', height: 12, borderRadius: 6, overflow: 'hidden', gap: 2, marginTop: 12, width: w, backgroundColor: t.sunken }}>
+        {rows.map((x) => <View key={x.s.key} style={{ flex: x.m, backgroundColor: x.s.c }} />)}
       </View>
       <View style={{ flex: 1, justifyContent: 'space-evenly', marginTop: 6 }}>
-        {rows.map((x) => {
-          const p = Math.min(1, x.m / 60 / x.s.goal);
+        {shown.map((x) => {
+          const p = x.goal ? Math.min(1, x.m / 60 / x.goal) : x.m / max;
           return (
-            <View key={x.s.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} accessible accessibilityLabel={`${x.s.name} ${(x.m / 60).toFixed(1)}時間、週の目標${x.s.goal}時間`}>
+            <View key={x.s.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} accessible accessibilityLabel={`${x.s.name} ${(x.m / 60).toFixed(1)}時間${x.goal ? `、週の目標${x.goal}時間` : ''}`}>
               <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: x.s.c }} />
-              <Txt size={13} w="600" style={{ width: 34 }}>{x.s.name}</Txt>
+              <Txt size={13} w="600" numberOfLines={1} style={{ width: 64 }}>{x.s.name}</Txt>
               <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: t.sunken, overflow: 'hidden' }}>
                 <View style={{ width: `${p * 100}%`, height: 6, borderRadius: 3, backgroundColor: x.s.c }} />
               </View>
-              <Txt num size={12.5} w="600" style={{ width: 70, textAlign: 'right' }}>{(x.m / 60).toFixed(1)}<Txt size={11} tone="ink3">{` / ${x.s.goal}h`}</Txt></Txt>
+              <Txt num size={12.5} w="600" style={{ width: 70, textAlign: 'right' }}>{(x.m / 60).toFixed(1)}<Txt size={11} tone="ink3">{x.goal ? ` / ${x.goal}h` : ' 時間'}</Txt></Txt>
             </View>
           );
         })}
+        {rest > 0 ? <Txt num size={12} tone="ink3">{`ほか ${rows.length - shown.length}科目 · ${(rest / 60).toFixed(1)}時間`}</Txt> : null}
       </View>
     </View>
   );

@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { hm, pad, subj, SUBJ } from '@/data';
-import { elapsedOf, getState, setSubject, setTarget, startStudy, togglePause, useNow, useStore } from '@/store';
+import { hm, pad, subj } from '@/data';
+import { elapsedOf, getState, setSubject, setTarget, startStudy, togglePause, useNow, useStore, useSubjects } from '@/store';
 import { focus, hair } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
@@ -58,6 +58,7 @@ export default function Timer() {
   const rem = s.targetMin * 60 - e;
   const over = s.running && rem < 0;
   const up = s.timerMode === 'up';
+  const subjects = useSubjects();
   const task = s.todos.find((x) => x.id === s.studyTodo && x.s === s.subj)?.t ?? sj.task;
   const canSwitch = !s.running || e <= 60;
 
@@ -143,8 +144,8 @@ export default function Timer() {
         <Txt size={13} color={focus.ink2} numberOfLines={1}>{task}</Txt>
       </View>
       {/* the subject can change before starting and in the first minute, so the chips show only then */}
-      {canSwitch ? <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, paddingHorizontal: 20, paddingTop: 12 }} accessibilityRole="radiogroup" accessibilityLabel="科目を変える">
-        {SUBJ.map((x) => {
+      {canSwitch ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, paddingHorizontal: 20, paddingTop: 12 }} accessibilityRole="radiogroup" accessibilityLabel="科目を変える">
+        {subjects.map((x) => {
           const on = x.id === s.subj;
           return (
             <Pressable key={x.id} onPress={() => pickSubject(x.id)} accessibilityRole="radio" accessibilityState={{ checked: on }} hitSlop={{ top: 8, bottom: 8 }}

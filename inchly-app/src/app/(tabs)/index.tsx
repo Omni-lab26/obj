@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
-import { hms, pad, PEOPLE, SUBJ, subj } from '@/data';
+import { hms, pad, PEOPLE, subj } from '@/data';
 import { dayOf, studiedOn } from '@/lib/history';
 import { jpDate } from '@/lib/time';
 import { endOf, suggestion } from '@/lib/timetable';
@@ -61,7 +61,7 @@ export default function Home() {
   const diff = s.todayMin - yesterday;
   // today's minutes by subject, straight from today's records
   const today = s.sessions.filter((x) => x.date === s.lastDay);
-  const parts = SUBJ.map((x) => ({ name: x.name, c: x.c, min: today.filter((r) => r.s === x.id).reduce((a, r) => a + r.min, 0) }));
+  const parts = s.subjects.map((x) => ({ name: x.name, c: x.c, min: today.filter((r) => r.s === x.id).reduce((a, r) => a + r.min, 0) })).filter((x) => x.min > 0);
   const peers = PEOPLE.filter((p) => !s.blocked.includes(p.n)).slice(0, 3);
   return (
     <Screen>

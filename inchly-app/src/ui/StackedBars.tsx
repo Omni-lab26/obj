@@ -2,12 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { pad, SUBJ } from '../data';
+import { pad } from '../data';
 import { dayOf } from '../lib/history';
 import { Session, useStore } from '../store';
 import { ease, hair, lift, radius, type, useT } from '../theme';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
+import { SeriesSet, useSeries } from './series';
 import { Segmented } from './Tabs';
 
 // bencho "stacked bars": twenty days (or weeks) of study as stacked bars by
@@ -25,13 +26,14 @@ const TIP_W = 172;
 type Mode = 'day' | 'week';
 type Col = { label: string; parts: number[]; total: number; short: number };
 
-function build(mode: Mode, sessions: Session[]): Col[] {
+function build(mode: Mode, sessions: Session[], series: SeriesSet): Col[] {
   const goal = mode === 'day' ? 180 : 1260;
   return Array.from({ length: N }, (_, i) => {
     const back = N - 1 - i;
     const span = mode === 'day' ? 1 : 7;
     const days = Array.from({ length: span }, (_, k) => dayOf(sessions, back * span + k));
-    const parts = SUBJ.map((_, k) => days.reduce((a, d) => a + d.parts[k], 0));
+    const each = days.map((d) => series.of(d.parts));
+    const parts = series.list.map((x) => each.reduce((a, p) => a + (p[x.key] ?? 0), 0));
     const total = parts.reduce((a, b) => a + b, 0);
     const d = new Date();
     d.setDate(d.getDate() - back * span);
@@ -57,7 +59,8 @@ export function StackedBars() {
   const t = useT();
   const [mode, setMode] = useState<Mode>('day');
   const sessions = useStore((s) => s.sessions);
-  const data = useMemo(() => ({ day: build('day', sessions), week: build('week', sessions) }), [sessions]);
+  const series = useSeries(useStore((s) => s.chart.detail));
+  const data = useMemo(() => ({ day: build('day', sessions, series), week: build('week', sessions, series) }), [sessions, series]);
   const cols = data[mode];
   const [w, setW] = useState(0);
   const [hot, setHot] = useState<number | null>(null);
@@ -145,7 +148,7 @@ export function StackedBars() {
                       const h = Math.max(0, up(m) - 2);
                       const bottom = PLOT - BASE + 1 + up(acc);
                       acc += m;
-                      return <Seg key={k} h={h} bottom={bottom} color={SUBJ[k].c} delay={i * 14} dim={dim} />;
+                      return <Seg key={k} h={h} bottom={bottom} color={series.list[k].c} delay={i * 14} dim={dim} />;
                     })}
                     <Seg h={col.short ? Math.max(3, down(col.short)) : 0} bottom={PLOT - BASE - 2 - (col.short ? Math.max(3, down(col.short)) : 0)} color={t.red} delay={i * 14} dim={dim} />
                   </View>
@@ -168,8 +171,8 @@ export function StackedBars() {
               </View>
               {top2.map(({ m, k }) => (
                 <View key={k} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 2.5, backgroundColor: SUBJ[k].c }} />
-                  <Txt size={12} lh={16} numberOfLines={1} style={{ flex: 1 }}>{SUBJ[k].name}</Txt>
+                  <View style={{ width: 8, height: 8, borderRadius: 2.5, backgroundColor: series.list[k].c }} />
+                  <Txt size={12} lh={16} numberOfLines={1} style={{ flex: 1 }}>{series.list[k].name}</Txt>
                   <Txt size={12} num lh={16}>{hmLabel(m)}</Txt>
                 </View>
               ))}
@@ -189,8 +192,8 @@ export function StackedBars() {
       </View>
       {/* legend, storage-style */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4, paddingTop: 10, borderTopWidth: hair, borderTopColor: t.line }} pointerEvents="none">
-        {SUBJ.map((x) => (
-          <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+        {series.list.filter((x, k) => cols.some((c) => c.parts[k] > 0)).map((x) => (
+          <View key={x.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: x.c }} />
             <Txt size={11} tone="ink2" lh={14}>{x.name}</Txt>
           </View>

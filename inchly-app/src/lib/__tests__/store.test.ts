@@ -1,7 +1,8 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { commitRecord, getState, INITIAL, MAX_TICKETS, migrate, rollDay, setState, toggleTodo } from '../../store';
+import { addSubject, commitRecord, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, toggleTodo, updateSubject } from '../../store';
+import { subj } from '../../data';
 import { addDays, dateKey } from '../time';
 
 const reset = (patch = {}) => setState({ ...INITIAL, ...patch });
@@ -86,6 +87,31 @@ describe('ToDo EXP', () => {
   it('a record that finishes its ToDo counts it', () => {
     reset({ running: true, base: 10 * 60, startedAt: Date.now(), todos: todos(1), todoLog: [] });
     expect(commitRecord({ todoId: 't0' }).exp).toBe(10 + TODO_EXP);
+  });
+});
+
+describe('subjects', () => {
+  it('adds one with the first unused color, and subj() sees it', () => {
+    reset();
+    const id = addSubject({ name: '数IA', area: 'ma' });
+    const x = subj(id);
+    expect(x.name).toBe('数IA');
+    expect(getState().subjects.filter((y) => y.c === x.c)).toHaveLength(1);
+    updateSubject(id, { name: '数学IA' });
+    expect(subj(id).name).toBe('数学IA');
+  });
+  it('removes an unused subject, hides one with records, keeps at least one', () => {
+    reset({ sessions: [{ id: 'r', s: 'en', min: 30, date: dateKey(), at: '20:00' }], subj: 'en' });
+    expect(removeSubject('ma')).toBe('removed');
+    expect(getState().subjects.some((x) => x.id === 'ma')).toBe(false);
+    expect(removeSubject('en')).toBe('hidden');
+    expect(subj('en').name).toBe('英語'); // old days keep their name
+    expect(getState().subj).not.toBe('en');
+    reset({ subjects: [{ id: 'en', name: '英語', c: '#5856D6', area: 'en' }] });
+    expect(removeSubject('en')).toBe('last');
+  });
+  it('fills in chart settings added later', () => {
+    expect(migrate({ v: 3, chart: { range: 'week', kind: 'bar', palette: 'blue' } }).chart).toMatchObject({ range: 'week', detail: 'subject' });
   });
 });
 

@@ -3,8 +3,8 @@ import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { hms, ROOM, SUBJ, subj } from '../data';
-import { elapsedOf, setSubject, startStudy, togglePause, useNow, useStore } from '../store';
+import { hms, ROOM, subj } from '../data';
+import { elapsedOf, setSubject, startStudy, togglePause, useNow, useStore, useSubjects } from '../store';
 import { focus, hair } from '../theme';
 import { Avatar, haptic, Press, Txt } from './base';
 import { LiveDot } from './GroupParts';
@@ -25,6 +25,7 @@ export function StudyRoom() {
   const since = Math.floor((now - opened) / 1000);
   const s = useStore((x) => x);
   const sj = subj(s.subj);
+  const subjects = useSubjects();
   const e = elapsedOf(s, now);
   const people = ROOM.filter((p) => !s.blocked.includes(p.n));
   const today = s.todayMin + (s.running ? Math.floor(e / 60) : 0);
@@ -61,8 +62,8 @@ export function StudyRoom() {
               <Icon name="play" size={17} color="#2E2200" />
               <Txt size={16} w="800" color="#2E2200">スタート</Txt>
             </Press>
-            <View style={{ flexDirection: 'row', gap: 6 }} accessibilityRole="radiogroup">
-              {SUBJ.map((x) => {
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }} accessibilityRole="radiogroup">
+              {subjects.map((x) => {
                 const on = x.id === s.subj;
                 return (
                   <Press key={x.id} onPress={() => setSubject(x.id)} scale={0.94} accessibilityRole="radio" accessibilityState={{ checked: on }}

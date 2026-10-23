@@ -2,10 +2,10 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
-import { hms, SUBJ, subj } from '@/data';
+import { hms, subj } from '@/data';
 import { blocksOn, endOf, minutesUntil, slotsOf, suggestion, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
-import { elapsedOf, getState, setTarget, setTimerMode, startFrom, toggleTodo, togglePause, useNow, useStore } from '@/store';
+import { elapsedOf, getState, setTarget, setTimerMode, startFrom, toggleTodo, togglePause, useNow, useStore, useSubjects } from '@/store';
 import { focus, hair, onColor, radius, type, useT } from '@/theme';
 import { Card, haptic, Press, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
@@ -58,6 +58,7 @@ function Now() {
   const t = useT();
   const now = useNow();
   const s = useStore((x) => x);
+  const subjects = useSubjects();
   const sj = subj(s.subj);
   if (s.running) {
     const e = elapsedOf(s, now);
@@ -121,12 +122,12 @@ function Now() {
       )}
       {/* or any subject, in one tap */}
       <Txt size={11.5} tone="ink3" style={{ marginTop: 14, marginBottom: 8 }}>{pick ? 'ほかの科目ですぐ始める' : '科目を押すとすぐ始まります'}</Txt>
-      <View style={{ flexDirection: 'row', gap: 6 }}>
-        {SUBJ.map((x) => (
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+        {subjects.map((x) => (
           <Press key={x.id} onPress={() => go({ s: x.id })} haptics={false} scale={0.94} accessibilityLabel={`${x.name}を始める`}
-            style={{ flex: 1, height: 40, borderRadius: 12, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 5 }}>
+            style={{ width: subjects.length > 5 ? '31.5%' : undefined, flexGrow: 1, flexBasis: subjects.length > 5 ? undefined : 0, paddingHorizontal: 6, height: 40, borderRadius: 12, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 5 }}>
             <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: x.c }} />
-            <Txt size={13} w="700">{x.name}</Txt>
+            <Txt size={13} w="700" numberOfLines={1}>{x.name}</Txt>
           </Press>
         ))}
       </View>
@@ -191,7 +192,7 @@ function Timetable() {
                   {live ? <View style={{ paddingHorizontal: 6, height: 18, borderRadius: 9, backgroundColor: t.ink, justifyContent: 'center' }}><Txt size={10} w="800" color={t.onInk}>いま</Txt></View> : null}
                   {state === 'next' ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
                 </View>
-                <Txt size={12} tone="ink2" numberOfLines={1}>{`${b.t ?? sj.task} · ${b.min}分`}</Txt>
+                <Txt size={12} tone="ink2" numberOfLines={1}>{[b.t ?? sj.task, `${b.min}分`].filter(Boolean).join(' · ')}</Txt>
               </View>
               {past || state === 'plain' ? null : (
                 <Press onPress={() => go({ s: b.s, min: b.min })} haptics={false} scale={0.9} hitSlop={6} disabled={running}

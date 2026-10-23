@@ -1,16 +1,18 @@
+import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { LayoutChangeEvent, Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 
-import { pad, SUBJ } from '../data';
-import { hourlyOf, weekOf, withLive } from '../lib/history';
+import { pad, SUBJECT_COLORS } from '../data';
+import { hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { dateKey } from '../lib/time';
-import { ChartKind, ChartPalette, elapsedOf, setChart, useNow, useStore } from '../store';
+import { ChartKind, ChartPalette, elapsedOf, setChart, useNow, useStore, useSubjects } from '../store';
 import { ease, hair, useT } from '../theme';
 import { Btn, haptic, Press, Txt } from './base';
 import { Icon } from './Icon';
 import { openSheet } from './Sheet';
+import { Series, useSeries } from './series';
 import { Segmented } from './Tabs';
 
 // Home's study-time graph: today hour by hour (24 vertical bars) or this week
@@ -18,16 +20,18 @@ import { Segmented } from './Tabs';
 // chart (bars, by subject, line) and its color. Tap a bar for its numbers.
 // Never green: green is the grass.
 
-/** Subject colors for charts — 国語's yellow is deepened so it holds on white. */
-const SUBJ_C = SUBJ.map((x) => (x.id === 'ja' ? '#D9A300' : x.c));
 export const PALETTES: Record<ChartPalette, { label: string; c: string }> = {
   ink: { label: 'インク', c: '#121417' },
+  navy: { label: 'ネイビー', c: '#1E3A8A' },
   blue: { label: 'ブルー', c: '#2F6BFF' },
-  orange: { label: 'オレンジ', c: '#F07B1D' },
+  teal: { label: 'ティール', c: '#0E9AB0' },
   grape: { label: 'グレープ', c: '#8B5CF6' },
+  rose: { label: 'ローズ', c: '#E11D74' },
+  orange: { label: 'オレンジ', c: '#F07B1D' },
+  amber: { label: 'アンバー', c: '#C98A00' },
 };
 const KINDS: { v: ChartKind; label: string }[] = [
-  { v: 'stack', label: '科目別' },
+  { v: 'stack', label: '色分け' },
   { v: 'bar', label: '棒' },
   { v: 'line', label: '折れ線' },
 ];
@@ -40,7 +44,7 @@ const jpHm = (m: number) => {
   return r >= 60 ? `${Math.floor(r / 60)}時間${r % 60 ? `${r % 60}分` : ''}` : `${r}分`;
 };
 
-type Col = { label: string; parts: number[]; live: number; total: number; future: boolean; now: boolean };
+type Col = { label: string; parts: Parts; live: number; total: number; future: boolean; now: boolean };
 
 /** The graph part of home's 今日の勉強 card: it sits under the day's total, so it shows no big figure of its own. */
 export function StudyChart() {
@@ -54,39 +58,41 @@ export function StudyChart() {
   const elapsed = useStore((s) => elapsedOf(s, now));
   // the tapped column, forgotten when the range or kind changes
   const [picked, setPicked] = useState<{ k: string; i: number } | null>(null);
-  const view = `${chart.range}:${chart.kind}`;
+  const view = `${chart.range}:${chart.kind}:${chart.detail}`;
   const sel = picked?.k === view ? picked.i : null;
   const [w, setW] = useState(0);
   const day = chart.range === 'day';
   const d = new Date(now);
   const today = dateKey(d);
   const liveMin = running ? elapsed / 60 : 0;
-  const sk = SUBJ.findIndex((x) => x.id === subjId);
+  const series = useSeries(chart.detail);
+  const liveKey = series.keyOf(subjId);
+  const liveC = series.list.find((x) => x.key === liveKey)?.c ?? '#8C93A0';
 
   const cols: Col[] = useMemo(() => {
     if (day) {
       const rec = hourlyOf(sessions, today);
       const all = running ? withLive(rec, now - elapsed * 1000, now, today, subjId) : rec;
       return rec.min.map((m, h) => ({
-        label: h % 6 === 0 ? `${h}` : '', parts: rec.parts[h], live: all.min[h] - m, total: all.min[h],
+        label: h % 6 === 0 ? `${h}` : '', parts: series.of(rec.parts[h]), live: all.min[h] - m, total: all.min[h],
         future: h > d.getHours(), now: h === d.getHours(),
       }));
     }
     return weekOf(sessions, d).map((x, i) => {
       const isToday = x.date === today;
       const live = isToday ? liveMin : 0;
-      return { label: DOW[i], parts: x.parts, live, total: x.min + live, future: x.date > today, now: isToday };
+      return { label: DOW[i], parts: series.of(x.parts), live, total: x.min + live, future: x.date > today, now: isToday };
     });
     // d and liveMin follow now and elapsed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [day, sessions, today, running, now, elapsed, subjId]);
+  }, [day, sessions, today, running, now, elapsed, subjId, series]);
 
   // the plot regrows when the range or kind changes
   const grow = useSharedValue(0);
   useEffect(() => {
     grow.set(0);
     grow.set(withTiming(1, { duration: 420, easing: ease.out }));
-  }, [chart.range, chart.kind, grow]);
+  }, [chart.range, chart.kind, chart.detail, grow]);
   const growA = useAnimatedStyle(() => ({ transform: [{ scaleY: grow.get() }], transformOrigin: 'bottom' }));
 
   // the figure is what's recorded (the same as home's card); the running timer is shown beside it
@@ -106,7 +112,7 @@ export function StudyChart() {
   let note: string;
   if (sel !== null) {
     const c = cols[sel];
-    const by = c.parts.map((m, k) => (m >= 1 ? `${SUBJ[k].name} ${Math.round(m)}` : '')).filter(Boolean);
+    const by = series.list.filter((x) => (c.parts[x.key] ?? 0) >= 1).map((x) => `${x.name} ${Math.round(c.parts[x.key])}`);
     if (c.live >= 1) by.push(`勉強中 ${Math.round(c.live)}`);
     note = `${day ? `${sel}時台` : `${DOW[sel]}曜`} · ${jpHm(c.total)}${by.length ? `（${by.join(' / ')}）` : ''}`;
   } else if (day) {
@@ -115,7 +121,7 @@ export function StudyChart() {
     note = studied.length ? `1日平均 ${hm(total / Math.max(1, d.getDay() === 0 ? 7 : d.getDay()))} · ${studied.length}日勉強` : '今週はまだ記録がありません';
   }
 
-  const usedSubj = SUBJ.map((x, k) => ({ ...x, c: SUBJ_C[k], on: cols.some((c) => c.parts[k] > 0) || (running && k === sk && liveMin > 0) })).filter((x) => x.on);
+  const used = series.list.filter((x) => cols.some((c) => (c.parts[x.key] ?? 0) > 0) || (running && x.key === liveKey && liveMin > 0));
 
   return (
     <View>
@@ -144,7 +150,7 @@ export function StudyChart() {
               ) : (
                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', gap }}>
                   {cols.map((c, i) => (
-                    <BarMark key={i} c={c} h={yOf(c.total)} rec={yOf(c.total - c.live)} stack={chart.kind === 'stack'} main={main} live={sk}
+                    <BarMark key={i} c={c} h={yOf(c.total)} rec={yOf(c.total - c.live)} stack={chart.kind === 'stack'} main={main} liveC={liveC} series={series.list}
                       dim={sel !== null && sel !== i} />
                   ))}
                 </View>
@@ -173,17 +179,17 @@ export function StudyChart() {
         </View>
       </View>
 
-      {chart.kind === 'stack' && usedSubj.length ? (
+      {chart.kind === 'stack' && used.length ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
-          {usedSubj.map((x) => (
-            <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          {used.map((x) => (
+            <View key={x.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: x.c }} />
               <Txt size={11} tone="ink2">{x.name}</Txt>
             </View>
           ))}
           {running ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: SUBJ_C[Math.max(0, sk)], opacity: 0.4 }} />
+              <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: liveC, opacity: 0.4 }} />
               <Txt size={11} tone="ink2">勉強中</Txt>
             </View>
           ) : null}
@@ -194,14 +200,14 @@ export function StudyChart() {
 }
 
 /** One column: recorded minutes solid (by subject when stacked), the running timer paler on top. */
-function BarMark({ c, h, rec, stack, main, live, dim }: { c: Col; h: number; rec: number; stack: boolean; main: string; live: number; dim: boolean }) {
+function BarMark({ c, h, rec, stack, main, liveC, series, dim }: { c: Col; h: number; rec: number; stack: boolean; main: string; liveC: string; series: Series[]; dim: boolean }) {
   const t = useT();
   if (h <= 0) return <View style={{ flex: 1 }} />;
   const segs: { c: string; h: number; o?: number }[] = [];
   if (stack && c.total > 0) {
-    c.parts.forEach((m, k) => { if (m > 0) segs.push({ c: SUBJ_C[k], h: (m / (c.total - c.live || 1)) * rec }); });
+    series.forEach((x) => { const m = c.parts[x.key] ?? 0; if (m > 0) segs.push({ c: x.c, h: (m / (c.total - c.live || 1)) * rec }); });
   } else if (rec > 0) segs.push({ c: main, h: rec });
-  if (h - rec > 0.5) segs.push({ c: stack ? SUBJ_C[Math.max(0, live)] : main, h: h - rec, o: 0.4 });
+  if (h - rec > 0.5) segs.push({ c: stack ? liveC : main, h: h - rec, o: 0.4 });
   return (
     <View style={{ flex: 1, height: Math.max(3, h), borderTopLeftRadius: 4, borderTopRightRadius: 4, overflow: 'hidden', opacity: dim ? 0.35 : 1, flexDirection: 'column-reverse' }}>
       {segs.map((s, i) => (
@@ -239,6 +245,7 @@ function chartSettings() {
 function ChartSettings({ close }: { close: () => void }) {
   const t = useT();
   const chart = useStore((s) => s.chart);
+  const subjects = useSubjects();
   const stack = chart.kind === 'stack';
   return (
     <View style={{ gap: 10 }}>
@@ -256,14 +263,28 @@ function ChartSettings({ close }: { close: () => void }) {
           );
         })}
       </View>
-      <Txt size={13} w="700" style={{ marginTop: 8 }}>色</Txt>
-      {stack ? <Txt size={11.5} tone="ink3">科目別は科目の色で塗ります。棒と折れ線の色を選べます</Txt> : null}
-      <View style={{ flexDirection: 'row', gap: 8 }}>
+      {stack ? (
+        <>
+          <Txt size={13} w="700" style={{ marginTop: 8 }}>色分けの細かさ</Txt>
+          <Segmented value={chart.detail} onChange={(v) => setChart({ detail: v })} options={[{ v: 'subject', label: '科目ごと（数IA・古文…）' }, { v: 'area', label: '教科ごと（数学・国語…）' }]} />
+          <Press onPress={() => { close(); router.push('/subjects'); }} scale={0.98} accessibilityRole="button"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: t.sunken }}>
+            <View style={{ flexDirection: 'row' }}>
+              {subjects.slice(0, 6).map((x, i) => <View key={x.id} style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: x.c, marginLeft: i ? -4 : 0, borderWidth: 1.5, borderColor: t.sunken }} />)}
+            </View>
+            <Txt size={13} w="600" style={{ flex: 1 }}>科目と色を編集</Txt>
+            <Txt size={11.5} tone="ink3">{`${subjects.length}科目`}</Txt>
+            <Icon name="chev" size={13} color={t.ink3} />
+          </Press>
+        </>
+      ) : null}
+      <Txt size={13} w="700" style={{ marginTop: 8 }}>{stack ? '棒と折れ線の色' : '色'}</Txt>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {(Object.keys(PALETTES) as ChartPalette[]).map((p) => {
           const on = chart.palette === p;
           return (
             <Press key={p} onPress={() => setChart({ palette: p })} scale={0.94} accessibilityRole="radio" accessibilityState={{ checked: on }}
-              style={{ flex: 1, alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: 14, backgroundColor: on ? t.surface : t.sunken, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line, opacity: stack ? 0.6 : 1 }}>
+              style={{ width: '23%', flexGrow: 1, alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: 14, backgroundColor: on ? t.surface : t.sunken, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line, opacity: stack ? 0.6 : 1 }}>
               <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: PALETTES[p].c, alignItems: 'center', justifyContent: 'center' }}>
                 {on ? <Icon name="check" size={13} color="#fff" width={3} /> : null}
               </View>
@@ -293,7 +314,7 @@ function KindPreview({ kind, color }: { kind: ChartKind; color: string }) {
       {PREVIEW.map((v, i) => (
         <View key={i} style={{ width: 8, height: v * H, borderTopLeftRadius: 2, borderTopRightRadius: 2, overflow: 'hidden', flexDirection: 'column-reverse' }}>
           {kind === 'stack'
-            ? [0.5, 0.3, 0.2].map((f, k) => <View key={k} style={{ height: f * v * H, backgroundColor: SUBJ_C[(i + k) % 5] }} />)
+            ? [0.5, 0.3, 0.2].map((f, k) => <View key={k} style={{ height: f * v * H, backgroundColor: SUBJECT_COLORS[(i * 3 + k * 5) % SUBJECT_COLORS.length] }} />)
             : <View style={{ flex: 1, backgroundColor: color }} />}
         </View>
       ))}

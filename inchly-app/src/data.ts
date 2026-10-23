@@ -1,14 +1,58 @@
 // Sample data. Every number, person and post here is made up for the mock.
 
-export type Subject = { id: string; name: string; c: string; task: string; week: number; goal: number };
-export const SUBJ: Subject[] = [
-  { id: 'en', name: '英語', c: '#5856D6', task: '長文読解 第3講', week: 6.5, goal: 7 },
-  { id: 'ma', name: '数学', c: '#FF9500', task: '青チャート 数III 例題41〜50', week: 5.8, goal: 8 },
-  { id: 'ph', name: '物理', c: '#30B0C7', task: '名問の森 電磁気 15', week: 4.1, goal: 5 },
-  { id: 'ch', name: '化学', c: '#FF2D55', task: '有機 構造決定 演習', week: 2.9, goal: 3 },
-  { id: 'ja', name: '国語', c: '#FFCC00', task: '古文単語 315 · 61〜80', week: 1.6, goal: 3 },
+/** 教科: the big groups subjects belong to. A subject's area decides how "教科ごと" charts add it up. */
+export type AreaId = 'en' | 'ma' | 'ja' | 'sci' | 'soc' | 'info' | 'other';
+export const AREAS: { id: AreaId; name: string; c: string }[] = [
+  { id: 'en', name: '英語', c: '#5856D6' },
+  { id: 'ma', name: '数学', c: '#FF9500' },
+  { id: 'ja', name: '国語', c: '#D9A300' },
+  { id: 'sci', name: '理科', c: '#30B0C7' },
+  { id: 'soc', name: '社会', c: '#A0522D' },
+  { id: 'info', name: '情報', c: '#64748B' },
+  { id: 'other', name: 'その他', c: '#8C93A0' },
 ];
-export const subj = (id: string) => SUBJ.find((s) => s.id === id) ?? SUBJ[0];
+export const area = (id: AreaId) => AREAS.find((g) => g.id === id) ?? AREAS[AREAS.length - 1];
+
+/** Colors to pick for a subject: deep and mid tones that read on white and on the dark timer. No greens (green is the grass). */
+export const SUBJECT_COLORS = [
+  '#5856D6', '#2F6BFF', '#0EA5E9', '#30B0C7', '#1E3A8A',
+  '#8B5CF6', '#A855F7', '#7E22CE', '#D946EF', '#EC4899',
+  '#FF2D55', '#E5484D', '#FF6B4A', '#FF9500', '#F5A524',
+  '#D9A300', '#A0522D', '#C8A27A', '#64748B', '#3F3F46',
+];
+
+/** A subject you study. task: what you're on in it (sample text); week/goal: sample hours for the weekly view. */
+export type Subject = { id: string; name: string; c: string; area: AreaId; task?: string; week?: number; goal?: number; hidden?: boolean };
+/** The starting five. Their ids are what older records point to, so they never change. */
+export const SUBJ: Subject[] = [
+  { id: 'en', name: '英語', c: '#5856D6', area: 'en', task: '長文読解 第3講', week: 6.5, goal: 7 },
+  { id: 'ma', name: '数学', c: '#FF9500', area: 'ma', task: '青チャート 数III 例題41〜50', week: 5.8, goal: 8 },
+  { id: 'ph', name: '物理', c: '#30B0C7', area: 'sci', task: '名問の森 電磁気 15', week: 4.1, goal: 5 },
+  { id: 'ch', name: '化学', c: '#FF2D55', area: 'sci', task: '有機 構造決定 演習', week: 2.9, goal: 3 },
+  { id: 'ja', name: '国語', c: '#D9A300', area: 'ja', task: '古文単語 315 · 61〜80', week: 1.6, goal: 3 },
+];
+/** Subjects people often split into, offered as one-tap additions. */
+export const PRESETS: { name: string; area: AreaId }[] = [
+  { name: '英単語', area: 'en' }, { name: '英文法', area: 'en' }, { name: '長文読解', area: 'en' }, { name: 'リスニング', area: 'en' }, { name: '英作文', area: 'en' },
+  { name: '数IA', area: 'ma' }, { name: '数IIB', area: 'ma' }, { name: '数III', area: 'ma' }, { name: '数C', area: 'ma' },
+  { name: '現代文', area: 'ja' }, { name: '古文', area: 'ja' }, { name: '漢文', area: 'ja' },
+  { name: '物理', area: 'sci' }, { name: '化学', area: 'sci' }, { name: '生物', area: 'sci' }, { name: '地学', area: 'sci' },
+  { name: '日本史', area: 'soc' }, { name: '世界史', area: 'soc' }, { name: '地理', area: 'soc' }, { name: '政治・経済', area: 'soc' }, { name: '倫理', area: 'soc' }, { name: '公共', area: 'soc' },
+  { name: '情報I', area: 'info' },
+];
+
+// The live list. The store keeps it in step (setSubjects) so subj() can be
+// called anywhere, even outside React.
+let current: Subject[] = SUBJ;
+export const setSubjects = (list: Subject[]) => { current = list; };
+/** Every subject, hidden ones included (charts still need their names and colors). */
+export const allSubjects = () => current;
+const GONE: Subject = { id: '?', name: '削除した科目', c: '#8C93A0', area: 'other' };
+/** A subject by id, with task always a string (subjects you add have none). */
+export const subj = (id: string): Subject & { task: string } => {
+  const x = current.find((s) => s.id === id) ?? (id === '?' ? GONE : { ...GONE, id });
+  return { ...x, task: x.task ?? '' };
+};
 
 export type Person = { n: string; h: string; c: string; s: string; t: number; g: string };
 export const PEOPLE: Person[] = [

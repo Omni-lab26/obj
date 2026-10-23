@@ -64,6 +64,7 @@ export default function RootLayout() {
           <Stack.Screen name="plan-event" />
           <Stack.Screen name="group/[id]" />
           <Stack.Screen name="settings" />
+          <Stack.Screen name="subjects" />
           <Stack.Screen name="follows" />
           <Stack.Screen name="record" />
           <Stack.Screen name="welcome" options={{ animation: 'fade', gestureEnabled: false }} />

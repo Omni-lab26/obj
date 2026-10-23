@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { hm, pad, SUBJ, subj } from '@/data';
+import { hm, pad, subj } from '@/data';
 import { commitRecord, elapsedOf, getState, useStore } from '@/store';
 import { ease, hair, lift, radius, useT } from '@/theme';
 import { Btn, Card, Empty, haptic, Press, SubjCoin, Txt } from '@/ui/base';
@@ -129,7 +129,7 @@ export default function Record() {
             <View style={[{ borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]} accessibilityRole="radiogroup">
               {[...open.map((x) => ({ id: x.id, label: x.t, s: x.s })), { id: 'none', label: 'どれでもない', s: '' }].map((x, i) => {
                 const on = todo === x.id;
-                const xs = x.s ? SUBJ.find((k) => k.id === x.s) : undefined;
+                const xs = x.s ? subj(x.s) : undefined;
                 return (
                   <Press key={x.id} onPress={() => { haptic.tap(); setTodo(x.id); }} scale={0.99} accessibilityRole="radio" accessibilityState={{ checked: on }}
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingHorizontal: 14, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>

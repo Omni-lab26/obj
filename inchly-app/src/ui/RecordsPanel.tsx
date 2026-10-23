@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { router } from 'expo-router';
+import { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { SUBJ, subj, Subject } from '@/data';
+import { subj, Subject } from '@/data';
 import { dayOf, minutesIn } from '@/lib/history';
-import { Session, useStore } from '@/store';
+import { Session, useStore, useSubjects } from '@/store';
 import { ease, hair, useT } from '@/theme';
 import { Card, Press, SectionHead, SubjCoin, Txt } from '@/ui/base';
 import { sessionSheet } from '@/ui/Editors';
@@ -13,10 +14,11 @@ import { Icon } from '@/ui/Icon';
 import { ScoreCard } from '@/ui/ScoreCard';
 import { StackedBars } from '@/ui/StackedBars';
 
-/** One subject, like a token row in a wallet: coin, name and pace, hours on the right. */
-function SubjRow({ s, i }: { s: Subject; i: number }) {
+/** One subject, like a token row in a wallet: coin, name and pace, hours (last 7 days) on the right. */
+function SubjRow({ s, week, i }: { s: Subject; week: number; i: number }) {
   const t = useT();
-  const p = Math.min(100, Math.round((s.week / s.goal) * 100));
+  const goal = s.goal ?? 0;
+  const p = goal ? Math.min(100, Math.round((week / goal) * 100)) : 100;
   const low = p < 80;
   const w = useSharedValue(0);
   useEffect(() => { w.value = withDelay(i * 50, withTiming(p, { duration: 700, easing: ease.out })); }, [p, i, w]);
@@ -28,14 +30,14 @@ function SubjRow({ s, i }: { s: Subject; i: number }) {
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
           <Txt size={13.5} w="600" style={{ flex: 1 }}>{s.name}</Txt>
-          <Txt num size={13.5} w="600">{s.week}<Txt size={11} tone="ink3" num>{` / ${s.goal}h`}</Txt></Txt>
+          <Txt num size={13.5} w="600">{week.toFixed(1)}<Txt size={11} tone="ink3" num>{goal ? ` / ${goal}h` : ' 時間'}</Txt></Txt>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 }}>
           {/* green while on pace, amber when behind */}
           <View style={{ flex: 1, height: 3, borderRadius: 1.5, backgroundColor: t.sunken, overflow: 'hidden' }}>
             <Animated.View style={[{ height: 3, borderRadius: 1.5, backgroundColor: low ? t.amber : t.green }, a]} />
           </View>
-          <Txt size={10.5} w="600" num tone={low ? 'amber' : 'greenInk'} style={{ minWidth: 64, textAlign: 'right' }}>{low ? `あと${(s.goal - s.week).toFixed(1)}時間` : `${p}%`}</Txt>
+          <Txt size={10.5} w="600" num tone={low ? 'amber' : 'greenInk'} style={{ minWidth: 64, textAlign: 'right' }}>{!goal ? '' : low ? `あと${(goal - week).toFixed(1)}時間` : `${p}%`}</Txt>
         </View>
       </View>
     </View>
@@ -121,6 +123,14 @@ export function LogPage() {
 }
 
 export function ChartsPage() {
+  const subjects = useSubjects();
+  const sessions = useStore((x) => x.sessions);
+  // hours per subject over the last 7 days
+  const hoursBy = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (let i = 0; i < 7; i++) for (const [k, m] of Object.entries(dayOf(sessions, i).parts)) out[k] = (out[k] ?? 0) + m / 60;
+    return out;
+  }, [sessions]);
   return (
     <View>
       <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
@@ -129,10 +139,10 @@ export function ChartsPage() {
 
       <View style={sec}>
         <View style={{ paddingHorizontal: 4 }}>
-          <SectionHead title="今週の科目" aux="目標に対して" />
+          <SectionHead title="この7日間の科目" aux="科目と色を編集" onAux={() => router.push('/subjects')} />
         </View>
         <Card pad={0} style={{ paddingVertical: 4 }}>
-          {SUBJ.map((s, i) => <SubjRow key={s.id} s={s} i={i} />)}
+          {subjects.map((s, i) => <SubjRow key={s.id} s={s} week={hoursBy[s.id] ?? 0} i={i} />)}
         </Card>
       </View>
 

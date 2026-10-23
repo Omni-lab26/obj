@@ -143,7 +143,7 @@ export default function Welcome() {
                 <Choice value={String(goal)} onChange={(v) => setGoal(Number(v))} options={[60, 120, 180, 240, 300].map((m) => ({ v: String(m), label: `${m / 60}時間` }))} />
               </View>
               <View>
-                <Label>勉強する科目</Label>
+                <Label sub="あとで 設定 › 科目と色 から、数IA・古文のように細かく分けられます">勉強する科目</Label>
                 <Txt size={13} tone="ink2">{SUBJ.map((x) => x.name).join('・')}</Txt>
               </View>
             </>
