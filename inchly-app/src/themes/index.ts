@@ -4,6 +4,7 @@ import grid from './grid';
 import ink from './ink';
 import kawaii from './kawaii';
 import neon from './neon';
+import oil from './oil';
 import piix from './piix';
 import riso from './riso';
 import type { ThemeKit } from './types';
@@ -16,6 +17,7 @@ import type { ThemeKit } from './types';
 const KITS: Partial<Record<ThemeId, ThemeKit>> = {
   retro: bit8, dotnight: bit8, pico: bit8,
   yumekawa: kawaii, milktea: kawaii, soda: kawaii,
+  sunflower: oil, starry: oil, lily: oil,
   piix, neon, ink, grid, riso,
 };
 const NONE: ThemeKit = {};
