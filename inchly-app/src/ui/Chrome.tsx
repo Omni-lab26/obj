@@ -67,11 +67,11 @@ export function BellBtn({ filled }: { filled?: boolean }) {
 }
 
 /** Pushed-screen header: back, centered title, optional right action. */
-export function NavBar({ title, right, color, border }: { title: string; right?: ReactNode; color?: string; border?: boolean }) {
+export function NavBar({ title, right, color, border, onBack }: { title: string; right?: ReactNode; color?: string; border?: boolean; onBack?: () => void }) {
   const t = useT();
   return (
     <View style={{ height: 48, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, borderBottomWidth: border ? hair : 0, borderBottomColor: t.line }}>
-      <IconBtn name="back" label="戻る" color={color} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+      <IconBtn name="back" label="戻る" color={color} onPress={onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/')))} />
       <View style={{ position: 'absolute', left: 60, right: 60, alignItems: 'center' }} pointerEvents="none">
         <Txt size={15.5} w="600" color={color} numberOfLines={1}>{title}</Txt>
       </View>

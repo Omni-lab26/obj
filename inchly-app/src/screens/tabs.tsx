@@ -1,10 +1,12 @@
 import { router } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { TABS } from '@/screens/layout';
+import { designReveal } from '@/screens/reveal';
 import { useThemeKit } from '@/themes';
 import type { TabBarProps, TabItem } from '@/themes/types';
 import { elapsedOf, useNow, useStore } from '@/store';
@@ -32,13 +34,20 @@ export function useTabItems({ state, navigation }: BottomTabBarProps): TabItem[]
   });
 }
 
-/** The navigator's tab bar: the theme's own, or the standard one. */
+/** The navigator's tab bar: the theme's own, or the standard one. It steps aside while the デザイン page slides in over home. */
 export function TabBar(p: BottomTabBarProps) {
   const items = useTabItems(p);
   const Bar = useThemeKit().TabBar ?? StandardTabBar;
   useNow();
   const st = useStore((s) => s);
-  return <Bar items={items} running={st.running} paused={st.paused} mins={Math.floor(elapsedOf(st) / 60)} insets={p.insets} />;
+  const [away, setAway] = useState(false);
+  useAnimatedReaction(() => designReveal.value > 0.02, (now, before) => { if (now !== before) scheduleOnRN(setAway, now); });
+  const aside = useAnimatedStyle(() => ({ opacity: 1 - designReveal.value, transform: [{ translateY: designReveal.value * 24 }] }));
+  return (
+    <Animated.View pointerEvents={away ? 'none' : 'box-none'} style={[StyleSheet.absoluteFill, aside]}>
+      <Bar items={items} running={st.running} paused={st.paused} mins={Math.floor(elapsedOf(st) / 60)} insets={p.insets} />
+    </Animated.View>
+  );
 }
 
 // A floating Liquid Glass capsule over the content, icons only. The selected
