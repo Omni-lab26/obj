@@ -3,6 +3,7 @@
 // its own (or shake → Reload). When dependencies change, it runs npm install
 // and restarts Expo for you.
 import { execSync, spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 
 const EVERY = 20_000;
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -11,7 +12,12 @@ const args = process.argv.slice(2); // e.g. npm run live -- --tunnel
 
 let expo = null;
 function startExpo() {
-  expo = spawn('npx', ['expo', 'start', ...args], { stdio: 'inherit', shell: process.platform === 'win32' });
+  // Expo's own CLI, run by this node, so stopping it reaches Expo itself (not just npx in front of it)
+  let cli = null;
+  try { cli = createRequire(import.meta.url).resolve('expo/bin/cli'); } catch { /* not installed yet: npx finds it */ }
+  expo = cli
+    ? spawn(process.execPath, [cli, 'start', ...args], { stdio: 'inherit' })
+    : spawn('npx', ['expo', 'start', ...args], { stdio: 'inherit', shell: process.platform === 'win32' });
   expo.on('exit', (code, signal) => { if (!signal && code !== null) process.exit(code); });
 }
 function stopExpo() {
@@ -33,6 +39,11 @@ const [remote, ...rest] = upstream.split('/');
 const branch = rest.join('/');
 
 let busy = false;
+let stuck = null; // the commit that local changes kept out: said once, and Expo isn't stopped for it again
+const blocked = (behind, target) => {
+  say(`新しい変更が ${behind} 件ありますが、このフォルダに手元の変更があるので取り込めませんでした（git status で確認してください）`);
+  stuck = target;
+};
 async function pull() {
   if (busy) return;
   busy = true;
@@ -40,19 +51,37 @@ async function pull() {
     sh(`git fetch --quiet ${remote} ${branch}`);
     const behind = Number(sh(`git rev-list --count HEAD..${upstream}`));
     if (!behind) return;
-    const before = sh('git rev-parse HEAD');
+    const target = sh(`git rev-parse ${upstream}`);
+    if (target === stuck) return;
+    // commits made here: it can't simply move forward
+    try { sh(`git merge-base --is-ancestor HEAD ${upstream}`); } catch { blocked(behind, target); return; }
+    // what's coming in: when packages change, Expo stops before the files arrive, so it never
+    // builds code whose packages aren't installed yet
+    const files = sh(`git diff --name-only HEAD ${upstream} -- .`).split('\n').filter(Boolean);
+    // a file changed here that is also coming in: it can't come in
+    const edited = sh('git diff --name-only HEAD').split('\n').filter(Boolean);
+    if (files.some((f) => edited.includes(f))) { blocked(behind, target); return; }
+    const deps = files.some((f) => /(^|\/)(package(-lock)?\.json|app\.json)$/.test(f));
+    if (deps) {
+      say('パッケージか設定が変わるので、Expo を止めてから取り込みます');
+      await stopExpo();
+    }
     try {
       sh(`git merge --ff-only --quiet ${upstream}`);
     } catch {
-      say(`新しい変更が ${behind} 件ありますが、このフォルダに手元の変更があるので取り込めませんでした（git status で確認してください）`);
+      blocked(behind, target);
+      if (deps) startExpo();
       return;
     }
-    const files = sh(`git diff --name-only ${before} HEAD -- .`).split('\n').filter(Boolean);
+    stuck = null;
     say(`最新を取り込みました（${behind} 件）。Expo Go に反映されます`);
-    if (files.some((f) => /(^|\/)(package(-lock)?\.json|app\.json)$/.test(f))) {
-      say('パッケージか設定が変わったので、npm install して Expo を立ち上げ直します');
-      await stopExpo();
-      execSync('npm install', { stdio: 'inherit' });
+    if (deps) {
+      say('npm install して Expo を立ち上げ直します');
+      try {
+        execSync('npm install', { stdio: 'inherit' });
+      } catch {
+        say('npm install に失敗しました。Ctrl+C で止めて、npm install をやり直してから npm run live してください');
+      }
       startExpo();
       say('立ち上げ直しました。Expo Go でもう一度開いてください（QRコードは同じです）');
     }
