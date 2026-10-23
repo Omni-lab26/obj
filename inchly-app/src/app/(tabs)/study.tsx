@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 
 import { hms, subj } from '@/data';
 import { blocksOn, endOf, minutesUntil, slotsOf, suggestion, type Block, type Slot } from '@/lib/timetable';
@@ -57,6 +57,7 @@ export default function Study() {
 function Now() {
   const t = useT();
   const now = useNow();
+  const narrow = useWindowDimensions().width < 360; // the two wide buttons keep to one line on a small phone
   const s = useStore((x) => x);
   const subjects = useSubjects();
   const sj = subj(s.subj);
@@ -82,11 +83,11 @@ function Now() {
             <Icon name={s.paused ? 'play' : 'pause'} size={16} color={focus.bg} />
           </Press>
           <Press onPress={() => router.push('/timer')} scale={0.96} style={{ flex: 1, height: 46, borderRadius: 23, backgroundColor: focus.raise, alignItems: 'center', justifyContent: 'center' }}>
-            <Txt size={14} w="700" color={focus.ink}>タイマーを開く</Txt>
+            <Txt size={narrow ? 12.5 : 14} w="700" color={focus.ink} numberOfLines={1}>タイマーを開く</Txt>
           </Press>
           <Press onPress={() => { const c = getState(); if (c.running && !c.paused) togglePause(); router.push('/record'); }} scale={0.96}
             style={{ flex: 1, height: 46, borderRadius: 23, backgroundColor: '#F2B705', alignItems: 'center', justifyContent: 'center' }}>
-            <Txt size={14} w="800" color="#2E2200">終わって記録</Txt>
+            <Txt size={narrow ? 12.5 : 14} w="800" color="#2E2200" numberOfLines={1}>終わって記録</Txt>
           </Press>
         </View>
       </Press>

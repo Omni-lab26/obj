@@ -42,7 +42,7 @@ export default function DesignPage() {
           <Preview />
 
           <Section title="テーマ" sub="フォント・色・角・質感までまとめて変わります">
-            <Segmented value={family} onChange={setFamily} options={FAMILIES.map((f) => ({ v: f.id, label: f.label }))} />
+            <Segmented fit value={family} onChange={setFamily} options={FAMILIES.map((f) => ({ v: f.id, label: f.label }))} />
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
               {keys(THEMES).filter((k) => THEMES[k].family === family).map((k) => <ThemeTile key={k} id={k} on={d.theme === k} onPress={() => set({ theme: k })} />)}
             </View>
@@ -105,8 +105,9 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 22, gap: 10 }}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 4 }}>
-        <Txt size={14} w="700">{title}</Txt>
-        {sub ? <Txt size={11.5} tone="ink3">{sub}</Txt> : null}
+        {/* on a narrow phone the note wraps, never the title */}
+        <Txt size={14} w="700" style={{ flexShrink: 0 }}>{title}</Txt>
+        {sub ? <Txt size={11.5} tone="ink3" style={{ flex: 1 }}>{sub}</Txt> : null}
       </View>
       {children}
     </View>

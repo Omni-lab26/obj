@@ -169,7 +169,7 @@ export default function Record() {
       </KeyboardAvoidingView>
 
       {phase === 'done' ? (
-        <Animated.View entering={FadeIn.duration(150)} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(244,245,248,0.6)' }}>
+        <Animated.View entering={FadeIn.duration(150)} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: t.dark ? 'rgba(0,0,0,0.5)' : 'rgba(244,245,248,0.6)' }}>
           <Stamp id="erai" size={150} pop />
         </Animated.View>
       ) : null}

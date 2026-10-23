@@ -29,7 +29,8 @@ function useIndicator(index: number, boxes: Box[]) {
  * Segmented control, wallet style: the choice sits in a navy pill that slides.
  * On a pale track by default; `small` drops the track (for use inside cards).
  */
-export function Segmented<K extends string>({ options, value, onChange, style, small }: { options: Opt<K>[]; value: K; onChange: (v: K) => void; style?: ViewStyle; small?: boolean }) {
+/** `fit`: each segment as wide as its label (for many labels of different lengths), else all the same width. */
+export function Segmented<K extends string>({ options, value, onChange, style, small, fit }: { options: Opt<K>[]; value: K; onChange: (v: K) => void; style?: ViewStyle; small?: boolean; fit?: boolean }) {
   const t = useT();
   const [boxes, setBoxes] = useState<Box[]>([]);
   const index = options.findIndex((o) => o.v === value);
@@ -47,8 +48,8 @@ export function Segmented<K extends string>({ options, value, onChange, style, s
         return (
           <Pressable key={o.v} onLayout={onLayout(i)} onPress={() => { if (!on) { haptic.tap(); onChange(o.v); } }}
             accessibilityRole="tab" accessibilityState={{ selected: on }} hitSlop={small ? { top: 10, bottom: 10 } : { top: 7, bottom: 7 }}
-            style={{ flex: 1, height: small ? 24 : 30, paddingHorizontal: small ? 10 : 0, alignItems: 'center', justifyContent: 'center' }}>
-            <Txt size={small ? 11 : 12} w="600" color={on ? t.onInk : t.ink3}>{o.label}</Txt>
+            style={[{ flex: 1, height: small ? 24 : 30, paddingHorizontal: small ? 10 : 0, alignItems: 'center', justifyContent: 'center' }, fit && { flexGrow: 1, flexShrink: 1, flexBasis: 'auto', paddingHorizontal: 5 }]}>
+            <Txt size={small ? 11 : 12} w="600" color={on ? t.onInk : t.ink3} numberOfLines={1}>{o.label}</Txt>
           </Pressable>
         );
       })}
