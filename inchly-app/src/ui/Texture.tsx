@@ -26,7 +26,8 @@ export function TextureFill({ texture, radius = 0, opacity = 1 }: { texture: Tex
   if (!texture) return null;
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius, overflow: 'hidden', opacity }]}>
-      <Image source={TILES[texture]} resizeMode="repeat" style={StyleSheet.absoluteFill} />
+      {/* sized as well as placed: on the web an image with only its edges set keeps its own size and tiles once */}
+      <Image source={TILES[texture]} resizeMode="repeat" style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} />
     </View>
   );
 }
