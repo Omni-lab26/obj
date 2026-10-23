@@ -8,6 +8,7 @@ import { cancelReminder, configureNotifications, notificationsAllowed, replaceRe
 import { deadlineReminders, goalReminderAt } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
 import { Block } from './lib/timetable';
+import { applyDesign, DEFAULT_DESIGN, Design } from './design';
 import { Done, expOf, levelOf, TODO_CAP, TODO_EXP } from './lib/exp';
 import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 
@@ -66,6 +67,7 @@ export type State = {
   extraTab: ExtraTab | null; // what the right-hand tab became; null = not chosen yet
   chart: Chart; // how home draws the study-time graph
   subjects: Subject[]; // what you study, in your order; hidden ones stay for old records
+  design: Design; // the look you picked on the デザイン page
   timetable: Block[]; // study blocks planned by the clock, repeating weekly
   timerMode: TimerMode;
   studyTodo: string | null; // the ToDo this session works on (picked on the record page)
@@ -111,6 +113,7 @@ export const INITIAL: State = {
   extraTab: null,
   chart: { range: 'day', kind: 'stack', palette: 'ink', detail: 'subject' },
   subjects: SUBJ,
+  design: DEFAULT_DESIGN,
   timetable: [],
   timerMode: 'up',
   studyTodo: null,
@@ -170,6 +173,7 @@ const subscribe = (l: () => void) => {
 };
 const derive = (s: State): State => {
   setSubjects(s.subjects); // so subj() anywhere sees renames and new subjects
+  applyDesign(s.design); // so useT() everywhere follows the look you picked
   return { ...s, todayMin: todayMinutes(s.sessions), showLive: s.liveScope !== 'none' };
 };
 
@@ -255,6 +259,9 @@ export function setTarget(min: number) {
 }
 export function setSubject(id: string) {
   setState({ subj: id });
+}
+export function setDesign(patch: Partial<Design>) {
+  setState((s) => ({ design: { ...s.design, ...patch } }));
 }
 export function setChart(patch: Partial<Chart>) {
   setState((s) => ({ chart: { ...s.chart, ...patch } }));
@@ -529,6 +536,7 @@ export function migrate(saved: Record<string, unknown>, now: Date = new Date()):
   }
   // settings saved before a field existed get its default
   if (out.chart && typeof out.chart === 'object') out.chart = { ...INITIAL.chart, ...(out.chart as object) };
+  if (out.design && typeof out.design === 'object') out.design = { ...INITIAL.design, ...(out.design as object) };
   // coins, the store and missions are gone; drop what older saves kept for them
   for (const k of ['coins', 'boost', 'owned', 'claimed', 'eventsClaimed']) delete out[k];
   delete out.v;

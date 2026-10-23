@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { PanResponder, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import { CARDS, useDesign } from '@/design';
 import { grassOf } from '@/lib/history';
 import { useStore } from '@/store';
 import { Avatar, haptic, Txt } from '@/ui/base';
@@ -10,15 +11,21 @@ import { Wordmark } from '@/ui/Brand';
 import { Rolling } from '@/ui/Rolling';
 import { hair, lift, useT } from '@/theme';
 
-const CARD_GRASS = ['#E3E7EE', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C']; // the app's grass, on white
+const CARD_GRASS = ['', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C']; // the app's grass; the empty cell depends on the card
 
-// The study card, in pearl white — the page's centerpiece, cut to the size of a credit card
+// The study card — the page's centerpiece, in the look picked on the デザイン page, cut to the size of a credit card
 // (ISO/IEC 7810 ID-1, 85.60 × 53.98 mm). The last five weeks of grass sit where
 // the IC chip would be. The sheen drifts on its own; drag a finger across it
 // and the sheen follows while the card tilts.
 export const CARD_RATIO = 85.6 / 53.98;
 export function HoloCard({ name, handle, goal, since, stats, lv }: { name: string; handle: string; goal: string; since: string; stats: { v: string; from: string; label: string }[]; lv: number }) {
   const t = useT();
+  const look = CARDS[useDesign().card];
+  const fg = look.dark ? '#FFFFFF' : '#121417';
+  const sub = (o: number) => (look.dark ? `rgba(255,255,255,${o + 0.08})` : `rgba(17,20,23,${o})`);
+  const grass = [look.dark ? 'rgba(255,255,255,0.12)' : 'rgba(17,20,23,0.08)', ...CARD_GRASS.slice(1)];
+  // SVG ids are page-wide on the web; keep each card's gradients its own
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const [w, setW] = useState(0);
   const CARD_H = w / CARD_RATIO;
   const sessions = useStore((s) => s.sessions);
@@ -76,54 +83,54 @@ export function HoloCard({ name, handle, goal, since, stats, lv }: { name: strin
     <Animated.View style={[{ marginHorizontal: 16, marginTop: 6 }, cardA]}>
       <View onLayout={(e) => setW(e.nativeEvent.layout.width)} {...pan.panHandlers}
         accessibilityLabel={`${name}の勉強カード。指でなぞると光が動きます`}
-        style={[{ aspectRatio: CARD_RATIO, borderRadius: 14, backgroundColor: '#FFFFFF', overflow: 'hidden', paddingHorizontal: 18, paddingVertical: 16, justifyContent: 'space-between', borderWidth: hair, borderColor: 'rgba(17,20,23,0.1)' }, lift(t, 2)]}>
-        {/* pearl white: white at the top left, a cool grey at the bottom right */}
+        style={[{ aspectRatio: CARD_RATIO, borderRadius: 14, backgroundColor: look.grad[1], overflow: 'hidden', paddingHorizontal: 18, paddingVertical: 16, justifyContent: 'space-between', borderWidth: hair, borderColor: look.dark ? 'rgba(255,255,255,0.08)' : 'rgba(17,20,23,0.1)' }, lift(t, 2)]}>
+        {/* the card's gradient, top left to bottom right */}
         {w ? (
           <Svg pointerEvents="none" width={w} height={CARD_H} style={{ position: 'absolute', top: 0, left: 0 }}>
             <Defs>
-              <LinearGradient id="pearl" x1="0" y1="0" x2="1" y2="1">
-                <Stop offset="0" stopColor="#FFFFFF" />
-                <Stop offset="0.55" stopColor="#F6F7FA" />
-                <Stop offset="1" stopColor="#E9EDF3" />
+              <LinearGradient id={`face${uid}`} x1="0" y1="0" x2="1" y2="1">
+                <Stop offset="0" stopColor={look.grad[0]} />
+                <Stop offset="0.55" stopColor={look.grad[1]} />
+                <Stop offset="1" stopColor={look.grad[2]} />
               </LinearGradient>
             </Defs>
-            <Rect width={w} height={CARD_H} fill="url(#pearl)" />
+            <Rect width={w} height={CARD_H} fill={`url(#face${uid})`} />
           </Svg>
         ) : null}
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: 0, bottom: 0, left: -w * 0.25, width: w * 1.5 }, sheenA]}>
           {w ? (
             <Svg width={w * 1.5} height={CARD_H}>
               <Defs>
-                <LinearGradient id="holo" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0.3" stopColor="#9EE8FF" stopOpacity="0" />
-                  <Stop offset="0.44" stopColor="#9EE8FF" stopOpacity="0.28" />
-                  <Stop offset="0.52" stopColor="#C9B6FF" stopOpacity="0.3" />
-                  <Stop offset="0.6" stopColor="#FFC2E2" stopOpacity="0.22" />
-                  <Stop offset="0.7" stopColor="#C9B6FF" stopOpacity="0" />
+                <LinearGradient id={`holo${uid}`} x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0.3" stopColor={look.sheen[0]} stopOpacity="0" />
+                  <Stop offset="0.44" stopColor={look.sheen[0]} stopOpacity="0.28" />
+                  <Stop offset="0.52" stopColor={look.sheen[1]} stopOpacity="0.3" />
+                  <Stop offset="0.6" stopColor={look.sheen[2]} stopOpacity="0.22" />
+                  <Stop offset="0.7" stopColor={look.sheen[1]} stopOpacity="0" />
                 </LinearGradient>
               </Defs>
-              <Rect width={w * 1.5} height={CARD_H} fill="url(#holo)" />
+              <Rect width={w * 1.5} height={CARD_H} fill={`url(#holo${uid})`} />
             </Svg>
           ) : null}
         </Animated.View>
 
         <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Wordmark size={16} color="#121417" />
-          <Txt num size={12} w="800" color="#121417" style={{ letterSpacing: 0.6 }}>{`Lv.${lv}`}</Txt>
+          <Wordmark size={16} color={fg} />
+          <Txt num size={12} w="800" color={fg} style={{ letterSpacing: 0.6 }}>{`Lv.${lv}`}</Txt>
         </View>
 
         {/* the chip: five weeks of grass in a gold frame */}
         <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
           <View style={{ padding: 4, borderRadius: 6, backgroundColor: 'rgba(214,180,106,0.14)', borderWidth: 1, borderColor: 'rgba(184,140,50,0.6)' }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 7 * 5 + 2 * 6, gap: 2 }}>
-              {cells.map((l, i) => <View key={i} style={{ width: 5, height: 5, borderRadius: 1.2, backgroundColor: CARD_GRASS[l] }} />)}
+              {cells.map((l, i) => <View key={i} style={{ width: 5, height: 5, borderRadius: 1.2, backgroundColor: grass[l] }} />)}
             </View>
           </View>
           <View style={{ flexDirection: 'row', gap: 20 }}>
             {stats.map((x) => (
               <View key={x.label}>
-                <Rolling value={x.v} size={21} weight="700" color="#121417" />
-                <Txt size={10} lh={13} color="rgba(17,20,23,0.5)">{x.label}</Txt>
+                <Rolling value={x.v} size={21} weight="700" color={fg} />
+                <Txt size={10} lh={13} color={sub(0.5)}>{x.label}</Txt>
               </View>
             ))}
           </View>
@@ -131,14 +138,14 @@ export function HoloCard({ name, handle, goal, since, stats, lv }: { name: strin
 
         {/* holder and "valid from", where a card prints them */}
         <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Avatar name={name} color="#6E56CF" size={34} ring="#FFFFFF" />
+          <Avatar name={name} color="#6E56CF" size={34} ring={look.dark ? 'rgba(255,255,255,0.2)' : '#FFFFFF'} />
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Txt size={15} w="700" lh={19} color="#121417" numberOfLines={1}>{name}</Txt>
-            <Txt size={10.5} color="rgba(17,20,23,0.55)" numberOfLines={1}>{`@${handle} · ${goal}`}</Txt>
+            <Txt size={15} w="700" lh={19} color={fg} numberOfLines={1}>{name}</Txt>
+            <Txt size={10.5} color={sub(0.55)} numberOfLines={1}>{`@${handle} · ${goal}`}</Txt>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Txt size={8} w="600" color="rgba(17,20,23,0.4)" style={{ letterSpacing: 1 }}>SINCE</Txt>
-            <Txt num size={13} w="600" color="rgba(17,20,23,0.8)">{since}</Txt>
+            <Txt size={8} w="600" color={sub(0.4)} style={{ letterSpacing: 1 }}>SINCE</Txt>
+            <Txt num size={13} w="600" color={sub(0.8)}>{since}</Txt>
           </View>
         </View>
       </View>

@@ -1,12 +1,15 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { hms, pad, PEOPLE, subj } from '@/data';
 import { dayOf, studiedOn } from '@/lib/history';
 import { jpDate } from '@/lib/time';
 import { endOf, suggestion } from '@/lib/timetable';
+import { useDesign } from '@/design';
 import { elapsedOf, startFrom, startStudy, togglePause, useNow, useStore, useStreak } from '@/store';
 import { hair, lift, onColor, radius, type, useT } from '@/theme';
 import { Avatar, AvatarStack, Btn, Card, haptic, IconBtn, Press, SubjCoin, Txt } from '@/ui/base';
@@ -23,6 +26,8 @@ import { StudyChart } from '@/ui/StudyChart';
 import { toast } from '@/ui/Toast';
 
 
+const openDesign = () => router.push('/design');
+
 // Home has one lead: how much you studied today, on the tape. Everything else
 // is smaller and shaped differently, so the eye has an order to follow.
 export default function Home() {
@@ -31,6 +36,8 @@ export default function Home() {
   const s = useStore((x) => x);
   const unread = useUnread();
   const tabPad = useTabPad();
+  const [toDesign] = useState(() => Gesture.Pan().activeOffsetX(24).failOffsetY([-14, 14])
+    .onEnd((e) => { if (e.translationX > 70) scheduleOnRN(openDesign); }));
   const sj = subj(s.subj);
   const e = elapsedOf(s);
   const me = s.account?.name ?? 'はる';
@@ -79,6 +86,8 @@ export default function Home() {
         <IconBtn outline name="gear" label="設定" onPress={() => router.push('/settings')} />
       </View>
 
+      {/* swipe home to the right for the デザイン page (the handle on the left edge does the same) */}
+      <GestureDetector gesture={toDesign}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: tabPad }}>
         {/* the lead: today's total, like a wallet's balance card */}
         <Card style={{ marginHorizontal: 16, marginTop: 6 }} pad={14}>
@@ -164,6 +173,12 @@ export default function Home() {
         </Press>
 
       </ScrollView>
+      </GestureDetector>
+      <Press onPress={() => router.push('/design')} hitSlop={{ top: 20, bottom: 20, left: 4, right: 14 }} scale={0.9} accessibilityRole="button" accessibilityLabel="デザインを変える"
+        style={{ position: 'absolute', left: 0, top: '42%', width: 14, height: 56, borderTopRightRadius: 8, borderBottomRightRadius: 8, backgroundColor: t.surface,
+          borderWidth: hair, borderLeftWidth: 0, borderColor: t.line2, alignItems: 'center', justifyContent: 'center', ...lift(t) }}>
+        <View style={{ width: 3, height: 20, borderRadius: 2, backgroundColor: t.ink3 }} />
+      </Press>
     </Screen>
   );
 }
@@ -287,14 +302,18 @@ function StreakPill() {
     s.set(withSequence(withTiming(1.3, { duration: 110 }), withSpring(1, { duration: 520, dampingRatio: 0.4 })));
     r.set(withSequence(withTiming(-14, { duration: 110 }), withSpring(0, { duration: 520, dampingRatio: 0.4 })));
   };
-  const dim = 'rgba(255,255,255,0.55)';
+  // the capsule's look, from the デザイン page: black, the main color, or white
+  const look = useDesign().streak;
+  const light = look === 'white';
+  const fg = light ? t.ink : '#fff';
+  const dim = light ? t.ink3 : 'rgba(255,255,255,0.55)';
   return (
     <Press onPress={jump} haptics={false} scale={0.98} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}
-      style={{ marginHorizontal: 16, marginTop: 12, height: 58, borderRadius: 29, backgroundColor: t.dark ? '#000' : '#0B0D12', flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 18,
-        borderWidth: t.dark ? hair : 0, borderColor: t.line2 }}>
+      style={{ marginHorizontal: 16, marginTop: 12, height: 58, borderRadius: 29, backgroundColor: look === 'ink' ? t.ink : light ? t.surface : '#0B0D12', flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 18,
+        borderWidth: light ? hair : 0, borderColor: t.line2, ...(light ? lift(t) : null) }}>
       <Animated.View style={a}><Sticker name="fire" size={42} /></Animated.View>
       <View style={{ marginLeft: 4 }}>
-        <Rolling value={pad(streak)} size={17} weight="700" color="#fff" />
+        <Rolling value={pad(streak)} size={17} weight="700" color={fg} />
         <Txt size={11} color={dim} lh={14}>{`日連続 · 休み券 ${tickets}`}</Txt>
       </View>
       <View style={{ flex: 1 }} />
@@ -306,9 +325,9 @@ function StreakPill() {
           const today = ago === 0;
           return (
             <View key={w} style={{ alignItems: 'center', gap: 5 }}>
-              <Txt size={10} w="600" lh={12} color={today ? '#fff' : dim}>{w}</Txt>
+              <Txt size={10} w="600" lh={12} color={today ? fg : dim}>{w}</Txt>
               <View style={{ width: 7, height: 7, borderRadius: 4,
-                backgroundColor: today && studied ? '#FF7A1A' : studied ? '#fff' : 'transparent',
+                backgroundColor: today && studied ? '#FF7A1A' : studied ? fg : 'transparent',
                 borderWidth: studied ? 0 : 1, borderColor: dim, borderStyle: future ? 'dashed' : 'solid' }} />
             </View>
           );

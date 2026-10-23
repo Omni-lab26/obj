@@ -112,6 +112,17 @@ export default function Settings() {
           <Row label="目標まであと少し" sub="あと15分のとき" right={<Toggle on={s.notify.goal} onChange={(v) => setState({ notify: { ...s.notify, goal: v } })} label="目標まであと少し" />} />
         </Section>
 
+        <Section title="見た目">
+          <Press onPress={() => router.push('/design')} scale={0.99} accessibilityRole="button" accessibilityLabel="デザインを変える"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Txt size={14} w="500">デザイン</Txt>
+              <Txt size={12} tone="ink3">背景・メインの色・角・カード・タイマー。ホームを右にスワイプでも開きます</Txt>
+            </View>
+            <Txt size={16} tone="ink3">›</Txt>
+          </Press>
+        </Section>
+
         <Section title="科目">
           <Press onPress={() => router.push('/subjects')} scale={0.99} accessibilityRole="button" accessibilityLabel="科目と色を編集"
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10 }}>

@@ -1,5 +1,8 @@
+import { useSyncExternalStore } from 'react';
 import { Platform, StyleSheet, TextStyle } from 'react-native';
 import { Easing } from 'react-native-reanimated';
+
+import { BGS, CORNERS, designVersion, getDesign, INKS, onDesign, TIMERS } from './design';
 
 // Light only. A cool blue-white canvas, white cards on a faint edge and a
 // short soft shadow, near-black ink for text and primary buttons. Green is for
@@ -32,9 +35,22 @@ const light = {
 
 export type Theme = typeof light;
 
-/** Light only (app.json: userInterfaceStyle "light"). */
+// ---------- following the design you pick (design.ts) ----------
+let palette: Theme = light;
+function follow() {
+  const d = getDesign();
+  palette = { ...light, canvas: BGS[d.bg].canvas, sunken: BGS[d.bg].sunken, ink: INKS[d.ink].ink };
+  // radius and focus are plain objects read during render; components that
+  // read them also read the theme, so they re-render with the new values
+  Object.assign(radius, { card: CORNERS[d.corners].card, inner: CORNERS[d.corners].inner });
+  focus.bg = TIMERS[d.timer].bg;
+}
+onDesign(follow);
+
+/** The theme, following the design you picked. */
 export function useT(): Theme {
-  return light;
+  useSyncExternalStore(onDesign, designVersion, designVersion);
+  return palette;
 }
 
 // The focus timer is always dark, whatever the system setting.
@@ -77,7 +93,7 @@ export const type = {
 /** Cards sit on a faint edge and a short, soft shadow (none in dark mode). */
 export const lift = (t: { dark: boolean }, k: 1 | 2 = 1) =>
   t.dark ? null : { boxShadow: k === 1 ? '0px 0px 0px 0.5px rgba(15,23,42,0.06), 0px 1px 2px rgba(15,23,42,0.04), 0px 4px 14px rgba(15,23,42,0.045)' : '0px 0px 0px 0.5px rgba(15,23,42,0.06), 0px 2px 6px rgba(15,23,42,0.06), 0px 12px 28px rgba(15,23,42,0.12)' };
-export const radius = { card: 16, inner: 12 };
+export const radius = { card: 16, inner: 12 }; // follows the 角 you pick (applyDesign)
 
 // Motion measured on bencho.dev: press = .2s (.3,.9,.4,1), springy round buttons = .24s (.28,1.3,.36,1).
 export const ease = {
