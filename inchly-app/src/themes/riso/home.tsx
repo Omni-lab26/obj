@@ -1,7 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { Easing, FadeInDown, FadeOutDown, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { G, Line, Path, Rect } from 'react-native-svg';
 
 import { pad, subj } from '@/data';
@@ -10,7 +9,7 @@ import { clock, go, hmColon, jpHm, pickLabel, session, startPick, tickTodo, useC
 import type { HomeKit } from '@/themes/types';
 import { MAX_TICKETS, type Todo, useLevel, useStore } from '@/store';
 import { haptic, Press } from '@/ui/base';
-import { barsTop, Screen, useTabPad, useUnread } from '@/ui/Chrome';
+import { Screen, useBarsTop, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon } from '@/ui/Icon';
 import { levelSheet } from '@/ui/Level';
@@ -586,14 +585,14 @@ function Colophon() {
 function Floating() {
   const k = useInk();
   const ss = useSession();
-  const insets = useSafeAreaInsets();
+  const barsTop = useBarsTop();
   const no = useNo(ss.subject.id);
   const bob = useSharedValue(0);
   useEffect(() => { bob.set(withRepeat(withSequence(withTiming(-3, { duration: 1300 }), withTiming(0, { duration: 1300 })), -1, false)); }, [bob]);
   const a = useAnimatedStyle(() => ({ transform: [{ translateY: bob.value }, { rotate: '3deg' }] }));
   if (!ss.running) return null;
   return (
-    <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOutDown.duration(160)} style={[{ position: 'absolute', right: 18, bottom: barsTop(insets.bottom) + 14 }, a]}>
+    <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOutDown.duration(160)} style={[{ position: 'absolute', right: 18, bottom: barsTop + 14 }, a]}>
       <Cover w={56} h={74} onPress={go.timer} a11y={`${ss.subject.name}を勉強中 ${clock(ss.elapsed)}。タイマーを開く`} live={!ss.paused}>
         <SubjectArt w={56} h={74} id={ss.subject.id} name={ss.subject.name} no={no} />
         <View style={{ position: 'absolute', left: 0, right: 0, bottom: 3, alignItems: 'center' }}>

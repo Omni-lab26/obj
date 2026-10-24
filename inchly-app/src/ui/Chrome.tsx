@@ -23,8 +23,8 @@ export function useUnread() {
   return NOTIFS.filter(allowed({ notify, blocked })).filter((n) => !read.includes(n.id) && !gone.includes(n.id)).length;
 }
 
-// The tab bar floats over the content with the study bar on top of it, so tab
-// screens leave room under their last item for both.
+// The tab bar floats over the content, and while you study the study bar sits
+// on top of it, so tab screens leave room under their last item for what's there.
 export const TAB_BAR_H = 62;
 export const tabBarBottom = (inset: number) => Math.max(inset - 6, 12);
 export const STUDY_BAR_H = 56;
@@ -32,9 +32,14 @@ export const STUDY_BAR_H = 56;
 export const studyBarBottom = (inset: number) => tabBarBottom(inset) + TAB_BAR_H + 8;
 /** The top of the study bar, from the bottom edge: things that float over a tab screen sit above it. */
 export const barsTop = (inset: number) => studyBarBottom(inset) + STUDY_BAR_H;
-export function useTabPad() {
+/** The top of what floats at the bottom of a tab screen: the study bar while studying, else the tab bar. */
+export function useBarsTop() {
   const insets = useSafeAreaInsets();
-  return barsTop(insets.bottom) + 20;
+  const running = useStore((s) => s.running);
+  return running ? barsTop(insets.bottom) : tabBarBottom(insets.bottom) + TAB_BAR_H;
+}
+export function useTabPad() {
+  return useBarsTop() + 20;
 }
 
 /** Full-height screen on the canvas colour with the top safe area applied. */

@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOutDown, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { TABS } from '@/screens/layout';
@@ -35,7 +35,7 @@ export function useTabItems({ state, navigation }: BottomTabBarProps): TabItem[]
   });
 }
 
-/** The navigator's tab bar (the theme's own, or the standard one) with the study bar on top. Both step aside while the デザイン page slides in over home. */
+/** The navigator's tab bar (the theme's own, or the standard one), with the study bar on top once you start. Both step aside while the デザイン page slides in over home. */
 export function TabBar(p: BottomTabBarProps) {
   const items = useTabItems(p);
   const kit = useThemeKit();
@@ -48,7 +48,11 @@ export function TabBar(p: BottomTabBarProps) {
   const aside = useAnimatedStyle(() => ({ opacity: 1 - designReveal.value, transform: [{ translateY: designReveal.value * 24 }] }));
   return (
     <Animated.View pointerEvents={away ? 'none' : 'box-none'} style={[StyleSheet.absoluteFill, aside]}>
-      <StudyBar insets={p.insets} />
+      {st.running ? (
+        <Animated.View pointerEvents="box-none" entering={FadeInDown.duration(260)} exiting={FadeOutDown.duration(180)} style={StyleSheet.absoluteFill}>
+          <StudyBar insets={p.insets} />
+        </Animated.View>
+      ) : null}
       <Bar items={items} running={st.running} paused={st.paused} mins={Math.floor(elapsedOf(st) / 60)} insets={p.insets} />
     </Animated.View>
   );

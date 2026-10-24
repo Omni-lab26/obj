@@ -23,7 +23,7 @@ import { toast } from '@/ui/Toast';
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 
-/** Start from a plan and open the timer. Refused once a different subject has run for over a minute. */
+/** Start from a plan; the study bar comes up on the tab bar (tap it for the timer). Refused once a different subject has run for over a minute. */
 function go(x: { s: string; todoId?: string; min?: number }) {
   if (!startFrom(x)) {
     haptic.warn();
@@ -31,7 +31,6 @@ function go(x: { s: string; todoId?: string; min?: number }) {
     return;
   }
   haptic.firm();
-  router.push('/timer');
 }
 
 export default function Study() {

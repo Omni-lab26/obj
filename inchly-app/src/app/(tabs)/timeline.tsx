@@ -1,13 +1,12 @@
 import { ComponentRef, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ROOM } from '@/data';
 import { useStore } from '@/store';
 import { useT } from '@/theme';
 import { Empty, Press } from '@/ui/base';
-import { barsTop, Screen, SearchBtn, TopBar, useTabPad } from '@/ui/Chrome';
+import { Screen, SearchBtn, TopBar, useBarsTop, useTabPad } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
 import { composeSheet, PostRow } from '@/ui/PostParts';
 import { UnderTabs } from '@/ui/Tabs';
@@ -18,7 +17,7 @@ type Feed = 'all' | 'following';
 // records ride along with posts, so "I did 70 minutes of physics" reads as news.
 export default function Timeline() {
   const t = useT();
-  const insets = useSafeAreaInsets();
+  const barsTop = useBarsTop();
   const pad = useTabPad();
   const [feed, setFeed] = useState<Feed>('all');
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -43,7 +42,7 @@ export default function Timeline() {
       </ScrollView>
       {/* write: a round button above the tab bar and the study bar, where the thumb already is */}
       <Press onPress={composeSheet} scale={0.9} accessibilityLabel="投稿する"
-        style={{ position: 'absolute', right: 20, bottom: barsTop(insets.bottom) + 12, width: 54, height: 54, borderRadius: 27, backgroundColor: t.ink,
+        style={{ position: 'absolute', right: 20, bottom: barsTop + 12, width: 54, height: 54, borderRadius: 27, backgroundColor: t.ink,
           alignItems: 'center', justifyContent: 'center', boxShadow: '0px 6px 18px rgba(18,20,23,0.28)' }}>
         <Icon name="plus" size={24} color={t.onInk} width={2.4} />
       </Press>
