@@ -51,6 +51,12 @@ export type TabBarProps = {
  * which is the room every screen leaves under its content.
  */
 export type TabBarKit = ComponentType<TabBarProps>;
+/**
+ * A theme's study bar: the mini player that sits on the tab bar on every tab
+ * (src/screens/StudyBar.tsx), placed at studyBarBottom(insets.bottom) and
+ * STUDY_BAR_H tall, which is the room every screen leaves above the tab bar.
+ */
+export type StudyBarKit = ComponentType<{ insets: EdgeInsets }>;
 
 /**
  * How a theme makes something of a moment (src/moments.ts): drawn over
@@ -58,4 +64,4 @@ export type TabBarKit = ComponentType<TabBarProps>;
  */
 export type MomentKit = { [K in MomentKind]?: ComponentType<{ moment: Extract<Moment, { kind: K }>; done: () => void }> };
 
-export type ThemeKit = { home?: HomeKit; timer?: TimerKit; TabBar?: TabBarKit; moments?: MomentKit };
+export type ThemeKit = { home?: HomeKit; timer?: TimerKit; TabBar?: TabBarKit; StudyBar?: StudyBarKit; moments?: MomentKit };

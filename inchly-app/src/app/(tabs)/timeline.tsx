@@ -7,7 +7,7 @@ import { ROOM } from '@/data';
 import { useStore } from '@/store';
 import { useT } from '@/theme';
 import { Empty, Press } from '@/ui/base';
-import { Screen, SearchBtn, TAB_BAR_H, tabBarBottom, TopBar, useTabPad } from '@/ui/Chrome';
+import { barsTop, Screen, SearchBtn, TopBar, useTabPad } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
 import { composeSheet, PostRow } from '@/ui/PostParts';
 import { UnderTabs } from '@/ui/Tabs';
@@ -41,9 +41,9 @@ export default function Timeline() {
           )}
         </Animated.View>
       </ScrollView>
-      {/* write: a round button above the tab bar, where the thumb already is */}
+      {/* write: a round button above the tab bar and the study bar, where the thumb already is */}
       <Press onPress={composeSheet} scale={0.9} accessibilityLabel="投稿する"
-        style={{ position: 'absolute', right: 20, bottom: tabBarBottom(insets.bottom) + TAB_BAR_H + 14, width: 54, height: 54, borderRadius: 27, backgroundColor: t.ink,
+        style={{ position: 'absolute', right: 20, bottom: barsTop(insets.bottom) + 12, width: 54, height: 54, borderRadius: 27, backgroundColor: t.ink,
           alignItems: 'center', justifyContent: 'center', boxShadow: '0px 6px 18px rgba(18,20,23,0.28)' }}>
         <Icon name="plus" size={24} color={t.onInk} width={2.4} />
       </Press>

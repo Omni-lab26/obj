@@ -578,12 +578,9 @@ export const home: HomeKit = {
   sections: SECTIONS,
   // paint first: the turf, the button, then the streak and ToDos; the week and deadlines below
   arrange: () => [
-    { id: 'turf', sections: ['today'] },
-    { id: 'go', sections: ['now'] },
+    { id: 'grass', sections: ['grass'] },
     { id: 'streak', sections: ['streak'] },
-    { id: 'todos', sections: ['todos'] },
-    { id: 'drips', sections: ['chart'] },
-    { id: 'deadlines', sections: ['deadlines'] },
+    { id: 'turf', sections: ['today'] },
     { id: 'peers', sections: ['peers'] },
   ],
 };

@@ -524,11 +524,9 @@ export const home: HomeKit = {
   sections: SECTIONS,
   // the readout and the launch bar lead; streak and level side by side; then the log, missions, deadlines and the network
   arrange: () => [
-    { id: 'readout', sections: ['today', 'now'] },
+    { id: 'grass', sections: ['grass'] },
     { id: 'stats', sections: ['streak', 'x:level'], row: true },
-    { id: 'log', sections: ['chart'] },
-    { id: 'missions', sections: ['todos'] },
-    { id: 'deadlines', sections: ['deadlines'] },
+    { id: 'readout', sections: ['today'] },
     { id: 'net', sections: ['peers'] },
   ],
   DesignHandle,

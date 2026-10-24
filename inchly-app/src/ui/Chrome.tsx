@@ -23,12 +23,18 @@ export function useUnread() {
   return NOTIFS.filter(allowed({ notify, blocked })).filter((n) => !read.includes(n.id) && !gone.includes(n.id)).length;
 }
 
-// The tab bar floats over the content, so tab screens leave room under their last item.
+// The tab bar floats over the content with the study bar on top of it, so tab
+// screens leave room under their last item for both.
 export const TAB_BAR_H = 62;
 export const tabBarBottom = (inset: number) => Math.max(inset - 6, 12);
+export const STUDY_BAR_H = 56;
+/** Where the study bar sits: just above the tab bar. */
+export const studyBarBottom = (inset: number) => tabBarBottom(inset) + TAB_BAR_H + 8;
+/** The top of the study bar, from the bottom edge: things that float over a tab screen sit above it. */
+export const barsTop = (inset: number) => studyBarBottom(inset) + STUDY_BAR_H;
 export function useTabPad() {
   const insets = useSafeAreaInsets();
-  return tabBarBottom(insets.bottom) + TAB_BAR_H + 20;
+  return barsTop(insets.bottom) + 20;
 }
 
 /** Full-height screen on the canvas colour with the top safe area applied. */

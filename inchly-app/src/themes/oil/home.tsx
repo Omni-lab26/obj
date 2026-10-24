@@ -95,13 +95,10 @@ function Frame({ block, children }: { block: Block; index: number; children: Rea
 }
 
 const ORDER = (): Block[] => [
-  { id: 'today', sections: ['today'] },
-  { id: 'now', sections: ['now'] },
-  { id: 'gallery', sections: ['x:gallery'] },
-  { id: 'chart', sections: ['chart'] },
+  { id: 'grass', sections: ['grass'] },
   { id: 'streak', sections: ['streak'] },
-  { id: 'todos', sections: ['todos'] },
-  { id: 'deadlines', sections: ['deadlines'] },
+  { id: 'today', sections: ['today'] },
+  { id: 'gallery', sections: ['x:gallery'] },
   { id: 'peers', sections: ['peers'] },
 ];
 

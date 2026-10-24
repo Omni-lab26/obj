@@ -5,7 +5,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withS
 
 import type { Reaction } from '../design';
 import { AVATAR } from '../photos';
-import { ease, face, hair, lift, radius, Theme, useT } from '../theme';
+import { ease, face, hair, lift, onColor, radius, Theme, useT } from '../theme';
 import { Icon, IconName } from './Icon';
 import { TextureFill } from './Texture';
 
@@ -211,6 +211,14 @@ export function SubjCoin({ name, color, size = 36 }: { name: string; color: stri
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color, alignItems: 'center', justifyContent: 'center' }}>
       <Text style={{ color: '#fff', fontSize: size * 0.44, lineHeight: size * 0.56, fontWeight: '700', fontFamily: face(size * 0.44) }}>{[...name][0]}</Text>
+    </View>
+  );
+}
+/** A subject as a small square tile, like an album cover: its color and its first letter. */
+export function SubjTile({ name, color, size = 40 }: { name: string; color: string; size?: number }) {
+  return (
+    <View style={{ width: size, height: size, borderRadius: size * 0.24, backgroundColor: color, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: onColor(color), fontSize: size * 0.42, lineHeight: size * 0.54, fontWeight: '700', fontFamily: face(size * 0.42) }}>{[...name][0]}</Text>
     </View>
   );
 }

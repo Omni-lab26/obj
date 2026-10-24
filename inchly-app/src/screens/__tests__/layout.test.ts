@@ -1,6 +1,26 @@
-import { arrange, arrangeZones, Block, HOME, TIMER } from '../layout';
+import { arrange, arrangeZones, Block, HOME as BASE_HOME, TIMER } from '../layout';
+
+// arrange() is tested on a fuller home than the base has now, so every rule has something to bite on.
+const HOME: Block[] = [
+  { id: 'today', sections: ['today', 'chart', 'now'] },
+  { id: 'streak', sections: ['streak'] },
+  { id: 'todos', sections: ['todos'] },
+  { id: 'deadlines', sections: ['deadlines'] },
+  { id: 'peers', sections: ['peers'] },
+];
 
 const kinds = (bs: Block[]) => bs.flatMap((b) => b.sections);
+
+describe('the base home', () => {
+  it('opens with the grass, then the streak', () => {
+    expect(BASE_HOME.flatMap((b) => b.sections).slice(0, 2)).toEqual(['grass', 'streak']);
+  });
+
+  it('puts a section the base gained before everything when a theme never mentions it', () => {
+    const out = arrange(BASE_HOME, () => [{ id: 'streak', sections: ['streak'] }, { id: 'today', sections: ['today'] }, { id: 'peers', sections: ['peers'] }]);
+    expect(out.flatMap((b) => b.sections)).toEqual(['grass', 'streak', 'today', 'peers']);
+  });
+});
 
 describe('arrange', () => {
   it('keeps the base when a theme has no arrangement', () => {

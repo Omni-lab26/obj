@@ -7,6 +7,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { TABS } from '@/screens/layout';
 import { designReveal } from '@/screens/reveal';
+import { StandardStudyBar } from '@/screens/StudyBar';
 import { useThemeKit } from '@/themes';
 import type { TabBarProps, TabItem } from '@/themes/types';
 import { elapsedOf, useNow, useStore } from '@/store';
@@ -34,10 +35,12 @@ export function useTabItems({ state, navigation }: BottomTabBarProps): TabItem[]
   });
 }
 
-/** The navigator's tab bar: the theme's own, or the standard one. It steps aside while the デザイン page slides in over home. */
+/** The navigator's tab bar (the theme's own, or the standard one) with the study bar on top. Both step aside while the デザイン page slides in over home. */
 export function TabBar(p: BottomTabBarProps) {
   const items = useTabItems(p);
-  const Bar = useThemeKit().TabBar ?? StandardTabBar;
+  const kit = useThemeKit();
+  const Bar = kit.TabBar ?? StandardTabBar;
+  const StudyBar = kit.StudyBar ?? StandardStudyBar;
   useNow();
   const st = useStore((s) => s);
   const [away, setAway] = useState(false);
@@ -45,6 +48,7 @@ export function TabBar(p: BottomTabBarProps) {
   const aside = useAnimatedStyle(() => ({ opacity: 1 - designReveal.value, transform: [{ translateY: designReveal.value * 24 }] }));
   return (
     <Animated.View pointerEvents={away ? 'none' : 'box-none'} style={[StyleSheet.absoluteFill, aside]}>
+      <StudyBar insets={p.insets} />
       <Bar items={items} running={st.running} paused={st.paused} mins={Math.floor(elapsedOf(st) / 60)} insets={p.insets} />
     </Animated.View>
   );

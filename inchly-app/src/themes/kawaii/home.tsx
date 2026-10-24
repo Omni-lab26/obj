@@ -521,11 +521,9 @@ export const home: HomeKit = {
   Frame,
   DesignHandle: Handle,
   arrange: () => [
-    { id: 'hero', sections: ['today', 'now'] },
+    { id: 'grass', sections: ['grass'] },
     { id: 'streak', sections: ['streak'] },
-    { id: 'chart', sections: ['chart'] },
-    { id: 'todos', sections: ['todos'] },
-    { id: 'deadlines', sections: ['deadlines'] },
+    { id: 'hero', sections: ['today'] },
     { id: 'peers', sections: ['peers'] },
   ],
   sections: { today: Today, now: Now, chart: Chart, streak: Streak, todos: Todos, deadlines: Deadlines, peers: Peers },

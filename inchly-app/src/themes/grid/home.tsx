@@ -586,10 +586,9 @@ export const home: HomeKit = {
   Page, Header, Frame, sections: SECTIONS, DesignHandle: Handle,
   // today and what's next in one window, the plot under it, streak and ToDos side by side, then the rest
   arrange: () => [
-    { id: 'today', sections: ['today', 'now'] },
-    { id: 'chart', sections: ['chart'] },
-    { id: 'pair', sections: ['streak', 'todos'], row: true },
-    { id: 'deadlines', sections: ['deadlines'] },
+    { id: 'grass', sections: ['grass'] },
+    { id: 'streak', sections: ['streak'] },
+    { id: 'today', sections: ['today'] },
     { id: 'peers', sections: ['peers'] },
     { id: 'footer', sections: ['x:footer'] },
   ],

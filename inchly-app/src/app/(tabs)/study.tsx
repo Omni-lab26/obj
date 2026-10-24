@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
 
 import { hms, subj } from '@/data';
+import { Deadlines } from '@/screens/home/standard';
 import { blocksOn, endOf, minutesUntil, slotsOf, suggestion, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
 import { elapsedOf, getState, setTarget, setTimerMode, startFrom, toggleTodo, togglePause, useNow, useStore, useSubjects } from '@/store';
@@ -17,7 +18,7 @@ import { Segmented } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 
 // The middle tab: where studying starts. Plan it here (the timetable, the
-// ToDos, how the timer counts), and start from what you planned, so the
+// ToDos and the deadlines they lead to, how the timer counts), and start from what you planned, so the
 // subject is always the one you chose. The timer itself opens on top.
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
@@ -46,6 +47,7 @@ export default function Study() {
         <Now />
         <Timetable />
         <Todos />
+        <View style={{ paddingHorizontal: 16, paddingTop: 14 }}><Deadlines /></View>
         <TimerPrefs />
         <View style={{ height: 8, backgroundColor: t.canvas }} />
       </ScrollView>

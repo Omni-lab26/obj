@@ -7,7 +7,7 @@ import type { IconName } from '../ui/Icon';
 
 // ---------- home ----------
 /** The sections the home screen is made of. */
-export type SectionKind = 'today' | 'chart' | 'now' | 'streak' | 'todos' | 'deadlines' | 'peers';
+export type SectionKind = 'grass' | 'streak' | 'today' | 'peers' | 'chart' | 'now' | 'todos' | 'deadlines';
 /** A theme's own extra section (drawn only by that theme), e.g. 'x:ticker'. */
 export type ExtraKind = `x:${string}`;
 export type Kind = SectionKind | ExtraKind;
@@ -17,12 +17,16 @@ export type Kind = SectionKind | ExtraKind;
  */
 export type Block = { id: string; sections: Kind[]; row?: boolean };
 
-/** The home screen, top to bottom. The header sits above it and stays put. */
+/**
+ * The home screen, top to bottom. The header sits above it and stays put;
+ * starting is the study bar's (on the tab bar). 'chart', 'now', 'todos' and
+ * 'deadlines' are kinds themes still draw but home no longer shows (they live
+ * on the study page and マイページ).
+ */
 export const HOME: Block[] = [
-  { id: 'today', sections: ['today', 'chart', 'now'] },
+  { id: 'grass', sections: ['grass'] },
   { id: 'streak', sections: ['streak'] },
-  { id: 'todos', sections: ['todos'] },
-  { id: 'deadlines', sections: ['deadlines'] },
+  { id: 'today', sections: ['today'] },
   { id: 'peers', sections: ['peers'] },
 ];
 

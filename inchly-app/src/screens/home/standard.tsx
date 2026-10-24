@@ -15,6 +15,7 @@ import { InchTape, Wordmark } from '@/ui/Brand';
 import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { LiveDot } from '@/ui/GroupParts';
+import { Heatmap } from '@/ui/Heatmap';
 import { MiniSeg } from '@/ui/HomeParts';
 import { Icon } from '@/ui/Icon';
 import { LevelChip } from '@/ui/Level';
@@ -61,7 +62,7 @@ export function StandardHeader() {
 }
 
 /** Sections that need a surface of their own when they stand alone. */
-const CARDED: SectionKind[] = ['today', 'chart', 'now'];
+const CARDED: SectionKind[] = ['grass', 'today', 'chart', 'now'];
 /** A block of several sections is one card; a lone section brings its own shape (or gets a card). */
 export function StandardFrame({ block, children }: { block: { sections: string[]; row?: boolean }; children: ReactNode }) {
   if (block.row) return <View style={{ flexDirection: 'row', gap: 12 }}>{wrapEach(children)}</View>;
@@ -71,6 +72,20 @@ export function StandardFrame({ block, children }: { block: { sections: string[]
 const wrapEach = (children: ReactNode) => (Array.isArray(children) ? children : [children]).map((c, i) => <View key={i} style={{ flex: 1, minWidth: 0 }}>{c}</View>);
 
 // ---------- sections ----------
+/** The grass, first: every day studied fills a square. Press and drag to read a day. */
+function Grass() {
+  const days = useStore((s) => s.sessions.filter((x) => x.date.startsWith(String(new Date().getFullYear()))).reduce((a, x) => a.add(x.date), new Set<string>()).size);
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+        <Txt size={13.5} w="600" style={{ flex: 1 }}>勉強した日</Txt>
+        <Txt size={12} tone="ink3" num>{`今年 ${days}日`}</Txt>
+      </View>
+      <Heatmap weeks={18} gap={3} />
+    </View>
+  );
+}
+
 /** The lead: today's total, like a wallet's balance card. */
 function Today() {
   const t = useT();
@@ -238,8 +253,8 @@ function Todos() {
   );
 }
 
-/** Deadlines, a portfolio-style list. */
-function Deadlines() {
+/** Deadlines, a portfolio-style list (on the study page; themes may still put it on home). */
+export function Deadlines() {
   const t = useT();
   const deadlines = useDeadlines();
   return (
@@ -319,7 +334,7 @@ function AddLink({ label, onPress }: { label: string; onPress: () => void }) {
 
 /** The standard drawing of every base section. */
 export const STANDARD_SECTIONS: Record<SectionKind, ComponentType<SectionProps>> = {
-  today: Today, chart: Chart, now: Now, streak: Streak, todos: Todos, deadlines: Deadlines, peers: Peers,
+  grass: Grass, streak: Streak, today: Today, peers: Peers, chart: Chart, now: Now, todos: Todos, deadlines: Deadlines,
 };
 
 /** The handle on the left edge that opens the デザイン page. */

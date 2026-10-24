@@ -10,7 +10,7 @@ import { clock, go, hmColon, jpHm, pickLabel, session, startPick, tickTodo, useC
 import type { HomeKit } from '@/themes/types';
 import { MAX_TICKETS, type Todo, useLevel, useStore } from '@/store';
 import { haptic, Press } from '@/ui/base';
-import { Screen, TAB_BAR_H, tabBarBottom, useTabPad, useUnread } from '@/ui/Chrome';
+import { barsTop, Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon } from '@/ui/Icon';
 import { levelSheet } from '@/ui/Level';
@@ -97,12 +97,9 @@ function Frame({ block, index, children }: { block: Block; index: number; childr
 }
 
 const ORDER = (): Block[] => [
-  { id: 'today', sections: ['today'] },
-  { id: 'now', sections: ['now'] },
-  { id: 'chart', sections: ['chart'] },
+  { id: 'grass', sections: ['grass'] },
   { id: 'streak', sections: ['streak'] },
-  { id: 'todos', sections: ['todos'] },
-  { id: 'deadlines', sections: ['deadlines'] },
+  { id: 'today', sections: ['today'] },
   { id: 'peers', sections: ['peers'] },
   { id: 'colophon', sections: ['x:colophon'] },
 ];
@@ -596,7 +593,7 @@ function Floating() {
   const a = useAnimatedStyle(() => ({ transform: [{ translateY: bob.value }, { rotate: '3deg' }] }));
   if (!ss.running) return null;
   return (
-    <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOutDown.duration(160)} style={[{ position: 'absolute', right: 18, bottom: tabBarBottom(insets.bottom) + TAB_BAR_H + 16 }, a]}>
+    <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOutDown.duration(160)} style={[{ position: 'absolute', right: 18, bottom: barsTop(insets.bottom) + 14 }, a]}>
       <Cover w={56} h={74} onPress={go.timer} a11y={`${ss.subject.name}を勉強中 ${clock(ss.elapsed)}。タイマーを開く`} live={!ss.paused}>
         <SubjectArt w={56} h={74} id={ss.subject.id} name={ss.subject.name} no={no} />
         <View style={{ position: 'absolute', left: 0, right: 0, bottom: 3, alignItems: 'center' }}>
