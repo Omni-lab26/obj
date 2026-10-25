@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { FadeIn, SharedValue, useAnimatedStyle, useSharedValue, withSpring, withTiming, ZoomIn } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -242,7 +243,10 @@ function Everyone({ open, close }: { open: boolean; close: () => void }) {
     <Modal visible={open} transparent animationType="none" onRequestClose={close} statusBarTranslucent>
       <GestureHandlerRootView style={{ flex: 1 }}>
         {open ? (
-          <Animated.View entering={FadeIn.duration(180)} style={[StyleSheet.absoluteFill, { backgroundColor: t.scrim }]}>
+          // the page behind goes soft and a little darker
+          <Animated.View entering={FadeIn.duration(220)} style={StyleSheet.absoluteFill}>
+            <BlurView intensity={Platform.OS === 'web' ? 28 : 40} tint={t.dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+            <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.dark ? 'rgba(0,0,0,0.35)' : 'rgba(17,20,23,0.18)' }]} />
             <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="閉じる" />
           </Animated.View>
         ) : null}
