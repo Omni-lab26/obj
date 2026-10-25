@@ -57,7 +57,7 @@ export function Segmented<K extends string>({ options, value, onChange, style, s
   );
 }
 
-/** Underline tabs for switching sections of a screen. Scrolls if labels overflow. */
+/** Underline tabs for switching sections of a screen, centered. Scrolls if labels overflow. */
 export function UnderTabs<K extends string>({ options, value, onChange }: { options: Opt<K>[]; value: K; onChange: (v: K) => void }) {
   const t = useT();
   const [boxes, setBoxes] = useState<Box[]>([]);
@@ -69,7 +69,7 @@ export function UnderTabs<K extends string>({ options, value, onChange }: { opti
   };
   return (
     <View style={{ borderBottomWidth: hair, borderBottomColor: t.line }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 20 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, gap: 24 }}>
         {options.map((o, i) => (
           <Pressable key={o.v} onLayout={onLayout(i)} onPress={() => { if (o.v !== value) { haptic.tap(); onChange(o.v); } }}
             accessibilityRole="tab" accessibilityState={{ selected: o.v === value }} style={{ paddingVertical: 10 }}>

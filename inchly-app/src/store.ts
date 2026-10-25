@@ -8,7 +8,7 @@ import { cancelReminder, configureNotifications, notificationsAllowed, replaceRe
 import { deadlineReminders, goalReminderAt } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
 import { Block } from './lib/timetable';
-import { applyDesign, DEFAULT_DESIGN, Design, themeId } from './design';
+import { applyDesign, DEFAULT_DESIGN, Design, STREAKS, themeId } from './design';
 import { Done, expOf, levelOf, TODO_CAP, TODO_EXP } from './lib/exp';
 import { celebrate } from './moments';
 import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
@@ -551,7 +551,8 @@ export function migrate(saved: Record<string, unknown>, now: Date = new Date()):
   if (out.chart && typeof out.chart === 'object') out.chart = { ...INITIAL.chart, ...(out.chart as object) };
   if (out.design && typeof out.design === 'object') {
     const d = { ...INITIAL.design, ...(out.design as object) } as Design;
-    out.design = { ...d, theme: themeId(d.theme) }; // a replaced theme becomes its successor
+    // a replaced theme becomes its successor; the black streak capsule is orange now
+    out.design = { ...d, theme: themeId(d.theme), streak: d.streak in STREAKS ? d.streak : 'orange' };
   }
   // coins, the store and missions are gone; drop what older saves kept for them
   for (const k of ['coins', 'boost', 'owned', 'claimed', 'eventsClaimed']) delete out[k];

@@ -1,24 +1,25 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { PanResponder, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { PanResponder, View, ViewStyle } from 'react-native';
+import Animated, { Easing, FadeIn, FadeOut, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 import { pad } from '../data';
 import { dayOf, grassOf } from '../lib/history';
 import { useStore } from '../store';
 import { useT } from '../theme';
-import { cascade, useAppear } from './appear';
+import { useAppear } from './appear';
 import { haptic, Txt } from './base';
 
 // GitHub-style grass. Columns are weeks, rows are days. Press (or press and
-// drag) on the grid to read the date and time of a day. It fills in from the
-// left when it appears (and when its page comes back).
+// drag) on the grid to read the date and time of a day. When it appears (and
+// when its page comes back) each square flips over like a card, grey side
+// first, its green on the back — a wave from the top left.
 
 const GUTTER = 18; // weekday labels
 const MONTH_H = 16; // month labels
 
 export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { weeks: number; gap?: number; legend?: boolean; labels?: boolean }) {
   const t = useT();
-  const appear = useAppear(80, 900); // the grass fills in from the left, a week at a time
+  const appear = useAppear(80, 1500, Easing.linear); // the squares flip over like cards, a wave from the top left
   const sessions = useStore((s) => s.sessions);
   const lastDay = useStore((s) => s.lastDay); // a new day redraws the grass
   const cells = useMemo(() => grassOf(sessions, weeks), [sessions, weeks, lastDay]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -108,13 +109,15 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { week
       <View pointerEvents="none" style={{ flexDirection: 'row', gap }}>
         {size
           ? Array.from({ length: weeks }, (_, c) => (
-              <Week key={c} i={c} n={weeks} p={appear} gap={gap}>
+              <View key={c} style={{ gap }}>
                 {cells.slice(c * 7, c * 7 + 7).map((l, r) => {
                   const i = c * 7 + r;
-                  return <View key={r} style={{ width: size, height: size, borderRadius: Math.min(4, size * 0.22), backgroundColor: t.grass[l],
-                    borderWidth: i === cells.length - 1 || hot === i ? 1.5 : 0, borderColor: t.ink }} />;
+                  return (
+                    <Flip key={r} p={appear} at={((c + r * 0.6) / (weeks + 4)) * 0.8} color={t.grass[l]} blank={t.grass[0]}
+                      style={{ width: size, height: size, borderRadius: Math.min(4, size * 0.22), borderWidth: i === cells.length - 1 || hot === i ? 1.5 : 0, borderColor: t.ink }} />
+                  );
                 })}
-              </Week>
+              </View>
             ))
           : null}
       </View>
@@ -142,11 +145,15 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { week
   );
 }
 
-/** One week of the grass, coming in on its turn. */
-export function Week({ i, n, p, gap, children }: { i: number; n: number; p: SharedValue<number>; gap: number; children: ReactNode }) {
+/** A square that flips over like a card when its turn comes (at, on the 0→1 timeline): blank on the front, its color on the back. */
+function Flip({ p, at, color, blank, style }: { p: SharedValue<number>; at: number; color: string; blank: string; style: ViewStyle }) {
   const a = useAnimatedStyle(() => {
-    const k = cascade(p.value, i, n);
-    return { opacity: k, transform: [{ translateY: (1 - k) * 6 }, { scale: 0.7 + 0.3 * k }] };
+    const raw = Math.max(0, Math.min(1, (p.value - at) / 0.2));
+    const k = raw * raw * (3 - 2 * raw); // each flip starts and lands softly
+    const back = k >= 0.5;
+    // the front turns away to its edge, then the back turns in from the other side
+    const deg = back ? (k - 1) * 180 : k * 180;
+    return { backgroundColor: back ? color : blank, transform: [{ perspective: 220 }, { rotateY: `${deg}deg` }, { scale: back ? 1 + 0.12 * Math.sin(k * Math.PI) : 1 }] };
   });
-  return <Animated.View style={[{ gap }, a]}>{children}</Animated.View>;
+  return <Animated.View style={[style, a]} />;
 }

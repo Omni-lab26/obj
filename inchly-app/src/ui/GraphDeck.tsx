@@ -5,23 +5,22 @@ import Animated, { Easing, SharedValue, useAnimatedStyle, useSharedValue, withTi
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Line, Rect } from 'react-native-svg';
 
-import { dayOf, grassOf } from '../lib/history';
+import { dayOf } from '../lib/history';
 import { useStore } from '../store';
 import { lift, radius, useT } from '../theme';
 import { cascade, useAppear } from './appear';
 import { haptic, Press, Txt } from './base';
-import { Week } from './Heatmap';
 import { useSeries } from './series';
 
 // The graph card on My Page's 成長 page, as a deck: swipe it sideways for a
-// different graph — this week first, then the grass, then the running total
-// (the card My Page passes in). It moves one card per swipe and clicks into
+// different graph — this week first, then the running total (the card My
+// Page passes in). It moves one card per swipe and clicks into
 // place — no free scrolling — and every card is the same height. The swipe
 // runs on the UI thread; dots under the deck say which card you're on.
 
 const GAP = 10;
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
-const PAGES = 3;
+const PAGES = 2;
 /** Every card's height (padding included). */
 export const DECK_H = 312;
 const CLICK = { duration: 260, easing: Easing.bezier(0.2, 0.9, 0.25, 1) };
@@ -80,7 +79,6 @@ export function GraphDeck({ last }: { last: ReactNode }) {
               onAccessibilityAction={(e) => go(e.nativeEvent.actionName === 'increment' ? 1 : -1)}>
               <Animated.View style={[{ flexDirection: 'row', alignItems: 'flex-start', gap: GAP, paddingHorizontal: 16 }, row]}>
                 <View style={sized}><WeekPage w={cardW - 28} h={h} /></View>
-                <View style={sized}><GrassPage w={cardW - 28} h={h} /></View>
                 <View style={sized}>{last}</View>
               </Animated.View>
             </View>
@@ -232,37 +230,6 @@ function WeekPage({ w, h }: { w: number; h: number }) {
 const hmc = (m: number) => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, '0')}`;
 /** '2時間35分' / '45分' */
 const jpHm = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}時間${Math.round(m % 60) ? `${Math.round(m % 60)}分` : ''}` : `${Math.round(m)}分`);
-
-/** 2: the grass, as many weeks as fit. */
-function GrassPage({ w, h }: { w: number; h: number }) {
-  const t = useT();
-  const gap = 3;
-  const room = Math.max(90, h - 28 - 62 - 12 - 26); // card minus padding, head, gap, legend
-  const size = Math.max(7, Math.min(16, Math.floor((room - gap * 6) / 7)));
-  const weeks = Math.max(8, Math.floor((w + gap) / (size + gap)));
-  const sessions = useStore((s) => s.sessions);
-  const cells = useMemo(() => grassOf(sessions, weeks), [sessions, weeks]);
-  const studied = cells.filter((l) => l > 0).length;
-  const appear = useAppear(80, 900);
-  return (
-    <View style={{ flex: 1 }}>
-      <Head label="草" aside={`${weeks}週間`} value={String(studied)} size={26} unit={`日 / ${cells.length}日 勉強した`} />
-      <View style={{ flexDirection: 'row', gap, marginTop: 12 }} accessible accessibilityLabel={`${weeks}週間のうち${studied}日勉強しました`}>
-        {Array.from({ length: weeks }, (_, c) => (
-          <Week key={c} i={c} n={weeks} p={appear} gap={gap}>
-            {cells.slice(c * 7, c * 7 + 7).map((l, r) => <View key={r} style={{ width: size, height: size, borderRadius: 3, backgroundColor: t.grass[l] }} />)}
-          </Week>
-        ))}
-      </View>
-      <View style={{ flex: 1 }} />
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, justifyContent: 'flex-end' }}>
-        <Txt size={10.5} tone="ink3">少</Txt>
-        {t.grass.map((c) => <View key={c} style={{ width: 9, height: 9, borderRadius: 2, backgroundColor: c }} />)}
-        <Txt size={10.5} tone="ink3">多</Txt>
-      </View>
-    </View>
-  );
-}
 
 /** A bar that grows up from the floor on its turn (day i of 7). */
 function Grow({ i, p, style, children }: { i: number; p: SharedValue<number>; style: ViewStyle; children: ReactNode }) {

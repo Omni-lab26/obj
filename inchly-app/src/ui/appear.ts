@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { SharedValue, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import { EasingFunction, EasingFunctionFactory, SharedValue, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 import { ease } from '../theme';
 
@@ -20,14 +20,14 @@ export function useReplay() {
   return useSyncExternalStore(on, () => tick, () => tick);
 }
 
-/** 0 → 1, eased: on mount and each time the page comes back. */
-export function useAppear(delay = 120, duration = 720): SharedValue<number> {
+/** 0 → 1, eased (or at an even pace, for a wave): on mount and each time the page comes back. */
+export function useAppear(delay = 120, duration = 720, easing: EasingFunction | EasingFunctionFactory = ease.out): SharedValue<number> {
   const p = useSharedValue(0);
   const n = useReplay();
   useEffect(() => {
     p.set(0);
-    p.set(withDelay(delay, withTiming(1, { duration, easing: ease.out })));
-  }, [n, p, delay, duration]);
+    p.set(withDelay(delay, withTiming(1, { duration, easing })));
+  }, [n, p, delay, duration, easing]);
   return p;
 }
 

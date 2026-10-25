@@ -15,7 +15,7 @@ import { useReplay } from './appear';
 import { DECK_H, GraphDeck } from './GraphDeck';
 import { Sticker, StickerName } from './Sticker';
 
-// "You are growing": the week, the grass and the running total in a deck (its
+// "You are growing": the week and the running total in a deck (its
 // 足 — a point a day, a week or a month — set by a little vertical slider), the
 // next milestone, three comparisons with your past self, and the themes (the
 // badges you have collected are drawn here too, but shown on home).
@@ -75,7 +75,7 @@ export function Growth() {
 
   return (
     <View style={{ paddingTop: 14, gap: 10 }}>
-      {/* the graph card: the week first; swipe it for the grass and the running total */}
+      {/* the graph card: the week first; swipe it for the running total */}
       <GraphDeck last={<>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <View style={{ flex: 1, minWidth: 0 }}>
