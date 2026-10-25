@@ -45,7 +45,7 @@ export function TabBar({ items, running, paused, mins, insets }: TabBarProps) {
                   <T size={10} lh={13} w="700" color={P.paper}>分</T>
                 </>
               ) : (
-                <Icon name="play" size={17} color={P.ink} />
+                <Icon name="clock" size={17} color={P.ink} />
               )}
             </Key>
           </View>

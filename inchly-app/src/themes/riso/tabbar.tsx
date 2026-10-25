@@ -61,7 +61,7 @@ function Middle({ it, running, paused, mins }: { it: TabItem; running: boolean; 
             </View>
           ) : (
             <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: k.ink, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="play" size={12} color={k.paper} />
+              <Icon name="clock" size={12} color={k.paper} />
             </View>
           )}
         </View>

@@ -97,7 +97,7 @@ export function arrangeZones(base: Zones, mine?: (base: Zones) => Zones): Zones 
 export const TABS: { name: string; label: string; icon: IconName }[] = [
   { name: 'index', label: 'ホーム', icon: 'home' },
   { name: 'timeline', label: 'タイムライン', icon: 'feed' },
-  { name: 'study', label: '勉強', icon: 'play' },
+  { name: 'study', label: '勉強', icon: 'clock' },
   { name: 'community', label: 'みんな', icon: 'users' },
   { name: 'me', label: 'マイページ', icon: 'user' },
 ];

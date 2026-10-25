@@ -52,7 +52,7 @@ function Center({ it, running, paused, mins }: { it: TabItem; running: boolean; 
         </>
       ) : (
         <>
-          <I name="play" size={14} color={ink} />
+          <I name="clock" size={14} color={ink} />
           <D size={15} color={ink} style={{ letterSpacing: 2 }}>{codeOf(it)}</D>
         </>
       )}

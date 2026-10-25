@@ -55,7 +55,7 @@ function Center({ it, running, paused, mins }: { it: TabItem; running: boolean; 
             <T size={9} w="800" lh={11} color={INK.black}>{paused ? '一時停止' : '分'}</T>
           </View>
         ) : (
-          <View><Icon name="play" size={20} color={INK.black} /></View>
+          <View><Icon name="clock" size={20} color={INK.black} /></View>
         )}
       </Press>
     </View>

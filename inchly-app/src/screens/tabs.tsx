@@ -89,7 +89,7 @@ export function StandardTabBar({ items, running, paused, mins, insets }: TabBarP
                     <Txt num size={13} w="600" color={t.onInk}>{mins}<Txt size={10} color={t.onInk}>分</Txt></Txt>
                   </>
                 ) : (
-                  <Icon name="play" size={16} color={t.onInk} />
+                  <Icon name="clock" size={19} color={t.onInk} />
                 )}
               </Press>
             </View>

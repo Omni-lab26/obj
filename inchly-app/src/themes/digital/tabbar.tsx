@@ -55,7 +55,7 @@ function Center({ it, running, paused, mins }: { it: TabItem; running: boolean; 
         </>
       ) : (
         <>
-          <View><Icon name="play" size={14} color={ink} /></View>
+          <View><Icon name="clock" size={14} color={ink} /></View>
           <Ann plain size={9} color={ink}>{it.focused ? 'START' : codeOf(it)}</Ann>
         </>
       )}

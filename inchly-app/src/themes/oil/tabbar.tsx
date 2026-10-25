@@ -70,7 +70,7 @@ function Middle({ it, running, paused, mins }: { it: TabItem; running: boolean; 
           {running ? (
             <T size={16} lh={20} num color={ink}>{mins}<T size={10} lh={20} color={ink}>分</T></T>
           ) : (
-            <Icon name="play" size={18} color={ink} />
+            <Icon name="clock" size={18} color={ink} />
           )}
         </View>
         {it.focused ? <View style={{ position: 'absolute', bottom: -3, width: 14, height: 2, borderRadius: 1, backgroundColor: v.trayInk }} /> : null}
