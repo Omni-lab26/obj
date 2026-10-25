@@ -5,6 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, w
 import { hms, pad, subj } from '@/data';
 import { useDesign } from '@/design';
 import { jpDate } from '@/lib/time';
+import { Friends } from '@/screens/home/Friends';
 import { SectionKind } from '@/screens/layout';
 import { go, pickLabel, session, startPick, useDeadlines, useNext, usePeers, useSession, useToday, useTodos, useWeekStreak } from '@/screens/model';
 import type { SectionProps } from '@/themes/types';
@@ -15,6 +16,7 @@ import { InchTape, Wordmark } from '@/ui/Brand';
 import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { LiveDot } from '@/ui/GroupParts';
+import { Badges, useGrowth } from '@/ui/Growth';
 import { Heatmap } from '@/ui/Heatmap';
 import { MiniSeg } from '@/ui/HomeParts';
 import { Icon } from '@/ui/Icon';
@@ -290,8 +292,14 @@ export function Deadlines() {
   );
 }
 
-/** People studying now, and studying along with them. */
-function Peers() {
+/** The badges you've collected, at the bottom of home. */
+function HomeBadges() {
+  const g = useGrowth(useStore((s) => s.sessions));
+  return <Badges total={g.total} />;
+}
+
+/** People studying now, and studying along with them (the one-line version; home shows Friends). */
+export function Peers() {
   const t = useT();
   const { people } = usePeers();
   const peers = people.slice(0, 3);
@@ -334,7 +342,7 @@ function AddLink({ label, onPress }: { label: string; onPress: () => void }) {
 
 /** The standard drawing of every base section. */
 export const STANDARD_SECTIONS: Record<SectionKind, ComponentType<SectionProps>> = {
-  grass: Grass, streak: Streak, today: Today, peers: Peers, chart: Chart, now: Now, todos: Todos, deadlines: Deadlines,
+  grass: Grass, streak: Streak, today: Today, peers: Friends, badges: HomeBadges, chart: Chart, now: Now, todos: Todos, deadlines: Deadlines,
 };
 
 /** The handle on the left edge that opens the デザイン page. */

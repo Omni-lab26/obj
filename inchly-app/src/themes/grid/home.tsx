@@ -588,8 +588,8 @@ export const home: HomeKit = {
   arrange: () => [
     { id: 'grass', sections: ['grass'] },
     { id: 'streak', sections: ['streak'] },
-    { id: 'today', sections: ['today'] },
     { id: 'peers', sections: ['peers'] },
+    { id: 'today', sections: ['today'] },
     { id: 'footer', sections: ['x:footer'] },
   ],
 };

@@ -10,14 +10,15 @@ import { Session, useStore, useStreak } from '../store';
 import { ease, lift, useT } from '../theme';
 import { Card, haptic, Press, Txt } from './base';
 import { Rolling } from './Rolling';
+import { ThemeCard } from '../screens/ThemeCard';
 import { DECK_H, GraphDeck } from './GraphDeck';
 import { Sticker, StickerName } from './Sticker';
 
 // "You are growing": the week, the grass and the running total in a deck (its
 // 足 — a point a day, a week or a month — set by a little vertical slider), the
-// next milestone, three comparisons with your past self, and the badges you
-// have collected. Everything is computed from your records, so it moves every
-// day you study.
+// next milestone, three comparisons with your past self, and the themes (the
+// badges you have collected are drawn here too, but shown on home).
+// Everything is computed from your records, so it moves every day you study.
 
 const MILESTONES = [100, 300, 500, 700, 1000, 1500];
 const WEEKS = 26;
@@ -112,7 +113,8 @@ export function Growth() {
           <Versus label="1日平均 · 先月より" up={g.avgNow >= g.avgThen} value={`${Math.round(Math.abs(g.avgNow - g.avgThen))}分`} />
         </View>
 
-        <Badges total={g.total} />
+        {/* the badges moved to home; here, the themes to try on */}
+        <ThemeCard />
       </View>
     </View>
   );
@@ -222,8 +224,8 @@ function Versus({ label, up, value }: { label: string; up: boolean; value: strin
   );
 }
 
-/** Collected badges, pop stickers; the next ones wait in grey with what's left. */
-function Badges({ total }: { total: number }) {
+/** Collected badges, pop stickers; the next ones wait in grey with what's left. (On home.) */
+export function Badges({ total }: { total: number }) {
   const streak = useStreak();
   const list: { s: StickerName; label: string; got: boolean; left?: string }[] = [
     ...[100, 300, 500, 700, 1000].map((m) => ({ s: 'trophy' as StickerName, label: `${m}時間`, got: total >= m, left: total < m ? `あと${Math.ceil(m - total)}時間` : undefined })),

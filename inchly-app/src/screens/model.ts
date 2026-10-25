@@ -6,7 +6,7 @@ import { celebrate } from '../moments';
 import { dayOf, hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { daysUntil, dateKey } from '../lib/time';
 import { endOf, minutesUntil, suggestion } from '../lib/timetable';
-import { elapsedOf, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
+import { elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
 import { haptic } from '../ui/base';
 import { toast } from '../ui/Toast';
 
@@ -198,6 +198,44 @@ export function usePeers() {
   const blocked = useStore((s) => s.blocked);
   const people = PEOPLE.filter((p) => !blocked.includes(p.n));
   return { people, count: 1263 + people.length };
+}
+
+/** A friend studying now: what, how long today (a session under way included), and their last seven days. */
+export type Friend = { n: string; h: string; c: string; s: string; g: string; live: number; today: number; diff: number; week: number[] };
+const opened = Date.now();
+/** Seven days of minutes for a sample person, the same every time (seeded by their handle), today last. */
+function weekOf7(h: string): number[] {
+  let seed = [...h].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7) % 233280;
+  const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  return Array.from({ length: 7 }, (_, i) => (i === 6 ? 70 + Math.round(rnd() * 150) : 60 + Math.round(rnd() * 200)));
+}
+/**
+ * Friends studying now (sample people; the blocked never show), in the order
+ * you chose: by today's time (the default), by name, or your own.
+ */
+export function useFriends(): { list: Friend[]; sort: FriendSort } {
+  const now = useNow(30_000);
+  const blocked = useStore((s) => s.blocked);
+  const sort = useStore((s) => s.friendSort);
+  const order = useStore((s) => s.friendOrder);
+  return useMemo(() => {
+    const since = Math.floor((now - opened) / 1000);
+    const list = PEOPLE.filter((p) => !blocked.includes(p.n)).map((p) => {
+      const week = weekOf7(p.h);
+      const live = p.t + since;
+      const today = week[6] + Math.floor(live / 60);
+      week[6] = today;
+      return { n: p.n, h: p.h, c: p.c, s: p.s, g: p.g, live, today, diff: today - week[5], week };
+    });
+    const byTime = (a: Friend, b: Friend) => b.today - a.today;
+    if (sort === 'name') list.sort((a, b) => a.n.localeCompare(b.n, 'ja'));
+    else if (sort === 'mine') {
+      // your order first; anyone new comes after, by time
+      const at = (f: Friend) => { const i = order.indexOf(f.h); return i < 0 ? Infinity : i; };
+      list.sort((a, b) => at(a) - at(b) || byTime(a, b));
+    } else list.sort(byTime);
+    return { list, sort };
+  }, [now, blocked, sort, order]);
 }
 
 /** Where things are, for any theme. */

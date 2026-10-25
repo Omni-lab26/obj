@@ -521,9 +521,9 @@ export const home: HomeKit = {
   arrange: () => [
     { id: 'grass', sections: ['grass'] },
     { id: 'stats', sections: ['streak', 'x:level'], row: true },
+    { id: 'link', sections: ['peers'] },
     { id: 'display', sections: ['today'] },
     { id: 'ticker', sections: ['x:ticker'] },
-    { id: 'link', sections: ['peers'] },
   ],
   DesignHandle,
 };

@@ -97,9 +97,9 @@ function Frame({ block, children }: { block: Block; index: number; children: Rea
 const ORDER = (): Block[] => [
   { id: 'grass', sections: ['grass'] },
   { id: 'streak', sections: ['streak'] },
+  { id: 'peers', sections: ['peers'] },
   { id: 'today', sections: ['today'] },
   { id: 'gallery', sections: ['x:gallery'] },
-  { id: 'peers', sections: ['peers'] },
 ];
 
 // ---------- sections ----------

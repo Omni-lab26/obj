@@ -618,9 +618,9 @@ export const home: HomeKit = {
   arrange: () => [
     { id: 'grass', sections: ['grass'] },
     { id: 'streak', sections: ['streak'] },
+    { id: 'peers', sections: ['peers'] },
     { id: 'hero', sections: ['today'] },
     { id: 'ticker', sections: ['x:ticker'] },
-    { id: 'peers', sections: ['peers'] },
   ],
   sections: { today: Today, now: Now, 'x:ticker': Ticker, chart: Chart, streak: Streak, todos: Todos, deadlines: Deadlines, peers: Peers },
 };

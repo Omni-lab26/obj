@@ -98,8 +98,8 @@ function Frame({ block, index, children }: { block: Block; index: number; childr
 const ORDER = (): Block[] => [
   { id: 'grass', sections: ['grass'] },
   { id: 'streak', sections: ['streak'] },
-  { id: 'today', sections: ['today'] },
   { id: 'peers', sections: ['peers'] },
+  { id: 'today', sections: ['today'] },
   { id: 'colophon', sections: ['x:colophon'] },
 ];
 

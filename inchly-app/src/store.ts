@@ -24,6 +24,8 @@ export type Deadline = { id: string; t: string; mo: number; day: number; urgent?
 export type Account = { name: string; handle: string; grade: string; birthYear: number; aim: string; via: 'apple' | 'mail' | 'demo' };
 export type LiveScope = 'all' | 'followers' | 'none';
 export type DmFrom = 'following' | 'groups' | 'all';
+/** How home lists the friends studying now: by today's time, by name, or in your own order (handles). */
+export type FriendSort = 'time' | 'name' | 'mine';
 export type ExtraTab = 'events' | 'exams' | 'me';
 export type ChartKind = 'bar' | 'stack' | 'line';
 export type ChartPalette = 'ink' | 'blue' | 'orange' | 'grape' | 'navy' | 'teal' | 'rose' | 'amber';
@@ -47,6 +49,8 @@ export type State = {
   todos: Todo[];
   deadlines: Deadline[];
   following: string[];
+  friendSort: FriendSort;
+  friendOrder: string[];
   posts: Post[];
   helpful: string[]; // post ids
   roomFilters: string[]; // extra 志望校 chips in the study room
@@ -94,6 +98,8 @@ export const INITIAL: State = {
   todos: [],
   deadlines: [],
   following: [],
+  friendSort: 'time',
+  friendOrder: [],
   posts: POSTS.filter((p) => !p.mine),
   helpful: [],
   roomFilters: [],
@@ -562,6 +568,13 @@ export async function hydrate() {
   listeners.forEach((l) => l());
   save();
   AsyncStorage.removeItem(OLD_KEY).catch(() => {});
+}
+export function setFriendSort(sort: FriendSort) {
+  setState({ friendSort: sort });
+}
+/** Your own order of the friends on home (dragging one switches the list to it). */
+export function setFriendOrder(order: string[]) {
+  setState({ friendSort: 'mine', friendOrder: order });
 }
 export function toggleFollow(h: string) {
   setState((s) => ({ following: toggleIn(s.following, h) }));

@@ -17,8 +17,8 @@ describe('the base home', () => {
   });
 
   it('puts a section the base gained before everything when a theme never mentions it', () => {
-    const out = arrange(BASE_HOME, () => [{ id: 'streak', sections: ['streak'] }, { id: 'today', sections: ['today'] }, { id: 'peers', sections: ['peers'] }]);
-    expect(out.flatMap((b) => b.sections)).toEqual(['grass', 'streak', 'today', 'peers']);
+    const out = arrange(BASE_HOME, () => [{ id: 'streak', sections: ['streak'] }, { id: 'peers', sections: ['peers'] }, { id: 'today', sections: ['today'] }]);
+    expect(out.flatMap((b) => b.sections)).toEqual(['grass', 'streak', 'peers', 'today', 'badges']);
   });
 });
 

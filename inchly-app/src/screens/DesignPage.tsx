@@ -89,7 +89,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
       </Section>
       ) : null}
 
-      <Txt size={11.5} tone="ink3" style={{ textAlign: 'center', paddingTop: 22, paddingHorizontal: 24 }}>ホームを右にスワイプすると、いつでもここに来られます。左にスワイプで戻ります</Txt>
+      <Txt size={11.5} tone="ink3" style={{ textAlign: 'center', paddingTop: 22, paddingHorizontal: 24 }}>設定とマイページのテーマから、いつでもここに来られます</Txt>
     </ScrollView>
   );
   return (
@@ -140,14 +140,14 @@ function Options<K extends string | number | symbol>({ value, onChange, items, c
 }
 
 /** A theme as a small picture: its canvas and texture, a card in its outline and corners, and text in its face. */
-function ThemeTile({ id, on, onPress }: { id: ThemeId; on: boolean; onPress: () => void }) {
+export function ThemeTile({ id, on, onPress, width = '31.5%' }: { id: ThemeId; on: boolean; onPress: () => void; width?: number | `${number}%` }) {
   const t = useT();
   const th = themeOf(id);
   const c = th.colors ?? { canvas: '#F4F5F8', surface: '#FFFFFF', ink: '#121417', ink3: '#848A96', sunken: '#EFF1F5' };
   const r = th.corners ?? { card: 16, inner: 12 };
   return (
     <Press onPress={onPress} haptics={false} scale={0.96} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`テーマ ${th.label}`}
-      style={{ width: '31.5%', padding: 5, gap: 6, borderRadius: radius.inner + 4, backgroundColor: t.surface, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line, alignItems: 'center' }}>
+      style={{ width, padding: 5, gap: 6, borderRadius: radius.inner + 4, backgroundColor: t.surface, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line, alignItems: 'center' }}>
       <View style={{ width: '100%', aspectRatio: 0.82, borderRadius: radius.inner, backgroundColor: c.canvas, overflow: 'hidden', padding: 7, gap: 6 }}>
         <TextureFill texture={th.texture ?? null} />
         <View style={{ backgroundColor: c.surface, borderRadius: Math.min(r.card, 12), padding: 6, gap: 2, boxShadow: th.shadow?.[0] ?? '0px 0px 0px 0.5px rgba(15,23,42,0.08)' }}>

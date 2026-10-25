@@ -7,7 +7,7 @@ import type { IconName } from '../ui/Icon';
 
 // ---------- home ----------
 /** The sections the home screen is made of. */
-export type SectionKind = 'grass' | 'streak' | 'today' | 'peers' | 'chart' | 'now' | 'todos' | 'deadlines';
+export type SectionKind = 'grass' | 'streak' | 'today' | 'peers' | 'badges' | 'chart' | 'now' | 'todos' | 'deadlines';
 /** A theme's own extra section (drawn only by that theme), e.g. 'x:ticker'. */
 export type ExtraKind = `x:${string}`;
 export type Kind = SectionKind | ExtraKind;
@@ -26,8 +26,9 @@ export type Block = { id: string; sections: Kind[]; row?: boolean };
 export const HOME: Block[] = [
   { id: 'grass', sections: ['grass'] },
   { id: 'streak', sections: ['streak'] },
-  { id: 'today', sections: ['today'] },
   { id: 'peers', sections: ['peers'] },
+  { id: 'today', sections: ['today'] },
+  { id: 'badges', sections: ['badges'] },
 ];
 
 /**
