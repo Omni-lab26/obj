@@ -173,7 +173,7 @@ function Climb({ curve, next, prev, from }: { curve: number[]; next: number; pre
       {w ? (
         <>
           <Svg width={w} height={PLOT_H} style={{ position: 'absolute' }}>
-            {[showPrev ? prev : -1, showNext ? next : -1].filter((m) => m > lo && m < hi).map((m) => (
+            {[...(showPrev ? [prev] : []), ...(showNext ? [next] : [])].filter((m) => m > lo && m < hi).map((m) => (
               <Line key={m} x1={0} x2={w} y1={Y(m)} y2={Y(m)} stroke={m === next ? t.ink2 : t.line2} strokeWidth={0.75} strokeDasharray="3 4" />
             ))}
           </Svg>

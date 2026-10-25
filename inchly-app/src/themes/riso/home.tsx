@@ -592,15 +592,17 @@ function Floating() {
   const a = useAnimatedStyle(() => ({ transform: [{ translateY: bob.value }, { rotate: '3deg' }] }));
   if (!ss.running) return null;
   return (
-    <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOutDown.duration(160)} style={[{ position: 'absolute', right: 18, bottom: barsTop + 14 }, a]}>
-      <Cover w={56} h={74} onPress={go.timer} a11y={`${ss.subject.name}を勉強中 ${clock(ss.elapsed)}。タイマーを開く`} live={!ss.paused}>
-        <SubjectArt w={56} h={74} id={ss.subject.id} name={ss.subject.name} no={no} />
-        <View style={{ position: 'absolute', left: 0, right: 0, bottom: 3, alignItems: 'center' }}>
-          <View style={{ backgroundColor: k.ink, paddingHorizontal: 3 }}>
-            <P f="monoB" size={9} lh={12} num color={k.paper}>{clock(ss.elapsed)}</P>
+    <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOutDown.duration(160)} style={{ position: 'absolute', right: 18, bottom: barsTop + 14 }}>
+      <Animated.View style={a}>
+        <Cover w={56} h={74} onPress={go.timer} a11y={`${ss.subject.name}を勉強中 ${clock(ss.elapsed)}。タイマーを開く`} live={!ss.paused}>
+          <SubjectArt w={56} h={74} id={ss.subject.id} name={ss.subject.name} no={no} />
+          <View style={{ position: 'absolute', left: 0, right: 0, bottom: 3, alignItems: 'center' }}>
+            <View style={{ backgroundColor: k.ink, paddingHorizontal: 3 }}>
+              <P f="monoB" size={9} lh={12} num color={k.paper}>{clock(ss.elapsed)}</P>
+            </View>
           </View>
-        </View>
-      </Cover>
+        </Cover>
+      </Animated.View>
     </Animated.View>
   );
 }
