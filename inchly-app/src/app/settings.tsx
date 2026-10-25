@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import { ScrollView, Share, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { THEMES_OPEN } from '@/design';
 import { subj } from '@/data';
 import { recordsCsv } from '@/lib/csv';
 import { DmFrom, getState, isMinor, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
@@ -112,7 +113,7 @@ export default function Settings() {
           <Row label="目標まであと少し" sub="あと15分のとき" right={<Toggle on={s.notify.goal} onChange={(v) => setState({ notify: { ...s.notify, goal: v } })} label="目標まであと少し" />} />
         </Section>
 
-        <Section title="見た目">
+        {THEMES_OPEN ? <Section title="見た目">
           <Press onPress={() => router.push('/design')} scale={0.99} accessibilityRole="button" accessibilityLabel="デザインを変える"
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10 }}>
             <View style={{ flex: 1 }}>
@@ -121,7 +122,7 @@ export default function Settings() {
             </View>
             <Txt size={16} tone="ink3">›</Txt>
           </Press>
-        </Section>
+        </Section> : null}
 
         <Section title="科目">
           <Press onPress={() => router.push('/subjects')} scale={0.99} accessibilityRole="button" accessibilityLabel="科目と色を編集"

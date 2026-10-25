@@ -194,8 +194,12 @@ export const onDesign = (l: () => void) => { listeners.add(l); return () => { li
 export const getDesign = () => design;
 export const designVersion = () => version;
 
+/** Theme switching is hidden until the themes are finished: everyone gets the standard look, and the saved choice is kept for later. */
+export const THEMES_OPEN = false;
+
 /** Called by the store whenever the saved design changes. */
 export function applyDesign(d: Design) {
+  if (!THEMES_OPEN) d = DEFAULT_DESIGN;
   if (d === design) return;
   design = d;
   version += 1;
