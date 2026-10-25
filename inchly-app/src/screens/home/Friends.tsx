@@ -1,8 +1,7 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { BlurView } from 'expo-blur';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { FadeIn, SharedValue, useAnimatedStyle, useSharedValue, withSpring, withTiming, ZoomIn } from 'react-native-reanimated';
+import { ScrollView, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { SharedValue, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -11,11 +10,11 @@ import { FriendSort, setFriendHidden, setFriendOrder, setFriendSort } from '@/st
 import { hair, lift, radius, useT } from '@/theme';
 import { useAppear } from '@/ui/appear';
 import { Avatar, Btn, haptic, Press, Txt } from '@/ui/base';
+import { Dialog } from '@/ui/Dialog';
 import { personSheet } from '@/ui/Editors';
 import { RadioCards } from '@/ui/Form';
 import { LiveDot } from '@/ui/GroupParts';
 import { Icon } from '@/ui/Icon';
-import { openSheet } from '@/ui/Sheet';
 import { toast } from '@/ui/Toast';
 
 // Friends studying now, like a portfolio's holdings: who, what, how long
@@ -24,7 +23,8 @@ import { toast } from '@/ui/Toast';
 // its grip (≡), or press and hold it, to put them in your own order: the row
 // lifts and follows the finger, the others slide out of its way on springs.
 // Swipe a row left to take that person off the list; もっと見る shows
-// everyone, and the ones you took off, in a card in the middle of the screen.
+// everyone, and the ones you took off, in a card in the middle of the screen
+// (the order is chosen in one too).
 
 const MAX = 4;
 const ROW = 60;
@@ -36,17 +36,17 @@ const SORTS: { v: FriendSort; title: string; sub: string }[] = [
 ];
 const hm = (m: number) => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, '0')}`;
 
-function sortSheet(current: FriendSort) {
-  openSheet((close) => <SortChoice current={current} close={close} />);
-}
-function SortChoice({ current, close }: { current: FriendSort; close: () => void }) {
+/** The order, in a card in the middle of the screen: pick one and it applies. */
+function SortChoice({ open, current, close }: { open: boolean; current: FriendSort; close: () => void }) {
   const [v, setV] = useState(current);
+  useEffect(() => { if (open) setV(current); }, [open, current]); // eslint-disable-line react-hooks/set-state-in-effect
   return (
-    <View style={{ gap: 14 }}>
-      <Txt size={18} w="700">並び順</Txt>
-      <RadioCards<FriendSort> value={v} onChange={setV} options={SORTS} />
-      <Btn kind="primary" wide label="この順にする" onPress={() => { setFriendSort(v); haptic.soft(); close(); }} />
-    </View>
+    <Dialog open={open} close={close} title="並び順">
+      <View style={{ gap: 14, paddingHorizontal: 18, paddingBottom: 18, paddingTop: 4 }}>
+        <RadioCards<FriendSort> value={v} onChange={setV} options={SORTS} />
+        <Btn kind="primary" wide label="この順にする" onPress={() => { setFriendSort(v); haptic.soft(); close(); }} />
+      </View>
+    </Dialog>
   );
 }
 
@@ -60,6 +60,7 @@ export function Friends() {
   const t = useT();
   const { list, sort } = useFriends();
   const [all, setAll] = useState(false);
+  const [sorting, setSorting] = useState(false);
   const shown = list.slice(0, MAX);
   const keys = shown.map((f) => f.h).join(',');
   // where each row sits (handle → slot), the row being dragged ('' for none) and where it is
@@ -78,7 +79,7 @@ export function Friends() {
         <Txt size={15} w="700">いま勉強中の友達</Txt>
         <LiveDot size={5} />
         <View style={{ flex: 1 }} />
-        <Press onPress={() => sortSheet(sort)} hitSlop={8} scale={0.94} accessibilityRole="button" accessibilityLabel={`並び順 ${SORTS.find((x) => x.v === sort)!.title}`}
+        <Press onPress={() => setSorting(true)} hitSlop={8} scale={0.94} accessibilityRole="button" accessibilityLabel={`並び順 ${SORTS.find((x) => x.v === sort)!.title}`}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 3, height: 26, paddingHorizontal: 9, borderRadius: 13, backgroundColor: t.sunken }}>
           <Txt size={11.5} w="600" tone="ink2">{SORTS.find((x) => x.v === sort)!.title}</Txt>
           <View style={{ transform: [{ rotate: '90deg' }] }}><Icon name="chev" size={10} color={t.ink3} /></View>
@@ -97,6 +98,7 @@ export function Friends() {
         <Txt size={12.5} tone="ink3" style={{ paddingHorizontal: 14, paddingVertical: 14 }}>いま勉強中の友達はいません</Txt>
       )}
       <Everyone open={all} close={() => setAll(false)} />
+      <SortChoice open={sorting} current={sort} close={() => setSorting(false)} />
     </View>
   );
 }
@@ -237,52 +239,26 @@ function Spark({ week, color }: { week: number[]; color: string }) {
 function Everyone({ open, close }: { open: boolean; close: () => void }) {
   const t = useT();
   const { list, hidden } = useFriends();
-  const { height } = useWindowDimensions();
   const see = (f: Friend) => { close(); setTimeout(() => personSheet(f.n, f.c), 220); };
   return (
-    <Modal visible={open} transparent animationType="none" onRequestClose={close} statusBarTranslucent>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        {open ? (
-          // the page behind goes soft and a little darker
-          <Animated.View entering={FadeIn.duration(220)} style={StyleSheet.absoluteFill}>
-            <BlurView intensity={Platform.OS === 'web' ? 28 : 40} tint={t.dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
-            <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.dark ? 'rgba(0,0,0,0.35)' : 'rgba(17,20,23,0.18)' }]} />
-            <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="閉じる" />
-          </Animated.View>
-        ) : null}
-        <View pointerEvents="box-none" style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          {open ? (
-            <Animated.View entering={ZoomIn.springify().damping(18).stiffness(220)} accessibilityViewIsModal
-              style={{ width: '100%', maxWidth: 420, maxHeight: height * 0.72, borderRadius: radius.card + 6, backgroundColor: t.surface, boxShadow: t.shadow2, overflow: 'hidden' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingTop: 16, paddingBottom: 8 }}>
-                <Txt size={17} w="700">いま勉強中の友達</Txt>
-                <Txt num size={13} tone="ink3" style={{ flex: 1 }}>{`${list.length}人`}</Txt>
-                <Press onPress={close} hitSlop={10} scale={0.9} accessibilityRole="button" accessibilityLabel="閉じる"
-                  style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="x" size={13} color={t.ink2} />
+    <Dialog open={open} close={close} title="いま勉強中の友達" aside={`${list.length}人`}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
+        {list.map((f) => <Line key={f.h} f={f} onPress={() => see(f)} />)}
+        {hidden.length ? (
+          <>
+            <Txt size={12.5} w="600" tone="ink3" style={{ paddingTop: 14, paddingBottom: 2 }}>非表示にした人</Txt>
+            {hidden.map((f) => (
+              <Line key={f.h} f={f} dim right={
+                <Press onPress={() => { setFriendHidden(f.h, false); haptic.soft(); }} scale={0.94} accessibilityRole="button" accessibilityLabel={`${f.n}をホームに戻す`}
+                  style={{ height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: t.sunken, justifyContent: 'center' }}>
+                  <Txt size={12} w="600">表示する</Txt>
                 </Press>
-              </View>
-              <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
-                {list.map((f) => <Line key={f.h} f={f} onPress={() => see(f)} />)}
-                {hidden.length ? (
-                  <>
-                    <Txt size={12.5} w="600" tone="ink3" style={{ paddingTop: 14, paddingBottom: 2 }}>非表示にした人</Txt>
-                    {hidden.map((f) => (
-                      <Line key={f.h} f={f} dim right={
-                        <Press onPress={() => { setFriendHidden(f.h, false); haptic.soft(); }} scale={0.94} accessibilityRole="button" accessibilityLabel={`${f.n}をホームに戻す`}
-                          style={{ height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: t.sunken, justifyContent: 'center' }}>
-                          <Txt size={12} w="600">表示する</Txt>
-                        </Press>
-                      } />
-                    ))}
-                  </>
-                ) : null}
-              </ScrollView>
-            </Animated.View>
-          ) : null}
-        </View>
-      </GestureHandlerRootView>
-    </Modal>
+              } />
+            ))}
+          </>
+        ) : null}
+      </ScrollView>
+    </Dialog>
   );
 }
 function Line({ f, onPress, right, dim }: { f: Friend; onPress?: () => void; right?: ReactNode; dim?: boolean }) {
