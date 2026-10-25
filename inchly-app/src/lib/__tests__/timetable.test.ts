@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { Block, blocksOn, endOf, minutesUntil, slotsOf, suggestion, toClock, toMin } from '../timetable';
+import { Block, blocksOn, endOf, isOn, minutesUntil, plansOn, slotsOf, suggestion, toClock, toMin } from '../timetable';
 
 // 2026-10-21 is a Wednesday (Monday index 2)
 const at = (h: number, m = 0) => new Date(2026, 9, 21, h, m);
@@ -28,6 +28,13 @@ describe('timetable', () => {
     expect(suggestion(blocks, at(17, 20))?.block.id).toBe('b2');
     expect(suggestion(blocks, at(18, 10))?.block.id).toBe('b3');
     expect(suggestion(blocks, at(23))).toBeNull();
+  });
+  it('puts a one-day plan on its date only, among the weekly ones', () => {
+    const once: Block = { id: 'd1', s: 'ch', start: '15:00', min: 90, days: [], date: '2026-10-21' };
+    expect(blocksOn([...blocks, once], at(12)).map((b) => b.id)).toEqual(['b1', 'd1', 'b2', 'b3']);
+    expect(blocksOn([...blocks, once], new Date(2026, 9, 28, 12)).map((b) => b.id)).toEqual(['b1', 'b2', 'b3']); // the next Wednesday: the weekly ones only
+    expect(isOn({ ...once, days: [2] }, new Date(2026, 9, 28))).toBe(false); // a date wins over weekdays
+    expect(plansOn([...blocks, once], at(9)).map((b) => b.id)).toEqual(['d1']);
   });
   it('counts down to a block', () => {
     expect(minutesUntil(blocks[0], at(18, 10))).toBe(50);

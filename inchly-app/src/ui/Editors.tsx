@@ -3,11 +3,12 @@ import { View } from 'react-native';
 
 import { ROOM, subj } from '../data';
 import { addDays, dateKey, daysUntil as untilDate, jpDate, parseKey } from '../lib/time';
-import { Block, toMin } from '../lib/timetable';
-import { addDeadline, addSession, addTodo, block, getState, moveTodo, removeBlock, removeDeadline, removeSession, removeTodo, saveBlock, Session, Todo, toggleFollow, toggleIn, updateSession, updateTodo, useStore, useSubjects } from '../store';
+import { Block } from '../lib/timetable';
+import { addDeadline, addSession, addTodo, block, getState, moveTodo, removeDeadline, removeSession, removeTodo, Session, Todo, toggleFollow, updateSession, updateTodo, useStore, useSubjects } from '../store';
 import { hair, useT } from '../theme';
-import { Avatar, Btn, haptic, Press, Txt } from './base';
+import { Avatar, Btn, haptic, Txt } from './base';
 import { Choice, Field, Label, RadioCards, Stepper } from './Form';
+import { planCalendar, planSheet } from './PlanSheets';
 import { openSheet } from './Sheet';
 import { toast } from './Toast';
 
@@ -112,64 +113,10 @@ function TodoForm({ close, existing }: { close: () => void; existing?: Todo }) {
 }
 
 // ---------- a timetable block ----------
-const DOW = ['月', '火', '水', '木', '金', '土', '日'];
+/** A timetable block: an existing one opens in the planner's form; a new one starts from the month. */
 export function blockSheet(existing?: Block) {
-  openSheet((close) => <BlockForm close={close} existing={existing} />);
-}
-function BlockForm({ close, existing }: { close: () => void; existing?: Block }) {
-  const subjOpts = useSubjOpts();
-  const t = useT();
-  const startMin = existing ? toMin(existing.start) : 19 * 60;
-  const [s, setS] = useState(existing?.s ?? getState().subj);
-  const [hour, setHour] = useState(Math.floor(startMin / 60));
-  const [minute, setMinute] = useState(String(Math.round((startMin % 60) / 15) * 15 % 60));
-  const [len, setLen] = useState(String(existing?.min ?? 60));
-  const [days, setDays] = useState<number[]>(existing?.days ?? [0, 1, 2, 3, 4]);
-  const [memo, setMemo] = useState(existing?.t ?? '');
-  const save = () => {
-    if (!days.length) { haptic.warn(); toast('曜日を1つ以上選んでください'); return; }
-    saveBlock({ id: existing?.id, s, t: memo.trim() || undefined, start: `${hour}:${minute.padStart(2, '0')}`, min: Number(len), days: [...days].sort() });
-    haptic.success();
-    close();
-    toast(existing ? '時間割を保存しました' : '時間割に追加しました');
-  };
-  return (
-    <View style={{ gap: 18 }}>
-      <Txt size={18} w="700">{existing ? '時間割を編集' : '時間割に追加'}</Txt>
-      <View>
-        <Label>科目</Label>
-        <Choice value={s} onChange={setS} options={subjOpts} />
-      </View>
-      <View>
-        <Label>始める時刻</Label>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <Stepper value={hour} min={0} max={23} onChange={setHour} unit="時" label="時" />
-          <Choice value={minute} onChange={setMinute} options={['0', '15', '30', '45'].map((m) => ({ v: m, label: `${m.padStart(2, '0')}分` }))} />
-        </View>
-      </View>
-      <View>
-        <Label>長さ</Label>
-        <Choice value={len} onChange={setLen} options={['30', '45', '60', '90', '120'].map((m) => ({ v: m, label: Number(m) >= 60 ? `${Number(m) / 60}時間` : `${m}分` }))} />
-      </View>
-      <View>
-        <Label sub="選んだ曜日に毎週くり返します">曜日</Label>
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          {DOW.map((d, i) => {
-            const on = days.includes(i);
-            return (
-              <Press key={d} onPress={() => setDays((x) => toggleIn(x, i))} scale={0.92} accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={`${d}曜日`}
-                style={{ flex: 1, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.ink : t.sunken }}>
-                <Txt size={13} w="700" color={on ? t.onInk : t.ink2}>{d}</Txt>
-              </Press>
-            );
-          })}
-        </View>
-      </View>
-      <Field label="何をやる？（例：青チャート）" value={memo} onChangeText={setMemo} max={24} />
-      <Btn kind="primary" wide label={existing ? '保存する' : '追加する'} onPress={save} />
-      {existing ? <Btn kind="quiet" wide label="この時間割を削除" onPress={() => { removeBlock(existing.id); haptic.warn(); close(); toast('時間割から削除しました'); }} /> : null}
-    </View>
-  );
+  if (existing) planSheet({ existing });
+  else planCalendar();
 }
 
 // ---------- a deadline ----------

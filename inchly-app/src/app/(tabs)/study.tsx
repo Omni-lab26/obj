@@ -11,6 +11,7 @@ import { focus, hair, onColor, radius, type, useT } from '@/theme';
 import { Card, haptic, Press, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
 import { blockSheet, todoSheet } from '@/ui/Editors';
+import { planCalendar } from '@/ui/PlanSheets';
 import { LiveDot } from '@/ui/GroupParts';
 import { TodoRow } from '@/ui/HomeParts';
 import { Icon } from '@/ui/Icon';
@@ -43,8 +44,8 @@ export default function Study() {
           <Txt size={type.title + 4} w="800">勉強</Txt>
           <Txt size={12} tone="ink3">{jpDate(new Date())}</Txt>
         </View>
-        <Now />
         <Timetable />
+        <Now />
         <Todos />
         <View style={{ paddingHorizontal: 16, paddingTop: 14 }}><Deadlines /></View>
         <TimerPrefs />
@@ -67,7 +68,7 @@ function Now() {
     const todo = s.todos.find((x) => x.id === s.studyTodo);
     return (
       <Press onPress={() => router.push('/timer')} scale={0.98} accessibilityLabel={`${sj.name}を勉強中 ${hms(e)}。タイマーを開く`}
-        style={{ marginHorizontal: 16, marginTop: 10, borderRadius: radius.card + 4, backgroundColor: focus.bg, padding: 16, gap: 12 }}>
+        style={{ marginHorizontal: 16, marginTop: 18, borderRadius: radius.card + 4, backgroundColor: focus.bg, padding: 16, gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <LiveDot size={6} color={s.paused ? t.amber : undefined} />
           <Txt size={12} w="600" color={focus.ink2}>{s.paused ? '一時停止中' : '勉強中'}</Txt>
@@ -101,7 +102,7 @@ function Now() {
   const pick = slot ? { s: slot.block.s, what: slot.block.t ?? subj(slot.block.s).task, min: slot.block.min, when: whenOf(slot, d) }
     : todo ? { s: todo.s, what: todo.t, todoId: todo.id, when: 'ToDo の一番上' } : null;
   return (
-    <Card style={{ marginHorizontal: 16, marginTop: 10 }} pad={16}>
+    <Card style={{ marginHorizontal: 16, marginTop: 18 }} pad={16}>
       {pick ? (
         <View style={{ gap: 12 }}>
           <View style={{ gap: 2 }}>
@@ -159,9 +160,9 @@ function Timetable() {
     : blocksOn(blocks, new Date(d.getFullYear(), d.getMonth(), d.getDate() + (day - today))).map((block) => ({ block, state: 'plain' as const }));
   return (
     <>
-      <View style={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 8, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 8, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
         <Txt size={type.head} w="700" style={{ flex: 1 }}>時間割</Txt>
-        <AddLink label="追加" onPress={() => blockSheet()} />
+        <AddLink label="追加" onPress={() => planCalendar()} />
       </View>
       <View style={{ flexDirection: 'row', gap: 4, marginHorizontal: 16, marginBottom: 8 }}>
         {DOW.map((w, i) => {
@@ -193,6 +194,7 @@ function Timetable() {
                   <Txt size={14.5} w="700">{sj.name}</Txt>
                   {live ? <View style={{ paddingHorizontal: 6, height: 18, borderRadius: 9, backgroundColor: t.ink, justifyContent: 'center' }}><Txt size={10} w="800" color={t.onInk}>いま</Txt></View> : null}
                   {state === 'next' ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
+                  {b.date ? <Txt size={11} w="600" tone="ink3">この日だけ</Txt> : null}
                 </View>
                 <Txt size={12} tone="ink2" numberOfLines={1}>{[b.t ?? sj.task, `${b.min}分`].filter(Boolean).join(' · ')}</Txt>
               </View>
@@ -206,9 +208,9 @@ function Timetable() {
             </Press>
           );
         }) : (
-          <Press onPress={() => blockSheet()} style={{ paddingVertical: 18, paddingHorizontal: 16, alignItems: 'center', gap: 4 }}>
+          <Press onPress={() => planCalendar()} style={{ paddingVertical: 18, paddingHorizontal: 16, alignItems: 'center', gap: 4 }}>
             <Txt size={13.5} w="600">{day === today ? '今日の時間割はまだありません' : `${DOW[day]}曜日の時間割はまだありません`}</Txt>
-            <Txt size={12} tone="ink3">時間と科目を決めておくと、その時間に1タップで始められます</Txt>
+            <Txt size={12} tone="ink3">「追加」からカレンダーで日を選んで、時間と科目を決めておくと、その時間に1タップで始められます</Txt>
           </Press>
         )}
       </Card>
