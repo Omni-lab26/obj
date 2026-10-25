@@ -3,7 +3,7 @@ import { ScrollView, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import { hms, pad, subj } from '@/data';
-import { STREAK_ORANGE, useDesign } from '@/design';
+import { STREAK_PEACH, useDesign } from '@/design';
 import { jpDate } from '@/lib/time';
 import { Friends } from '@/screens/home/Friends';
 import { SectionKind } from '@/screens/layout';
@@ -202,15 +202,16 @@ function Streak() {
     s.set(withSequence(withTiming(1.3, { duration: 110 }), withSpring(1, { duration: 520, dampingRatio: 0.4 })));
     r.set(withSequence(withTiming(-14, { duration: 110 }), withSpring(0, { duration: 520, dampingRatio: 0.4 })));
   };
-  // the capsule's look, from the デザイン page: orange (the default), the main color, or white
+  // the capsule's look, from the デザイン page: peach (the default), the main color, or white
   const look = useDesign().streak;
   const light = look === 'white';
-  const fg = light ? t.ink : '#fff';
-  const dim = light ? t.ink3 : 'rgba(255,255,255,0.55)';
+  const peach = look === 'peach';
+  const fg = light ? t.ink : peach ? STREAK_PEACH.fg : '#fff';
+  const dim = light ? t.ink3 : peach ? STREAK_PEACH.dim : 'rgba(255,255,255,0.55)';
   return (
     <Press onPress={jump} haptics={false} scale={0.98} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}
-      style={{ height: 58, borderRadius: 29, backgroundColor: look === 'ink' ? t.ink : light ? t.surface : STREAK_ORANGE, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 18,
-        borderWidth: light ? hair : 0, borderColor: t.line2, ...(light ? lift(t) : null) }}>
+      style={{ height: 58, borderRadius: 29, backgroundColor: look === 'ink' ? t.ink : light ? t.surface : STREAK_PEACH.bg, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 18,
+        borderWidth: light || peach ? hair : 0, borderColor: peach ? STREAK_PEACH.edge : t.line2, ...(light ? lift(t) : null) }}>
       <Animated.View style={a}><Sticker name="fire" size={42} /></Animated.View>
       <View style={{ marginLeft: 4 }}>
         <Rolling value={pad(streak)} size={17} weight="700" color={fg} />
@@ -222,7 +223,7 @@ function Streak() {
           <View key={d.label} style={{ alignItems: 'center', gap: 5 }}>
             <Txt size={10} w="600" lh={12} color={d.today ? fg : dim}>{d.label}</Txt>
             <View style={{ width: 7, height: 7, borderRadius: 4,
-              backgroundColor: d.today && d.studied ? (look === 'orange' ? '#FFE27A' : '#FF7A1A') : d.studied ? fg : 'transparent',
+              backgroundColor: d.today && d.studied ? (peach ? STREAK_PEACH.today : '#FF7A1A') : d.studied ? fg : 'transparent',
               borderWidth: d.studied ? 0 : 1, borderColor: dim, borderStyle: d.future ? 'dashed' : 'solid' }} />
           </View>
         ))}

@@ -551,8 +551,8 @@ export function migrate(saved: Record<string, unknown>, now: Date = new Date()):
   if (out.chart && typeof out.chart === 'object') out.chart = { ...INITIAL.chart, ...(out.chart as object) };
   if (out.design && typeof out.design === 'object') {
     const d = { ...INITIAL.design, ...(out.design as object) } as Design;
-    // a replaced theme becomes its successor; the black streak capsule is orange now
-    out.design = { ...d, theme: themeId(d.theme), streak: d.streak in STREAKS ? d.streak : 'orange' };
+    // a replaced theme becomes its successor; the old black and orange streak capsules are peach now
+    out.design = { ...d, theme: themeId(d.theme), streak: d.streak in STREAKS ? d.streak : 'peach' };
   }
   // coins, the store and missions are gone; drop what older saves kept for them
   for (const k of ['coins', 'boost', 'owned', 'claimed', 'eventsClaimed']) delete out[k];

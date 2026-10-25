@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_ORANGE, STREAKS, THEMES, themeOf, ThemeId, TIMERS, useDesign } from '@/design';
+import { BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_PEACH, STREAKS, THEMES, themeOf, ThemeId, TIMERS, useDesign } from '@/design';
 import { setDesign } from '@/store';
 import { faceFor, focus, hair, lift, radius, useT } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
@@ -192,9 +192,9 @@ function MiniStreak({ look }: { look: keyof typeof STREAKS }) {
   const light = look === 'white';
   return (
     <View style={{ width: '100%', height: 30, borderRadius: 15, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, gap: 4,
-      backgroundColor: look === 'ink' ? t.ink : light ? t.surface : STREAK_ORANGE, borderWidth: light ? hair : 0, borderColor: t.line2 }}>
+      backgroundColor: look === 'ink' ? t.ink : light ? t.surface : STREAK_PEACH.bg, borderWidth: look === 'ink' ? 0 : hair, borderColor: light ? t.line2 : STREAK_PEACH.edge }}>
       <Sticker name="fire" size={20} />
-      <Txt num size={12} w="800" color={light ? t.ink : '#fff'}>23</Txt>
+      <Txt num size={12} w="800" color={light ? t.ink : look === 'peach' ? STREAK_PEACH.fg : '#fff'}>23</Txt>
     </View>
   );
 }

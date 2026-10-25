@@ -33,9 +33,9 @@ export const CARDS = {
   sky: { label: 'スカイ', grad: ['#F4FAFF', '#DDEEFF', '#C6DEFA'], dark: false, sheen: ['#FFFFFF', '#9EE8FF', '#C9B6FF'] },
   midnight: { label: 'ミッドナイト', grad: ['#2B2A6B', '#1B1A4A', '#0E0D2B'], dark: true, sheen: ['#9EE8FF', '#C9B6FF', '#FFC2E2'] },
 };
-export const STREAKS = { orange: { label: 'オレンジ' }, ink: { label: 'メインの色' }, white: { label: 'ホワイト' } };
-/** The streak capsule's orange (the flame's own color, a shade deeper so white reads on it). */
-export const STREAK_ORANGE = '#F26A1B';
+export const STREAKS = { peach: { label: 'ピーチ' }, ink: { label: 'メインの色' }, white: { label: 'ホワイト' } };
+/** The streak capsule in peach: a pale orange ground, deep orange type, so the flame stands out and sits easy by the green grass. */
+export const STREAK_PEACH = { bg: '#FFEDE0', fg: '#B4410C', dim: 'rgba(180,65,12,0.62)', edge: 'rgba(242,106,27,0.22)', today: '#F26A1B' };
 export const TIMERS = {
   night: { label: 'ナイト', bg: '#0B0F17' },
   black: { label: 'ブラック', bg: '#000000' },
@@ -185,7 +185,7 @@ export const themeId = (id: string): ThemeId => (id in THEMES ? (id as ThemeId) 
 export const themeOf = (id: ThemeId): ThemeDef => THEMES[themeId(id)];
 
 export type Design = { theme: ThemeId; bg: keyof typeof BGS; ink: keyof typeof INKS; corners: keyof typeof CORNERS; card: keyof typeof CARDS; streak: keyof typeof STREAKS; timer: keyof typeof TIMERS };
-export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'black', corners: 'm', card: 'pearl', streak: 'orange', timer: 'night' };
+export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'black', corners: 'm', card: 'pearl', streak: 'peach', timer: 'night' };
 
 let design: Design = DEFAULT_DESIGN;
 let version = 0;
