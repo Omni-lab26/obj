@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { deadlineReminders, goalReminderAt, nextTimeAt, nextTimeLabel } from '../reminders';
+import { deadlineReminders, goalReminderAt, nextTimeAt, nextTimeLabel, timetableReminders } from '../reminders';
 
 const now = new Date(2026, 9, 21, 19, 30); // Wednesday 21 Oct, 19:30
 const start = new Date(2026, 9, 21, 18, 50);
@@ -40,5 +40,29 @@ describe('goalReminderAt', () => {
   });
   it('nothing if already that close', () => {
     expect(goalReminderAt(170, 0, 180, now)).toBeNull();
+  });
+});
+
+describe('timetable reminders', () => {
+  // 2026-10-21 is a Wednesday
+  const now = new Date(2026, 9, 21, 18, 30);
+  const blocks = [
+    { id: 'w', s: 'ma', start: '19:00', min: 60, days: [2], t: '青チャート' }, // Wednesdays
+    { id: 'm', s: 'en', start: '7:00', min: 30, days: [0, 1, 2, 3, 4] }, // weekday mornings
+    { id: 'd', s: 'ch', start: '15:00', min: 90, days: [], date: '2026-10-24' }, // one Saturday only
+  ];
+  const name = (s: string) => ({ ma: '数学', en: '英語', ch: '化学' })[s] ?? s;
+  it('nudges at each start in the coming week, never in the past', () => {
+    const r = timetableReminders(blocks, name, now);
+    expect(r[0]).toMatchObject({ id: 'tt-w-20261021', title: '数学の時間です' });
+    expect(r[0].at).toEqual(new Date(2026, 9, 21, 19, 0));
+    expect(r[0].body).toContain('19:00〜20:00 · 青チャート');
+    expect(r.some((x) => x.id === 'tt-m-20261021')).toBe(false); // this morning has passed
+    expect(r.filter((x) => x.id.startsWith('tt-m-')).length).toBe(4); // Thu, Fri, Mon, Tue
+    expect(r.filter((x) => x.id.startsWith('tt-d-')).map((x) => x.at)).toEqual([new Date(2026, 9, 24, 15, 0)]);
+    expect(r.every((x, i) => i === 0 || x.at >= r[i - 1].at)).toBe(true);
+  });
+  it('keeps to the limit, earliest first', () => {
+    expect(timetableReminders(blocks, name, now, 7, 2).map((x) => x.id)).toEqual(['tt-w-20261021', 'tt-m-20261022']);
   });
 });

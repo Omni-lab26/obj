@@ -1,4 +1,5 @@
 import { daysUntil } from './time';
+import { Block, blocksOn, endOf, toMin } from './timetable';
 
 // When each reminder should fire. Pure, so the times can be tested; the
 // scheduling itself lives in notify.ts.
@@ -54,4 +55,24 @@ export function goalReminderAt(todayMin: number, elapsedSec: number, goalMin: nu
   const left = goalMin - 15 - todayMin - elapsedSec / 60;
   if (left <= 0) return null;
   return new Date(now.getTime() + left * 60_000);
+}
+
+/**
+ * The timetable: a nudge when each planned block starts, for the next `days`
+ * days (weekly blocks and one-day plans alike). Kept under `max`, earliest
+ * first, since a phone holds only so many scheduled notifications.
+ */
+export function timetableReminders(blocks: readonly Block[], name: (s: string) => string, now: Date = new Date(), days = 7, max = 48): Reminder[] {
+  const out: Reminder[] = [];
+  for (let i = 0; i < days; i++) {
+    const day = at(now, i, 0);
+    for (const b of blocksOn(blocks, day)) {
+      const m = toMin(b.start);
+      const when = at(now, i, Math.floor(m / 60), m % 60);
+      if (when <= now) continue;
+      const key = `${day.getFullYear()}${String(day.getMonth() + 1).padStart(2, '0')}${String(day.getDate()).padStart(2, '0')}`;
+      out.push({ id: `tt-${b.id}-${key}`, at: when, title: `${name(b.s)}の時間です`, body: `${b.start}〜${endOf(b)}${b.t ? ` · ${b.t}` : ''}。開くとすぐ始められます` });
+    }
+  }
+  return out.sort((a, b) => a.at.getTime() - b.at.getTime()).slice(0, max);
 }

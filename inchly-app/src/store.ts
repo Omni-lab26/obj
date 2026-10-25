@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { AreaId, demoHistory, GROUPS, Group, Post, POSTS, setSubjects, SUBJ, subj, SUBJECT_COLORS, Subject } from './data';
 import { cancelReminder, configureNotifications, notificationsAllowed, replaceReminders, scheduleReminder } from './lib/notify';
-import { deadlineReminders, goalReminderAt } from './lib/reminders';
+import { deadlineReminders, goalReminderAt, timetableReminders } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
 import { Block } from './lib/timetable';
 import { applyDesign, DEFAULT_DESIGN, Design, STREAKS, themeId } from './design';
@@ -63,7 +63,7 @@ export type State = {
   showLive: boolean; // derived: liveScope !== 'none'
   showRank: boolean;
   dmFrom: DmFrom;
-  notify: { peers: boolean; deadlines: boolean; goal: boolean };
+  notify: { peers: boolean; deadlines: boolean; goal: boolean; timetable?: boolean }; // timetable: off only when set false (older saves lack it)
   blocked: string[]; // names
   savedAt: number; // ms, last write to this device
   lastDay: string; // the last calendar day the app saw, for rolling over at midnight
@@ -113,7 +113,7 @@ export const INITIAL: State = {
   showLive: true,
   showRank: true,
   dmFrom: 'groups',
-  notify: { peers: true, deadlines: true, goal: true },
+  notify: { peers: true, deadlines: true, goal: true, timetable: true },
   blocked: [],
   savedAt: 0,
   lastDay: dateKey(),
@@ -455,7 +455,7 @@ export function useDayRollover() {
 }
 /**
  * Mount once: keeps the phone's scheduled reminders in step with your data —
- * deadlines (3 days and 1 day before) and, while the timer runs, a nudge when
+ * deadlines (3 days and 1 day before), each timetable block as it starts, and, while the timer runs, a nudge when
  * today's total is 15 minutes from the goal. Never asks for permission itself.
  */
 export function useReminders() {
@@ -467,7 +467,13 @@ export function useReminders() {
   const startedAt = useStore((s) => s.startedAt);
   const todayMin = useStore((s) => s.todayMin);
   const goalMin = useStore((s) => s.goalMin);
+  const blocks = useStore((s) => s.timetable);
+  const onTimetable = useStore((s) => s.notify.timetable !== false);
+  const today = useStore((s) => s.lastDay); // re-plan the week's nudges once a day
   useEffect(() => { configureNotifications(); }, []);
+  useEffect(() => {
+    notificationsAllowed(false).then((ok) => replaceReminders('tt-', ok && signedIn && onTimetable ? timetableReminders(blocks, (id) => subj(id).name) : []));
+  }, [signedIn, blocks, onTimetable, today]);
   useEffect(() => {
     notificationsAllowed(false).then((ok) => replaceReminders('dl-', ok && signedIn && onDeadlines ? deadlineReminders(deadlines) : []));
   }, [signedIn, deadlines, onDeadlines]);
