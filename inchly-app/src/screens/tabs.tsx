@@ -12,7 +12,7 @@ import { useThemeKit } from '@/themes';
 import type { TabBarProps, TabItem } from '@/themes/types';
 import { elapsedOf, useNow, useStore } from '@/store';
 import { useT } from '@/theme';
-import { haptic, Press, Txt } from '@/ui/base';
+import { Press } from '@/ui/base';
 import { showStudyBar, TAB_BAR_H, tabBarBottom, useStudyBarShown } from '@/ui/Chrome';
 import { replayCharts } from '@/ui/appear';
 import { Glass } from '@/ui/Glass';
@@ -64,9 +64,10 @@ export function TabBar(p: BottomTabBarProps) {
   );
 }
 
-// A floating Liquid Glass capsule over the content, icons only. The selected
-// tab sits in a lighter lens that slides between items; the middle is a dark
-// pill that shows the running minutes.
+// A floating Liquid Glass capsule over the content, icons only, all alike.
+// The selected tab sits in a lighter lens that slides between items; while
+// studying, the middle one's clock wears a small live dot (the time itself is
+// on the study bar above).
 export function StandardTabBar({ items, running, paused, mins, insets }: TabBarProps) {
   const t = useT();
   const [w, setW] = useState(0);
@@ -80,26 +81,17 @@ export function StandardTabBar({ items, running, paused, mins, insets }: TabBarP
       <Glass style={{ height: TAB_BAR_H }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist">
           {item ? <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 4, bottom: 4, width: item, borderRadius: 28, backgroundColor: 'rgba(118,118,128,0.14)' }, lens]} /> : null}
-          {items.map((it) => it.center ? (
-            <View key={it.key} style={{ flex: 1, alignItems: 'center' }}>
-              <Press onPress={() => { haptic.soft(); it.onPress(); }} haptics={false} scale={0.9} hitSlop={{ top: 10, bottom: 10 }}
-                accessibilityRole="tab" accessibilityState={{ selected: it.focused }}
-                accessibilityLabel={running ? `${it.label} · 勉強中 ${mins}分` : `${it.label}（時間割・ToDo・タイマー）`}
-                style={{ height: 40, minWidth: 52, paddingHorizontal: running ? 12 : 0, borderRadius: 20, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                {running ? (
-                  <>
-                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: paused ? t.amber : '#22C55E' }} />
-                    <Txt num size={13} w="600" color={t.onInk}>{mins}<Txt size={10} color={t.onInk}>分</Txt></Txt>
-                  </>
-                ) : (
-                  <Icon name="clock" size={19} color={t.onInk} />
-                )}
-              </Press>
-            </View>
-          ) : (
-            <Press key={it.key} scale={0.86} accessibilityRole="tab" accessibilityState={{ selected: it.focused }} accessibilityLabel={it.label} onPress={it.onPress}
+          {items.map((it) => (
+            <Press key={it.key} scale={0.86} accessibilityRole="tab" accessibilityState={{ selected: it.focused }} onPress={it.onPress}
+              accessibilityLabel={it.center ? (running ? `${it.label} · 勉強中 ${mins}分` : `${it.label}（時間割・ToDo・タイマー）`) : it.label}
               style={{ flex: 1, height: TAB_BAR_H - 8, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name={it.icon} size={25} color={it.focused ? t.ink : t.ink2} filled={it.focused} width={it.focused ? 1.9 : 1.6} />
+              <View>
+                <Icon name={it.icon} size={25} color={it.focused ? t.ink : t.ink2} filled={it.focused} width={it.focused ? 1.9 : 1.6} />
+                {/* the middle tab while studying: a small live dot on the clock (amber when paused) */}
+                {it.center && running ? (
+                  <View style={{ position: 'absolute', top: -2, right: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: paused ? t.amber : '#22C55E', borderWidth: 1.5, borderColor: t.surface }} />
+                ) : null}
+              </View>
             </Press>
           ))}
         </View>

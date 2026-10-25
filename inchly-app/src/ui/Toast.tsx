@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeOutUp, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { ease, hair, lift, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
@@ -9,7 +11,8 @@ import { Sticker } from './Sticker';
 
 // Toast stack (bencho "notification stack"): newest in front, the two behind
 // peek out above it. Tapping the stack spreads it into a list; it collapses
-// again on its own. Each toast can carry one action ("一緒に始める", "元に戻す").
+// again on its own. Flick one up and it's gone, like a phone's banner. Each
+// toast can carry one action ("一緒に始める", "元に戻す").
 type Action = { label: string; run: () => void };
 type Item = { id: number; title: string; sub?: string; action?: Action };
 
@@ -53,26 +56,40 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
     s.value = withTiming(ts, { duration: 260, easing: ease.out });
     o.value = withTiming(to, { duration: 200 });
   }, [index, spread, y, s, o]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateY: y.value }, { scale: s.value }] }));
+  // flick it up to dismiss: it follows the finger up (and only a little down)
+  const drag = useSharedValue(0);
+  const flick = useMemo(() => Gesture.Pan().activeOffsetY([-6, 6]).failOffsetX([-20, 20])
+    .onUpdate((e) => { drag.set(e.translationY < 0 ? e.translationY : e.translationY * 0.25); })
+    .onEnd((e) => {
+      if (e.translationY < -22 || e.velocityY < -450) {
+        drag.set(withTiming(-140, { duration: 160 }, (done) => { if (done) scheduleOnRN(dismiss, item.id); }));
+      } else drag.set(withSpring(0, { damping: 18, stiffness: 260 }));
+    }), [drag, item.id]);
+  const a = useAnimatedStyle(() => ({
+    opacity: o.value * (1 - Math.min(0.8, Math.max(0, -drag.value) / 140)),
+    transform: [{ translateY: y.value + drag.value }, { scale: s.value }],
+  }));
   return (
     // the exit animation sits on its own layer, so it doesn't fight the stack's opacity and position
     <Animated.View exiting={FadeOutUp.duration(220)} style={{ position: 'absolute', left: 0, right: 0, zIndex: 10 - index }}>
-      <Animated.View style={a}>
-        <Pressable onPress={onPress}
-          style={[{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingLeft: 8, paddingRight: item.action ? 8 : 14, borderRadius: 20,
-            backgroundColor: t.surface, borderWidth: t.dark ? hair : 0, borderColor: t.line2 }, t.dark ? { boxShadow: '0px 8px 24px rgba(0,0,0,0.5)' } : lift(t, 2)]}>
-          <Sticker name="done" size={32} tilt={-6} />
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Txt size={14} w="600" numberOfLines={1}>{item.title}</Txt>
-            {item.sub ? <Txt size={12} tone="ink3" numberOfLines={1}>{item.sub}</Txt> : null}
-          </View>
-          {item.action ? (
-            <Press onPress={() => { item.action!.run(); dismiss(item.id); }} style={{ height: 32, paddingHorizontal: 13, borderRadius: 16, backgroundColor: t.ink, justifyContent: 'center' }}>
-              <Txt size={12.5} w="600" color={t.onInk}>{item.action.label}</Txt>
-            </Press>
-          ) : null}
-        </Pressable>
-      </Animated.View>
+      <GestureDetector gesture={flick}>
+        <Animated.View style={a}>
+          <Pressable onPress={onPress}
+            style={[{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingLeft: 8, paddingRight: item.action ? 8 : 14, borderRadius: 20,
+              backgroundColor: t.surface, borderWidth: t.dark ? hair : 0, borderColor: t.line2 }, t.dark ? { boxShadow: '0px 8px 24px rgba(0,0,0,0.5)' } : lift(t, 2)]}>
+            <Sticker name="done" size={32} tilt={-6} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Txt size={14} w="600" numberOfLines={1}>{item.title}</Txt>
+              {item.sub ? <Txt size={12} tone="ink3" numberOfLines={1}>{item.sub}</Txt> : null}
+            </View>
+            {item.action ? (
+              <Press onPress={() => { item.action!.run(); dismiss(item.id); }} style={{ height: 32, paddingHorizontal: 13, borderRadius: 16, backgroundColor: t.ink, justifyContent: 'center' }}>
+                <Txt size={12.5} w="600" color={t.onInk}>{item.action.label}</Txt>
+              </Press>
+            ) : null}
+          </Pressable>
+        </Animated.View>
+      </GestureDetector>
     </Animated.View>
   );
 }
