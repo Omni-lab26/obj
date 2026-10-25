@@ -214,11 +214,11 @@ function Grip() {
   );
 }
 
-/** Seven days as a small line, today's point marked; it draws itself in when it appears. */
-function Spark({ week, color }: { week: number[]; color: string }) {
+/** Seven days as a small line, today's point marked; on home it draws itself in when it appears, in the もっと見る card it is just there. */
+function Spark({ week, color, still }: { week: number[]; color: string; still?: boolean }) {
   const W = 52, H = 26;
   const p = useAppear(260, 820);
-  const clip = useAnimatedStyle(() => ({ width: W * p.value }));
+  const clip = useAnimatedStyle(() => ({ width: still ? W : W * p.value }));
   const lo = Math.min(...week), hi = Math.max(...week), span = Math.max(1, hi - lo);
   const pts = week.map((m, i) => [(i / (week.length - 1)) * (W - 4) + 2, H - 3 - ((m - lo) / span) * (H - 6)] as const);
   const d = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
@@ -278,7 +278,7 @@ function Line({ f, onPress, right, dim }: { f: Friend; onPress?: () => void; rig
             <Txt num size={15} w="700" lh={19}>{hm(f.today)}</Txt>
             <Txt num size={11} w="600" lh={14} color={up ? t.greenInk : t.red}>{`${up ? '▲' : '▼'} ${hm(Math.abs(f.diff))}`}</Txt>
           </View>
-          <Spark week={f.week} color={up ? t.blue : t.red} />
+          <Spark still week={f.week} color={up ? t.blue : t.red} />
         </>
       )}
     </Press>
