@@ -9,6 +9,7 @@ import { hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { dateKey } from '../lib/time';
 import { ChartKind, ChartPalette, elapsedOf, setChart, useNow, useStore, useSubjects } from '../store';
 import { ease, hair, useT } from '../theme';
+import { useReplay } from './appear';
 import { Btn, haptic, Press, Txt } from './base';
 import { Icon } from './Icon';
 import { openSheet } from './Sheet';
@@ -87,12 +88,13 @@ export function StudyChart() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [day, sessions, today, running, now, elapsed, subjId, series]);
 
-  // the plot regrows when the range or kind changes
+  // the plot regrows when the range or kind changes, and when its page comes back
   const grow = useSharedValue(0);
+  const replay = useReplay();
   useEffect(() => {
     grow.set(0);
-    grow.set(withTiming(1, { duration: 420, easing: ease.out }));
-  }, [chart.range, chart.kind, chart.detail, grow]);
+    grow.set(withTiming(1, { duration: 520, easing: ease.out }));
+  }, [chart.range, chart.kind, chart.detail, grow, replay]);
   const growA = useAnimatedStyle(() => ({ transform: [{ scaleY: grow.get() }], transformOrigin: 'bottom' }));
 
   // the figure is what's recorded (the same as home's card); the running timer is shown beside it

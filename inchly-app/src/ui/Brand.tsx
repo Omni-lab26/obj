@@ -3,6 +3,7 @@ import { PanResponder, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 import { ease, font, useT } from '../theme';
+import { useReplay } from './appear';
 import { haptic, Txt } from './base';
 
 // Inch-ly: "a little at a time". The brand's one motif is the measuring tape —
@@ -34,25 +35,36 @@ export function InchTape({ minutes, goal, parts }: { minutes: number; goal: numb
   const t = useT();
   const [w, setW] = useState(0);
   const [hot, setHot] = useState<number | null>(null);
-  const end = Math.max(goal + 60, Math.ceil((minutes + 30) / 60) * 60);
+  // the scale stretches with a long day; labels and ticks thin out so they never crowd
+  const rough = Math.max(goal + 60, Math.ceil((minutes + 30) / 60) * 60);
+  const perHour = w ? w / (rough / 60) : 60;
+  const step = [1, 2, 3, 4, 6, 8, 12].find((h) => perHour * h >= 34) ?? 12; // hours between labels
+  const end = Math.ceil(rough / (step * 60)) * step * 60;
+  const px = w ? w / (end / 60) : 60; // px per hour on the final scale
+  const tick = px >= 64 ? 15 : px >= 32 ? 30 : 60; // minutes between small ticks
   const x = (m: number) => (m / end) * w;
   const reveal = useSharedValue(0);
-  useEffect(() => { if (w) reveal.set(withDelay(150, withTiming(x(Math.min(minutes, end)), { duration: 900, easing: ease.out }))); }, [w, minutes]); // eslint-disable-line react-hooks/exhaustive-deps
+  const replay = useReplay();
+  useEffect(() => {
+    if (!w) return;
+    reveal.set(0);
+    reveal.set(withDelay(150, withTiming(x(Math.min(minutes, end)), { duration: 900, easing: ease.out })));
+  }, [w, minutes, end, replay]); // eslint-disable-line react-hooks/exhaustive-deps
   const ra = useAnimatedStyle(() => ({ width: reveal.value }));
   const segs = parts.filter((p) => p.min > 0);
   const starts = segs.map((_, i) => segs.slice(0, i).reduce((a, p) => a + p.min, 0));
   const reached = minutes >= goal;
 
-  const geo = useRef({ w: 0, starts, segs });
-  useEffect(() => { geo.current = { w, starts, segs }; });
+  const geo = useRef({ w: 0, starts, segs, end });
+  useEffect(() => { geo.current = { w, starts, segs, end }; });
   // eslint-disable-next-line react-hooks/refs
   const [pan] = useState(() => {
     let last: number | null = null;
     let hide: ReturnType<typeof setTimeout> | undefined;
     const at = (px: number) => {
-      const { w: ww, starts: st, segs: sg } = geo.current;
+      const { w: ww, starts: st, segs: sg, end: e } = geo.current;
       if (!ww) return null;
-      const m = (px / ww) * end;
+      const m = (px / ww) * e;
       for (let i = sg.length - 1; i >= 0; i--) if (m >= st[i] && m <= st[i] + sg[i].min + 4) return i;
       return null;
     };
@@ -89,18 +101,23 @@ export function InchTape({ minutes, goal, parts }: { minutes: number; goal: numb
                 );
               })}
             </Animated.View>
-            {/* ruler: a hairline tick every quarter hour, longer on the hour */}
-            {Array.from({ length: end / 15 + 1 }, (_, i) => {
-              const m = i * 15;
-              const hour = m % 60 === 0;
-              return <View key={i} style={{ position: 'absolute', top: 23, left: Math.min(w - 1, x(m)), width: 1, height: hour ? 6 : 3, backgroundColor: t.ink3, opacity: hour ? 0.7 : 0.4 }} />;
+            {/* ruler: small ticks as room allows, a longer one at each label */}
+            {Array.from({ length: end / tick + 1 }, (_, i) => {
+              const m = i * tick;
+              const major = m % (step * 60) === 0;
+              return <View key={i} style={{ position: 'absolute', top: 23, left: Math.min(w - 1, x(m)), width: 1, height: major ? 6 : 3, backgroundColor: t.ink3, opacity: major ? 0.7 : 0.4 }} />;
             })}
-            {Array.from({ length: end / 60 + 1 }, (_, h) => (h * 60 === goal ? null : (
-              <Txt key={h} num size={10} tone="ink3" lh={12}
-                style={{ position: 'absolute', top: 30, left: Math.min(w - 16, Math.max(0, x(h * 60) - 8)), width: 16, textAlign: h === 0 ? 'left' : h * 60 === end ? 'right' : 'center' }}>
-                {h === 0 ? '0' : `${h}h`}
-              </Txt>
-            )))}
+            {Array.from({ length: end / (step * 60) + 1 }, (_, k) => {
+              const h = k * step;
+              // the goal's label wins where they'd overlap
+              if (h * 60 === goal || Math.abs(x(h * 60) - x(goal)) < 30) return null;
+              return (
+                <Txt key={h} num size={10} tone="ink3" lh={12}
+                  style={{ position: 'absolute', top: 30, left: Math.min(w - 20, Math.max(0, x(h * 60) - 10)), width: 20, textAlign: h === 0 ? 'left' : h * 60 === end ? 'right' : 'center' }}>
+                  {h === 0 ? '0' : `${h}h`}
+                </Txt>
+              );
+            })}
             {/* goal: a hairline notch through the bar */}
             <View style={{ position: 'absolute', top: 3, left: x(goal) - 0.75, width: 1.5, height: BAR + 13, borderRadius: 1, backgroundColor: reached ? t.greenInk : t.ink }} />
             <Txt size={10} w="700" lh={12} tone={reached ? 'greenInk' : 'ink'} style={{ position: 'absolute', top: 30, left: Math.min(w - 50, x(goal) - 25), width: 50, textAlign: 'center' }}>{`目標 ${goal / 60}h`}</Txt>

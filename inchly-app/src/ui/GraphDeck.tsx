@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { View, ViewStyle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { Easing, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -8,7 +8,9 @@ import Svg, { Line, Rect } from 'react-native-svg';
 import { dayOf, grassOf } from '../lib/history';
 import { useStore } from '../store';
 import { lift, radius, useT } from '../theme';
+import { cascade, useAppear } from './appear';
 import { haptic, Press, Txt } from './base';
+import { Week } from './Heatmap';
 import { useSeries } from './series';
 
 // The graph card on My Page's 成長 page, as a deck: swipe it sideways for a
@@ -141,6 +143,7 @@ function WeekPage({ w, h }: { w: number; h: number }) {
   const used = series.list.filter((x) => days.some((d) => (d.parts[x.key] ?? 0) > 0));
   const prev = useMemo(() => Array.from({ length: 7 }, (_, i) => dayOf(sessions, 7 + i).min).reduce((a, b) => a + b, 0), [sessions]);
   const [sel, setSel] = useState<number | null>(null);
+  const appear = useAppear(100, 760);
   const total = days.reduce((a, d) => a + d.min, 0);
   const d = (total - prev) / 60;
   const ch = Math.max(90, h - 28 - 62 - 12 - 18 - 40); // card minus padding, head, gaps, labels, legend or the day's detail
@@ -155,18 +158,27 @@ function WeekPage({ w, h }: { w: number; h: number }) {
     <View style={{ flex: 1 }}>
       <Head label="この7日間" aside={`1日の目標 ${goal / 60}時間`} value={(total / 60).toFixed(1)} unit="時間" up={d >= 0} delta={`${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}時間`} />
       <View style={{ marginTop: 12 }}>
-        <Svg width={w} height={ch}>
+        {/* each day's bar grows up from the floor in turn */}
+        <View style={{ width: w, height: ch }}>
           {days.map((x, i) => {
             let y = ch;
             const op = sel === null ? (i === 6 ? 1 : 0.8) : i === sel ? 1 : 0.22;
-            return used.map((s) => {
-              const bh = ((x.parts[s.key] ?? 0) / top) * ch;
-              y -= bh;
-              return bh > 0 ? <Rect key={`${i}-${s.key}`} x={i * (bw + gap)} y={y} width={bw} height={Math.max(0, bh - 1.5)} rx={3} fill={s.c} opacity={op} /> : null;
-            });
+            return (
+              <Grow key={i} i={i} p={appear} style={{ position: 'absolute', left: i * (bw + gap), top: 0, width: bw, height: ch }}>
+                <Svg width={bw} height={ch}>
+                  {used.map((s) => {
+                    const bh = ((x.parts[s.key] ?? 0) / top) * ch;
+                    y -= bh;
+                    return bh > 0 ? <Rect key={s.key} x={0} y={y} width={bw} height={Math.max(0, bh - 1.5)} rx={3} fill={s.c} opacity={op} /> : null;
+                  })}
+                </Svg>
+              </Grow>
+            );
           })}
-          <Line x1={0} x2={w} y1={gy} y2={gy} stroke={t.amber} strokeWidth={1} strokeDasharray="3 4" />
-        </Svg>
+          <Svg width={w} height={ch} style={{ position: 'absolute' }} pointerEvents="none">
+            <Line x1={0} x2={w} y1={gy} y2={gy} stroke={t.amber} strokeWidth={1} strokeDasharray="3 4" />
+          </Svg>
+        </View>
         {/* the bars are buttons: a whole column, so a short day is as easy to tap as a long one */}
         <View style={{ position: 'absolute', left: 0, top: 0, width: w, height: ch, flexDirection: 'row', gap }}>
           {days.map((x, i) => (
@@ -231,14 +243,15 @@ function GrassPage({ w, h }: { w: number; h: number }) {
   const sessions = useStore((s) => s.sessions);
   const cells = useMemo(() => grassOf(sessions, weeks), [sessions, weeks]);
   const studied = cells.filter((l) => l > 0).length;
+  const appear = useAppear(80, 900);
   return (
     <View style={{ flex: 1 }}>
       <Head label="草" aside={`${weeks}週間`} value={String(studied)} size={26} unit={`日 / ${cells.length}日 勉強した`} />
       <View style={{ flexDirection: 'row', gap, marginTop: 12 }} accessible accessibilityLabel={`${weeks}週間のうち${studied}日勉強しました`}>
         {Array.from({ length: weeks }, (_, c) => (
-          <View key={c} style={{ gap }}>
+          <Week key={c} i={c} n={weeks} p={appear} gap={gap}>
             {cells.slice(c * 7, c * 7 + 7).map((l, r) => <View key={r} style={{ width: size, height: size, borderRadius: 3, backgroundColor: t.grass[l] }} />)}
-          </View>
+          </Week>
         ))}
       </View>
       <View style={{ flex: 1 }} />
@@ -249,4 +262,10 @@ function GrassPage({ w, h }: { w: number; h: number }) {
       </View>
     </View>
   );
+}
+
+/** A bar that grows up from the floor on its turn (day i of 7). */
+function Grow({ i, p, style, children }: { i: number; p: SharedValue<number>; style: ViewStyle; children: ReactNode }) {
+  const a = useAnimatedStyle(() => ({ transform: [{ scaleY: cascade(p.value, i, 7, 0.45) }], transformOrigin: 'bottom' }));
+  return <Animated.View style={[style, a]}>{children}</Animated.View>;
 }

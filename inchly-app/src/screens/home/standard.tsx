@@ -16,6 +16,7 @@ import { InchTape, Wordmark } from '@/ui/Brand';
 import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { LiveDot } from '@/ui/GroupParts';
+import { useReplay } from '@/ui/appear';
 import { Badges, useGrowth } from '@/ui/Growth';
 import { Heatmap } from '@/ui/Heatmap';
 import { MiniSeg } from '@/ui/HomeParts';
@@ -94,9 +95,14 @@ function Today() {
   const today = useToday();
   const deadlines = useDeadlines();
   const next = deadlines[0];
-  // hero digits roll up from zero once the screen is shown
+  // hero digits roll up from zero when the screen is shown (and when home comes back)
   const [shown, setShown] = useState(false);
-  useEffect(() => { const id = setTimeout(() => setShown(true), 120); return () => clearTimeout(id); }, []);
+  const replay = useReplay();
+  useEffect(() => {
+    const a = setTimeout(() => setShown(false), 0);
+    const b = setTimeout(() => setShown(true), 120);
+    return () => { clearTimeout(a); clearTimeout(b); };
+  }, [replay]);
   const H = shown ? String(Math.floor(today.min / 60)) : '0';
   const M = shown ? pad(today.min % 60) : '00';
   const diff = today.diff;

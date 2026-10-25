@@ -14,6 +14,7 @@ import { elapsedOf, useNow, useStore } from '@/store';
 import { useT } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
 import { showStudyBar, TAB_BAR_H, tabBarBottom, useStudyBarShown } from '@/ui/Chrome';
+import { replayCharts } from '@/ui/appear';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
 
@@ -46,6 +47,8 @@ export function TabBar(p: BottomTabBarProps) {
   const barUp = useStudyBarShown();
   // a new session brings the bar back, even if the last one was swiped away
   useEffect(() => { if (st.running) showStudyBar(); }, [st.running]);
+  // another tab came into view: its charts play their entrance again
+  useEffect(() => { replayCharts(); }, [p.state.index]);
   const [away, setAway] = useState(false);
   useAnimatedReaction(() => designReveal.value > 0.02, (now, before) => { if (now !== before) scheduleOnRN(setAway, now); });
   const aside = useAnimatedStyle(() => ({ opacity: 1 - designReveal.value, transform: [{ translateY: designReveal.value * 24 }] }));

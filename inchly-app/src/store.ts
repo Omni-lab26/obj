@@ -51,6 +51,7 @@ export type State = {
   following: string[];
   friendSort: FriendSort;
   friendOrder: string[];
+  friendHidden: string[]; // handles swiped off home's friends list
   posts: Post[];
   helpful: string[]; // post ids
   roomFilters: string[]; // extra 志望校 chips in the study room
@@ -100,6 +101,7 @@ export const INITIAL: State = {
   following: [],
   friendSort: 'time',
   friendOrder: [],
+  friendHidden: [],
   posts: POSTS.filter((p) => !p.mine),
   helpful: [],
   roomFilters: [],
@@ -575,6 +577,10 @@ export function setFriendSort(sort: FriendSort) {
 /** Your own order of the friends on home (dragging one switches the list to it). */
 export function setFriendOrder(order: string[]) {
   setState({ friendSort: 'mine', friendOrder: order });
+}
+/** Takes a friend off home's list (or puts them back). */
+export function setFriendHidden(h: string, hidden: boolean) {
+  setState((s) => ({ friendHidden: hidden ? [...s.friendHidden.filter((x) => x !== h), h] : s.friendHidden.filter((x) => x !== h) }));
 }
 export function toggleFollow(h: string) {
   setState((s) => ({ following: toggleIn(s.following, h) }));

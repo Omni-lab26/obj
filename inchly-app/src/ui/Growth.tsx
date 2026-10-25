@@ -11,6 +11,7 @@ import { ease, lift, useT } from '../theme';
 import { Card, haptic, Press, Txt } from './base';
 import { Rolling } from './Rolling';
 import { ThemeCard } from '../screens/ThemeCard';
+import { useReplay } from './appear';
 import { DECK_H, GraphDeck } from './GraphDeck';
 import { Sticker, StickerName } from './Sticker';
 
@@ -166,7 +167,8 @@ function Climb({ curve, next, prev, from }: { curve: number[]; next: number; pre
   const Y = (v: number) => 6 + (PLOT_H - 12) * (1 - (v - lo) / (hi - lo));
   const line = curve.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
   const reveal = useSharedValue(0);
-  useEffect(() => { if (w) reveal.value = withDelay(150, withTiming(1, { duration: 1100, easing: ease.out })); }, [w, reveal]);
+  const replay = useReplay();
+  useEffect(() => { if (w) { reveal.value = 0; reveal.value = withDelay(150, withTiming(1, { duration: 1100, easing: ease.out })); } }, [w, reveal, replay]);
   const clip = useAnimatedStyle(() => ({ width: w * reveal.value }));
   const end = curve[curve.length - 1];
   return (
@@ -205,7 +207,8 @@ function Climb({ curve, next, prev, from }: { curve: number[]; next: number; pre
 function Meter({ p }: { p: number }) {
   const t = useT();
   const v = useSharedValue(0);
-  useEffect(() => { v.value = withDelay(400, withTiming(Math.max(0, Math.min(1, p)), { duration: 900, easing: ease.out })); }, [p, v]);
+  const replay = useReplay();
+  useEffect(() => { v.value = 0; v.value = withDelay(400, withTiming(Math.max(0, Math.min(1, p)), { duration: 900, easing: ease.out })); }, [p, v, replay]);
   const a = useAnimatedStyle(() => ({ width: `${v.value * 100}%` }));
   return (
     <View style={{ height: 6, borderRadius: 3, backgroundColor: t.sunken, overflow: 'hidden' }}>

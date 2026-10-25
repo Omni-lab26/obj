@@ -6,6 +6,7 @@ import { pad } from '../data';
 import { dayOf } from '../lib/history';
 import { Session, useStore } from '../store';
 import { ease, hair, lift, radius, type, useT } from '../theme';
+import { useReplay } from './appear';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
 import { SeriesSet, useSeries } from './series';
@@ -46,10 +47,19 @@ function Seg({ h, bottom, color, delay, dim }: { h: number; bottom: number; colo
   const hh = useSharedValue(0);
   const bb = useSharedValue(bottom);
   const o = useSharedValue(1);
+  const replay = useReplay();
   useEffect(() => {
     hh.set(withDelay(delay, withTiming(h, { duration: 600, easing: ease.out })));
     bb.set(withDelay(delay, withTiming(bottom, { duration: 600, easing: ease.out })));
   }, [h, bottom, delay, hh, bb]);
+  // its page came back: grow again from the floor
+  useEffect(() => {
+    if (!replay) return;
+    hh.set(0);
+    bb.set(0);
+    hh.set(withDelay(delay, withTiming(h, { duration: 600, easing: ease.out })));
+    bb.set(withDelay(delay, withTiming(bottom, { duration: 600, easing: ease.out })));
+  }, [replay]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { o.set(withTiming(dim ? 0.36 : 1, { duration: 160 })); }, [dim, o]);
   const a = useAnimatedStyle(() => ({ height: hh.value, bottom: bb.value, opacity: o.value }));
   return <Animated.View style={[{ position: 'absolute', left: 0, right: 0, borderRadius: 2.5, backgroundColor: color }, a]} />;

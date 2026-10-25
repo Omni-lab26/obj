@@ -1,21 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 import { pad } from '../data';
 import { dayOf, grassOf } from '../lib/history';
 import { useStore } from '../store';
 import { useT } from '../theme';
+import { cascade, useAppear } from './appear';
 import { haptic, Txt } from './base';
 
 // GitHub-style grass. Columns are weeks, rows are days. Press (or press and
-// drag) on the grid to read the date and time of a day.
+// drag) on the grid to read the date and time of a day. It fills in from the
+// left when it appears (and when its page comes back).
 
 const GUTTER = 18; // weekday labels
 const MONTH_H = 16; // month labels
 
 export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { weeks: number; gap?: number; legend?: boolean; labels?: boolean }) {
   const t = useT();
+  const appear = useAppear(80, 900); // the grass fills in from the left, a week at a time
   const sessions = useStore((s) => s.sessions);
   const lastDay = useStore((s) => s.lastDay); // a new day redraws the grass
   const cells = useMemo(() => grassOf(sessions, weeks), [sessions, weeks, lastDay]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -102,11 +105,16 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { week
       ) : null}
       {/* cells ignore touches so locationX/Y are relative to the whole grid */}
       <View style={{ flex: 1 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} {...pan.panHandlers} accessibilityLabel={`${weeks}週間の勉強記録`}>
-      <View pointerEvents="none" style={{ flexDirection: 'column', flexWrap: 'wrap', height: size ? size * 7 + gap * 6 + 0.5 : 0, columnGap: gap, rowGap: gap }}>
+      <View pointerEvents="none" style={{ flexDirection: 'row', gap }}>
         {size
-          ? cells.map((l, i) => (
-              <View key={i} style={{ width: size, height: size, borderRadius: Math.min(4, size * 0.22), backgroundColor: t.grass[l],
-                borderWidth: i === cells.length - 1 || hot === i ? 1.5 : 0, borderColor: t.ink }} />
+          ? Array.from({ length: weeks }, (_, c) => (
+              <Week key={c} i={c} n={weeks} p={appear} gap={gap}>
+                {cells.slice(c * 7, c * 7 + 7).map((l, r) => {
+                  const i = c * 7 + r;
+                  return <View key={r} style={{ width: size, height: size, borderRadius: Math.min(4, size * 0.22), backgroundColor: t.grass[l],
+                    borderWidth: i === cells.length - 1 || hot === i ? 1.5 : 0, borderColor: t.ink }} />;
+                })}
+              </Week>
             ))
           : null}
       </View>
@@ -132,4 +140,13 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { week
       ) : null}
     </View>
   );
+}
+
+/** One week of the grass, coming in on its turn. */
+export function Week({ i, n, p, gap, children }: { i: number; n: number; p: SharedValue<number>; gap: number; children: ReactNode }) {
+  const a = useAnimatedStyle(() => {
+    const k = cascade(p.value, i, n);
+    return { opacity: k, transform: [{ translateY: (1 - k) * 6 }, { scale: 0.7 + 0.3 * k }] };
+  });
+  return <Animated.View style={[{ gap }, a]}>{children}</Animated.View>;
 }

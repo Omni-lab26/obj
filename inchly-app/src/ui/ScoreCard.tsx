@@ -5,6 +5,7 @@ import Svg, { Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { rng } from '../data';
 import { lift, radius, type, useT } from '../theme';
+import { useReplay } from './appear';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
 
@@ -52,6 +53,7 @@ function smoothPath(pts: [number, number][]) {
 }
 
 export function ScoreCard() {
+  const replay = useReplay();
   const t = useT();
   const [data] = useState(series);
   const [win, setWin] = useState<Win>('3m');
@@ -123,7 +125,7 @@ export function ScoreCard() {
         <View style={{ height: PLOT_H, marginTop: 16, marginBottom: 4 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} {...scrub.panHandlers}
           accessible accessibilityLabel={`偏差値の推移。${W.label}で${delta >= 0 ? '+' : '−'}${Math.abs(delta).toFixed(1)}`}>
           {w ? (
-            <Animated.View key={win + data.length + data[data.length - 1]} entering={FadeIn.duration(260)} pointerEvents="none" style={{ flex: 1 }}>
+            <Animated.View key={`${win}${data.length}${data[data.length - 1]}-${replay}`} entering={FadeIn.duration(360)} pointerEvents="none" style={{ flex: 1 }}>
               <Svg width={w} height={PLOT_H}>
                 <Defs>
                   <LinearGradient id="pullArea" x1="0" y1="0" x2="0" y2="1">

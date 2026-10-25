@@ -211,13 +211,15 @@ function weekOf7(h: string): number[] {
 }
 /**
  * Friends studying now (sample people; the blocked never show), in the order
- * you chose: by today's time (the default), by name, or your own.
+ * you chose: by today's time (the default), by name, or your own — and the
+ * ones you hid from the list.
  */
-export function useFriends(): { list: Friend[]; sort: FriendSort } {
+export function useFriends(): { list: Friend[]; hidden: Friend[]; sort: FriendSort } {
   const now = useNow(30_000);
   const blocked = useStore((s) => s.blocked);
   const sort = useStore((s) => s.friendSort);
   const order = useStore((s) => s.friendOrder);
+  const off = useStore((s) => s.friendHidden);
   return useMemo(() => {
     const since = Math.floor((now - opened) / 1000);
     const list = PEOPLE.filter((p) => !blocked.includes(p.n)).map((p) => {
@@ -234,8 +236,9 @@ export function useFriends(): { list: Friend[]; sort: FriendSort } {
       const at = (f: Friend) => { const i = order.indexOf(f.h); return i < 0 ? Infinity : i; };
       list.sort((a, b) => at(a) - at(b) || byTime(a, b));
     } else list.sort(byTime);
-    return { list, sort };
-  }, [now, blocked, sort, order]);
+    // the ones you swiped away stay out of the list (and can be brought back)
+    return { list: list.filter((f) => !off.includes(f.h)), hidden: list.filter((f) => off.includes(f.h)), sort };
+  }, [now, blocked, sort, order, off]);
 }
 
 /** Where things are, for any theme. */
