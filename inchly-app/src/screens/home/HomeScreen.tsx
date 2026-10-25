@@ -18,6 +18,8 @@ import { STANDARD_SECTIONS, StandardFrame, StandardHandle, StandardHeader, Stand
 // too); slide that page back to the left, or tap back, and home returns.
 
 const SETTLE = { duration: 420, dampingRatio: 0.9 };
+/** The slide to デザイン (and its handle) is put away for now; デザイン is still in 設定. */
+const DESIGN_SLIDE = false;
 /** Past a third of the way, or flung, it goes the rest of the way; otherwise it slides back. */
 const decide = (at: number, v: number, opening: boolean) => {
   'worklet';
@@ -44,7 +46,7 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
   const close = useCallback(() => settle(false), [settle]);
 
   // home → デザイン: only a slide to the right, so scrolling up and down is left alone
-  const [bringIn] = useState(() => Gesture.Pan().activeOffsetX(14).failOffsetY([-22, 22])
+  const [bringIn] = useState(() => Gesture.Pan().enabled(DESIGN_SLIDE).activeOffsetX(14).failOffsetY([-22, 22])
     .onStart(() => { moving.set(true); scheduleOnRN(setShown, true); })
     .onUpdate((e) => { designReveal.set(Math.min(1, Math.max(0, e.translationX / w.get()))); })
     .onFinalize((e) => {
@@ -88,7 +90,7 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
               </Frame>
             ))}
           </Page>
-          <Handle onPress={open} />
+          {DESIGN_SLIDE ? <Handle onPress={open} /> : null}
           <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }, dim]} />
         </Animated.View>
       </GestureDetector>

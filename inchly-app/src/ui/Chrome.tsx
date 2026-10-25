@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ReactNode } from 'react';
+import { ReactNode, useSyncExternalStore } from 'react';
 import { View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -32,11 +32,23 @@ export const STUDY_BAR_H = 56;
 export const studyBarBottom = (inset: number) => tabBarBottom(inset) + TAB_BAR_H + 8;
 /** The top of the study bar, from the bottom edge: things that float over a tab screen sit above it. */
 export const barsTop = (inset: number) => studyBarBottom(inset) + STUDY_BAR_H;
-/** The top of what floats at the bottom of a tab screen: the study bar while studying, else the tab bar. */
+// Swiped down, the study bar stays away until you start again or open the timer.
+let barAway = false;
+const barSubs = new Set<() => void>();
+const setBarAway = (v: boolean) => { if (v === barAway) return; barAway = v; barSubs.forEach((f) => f()); };
+const onBarAway = (f: () => void) => { barSubs.add(f); return () => { barSubs.delete(f); }; };
+export const hideStudyBar = () => setBarAway(true);
+export const showStudyBar = () => setBarAway(false);
+/** The study bar is up: a session is under way and it hasn't been swiped away. */
+export function useStudyBarShown() {
+  const running = useStore((s) => s.running);
+  const away = useSyncExternalStore(onBarAway, () => barAway, () => barAway);
+  return running && !away;
+}
+/** The top of what floats at the bottom of a tab screen: the study bar while it's up, else the tab bar. */
 export function useBarsTop() {
   const insets = useSafeAreaInsets();
-  const running = useStore((s) => s.running);
-  return running ? barsTop(insets.bottom) : tabBarBottom(insets.bottom) + TAB_BAR_H;
+  return useStudyBarShown() ? barsTop(insets.bottom) : tabBarBottom(insets.bottom) + TAB_BAR_H;
 }
 export function useTabPad() {
   return useBarsTop() + 20;

@@ -1,23 +1,34 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { dayOf } from '../lib/history';
 import { Session, useStore, useStreak } from '../store';
-import { ease, useT } from '../theme';
-import { Card, Txt } from './base';
+import { ease, lift, useT } from '../theme';
+import { Card, haptic, Press, Txt } from './base';
 import { Rolling } from './Rolling';
-import { GraphDeck } from './GraphDeck';
+import { DECK_H, GraphDeck } from './GraphDeck';
 import { Sticker, StickerName } from './Sticker';
 
-// "You are growing": the running total climbing toward the next milestone,
-// three comparisons with your past self, and the badges you have collected.
-// Everything is computed from your records, so it moves every day you study.
+// "You are growing": the week, the grass and the running total in a deck (its
+// 足 — a point a day, a week or a month — set by a little vertical slider), the
+// next milestone, three comparisons with your past self, and the badges you
+// have collected. Everything is computed from your records, so it moves every
+// day you study.
 
 const MILESTONES = [100, 300, 500, 700, 1000, 1500];
 const WEEKS = 26;
-const PLOT_H = 112;
+/** How the running total is drawn: a point every day (30 days), week (26 weeks) or month (12 months). */
+export type Frame = 'day' | 'week' | 'month';
+const FRAMES: { id: Frame; label: string; from: string }[] = [
+  { id: 'day', label: '日', from: '30日前' },
+  { id: 'week', label: '週', from: '半年前' },
+  { id: 'month', label: '月', from: '1年前' },
+];
+const PLOT_H = DECK_H - 28 - 62 - 12 - 18; // the card minus padding, head, gap, the labels under it
 
 export function useGrowth(sessions: Session[]) {
   return useMemo(() => {
@@ -27,13 +38,18 @@ export function useGrowth(sessions: Session[]) {
     const totalMin = sum(0, 365);
     // the running total at the end of each of the last 26 weeks, oldest first
     const curve = Array.from({ length: WEEKS + 1 }, (_, k) => (totalMin - sum(0, (WEEKS - k) * 7)) / 60);
+    const curves: Record<Frame, number[]> = {
+      day: Array.from({ length: 31 }, (_, k) => (totalMin - sum(0, 30 - k)) / 60),
+      week: curve,
+      month: Array.from({ length: 13 }, (_, k) => (totalMin - sum(0, (12 - k) * 30)) / 60),
+    };
     const next = MILESTONES.find((m) => m * 60 > totalMin) ?? MILESTONES[MILESTONES.length - 1];
     const prev = [...MILESTONES].reverse().find((m) => m * 60 <= totalMin) ?? 0;
     const pace = sum(0, 14) / 14; // minutes a day lately
     const eta = new Date();
     eta.setDate(eta.getDate() + Math.ceil((next * 60 - totalMin) / Math.max(1, pace)));
     return {
-      total: totalMin / 60, curve, next, prev, eta,
+      total: totalMin / 60, curve, curves, next, prev, eta,
       vsYesterday: days[0] - days[1],
       vsLastWeek: (sum(0, 7) - sum(7, 14)) / 60,
       avgNow: sum(0, 30) / 30,
@@ -53,37 +69,42 @@ export function Growth() {
   const left = g.next - g.total;
   const p = (g.total - g.prev) / (g.next - g.prev);
 
+  const [frame, setFrame] = useState<Frame>('week');
+
   return (
     <View style={{ paddingTop: 14, gap: 10 }}>
-      {/* the graph card: swipe it for the week, the subjects and the grass */}
-      <GraphDeck first={<>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />
-          <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>これまでの勉強時間</Txt>
-          <Txt size={11} tone="ink3">直近1年</Txt>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginTop: 4 }}>
-          <Rolling value={shown ? g.total.toFixed(1) : '000.0'} size={34} weight="700" />
-          <Txt size={13} w="600" tone="ink3" style={{ marginBottom: 6 }}>時間</Txt>
-          <View style={{ flex: 1 }} />
-          <View style={{ alignItems: 'flex-end', marginBottom: 4 }}>
-            <Txt num size={12} w="700" lh={15} color={g.vsLastWeek >= 0 ? t.greenInk : t.red}>{`${g.vsLastWeek >= 0 ? '▲' : '▼'} ${Math.abs(g.vsLastWeek).toFixed(1)}時間`}</Txt>
-            <Txt size={10.5} tone="ink3" lh={13}>先週より</Txt>
+      {/* the graph card: the week first; swipe it for the grass and the running total */}
+      <GraphDeck last={<>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />
+              <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>これまでの勉強時間</Txt>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginTop: 4 }}>
+              <Rolling value={shown ? g.total.toFixed(1) : '000.0'} size={34} weight="700" />
+              <Txt size={13} w="600" tone="ink3" style={{ marginBottom: 6 }}>時間</Txt>
+              <Txt num size={11.5} w="700" color={g.vsLastWeek >= 0 ? t.greenInk : t.red} style={{ marginBottom: 7, marginLeft: 4 }}>
+                {`${g.vsLastWeek >= 0 ? '▲' : '▼'} ${Math.abs(g.vsLastWeek).toFixed(1)}`}<Txt size={10} tone="ink3">{' 先週より'}</Txt>
+              </Txt>
+            </View>
           </View>
+          <FrameSlider value={frame} onChange={setFrame} />
         </View>
-        <Climb curve={g.curve} next={g.next} prev={g.prev} />
-        {/* the next milestone, and when you'll reach it at this pace */}
-        <View style={{ marginTop: 12, padding: 10, borderRadius: 12, backgroundColor: t.canvas, gap: 7 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-            <Txt size={12.5} w="600" style={{ flex: 1 }}>{`次のバッジ · ${g.next}時間`}</Txt>
-            <Txt num size={12.5} w="700">{`あと${left.toFixed(1)}時間`}</Txt>
-          </View>
-          <Meter p={p} />
-          <Txt size={11} tone="ink3">{`このペースなら ${g.eta.getMonth() + 1}月${g.eta.getDate()}日に届きます`}</Txt>
-        </View>
+        <Climb key={frame} curve={g.curves[frame]} next={g.next} prev={g.prev} from={FRAMES.find((f) => f.id === frame)!.from} />
       </>} />
 
       <View style={{ paddingHorizontal: 16, gap: 10 }}>
+        {/* the next milestone, and when you'll reach it at this pace */}
+        <Card pad={14} style={{ gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+            <Txt size={13} w="600" style={{ flex: 1 }}>{`次のバッジ · ${g.next}時間`}</Txt>
+            <Txt num size={13} w="700">{`あと${left.toFixed(1)}時間`}</Txt>
+          </View>
+          <Meter p={p} />
+          <Txt size={11} tone="ink3">{`このペースなら ${g.eta.getMonth() + 1}月${g.eta.getDate()}日に届きます`}</Txt>
+        </Card>
+
         {/* you vs. your past self */}
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Versus label="昨日より" up={g.vsYesterday >= 0} value={hm(g.vsYesterday)} />
@@ -97,11 +118,48 @@ export function Growth() {
   );
 }
 
+const STOP = 20; // the slider's room per 足
+/** The 足 of the running total, as a short vertical slider in the card's corner: slide it (or tap a label) for 日・週・月. */
+function FrameSlider({ value, onChange }: { value: Frame; onChange: (f: Frame) => void }) {
+  const t = useT();
+  const at = FRAMES.findIndex((f) => f.id === value);
+  const y = useSharedValue(at * STOP);
+  useEffect(() => { y.set(withSpring(at * STOP, { duration: 320, dampingRatio: 0.8 })); }, [at, y]);
+  const lens = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+  const set = (i: number) => { if (FRAMES[i] && FRAMES[i].id !== value) { haptic.tap(); onChange(FRAMES[i].id); } };
+  // only a vertical slide: a sideways one still turns the deck
+  const pan = useMemo(() => Gesture.Pan().activeOffsetY([-4, 4]).failOffsetX([-10, 10])
+    .onUpdate((e) => {
+      const i = Math.max(0, Math.min(FRAMES.length - 1, Math.round((at * STOP + e.translationY) / STOP)));
+      scheduleOnRN(set, i);
+    }), [at, value]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <GestureDetector gesture={pan}>
+      <View accessible accessibilityRole="adjustable" accessibilityLabel={`グラフの足 ${FRAMES[at].label}`}
+        accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+        onAccessibilityAction={(e) => set(at + (e.nativeEvent.actionName === 'increment' ? 1 : -1))}
+        style={{ width: 34, padding: 2, borderRadius: 12, backgroundColor: t.sunken }}>
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 2, right: 2, top: 2, height: STOP, borderRadius: 10, backgroundColor: t.surface, ...lift(t) }, lens]} />
+        {FRAMES.map((f, i) => (
+          <Press key={f.id} onPress={() => set(i)} haptics={false} scale={0.9} hitSlop={{ left: 6, right: 6 }} accessibilityLabel={`${f.label}足`}
+            style={{ height: STOP, alignItems: 'center', justifyContent: 'center' }}>
+            <Txt size={11.5} w={i === at ? '700' : '500'} tone={i === at ? 'ink' : 'ink3'}>{f.label}</Txt>
+          </Press>
+        ))}
+      </View>
+    </GestureDetector>
+  );
+}
+
 /** The running total as a rising line, with the milestone you passed and the one ahead. */
-function Climb({ curve, next, prev }: { curve: number[]; next: number; prev: number }) {
+function Climb({ curve, next, prev, from }: { curve: number[]; next: number; prev: number; from: string }) {
   const t = useT();
   const [w, setW] = useState(0);
-  const lo = Math.min(curve[0], prev) - 10, hi = next + 10;
+  // the milestones are drawn when they are near the line (a month of days rises only a little)
+  const first = curve[0], last = curve[curve.length - 1], span = Math.max(1, last - first);
+  const showNext = next - last < span * 1.5, showPrev = first - prev < span * 1.5 && prev > 0;
+  const pad = span * 0.12 + 1;
+  const lo = Math.min(first, showPrev ? prev : first) - pad, hi = Math.max(last, showNext ? next : last) + pad;
   const X = (i: number) => (w - 4) * (i / (curve.length - 1)) + 2;
   const Y = (v: number) => 6 + (PLOT_H - 12) * (1 - (v - lo) / (hi - lo));
   const line = curve.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
@@ -111,11 +169,11 @@ function Climb({ curve, next, prev }: { curve: number[]; next: number; prev: num
   const end = curve[curve.length - 1];
   return (
     <View style={{ height: PLOT_H, marginTop: 12 }} onLayout={(e) => setW(e.nativeEvent.layout.width)}
-      accessible accessibilityLabel={`半年で${(end - curve[0]).toFixed(0)}時間ふえました`}>
+      accessible accessibilityLabel={`${from}から${(end - curve[0]).toFixed(0)}時間ふえました`}>
       {w ? (
         <>
           <Svg width={w} height={PLOT_H} style={{ position: 'absolute' }}>
-            {[prev, next].filter((m) => m > lo).map((m) => (
+            {[showPrev ? prev : -1, showNext ? next : -1].filter((m) => m > lo && m < hi).map((m) => (
               <Line key={m} x1={0} x2={w} y1={Y(m)} y2={Y(m)} stroke={m === next ? t.ink2 : t.line2} strokeWidth={0.75} strokeDasharray="3 4" />
             ))}
           </Svg>
@@ -132,9 +190,9 @@ function Climb({ curve, next, prev }: { curve: number[]; next: number; prev: num
               <Circle cx={X(curve.length - 1)} cy={Y(end)} r={4} fill={t.ink} stroke={t.surface} strokeWidth={1.5} />
             </Svg>
           </Animated.View>
-          <Txt num size={10} w="600" lh={12} tone="ink2" style={{ position: 'absolute', left: 0, top: Y(next) - 14 }}>{`${next}時間`}</Txt>
-          {prev > lo ? <Txt num size={10} lh={12} tone="ink3" style={{ position: 'absolute', left: 0, top: Y(prev) - 14 }}>{`${prev}時間 達成`}</Txt> : null}
-          <Txt size={10} lh={12} tone="ink3" style={{ position: 'absolute', left: 0, bottom: -14 }}>半年前</Txt>
+          {showNext ? <Txt num size={10} w="600" lh={12} tone="ink2" style={{ position: 'absolute', left: 0, top: Y(next) - 14 }}>{`${next}時間`}</Txt> : null}
+          {showPrev && prev > lo ? <Txt num size={10} lh={12} tone="ink3" style={{ position: 'absolute', left: 0, top: Y(prev) - 14 }}>{`${prev}時間 達成`}</Txt> : null}
+          <Txt size={10} lh={12} tone="ink3" style={{ position: 'absolute', left: 0, bottom: -14 }}>{from}</Txt>
           <Txt size={10} lh={12} tone="ink3" style={{ position: 'absolute', right: 0, bottom: -14 }}>今日</Txt>
         </>
       ) : null}

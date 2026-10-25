@@ -1,8 +1,9 @@
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useEffect, useMemo } from 'react';
 
 import { arrangeZones, ExtraKind, TIMER, TimerPart, Zone } from '@/screens/layout';
 import { useTargetNudge } from '@/screens/model';
 import type { TimerKit } from '@/themes/types';
+import { showStudyBar } from '@/ui/Chrome';
 import { STANDARD_PARTS, STANDARD_ZONES, StandardTimerPage } from './standard';
 
 // The timer, for every theme: the base parts (layout.ts) in three zones, each
@@ -11,6 +12,8 @@ import { STANDARD_PARTS, STANDARD_ZONES, StandardTimerPage } from './standard';
 const STANDARD: TimerKit = { arrange: STANDARD_ZONES };
 export function TimerScreen({ kit = STANDARD }: { kit?: TimerKit }) {
   const zones = useMemo(() => arrangeZones(TIMER, kit.arrange), [kit.arrange]);
+  // a study bar swiped away comes back once you've looked at the timer
+  useEffect(() => { showStudyBar(); }, []);
   const Page = kit.Page ?? StandardTimerPage;
   const draw = (list: (TimerPart | ExtraKind)[]): ReactNode => list.map((p) => {
     const C = kit.parts?.[p] ?? (p in STANDARD_PARTS ? STANDARD_PARTS[p as TimerPart] : undefined);

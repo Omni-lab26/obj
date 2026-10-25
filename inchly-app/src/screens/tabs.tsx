@@ -13,7 +13,7 @@ import type { TabBarProps, TabItem } from '@/themes/types';
 import { elapsedOf, useNow, useStore } from '@/store';
 import { useT } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
-import { TAB_BAR_H, tabBarBottom } from '@/ui/Chrome';
+import { showStudyBar, TAB_BAR_H, tabBarBottom, useStudyBarShown } from '@/ui/Chrome';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
 
@@ -35,7 +35,7 @@ export function useTabItems({ state, navigation }: BottomTabBarProps): TabItem[]
   });
 }
 
-/** The navigator's tab bar (the theme's own, or the standard one), with the study bar on top once you start. Both step aside while the デザイン page slides in over home. */
+/** The navigator's tab bar (the theme's own, or the standard one), with the study bar on top once you start (swipe it down to put it away). Both step aside while the デザイン page slides in over home. */
 export function TabBar(p: BottomTabBarProps) {
   const items = useTabItems(p);
   const kit = useThemeKit();
@@ -43,12 +43,15 @@ export function TabBar(p: BottomTabBarProps) {
   const StudyBar = kit.StudyBar ?? StandardStudyBar;
   useNow();
   const st = useStore((s) => s);
+  const barUp = useStudyBarShown();
+  // a new session brings the bar back, even if the last one was swiped away
+  useEffect(() => { if (st.running) showStudyBar(); }, [st.running]);
   const [away, setAway] = useState(false);
   useAnimatedReaction(() => designReveal.value > 0.02, (now, before) => { if (now !== before) scheduleOnRN(setAway, now); });
   const aside = useAnimatedStyle(() => ({ opacity: 1 - designReveal.value, transform: [{ translateY: designReveal.value * 24 }] }));
   return (
     <Animated.View pointerEvents={away ? 'none' : 'box-none'} style={[StyleSheet.absoluteFill, aside]}>
-      {st.running ? (
+      {barUp ? (
         <Animated.View pointerEvents="box-none" entering={FadeInDown.duration(260)} exiting={FadeOutDown.duration(180)} style={StyleSheet.absoluteFill}>
           <StudyBar insets={p.insets} />
         </Animated.View>
