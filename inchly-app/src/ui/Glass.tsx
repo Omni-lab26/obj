@@ -43,21 +43,23 @@ function Sheen({ radius, dark, strength = 0.55 }: { radius: number; dark: boolea
   );
 }
 
-export function Glass({ children, style, radius = 999, interactive, tint, flat }: {
+export function Glass({ children, style, radius = 999, interactive, tint, flat, frost }: {
   children?: ReactNode; style?: StyleProp<ViewStyle>; radius?: number; interactive?: boolean;
   /** a coloured glass (e.g. the tint) instead of clear */ tint?: string;
   /** no drop shadow: glass lying on glass (a pill inside the tab bar) */ flat?: boolean;
+  /** frosted, not clear: words on it are read at a glance (the study bar) */ frost?: boolean;
 }) {
   const dark = useT().dark;
   if (LIQUID) {
     return (
-      <GlassView glassEffectStyle="clear" isInteractive={interactive} tintColor={tint ?? (dark ? 'rgba(8,12,18,0.28)' : 'rgba(255,255,255,0.14)')}
+      <GlassView glassEffectStyle={frost ? 'regular' : 'clear'} isInteractive={interactive}
+        tintColor={tint ?? (dark ? `rgba(8,12,18,${frost ? 0.5 : 0.28})` : `rgba(255,255,255,${frost ? 0.55 : 0.14})`)}
         colorScheme={dark ? 'dark' : 'light'} style={[{ borderRadius: radius }, style]}>
         {children}
       </GlassView>
     );
   }
-  const film = tint ?? (dark ? `rgba(18,22,32,${blurs ? 0.4 : 0.86})` : `rgba(255,255,255,${blurs ? 0.3 : 0.86})`);
+  const film = tint ?? (dark ? `rgba(18,22,32,${blurs ? (frost ? 0.72 : 0.4) : 0.86})` : `rgba(255,255,255,${blurs ? (frost ? 0.74 : 0.3) : 0.86})`);
   return (
     // zIndex: the material sits under the content even when the content is an unpositioned SVG (web)
     <View style={[{ borderRadius: radius, zIndex: 0 }, !flat && { boxShadow: DROP }, style]}>
@@ -73,8 +75,9 @@ export function Glass({ children, style, radius = 999, interactive, tint, flat }
 }
 
 /**
- * A card's glass over a 背景 (none without one): what's behind is blurred,
- * light falls across it, and its edge is soft — no line and no shadow, a
+ * A card's glass over a 背景 (none without one): on the frosted 背景 of the
+ * pages, a white film (the frost behind does the blurring; on the timer it
+ * blurs itself), light falls across it, and its edge is soft — no line and no shadow, a
  * faint haze of its own color just outside, so the card melts into the koi
  * instead of sitting on them. The card's own background is the film; put the
  * pane first inside it.
@@ -83,8 +86,9 @@ export function Glass({ children, style, radius = 999, interactive, tint, flat }
  * light gathering just inside the edge, and the card lifted a touch.
  */
 const LIQUID_RIM = 'inset 0px 1px 0px rgba(255,255,255,0.92), inset 0px 0px 0px 0.75px rgba(255,255,255,0.5), inset 0px -1px 0px rgba(255,255,255,0.28), inset 0px 0px 22px rgba(255,255,255,0.26), inset 0px -3px 8px rgba(20,40,44,0.035)';
-export function Pane({ radius, small, liquid }: {
+export function Pane({ radius, small, liquid, blur }: {
   radius: number; /** a small tile among many: a denser film instead of a live blur (blurs cost) */ small?: boolean; liquid?: boolean;
+  /** blur what's behind (on the timer, where the 背景 isn't frosted); the pages' 背景 is frosted already (backdrop/Veil) */ blur?: boolean;
 }) {
   const t = useT();
   if (t.backdrop === 'none') return null;
@@ -96,7 +100,7 @@ export function Pane({ radius, small, liquid }: {
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius, zIndex: -1,
       boxShadow: dark ? '0px 0px 24px 2px rgba(8,14,20,0.32)' : liquid ? '0px 10px 28px rgba(30,45,50,0.07), 0px 0px 22px 2px rgba(255,255,255,0.32)' : '0px 0px 24px 2px rgba(255,255,255,0.4)' }]}>
       <View style={[StyleSheet.absoluteFill, { borderRadius: radius, overflow: 'hidden' }]}>
-        {blurs ? <BlurView intensity={web ? 60 : 80} tint={dark ? 'systemUltraThinMaterialDark' : 'systemUltraThinMaterialLight'} style={StyleSheet.absoluteFill} />
+        {!(blur || liquid) ? null : blurs ? <BlurView intensity={web ? 60 : 80} tint={dark ? 'systemUltraThinMaterialDark' : 'systemUltraThinMaterialLight'} style={StyleSheet.absoluteFill} />
           : <View style={[StyleSheet.absoluteFill, { backgroundColor: dark ? 'rgba(14,20,28,0.62)' : 'rgba(255,255,255,0.6)' }]} />}
         <Sheen radius={radius} dark={dark} strength={liquid ? 0.75 : 0.55} />
         <View style={[StyleSheet.absoluteFill, { borderRadius: radius, boxShadow: dark ? 'inset 0px 1px 0px rgba(255,255,255,0.06)' : liquid ? LIQUID_RIM : 'inset 0px 1px 0px rgba(255,255,255,0.5)' }]} />

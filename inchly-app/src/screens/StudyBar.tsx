@@ -123,7 +123,7 @@ function PlanBar({ insets }: { insets: EdgeInsets }) {
   };
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: studyBarBottom(insets.bottom), paddingHorizontal: 20 }}>
-      <Glass radius={20} style={{ height: STUDY_BAR_H }}>
+      <Glass radius={20} frost style={{ height: STUDY_BAR_H }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 8, gap: 8 }}>
           <Press onPress={go.timer} scale={0.98} accessibilityRole="button" accessibilityLabel={timed ? `${when} ${sj.name} ${b?.t ?? ''}。タイマーを開く` : '今日の時間割。タイマーを開く'}
             style={{ flex: 1, minWidth: 0, height: STUDY_BAR_H, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -207,7 +207,7 @@ function RunningBar({ insets }: { insets: EdgeInsets }) {
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: studyBarBottom(insets.bottom), paddingHorizontal: 20 }}>
       <SwipeToRecord>
-        <Glass radius={20} style={{ height: STUDY_BAR_H }}>
+        <Glass radius={20} frost style={{ height: STUDY_BAR_H }}>
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 6, gap: 4 }}>
             <Press onPress={go.timer} scale={0.98} accessibilityRole="button"
               accessibilityLabel={`${ss.subject.name}を${ss.paused ? '一時停止中' : '勉強中'}。${line(ss)}。タイマーを開く`}

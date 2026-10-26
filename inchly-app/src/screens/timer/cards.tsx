@@ -109,12 +109,12 @@ function Back({ bg, look }: { bg: Backdrop; look: boolean }) {
   return (
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
       <BackProbe />
-      {bg === 'none' ? <DeckWash /> : <Water feedable={bg !== 'walk'} />}
+      {bg === 'none' ? <DeckWash /> : <Water feedable={bg !== 'walk'} look={look} />}
     </View>
   );
 }
-/** The 背景 behind the timer; a tap on the water feeds the koi (or the sharks). */
-function Water({ feedable }: { feedable: boolean }) {
+/** The 背景 behind the timer — kept sharp, a little paler; clear while you look — and a tap on the water feeds the koi (or the sharks). */
+function Water({ feedable, look }: { feedable: boolean; look: boolean }) {
   const [tap] = useState(() => Gesture.Tap().maxDuration(400).onEnd((e) => {
     'worklet';
     feedAt(e.x, e.y);
@@ -124,7 +124,7 @@ function Water({ feedable }: { feedable: boolean }) {
   return (
     <GestureDetector gesture={tap}>
       <View pointerEvents={feedable ? 'auto' : 'none'} style={StyleSheet.absoluteFill}>
-        <BackdropView always />
+        <BackdropView always look={look ? 'clear' : 'pale'} />
       </View>
     </GestureDetector>
   );
@@ -574,7 +574,7 @@ function Elapsed({ tone }: { tone: Tone }) {
     <View pointerEvents="none" accessible accessibilityRole={ss.plan ? 'progressbar' : undefined}
       style={glass ? { marginHorizontal: 10, marginTop: 14, paddingHorizontal: 10, paddingTop: 8, paddingBottom: 12, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.3)' } : { marginHorizontal: 20, marginTop: 22 }}
       accessibilityLabel={ss.running ? `勉強した時間 ${fmt(sec)}${ss.paused ? '（一時停止中）' : ''}。${top}。${below}` : `${top}。${below}`}>
-      {glass ? <Pane radius={18} /> : null}
+      {glass ? <Pane radius={18} blur /> : null}
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>
         <Txt num size={40} w="700" lh={46} color={!ss.running ? tone.ink3 : ss.paused ? (tone.light ? CRIMSON : CRIMSON_ON_DARK) : tone.ink}
           style={{ textShadowColor: tone.shade, textShadowRadius: 10 }}>{fmt(sec)}</Txt>

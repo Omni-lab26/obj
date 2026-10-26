@@ -78,7 +78,7 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
           <Pressable onPress={onPress}
             style={[{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingLeft: 8, paddingRight: item.action ? 8 : 14, borderRadius: 20,
               backgroundColor: t.surface, borderWidth: t.dark ? hair : 0, borderColor: t.line2 }, t.dark ? { boxShadow: '0px 8px 24px rgba(0,0,0,0.5)' } : lift(t, 2)]}>
-            <Pane radius={20} />
+            <Pane radius={20} blur />
             <Sticker name="done" size={32} tilt={-6} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <Txt size={14} w="600" numberOfLines={1}>{item.title}</Txt>
