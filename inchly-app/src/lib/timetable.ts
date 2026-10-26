@@ -73,3 +73,21 @@ export function suggestion(blocks: readonly Block[], now: Date = new Date()): Sl
 
 /** Minutes until a block starts (negative once it has begun). */
 export const minutesUntil = (b: Block, now: Date = new Date()) => (b.start ? toMin(b.start) - (now.getHours() * 60 + now.getMinutes()) : 0);
+
+/**
+ * The day's plans as the timer's cards: first the ones already under way or
+ * done but not recorded (`held`, in the order they were stopped, then the
+ * one running) — these can't be moved — then the rest, in the order you put
+ * them (`order`) or else by time. Plans finished for the day (`done`) are gone.
+ */
+export function deckOf(x: { blocks: readonly Block[]; day: Date; done: ReadonlySet<string>; held: readonly string[]; live: string | null; order?: readonly string[] }): { list: Block[]; locked: number } {
+  const byId = new Map(x.blocks.map((b) => [b.id, b]));
+  const first = [...x.held, ...(x.live ? [x.live] : [])].filter((id, i, a) => a.indexOf(id) === i).map((id) => byId.get(id)).filter((b): b is Block => !!b);
+  const pinned = new Set(first.map((b) => b.id));
+  const rest = blocksOn(x.blocks, x.day).filter((b) => !x.done.has(b.id) && !pinned.has(b.id));
+  if (x.order?.length) {
+    const at = (b: Block) => { const i = x.order!.indexOf(b.id); return i < 0 ? Infinity : i; };
+    rest.sort((a, b) => at(a) - at(b) || startOf(a) - startOf(b));
+  }
+  return { list: [...first, ...rest], locked: first.length };
+}

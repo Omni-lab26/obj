@@ -20,6 +20,8 @@ import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 /** One study session, on the calendar day it was recorded. */
 export type Session = { id: string; s: string; min: number; date: string; at: string; note?: string; manual?: boolean };
 export type Todo = { id: string; s: string; t: string; d: boolean; carried?: number; dl?: string; doneOn?: string }; // carried: days it has slid; dl: deadline id
+/** A session stopped to go on to another plan, not recorded yet: its subject, time, when it stopped, and the plan it came from. */
+export type Held = { id: string; s: string; sec: number; end: number; blockId?: string; planMin?: number };
 export type Deadline = { id: string; t: string; mo: number; day: number; urgent?: boolean; note?: string };
 export type Account = { name: string; handle: string; grade: string; birthYear: number; aim: string; via: 'apple' | 'mail' | 'demo' };
 export type LiveScope = 'all' | 'followers' | 'none';
@@ -52,6 +54,8 @@ export type State = {
   planNext: { s: string; at: string } | null; // that next plan: its subject and start
   planBlock: string | null; // the timetable block this session was started from (ending it finishes the plan)
   doneBlocks: { id: string; date: string }[]; // plans finished on a day: their cards leave that day's timer
+  held: Held[]; // sessions stopped to go on to the next plan, waiting to be recorded (one by one, or all at the end)
+  dayOrder: { date: string; ids: string[] } | null; // the order you put the day's plans in (the timer's cards)
   todos: Todo[];
   deadlines: Deadline[];
   following: string[];
@@ -131,6 +135,8 @@ export const INITIAL: State = {
   planNext: null,
   planBlock: null,
   doneBlocks: [],
+  held: [],
+  dayOrder: null,
   todos: [],
   deadlines: [],
   following: [],
@@ -267,18 +273,33 @@ export function startStudy(id?: string) {
  * Start from something planned: a timetable block or a ToDo. The subject is
  * set from it, the block's length becomes the target, and a ToDo is carried
  * to the record page; a block is remembered, so ending the session finishes
- * that plan for the day. While already studying, this switches only if the
- * session is under a minute old (as the timer allows).
+ * that plan for the day. While already studying something else, that session
+ * stops and waits to be recorded (held) — so going on to the next plan takes
+ * one tap — unless it's under a minute old, when it just switches. A plan
+ * that was held picks up its time again. Always starts (true).
  */
-export function startFrom(x: { s: string; todoId?: string; min?: number; next?: { s: string; at: string }; blockId?: string }): boolean {
+export function startFrom(x: { s: string; todoId?: string; min?: number; next?: { s: string; at: string }; blockId?: string }, now = Date.now()): boolean {
   const s = state;
-  if (s.running && elapsedOf(s) > 60 && x.s !== s.subj) return false;
+  const same = s.running && (x.blockId ? x.blockId === s.planBlock : !s.planBlock && x.s === s.subj);
+  const sec = s.running ? elapsedOf(s, now) : 0;
+  let held = s.held;
+  if (s.running && !same && sec >= 60) {
+    held = [...held, { id: newId('k'), s: s.subj, sec, end: now, ...(s.planBlock ? { blockId: s.planBlock } : {}), ...(s.planMin ? { planMin: s.planMin } : {}) }];
+  }
+  // a plan held before goes on from where it stopped
+  const back = x.blockId ? held.find((h) => h.blockId === x.blockId) : undefined;
+  if (back) held = held.filter((h) => h !== back);
   setState({
-    running: true, paused: false, startedAt: Date.now(), base: s.running && x.s === s.subj ? elapsedOf(s) : 0,
+    running: true, paused: false, startedAt: now, base: same ? sec : back?.sec ?? (s.running && sec < 60 && x.s === s.subj ? sec : 0),
     subj: x.s, studyTodo: x.todoId ?? null, planMin: x.min || null, planNext: x.min ? x.next ?? null : null, planBlock: x.blockId ?? null, ...(x.min ? { targetMin: x.min } : {}),
+    held,
   });
   if (!s.running) celebrate({ kind: 'start', subject: x.s });
   return true;
+}
+/** Puts the day's plans in this order (the timer's cards). */
+export function setDayOrder(ids: string[], now: Date = new Date()) {
+  setState({ dayOrder: { date: dateKey(now), ids } });
 }
 export function setClockFace(f: ClockFace) {
   setState({ clockFace: f });
@@ -383,28 +404,56 @@ export const MAX_TICKETS = 3;
  * earns a rest ticket. Returns the minutes, whether a ticket was earned, the
  * EXP it brought, and the new level if it went up.
  */
-export function commitRecord(opts?: { todoId?: string; note?: string; min?: number; now?: Date }): { min: number; ticket: boolean; exp: number; levelUp: number | null } {
+export type Recorded = { min: number; ticket: boolean; exp: number; levelUp: number | null };
+type Rec = { s: string; min: number; end: Date; note?: string; todoId?: string; blockId?: string };
+/** Saves these records (each split at midnight; a plan's is finished on the day it started), with what they earned; `rest` goes into the same update. */
+function saveRecords(recs: Rec[], now: Date, rest: Partial<State>): Recorded {
   const s = state;
-  const now = opts?.now ?? new Date();
   const today = dateKey(now);
-  const min = Math.max(1, Math.round(opts?.min ?? elapsedOf(s, now.getTime()) / 60));
-  const todo = s.todos.find((x) => x.id === opts?.todoId);
-  const note = opts?.note ?? todo?.t;
-  const sessions = [...s.sessions, ...splitAtMidnight(min, now).map((x) => ({ id: newId('s'), s: s.subj, note, ...x }))];
+  let sessions = s.sessions, todos = s.todos, todoLog = s.todoLog, doneBlocks = s.doneBlocks;
+  for (const r of recs) {
+    const todo = todos.find((x) => x.id === r.todoId);
+    const note = r.note ?? todo?.t;
+    sessions = [...sessions, ...splitAtMidnight(r.min, r.end).map((x) => ({ id: newId('s'), s: r.s, note, ...x }))];
+    if (todo) {
+      if (!todo.d) todoLog = [...todoLog, { id: todo.id, date: today }];
+      todos = todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x));
+    }
+    if (r.blockId) doneBlocks = withDone(doneBlocks, r.blockId, dateKey(new Date(r.end.getTime() - r.min * 60_000)));
+  }
   const run = streakOf(sessions, s.restDays, now);
   const ticket = !byDay(s.sessions).has(today) && run > 0 && run % 7 === 0 && s.restTickets < MAX_TICKETS;
-  setState({
-    running: false, paused: false, base: 0, studyTodo: null, planMin: null, planNext: null, planBlock: null,
-    // a session started from a plan finishes it, on the day it started
-    doneBlocks: s.planBlock ? withDone(s.doneBlocks, s.planBlock, dateKey(new Date(now.getTime() - min * 60_000))) : s.doneBlocks,
-    sessions,
-    todos: todo ? s.todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x)) : s.todos,
-    todoLog: todo && !todo.d ? [...s.todoLog, { id: todo.id, date: today }] : s.todoLog,
-    restTickets: s.restTickets + (ticket ? 1 : 0),
-  });
-  const before = expOf(s.sessions, s.goalMin, s.todoLog), after = expOf(sessions, s.goalMin, state.todoLog);
+  setState({ ...rest, sessions, todos, todoLog, doneBlocks, restTickets: s.restTickets + (ticket ? 1 : 0) });
+  const before = expOf(s.sessions, s.goalMin, s.todoLog), after = expOf(sessions, s.goalMin, todoLog);
   const lv0 = levelOf(before).lv, lv1 = levelOf(after).lv;
-  return { min, ticket, exp: after - before, levelUp: lv1 > lv0 ? lv1 : null };
+  return { min: recs.reduce((n, r) => n + r.min, 0), ticket, exp: after - before, levelUp: lv1 > lv0 ? lv1 : null };
+}
+const STOPPED: Partial<State> = { running: false, paused: false, base: 0, studyTodo: null, planMin: null, planNext: null, planBlock: null };
+/** The session under way, as a record. */
+const current = (s: State, now: Date, opts?: { todoId?: string; note?: string; min?: number }): Rec => ({
+  s: s.subj, min: Math.max(1, Math.round(opts?.min ?? elapsedOf(s, now.getTime()) / 60)), end: now,
+  note: opts?.note, todoId: opts?.todoId, blockId: s.planBlock ?? undefined,
+});
+const ofHeld = (h: Held, opts?: { note?: string; min?: number }): Rec => ({
+  s: h.s, min: Math.max(1, Math.round(opts?.min ?? h.sec / 60)), end: new Date(h.end), note: opts?.note, blockId: h.blockId,
+});
+
+export function commitRecord(opts?: { todoId?: string; note?: string; min?: number; now?: Date }): Recorded {
+  const now = opts?.now ?? new Date();
+  return saveRecords([current(state, now, opts)], now, STOPPED);
+}
+/** Records one held session (the one under way, if any, goes on). */
+export function commitHeld(id: string, opts?: { note?: string; min?: number; now?: Date }): Recorded | null {
+  const h = state.held.find((x) => x.id === id);
+  if (!h) return null;
+  return saveRecords([ofHeld(h, opts)], opts?.now ?? new Date(), { held: state.held.filter((x) => x !== h) });
+}
+/** Records everything at once: every held session and the one under way (which stops). */
+export function commitAll(now: Date = new Date()): Recorded | null {
+  const s = state;
+  const recs = [...s.held.map((h) => ofHeld(h)), ...(s.running ? [current(s, now, { todoId: s.studyTodo ?? undefined })] : [])];
+  if (!recs.length) return null;
+  return saveRecords(recs, now, { held: [], ...(s.running ? STOPPED : {}) });
 }
 
 // ---------- sessions ----------

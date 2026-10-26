@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ComponentType, ReactNode, useState, useSyncExternalStore } from 'react';
+import { ComponentType, ReactNode, useEffect, useState, useSyncExternalStore } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Line, LinearGradient, Rect, Stop } from 'react-native-svg';
@@ -61,33 +61,52 @@ export function StandardTimerPage({ zones }: { zones: Record<Zone, ReactNode> })
   return <TimerFrame zones={zones} wash={<Wash />} />;
 }
 
-/** The timer's page: always dark, a color wash behind, and pulled down (by its bar, or anywhere) it shrinks back to the study bar. */
+/**
+ * The timer's page, made like Apple Music's player: it comes up from the
+ * bottom over the app (the screen it was opened from stays under it, dimmed),
+ * and pulled down — by its bar, or anywhere — it follows the finger with
+ * round corners, the app showing behind; let go far or fast enough and it
+ * slides away into the study bar, else it springs back. Always dark, a color
+ * wash behind.
+ */
 export function TimerFrame({ zones, wash }: { zones: Record<Zone, ReactNode>; wash: ReactNode }) {
   useT(); // the timer's color follows the theme
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  // pull the page down by its bar (or anywhere) and it shrinks back to the study bar
-  const y = useSharedValue(0);
+  const y = useSharedValue(height); // starts below the screen and comes up
   const [pull] = useState(() => Gesture.Pan().activeOffsetY(12).failOffsetX([-20, 20])
     .onUpdate((e) => { y.set(Math.max(0, e.translationY)); })
     .onEnd((e) => {
       if (e.translationY > 140 || e.velocityY > 900) {
-        y.set(withTiming(height, { duration: 200 }, (done) => { if (done) scheduleOnRN(closeTimer); }));
-      } else y.set(withSpring(0, { duration: 360, dampingRatio: 0.85 }));
+        y.set(withTiming(height, { duration: 240, easing: Easing.out(Easing.quad) }, (done) => { if (done) scheduleOnRN(left); }));
+      } else y.set(withSpring(0, { duration: 380, dampingRatio: 0.86 }));
     }));
-  const follow = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }], borderRadius: Math.min(28, y.value / 4) }));
+  useEffect(() => {
+    y.set(withSpring(0, { duration: 520, dampingRatio: 0.92 }));
+    const out = () => y.set(withTiming(height, { duration: 300, easing: Easing.in(Easing.cubic) }, (done) => { if (done) scheduleOnRN(left); }));
+    leave = out;
+    return () => { if (leave === out) leave = null; };
+  }, [y, height]);
+  const sheet = useAnimatedStyle(() => ({
+    transform: [{ translateY: y.value }],
+    borderRadius: interpolate(y.value, [0, 30], [0, 44], Extrapolation.CLAMP),
+  }));
+  const dim = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [0, height], [0.45, 0], Extrapolation.CLAMP) }));
   return (
-    <GestureDetector gesture={pull}>
-      <Animated.View style={[{ flex: 1, overflow: 'hidden' }, follow]}>
-        <Screen bg={focus.bg} style={{ paddingBottom: insets.bottom + 12 }}>
-          <StatusBar style="light" />
-          {wash}
-          {zones.head}
-          <View style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>{zones.center}</View>
-          <View>{zones.foot}</View>
-        </Screen>
-      </Animated.View>
-    </GestureDetector>
+    <View style={{ flex: 1 }}>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }, dim]} />
+      <GestureDetector gesture={pull}>
+        <Animated.View style={[{ flex: 1, overflow: 'hidden' }, sheet]}>
+          <Screen bg={focus.bg} style={{ paddingBottom: insets.bottom + 12 }}>
+            <StatusBar style="light" />
+            {wash}
+            {zones.head}
+            <View style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>{zones.center}</View>
+            <View>{zones.foot}</View>
+          </Screen>
+        </Animated.View>
+      </GestureDetector>
+    </View>
   );
 }
 
@@ -111,7 +130,21 @@ function Wash() {
 }
 
 // ---------- parts ----------
-export const closeTimer = () => (router.canGoBack() ? router.back() : router.replace('/'));
+/** The open timer's way out (slide down, then leave), while one is open. */
+let leave: (() => void) | null = null;
+/** What to do once the timer has gone (e.g. open the study tab). */
+let afterLeave: (() => void) | undefined;
+function left() {
+  if (router.canGoBack()) router.back(); else router.replace('/');
+  const then = afterLeave;
+  afterLeave = undefined;
+  if (then) setTimeout(then, 30);
+}
+/** Slides the timer down into the study bar, then `after` (a press handler's event is ignored). */
+export function closeTimer(after?: unknown) {
+  afterLeave = typeof after === 'function' ? (after as () => void) : undefined;
+  if (leave) leave(); else left();
+}
 /** A way down (back to the study bar), where things stand, and the button for another clock face. */
 function Top() {
   const ss = useSession();

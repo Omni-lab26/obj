@@ -7,7 +7,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { TABS } from '@/screens/layout';
 import { designReveal } from '@/screens/reveal';
-import { StandardStudyBar } from '@/screens/StudyBar';
+import { CRIMSON, NEON, StandardStudyBar } from '@/screens/StudyBar';
 import { useThemeKit } from '@/themes';
 import type { TabBarProps, TabItem } from '@/themes/types';
 import { elapsedOf, useNow, useStore } from '@/store';
@@ -87,9 +87,9 @@ export function StandardTabBar({ items, running, paused, mins, insets }: TabBarP
               style={{ flex: 1, height: TAB_BAR_H - 8, alignItems: 'center', justifyContent: 'center' }}>
               <View>
                 <Icon name={it.icon} size={25} color={it.focused ? t.ink : t.ink2} filled={it.focused} width={it.focused ? 1.9 : 1.6} />
-                {/* the middle tab while studying: a small live dot on the clock (amber when paused) */}
-                {it.center && running ? (
-                  <View style={{ position: 'absolute', top: -2, right: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: paused ? t.amber : '#22C55E', borderWidth: 1.5, borderColor: t.surface }} />
+                {/* the middle tab while studying, seen from another tab: a fluorescent green dot on the clock (crimson when paused) */}
+                {it.center && running && !it.focused ? (
+                  <View style={{ position: 'absolute', top: -2, right: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: paused ? CRIMSON : NEON, borderWidth: 1.5, borderColor: t.surface }} />
                 ) : null}
               </View>
             </Press>

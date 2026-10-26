@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { Block, blocksOn, endOf, isOn, minutesUntil, nextOf, plansOn, slotsOf, spanEnd, suggestion, toClock, toMin } from '../timetable';
+import { Block, blocksOn, deckOf, endOf, isOn, minutesUntil, nextOf, plansOn, slotsOf, spanEnd, suggestion, toClock, toMin } from '../timetable';
 
 // 2026-10-21 is a Wednesday (Monday index 2)
 const at = (h: number, m = 0) => new Date(2026, 9, 21, h, m);
@@ -56,5 +56,24 @@ describe('timetable', () => {
     expect(slotsOf([...blocks, free], at(12)).map((x) => x.state)).toEqual(['past', 'next', 'later', 'later']);
     expect(suggestion([free], at(12))).toBeNull();
     expect(endOf(free)).toBe('');
+  });
+});
+
+describe('the timer cards', () => {
+  const day = [
+    { id: 'a', s: 'ja', start: '6:30', min: 30, days: [2] },
+    { id: 'b', s: 'en', start: '17:00', min: 60, days: [2] },
+    { id: 'c', s: 'ma', start: '19:00', min: 60, days: [2] },
+    { id: 'd', s: 'ph', start: '21:00', min: 45, days: [2] },
+  ] as Block[];
+  const ids = (x: { list: Block[] }) => x.list.map((b) => b.id);
+  it('puts the held and the running plan first, drops finished ones, the rest by time', () => {
+    const x = deckOf({ blocks: day, day: at(12), done: new Set(['a']), held: ['c'], live: 'b' });
+    expect(ids(x)).toEqual(['c', 'b', 'd']);
+    expect(x.locked).toBe(2);
+  });
+  it('follows the order you set for the rest', () => {
+    const x = deckOf({ blocks: day, day: at(12), done: new Set(), held: [], live: 'a', order: ['d', 'b', 'c'] });
+    expect(ids(x)).toEqual(['a', 'd', 'b', 'c']);
   });
 });

@@ -94,8 +94,23 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
   );
 }
 
+// A screen shown over everything (the timer) mounts its own host; only the newest shows the toasts.
+let hostSeq = 0;
+const hosts: number[] = [];
+const hostSubs = new Set<() => void>();
+const hostsChanged = () => hostSubs.forEach((f) => f());
+
 export function ToastHost() {
   const insets = useSafeAreaInsets();
+  const [me] = useState(() => ++hostSeq);
+  const [top, setTop] = useState(true);
+  useEffect(() => {
+    const f = () => setTop(hosts[hosts.length - 1] === me);
+    hostSubs.add(f);
+    hosts.push(me);
+    hostsChanged();
+    return () => { hosts.splice(hosts.indexOf(me), 1); hostSubs.delete(f); hostsChanged(); };
+  }, [me]);
   const [list, setList] = useState<Item[]>(items);
   const [spread, setSpread] = useState(false);
   const collapse = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -115,6 +130,7 @@ export function ToastHost() {
     list.forEach((x) => (next ? clearTimeout(timers.get(x.id)) : schedule(x.id, 2400)));
     if (next) collapse.current = setTimeout(() => { setSpread(false); items.forEach((x) => schedule(x.id, 2400)); }, 4500);
   };
+  if (!top) return null;
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', top: insets.top + 6, left: 12, right: 12, zIndex: 100, height: spread ? list.length * GAP : 70 }}>
       {list.map((it, i) => <ToastCard key={it.id} item={it} index={i} spread={spread} onPress={onPress} />)}

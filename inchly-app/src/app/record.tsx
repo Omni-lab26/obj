@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ReactNode, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -7,7 +7,7 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { hm, pad, PERSON_COLOR, subj } from '@/data';
 import { celebrate } from '@/moments';
-import { addPost, commitRecord, elapsedOf, getState, splitAtMidnight, togglePause, useStore } from '@/store';
+import { addPost, commitHeld, commitRecord, elapsedOf, getState, splitAtMidnight, togglePause, useStore } from '@/store';
 import { dateKey } from '@/lib/time';
 import { hair, useT } from '@/theme';
 import { Empty, haptic, Press, SubjCoin, Txt } from '@/ui/base';
@@ -16,11 +16,13 @@ import { Icon } from '@/ui/Icon';
 import { Stamp } from '@/ui/Sticker';
 import { toast } from '@/ui/Toast';
 
-// "Record this study": opened by 終わる on the timer (the clock is paused).
+// "Record this study": opened by 終わる on the timer (the clock is paused), or
+// for a study set aside when you went on to the next plan (?held=id).
 // Written like a post: the subject and the time at the top (the time can be
 // fixed by 5 minutes), a memo of how far you got and how it went, and whether
-// it stays yours or goes to the timeline too. 記録する saves it; 続ける goes back
-// to the timer and the clock runs again.
+// it stays yours or goes to the timeline too. 記録する saves it and goes back
+// to where you were (the timer stays as it was); 続ける goes back too, and the
+// clock runs again.
 
 const clock = (d: Date) => `${d.getHours()}:${pad(d.getMinutes())}`;
 const MAX = 140;
@@ -31,18 +33,21 @@ export default function Record() {
   const insets = useSafeAreaInsets();
   const running = useStore((s) => s.running);
   const before = useStore((s) => s.todayMin);
-  const plan = useStore((s) => s.planMin);
-  const [sid] = useState(() => getState().subj);
+  const { held: heldId } = useLocalSearchParams<{ held?: string }>();
+  const [h] = useState(() => getState().held.find((x) => x.id === heldId));
+  const livePlan = useStore((s) => s.planMin);
+  const plan = h ? h.planMin ?? null : livePlan;
+  const [sid] = useState(() => h?.s ?? getState().subj);
   const sj = subj(sid);
-  const [min, setMin] = useState(() => Math.max(1, Math.round(elapsedOf(getState()) / 60)));
-  const [end] = useState(() => new Date());
+  const [min, setMin] = useState(() => Math.max(1, Math.round((h ? h.sec : elapsedOf(getState())) / 60)));
+  const [end] = useState(() => (h ? new Date(h.end) : new Date()));
   const start = new Date(end.getTime() - min * 60_000);
-  const [todoId] = useState(() => getState().studyTodo ?? undefined);
+  const [todoId] = useState(() => (h ? undefined : getState().studyTodo ?? undefined));
   const [note, setNote] = useState('');
   const [share, setShare] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'saving' | 'done'>('idle');
 
-  if (!running && phase === 'idle') {
+  if (!h && !running && phase === 'idle') {
     return (
       <Screen>
         <NavBar title="この勉強を記録" />
@@ -56,13 +61,15 @@ export default function Record() {
   const left = MAX - note.length;
   const tooLong = left < 0;
   const adjust = (d: number) => { haptic.tap(); setMin((m) => Math.max(1, Math.min(600, m + d))); };
-  const back = () => { const c = getState(); if (c.running && c.paused) togglePause(); router.back(); };
+  const back = () => { const c = getState(); if (!h && c.running && c.paused) togglePause(); router.back(); };
 
   const save = () => {
     if (tooLong) { haptic.warn(); return; }
     setPhase('saving');
     const text = note.trim();
-    const { min: m, ticket, exp, levelUp } = commitRecord({ todoId, note: text || undefined, min });
+    const done = h ? commitHeld(h.id, { note: text || undefined, min }) : commitRecord({ todoId, note: text || undefined, min });
+    if (!done) { router.back(); return; }
+    const { min: m, ticket, exp, levelUp } = done;
     if (share) {
       const a = getState().account;
       addPost({ n: a?.name ?? 'はる', h: a?.handle ?? 'haru_study', c: PERSON_COLOR['はる'], m: a?.grade ?? '高3', mine: true, w: 'たった今',
@@ -71,7 +78,7 @@ export default function Record() {
     haptic.success();
     setPhase('done');
     setTimeout(() => {
-      router.dismissAll();
+      router.back(); // back where you were: the timer stays as you left it
       const sub = [`+${exp} EXP`, ticket ? '7日連続！休み券を1枚もらいました' : '', share ? 'タイムラインにも投稿しました' : ''].filter(Boolean).join(' · ');
       toast(levelUp ? `レベルアップ！ Lv.${levelUp}` : `${sj.name} ${m}分を記録しました`, levelUp ? `${sj.name} ${m}分を記録 · ${sub}` : sub);
       celebrate({ kind: 'record', subject: sid, min: m, exp, level: levelUp, ticket });

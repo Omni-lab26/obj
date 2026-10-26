@@ -45,6 +45,9 @@ const ICONS = {
   bookmark: { els: [['p', 'M6.5 3.5h11v17L12 16.2l-5.5 4.3z']] },
   more: { els: [['c', 5.5, 12, 1.4], ['c', 12, 12, 1.4], ['c', 18.5, 12, 1.4]], fill: true },
   feed: { els: [['p', 'M4.5 5.5h15v10h-9l-4.5 3.5v-3.5h-1.5z'], ['p', 'M8.5 9.2h7M8.5 12.2h4.5']] },
+  sort: { els: [['p', 'M8 4.5v15M4.5 8L8 4.5 11.5 8'], ['p', 'M16 19.5v-15M12.5 16l3.5 3.5 3.5-3.5']] },
+  grip: { els: [['p', 'M4.5 8h15M4.5 12h15M4.5 16h15']] },
+  lock: { els: [['r', 5.5, 10.5, 13, 9.5, 2], ['p', 'M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5']] },
 } satisfies Record<string, Spec>;
 
 export type IconName = keyof typeof ICONS;
@@ -59,6 +62,7 @@ const SF: Record<IconName, string> = {
   bulb: 'lightbulb', chat: 'bubble.left', send: 'arrow.up', q: 'questionmark', target: 'target', book: 'book',
   sun: 'sun.max', cert: 'rosette', heart: 'heart', pin: 'mappin', note: 'note.text', share: 'square.and.arrow.up',
   plus: 'plus', minus: 'minus', edit: 'pencil', gear: 'gearshape', plane: 'paperplane', bookmark: 'bookmark', more: 'ellipsis', feed: 'text.bubble',
+  sort: 'arrow.up.arrow.down', grip: 'line.3.horizontal', lock: 'lock',
 };
 const HAS_FILL = new Set<IconName>(['bell', 'flag', 'users', 'user', 'home', 'bars', 'bulb', 'chat', 'book', 'heart', 'gear', 'cal', 'clock', 'note', 'plane', 'bookmark', 'feed']);
 

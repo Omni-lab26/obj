@@ -6,7 +6,7 @@ import { celebrate } from '../moments';
 import { dayOf, hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { daysUntil, dateKey } from '../lib/time';
 import { type Block, endOf, minutesUntil, nextOf, spanEnd, suggestion, toMin } from '../lib/timetable';
-import { commitRecord, doneOn, elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
+import { commitAll, commitRecord, doneOn, elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
 import { haptic } from '../ui/base';
 import { toast } from '../ui/Toast';
 
@@ -74,6 +74,17 @@ export const session = {
     const sub = [`+${exp} EXP`, ticket ? '7日連続！休み券を1枚もらいました' : ''].filter(Boolean).join(' · ');
     toast(levelUp ? `レベルアップ！ Lv.${levelUp}` : `${name} ${min}分を記録しました`, levelUp ? `${name} ${min}分を記録 · ${sub}` : sub);
     celebrate({ kind: 'record', subject: sid, min, exp, level: levelUp, ticket });
+  },
+  /** Records every study set aside and the one under way, at once (the timer's まとめて記録). */
+  saveAll() {
+    const c = getState();
+    const n = c.held.length + (c.running ? 1 : 0);
+    const r = commitAll();
+    if (!r) return;
+    haptic.success();
+    const sub = [`+${r.exp} EXP`, r.ticket ? '7日連続！休み券を1枚もらいました' : ''].filter(Boolean).join(' · ');
+    toast(r.levelUp ? `レベルアップ！ Lv.${r.levelUp}` : `${n}つ・${jpHm(r.min)}を記録しました`, sub);
+    celebrate({ kind: 'record', subject: c.subj, min: r.min, exp: r.exp, level: r.levelUp, ticket: r.ticket });
   },
   /** Starts (or resumes) the selected subject without opening the timer. */
   start() { haptic.firm(); startStudy(); },
@@ -154,9 +165,13 @@ export function startPick(p: Pick): boolean {
   return true;
 }
 
-/** Starting a plan now: how long until it ends (its end, or the next plan's start), and that next plan when it runs until one. */
+/**
+ * Starting a plan now: how long it has (to its end, or the next plan's start;
+ * started before its time, its whole length), and that next plan when it runs until one.
+ */
 export function untilNext(blocks: readonly Block[], b: Block, d: Date): { min?: number; next?: { s: string; at: string } } {
-  const left = spanEnd(blocks, b, d) - (d.getHours() * 60 + d.getMinutes());
+  const t = d.getHours() * 60 + d.getMinutes();
+  const left = spanEnd(blocks, b, d) - Math.max(t, b.start ? toMin(b.start) : t);
   if (left <= 0) return {};
   const n = b.min ? undefined : nextOf(blocks, b, d);
   return { min: left, next: n?.start ? { s: n.s, at: n.start } : undefined };

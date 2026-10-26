@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { addSubject, commitRecord, doneOn, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
+import { addSubject, commitAll, commitHeld, commitRecord, doneOn, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
 import { subj } from '../../data';
 import { addDays, dateKey } from '../time';
 
@@ -199,5 +199,47 @@ describe('migrate', () => {
   it('drops the coins and store that older saves kept', () => {
     const out = migrate({ v: 3, coins: 1240, boost: 1, owned: ['x'], claimed: { day: '', ids: [] }, restTickets: 2 });
     expect(out).toEqual({ restTickets: 2 });
+  });
+});
+
+describe('going on to the next plan', () => {
+  const t0 = new Date(2026, 9, 26, 19, 0).getTime();
+  it('holds the session under way, and picks it up again when its plan starts again', () => {
+    reset();
+    startFrom({ s: 'ma', blockId: 'c' }, t0);
+    startFrom({ s: 'ph', blockId: 'd' }, t0 + 42 * 60_000);
+    expect(getState().held).toEqual([expect.objectContaining({ s: 'ma', sec: 42 * 60, blockId: 'c' })]);
+    expect(getState().planBlock).toBe('d');
+    startFrom({ s: 'ma', blockId: 'c' }, t0 + 50 * 60_000);
+    expect(getState().held).toEqual([expect.objectContaining({ s: 'ph', sec: 8 * 60, blockId: 'd' })]);
+    expect(getState().base).toBe(42 * 60);
+  });
+  it('just switches in the first minute', () => {
+    reset();
+    startFrom({ s: 'ma', blockId: 'c' }, t0);
+    startFrom({ s: 'ph', blockId: 'd' }, t0 + 30_000);
+    expect(getState().held).toEqual([]);
+  });
+  it('records a held session on its own, and finishes its plan', () => {
+    reset();
+    startFrom({ s: 'ma', blockId: 'c' }, t0);
+    startFrom({ s: 'ph', blockId: 'd' }, t0 + 42 * 60_000);
+    const id = getState().held[0].id;
+    expect(commitHeld(id, { note: '例題41〜50' })?.min).toBe(42);
+    expect(getState().held).toEqual([]);
+    expect(getState().running).toBe(true);
+    expect(getState().sessions.slice(-1)[0]).toEqual(expect.objectContaining({ s: 'ma', min: 42, note: '例題41〜50' }));
+    expect(doneOn(getState(), new Date(t0)).has('c')).toBe(true);
+  });
+  it('records everything at the end', () => {
+    reset();
+    startFrom({ s: 'ma', blockId: 'c' }, t0);
+    startFrom({ s: 'ph', blockId: 'd' }, t0 + 42 * 60_000);
+    const r = commitAll(new Date(t0 + 72 * 60_000));
+    expect(r?.min).toBe(72);
+    expect(getState().running).toBe(false);
+    expect(getState().held).toEqual([]);
+    expect(getState().sessions.slice(-2).map((x) => [x.s, x.min])).toEqual([['ma', 42], ['ph', 30]]);
+    expect(doneOn(getState(), new Date(t0))).toEqual(new Set(['c', 'd']));
   });
 });

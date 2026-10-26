@@ -5,6 +5,7 @@ import { useTargetNudge } from '@/screens/model';
 import type { TimerKit } from '@/themes/types';
 import { showStudyBar } from '@/ui/Chrome';
 import { SheetHost } from '@/ui/Sheet';
+import { ToastHost } from '@/ui/Toast';
 import { CARD_PARTS, CARD_ZONES, CardTimerPage } from './cards';
 import { STANDARD_PARTS, StandardTimerPage } from './standard';
 
@@ -27,8 +28,9 @@ export function TimerScreen({ kit = STANDARD }: { kit?: TimerKit }) {
     <>
       <Page zones={drawn} />
       <TargetNudge />
-      {/* the timer covers the app, so sheets opened from it (a new plan) come up over it */}
+      {/* the timer covers the app, so sheets opened from it (a new plan) and what it says come up over it */}
       <SheetHost />
+      <ToastHost />
     </>
   );
 }

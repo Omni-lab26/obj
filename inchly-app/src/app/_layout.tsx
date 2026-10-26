@@ -17,7 +17,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { MomentHost } from '@/screens/MomentHost';
 import { getState, hydrate, startStudy, useDayRollover, useReminders, useStore } from '@/store';
-import { bundledFontsLoaded, focus, useT } from '@/theme';
+import { bundledFontsLoaded, useT } from '@/theme';
 import { SheetHost } from '@/ui/Sheet';
 import { isRoomShape, StudyRoom } from '@/ui/StudyRoom';
 import { toast, ToastHost } from '@/ui/Toast';
@@ -75,7 +75,8 @@ export default function RootLayout() {
       <GestureHandlerRootView style={[{ flex: 1, backgroundColor: t.canvas }, Platform.OS === 'web' && ({ userSelect: 'none' } as object)]}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="timer" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: focus.bg } }} />
+          {/* the timer draws its own coming up and going down (like Apple Music's player), over the screen it came from */}
+          <Stack.Screen name="timer" options={{ presentation: 'transparentModal', animation: 'none', contentStyle: { backgroundColor: 'transparent' } }} />
           <Stack.Screen name="notifications" />
           <Stack.Screen name="search" />
           <Stack.Screen name="create-group" />
