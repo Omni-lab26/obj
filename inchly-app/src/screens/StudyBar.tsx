@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -5,39 +6,66 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import type { EdgeInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { clock, go, jpHm, useSession } from '@/screens/model';
+import { clock, go, jpHm, session, useSession } from '@/screens/model';
 import { getState, togglePause } from '@/store';
 import { useT } from '@/theme';
-import { haptic, Press, SubjTile, Txt } from '@/ui/base';
+import { Btn, haptic, Press, SubjTile, Txt } from '@/ui/base';
 import { STUDY_BAR_H, studyBarBottom } from '@/ui/Chrome';
+import { Dialog } from '@/ui/Dialog';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
-import { toast } from '@/ui/Toast';
 
 // The study bar, like a music app's mini player: once you start (from the
 // study page, the menu, anywhere), it sits on the tab bar on every tab with the
-// time studied and pause. Tap it and the timer opens. Pull it down and the
-// time stops (pull again, or press play, and it goes on). It goes when you record.
+// time studied and pause. Tap it and the timer opens. Pull it down to put it
+// away: the time stops and it asks whether to record (the clock never runs
+// on with the bar gone). It goes when you record.
 
-/** Pull the bar down to pause the time (or start it again): it follows the finger a little and springs back. A theme's own bar can wrap itself in this too. */
-export function SwipeToPause({ children }: { children: ReactNode }) {
+/** Pull the bar down to finish: the time stops and a card asks to record it, write a memo first, or go on. A theme's own bar can wrap itself in this too. */
+export function SwipeToRecord({ children }: { children: ReactNode }) {
   const y = useSharedValue(0);
+  const [ask, setAsk] = useState(false);
+  const [was, setWas] = useState(false); // whether the clock was running when you pulled
+  const pulled = () => {
+    const c = getState();
+    if (!c.running) return;
+    haptic.warn();
+    setWas(!c.paused);
+    if (!c.paused) togglePause(); // nothing runs behind the question
+    setAsk(true);
+  };
   const [pan] = useState(() => Gesture.Pan().activeOffsetY(8).failOffsetX([-16, 16])
-    .onUpdate((e) => { y.value = e.translationY > 0 ? Math.min(46, e.translationY * 0.6) : e.translationY * 0.15; })
+    .onUpdate((e) => { y.value = e.translationY > 0 ? Math.min(60, e.translationY * 0.6) : e.translationY * 0.15; })
     .onEnd((e) => {
-      if (e.translationY > 28 || e.velocityY > 600) scheduleOnRN(pauseOrGo);
+      if (e.translationY > 28 || e.velocityY > 600) scheduleOnRN(pulled);
       y.value = withSpring(0, { duration: 340, dampingRatio: 0.7 });
     }));
   const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
-  return <GestureDetector gesture={pan}><Animated.View style={a}>{children}</Animated.View></GestureDetector>;
+  const goOn = () => { setAsk(false); const c = getState(); if (was && c.running && c.paused) togglePause(); };
+  const save = () => { setAsk(false); session.saveNow(); };
+  const memo = () => { setAsk(false); router.push('/record'); };
+  return (
+    <>
+      <GestureDetector gesture={pan}><Animated.View style={a}>{children}</Animated.View></GestureDetector>
+      <AskRecord open={ask} goOn={goOn} save={save} memo={memo} />
+    </>
+  );
 }
-const pauseOrGo = () => {
-  const c = getState();
-  if (!c.running) return;
-  haptic.soft();
-  togglePause();
-  toast(c.paused ? '再開しました' : '一時停止しました', c.paused ? '' : 'もう一度下にスライドすると再開します');
-};
+
+function AskRecord({ open, goOn, save, memo }: { open: boolean; goOn: () => void; save: () => void; memo: () => void }) {
+  const ss = useSession();
+  const min = Math.max(1, Math.round(ss.elapsed / 60));
+  return (
+    <Dialog open={open} close={goOn} title="記録しますか？">
+      <View style={{ gap: 10, paddingHorizontal: 20, paddingBottom: 20 }}>
+        <Txt size={14} tone="ink2" style={{ marginBottom: 6 }}>{`${ss.subject.name} ${min}分。バーを消すと時間は止まります。記録すると今日の合計に入ります`}</Txt>
+        <Btn kind="primary" wide label={`${min}分を記録する`} onPress={save} />
+        <Btn kind="quiet" wide label="メモを書いて記録する" onPress={memo} />
+        <Btn kind="ghost" wide label="続ける" onPress={goOn} />
+      </View>
+    </Dialog>
+  );
+}
 
 /** What the bar says on its second line: the time studied, and the timetable block's length when it came from one. */
 function line(ss: ReturnType<typeof useSession>) {
@@ -52,7 +80,7 @@ export function StandardStudyBar({ insets }: { insets: EdgeInsets }) {
   const press = () => { haptic.soft(); togglePause(); };
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: studyBarBottom(insets.bottom), paddingHorizontal: 20 }}>
-      <SwipeToPause>
+      <SwipeToRecord>
         <Glass radius={20} style={{ height: STUDY_BAR_H }}>
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 6, gap: 4 }}>
             <Press onPress={go.timer} scale={0.98} accessibilityRole="button"
@@ -77,7 +105,7 @@ export function StandardStudyBar({ insets }: { insets: EdgeInsets }) {
             </View>
           ) : null}
         </Glass>
-      </SwipeToPause>
+      </SwipeToRecord>
     </View>
   );
 }

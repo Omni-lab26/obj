@@ -6,7 +6,7 @@ import { celebrate } from '../moments';
 import { dayOf, hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { daysUntil, dateKey } from '../lib/time';
 import { endOf, minutesUntil, suggestion } from '../lib/timetable';
-import { elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
+import { commitRecord, elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
 import { haptic } from '../ui/base';
 import { toast } from '../ui/Toast';
 
@@ -61,6 +61,18 @@ export const session = {
   pause() { haptic.soft(); togglePause(); },
   /** Stops the clock where it is and opens the record page. */
   finish() { const c = getState(); if (c.running && !c.paused) togglePause(); router.push('/record'); },
+  /** Records the session as it stands, with no memo (the study bar's 記録する): the clock stops and the bar goes. */
+  saveNow() {
+    const c = getState();
+    if (!c.running) return;
+    const sid = c.subj;
+    const { min, ticket, exp, levelUp } = commitRecord({ todoId: c.studyTodo ?? undefined });
+    haptic.success();
+    const name = subj(sid).name;
+    const sub = [`+${exp} EXP`, ticket ? '7日連続！休み券を1枚もらいました' : ''].filter(Boolean).join(' · ');
+    toast(levelUp ? `レベルアップ！ Lv.${levelUp}` : `${name} ${min}分を記録しました`, levelUp ? `${name} ${min}分を記録 · ${sub}` : sub);
+    celebrate({ kind: 'record', subject: sid, min, exp, level: levelUp, ticket });
+  },
   /** Starts (or resumes) the selected subject without opening the timer. */
   start() { haptic.firm(); startStudy(); },
   switchTo(id: string) {

@@ -55,7 +55,7 @@ export type TabBarKit = ComponentType<TabBarProps>;
  * A theme's study bar: the mini player that sits on the tab bar on every tab
  * (src/screens/StudyBar.tsx), placed at studyBarBottom(insets.bottom) and
  * STUDY_BAR_H tall, which is the room every screen leaves above the tab bar.
- * Wrap it in SwipeToPause (src/screens/StudyBar.tsx) so pulling it down pauses the time.
+ * Wrap it in SwipeToRecord (src/screens/StudyBar.tsx) so pulling it down stops the time and asks to record.
  */
 export type StudyBarKit = ComponentType<{ insets: EdgeInsets }>;
 
