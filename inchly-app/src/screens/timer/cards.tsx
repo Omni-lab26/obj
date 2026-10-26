@@ -1,6 +1,7 @@
+import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
 import { ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   FadeIn, FadeOut, interpolateColor, LayoutAnimationConfig, LinearTransition, makeMutable, type SharedValue,
   useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withDelay, withTiming, ZoomOut,
@@ -36,8 +37,8 @@ import { closeTimer, fmt, TimerFrame } from './standard';
 // and the line toward the plan's end: green inside it, red past it.
 //
 // Behind it all, the theme you pick (テーマ): the koi pond (they swim around
-// the card, never under it), people walking over a glass floor, or the
-// centered card's color. 眺める fades the words away and leaves the background.
+// the card, never under it), sharks in a pale sea (the cards frosted glass),
+// people walking over a glass floor, or the centered card's color. 眺める fades the words away and leaves the background.
 
 /** The measured card, in points, on a 393pt-wide screen; everything scales with it. */
 const BASE_W = 281, RATIO = 439 / 281, GAP = 10, SIDE = 0.95, DIM = 0.45;
@@ -72,7 +73,9 @@ const cardBox = shared<Box | null>(null);
 type Tone = { light: boolean; ink: string; ink2: string; ink3: string; chip: string; shade: string };
 const ON_DARK: Tone = { light: false, ink: '#F3F5F9', ink2: 'rgba(243,245,249,0.66)', ink3: 'rgba(243,245,249,0.4)', chip: 'rgba(255,255,255,0.12)', shade: 'rgba(0,0,0,0.55)' };
 const ON_LIGHT: Tone = { light: true, ink: '#161616', ink2: 'rgba(22,22,22,0.6)', ink3: 'rgba(22,22,22,0.38)', chip: 'rgba(22,22,22,0.06)', shade: 'transparent' };
-const useTone = () => (useStore((s) => s.studyBg) === 'walk' ? ON_LIGHT : ON_DARK);
+/** The pale backgrounds: the sea and the glass floor. */
+const isLight = (bg: StudyBg) => bg === 'walk' || bg === 'sea';
+const useTone = () => (isLight(useStore((s) => s.studyBg)) ? ON_LIGHT : ON_DARK);
 
 export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
   const bg = useStore((s) => s.studyBg);
@@ -88,7 +91,7 @@ export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
     <Animated.View pointerEvents={look ? 'none' : 'box-none'} style={[grow ? { flex: 1, alignSelf: 'stretch' } : null, fade]}>{n}</Animated.View>
   );
   return (
-    <TimerFrame light={bg === 'walk'} zones={{ head: wrap(zones.head), center: wrap(zones.center, true), foot: wrap(zones.foot) }}
+    <TimerFrame light={isLight(bg)} zones={{ head: wrap(zones.head), center: wrap(zones.center, true), foot: wrap(zones.foot) }}
       wash={<Back bg={bg} look={look} />} over={look ? <Looking bg={bg} /> : null} />
   );
 }
@@ -103,6 +106,7 @@ function Back({ bg, look }: { bg: StudyBg; look: boolean }) {
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
       <BackProbe />
       {bg === 'pond' ? <KoiPond width={width} height={height} cell={9} seed={23} feedable avoid={avoid} />
+        : bg === 'sea' ? <KoiPond width={width} height={height} cell={9} seed={31} feedable avoid={avoid} school="shark" />
         : bg === 'walk' ? <WalkFloor width={width} height={height} avoid={avoid} names={look} floor={FLOOR} />
         : <DeckWash />}
     </View>
@@ -129,10 +133,13 @@ function DeckWash() {
   );
 }
 
+const HINTS: Record<StudyBg, string> = {
+  pond: '水面をタップすると、エサをあげられます', sea: '海をタップすると、サメが寄ってきます', walk: 'いま勉強している人たちが、上を歩いていきます', color: '',
+};
 /** 眺める: the time, small and quiet at the top, a way back, and (for a while) what you can do. */
 function Looking({ bg }: { bg: StudyBg }) {
   const ss = useSession();
-  const tone = bg === 'walk' ? ON_LIGHT : ON_DARK;
+  const tone = isLight(bg) ? ON_LIGHT : ON_DARK;
   const [hint, setHint] = useState(true);
   useEffect(() => { const id = setTimeout(() => setHint(false), 6000); return () => clearTimeout(id); }, []);
   return (
@@ -148,7 +155,7 @@ function Looking({ bg }: { bg: StudyBg }) {
       </View>
       {hint ? (
         <Animated.View exiting={FadeOut.duration(800)} pointerEvents="none" style={{ position: 'absolute', bottom: 46, left: 0, right: 0, alignItems: 'center' }}>
-          <Txt size={12.5} color={tone.ink2}>{bg === 'pond' ? '水面をタップすると、エサをあげられます' : 'いま勉強している人たちが、上を歩いていきます'}</Txt>
+          <Txt size={12.5} color={tone.ink2}>{HINTS[bg]}</Txt>
         </Animated.View>
       ) : null}
     </Animated.View>
@@ -386,15 +393,20 @@ function mix(a: string, b: string, t: number) {
 }
 /**
  * How a card is colored: quiet, and a little of the background in it — on
- * the koi pond, the deep blue-grey of the water; on the glass floor, near
- * white; with 科目の色, the subject's color taken down. The subject's own
+ * the koi pond, the deep blue-grey of the water; on the sea, frosted glass;
+ * on the glass floor, near white; with 科目の色, the subject's color taken down. The subject's own
  * color shows only in its cover, quieted too.
  */
-type Skin = { paper: string; edge: string; ink: string; ink2: string; ink3: string; solid: string; onSolid: string; outline: string; cover: string; dim: string; live: string; stop: string };
+type Skin = {
+  paper: string; edge: string; ink: string; ink2: string; ink3: string; solid: string; onSolid: string; outline: string; cover: string; dim: string; live: string; stop: string;
+  /** frosted glass: the sea shows through, blurred */
+  frost?: boolean;
+};
 function skinOf(bg: StudyBg, c: string): Skin {
-  if (bg === 'walk') {
-    return { paper: '#FBFBF9', edge: 'rgba(0,0,0,0.10)', ink: '#1A1A18', ink2: 'rgba(26,26,24,0.6)', ink3: 'rgba(26,26,24,0.4)', solid: '#1A1A18', onSolid: '#FBFBF9',
+  if (bg === 'walk' || bg === 'sea') {
+    const light: Skin = { paper: '#FBFBF9', edge: 'rgba(0,0,0,0.10)', ink: '#1A1A18', ink2: 'rgba(26,26,24,0.6)', ink3: 'rgba(26,26,24,0.4)', solid: '#1A1A18', onSolid: '#FBFBF9',
       outline: 'rgba(26,26,24,0.2)', cover: mix(c, '#D9D7D0', 0.45), dim: FLOOR, live: '#1E7A46', stop: CRIMSON };
+    return bg === 'walk' ? light : { ...light, paper: 'rgba(250,250,248,0.55)', edge: 'rgba(255,255,255,0.9)', cover: mix(c, '#D3D9E0', 0.5), frost: true };
   }
   const base = bg === 'pond' ? '#16202A' : mix(c, '#12141A', 0.72);
   return { paper: base, edge: 'rgba(255,255,255,0.09)', ink: '#E8ECEF', ink2: 'rgba(232,236,239,0.62)', ink3: 'rgba(232,236,239,0.4)', solid: '#E8ECEF', onSolid: base,
@@ -423,7 +435,8 @@ function PlanCard({ b, no, i, x, step, k, tone, live, held, begin, record, more 
   const state = live ? (paused ? '一時停止中' : '勉強中') : held ? `記録まち · ${min}分` : time;
   const fs = (v: number, lo: number) => Math.max(lo, v * k);
   return (
-    <View style={{ flex: 1, backgroundColor: sk.paper, borderRadius: 16 * k, borderWidth: StyleSheet.hairlineWidth, borderColor: sk.edge }}>
+    <View style={{ flex: 1, backgroundColor: sk.paper, borderRadius: 16 * k, borderWidth: sk.frost ? 1 : StyleSheet.hairlineWidth, borderColor: sk.edge, overflow: 'hidden' }}>
+      {sk.frost ? <BlurView intensity={Platform.OS === 'web' ? 22 : 40} tint="light" style={StyleSheet.absoluteFill} /> : null}
       {/* the picture */}
       <View style={{ position: 'absolute', left: 14 * k, top: 14 * k, width: art + 2 * k, height: art, borderRadius: 10 * k, overflow: 'hidden', backgroundColor: sk.cover }}>
         <Animated.View style={drift}>

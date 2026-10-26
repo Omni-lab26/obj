@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { feed, makePond, paint, step } from '../koi';
+import { feed, makePond, MARKS, paint, SEA, step } from '../koi';
 
 describe('the koi pond', () => {
   it('keeps its koi in (or just past the edge of) the pond, bodies whole', () => {
@@ -36,5 +36,45 @@ describe('the koi pond', () => {
     const marks = p.mark.reduce((n, v) => n + (v ? 1 : 0), 0);
     expect(tiles).toBeGreaterThan(100);
     expect(marks).toBeGreaterThan(tiles);
+  });
+});
+
+describe('the sea, with sharks', () => {
+  it('has only sharks, on pale water, and no lily pads', () => {
+    const p = makePond(44, 95, 31, 4, 'shark');
+    expect(p.sea).toBe(true);
+    expect(p.water).toBe(SEA);
+    expect(p.pads.length).toBe(0);
+    expect(p.koi.every((k) => k.kind >= 6)).toBe(true);
+    // slimmer than koi, for their length
+    expect(p.koi.every((k) => k.w / k.len < 0.15)).toBe(true);
+  });
+  it('keeps them in the sea and off the card', () => {
+    const p = makePond(44, 95, 31, 4, 'shark');
+    p.avoid = { x0: 6, y0: 13, x1: 37, y1: 62 };
+    for (let i = 0; i < 300; i++) step(p, 1 / 30); // as in the app: already swimming when it shows
+    let under = 0, seen = 0;
+    for (let i = 0; i < 30 * 120; i++) {
+      step(p, 1 / 30);
+      if (i % 30) continue;
+      for (const k of p.koi) {
+        seen++;
+        if (k.x > 6 && k.x < 37 && k.y > 13 && k.y < 62) under++;
+      }
+    }
+    expect(under / seen).toBeLessThan(0.03);
+    for (const k of p.koi) {
+      expect(k.x).toBeGreaterThan(-k.len * 0.6);
+      expect(k.x).toBeLessThan(p.cols + k.len * 0.6);
+    }
+  });
+  it('paints the sharks, and the light on the water as dashes', () => {
+    const p = makePond(44, 95, 31, 4, 'shark');
+    for (let i = 0; i < 60; i++) step(p, 1 / 30);
+    paint(p);
+    const tiles = p.tile.reduce((n, v) => n + (v > 0.5 ? 1 : 0), 0);
+    const dashes = p.mark.reduce((n, v) => n + (MARKS[v] === 'dash' ? 1 : 0), 0);
+    expect(tiles).toBeGreaterThan(80);
+    expect(dashes).toBeGreaterThan(10);
   });
 });

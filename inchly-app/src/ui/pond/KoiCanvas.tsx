@@ -7,7 +7,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { feed, makePond, MARKS, paint, type Pond, step, WATER } from '../../lib/koi';
+import { feed, makePond, MARKS, paint, type Pond, SEA, step, WATER } from '../../lib/koi';
 import { haptic } from '../base';
 
 // The koi pond drawn with Skia: the pond (lib/koi) moves on and is painted
@@ -17,8 +17,11 @@ import { haptic } from '../base';
 // with the colors made once and reused.
 
 /** water: draw the dark water and its grid (else the pond is see-through, over what's behind). fade: how much of the height melts away at the top and bottom (0..0.5). */
-/** avoid: a rectangle (in points) the koi swim around, never under (the card). */
-export type PondProps = { width: number; height: number; cell?: number; feedable?: boolean; seed?: number; water?: boolean; fade?: number; avoid?: { x: number; y: number; w: number; h: number } | null };
+/** avoid: a rectangle (in points) the koi swim around, never under (the card). school: koi in a dark pond, or sharks in a pale sea. */
+export type PondProps = {
+  width: number; height: number; cell?: number; feedable?: boolean; seed?: number; water?: boolean; fade?: number;
+  avoid?: { x: number; y: number; w: number; h: number } | null; school?: 'koi' | 'shark';
+};
 
 /** A mark's shape, white, in a cell `s` across. */
 function markPath(kind: string, s: number): SkPath {
@@ -44,6 +47,7 @@ function markPath(kind: string, s: number): SkPath {
     case 'grid': p.addRect(Skia.XYWHRect(c - s * 0.22, c - s * 0.22, s * 0.44, s * 0.44)); p.addRect(Skia.XYWHRect(c - s * 0.14, c - s * 0.14, s * 0.28, s * 0.28)); dot(c, c, s * 0.06); p.setFillType(FillType.EvenOdd); break;
     case 'disc': dot(c, c, s * 0.21); break;
     case 'block': p.addRRect(Skia.RRectXY(Skia.XYWHRect(c - s * 0.23, c - s * 0.23, s * 0.46, s * 0.46), s * 0.08, s * 0.08)); break;
+    case 'dash': bar(c, c, s * 0.46, s * 0.08); break;
   }
   return p.build();
 }
@@ -67,7 +71,7 @@ function makeAtlas(px: number) {
   return drawAsImageFromPicture(pic, { width: px * n, height: px });
 }
 
-export default function KoiCanvas({ width, height, cell = 9, feedable = false, seed = 7, water = true, fade = 0, avoid = null }: PondProps) {
+export default function KoiCanvas({ width, height, cell = 9, feedable = false, seed = 7, water = true, fade = 0, avoid = null, school = 'koi' }: PondProps) {
   const cols = Math.ceil(width / cell), rows = Math.ceil(height / cell);
   const pr = Math.min(3, PixelRatio.get());
   const px = Math.round(cell * pr);
@@ -95,14 +99,15 @@ export default function KoiCanvas({ width, height, cell = 9, feedable = false, s
   const sprites = useSharedValue<SkRect[]>([]);
   const transforms = useSharedValue<SkRSXform[]>([]);
   const colors = useSharedValue<SkColor[]>([]);
-  const count = Math.max(3, Math.min(7, Math.round((cols * rows) / 560)));
+  // fewer sharks than koi: they're bigger
+  const count = school === 'shark' ? Math.max(3, Math.min(5, Math.round((cols * rows) / 1000))) : Math.max(3, Math.min(7, Math.round((cols * rows) / 560)));
   const { slots, at } = fixed;
 
   useFrameCallback((f) => {
     'worklet';
     let p = state.value;
-    if (!p || p.cols !== cols || p.rows !== rows) {
-      p = makePond(cols, rows, seed, count);
+    if (!p || p.cols !== cols || p.rows !== rows || p.sea !== (school === 'shark')) {
+      p = makePond(cols, rows, seed, count, school);
       for (let i = 0; i < 300; i++) step(p, 1 / 30); // already swimming when it shows
       state.value = p;
     }
@@ -151,10 +156,11 @@ export default function KoiCanvas({ width, height, cell = 9, feedable = false, s
   }));
   tap.enabled(feedable);
 
-  const line = water ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.05)';
+  const sea = school === 'shark';
+  const line = sea ? 'rgba(20,30,40,0.06)' : water ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.05)';
   return (
     <GestureDetector gesture={tap}>
-      <View pointerEvents={feedable ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, water ? { backgroundColor: `#${WATER.toString(16).padStart(6, '0')}` } : null]}>
+      <View pointerEvents={feedable ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, water ? { backgroundColor: `#${(sea ? SEA : WATER).toString(16).padStart(6, '0')}` } : null]}>
         <Canvas style={{ width, height }}>
           <Path path={fixed.grid} style="stroke" strokeWidth={StyleSheet.hairlineWidth} color={line}>
             {fade > 0 ? <LinearGradient start={vec(0, 0)} end={vec(0, height)} colors={['transparent', line, line, 'transparent']} positions={[0, fade, 1 - fade, 1]} /> : null}

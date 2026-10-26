@@ -6,12 +6,19 @@
 // 茶鯉). Some swim deeper, dimmer and under the others. Lily pads drift on top.
 // Tap the water: a ripple, and food the koi come for.
 //
+// The same water, made a pale sea (school 'shark'): sharks instead of koi —
+// シュモクザメ with its hammer, ジンベエザメ spotted, トラフザメ with its long
+// tail, ヨシキリザメ slim and blue — slower and stiffer, with swept-back fins,
+// and the light on the water as short dashes.
+//
 // Pure functions over plain data and typed arrays, marked as worklets, so the
 // same code runs on the UI thread in the app (Reanimated + Skia) and in a
 // browser (the prototype). `step` moves things on; `paint` fills the grid.
 
 /** Marks, from faint to dense; index 0 is none. Drawn as small shapes, not letters. */
-export const MARKS = ['', 'dot', 'dot2', 'colon', 'tri', 'plus', 'cross', 'ring', 'star', 'hash', 'grid', 'disc', 'block'] as const;
+export const MARKS = ['', 'dot', 'dot2', 'colon', 'tri', 'plus', 'cross', 'ring', 'star', 'hash', 'grid', 'disc', 'block', 'dash'] as const;
+/** The marks from faint to dense end at 'block'; 'dash' is the sea's own light on the water. */
+const RAMP = 12, DASH = 13;
 export type Mark = (typeof MARKS)[number];
 
 const N = 11; // spine points
@@ -26,6 +33,8 @@ export type Koi = {
   kiss: number;
   /** its pattern, worked out once: PU steps along the body by PV across */
   pat: Uint32Array;
+  /** how far its widest part (head or fins) reaches out, in units of its width */
+  wide: number;
 };
 const PU = 48, PV = 9;
 export type Pad = { x: number; y: number; r: number; a: number; spin: number; vx: number; vy: number; flower: boolean };
@@ -45,6 +54,8 @@ export type Pond = {
   nd: Float32Array; nu: Float32Array; ns: Float32Array;
   /** the light on the water, worked out a few times a second (it moves slowly) and copied into each frame */
   wm: Uint8Array; wa: Float32Array; wAt: number;
+  /** the water: the koi pond (dark) or the sea with sharks (light) */
+  sea: boolean; water: number; hi: number; deepTo: number;
 };
 
 // ---------- small math ----------
@@ -112,6 +123,16 @@ const WHITE = 0xf1ebe0, RED = 0xd8442a, DEEP_RED = 0xb8321f, INK = 0x1d1b1a, GOL
 const ASAGI = 0x7488a6, ASAGI_HI = 0xa9b7cc, ORANGE = 0xde7a3c, CHA = 0xa3713f, CHA_HI = 0xc8955b;
 const PAD = 0x3d6b3c, PAD_HI = 0x5d8c4f, PAD_DARK = 0x2a4a2b, PETAL = 0xeaa6bd, PETAL_HI = 0xfbd9e3, FOOD = 0xd9a659;
 
+export const SEA = 0xf5f5f3;
+const SEA_HI = 0xaeb6c0; // the light on a pale sea, as dashes
+const HAM = 0x6f7a8a, HAM_HI = 0xaeb7c3, WHALE = 0x485463, WHALE_SPOT = 0xe9ebee, LEO = 0xbfae90, LEO_DARK = 0x5c4d3b, BLUE = 0x5878a3, BLUE_HI = 0xa6bbd6;
+/** シュモクザメ, ジンベエザメ, トラフザメ, ヨシキリザメ (kinds 6 to 9) */
+export const SHARKS = ['シュモクザメ', 'ジンベエザメ', 'トラフザメ', 'ヨシキリザメ'] as const;
+const isShark = (kind: number) => {
+  'worklet';
+  return kind >= 6;
+};
+
 /** 紅白, 大正三色, 昭和, 黄金, 浅黄, 茶鯉 */
 export const VARIETIES = ['紅白', '大正三色', '昭和三色', '黄金', '浅黄', '茶鯉'] as const;
 
@@ -141,23 +162,61 @@ function skin(kind: number, seed: number, u: number, v: number) {
     case 4: // 浅黄: blue-grey back with a net, orange cheeks and sides
       if (av > 0.62 || (u < 0.12 && av > 0.3)) return ORANGE;
       return (Math.floor(u * 26) + Math.floor(v * 3 + 3)) % 2 ? ASAGI : ASAGI_HI;
-    default: // 茶鯉: bronze
+    case 5: // 茶鯉: bronze
       return mixRGB(CHA, CHA_HI, clamp(1 - av, 0, 1) * 0.6 + (n - 0.5) * 0.3);
+    // the sharks, seen from above: darker along the back, paler to the sides
+    case 6: // シュモクザメ: grey
+      return mixRGB(HAM, HAM_HI, clamp(av * 0.9 + (n - 0.5) * 0.3, 0, 1));
+    case 7: { // ジンベエザメ: dark slate with rows of pale spots and thin bars
+      const row = Math.floor(u * 34), col = Math.floor((v + 1) * 3.5);
+      if ((row + col) % 2 === 0 && m > 0.42 && u > 0.04 && u < 0.86) return WHALE_SPOT;
+      if (u * 15 - Math.floor(u * 15) < 0.07 && u > 0.12 && u < 0.7) return mixRGB(WHALE, WHALE_SPOT, 0.55);
+      return mixRGB(WHALE, 0x8592a1, av * 0.5);
+    }
+    case 8: // トラフザメ: sand with dark spots
+      return m > 0.64 && u > 0.08 ? LEO_DARK : mixRGB(LEO, 0xe2d8c4, av * 0.5 + (n - 0.5) * 0.2);
+    default: // ヨシキリザメ: blue
+      return mixRGB(BLUE, BLUE_HI, clamp(av * 0.85, 0, 1));
   }
 }
 
-/** A koi's half width at u along it (in units of its widest), and whether that part is fin. */
-function width(u: number) {
+/** A fish's half width at u along it (in units of its widest body). */
+function width(kind: number, u: number) {
   'worklet';
-  if (u < 0.12) return 0.55 + 0.45 * Math.sqrt(u / 0.12); // the round head
-  if (u < 0.38) return 1;
-  if (u < 0.84) return 1 - 0.66 * Math.pow((u - 0.38) / 0.46, 1.3); // down to the tail's root
-  return 0.34 + 0.86 * ((u - 0.84) / 0.16); // the tail fans out
+  if (!isShark(kind)) {
+    if (u < 0.12) return 0.55 + 0.45 * Math.sqrt(u / 0.12); // the round head
+    if (u < 0.38) return 1;
+    if (u < 0.84) return 1 - 0.66 * Math.pow((u - 0.38) / 0.46, 1.3); // down to the tail's root
+    return 0.34 + 0.86 * ((u - 0.84) / 0.16); // the tail fans out
+  }
+  if (kind === 6) {
+    if (u < 0.075) return u < 0.012 ? 1.3 : 2.3; // the hammer, a wide bar across the head
+    if (u < 0.13) return 0.42; // and its neck
+  } else if (kind === 7) {
+    if (u < 0.08) return 0.82 + 0.18 * (u / 0.08); // a broad, blunt head
+  } else if (kind === 8) {
+    // a long, thin tail, half its length
+    if (u < 0.14) return 0.32 + 0.68 * Math.pow(u / 0.14, 0.6);
+    if (u < 0.34) return 1;
+    if (u < 0.56) return 1 - 0.62 * ((u - 0.34) / 0.22);
+    if (u < 0.86) return 0.38 - 0.24 * ((u - 0.56) / 0.3);
+    return 0.14 + 0.16 * Math.sin((Math.PI * (u - 0.86)) / 0.14);
+  }
+  if (u < 0.14) return 0.32 + 0.68 * Math.pow(u / 0.14, 0.6); // a pointed snout
+  if (u < 0.36) return 1;
+  if (u < 0.8) return 1 - 0.82 * Math.pow((u - 0.36) / 0.44, 1.1); // down to the tail's root
+  return 0.18 + 0.3 * Math.sin((Math.PI * (u - 0.8)) / 0.2); // the tail, a narrow blade from above
 }
+/** Where a fish's tail fin starts (it's drawn thinner). */
+const tailAt = (kind: number) => {
+  'worklet';
+  return !isShark(kind) ? 0.84 : kind === 8 ? 0.86 : 0.8;
+};
 
 // ---------- making a pond ----------
-export function makePond(cols: number, rows: number, seed = 7, count = 6): Pond {
+export function makePond(cols: number, rows: number, seed = 7, count = 6, school: 'koi' | 'shark' = 'koi'): Pond {
   'worklet';
+  const sea = school === 'shark';
   const size = cols * rows;
   const p: Pond = {
     cols, rows, t: 0, r: seed | 0, acc: 0, koi: [], food: [], ripples: [], pads: [],
@@ -165,18 +224,22 @@ export function makePond(cols: number, rows: number, seed = 7, count = 6): Pond 
     cover: new Float32Array(size), avoid: null,
     nd: new Float32Array(size), nu: new Float32Array(size), ns: new Float32Array(size),
     wm: new Uint8Array(size), wa: new Float32Array(size), wAt: -1,
+    sea, water: sea ? SEA : WATER, hi: sea ? SEA_HI : WATER_HI, deepTo: sea ? 0xdfe4e9 : 0x16303a,
   };
-  const kinds = [0, 3, 1, 4, 2, 0, 5, 1];
+  const kinds = sea ? [6, 7, 9, 8, 6, 9, 7] : [0, 3, 1, 4, 2, 0, 5, 1];
+  // how wide each kind is for its length
+  const slim = [0.17, 0.17, 0.17, 0.17, 0.17, 0.17, 0.095, 0.13, 0.09, 0.08];
   // koi in proportion to the pond (a low, wide band of a pond has smaller ones)
   const scale = clamp(Math.min(cols, rows * 1.1) / 36, 0.6, 1.6);
   for (let i = 0; i < count; i++) {
-    const len = (12.5 + rand(p) * 5) * scale;
+    const kind = kinds[i % kinds.length];
+    const len = (sea ? (14.5 + rand(p) * 5) * (kind === 7 ? 1.2 : 1) : 12.5 + rand(p) * 5) * scale;
     const a = rand(p) * Math.PI * 2;
     const k: Koi = {
       x: 4 + rand(p) * (cols - 8), y: rows * (0.3 + rand(p) * 0.4), a: rows < cols * 0.6 ? (rand(p) < 0.5 ? 0 : Math.PI) + (rand(p) - 0.5) * 0.6 : a, v: 1.6, turn: 0,
-      len, w: len * (0.17 + rand(p) * 0.025), depth: i === count - 1 ? 0.55 : i === count - 2 ? 0.35 : rand(p) * 0.2,
-      kind: kinds[i % kinds.length], seed: rand(p) * 100, sx: new Float32Array(N), sy: new Float32Array(N), phase: rand(p) * 6, hunger: 0.5 + rand(p) * 0.5, boost: 0, kiss: 8 + rand(p) * 30,
-      pat: new Uint32Array(PU * PV),
+      len, w: len * (slim[kind] + rand(p) * (sea ? 0.012 : 0.025)), depth: i === count - 1 ? 0.55 : i === count - 2 ? 0.35 : rand(p) * 0.2,
+      kind, seed: rand(p) * 100, sx: new Float32Array(N), sy: new Float32Array(N), phase: rand(p) * 6, hunger: 0.5 + rand(p) * 0.5, boost: 0, kiss: 8 + rand(p) * 30,
+      pat: new Uint32Array(PU * PV), wide: kind === 6 ? 2.5 : isShark(kind) ? 2.9 : 2.2,
     };
     for (let a2 = 0; a2 < PU; a2++) for (let b2 = 0; b2 < PV; b2++) k.pat[a2 * PV + b2] = skin(k.kind, k.seed, a2 / (PU - 1), (b2 / (PV - 1)) * 2 - 1);
     for (let j = 0; j < N; j++) { k.sx[j] = k.x - Math.cos(a) * (len * j) / (N - 1); k.sy[j] = k.y - Math.sin(a) * (len * j) / (N - 1); }
@@ -184,7 +247,8 @@ export function makePond(cols: number, rows: number, seed = 7, count = 6): Pond 
   }
   // the deep ones first, so the ones near the surface are drawn over them
   p.koi.sort((a, b) => b.depth - a.depth);
-  const pads = Math.max(2, Math.round((cols * rows) / 900));
+  // lily pads on the pond (not out at sea)
+  const pads = sea ? 0 : Math.max(2, Math.round((cols * rows) / 900));
   for (let i = 0; i < pads; i++) {
     const side = i % 2;
     p.pads.push({
@@ -273,7 +337,7 @@ export function step(p: Pond, dtIn: number) {
     k.a += k.turn * dt;
     const cruise = 1.3 + noise(p.t * 0.07, k.seed + 11, 1.3) * 1.3;
     k.boost = Math.max(0, k.boost - dt * 0.6);
-    const speed = (cruise + (goal >= 0 ? 1.4 : 0) + k.boost * 1.6) * (k.len / 13) * (1 - k.depth * 0.25);
+    const speed = (cruise + (goal >= 0 ? 1.4 : 0) + k.boost * 1.6) * (k.len / 13) * (1 - k.depth * 0.25) * (isShark(k.kind) ? 0.72 : 1);
     k.v += (speed - k.v) * Math.min(1, dt * 1.5);
     k.x += Math.cos(k.a) * k.v * dt;
     k.y += Math.sin(k.a) * k.v * dt;
@@ -284,7 +348,7 @@ export function step(p: Pond, dtIn: number) {
       if (k.depth < 0.3 && k.x > 0 && k.y > 0 && k.x < cols && k.y < rows) p.ripples.push({ x: k.x + Math.cos(k.a) * 0.6, y: k.y + Math.sin(k.a) * 0.6, t: 0, s: 0.38 });
       k.kiss = 18 + rand(p) * 40;
     }
-    k.phase += dt * (2.2 + k.v * 1.5 + Math.abs(k.turn) * 2);
+    k.phase += dt * (isShark(k.kind) ? 1.3 + k.v * 0.8 : 2.2 + k.v * 1.5 + Math.abs(k.turn) * 2);
     // the body follows the head, each point a fixed step behind the one before,
     // and bends only so much at each joint (a koi's body is supple, not a rope)
     const seg = k.len / (N - 1);
@@ -293,7 +357,7 @@ export function step(p: Pond, dtIn: number) {
     for (let j = 1; j < N; j++) {
       let a = Math.atan2(k.sy[j] - k.sy[j - 1], k.sx[j] - k.sx[j - 1]);
       const bend = angleTo(prev, a);
-      const lim = j < 3 ? 0.1 : 0.17;
+      const lim = isShark(k.kind) ? (j < 3 ? 0.06 : 0.12) : j < 3 ? 0.1 : 0.17;
       if (bend > lim) a = prev + lim; else if (bend < -lim) a = prev - lim;
       k.sx[j] = k.sx[j - 1] + Math.cos(a) * seg;
       k.sy[j] = k.sy[j - 1] + Math.sin(a) * seg;
@@ -318,7 +382,6 @@ export function step(p: Pond, dtIn: number) {
 }
 
 // ---------- drawing into the grid ----------
-const RAMP = MARKS.length - 1;
 /** Tiles start at this strength; below it, a mark alone. */
 const TILE_AT = 0.42;
 
@@ -359,7 +422,10 @@ export function paint(p: Pond) {
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         const c = noise(x * 0.16 + t * 0.05, y * 0.16 - t * 0.03, t * 0.08);
-        if (c > 0.7) {
+        if (p.sea) {
+          // a pale sea: the light lies on it as short dashes, sparse
+          if (c > 0.74) { const i = y * cols + x; p.wm[i] = DASH; p.wa[i] = (c - 0.74) * 1.6; }
+        } else if (c > 0.7) {
           const i = y * cols + x;
           p.wm[i] = c > 0.83 ? 3 : c > 0.77 ? 2 : 1;
           p.wa[i] = (c - 0.7) * 0.9;
@@ -367,7 +433,7 @@ export function paint(p: Pond) {
       }
     }
   }
-  p.mark.set(p.wm); p.markA.set(p.wa); p.markRGB.fill(WATER_HI);
+  p.mark.set(p.wm); p.markA.set(p.wa); p.markRGB.fill(p.hi);
   // rings where the water was touched
   for (const r of p.ripples) {
     const life = 1 - r.t / RIPPLE_LIFE;
@@ -381,7 +447,7 @@ export function paint(p: Pond) {
           const k = (1 - Math.abs(d - rad) / 0.85) * life * (ring ? 0.55 : 1);
           if (k <= 0) continue;
           const i = y * cols + x;
-          if (k * 0.9 > p.markA[i]) { p.mark[i] = k > 0.6 ? 7 : k > 0.35 ? 3 : 2; p.markRGB[i] = 0xbfd6e4; p.markA[i] = k * 0.9; }
+          if (k * 0.9 > p.markA[i]) { p.mark[i] = k > 0.6 ? 7 : k > 0.35 ? 3 : 2; p.markRGB[i] = p.sea ? 0x8e99a6 : 0xbfd6e4; p.markA[i] = k * 0.9; }
         }
       }
     }
@@ -397,7 +463,8 @@ export function paint(p: Pond) {
   }
   // the koi, deep ones first
   for (const k of p.koi) {
-    const amp = (0.28 + Math.min(1, k.v / 3) * 0.22 + Math.abs(k.turn) * 0.15) * (k.w / 1.8);
+    const shark = isShark(k.kind);
+    const amp = (0.28 + Math.min(1, k.v / 3) * 0.22 + Math.abs(k.turn) * 0.15) * (k.w / 1.8) * (shark ? 0.75 : 1);
     // the spine as drawn: the tail swings side to side, more toward its end
     const px = new Float32Array(N), py = new Float32Array(N);
     let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
@@ -410,13 +477,14 @@ export function paint(p: Pond) {
       if (px[j] < minX) minX = px[j]; if (px[j] > maxX) maxX = px[j];
       if (py[j] < minY) minY = py[j]; if (py[j] > maxY) maxY = py[j];
     }
-    const pad = k.w * 2.2 + 1;
+    const pad = k.w * k.wide + 1;
     const x0 = Math.max(0, Math.floor(minX - pad)), x1 = Math.min(cols - 1, Math.ceil(maxX + pad));
     const y0 = Math.max(0, Math.floor(minY - pad)), y1 = Math.min(rows - 1, Math.ceil(maxY + pad));
     const deep = 1 - k.depth * 0.4;
     const flap = Math.sin(k.phase * 0.5) * 0.25;
     // the nearest point on the spine for each cell near the koi: only the cells near each segment are tried
-    const reach = k.w * 1.3 + 2.4, far = reach * reach;
+    const reach = k.w * k.wide + 1.4, far = reach * reach;
+    const tailFrom = tailAt(k.kind);
     for (let y = y0; y <= y1; y++) p.nd.fill(1e9, y * cols + x0, y * cols + x1 + 1);
     for (let j = 0; j < N - 1; j++) {
       const ax = px[j], ay = py[j], bx = px[j + 1] - ax, by = py[j + 1] - ay;
@@ -442,30 +510,54 @@ export function paint(p: Pond) {
         if (bd > far) continue;
         const bu = p.nu[i], side = p.ns[i];
         const d = Math.sqrt(bd);
-        const W = Math.max(0.6, k.w * width(bu));
+        const W = Math.max(0.6, k.w * width(k.kind, bu));
         const v = clamp((side < 0 ? -d : d) / W, -1, 1);
         if (d < W + 0.5) {
           let s = clamp((W + 0.5 - d) / 0.9, 0, 1);
-          const tail = bu > 0.84;
-          // the tail is forked: a shallow notch at its very end
-          if (tail && bu > 0.97 && Math.abs(v) < 0.25) s *= 0.3;
+          const tail = bu > tailFrom;
+          // a koi's tail is forked: a shallow notch at its very end
+          if (!shark && tail && bu > 0.97 && Math.abs(v) < 0.25) s *= 0.3;
           let c = k.pat[Math.round(bu * (PU - 1)) * PV + Math.round((v + 1) * 0.5 * (PV - 1))];
-          // the eyes
-          if (bu > 0.04 && bu < 0.1 && Math.abs(v) > 0.45 && Math.abs(v) < 0.85) c = mixRGB(c, INK, 0.75);
-          // light along the back, shade at the sides; deeper is dimmer and greener
-          c = mixRGB(c, 0xffffff, 0.14 * (1 - v * v));
-          c = mixRGB(c, 0x000000, 0.22 * Math.pow(Math.abs(v), 3));
-          if (tail) c = mixRGB(c, 0xffffff, 0.3);
-          c = mixRGB(c, 0x16303a, k.depth * 0.5);
+          // the eyes (a hammerhead's at the ends of its hammer)
+          const av = Math.abs(v);
+          if (k.kind === 6 ? bu > 0.02 && bu < 0.06 && av > 0.86 : bu > 0.04 && bu < 0.1 && av > 0.45 && av < 0.85) c = mixRGB(c, INK, shark ? 0.6 : 0.75);
+          if (shark) {
+            // seen from above: the back darker, the edges catching the light
+            c = mixRGB(c, 0x1b2230, 0.12 * (1 - v * v));
+            c = mixRGB(c, 0xffffff, 0.16 * av * av);
+            if (tail) c = mixRGB(c, p.water, 0.25);
+          } else {
+            // light along the back, shade at the sides
+            c = mixRGB(c, 0xffffff, 0.14 * (1 - v * v));
+            c = mixRGB(c, 0x000000, 0.22 * Math.pow(av, 3));
+            if (tail) c = mixRGB(c, 0xffffff, 0.3);
+          }
+          // deeper is dimmer, into the water's own color
+          c = mixRGB(c, p.deepTo, k.depth * 0.5);
           s *= (0.78 + 0.22 * (1 - v * v)) * deep;
           // the tail fin is thin: lighter, and the water shows through
           put(p, i, tail ? s * 0.62 : s, c, tail ? 1 : 0);
-        } else if (d < W + 1.9 && bu > 0.02 && bu < 0.98) {
-          // the halo: a few marks just outside the body, fading out
-          const c = mixRGB(mixRGB(k.pat[Math.round(bu * (PU - 1)) * PV + (side < 0 ? 0 : PV - 1)], WATER, 0.25), 0x16303a, k.depth * 0.5);
-          put(p, y * cols + x, 0.3 * (1 - (d - W - 0.5) / 1.4) * deep, c, 2);
+        } else if (d < W + (shark ? 1.1 : 1.9) && bu > 0.02 && bu < 0.98) {
+          // the halo: a few marks just outside the body, fading out (a shark's is closer, its outline cleaner)
+          const c = mixRGB(mixRGB(k.pat[Math.round(bu * (PU - 1)) * PV + (side < 0 ? 0 : PV - 1)], p.water, 0.25), p.deepTo, k.depth * 0.5);
+          put(p, y * cols + x, (shark ? 0.22 : 0.3) * (1 - (d - W - 0.5) / (shark ? 0.6 : 1.4)) * deep, c, 2);
         }
-        if (d >= W + 0.5 && bu > 0.17 && bu < 0.32) {
+        if (shark && d >= W + 0.3) {
+          // a shark's fins, stiff and swept back: a pair of pectorals (long and narrow on the blue shark), and small pelvics
+          // further back. Each is a triangle off the body: its root from u0 to u1, its tip `reach` out and swept back.
+          const out = d - W;
+          for (let f2 = 0; f2 < 2; f2++) {
+            const u0 = f2 ? 0.56 : k.kind === 9 ? 0.23 : 0.2, u1 = f2 ? 0.63 : k.kind === 9 ? 0.31 : 0.34;
+            const reach = k.w * (f2 ? 0.8 : k.kind === 9 ? 2.3 : k.kind === 7 ? 1.4 : 1.7);
+            const g = out / reach;
+            if (g >= 1) continue;
+            const back = (reach * 1.25) / k.len; // how far back the tip is, along the body
+            if (bu < u0 + g * back || bu > u1 + g * (u0 + back - u1)) continue;
+            const c = mixRGB(mixRGB(k.pat[Math.round(((u0 + u1) / 2) * (PU - 1)) * PV + (side < 0 ? 0 : PV - 1)], 0x1b2230, 0.12), p.deepTo, k.depth * 0.5);
+            put(p, i, (0.8 - 0.3 * g) * deep, c, 0);
+            break;
+          }
+        } else if (d >= W + 0.5 && bu > 0.17 && bu < 0.32) {
           // pectoral fins, out to the sides, rowing slowly
           const reach = k.w * (0.95 + flap * (side < 0 ? 1 : -1));
           const out = d - W;

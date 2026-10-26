@@ -5,12 +5,14 @@ import { Btn, haptic, Press, Txt } from './base';
 import { openSheet } from './Sheet';
 
 // The theme of the study screen — what's behind the cards while you study:
-// the koi pond, people walking over a glass floor, or the centered card's
-// color. Chosen from the timer (テーマ) or the side menu.
+// the koi pond, sharks in a pale sea, people walking over a glass floor, or
+// the centered card's color. Chosen from the timer (テーマ) or the side menu.
 
 /** The glass floor's color. */
 export const FLOOR = '#F1F1EE';
-export const THEME_NAMES: Record<StudyBg, string> = { pond: '鯉の池', walk: '歩く人', color: '科目の色' };
+/** The pale sea's color (lib/koi's SEA). */
+export const SEA_BG = '#F5F5F3';
+export const THEME_NAMES: Record<StudyBg, string> = { pond: '鯉の池', sea: 'サメの海', walk: '歩く人', color: '科目の色' };
 
 /** The study screen's theme: what's behind it. */
 export function themeSheet() {
@@ -20,6 +22,7 @@ function BgChoice({ close }: { close: () => void }) {
   const cur = useStore((s) => s.studyBg);
   const items: { id: StudyBg; name: string; sub: string }[] = [
     { id: 'pond', name: THEME_NAMES.pond, sub: '暗い池を、鯉がカードをよけてゆっくり泳ぎます。水面をタップするとエサ' },
+    { id: 'sea', name: THEME_NAMES.sea, sub: '白い海を、シュモクザメやジンベエザメがカードをよけて泳ぎます。カードはすりガラス' },
     { id: 'walk', name: THEME_NAMES.walk, sub: 'ガラスの床の下から見上げるように、いま勉強している人たちが上を歩いていきます' },
     { id: 'color', name: THEME_NAMES.color, sub: '真ん中のカードの科目の色に、画面が染まります' },
   ];
@@ -56,6 +59,19 @@ function Swatch({ id }: { id: StudyBg }) {
         <View style={{ flexDirection: 'row', gap: 2 }}>{['#F1EBE0', '#D8442A', '#D8442A', '#F1EBE0'].map(cell)}</View>
         <View style={{ flexDirection: 'row', gap: 2, marginLeft: 8 }}>{['#D8442A', '#F1EBE0', '#F1EBE0'].map(cell)}</View>
         <View style={{ flexDirection: 'row', gap: 2, marginLeft: 4, marginTop: 6 }}>{['#E2B04A', '#E2B04A', '#E2B04A'].map(cell)}</View>
+      </View>
+    );
+  }
+  if (id === 'sea') {
+    // a hammerhead, from above
+    const g = (x: number, y: number, w: number, h: number, c: string) => <View style={{ position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: 1.5, backgroundColor: c }} />;
+    return (
+      <View style={{ width: 50, height: 64, borderRadius: 10, backgroundColor: SEA_BG, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(0,0,0,0.12)' }}>
+        {g(12, 14, 26, 6, '#6F7A8A')}
+        {g(22, 20, 6, 22, '#7E8999')}
+        {g(23, 42, 4, 10, '#AEB7C3')}
+        {g(8, 50, 7, 1.5, '#AEB6C0')}
+        {g(34, 8, 7, 1.5, '#AEB6C0')}
       </View>
     );
   }

@@ -38,7 +38,7 @@ export type TimerMode = 'up' | 'goal';
 /** How the timer draws the time: big digits, a clock with hands, or flip cards. */
 export type ClockFace = 'digital' | 'analog' | 'flip';
 /** What's behind the study screen: the koi pond, people walking over a glass floor, or the centered card's subject color. */
-export type StudyBg = 'pond' | 'walk' | 'color';
+export type StudyBg = 'pond' | 'sea' | 'walk' | 'color';
 export type { Block };
 
 export type State = {

@@ -37,7 +37,7 @@ export function SideMenu({ close, leave }: { close: () => void; leave: () => voi
     { icon: 'bookmark', label: 'ブックマーク', sub: saved ? String(saved) : undefined, go: open('/bookmarks') },
     { icon: 'bell', label: 'お知らせ', go: open('/notifications') },
     { icon: 'users', label: 'フォロー', go: open('/follows') },
-    // the study screen's theme: 鯉の池, 歩く人, 科目の色
+    // the study screen's theme: 鯉の池, サメの海, 歩く人, 科目の色
     { icon: 'sun', label: 'テーマ', sub: THEME_NAMES[theme], go: () => { close(); setTimeout(themeSheet, 280); } },
   ];
   // its plan if it has one now, else it goes into today's timetable from now
