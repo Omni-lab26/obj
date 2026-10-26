@@ -275,8 +275,8 @@ function Hands({ sec, color }: { sec: number; color: string }) {
 
 /**
  * Started from the timetable: a plain line that fills in green toward the
- * block's length and turns all red once past it. Just measuring, there's no
- * line — only today's total.
+ * next plan's start and turns all red once past it (the time keeps running
+ * until you stop). Just measuring, there's no line — only today's total.
  */
 function Progress() {
   const ss = useSession();
@@ -286,12 +286,13 @@ function Progress() {
   }
   const over = ss.elapsed > ss.plan;
   const f = Math.min(1, ss.elapsed / ss.plan);
+  const label = ss.next ? `次の${ss.next.subject.name}（${ss.next.at}）` : `予定 ${Math.round(ss.plan / 60)}分`;
   const col = over ? OVER : WITHIN;
   return (
     <View style={{ marginHorizontal: 20, marginBottom: 16, gap: 8 }} accessible accessibilityRole="progressbar"
-      accessibilityLabel={over ? `予定の${Math.round(ss.plan / 60)}分を${fmt(ss.elapsed - ss.plan)}こえています` : `予定の${Math.round(ss.plan / 60)}分まで あと${fmt(ss.plan - ss.elapsed)}`}>
+      accessibilityLabel={`${label}${over ? `を${fmt(ss.elapsed - ss.plan)}こえて続けています` : `まで あと${fmt(ss.plan - ss.elapsed)}`}`}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-        <Txt size={12} color={focus.ink2} style={{ flex: 1 }}>{`予定 ${Math.round(ss.plan / 60)}分`}</Txt>
+        <Txt size={12} color={focus.ink2} style={{ flex: 1 }} numberOfLines={1}>{label}</Txt>
         <Txt num size={13} w="700" color={col}>{over ? `+${fmt(ss.elapsed - ss.plan)}` : `あと ${fmt(ss.plan - ss.elapsed)}`}</Txt>
       </View>
       <View style={{ height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.16)', overflow: 'hidden' }}>

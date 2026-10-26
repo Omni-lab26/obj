@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { Block, blocksOn, endOf, isOn, minutesUntil, plansOn, slotsOf, suggestion, toClock, toMin } from '../timetable';
+import { Block, blocksOn, endOf, isOn, minutesUntil, nextOf, plansOn, slotsOf, spanEnd, suggestion, toClock, toMin } from '../timetable';
 
 // 2026-10-21 is a Wednesday (Monday index 2)
 const at = (h: number, m = 0) => new Date(2026, 9, 21, h, m);
@@ -38,6 +38,17 @@ describe('timetable', () => {
   });
   it('counts down to a block', () => {
     expect(minutesUntil(blocks[0], at(18, 10))).toBe(50);
+  });
+  it('runs a plan with no length until the next one starts', () => {
+    const day: Block[] = [
+      { id: 'e', s: 'en', start: '17:00', min: 0, days: [], date: '2026-10-21' },
+      { id: 'm', s: 'ma', start: '19:00', min: 0, days: [], date: '2026-10-21' },
+    ];
+    expect(nextOf(day, day[0], at(12))?.id).toBe('m');
+    expect(spanEnd(day, day[0], at(12))).toBe(19 * 60);
+    expect(spanEnd(day, day[1], at(12))).toBe(24 * 60); // the day's last runs to midnight
+    expect(slotsOf(day, at(18, 30)).map((x) => x.state)).toEqual(['now', 'next']);
+    expect(slotsOf(day, at(19, 5)).map((x) => x.state)).toEqual(['past', 'now']);
   });
   it('puts a plan with no time after the timed ones, never under way and never next', () => {
     const free: Block = { id: 'f1', s: 'en', t: '単語', min: 0, days: [], date: '2026-10-21' };

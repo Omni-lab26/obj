@@ -4,7 +4,7 @@ import { ScrollView, View } from 'react-native';
 
 import { subj } from '@/data';
 import { Deadlines } from '@/screens/home/standard';
-import { blocksOn, endOf, slotsOf, type Block, type Slot } from '@/lib/timetable';
+import { blocksOn, endOf, nextOf, slotsOf, toMin, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
 import { getState, startFrom, useNow, useStore } from '@/store';
 import { hair, onColor, type, useT } from '@/theme';
@@ -23,7 +23,14 @@ import { toast } from '@/ui/Toast';
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 
 /** Start from a plan and open the timer, big in the middle. Refused once a different subject has run for over a minute. */
-function go(x: { s: string; todoId?: string; min?: number }) {
+/** Starting a plan now: how long until the next one starts, and which it is (none after the day's last). */
+function untilNext(blocks: readonly Block[], b: Block, d: Date) {
+  const n = nextOf(blocks, b, d);
+  if (!n?.start) return {};
+  const left = toMin(n.start) - (d.getHours() * 60 + d.getMinutes());
+  return left > 0 ? { min: left, next: { s: n.s, at: n.start } } : {};
+}
+function go(x: { s: string; todoId?: string; min?: number; next?: { s: string; at: string } }) {
   if (!startFrom(x)) {
     haptic.warn();
     toast(`いまは${subj(getState().subj).name}を勉強中です`, '記録してから次の科目を始めましょう');
@@ -87,14 +94,14 @@ function Timetable() {
           const past = state === 'past';
           const live = state === 'now';
           return (
-            <Press key={b.id} onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から${b.min}分` : '時刻なし'} ${sj.name} ${b.t ?? ''}。編集`}
+            <Press key={b.id} onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。編集`}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingLeft: 12, paddingRight: 10, borderTopWidth: i ? hair : 0, borderTopColor: t.line,
                 backgroundColor: live ? t.sunken : 'transparent', opacity: past ? 0.45 : 1 }}>
               <View style={{ width: 48 }}>
                 {b.start ? (
                   <>
                     <Txt num size={13} w="700" lh={16}>{b.start}</Txt>
-                    <Txt num size={11} tone="ink3" lh={14}>{endOf(b)}</Txt>
+                    {b.min ? <Txt num size={11} tone="ink3" lh={14}>{endOf(b)}</Txt> : <Txt size={11} tone="ink3" lh={14}>から</Txt>}
                   </>
                 ) : <Txt size={10.5} w="600" tone="ink3" lh={14} numberOfLines={1}>時刻なし</Txt>}
               </View>
@@ -106,11 +113,11 @@ function Timetable() {
                   {state === 'next' ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
                   {b.date ? <Txt size={11} w="600" tone="ink3">この日だけ</Txt> : null}
                 </View>
-                <Txt size={12} tone="ink2" numberOfLines={1}>{[b.t ?? sj.task, b.start ? `${b.min}分` : ''].filter(Boolean).join(' · ')}</Txt>
+                <Txt size={12} tone="ink2" numberOfLines={1}>{[b.t ?? sj.task, b.min ? `${b.min}分` : ''].filter(Boolean).join(' · ')}</Txt>
                 {b.note ? <Txt size={11.5} tone="ink3" numberOfLines={1}>{b.note}</Txt> : null}
               </View>
               {past || state === 'plain' ? null : (
-                <Press onPress={() => go({ s: b.s, min: b.min || undefined })} haptics={false} scale={0.9} hitSlop={6} disabled={running}
+                <Press onPress={() => go({ s: b.s, ...untilNext(blocks, b, new Date()) })} haptics={false} scale={0.9} hitSlop={6} disabled={running}
                   accessibilityLabel={`${sj.name}を始める`}
                   style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: live ? sj.c : t.sunken, alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name="play" size={14} color={live ? onColor(sj.c) : t.ink} />
@@ -121,7 +128,7 @@ function Timetable() {
         }) : (
           <Press onPress={() => planCalendar()} style={{ paddingVertical: 18, paddingHorizontal: 16, alignItems: 'center', gap: 4 }}>
             <Txt size={13.5} w="600">{day === today ? '今日の時間割はまだありません' : `${DOW[day]}曜日の時間割はまだありません`}</Txt>
-            <Txt size={12} tone="ink3">「追加」で日と科目を決めておくと、1タップで始められます（時刻はなくてもOK）</Txt>
+            <Txt size={12} tone="ink3">「追加」で日と始める時刻と科目を決めておくと、1タップで始められます。次の予定の時刻に知らせます</Txt>
           </Press>
         )}
       </Card>

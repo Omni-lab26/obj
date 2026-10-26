@@ -5,7 +5,7 @@ import { PEOPLE, subj } from '../data';
 import { celebrate } from '../moments';
 import { dayOf, hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { daysUntil, dateKey } from '../lib/time';
-import { endOf, minutesUntil, suggestion } from '../lib/timetable';
+import { endOf, minutesUntil, nextOf, suggestion, toMin } from '../lib/timetable';
 import { commitRecord, elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
 import { haptic } from '../ui/base';
 import { toast } from '../ui/Toast';
@@ -51,6 +51,8 @@ export function useSession() {
     elapsed, target, remaining: Math.max(0, target - elapsed), over: s.running && elapsed > target,
     /** the timetable block's length in seconds when started from it; null when just measuring */
     plan: s.planMin ? Math.round(s.planMin * 60) : null,
+    /** the plan after it: its subject and when it starts */
+    next: s.planMin && s.planNext ? { subject: subj(s.planNext.s), at: s.planNext.at } : null,
     /** 'up' counts the time studied (what is recorded); 'goal' counts down to the target */
     mode: s.timerMode,
     /** the subject can change before starting and in the first minute */
@@ -85,7 +87,7 @@ export const session = {
   },
 };
 
-/** One nudge when the timetable block's length is reached, while the timer is open (just measuring, there is none). */
+/** One nudge when the next plan's start comes, while the timer is open (just measuring, there is none). The time keeps running. */
 export function useTargetNudge() {
   const now = useNow();
   const running = useStore((s) => s.running);
@@ -97,7 +99,7 @@ export function useTargetNudge() {
     else if (over && !nudged.current) {
       nudged.current = true;
       haptic.success();
-      toast(`予定の${Math.round(target)}分に届きました`, 'このまま続けても、記録してもOK');
+      toast('次の予定の時間です', 'このまま続けても、記録して次へ行ってもOK');
       celebrate({ kind: 'target', min: Math.round(target) });
     }
   }, [over, running, target]);
@@ -109,6 +111,8 @@ export function useTargetNudge() {
  */
 export type Pick = {
   s: string; what: string; min?: number; todoId?: string;
+  /** the plan after it, when this one runs until it starts */
+  next?: { s: string; at: string };
   from: 'now' | 'next' | 'todo' | 'last';
   /** the block's times, and the minutes until it starts */
   start?: string; end?: string; inMin?: number;
@@ -120,8 +124,12 @@ export function useNext(): Pick {
   const cur = useStore((s) => s.subj);
   const slot = suggestion(timetable, new Date(now));
   if (slot) {
-    const b = slot.block;
-    return { s: b.s, what: b.t ?? subj(b.s).task, min: b.min || undefined, from: slot.state === 'now' ? 'now' : 'next', start: b.start, end: endOf(b), inMin: minutesUntil(b, new Date(now)) };
+    const b = slot.block, d = new Date(now);
+    // a plan runs until the next one starts: started now, that's how long it has
+    const n = nextOf(timetable, b, d);
+    const left = n?.start ? toMin(n.start) - (d.getHours() * 60 + d.getMinutes()) : 0;
+    const min = b.min || (left > 0 ? left : undefined);
+    return { s: b.s, what: b.t ?? subj(b.s).task, min, next: !b.min && min && n?.start ? { s: n.s, at: n.start } : undefined, from: slot.state === 'now' ? 'now' : 'next', start: b.start, end: endOf(b), inMin: minutesUntil(b, d) };
   }
   const todo = todos.find((x) => !x.d);
   if (todo) return { s: todo.s, what: todo.t, todoId: todo.id, from: 'todo' };
@@ -129,10 +137,10 @@ export function useNext(): Pick {
 }
 /** 'いま · 17:00〜18:00', '次は · 19:00から', '次は · ToDo' or '次は' */
 export const pickLabel = (p: Pick) =>
-  p.from === 'now' ? `いま · ${p.start}〜${p.end}` : p.from === 'next' ? `次は · ${p.start}から` : p.from === 'todo' ? '次は · ToDo' : '次は';
+  p.from === 'now' ? (p.end ? `いま · ${p.start}〜${p.end}` : `いま · ${p.start}から`) : p.from === 'next' ? `次は · ${p.start}から` : p.from === 'todo' ? '次は · ToDo' : '次は';
 /** Starts what was picked and opens the timer. False when another subject is already under way. */
 export function startPick(p: Pick): boolean {
-  if (!startFrom({ s: p.s, min: p.min, todoId: p.todoId })) {
+  if (!startFrom({ s: p.s, min: p.min, next: p.next, todoId: p.todoId })) {
     haptic.warn();
     toast(`いまは${subj(getState().subj).name}を勉強中です`, '記録してから次の科目を始めましょう');
     return false;

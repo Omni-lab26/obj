@@ -69,7 +69,7 @@ function AskRecord({ open, goOn, save, memo }: { open: boolean; goOn: () => void
 
 /** What the bar says on its second line: the time studied, and the timetable block's length when it came from one. */
 function line(ss: ReturnType<typeof useSession>) {
-  const time = ss.plan ? `${clock(ss.elapsed)} · 予定 ${jpHm(ss.plan / 60)}` : clock(ss.elapsed);
+  const time = ss.next ? `${clock(ss.elapsed)} · 次 ${ss.next.subject.name} ${ss.next.at}` : ss.plan ? `${clock(ss.elapsed)} · 予定 ${jpHm(ss.plan / 60)}` : clock(ss.elapsed);
   return `${ss.paused ? '一時停止中 · ' : ''}${time}`;
 }
 

@@ -13,9 +13,10 @@ import { openSheet } from './Sheet';
 import { toast } from './Toast';
 
 // Adding to the timetable or a deadline, laid out like a calendar's new event:
-// ✕, 予定 / 締切, and ✓ along the top; the title; the day and the times (a
-// switch for no time, and repeat); then the subject with its color (for the
-// charts), and a memo. Dates and times open right under their row.
+// ✕, 予定 / 締切, and ✓ along the top; the title; the day and the start (a
+// plan runs until the next one starts, so there's no end), and repeat; then
+// the subject with its color (for the charts), and a memo. Dates and times
+// open right under their row.
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 const day0 = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -29,7 +30,7 @@ export function planSheet(o: { date?: Date; existing?: Block; kind?: Kind } = {}
 /** The timetable's 追加: a new plan for today (the day can be changed in the sheet). */
 export const planCalendar = () => planSheet({ date: new Date() });
 
-type Open = 'date' | 'start' | 'end' | 'color' | null;
+type Open = 'date' | 'start' | 'color' | null;
 
 function Editor({ close, date, existing, kind: kind0 }: { close: () => void; date?: Date; existing?: Block; kind: Kind }) {
   const t = useT();
@@ -39,9 +40,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const [title, setTitle] = useState(existing?.t ?? '');
   const [d, setD] = useState(() => (existing?.date ? parseKey(existing.date) : day0(date ?? new Date())));
   const nextHour = Math.min(22, new Date().getHours() + 1) * 60;
-  const [timed, setTimed] = useState(existing ? !!existing.start : true);
   const [start, setStart] = useState(existing?.start ? toMin(existing.start) : nextHour);
-  const [end, setEnd] = useState(existing?.start ? toMin(existing.start) + existing.min : nextHour + 60);
   const [weekly, setWeekly] = useState(!!existing && !existing.date);
   const known = existing ? subjects.find((x) => x.id === existing.s) : undefined;
   const [name, setName] = useState(known?.name ?? '');
@@ -54,7 +53,6 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const accent = plan ? color : DEADLINE_RED;
   const toggle = (k: Open) => { haptic.tap(); setOpen(open === k ? null : k); };
   const typeName = (v: string) => { setName(v); const m = subjects.find((x) => x.name === v.trim()); if (m) setColor(m.c); };
-  const moveStart = (m: number) => { const len = end - start; setStart(m); setEnd(Math.min(24 * 60 - 15, m + Math.max(15, len))); };
 
   const save = () => {
     if (!title.trim()) { haptic.warn(); toast(plan ? '何をやるかを入れてください' : '締切の名前を入れてください'); return; }
@@ -67,19 +65,18 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
       return;
     }
     if (!name.trim()) { haptic.warn(); toast('科目を入れてください', '記録とグラフは科目ごとに分かれます'); return; }
-    if (timed && end <= start) { haptic.warn(); setOpen('end'); toast('終わりの時刻を開始より後にしてください'); return; }
     // the subject: one you have (its color follows what you picked), or a new one
     let s = match?.id;
     if (match && match.c !== color) updateSubject(match.id, { c: color });
     if (!s) s = addSubject({ name: name.trim(), area: 'other', c: color });
     saveBlock({
       id: existing?.id, s, t: title.trim(), note: note.trim() || undefined,
-      start: timed ? toClock(start) : undefined, min: timed ? end - start : 0,
+      start: toClock(start), min: 0,
       days: weekly ? (existing && !existing.date ? existing.days : [mondayIndex(d)]) : [], date: weekly ? undefined : dateKey(d),
     });
     haptic.success();
     close();
-    toast(existing ? '予定を保存しました' : '予定を追加しました', `${weekly ? `毎週${DOW[mondayIndex(d)]}曜` : shortDate(d)}${timed ? ` ${toClock(start)}〜${toClock(end)}` : ''} · ${name.trim()}`);
+    toast(existing ? '予定を保存しました' : '予定を追加しました', `${weekly ? `毎週${DOW[mondayIndex(d)]}曜` : shortDate(d)} ${toClock(start)}から · ${name.trim()} · 次の予定の時刻に知らせます`);
   };
 
   return (
@@ -122,21 +119,12 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
               <>
                 <Row label="開始" first>
                   <Chip on={open === 'date'} onPress={() => toggle('date')} label={shortDate(d)} a11y="日付を変える" />
-                  {timed ? <Chip on={open === 'start'} onPress={() => toggle('start')} label={toClock(start)} a11y="開始の時刻を変える" /> : null}
+                  <Chip on={open === 'start'} onPress={() => toggle('start')} label={toClock(start)} a11y="始める時刻を変える" />
                 </Row>
                 {open === 'date' ? <Month value={d} onPick={(x) => { setD(x); setOpen(null); }} dots={(x) => plansOn(blocks, x).length} /> : null}
-                {open === 'start' ? <TimePick value={start} onChange={moveStart} /> : null}
-                {timed ? (
-                  <>
-                    <Row label="終了">
-                      <Chip label={shortDate(d)} a11y="終わりの日付（開始と同じ日）" />
-                      <Chip on={open === 'end'} onPress={() => toggle('end')} label={toClock(end)} a11y="終わりの時刻を変える" />
-                    </Row>
-                    {open === 'end' ? <TimePick value={end} onChange={setEnd} /> : null}
-                  </>
-                ) : null}
-                <Row label="時刻なし" icon="clock">
-                  <Switch on={!timed} onChange={(v) => { setTimed(!v); setOpen(null); }} label="時刻を決めない" />
+                {open === 'start' ? <TimePick value={start} onChange={setStart} /> : null}
+                <Row label="終わり" icon="clock">
+                  <Txt size={13.5} tone="ink3">次の予定まで（止めるまで測る）</Txt>
                 </Row>
                 <Row label="繰り返し" icon="cal">
                   <Press onPress={() => { haptic.tap(); setWeekly(!weekly); }} hitSlop={8} accessibilityLabel={`繰り返し：${weekly ? '毎週' : 'しない'}。変える`}
@@ -244,15 +232,6 @@ function Chip({ label, on, onPress, a11y }: { label: string; on?: boolean; onPre
     <Press onPress={onPress ?? (() => {})} disabled={!onPress} scale={0.95} accessibilityLabel={a11y}
       style={{ height: 34, paddingHorizontal: 12, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.blueSoft : t.sunken }}>
       <Txt num size={14.5} w="500" color={on ? t.blue : t.ink}>{label}</Txt>
-    </Press>
-  );
-}
-function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
-  const t = useT();
-  return (
-    <Press onPress={() => { haptic.tap(); onChange(!on); }} haptics={false} scale={0.95} accessibilityRole="switch" accessibilityState={{ checked: on }} accessibilityLabel={label}
-      style={{ width: 52, height: 32, borderRadius: 16, padding: 3, backgroundColor: on ? '#34C759' : t.line2, alignItems: on ? 'flex-end' : 'flex-start' }}>
-      <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: '#fff', boxShadow: '0px 1px 3px rgba(0,0,0,0.2)' }} />
     </Press>
   );
 }

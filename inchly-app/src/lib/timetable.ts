@@ -1,13 +1,15 @@
 import { dateKey, mondayIndex } from './time';
 
-// The timetable: what you plan to study on a day from the calendar, by the
-// clock if you like ("19:00 から 60分 数学") or with no time at all. Older plans
-// may repeat on weekdays. Pure functions, so the study page and its tests read
-// them the same way.
+// The timetable: what you plan to study and when it starts ("19:00 から 数学").
+// A plan runs until the next one starts — there's no end to set; the timer
+// just measures, and goes on past the next start until you stop it (the next
+// plan's notification still comes). Older plans may carry a length, or no
+// time at all, or repeat on weekdays. Pure functions, so the study page and
+// its tests read them the same way.
 
 /**
- * days: 0 = Monday … 6 = Sunday. start: 'H:MM', or none for a plan with no
- * time (min is then 0). date: 'YYYY-MM-DD' for a plan on that one day only
+ * days: 0 = Monday … 6 = Sunday. start: 'H:MM' (older plans may have none).
+ * min: 0 — it runs until the next plan starts (older plans: their length). date: 'YYYY-MM-DD' for a plan on that one day only
  * (days is then ignored). note: a memo written with it.
  */
 export type Block = { id: string; s: string; t?: string; start?: string; min: number; days: number[]; date?: string; note?: string };
@@ -34,13 +36,27 @@ export const plansOn = (blocks: readonly Block[], d: Date) => blocks.filter((b) 
 
 export type Slot = { block: Block; state: 'past' | 'now' | 'next' | 'later' };
 
+/** The timed plan after this one on that day, if any. */
+export function nextOf(blocks: readonly Block[], b: Block, day: Date): Block | undefined {
+  if (!b.start) return undefined;
+  const a = toMin(b.start);
+  return blocksOn(blocks, day).find((x) => x.id !== b.id && !!x.start && toMin(x.start) > a);
+}
+/** Where a plan ends, in minutes: its length if it has one, else where the next plan starts (else midnight). */
+export function spanEnd(blocks: readonly Block[], b: Block, day: Date): number {
+  const a = b.start ? toMin(b.start) : 0;
+  if (b.min) return a + b.min;
+  const n = nextOf(blocks, b, day);
+  return n?.start ? toMin(n.start) : 24 * 60;
+}
+
 /** Today's blocks, each marked past / now / next / later against the clock (a plan with no time is always 'later'). */
 export function slotsOf(blocks: readonly Block[], now: Date = new Date()): Slot[] {
   const t = now.getHours() * 60 + now.getMinutes();
   let nextGiven = false;
   return blocksOn(blocks, now).map((block) => {
     if (!block.start) return { block, state: 'later' as const };
-    const a = toMin(block.start), z = a + block.min;
+    const a = toMin(block.start), z = spanEnd(blocks, block, now);
     if (t >= z) return { block, state: 'past' as const };
     if (t >= a) return { block, state: 'now' as const };
     if (!nextGiven) { nextGiven = true; return { block, state: 'next' as const }; }

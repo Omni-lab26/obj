@@ -48,7 +48,8 @@ export type State = {
   todayMin: number; // derived from sessions, kept for readers
   goalMin: number;
   targetMin: number; // planned length of this focus session
-  planMin: number | null; // the timetable block's length when started from it; null = just measuring
+  planMin: number | null; // started from the timetable: minutes until the next plan starts; null = just measuring
+  planNext: { s: string; at: string } | null; // that next plan: its subject and start
   todos: Todo[];
   deadlines: Deadline[];
   following: string[];
@@ -102,6 +103,7 @@ export const INITIAL: State = {
   goalMin: 180,
   targetMin: 60,
   planMin: null,
+  planNext: null,
   todos: [],
   deadlines: [],
   following: [],
@@ -151,7 +153,7 @@ export function demoState(now: Date = new Date()): Partial<State> {
     { id: 's6', s: 'ma', min: 33, date: yesterday, at: '22:05' },
   ];
   return {
-    running: true, paused: false, startedAt: now.getTime(), base: 2350, subj: 'en', planMin: 60, targetMin: 60,
+    running: true, paused: false, startedAt: now.getTime(), base: 2350, subj: 'en', planMin: 60, targetMin: 60, planNext: { s: 'ma', at: '19:00' },
     sessions: [...past, ...recent],
     todos: [
       { id: 't1', s: 'ph', t: '名問の森 15', d: false, carried: 2, dl: 'd1' },
@@ -231,7 +233,7 @@ export function startStudy(id?: string) {
     if (s.paused) setState({ paused: false, startedAt: Date.now() });
     return;
   }
-  setState({ running: true, paused: false, startedAt: Date.now(), base: 0, subj: next, studyTodo: null, planMin: null });
+  setState({ running: true, paused: false, startedAt: Date.now(), base: 0, subj: next, studyTodo: null, planMin: null, planNext: null });
   if (!s.running) celebrate({ kind: 'start', subject: next });
 }
 /**
@@ -240,12 +242,12 @@ export function startStudy(id?: string) {
  * to the record page. While already studying, this switches only if the
  * session is under a minute old (as the timer allows).
  */
-export function startFrom(x: { s: string; todoId?: string; min?: number }): boolean {
+export function startFrom(x: { s: string; todoId?: string; min?: number; next?: { s: string; at: string } }): boolean {
   const s = state;
   if (s.running && elapsedOf(s) > 60 && x.s !== s.subj) return false;
   setState({
     running: true, paused: false, startedAt: Date.now(), base: s.running && x.s === s.subj ? elapsedOf(s) : 0,
-    subj: x.s, studyTodo: x.todoId ?? null, planMin: x.min || null, ...(x.min ? { targetMin: x.min } : {}),
+    subj: x.s, studyTodo: x.todoId ?? null, planMin: x.min || null, planNext: x.min ? x.next ?? null : null, ...(x.min ? { targetMin: x.min } : {}),
   });
   if (!s.running) celebrate({ kind: 'start', subject: x.s });
   return true;
@@ -351,7 +353,7 @@ export function commitRecord(opts?: { todoId?: string; note?: string; min?: numb
   const run = streakOf(sessions, s.restDays, now);
   const ticket = !byDay(s.sessions).has(today) && run > 0 && run % 7 === 0 && s.restTickets < MAX_TICKETS;
   setState({
-    running: false, paused: false, base: 0, studyTodo: null, planMin: null,
+    running: false, paused: false, base: 0, studyTodo: null, planMin: null, planNext: null,
     sessions,
     todos: todo ? s.todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x)) : s.todos,
     todoLog: todo && !todo.d ? [...s.todoLog, { id: todo.id, date: today }] : s.todoLog,

@@ -56,7 +56,8 @@ describe('timetable reminders', () => {
     const r = timetableReminders(blocks, name, now);
     expect(r[0]).toMatchObject({ id: 'tt-w-20261021', title: '数学の時間です' });
     expect(r[0].at).toEqual(new Date(2026, 9, 21, 19, 0));
-    expect(r[0].body).toContain('19:00〜20:00 · 青チャート');
+    expect(r[0].body).toContain('19:00から · 青チャート');
+    expect(r[0].body).toContain('ストップするまでいまの勉強はそのまま続きます'); // studying something else goes on
     expect(r.some((x) => x.id === 'tt-m-20261021')).toBe(false); // this morning has passed
     expect(r.filter((x) => x.id.startsWith('tt-m-')).length).toBe(4); // Thu, Fri, Mon, Tue
     expect(r.filter((x) => x.id.startsWith('tt-d-')).map((x) => x.at)).toEqual([new Date(2026, 9, 24, 15, 0)]);

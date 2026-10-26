@@ -1,5 +1,5 @@
 import { daysUntil } from './time';
-import { Block, blocksOn, endOf, toMin } from './timetable';
+import { Block, blocksOn, toMin } from './timetable';
 
 // When each reminder should fire. Pure, so the times can be tested; the
 // scheduling itself lives in notify.ts.
@@ -72,7 +72,7 @@ export function timetableReminders(blocks: readonly Block[], name: (s: string) =
       const when = at(now, i, Math.floor(m / 60), m % 60);
       if (when <= now) continue;
       const key = `${day.getFullYear()}${String(day.getMonth() + 1).padStart(2, '0')}${String(day.getDate()).padStart(2, '0')}`;
-      out.push({ id: `tt-${b.id}-${key}`, at: when, title: `${name(b.s)}の時間です`, body: `${b.start}〜${endOf(b)}${b.t ? ` · ${b.t}` : ''}。開くとすぐ始められます` });
+      out.push({ id: `tt-${b.id}-${key}`, at: when, title: `${name(b.s)}の時間です`, body: `${b.start}から${b.t ? ` · ${b.t}` : ''}。勉強中なら、ストップするまでいまの勉強はそのまま続きます` });
     }
   }
   return out.sort((a, b) => a.at.getTime() - b.at.getTime()).slice(0, max);
