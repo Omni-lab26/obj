@@ -20,7 +20,7 @@ import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 /** One study session, on the calendar day it was recorded. */
 export type Session = { id: string; s: string; min: number; date: string; at: string; note?: string; manual?: boolean };
 export type Todo = { id: string; s: string; t: string; d: boolean; carried?: number; dl?: string; doneOn?: string }; // carried: days it has slid; dl: deadline id
-export type Deadline = { id: string; t: string; mo: number; day: number; urgent?: boolean };
+export type Deadline = { id: string; t: string; mo: number; day: number; urgent?: boolean; note?: string };
 export type Account = { name: string; handle: string; grade: string; birthYear: number; aim: string; via: 'apple' | 'mail' | 'demo' };
 export type LiveScope = 'all' | 'followers' | 'none';
 export type DmFrom = 'following' | 'groups' | 'all';
@@ -245,7 +245,7 @@ export function startFrom(x: { s: string; todoId?: string; min?: number }): bool
   if (s.running && elapsedOf(s) > 60 && x.s !== s.subj) return false;
   setState({
     running: true, paused: false, startedAt: Date.now(), base: s.running && x.s === s.subj ? elapsedOf(s) : 0,
-    subj: x.s, studyTodo: x.todoId ?? null, planMin: x.min ?? null, ...(x.min ? { targetMin: x.min } : {}),
+    subj: x.s, studyTodo: x.todoId ?? null, planMin: x.min || null, ...(x.min ? { targetMin: x.min } : {}),
   });
   if (!s.running) celebrate({ kind: 'start', subject: x.s });
   return true;

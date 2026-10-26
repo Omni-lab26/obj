@@ -109,7 +109,7 @@ export function useNext(): Pick {
   const slot = suggestion(timetable, new Date(now));
   if (slot) {
     const b = slot.block;
-    return { s: b.s, what: b.t ?? subj(b.s).task, min: b.min, from: slot.state === 'now' ? 'now' : 'next', start: b.start, end: endOf(b), inMin: minutesUntil(b, new Date(now)) };
+    return { s: b.s, what: b.t ?? subj(b.s).task, min: b.min || undefined, from: slot.state === 'now' ? 'now' : 'next', start: b.start, end: endOf(b), inMin: minutesUntil(b, new Date(now)) };
   }
   const todo = todos.find((x) => !x.d);
   if (todo) return { s: todo.s, what: todo.t, todoId: todo.id, from: 'todo' };

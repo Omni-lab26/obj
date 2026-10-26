@@ -66,3 +66,10 @@ describe('timetable reminders', () => {
     expect(timetableReminders(blocks, name, now, 7, 2).map((x) => x.id)).toEqual(['tt-w-20261021', 'tt-m-20261022']);
   });
 });
+
+describe('timetable reminders for a plan with no time', () => {
+  it('sends none: there is no moment to remind', () => {
+    const r = timetableReminders([{ id: 'f', s: 'en', min: 0, days: [], date: '2026-10-22' }, { id: 'b', s: 'ma', start: '19:00', min: 60, days: [], date: '2026-10-22' }], () => '数学', now);
+    expect(r.map((x) => x.id)).toEqual(['tt-b-20261022']);
+  });
+});

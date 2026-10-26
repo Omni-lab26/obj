@@ -9,11 +9,12 @@ import { ease, useT } from '../theme';
 // Bottom sheet. openSheet(close => <Content/>) from anywhere; drag the grabber
 // (or the top of the sheet) down to dismiss, or tap the scrim.
 type Render = (close: () => void) => ReactNode;
-let setter: ((r: Render | null) => void) | null = null;
+let setter: ((r: Render | null, grouped: boolean) => void) | null = null;
 let closer: (() => void) | null = null;
 
-export function openSheet(render: Render) {
-  setter?.(render);
+/** grouped: the sheet's ground is the page gray, for white grouped cards inside (like a calendar's new-event sheet). */
+export function openSheet(render: Render, opts?: { grouped?: boolean }) {
+  setter?.(render, !!opts?.grouped);
 }
 export function closeSheet() {
   closer?.();
@@ -23,6 +24,7 @@ export function SheetHost() {
   const t = useT();
   const insets = useSafeAreaInsets();
   const [render, setRender] = useState<Render | null>(null);
+  const [grouped, setGrouped] = useState(false);
   const H = Dimensions.get('window').height;
   const y = useSharedValue(H);
   const scrim = useSharedValue(0);
@@ -34,7 +36,7 @@ export function SheetHost() {
     scrim.set(withTiming(0, { duration: 240 }));
   };
   useEffect(() => {
-    setter = (r) => setRender(() => r);
+    setter = (r, g) => { setGrouped(g); setRender(() => r); };
     closer = close;
     return () => { setter = null; closer = null; };
   });
@@ -68,7 +70,7 @@ export function SheetHost() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '90%' }} pointerEvents="box-none">
         <Animated.View
           onLayout={(e) => { height.set(e.nativeEvent.layout.height); }}
-          style={[{ backgroundColor: t.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28 }, sa]}
+          style={[{ backgroundColor: grouped ? t.canvas : t.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28 }, sa]}
           accessibilityViewIsModal>
           <View {...pan.panHandlers} style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>
             <View style={{ width: 38, height: 5, borderRadius: 3, backgroundColor: t.line2 }} />

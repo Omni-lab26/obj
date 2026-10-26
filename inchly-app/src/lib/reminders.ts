@@ -67,6 +67,7 @@ export function timetableReminders(blocks: readonly Block[], name: (s: string) =
   for (let i = 0; i < days; i++) {
     const day = at(now, i, 0);
     for (const b of blocksOn(blocks, day)) {
+      if (!b.start) continue; // a plan with no time has no moment to remind
       const m = toMin(b.start);
       const when = at(now, i, Math.floor(m / 60), m % 60);
       if (when <= now) continue;

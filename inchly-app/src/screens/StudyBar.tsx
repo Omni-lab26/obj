@@ -1,43 +1,47 @@
 import { ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { clock, go, jpHm, useSession } from '@/screens/model';
-import { togglePause } from '@/store';
+import { getState, togglePause } from '@/store';
 import { useT } from '@/theme';
 import { haptic, Press, SubjTile, Txt } from '@/ui/base';
-import { hideStudyBar, STUDY_BAR_H, studyBarBottom } from '@/ui/Chrome';
+import { STUDY_BAR_H, studyBarBottom } from '@/ui/Chrome';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
+import { toast } from '@/ui/Toast';
 
 // The study bar, like a music app's mini player: once you start (from the
-// study page, a ToDo, anywhere), it sits on the tab bar on every tab with the
-// time and pause. Tap it and the timer opens. Swipe it down and it goes away
-// (the clock keeps running; the middle tab still shows the minutes) until you
-// open the timer or start again. It goes when you record.
+// study page, the menu, anywhere), it sits on the tab bar on every tab with the
+// time studied and pause. Tap it and the timer opens. Pull it down and the
+// time stops (pull again, or press play, and it goes on). It goes when you record.
 
-/** Lets the bar be swiped down and away: it follows the finger, and goes past a short pull or a flick. A theme's own bar can wrap itself in this too. */
-export function SwipeAway({ children }: { children: ReactNode }) {
+/** Pull the bar down to pause the time (or start it again): it follows the finger a little and springs back. A theme's own bar can wrap itself in this too. */
+export function SwipeToPause({ children }: { children: ReactNode }) {
   const y = useSharedValue(0);
   const [pan] = useState(() => Gesture.Pan().activeOffsetY(8).failOffsetX([-16, 16])
-    .onUpdate((e) => { y.value = e.translationY > 0 ? e.translationY : e.translationY * 0.2; })
+    .onUpdate((e) => { y.value = e.translationY > 0 ? Math.min(46, e.translationY * 0.6) : e.translationY * 0.15; })
     .onEnd((e) => {
-      if (e.translationY > 28 || e.velocityY > 600) {
-        y.value = withTiming(140, { duration: 180 }, (done) => { if (done) scheduleOnRN(hideStudyBar); });
-      } else y.value = withSpring(0, { duration: 320, dampingRatio: 0.8 });
+      if (e.translationY > 28 || e.velocityY > 600) scheduleOnRN(pauseOrGo);
+      y.value = withSpring(0, { duration: 340, dampingRatio: 0.7 });
     }));
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }], opacity: 1 - Math.min(0.6, Math.max(0, y.value) / 140) }));
+  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   return <GestureDetector gesture={pan}><Animated.View style={a}>{children}</Animated.View></GestureDetector>;
 }
+const pauseOrGo = () => {
+  const c = getState();
+  if (!c.running) return;
+  haptic.soft();
+  togglePause();
+  toast(c.paused ? '再開しました' : '一時停止しました', c.paused ? '' : 'もう一度下にスライドすると再開します');
+};
 
-/** What the bar says on its second line. */
+/** What the bar says on its second line: the time studied, and the timetable block's length when it came from one. */
 function line(ss: ReturnType<typeof useSession>) {
-  const time = ss.mode === 'goal'
-    ? (ss.over ? `目安をこえて ${clock(ss.elapsed - ss.target)}` : `のこり ${clock(ss.remaining)}`)
-    : `${clock(ss.elapsed)} · 目安 ${jpHm(ss.target / 60)}`;
+  const time = ss.plan ? `${clock(ss.elapsed)} · 予定 ${jpHm(ss.plan / 60)}` : clock(ss.elapsed);
   return `${ss.paused ? '一時停止中 · ' : ''}${time}`;
 }
 
@@ -48,7 +52,7 @@ export function StandardStudyBar({ insets }: { insets: EdgeInsets }) {
   const press = () => { haptic.soft(); togglePause(); };
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: studyBarBottom(insets.bottom), paddingHorizontal: 20 }}>
-      <SwipeAway>
+      <SwipeToPause>
         <Glass radius={20} style={{ height: STUDY_BAR_H }}>
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 6, gap: 4 }}>
             <Press onPress={go.timer} scale={0.98} accessibilityRole="button"
@@ -66,12 +70,14 @@ export function StandardStudyBar({ insets }: { insets: EdgeInsets }) {
               <Icon name={playing ? 'pause' : 'play'} size={20} color={t.ink} filled />
             </Press>
           </View>
-          {/* how far along: toward the target, in the subject's color */}
-          <View pointerEvents="none" style={{ position: 'absolute', left: 16, right: 16, bottom: 0, height: 2.5, borderRadius: 2, backgroundColor: t.line, overflow: 'hidden' }}>
-            <View style={{ width: `${Math.min(100, (ss.elapsed / Math.max(1, ss.target)) * 100)}%`, height: '100%', backgroundColor: ss.subject.c }} />
-          </View>
+          {/* from the timetable: how far toward the block's length, green inside it, red past it */}
+          {ss.plan ? (
+            <View pointerEvents="none" style={{ position: 'absolute', left: 16, right: 16, bottom: 0, height: 2.5, borderRadius: 2, backgroundColor: t.line, overflow: 'hidden' }}>
+              <View style={{ width: `${Math.min(100, (ss.elapsed / ss.plan) * 100)}%`, height: '100%', backgroundColor: ss.elapsed > ss.plan ? '#FF453A' : '#30D158' }} />
+            </View>
+          ) : null}
         </Glass>
-      </SwipeAway>
+      </SwipeToPause>
     </View>
   );
 }

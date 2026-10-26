@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { ROOM, subj } from '../data';
 import { addDays, dateKey, daysUntil as untilDate, jpDate, parseKey } from '../lib/time';
 import { Block } from '../lib/timetable';
-import { addDeadline, addSession, addTodo, block, getState, moveTodo, removeDeadline, removeSession, removeTodo, Session, Todo, toggleFollow, updateSession, updateTodo, useStore, useSubjects } from '../store';
+import { addSession, addTodo, block, getState, moveTodo, removeDeadline, removeSession, removeTodo, Session, Todo, toggleFollow, updateSession, updateTodo, useStore, useSubjects } from '../store';
 import { hair, useT } from '../theme';
 import { Avatar, Btn, haptic, Txt } from './base';
 import { Choice, Field, Label, RadioCards, Stepper } from './Form';
@@ -123,40 +123,9 @@ export function blockSheet(existing?: Block) {
 const daysUntil = (mo: number, day: number) => untilDate(mo, day);
 export { daysUntil };
 
+/** A new deadline: the same sheet as a plan, on 締切. */
 export function deadlineSheet() {
-  openSheet((close) => <DeadlineForm close={close} />);
-}
-function DeadlineForm({ close }: { close: () => void }) {
-  const [t, setT] = useState('');
-  const [mo, setMo] = useState(() => (new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2));
-  const [day, setDay] = useState(15);
-  const [touched, setTouched] = useState(false);
-  const err = touched && !t.trim() ? '名前を入れてください' : undefined;
-  const save = () => {
-    if (!t.trim()) { setTouched(true); return; }
-    addDeadline({ t: t.trim(), mo, day, urgent: daysUntil(mo, day) <= 21 });
-    haptic.success();
-    close();
-    toast('締切を追加しました', `あと${daysUntil(mo, day)}日`);
-  };
-  return (
-    <View style={{ gap: 18 }}>
-      <Txt size={18} w="700">締切を追加</Txt>
-      <Field label="名前（例：英検 申込）" value={t} onChangeText={setT} max={24} error={err} onBlur={() => setTouched(true)} autoFocus />
-      <View style={{ flexDirection: 'row', gap: 16 }}>
-        <View style={{ flex: 1 }}>
-          <Label>月</Label>
-          <Stepper value={mo} min={1} max={12} onChange={setMo} unit="月" label="月" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Label>日</Label>
-          <Stepper value={day} min={1} max={31} onChange={setDay} unit="日" label="日" />
-        </View>
-      </View>
-      <Txt size={13} tone="ink2">{`今日から あと${daysUntil(mo, day)}日`}</Txt>
-      <Btn kind="primary" wide label="追加する" onPress={save} />
-    </View>
-  );
+  planSheet({ kind: 'deadline' });
 }
 export function deadlineActions(id: string, name: string) {
   openSheet((close) => (

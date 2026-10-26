@@ -87,12 +87,16 @@ function Timetable() {
           const past = state === 'past';
           const live = state === 'now';
           return (
-            <Press key={b.id} onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start}から${b.min}分 ${sj.name} ${b.t ?? ''}。編集`}
+            <Press key={b.id} onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から${b.min}分` : '時刻なし'} ${sj.name} ${b.t ?? ''}。編集`}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingLeft: 12, paddingRight: 10, borderTopWidth: i ? hair : 0, borderTopColor: t.line,
                 backgroundColor: live ? t.sunken : 'transparent', opacity: past ? 0.45 : 1 }}>
-              <View style={{ width: 42 }}>
-                <Txt num size={13} w="700" lh={16}>{b.start}</Txt>
-                <Txt num size={11} tone="ink3" lh={14}>{endOf(b)}</Txt>
+              <View style={{ width: 48 }}>
+                {b.start ? (
+                  <>
+                    <Txt num size={13} w="700" lh={16}>{b.start}</Txt>
+                    <Txt num size={11} tone="ink3" lh={14}>{endOf(b)}</Txt>
+                  </>
+                ) : <Txt size={10.5} w="600" tone="ink3" lh={14} numberOfLines={1}>時刻なし</Txt>}
               </View>
               <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: sj.c }} />
               <View style={{ flex: 1, minWidth: 0 }}>
@@ -102,10 +106,11 @@ function Timetable() {
                   {state === 'next' ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
                   {b.date ? <Txt size={11} w="600" tone="ink3">この日だけ</Txt> : null}
                 </View>
-                <Txt size={12} tone="ink2" numberOfLines={1}>{[b.t ?? sj.task, `${b.min}分`].filter(Boolean).join(' · ')}</Txt>
+                <Txt size={12} tone="ink2" numberOfLines={1}>{[b.t ?? sj.task, b.start ? `${b.min}分` : ''].filter(Boolean).join(' · ')}</Txt>
+                {b.note ? <Txt size={11.5} tone="ink3" numberOfLines={1}>{b.note}</Txt> : null}
               </View>
               {past || state === 'plain' ? null : (
-                <Press onPress={() => go({ s: b.s, min: b.min })} haptics={false} scale={0.9} hitSlop={6} disabled={running}
+                <Press onPress={() => go({ s: b.s, min: b.min || undefined })} haptics={false} scale={0.9} hitSlop={6} disabled={running}
                   accessibilityLabel={`${sj.name}を始める`}
                   style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: live ? sj.c : t.sunken, alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name="play" size={14} color={live ? onColor(sj.c) : t.ink} />
@@ -116,7 +121,7 @@ function Timetable() {
         }) : (
           <Press onPress={() => planCalendar()} style={{ paddingVertical: 18, paddingHorizontal: 16, alignItems: 'center', gap: 4 }}>
             <Txt size={13.5} w="600">{day === today ? '今日の時間割はまだありません' : `${DOW[day]}曜日の時間割はまだありません`}</Txt>
-            <Txt size={12} tone="ink3">「追加」からカレンダーで日を選んで、時間と科目を決めておくと、その時間に1タップで始められます</Txt>
+            <Txt size={12} tone="ink3">「追加」で日と科目を決めておくと、1タップで始められます（時刻はなくてもOK）</Txt>
           </Press>
         )}
       </Card>

@@ -39,4 +39,11 @@ describe('timetable', () => {
   it('counts down to a block', () => {
     expect(minutesUntil(blocks[0], at(18, 10))).toBe(50);
   });
+  it('puts a plan with no time after the timed ones, never under way and never next', () => {
+    const free: Block = { id: 'f1', s: 'en', t: '単語', min: 0, days: [], date: '2026-10-21' };
+    expect(blocksOn([...blocks, free], at(12)).map((b) => b.id)).toEqual(['b1', 'b2', 'b3', 'f1']);
+    expect(slotsOf([...blocks, free], at(12)).map((x) => x.state)).toEqual(['past', 'next', 'later', 'later']);
+    expect(suggestion([free], at(12))).toBeNull();
+    expect(endOf(free)).toBe('');
+  });
 });

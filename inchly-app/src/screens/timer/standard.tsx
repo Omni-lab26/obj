@@ -1,7 +1,10 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ComponentType, ReactNode, useSyncExternalStore } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ComponentType, ReactNode, useState, useSyncExternalStore } from 'react';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Line, LinearGradient, Rect, Stop } from 'react-native-svg';
 
@@ -57,18 +60,33 @@ export const STANDARD_ZONES = (): Zones => ({ head: ['top', 'subject'], center: 
 export function StandardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
   useT(); // the timer's color follows the theme
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  // pull the page down by its bar (or anywhere) and it shrinks back to the study bar
+  const y = useSharedValue(0);
+  const [pull] = useState(() => Gesture.Pan().activeOffsetY(12).failOffsetX([-20, 20])
+    .onUpdate((e) => { y.set(Math.max(0, e.translationY)); })
+    .onEnd((e) => {
+      if (e.translationY > 140 || e.velocityY > 900) {
+        y.set(withTiming(height, { duration: 200 }, (done) => { if (done) scheduleOnRN(closeTimer); }));
+      } else y.set(withSpring(0, { duration: 360, dampingRatio: 0.85 }));
+    }));
+  const follow = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }], borderRadius: Math.min(28, y.value / 4) }));
   return (
-    <Screen bg={focus.bg} style={{ paddingBottom: insets.bottom + 12 }}>
-      <StatusBar style="light" />
-      <Wash />
-      {zones.head}
-      <View style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>{zones.center}</View>
-      <View>{zones.foot}</View>
-    </Screen>
+    <GestureDetector gesture={pull}>
+      <Animated.View style={[{ flex: 1, overflow: 'hidden' }, follow]}>
+        <Screen bg={focus.bg} style={{ paddingBottom: insets.bottom + 12 }}>
+          <StatusBar style="light" />
+          <Wash />
+          {zones.head}
+          <View style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>{zones.center}</View>
+          <View>{zones.foot}</View>
+        </Screen>
+      </Animated.View>
+    </GestureDetector>
   );
 }
 
-/** The subject's color, washed over the top and gone before the rulers (their edges fade into the plain background). */
+/** The subject's color over the whole page: strong at the top, still there at the bottom, so the page reads bright, not black. */
 function Wash() {
   const c = useSession().subject.c;
   return (
@@ -76,9 +94,9 @@ function Wash() {
       <Svg width="100%" height="100%">
         <Defs>
           <LinearGradient id="wash" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={c} stopOpacity={0.5} />
-            <Stop offset="0.2" stopColor={c} stopOpacity={0.16} />
-            <Stop offset="0.3" stopColor={c} stopOpacity={0} />
+            <Stop offset="0" stopColor={c} stopOpacity={0.82} />
+            <Stop offset="0.45" stopColor={c} stopOpacity={0.5} />
+            <Stop offset="1" stopColor={c} stopOpacity={0.3} />
           </LinearGradient>
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#wash)" />
@@ -95,6 +113,9 @@ function Top() {
   const face = useStore((x) => x.clockFace);
   const state = ss.running ? (ss.paused ? '一時停止中' : '勉強中') : 'これから';
   return (
+    <View>
+    {/* the bar on top: pull it down to make the timer small again */}
+    <Press onPress={closeTimer} hitSlop={12} accessibilityLabel="小さくする（下にスライドでも）" style={{ alignSelf: 'center', marginTop: 6, width: 40, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.45)' }} />
     <View style={{ height: 44, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12 }}>
       <Press onPress={closeTimer} scale={0.86} accessibilityLabel="小さくする" hitSlop={6}
         style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)' }}>
@@ -110,6 +131,7 @@ function Top() {
         style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)' }}>
         <Icon name="clock" size={17} color={focus.ink2} />
       </Press>
+    </View>
     </View>
   );
 }

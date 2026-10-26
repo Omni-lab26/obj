@@ -286,7 +286,7 @@ export function Deadlines() {
             <Sticker name={d.days <= 21 ? 'flag' : i === 1 ? 'cal' : 'trophy'} size={36} tilt={i % 2 ? 6 : -6} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <Txt size={13.5} w="600" lh={18} numberOfLines={1}>{d.t}</Txt>
-              <Txt size={11} tone="ink3" lh={15}>{`${d.mo}月${d.day}日 · ${d.total ? `ToDo ${d.done}/${d.total}` : 'ToDoなし'}`}</Txt>
+              <Txt size={11} tone="ink3" lh={15} numberOfLines={1}>{`${d.mo}月${d.day}日 · ${d.note ?? (d.total ? `ToDo ${d.done}/${d.total}` : 'ToDoなし')}`}</Txt>
             </View>
             <View style={{ alignItems: 'flex-end', gap: 3 }}>
               <Txt num size={14} w="700" lh={17} color={d.days <= 21 ? t.amber : t.ink}>{d.days}<Txt size={11} w="500" tone="ink3"> 日</Txt></Txt>
