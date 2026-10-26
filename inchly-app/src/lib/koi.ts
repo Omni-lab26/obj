@@ -24,7 +24,10 @@ export type Koi = {
   sx: Float32Array; sy: Float32Array; phase: number; hunger: number; boost: number;
   /** seconds until it next comes up to touch the surface (a small ring at its mouth) */
   kiss: number;
+  /** its pattern, worked out once: PU steps along the body by PV across */
+  pat: Uint32Array;
 };
+const PU = 48, PV = 9;
 export type Pad = { x: number; y: number; r: number; a: number; spin: number; vx: number; vy: number; flower: boolean };
 export type Pond = {
   cols: number; rows: number; t: number; r: number; acc: number;
@@ -38,6 +41,10 @@ export type Pond = {
   cover: Float32Array;
   /** a place the koi keep clear of (the card on the study screen), in cells */
   avoid: { x0: number; y0: number; x1: number; y1: number } | null;
+  /** scratch, per cell: the nearest point on the koi being drawn (distance², how far along, which side) */
+  nd: Float32Array; nu: Float32Array; ns: Float32Array;
+  /** the light on the water, worked out a few times a second (it moves slowly) and copied into each frame */
+  wm: Uint8Array; wa: Float32Array; wAt: number;
 };
 
 // ---------- small math ----------
@@ -65,11 +72,11 @@ export function noise(x: number, y: number, z: number) {
   'worklet';
   const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
   const fx = fade(x - ix), fy = fade(y - iy), fz = fade(z - iz);
-  const l = (a: number, b: number, t: number) => a + (b - a) * t;
-  const c = (dz: number) => l(
-    l(hash(ix, iy, iz + dz), hash(ix + 1, iy, iz + dz), fx),
-    l(hash(ix, iy + 1, iz + dz), hash(ix + 1, iy + 1, iz + dz), fx), fy);
-  return l(c(0), c(1), fz);
+  const a0 = hash(ix, iy, iz), b0 = hash(ix + 1, iy, iz), c0 = hash(ix, iy + 1, iz), d0 = hash(ix + 1, iy + 1, iz);
+  const a1 = hash(ix, iy, iz + 1), b1 = hash(ix + 1, iy, iz + 1), c1 = hash(ix, iy + 1, iz + 1), d1 = hash(ix + 1, iy + 1, iz + 1);
+  const e0 = a0 + (b0 - a0) * fx, f0 = c0 + (d0 - c0) * fx, g0 = e0 + (f0 - e0) * fy;
+  const e1 = a1 + (b1 - a1) * fx, f1 = c1 + (d1 - c1) * fx, g1 = e1 + (f1 - e1) * fy;
+  return g0 + (g1 - g0) * fz;
 }
 const clamp = (v: number, a: number, b: number) => {
   'worklet';
@@ -156,6 +163,8 @@ export function makePond(cols: number, rows: number, seed = 7, count = 6): Pond 
     cols, rows, t: 0, r: seed | 0, acc: 0, koi: [], food: [], ripples: [], pads: [],
     tile: new Float32Array(size), tileRGB: new Uint32Array(size), mark: new Uint8Array(size), markRGB: new Uint32Array(size), markA: new Float32Array(size),
     cover: new Float32Array(size), avoid: null,
+    nd: new Float32Array(size), nu: new Float32Array(size), ns: new Float32Array(size),
+    wm: new Uint8Array(size), wa: new Float32Array(size), wAt: -1,
   };
   const kinds = [0, 3, 1, 4, 2, 0, 5, 1];
   // koi in proportion to the pond (a low, wide band of a pond has smaller ones)
@@ -167,7 +176,9 @@ export function makePond(cols: number, rows: number, seed = 7, count = 6): Pond 
       x: 4 + rand(p) * (cols - 8), y: rows * (0.3 + rand(p) * 0.4), a: rows < cols * 0.6 ? (rand(p) < 0.5 ? 0 : Math.PI) + (rand(p) - 0.5) * 0.6 : a, v: 1.6, turn: 0,
       len, w: len * (0.17 + rand(p) * 0.025), depth: i === count - 1 ? 0.55 : i === count - 2 ? 0.35 : rand(p) * 0.2,
       kind: kinds[i % kinds.length], seed: rand(p) * 100, sx: new Float32Array(N), sy: new Float32Array(N), phase: rand(p) * 6, hunger: 0.5 + rand(p) * 0.5, boost: 0, kiss: 8 + rand(p) * 30,
+      pat: new Uint32Array(PU * PV),
     };
+    for (let a2 = 0; a2 < PU; a2++) for (let b2 = 0; b2 < PV; b2++) k.pat[a2 * PV + b2] = skin(k.kind, k.seed, a2 / (PU - 1), (b2 / (PV - 1)) * 2 - 1);
     for (let j = 0; j < N; j++) { k.sx[j] = k.x - Math.cos(a) * (len * j) / (N - 1); k.sy[j] = k.y - Math.sin(a) * (len * j) / (N - 1); }
     p.koi.push(k);
   }
@@ -340,19 +351,23 @@ function put(p: Pond, i: number, s: number, color: number, part: number) {
 export function paint(p: Pond) {
   'worklet';
   const { cols, rows, t } = p;
-  p.tile.fill(0); p.mark.fill(0); p.markA.fill(0); p.cover.fill(0);
-  // the water: light moving over it, here and there
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      const c = noise(x * 0.16 + t * 0.05, y * 0.16 - t * 0.03, t * 0.08);
-      if (c > 0.7) {
-        const i = y * cols + x;
-        p.mark[i] = c > 0.83 ? 3 : c > 0.77 ? 2 : 1;
-        p.markRGB[i] = WATER_HI;
-        p.markA[i] = (c - 0.7) * 0.9;
+  p.tile.fill(0); p.cover.fill(0);
+  // the water: light moving over it, here and there (worked out five times a second)
+  if (p.wAt < 0 || t - p.wAt > 0.2) {
+    p.wAt = t;
+    p.wm.fill(0); p.wa.fill(0);
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const c = noise(x * 0.16 + t * 0.05, y * 0.16 - t * 0.03, t * 0.08);
+        if (c > 0.7) {
+          const i = y * cols + x;
+          p.wm[i] = c > 0.83 ? 3 : c > 0.77 ? 2 : 1;
+          p.wa[i] = (c - 0.7) * 0.9;
+        }
       }
     }
   }
+  p.mark.set(p.wm); p.markA.set(p.wa); p.markRGB.fill(WATER_HI);
   // rings where the water was touched
   for (const r of p.ripples) {
     const life = 1 - r.t / RIPPLE_LIFE;
@@ -400,29 +415,41 @@ export function paint(p: Pond) {
     const y0 = Math.max(0, Math.floor(minY - pad)), y1 = Math.min(rows - 1, Math.ceil(maxY + pad));
     const deep = 1 - k.depth * 0.4;
     const flap = Math.sin(k.phase * 0.5) * 0.25;
-    for (let y = y0; y <= y1; y++) {
-      for (let x = x0; x <= x1; x++) {
-        const cx = x + 0.5, cy = y + 0.5;
-        // the nearest point on the spine: how far along (u), and how far to the side (d)
-        let bd = 1e9, bu = 0, side = 0;
-        for (let j = 0; j < N - 1; j++) {
-          const ax = px[j], ay = py[j], bx = px[j + 1] - ax, by = py[j + 1] - ay;
-          const l2 = bx * bx + by * by || 1;
+    // the nearest point on the spine for each cell near the koi: only the cells near each segment are tried
+    const reach = k.w * 1.3 + 2.4, far = reach * reach;
+    for (let y = y0; y <= y1; y++) p.nd.fill(1e9, y * cols + x0, y * cols + x1 + 1);
+    for (let j = 0; j < N - 1; j++) {
+      const ax = px[j], ay = py[j], bx = px[j + 1] - ax, by = py[j + 1] - ay;
+      const l2 = bx * bx + by * by || 1;
+      const sx0 = Math.max(x0, Math.floor(Math.min(ax, px[j + 1]) - reach)), sx1 = Math.min(x1, Math.ceil(Math.max(ax, px[j + 1]) + reach));
+      const sy0 = Math.max(y0, Math.floor(Math.min(ay, py[j + 1]) - reach)), sy1 = Math.min(y1, Math.ceil(Math.max(ay, py[j + 1]) + reach));
+      for (let y = sy0; y <= sy1; y++) {
+        const cy = y + 0.5;
+        for (let x = sx0; x <= sx1; x++) {
+          const cx = x + 0.5;
           const tt = clamp(((cx - ax) * bx + (cy - ay) * by) / l2, 0, 1);
           const qx = ax + bx * tt - cx, qy = ay + by * tt - cy;
           const d = qx * qx + qy * qy;
-          if (d < bd) { bd = d; bu = (j + tt) / (N - 1); side = bx * (cy - ay) - by * (cx - ax); }
+          const i = y * cols + x;
+          if (d < p.nd[i]) { p.nd[i] = d; p.nu[i] = (j + tt) / (N - 1); p.ns[i] = bx * (cy - ay) - by * (cx - ax); }
         }
+      }
+    }
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        const i = y * cols + x;
+        const bd = p.nd[i];
+        if (bd > far) continue;
+        const bu = p.nu[i], side = p.ns[i];
         const d = Math.sqrt(bd);
         const W = Math.max(0.6, k.w * width(bu));
-        const i = y * cols + x;
         const v = clamp((side < 0 ? -d : d) / W, -1, 1);
         if (d < W + 0.5) {
           let s = clamp((W + 0.5 - d) / 0.9, 0, 1);
           const tail = bu > 0.84;
           // the tail is forked: a shallow notch at its very end
           if (tail && bu > 0.97 && Math.abs(v) < 0.25) s *= 0.3;
-          let c = skin(k.kind, k.seed, bu, v);
+          let c = k.pat[Math.round(bu * (PU - 1)) * PV + Math.round((v + 1) * 0.5 * (PV - 1))];
           // the eyes
           if (bu > 0.04 && bu < 0.1 && Math.abs(v) > 0.45 && Math.abs(v) < 0.85) c = mixRGB(c, INK, 0.75);
           // light along the back, shade at the sides; deeper is dimmer and greener
@@ -435,7 +462,7 @@ export function paint(p: Pond) {
           put(p, i, tail ? s * 0.62 : s, c, tail ? 1 : 0);
         } else if (d < W + 1.9 && bu > 0.02 && bu < 0.98) {
           // the halo: a few marks just outside the body, fading out
-          const c = mixRGB(mixRGB(skin(k.kind, k.seed, bu, side < 0 ? -1 : 1), WATER, 0.25), 0x16303a, k.depth * 0.5);
+          const c = mixRGB(mixRGB(k.pat[Math.round(bu * (PU - 1)) * PV + (side < 0 ? 0 : PV - 1)], WATER, 0.25), 0x16303a, k.depth * 0.5);
           put(p, y * cols + x, 0.3 * (1 - (d - W - 0.5) / 1.4) * deep, c, 2);
         }
         if (d >= W + 0.5 && bu > 0.17 && bu < 0.32) {
@@ -444,7 +471,7 @@ export function paint(p: Pond) {
           const out = d - W;
           const along = 1 - Math.abs(bu - 0.22) / 0.1;
           if (out < reach * along && along > 0) {
-            const c = mixRGB(mixRGB(skin(k.kind, k.seed, 0.3, side < 0 ? -1 : 1), 0xffffff, 0.45), 0x1d3b44, k.depth * 0.55);
+            const c = mixRGB(mixRGB(k.pat[Math.round(0.3 * (PU - 1)) * PV + (side < 0 ? 0 : PV - 1)], 0xffffff, 0.45), 0x1d3b44, k.depth * 0.55);
             put(p, i, 0.55 * along * deep * (1 - out / (reach + 0.01)), c, 1);
           }
         }

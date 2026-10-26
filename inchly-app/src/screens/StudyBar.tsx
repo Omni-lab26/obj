@@ -58,25 +58,31 @@ export function SwipeToRecord({ children }: { children: ReactNode }) {
 }
 
 function AskRecord({ open, goOn, save, saveAll, memo }: { open: boolean; goOn: () => void; save: () => void; saveAll: () => void; memo: () => void }) {
+  return (
+    <Dialog open={open} close={goOn} title="記録しますか？">
+      {/* what it says counts the time, so it's only there while the card is open */}
+      {open ? <AskBody save={save} saveAll={saveAll} memo={memo} goOn={goOn} /> : null}
+    </Dialog>
+  );
+}
+function AskBody({ save, saveAll, memo, goOn }: { save: () => void; saveAll: () => void; memo: () => void; goOn: () => void }) {
   const ss = useSession();
   const held = useStore((s) => s.held);
   const min = Math.max(1, Math.round(ss.elapsed / 60));
   const all = held.reduce((n, h) => n + Math.max(1, Math.round(h.sec / 60)), min);
   return (
-    <Dialog open={open} close={goOn} title="記録しますか？">
-      <View style={{ gap: 10, paddingHorizontal: 20, paddingBottom: 20 }}>
-        <Txt size={14} tone="ink2" style={{ marginBottom: 6 }}>
-          {`${ss.subject.name} ${min}分${held.length ? `（ほかに記録まちが${held.length}つ）` : ''}。バーを消すと時間は止まります。記録すると今日の合計に入ります`}
-        </Txt>
-        {held.length ? (
-          <Btn kind="primary" wide label={`ぜんぶ記録する（${jpHm(all)}）`} onPress={saveAll} />
-        ) : (
-          <Btn kind="primary" wide label={`${min}分を記録する`} onPress={save} />
-        )}
-        <Btn kind="quiet" wide label="メモを書いて記録する" onPress={memo} />
-        <Btn kind="ghost" wide label="続ける" onPress={goOn} />
-      </View>
-    </Dialog>
+    <View style={{ gap: 10, paddingHorizontal: 20, paddingBottom: 20 }}>
+      <Txt size={14} tone="ink2" style={{ marginBottom: 6 }}>
+        {`${ss.subject.name} ${min}分${held.length ? `（ほかに記録まちが${held.length}つ）` : ''}。バーを消すと時間は止まります。記録すると今日の合計に入ります`}
+      </Txt>
+      {held.length ? (
+        <Btn kind="primary" wide label={`ぜんぶ記録する（${jpHm(all)}）`} onPress={saveAll} />
+      ) : (
+        <Btn kind="primary" wide label={`${min}分を記録する`} onPress={save} />
+      )}
+      <Btn kind="quiet" wide label="メモを書いて記録する" onPress={memo} />
+      <Btn kind="ghost" wide label="続ける" onPress={goOn} />
+    </View>
   );
 }
 

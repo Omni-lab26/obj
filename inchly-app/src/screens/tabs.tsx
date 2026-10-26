@@ -42,11 +42,14 @@ export function TabBar(p: BottomTabBarProps) {
   const kit = useThemeKit();
   const Bar = kit.TabBar ?? StandardTabBar;
   const StudyBar = kit.StudyBar ?? StandardStudyBar;
-  useNow();
-  const st = useStore((s) => s);
+  // the tab bar itself only needs the minutes (for the clock's spoken label), so it ticks once a minute
+  const now = useNow(60_000);
+  const running = useStore((s) => s.running);
+  const paused = useStore((s) => s.paused);
+  const mins = useStore((s) => (s.running ? Math.floor(elapsedOf(s, now) / 60) : 0));
   const barUp = useStudyBarShown();
   // a new session brings the bar back, even if the last one was swiped away
-  useEffect(() => { if (st.running) showStudyBar(); }, [st.running]);
+  useEffect(() => { if (running) showStudyBar(); }, [running]);
   // another tab came into view: its charts play their entrance again
   useEffect(() => { replayCharts(); }, [p.state.index]);
   const [away, setAway] = useState(false);
@@ -59,7 +62,7 @@ export function TabBar(p: BottomTabBarProps) {
           <StudyBar insets={p.insets} />
         </Animated.View>
       ) : null}
-      <Bar items={items} running={st.running} paused={st.paused} mins={Math.floor(elapsedOf(st) / 60)} insets={p.insets} />
+      <Bar items={items} running={running} paused={paused} mins={mins} insets={p.insets} />
     </Animated.View>
   );
 }

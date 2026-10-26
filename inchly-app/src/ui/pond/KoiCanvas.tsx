@@ -13,7 +13,8 @@ import { haptic } from '../base';
 // The koi pond drawn with Skia: the pond (lib/koi) moves on and is painted
 // into its grid on the UI thread, and the grid is drawn in one call — an atlas
 // of white shapes (a tile and the marks), each placed on its cell and tinted.
-// Drawn 30 times a second (the marks are a mosaic; the motion stays smooth).
+// Drawn 24 times a second (the marks are a mosaic; the motion stays smooth),
+// with the colors made once and reused.
 
 /** water: draw the dark water and its grid (else the pond is see-through, over what's behind). fade: how much of the height melts away at the top and bottom (0..0.5). */
 /** avoid: a rectangle (in points) the koi swim around, never under (the card). */
@@ -88,6 +89,9 @@ export default function KoiCanvas({ width, height, cell = 9, feedable = false, s
   const ax = avoid ? avoid.x / cell : 0, ay = avoid ? avoid.y / cell : 0, aw = avoid ? avoid.w / cell : 0, ah = avoid ? avoid.h / cell : 0;
   useEffect(() => { keep.set(avoid ? { x0: ax, y0: ay, x1: ax + aw, y1: ay + ah } : null); }, [avoid, ax, ay, aw, ah, keep]);
   const acc = useSharedValue(1);
+  // colors made once and reused (a color with its strength taken to 1/32): no new objects each frame
+  const tints = useSharedValue<Record<number, SkColor> | null>(null);
+  const made = useSharedValue(0);
   const sprites = useSharedValue<SkRect[]>([]);
   const transforms = useSharedValue<SkRSXform[]>([]);
   const colors = useSharedValue<SkColor[]>([]);
@@ -106,9 +110,12 @@ export default function KoiCanvas({ width, height, cell = 9, feedable = false, s
     const dt = (f.timeSincePreviousFrame ?? 16) / 1000;
     step(p, dt);
     acc.value += dt;
-    if (acc.value < 1 / 30) return;
+    if (acc.value < 1 / 24) return;
     acc.value = 0;
     paint(p);
+    let cache = tints.value;
+    // kept to a size: started afresh when it has grown large
+    if (!cache || made.value > 20000) { cache = {}; tints.value = cache; made.value = 0; }
     const S: SkRect[] = [], T: SkRSXform[] = [], C: SkColor[] = [];
     for (let y = 0; y < rows; y++) {
       // the pond melts away toward its top and bottom edges
@@ -120,12 +127,18 @@ export default function KoiCanvas({ width, height, cell = 9, feedable = false, s
         if (tl > 0.01) {
           const c = p.tileRGB[i];
           S.push(slots[0]); T.push(at[i]);
-          C.push(Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, tl * e));
+          const q = Math.min(31, Math.round(tl * e * 31)), key = c * 32 + q;
+          let col = cache[key];
+          if (!col) { col = Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, q / 31); cache[key] = col; made.value += 1; }
+          C.push(col);
         }
         if (mk) {
           const c = p.markRGB[i];
           S.push(slots[mk]); T.push(at[i]);
-          C.push(Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, p.markA[i] * e));
+          const q = Math.min(31, Math.round(p.markA[i] * e * 31)), key = c * 32 + q;
+          let col = cache[key];
+          if (!col) { col = Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, q / 31); cache[key] = col; made.value += 1; }
+          C.push(col);
         }
       }
     }

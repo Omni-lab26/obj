@@ -30,28 +30,37 @@ half4 main(float2 xy) {
   float shade = 0.0;
   for (int i = 0; i < ${MAX_WALKERS}; i++) {
     float4 b = bodies[i];
-    float4 h = heads[i];
     float2 d = xy - b.xy;
-    // shoulders wider than deep
-    float along = dot(d, h.xy) / (b.z * 0.72);
-    float across = dot(d, float2(-h.y, h.x)) / (b.z * 1.1);
-    shade += b.w * exp(-(along * along + across * across) * 0.9);
+    // only near someone (most of the floor is far from everyone)
+    if (b.w > 0.0 && dot(d, d) < b.z * b.z * 7.0) {
+      float4 h = heads[i];
+      // shoulders wider than deep
+      float along = dot(d, h.xy) / (b.z * 0.72);
+      float across = dot(d, float2(-h.y, h.x)) / (b.z * 1.1);
+      shade += b.w * exp(-(along * along + across * across) * 0.9);
+    }
   }
   float solid = 0.0;
   for (int i = 0; i < ${MAX_WALKERS * 2}; i++) {
     float4 f = feet[i];
     float2 d = xy - f.xy;
-    float c = cos(f.z);
-    float s = sin(f.z);
-    float2 p = float2(c * d.x + s * d.y, -s * d.x + c * d.y);
-    float L = 14.0 * scale;
-    float W = 5.6 * scale;
-    // a little rounder and wider toward the toe
-    float sd = sole(p - float2(1.5 * scale, 0.0), float2(L, W + p.x * 0.05), W * 0.95);
-    float lift = f.w;
-    float blur = 1.0 + lift * 20.0 * scale;
-    shade += (1.0 - smoothstep(-blur, blur, sd)) * (0.95 - lift * 0.55);
-    solid = max(solid, (1.0 - smoothstep(-0.7, 0.7, sd)) * (1.0 - smoothstep(0.02, 0.16, lift)));
+    float near = 22.0 * scale + f.w * 26.0 * scale;
+    if (dot(d, d) < near * near) {
+      float c = cos(f.z);
+      float s = sin(f.z);
+      float2 p = float2(c * d.x + s * d.y, -s * d.x + c * d.y);
+      float L = 14.0 * scale;
+      float W = 5.6 * scale;
+      // a little rounder and wider toward the toe
+      float sd = sole(p - float2(1.5 * scale, 0.0), float2(L, W + p.x * 0.05), W * 0.95);
+      float lift = f.w;
+      float blur = 1.0 + lift * 20.0 * scale;
+      shade += (1.0 - smoothstep(-blur, blur, sd)) * (0.95 - lift * 0.55);
+      solid = max(solid, (1.0 - smoothstep(-0.7, 0.7, sd)) * (1.0 - smoothstep(0.02, 0.16, lift)));
+    }
+  }
+  if (shade <= 0.001 && solid <= 0.0) {
+    return half4(0.0);
   }
   shade = clamp(shade, 0.0, 1.0);
   float2 g = float2(xy.x + xy.y, xy.y - xy.x) * 0.70710678 / pitch;
@@ -76,6 +85,7 @@ export default function WalkCanvas({ width, height, avoid = null, names = false,
   // the tags: where each walker is (x, y, how visible) and who
   const tags = useSharedValue<number[]>(new Array(MAX_WALKERS * 4).fill(0));
   const [who, setWho] = useState<number[]>([]);
+  const acc = useSharedValue(1);
 
   useFrameCallback((f) => {
     'worklet';
@@ -86,7 +96,12 @@ export default function WalkCanvas({ width, height, avoid = null, names = false,
       crowd.value = c;
     }
     c.avoid = keep.value;
-    stepCrowd(c, (f.timeSincePreviousFrame ?? 16) / 1000);
+    const dt = (f.timeSincePreviousFrame ?? 16) / 1000;
+    stepCrowd(c, dt);
+    // drawn 30 times a second
+    acc.value += dt;
+    if (acc.value < 1 / 30) return;
+    acc.value = 0;
     const u = {
       pitch: 3.4, scale: Math.min(1.5, Math.max(0.9, Math.min(width, height) / 393)), ink: [0.09, 0.09, 0.09],
       bodies: new Array(MAX_WALKERS * 4).fill(0), heads: new Array(MAX_WALKERS * 4).fill(0), feet: new Array(MAX_WALKERS * 8).fill(0),

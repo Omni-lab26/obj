@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { THEMES_OPEN } from '@/design';
 import { startSubject } from '@/screens/model';
 import { getState, useStore, useSubjects } from '@/store';
 import { hair, useT } from '@/theme';
@@ -10,10 +9,11 @@ import { haptic, Press, Txt } from '@/ui/base';
 import { Wordmark } from '@/ui/Brand';
 import { Icon, type IconName } from '@/ui/Icon';
 import { planCalendar } from '@/ui/PlanSheets';
+import { THEME_NAMES, themeSheet } from '@/ui/StudyTheme';
 
 // The menu that home slides aside for (slide home to the right, or press the
 // handle on its left edge): the app's places that aren't tabs — settings,
-// subjects and colors, saved posts, the theme — then each subject, one tap to start it
+// subjects and colors, saved posts, the study screen's theme — then each subject, one tap to start it
 // (studying that isn't in the timetable starts here), and at the bottom a way
 // to plan.
 
@@ -29,6 +29,7 @@ export function SideMenu({ close, leave }: { close: () => void; leave: () => voi
   const subjects = useSubjects();
   const running = useStore((s) => s.running);
   const saved = useStore((s) => s.bookmarks.length);
+  const theme = useStore((s) => s.studyBg);
   const open = (path: Parameters<typeof router.push>[0]) => () => { leave(); router.push(path); };
   const items: Item[] = [
     { icon: 'gear', label: '設定', go: open('/settings') },
@@ -36,7 +37,8 @@ export function SideMenu({ close, leave }: { close: () => void; leave: () => voi
     { icon: 'bookmark', label: 'ブックマーク', sub: saved ? String(saved) : undefined, go: open('/bookmarks') },
     { icon: 'bell', label: 'お知らせ', go: open('/notifications') },
     { icon: 'users', label: 'フォロー', go: open('/follows') },
-    { icon: 'sun', label: 'テーマ', ...(THEMES_OPEN ? { go: open('/design') } : { sub: '準備中' }) },
+    // the study screen's theme: 鯉の池, 歩く人, 科目の色
+    { icon: 'sun', label: 'テーマ', sub: THEME_NAMES[theme], go: () => { close(); setTimeout(themeSheet, 280); } },
   ];
   // its plan if it has one now, else it goes into today's timetable from now
   const start = (id: string) => {

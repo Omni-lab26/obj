@@ -13,7 +13,7 @@ import type { Zone, Zones } from '@/screens/layout';
 import { jpHm, session, startBlock, useSession } from '@/screens/model';
 import { jpDate } from '@/lib/time';
 import { deckOf, endOf, suggestion, type Block } from '@/lib/timetable';
-import { doneOn, elapsedOf, finishBlock, getState, type Held, setStudyBg, type StudyBg, togglePause, useStore } from '@/store';
+import { doneOn, elapsedOf, finishBlock, getState, type Held, type StudyBg, togglePause, useStore } from '@/store';
 import { focus } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { Dialog } from '@/ui/Dialog';
@@ -22,7 +22,7 @@ import { orderSheet } from '@/ui/OrderSheet';
 import { PlanArt } from '@/ui/PlanArt';
 import { planSheet } from '@/ui/PlanSheets';
 import { KoiPond } from '@/ui/pond/KoiPond';
-import { openSheet } from '@/ui/Sheet';
+import { FLOOR, themeSheet } from '@/ui/StudyTheme';
 import { WalkFloor } from '@/ui/walk/WalkFloor';
 import { closeTimer, fmt, TimerFrame } from './standard';
 
@@ -35,7 +35,7 @@ import { closeTimer, fmt, TimerFrame } from './standard';
 // leaves; the card in front adds one. Under the cards, fixed, the time studied
 // and the line toward the plan's end: green inside it, red past it.
 //
-// Behind it all, the background you pick (背景): the koi pond (they swim around
+// Behind it all, the theme you pick (テーマ): the koi pond (they swim around
 // the card, never under it), people walking over a glass floor, or the
 // centered card's color. 眺める fades the words away and leaves the background.
 
@@ -73,8 +73,6 @@ type Tone = { light: boolean; ink: string; ink2: string; ink3: string; chip: str
 const ON_DARK: Tone = { light: false, ink: '#F3F5F9', ink2: 'rgba(243,245,249,0.66)', ink3: 'rgba(243,245,249,0.4)', chip: 'rgba(255,255,255,0.12)', shade: 'rgba(0,0,0,0.55)' };
 const ON_LIGHT: Tone = { light: true, ink: '#161616', ink2: 'rgba(22,22,22,0.6)', ink3: 'rgba(22,22,22,0.38)', chip: 'rgba(22,22,22,0.06)', shade: 'transparent' };
 const useTone = () => (useStore((s) => s.studyBg) === 'walk' ? ON_LIGHT : ON_DARK);
-/** The glass floor's color. */
-const FLOOR = '#F1F1EE';
 
 export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
   const bg = useStore((s) => s.studyBg);
@@ -157,75 +155,19 @@ function Looking({ bg }: { bg: StudyBg }) {
   );
 }
 
-/** What's behind the study screen. */
-export function bgSheet() {
-  openSheet((close) => <BgChoice close={close} />, { grouped: true });
-}
-function BgChoice({ close }: { close: () => void }) {
-  const cur = useStore((s) => s.studyBg);
-  const items: { id: StudyBg; name: string; sub: string }[] = [
-    { id: 'pond', name: '鯉の池', sub: '暗い池を、鯉がカードをよけてゆっくり泳ぎます。水面をタップするとエサ' },
-    { id: 'walk', name: '歩く人', sub: 'ガラスの床の下から見上げるように、いま勉強している人たちが上を歩いていきます' },
-    { id: 'color', name: '科目の色', sub: '真ん中のカードの科目の色に、画面が染まります' },
-  ];
-  return (
-    <View style={{ gap: 12, paddingTop: 2 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View style={{ width: 64 }} />
-        <Txt size={17} w="700" style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">勉強中の背景</Txt>
-        <Btn kind="primary" small label="できた" onPress={close} style={{ width: 64 }} />
-      </View>
-      {items.map((x) => {
-        const on = cur === x.id;
-        return (
-          <Press key={x.id} onPress={() => { haptic.tap(); setStudyBg(x.id); }} scale={0.98} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={x.name}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, borderRadius: 14, backgroundColor: '#fff', borderWidth: 1.5, borderColor: on ? '#161616' : 'transparent' }}>
-            <Swatch id={x.id} />
-            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-              <Txt size={15.5} w="700">{x.name}</Txt>
-              <Txt size={12.5} tone="ink3">{x.sub}</Txt>
-            </View>
-            <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: on ? 6 : 1.5, borderColor: on ? '#161616' : '#C7CBD3' }} />
-          </Press>
-        );
-      })}
-    </View>
-  );
-}
-/** A tiny picture of each background. */
-function Swatch({ id }: { id: StudyBg }) {
-  const cell = (c: string, i: number) => <View key={i} style={{ width: 6, height: 6, borderRadius: 1.5, backgroundColor: c }} />;
-  if (id === 'pond') {
-    return (
-      <View style={{ width: 50, height: 64, borderRadius: 10, backgroundColor: '#0B1117', padding: 8, gap: 3, justifyContent: 'center' }}>
-        <View style={{ flexDirection: 'row', gap: 2 }}>{['#F1EBE0', '#D8442A', '#D8442A', '#F1EBE0'].map(cell)}</View>
-        <View style={{ flexDirection: 'row', gap: 2, marginLeft: 8 }}>{['#D8442A', '#F1EBE0', '#F1EBE0'].map(cell)}</View>
-        <View style={{ flexDirection: 'row', gap: 2, marginLeft: 4, marginTop: 6 }}>{['#E2B04A', '#E2B04A', '#E2B04A'].map(cell)}</View>
-      </View>
-    );
-  }
-  if (id === 'walk') {
-    return (
-      <View style={{ width: 50, height: 64, borderRadius: 10, backgroundColor: FLOOR, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(0,0,0,0.12)' }}>
-        <View style={{ position: 'absolute', left: 13, top: 14, width: 8, height: 20, borderRadius: 4, backgroundColor: '#1B1B1B', transform: [{ rotate: '-18deg' }] }} />
-        <View style={{ position: 'absolute', left: 26, top: 26, width: 8, height: 20, borderRadius: 4, backgroundColor: 'rgba(27,27,27,0.35)', transform: [{ rotate: '-18deg' }] }} />
-      </View>
-    );
-  }
-  return <View style={{ width: 50, height: 64, borderRadius: 10, backgroundColor: '#5856D6' }} />;
-}
-
 /** The grabber (pull the page down by it, or anywhere, to make it small again), 背景, where things stand, 眺める. */
 export function CardTop() {
-  const ss = useSession();
+  // only what it shows (not the ticking time), so it doesn't redraw every second
+  const ss = { running: useStore((s) => s.running), paused: useStore((s) => s.paused) };
+  const name = subj(useStore((s) => s.subj)).name;
   const tone = useTone();
   const bg = useStore((s) => s.studyBg);
-  const state = ss.running ? `${ss.subject.name}を勉強中` : 'これから';
+  const state = ss.running ? `${name}を勉強中` : 'これから';
   return (
     <View pointerEvents="box-none" style={{ alignItems: 'center' }}>
       <Press onPress={() => closeTimer()} hitSlop={14} accessibilityLabel="小さくする（下にスライドでも）" style={{ marginTop: 6, width: 40, height: 5, borderRadius: 3, backgroundColor: tone.light ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.45)' }} />
       <View pointerEvents="box-none" style={{ height: 44, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
-        <TopChip tone={tone} label="背景" a11y="勉強中の背景を選ぶ" onPress={bgSheet} />
+        <TopChip tone={tone} label="テーマ" a11y="テーマ（勉強中の背景）を選ぶ" onPress={themeSheet} />
         <View pointerEvents="none" style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           {ss.running && !ss.paused ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#39FF14' }} /> : null}
           <Txt size={12} w="700" color={ss.paused ? (tone.light ? CRIMSON : CRIMSON_ON_DARK) : tone.ink2} numberOfLines={1}>{state}</Txt>
@@ -362,8 +304,9 @@ function Deck({ height }: { height: number }) {
             <Txt size={21} w="700" lh={26} color={tone.ink} style={{ textShadowColor: tone.shade, textShadowRadius: 10 }}>今日の時間割</Txt>
             <View style={{ transform: [{ rotate: '180deg' }], opacity: 0.6 }}><Icon name="back" size={15} color={tone.ink} /></View>
           </View>
-          <Txt size={15} lh={20} color={tone.ink2} numberOfLines={1} style={{ textShadowColor: tone.shade, textShadowRadius: 8 }}>
-            {`${jpDate(d)} · ${cards.length ? `のこり${rest}つ` : '予定はまだありません'}`}
+          {/* the day, plainly: bigger, in the page's ink, with a shadow on the dark backgrounds */}
+          <Txt size={16} lh={22} w="600" color={tone.ink} numberOfLines={1} style={{ opacity: 0.88, letterSpacing: 0.3, textShadowColor: tone.shade, textShadowRadius: 12 }}>
+            {jpDate(d)}
           </Txt>
         </Press>
         {rest > 1 ? (
