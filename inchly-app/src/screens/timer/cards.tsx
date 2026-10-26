@@ -72,33 +72,33 @@ export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
 }
 
 /**
- * The koi pond behind the study screen. With the words up, it's dimmed a
- * little and shaded where they sit, with a breath of the centered card's
- * color; in 池を見る it's all there is, at full light, and a tap feeds the koi.
+ * With the koi pond: the page keeps the centered card's color, the pond swims
+ * in the room under the cards (PondBand), and 池を見る brings the whole pond
+ * up over the page, at full light, where a tap feeds the koi.
  */
 function PondWash({ only: on }: { only: boolean }) {
   const { width, height } = useWindowDimensions();
-  const veil = useAnimatedStyle(() => ({ opacity: withTiming(on ? 0 : 1, { duration: 500 }) }), [on]);
-  const tint = useAnimatedStyle(() => ({ backgroundColor: washColor.value }));
   return (
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-      <KoiPond width={width} height={height} feedable={on} />
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, veil]}>
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: 0.1 }, tint]} />
-        <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-          <Defs>
-            <LinearGradient id="pondveil" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={focus.bg} stopOpacity={0.7} />
-              <Stop offset="0.2" stopColor={focus.bg} stopOpacity={0.25} />
-              <Stop offset="0.5" stopColor={focus.bg} stopOpacity={0.15} />
-              <Stop offset="0.74" stopColor={focus.bg} stopOpacity={0.55} />
-              <Stop offset="1" stopColor={focus.bg} stopOpacity={0.85} />
-            </LinearGradient>
-          </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#pondveil)" />
-        </Svg>
-      </Animated.View>
+      <DeckWash />
+      {on ? (
+        <Animated.View entering={FadeIn.duration(700)} exiting={FadeOut.duration(400)} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+          <KoiPond width={width} height={height} cell={9} seed={23} feedable />
+        </Animated.View>
+      ) : null}
       {on ? <PondOnly /> : null}
+    </View>
+  );
+}
+
+/** The room under the cards: the koi pond swims there, with the time studied over it (tap the water to feed them). */
+function PondBand({ children }: { children: ReactNode }) {
+  const bg = useStore((s) => s.studyBg);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  return (
+    <View style={{ flex: 1 }} onLayout={(e) => setSize({ w: Math.round(e.nativeEvent.layout.width), h: Math.round(e.nativeEvent.layout.height) })}>
+      {bg === 'pond' && size.h > 40 ? <KoiPond width={size.w} height={size.h} cell={7} seed={5} water={false} fade={0.12} feedable /> : null}
+      <View pointerEvents="box-none">{children}</View>
     </View>
   );
 }
@@ -364,9 +364,10 @@ function Deck({ height }: { height: number }) {
       </View>
 
       <Pager x={x} step={step} n={n} label={shown === 0 ? '追加' : `${shown} / ${cards.length}`} />
-      <Elapsed />
-      {held.length ? <Waiting held={held} onPress={() => { haptic.tap(); setMenu({ kind: 'all' }); }} /> : null}
-      <View style={{ flex: 1 }} />
+      <PondBand>
+        <Elapsed />
+        {held.length ? <Waiting held={held} onPress={() => { haptic.tap(); setMenu({ kind: 'all' }); }} /> : null}
+      </PondBand>
       <Foot running={running} live={live} centered={centered} heldOf={heldOf} begin={begin} add={add} record={record} />
 
       <MenuDialog menu={menu} close={() => setMenu(null)} record={record} begin={begin} />
@@ -492,10 +493,10 @@ function Elapsed() {
     : ss.plan ? (over ? `予定を ${fmt(sec - ss.plan)} こえて` : `あと ${fmt(ss.plan - sec)}`)
     : `今日 ${hm(today)}`;
   return (
-    <View style={{ marginHorizontal: 20, marginTop: 22 }} accessible accessibilityRole={ss.plan ? 'progressbar' : undefined}
+    <View pointerEvents="none" style={{ marginHorizontal: 20, marginTop: 22 }} accessible accessibilityRole={ss.plan ? 'progressbar' : undefined}
       accessibilityLabel={ss.running ? `勉強した時間 ${fmt(sec)}${ss.paused ? '（一時停止中）' : ''}。${top}。${below}` : `${top}。${below}`}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>
-        <Txt num size={40} w="700" lh={46} color={!ss.running ? focus.ink3 : ss.paused ? CRIMSON_ON_DARK : focus.ink}>{fmt(sec)}</Txt>
+        <Txt num size={40} w="700" lh={46} color={!ss.running ? focus.ink3 : ss.paused ? CRIMSON_ON_DARK : focus.ink} style={{ textShadowColor: 'rgba(0,0,0,0.55)', textShadowRadius: 10 }}>{fmt(sec)}</Txt>
         <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-end', paddingBottom: 4 }}>
           <Txt size={12.5} lh={17} color={focus.ink2} numberOfLines={1}>{top}</Txt>
           <Txt num size={12.5} lh={17} color={over ? OVER : focus.ink2} numberOfLines={1}>{below}</Txt>
@@ -512,7 +513,7 @@ function Elapsed() {
 function Waiting({ held, onPress }: { held: Held[]; onPress: () => void }) {
   const min = held.reduce((n, h) => n + Math.max(1, Math.round(h.sec / 60)), 0);
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginTop: 16 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginTop: 16, alignSelf: 'stretch' }}>
       <View style={{ flexDirection: 'row' }}>
         {held.slice(0, 4).map((h, i) => (
           <View key={h.id} style={{ width: 12, height: 12, borderRadius: 6, marginLeft: i ? -4 : 0, backgroundColor: subj(h.s).c, borderWidth: 1.5, borderColor: 'rgba(0,0,0,0.35)' }} />

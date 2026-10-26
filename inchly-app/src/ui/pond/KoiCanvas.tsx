@@ -1,4 +1,6 @@
-import { Atlas, Canvas, createPicture, drawAsImageFromPicture, FillType, Path, Skia, type SkColor, type SkPath, type SkRect, type SkRSXform } from '@shopify/react-native-skia';
+import {
+  Atlas, Canvas, createPicture, drawAsImageFromPicture, FillType, LinearGradient, Path, Skia, type SkColor, type SkPath, type SkRect, type SkRSXform, vec,
+} from '@shopify/react-native-skia';
 import { useMemo, useState } from 'react';
 import { PixelRatio, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -13,7 +15,8 @@ import { haptic } from '../base';
 // of white shapes (a tile and the marks), each placed on its cell and tinted.
 // Drawn 30 times a second (the marks are a mosaic; the motion stays smooth).
 
-export type PondProps = { width: number; height: number; cell?: number; feedable?: boolean; seed?: number };
+/** water: draw the dark water and its grid (else the pond is see-through, over what's behind). fade: how much of the height melts away at the top and bottom (0..0.5). */
+export type PondProps = { width: number; height: number; cell?: number; feedable?: boolean; seed?: number; water?: boolean; fade?: number };
 
 /** A mark's shape, white, in a cell `s` across. */
 function markPath(kind: string, s: number): SkPath {
@@ -62,7 +65,7 @@ function makeAtlas(px: number) {
   return drawAsImageFromPicture(pic, { width: px * n, height: px });
 }
 
-export default function KoiCanvas({ width, height, cell = 11, feedable = false, seed = 7 }: PondProps) {
+export default function KoiCanvas({ width, height, cell = 9, feedable = false, seed = 7, water = true, fade = 0 }: PondProps) {
   const cols = Math.ceil(width / cell), rows = Math.ceil(height / cell);
   const pr = Math.min(3, PixelRatio.get());
   const px = Math.round(cell * pr);
@@ -78,7 +81,7 @@ export default function KoiCanvas({ width, height, cell = 11, feedable = false, 
     return { atlas, slots, at, grid: g.build() };
   }, [px, pr, cols, rows, cell]);
 
-  const pond = useSharedValue<Pond | null>(null);
+  const state = useSharedValue<Pond | null>(null);
   const acc = useSharedValue(1);
   const sprites = useSharedValue<SkRect[]>([]);
   const transforms = useSharedValue<SkRSXform[]>([]);
@@ -88,11 +91,11 @@ export default function KoiCanvas({ width, height, cell = 11, feedable = false, 
 
   useFrameCallback((f) => {
     'worklet';
-    let p = pond.value;
+    let p = state.value;
     if (!p || p.cols !== cols || p.rows !== rows) {
       p = makePond(cols, rows, seed, count);
       for (let i = 0; i < 300; i++) step(p, 1 / 30); // already swimming when it shows
-      pond.value = p;
+      state.value = p;
     }
     const dt = (f.timeSincePreviousFrame ?? 16) / 1000;
     step(p, dt);
@@ -101,18 +104,23 @@ export default function KoiCanvas({ width, height, cell = 11, feedable = false, 
     acc.value = 0;
     paint(p);
     const S: SkRect[] = [], T: SkRSXform[] = [], C: SkColor[] = [];
-    const n = cols * rows;
-    for (let i = 0; i < n; i++) {
-      const tl = p.tile[i], mk = p.mark[i];
-      if (tl > 0.01) {
-        const c = p.tileRGB[i];
-        S.push(slots[0]); T.push(at[i]);
-        C.push(Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, tl));
-      }
-      if (mk) {
-        const c = p.markRGB[i];
-        S.push(slots[mk]); T.push(at[i]);
-        C.push(Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, p.markA[i]));
+    for (let y = 0; y < rows; y++) {
+      // the pond melts away toward its top and bottom edges
+      const e = fade > 0 ? Math.min(1, Math.min(y + 0.5, rows - y - 0.5) / (rows * fade)) : 1;
+      if (e <= 0.02) continue;
+      for (let x = 0; x < cols; x++) {
+        const i = y * cols + x;
+        const tl = p.tile[i], mk = p.mark[i];
+        if (tl > 0.01) {
+          const c = p.tileRGB[i];
+          S.push(slots[0]); T.push(at[i]);
+          C.push(Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, tl * e));
+        }
+        if (mk) {
+          const c = p.markRGB[i];
+          S.push(slots[mk]); T.push(at[i]);
+          C.push(Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, p.markA[i] * e));
+        }
       }
     }
     sprites.value = S; transforms.value = T; colors.value = C;
@@ -120,16 +128,18 @@ export default function KoiCanvas({ width, height, cell = 11, feedable = false, 
 
   const [tap] = useState(() => Gesture.Tap().maxDuration(400).onEnd((e) => {
     'worklet';
-    if (pond.value) { feed(pond.value, e.x / cell, e.y / cell); scheduleOnRN(haptic.soft); }
+    if (state.value) { feed(state.value, e.x / cell, e.y / cell); scheduleOnRN(haptic.soft); }
   }));
   tap.enabled(feedable);
 
-  const water = `#${WATER.toString(16).padStart(6, '0')}`;
+  const line = water ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.05)';
   return (
     <GestureDetector gesture={tap}>
-      <View pointerEvents={feedable ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, { backgroundColor: water }]}>
+      <View pointerEvents={feedable ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, water ? { backgroundColor: `#${WATER.toString(16).padStart(6, '0')}` } : null]}>
         <Canvas style={{ width, height }}>
-          <Path path={fixed.grid} style="stroke" strokeWidth={StyleSheet.hairlineWidth} color="rgba(255,255,255,0.04)" />
+          <Path path={fixed.grid} style="stroke" strokeWidth={StyleSheet.hairlineWidth} color={line}>
+            {fade > 0 ? <LinearGradient start={vec(0, 0)} end={vec(0, height)} colors={['transparent', line, line, 'transparent']} positions={[0, fade, 1 - fade, 1]} /> : null}
+          </Path>
           <Atlas image={fixed.atlas} sprites={sprites} transforms={transforms} colors={colors} colorBlendMode="dstIn" />
         </Canvas>
       </View>

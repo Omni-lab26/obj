@@ -156,12 +156,13 @@ export function makePond(cols: number, rows: number, seed = 7, count = 6): Pond 
     cover: new Float32Array(size),
   };
   const kinds = [0, 3, 1, 4, 2, 0, 5, 1];
-  const scale = clamp(Math.min(cols, rows * 0.7) / 36, 0.75, 1.6);
+  // koi in proportion to the pond (a low, wide band of a pond has smaller ones)
+  const scale = clamp(Math.min(cols, rows * 1.1) / 36, 0.6, 1.6);
   for (let i = 0; i < count; i++) {
     const len = (12.5 + rand(p) * 5) * scale;
     const a = rand(p) * Math.PI * 2;
     const k: Koi = {
-      x: 4 + rand(p) * (cols - 8), y: 4 + rand(p) * (rows - 8), a, v: 1.6, turn: 0,
+      x: 4 + rand(p) * (cols - 8), y: rows * (0.3 + rand(p) * 0.4), a: rows < cols * 0.6 ? (rand(p) < 0.5 ? 0 : Math.PI) + (rand(p) - 0.5) * 0.6 : a, v: 1.6, turn: 0,
       len, w: len * (0.17 + rand(p) * 0.025), depth: i === count - 1 ? 0.55 : i === count - 2 ? 0.35 : rand(p) * 0.2,
       kind: kinds[i % kinds.length], seed: rand(p) * 100, sx: new Float32Array(N), sy: new Float32Array(N), phase: rand(p) * 6, hunger: 0.5 + rand(p) * 0.5, boost: 0, kiss: 8 + rand(p) * 30,
     };
@@ -200,12 +201,15 @@ export function step(p: Pond, dtIn: number) {
     // where it would go: its own slow wandering, back from the edges, apart from others, to food
     const wander = (noise(p.t * 0.06, k.seed, 3.7) - 0.5) * 2;
     let dx = Math.cos(k.a + wander * 0.7), dy = Math.sin(k.a + wander * 0.7);
+    // in a low, wide pond they mostly swim across it
+    dy *= clamp((rows / cols) * 1.8, 0.3, 1);
     // back from the edges (a little of the koi may slip past them, as from under a bank)
-    const m = k.len * 0.75;
+    const m = Math.min(k.len * 0.75, cols * 0.3);
+    const mv = Math.min(k.len * 0.75, rows * 0.36);
     if (k.x < m) dx += ((m - k.x) / m) * 1.6;
     if (k.x > cols - m) dx -= ((k.x - (cols - m)) / m) * 1.6;
-    if (k.y < m) dy += ((m - k.y) / m) * 1.6;
-    if (k.y > rows - m) dy -= ((k.y - (rows - m)) / m) * 1.6;
+    if (k.y < mv) dy += ((mv - k.y) / mv) * 2.2;
+    if (k.y > rows - mv) dy -= ((k.y - (rows - mv)) / mv) * 2.2;
     for (const o of p.koi) {
       if (o === k || Math.abs(o.depth - k.depth) > 0.3) continue;
       const ox = k.x - o.x, oy = k.y - o.y, d2 = ox * ox + oy * oy, r = (k.w + o.w) * 2.2;
