@@ -4,7 +4,7 @@ import { ScrollView, View } from 'react-native';
 
 import { subj } from '@/data';
 import { Deadlines } from '@/screens/home/standard';
-import { blocksOn, endOf, nextOf, slotsOf, toMin, type Block, type Slot } from '@/lib/timetable';
+import { blocksOn, endOf, nextOf, slotsOf, spanEnd, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
 import { getState, startFrom, useNow, useStore } from '@/store';
 import { hair, onColor, type, useT } from '@/theme';
@@ -23,12 +23,12 @@ import { toast } from '@/ui/Toast';
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 
 /** Start from a plan and open the timer, big in the middle. Refused once a different subject has run for over a minute. */
-/** Starting a plan now: how long until the next one starts, and which it is (none after the day's last). */
+/** Starting a plan now: how long until it ends (its end, or the next plan's start), and that next plan when it runs until one. */
 function untilNext(blocks: readonly Block[], b: Block, d: Date) {
-  const n = nextOf(blocks, b, d);
-  if (!n?.start) return {};
-  const left = toMin(n.start) - (d.getHours() * 60 + d.getMinutes());
-  return left > 0 ? { min: left, next: { s: n.s, at: n.start } } : {};
+  const left = spanEnd(blocks, b, d) - (d.getHours() * 60 + d.getMinutes());
+  if (left <= 0) return {};
+  const n = b.min ? undefined : nextOf(blocks, b, d);
+  return { min: left, next: n?.start ? { s: n.s, at: n.start } : undefined };
 }
 function go(x: { s: string; todoId?: string; min?: number; next?: { s: string; at: string } }) {
   if (!startFrom(x)) {

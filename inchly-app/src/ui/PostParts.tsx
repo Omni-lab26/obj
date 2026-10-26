@@ -168,7 +168,7 @@ function Compose({ close }: { close: () => void }) {
   return (
     <View style={{ gap: 14 }}>
       <Txt size={17} w="700">投稿</Txt>
-      <Field label="いま何してる？" value={text} onChangeText={setText} multiline max={280} error={err} onBlur={() => setTouched(true)} autoFocus />
+      <Field label="いま何してる？" value={text} onChangeText={setText} multiline max={280} error={err} onBlur={() => setTouched(true)} />
       {last ? (
         <Choice value={attach} onChange={setAttach} options={[{ v: 'last', label: `記録をつける（${subj(last.s).name} ${last.min}分）` }, { v: 'none', label: 'つけない' }]} />
       ) : null}

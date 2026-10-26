@@ -128,7 +128,7 @@ function SubjectForm({ close, existing }: { close: () => void; existing?: Subjec
         <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: c }} />
         <Txt size={18} w="700">{existing ? '科目を編集' : '科目を追加'}</Txt>
       </View>
-      <Field label="名前（例：数IA、古文、日本史）" value={name} onChangeText={setName} max={12} error={err} onBlur={() => setTouched(true)} autoFocus={!existing} />
+      <Field label="名前（例：数IA、古文、日本史）" value={name} onChangeText={setName} max={12} error={err} onBlur={() => setTouched(true)} />
       <View>
         <Label sub="「教科ごと」のグラフでまとめる先">教科</Label>
         <Choice value={area} onChange={setArea} options={AREAS.map((a) => ({ v: a.id, label: a.name }))} />

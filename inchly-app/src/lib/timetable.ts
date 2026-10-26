@@ -24,7 +24,8 @@ export const toMin = (hm: string) => {
   return (h || 0) * 60 + (m || 0);
 };
 export const toClock = (min: number) => `${Math.floor(min / 60) % 24}:${String(min % 60).padStart(2, '0')}`;
-export const endOf = (b: Block) => (b.start ? toClock(toMin(b.start) + b.min) : '');
+/** Where a plan with a length ends, '翌1:00' past midnight; '' for one that runs until the next. */
+export const endOf = (b: Block) => (b.start && b.min ? `${toMin(b.start) + b.min >= 24 * 60 ? '翌' : ''}${toClock(toMin(b.start) + b.min)}` : '');
 
 /** The blocks that fall on `now`'s weekday, earliest first. */
 export function blocksOn(blocks: readonly Block[], now: Date = new Date()): Block[] {

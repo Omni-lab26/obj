@@ -1,22 +1,24 @@
 import { useState } from 'react';
 import { TextInput, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { SUBJECT_COLORS } from '../data';
-import { dateKey, jpDate, mondayIndex, parseKey } from '../lib/time';
-import { Block, plansOn, toClock, toMin } from '../lib/timetable';
-import { addDeadline, addSubject, removeBlock, saveBlock, updateSubject, useStore, useSubjects } from '../store';
+import { dateKey, mondayIndex, parseKey } from '../lib/time';
+import { Block, toClock, toMin } from '../lib/timetable';
+import { addDeadline, addSubject, removeBlock, saveBlock, updateSubject, useSubjects } from '../store';
 import { font, hair, noOutline, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
-import { Choice, Stepper } from './Form';
+import { DatePick, Opens, PickChip, SMOOTH, TimePick } from './DateTime';
 import { Icon } from './Icon';
 import { openSheet } from './Sheet';
 import { toast } from './Toast';
 
 // Adding to the timetable or a deadline, laid out like a calendar's new event:
-// ✕, 予定 / 締切, and ✓ along the top; the title; the day and the start (a
-// plan runs until the next one starts, so there's no end), and repeat; then
-// the subject with its color (for the charts), and a memo. Dates and times
-// open right under their row.
+// ✕, 予定 / 締切, and ✓ along the top; the title; the start and the end (each
+// a day and a time — the end can be the next day), and repeat; then the
+// subject with its color (for the charts), and a memo. Days and times are
+// picked as on an iPhone, opening right under their row; the keyboard waits
+// until you tap a field.
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 const day0 = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -30,17 +32,20 @@ export function planSheet(o: { date?: Date; existing?: Block; kind?: Kind } = {}
 /** The timetable's 追加: a new plan for today (the day can be changed in the sheet). */
 export const planCalendar = () => planSheet({ date: new Date() });
 
-type Open = 'date' | 'start' | 'color' | null;
+type Open = 'date' | 'start' | 'endDate' | 'end' | 'color' | null;
+const DAY = 24 * 60;
 
 function Editor({ close, date, existing, kind: kind0 }: { close: () => void; date?: Date; existing?: Block; kind: Kind }) {
   const t = useT();
   const subjects = useSubjects();
-  const blocks = useStore((x) => x.timetable);
+  const today = day0(new Date());
   const [kind, setKind] = useState<Kind>(existing ? 'plan' : kind0);
   const [title, setTitle] = useState(existing?.t ?? '');
   const [d, setD] = useState(() => (existing?.date ? parseKey(existing.date) : day0(date ?? new Date())));
   const nextHour = Math.min(22, new Date().getHours() + 1) * 60;
   const [start, setStart] = useState(existing?.start ? toMin(existing.start) : nextHour);
+  // the end, in minutes from the start day's midnight: past 24:00 is the next day
+  const [end, setEnd] = useState(() => (existing?.start ? toMin(existing.start) + (existing.min || 60) : nextHour + 60));
   const [weekly, setWeekly] = useState(!!existing && !existing.date);
   const known = existing ? subjects.find((x) => x.id === existing.s) : undefined;
   const [name, setName] = useState(known?.name ?? '');
@@ -52,6 +57,11 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const match = subjects.find((x) => x.name === name.trim());
   const accent = plan ? color : DEADLINE_RED;
   const toggle = (k: Open) => { haptic.tap(); setOpen(open === k ? null : k); };
+  const endDay = new Date(d.getFullYear(), d.getMonth(), d.getDate() + Math.floor(end / DAY));
+  const nextDay = end >= DAY;
+  // moving the start keeps the length; an end before the start goes to the next day
+  const moveStart = (m: number) => { setEnd(m + (end - start)); setStart(m); };
+  const moveEnd = (m: number, offset = Math.floor(end / DAY)) => { let e = offset * DAY + m; if (e <= start) e += DAY; setEnd(Math.min(start + DAY, e)); };
   const typeName = (v: string) => { setName(v); const m = subjects.find((x) => x.name === v.trim()); if (m) setColor(m.c); };
 
   const save = () => {
@@ -71,12 +81,12 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
     if (!s) s = addSubject({ name: name.trim(), area: 'other', c: color });
     saveBlock({
       id: existing?.id, s, t: title.trim(), note: note.trim() || undefined,
-      start: toClock(start), min: 0,
+      start: toClock(start), min: end - start,
       days: weekly ? (existing && !existing.date ? existing.days : [mondayIndex(d)]) : [], date: weekly ? undefined : dateKey(d),
     });
     haptic.success();
     close();
-    toast(existing ? '予定を保存しました' : '予定を追加しました', `${weekly ? `毎週${DOW[mondayIndex(d)]}曜` : shortDate(d)} ${toClock(start)}から · ${name.trim()} · 次の予定の時刻に知らせます`);
+    toast(existing ? '予定を保存しました' : '予定を追加しました', `${weekly ? `毎週${DOW[mondayIndex(d)]}曜` : shortDate(d)} ${toClock(start)}〜${nextDay ? '翌' : ''}${toClock(end % DAY)} · ${name.trim()}`);
   };
 
   return (
@@ -111,21 +121,29 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
         <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
           <Group>
             <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder={plan ? '何をやる？（例：青チャート 例題41〜50）' : '締切の名前（例：英検 申込）'}
-              placeholderTextColor={t.ink3} multiline autoFocus={!existing} accessibilityLabel={plan ? '何をやるか' : '締切の名前'}
+              placeholderTextColor={t.ink3} multiline accessibilityLabel={plan ? '何をやるか' : '締切の名前'}
               style={[{ minHeight: 64, margin: 10, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: t.sunken, fontSize: 21, lineHeight: 28, fontFamily: font.text, fontWeight: '700', color: t.ink, textAlignVertical: 'top' }, noOutline]} />
           </Group>
           <Group>
             {plan ? (
               <>
                 <Row label="開始" first>
-                  <Chip on={open === 'date'} onPress={() => toggle('date')} label={shortDate(d)} a11y="日付を変える" />
-                  <Chip on={open === 'start'} onPress={() => toggle('start')} label={toClock(start)} a11y="始める時刻を変える" />
+                  <PickChip on={open === 'date'} onPress={() => toggle('date')} label={shortDate(d)} a11y="始める日を変える" />
+                  <PickChip on={open === 'start'} onPress={() => toggle('start')} label={toClock(start)} a11y="始める時刻を変える" />
                 </Row>
-                {open === 'date' ? <Month value={d} onPick={(x) => { setD(x); setOpen(null); }} dots={(x) => plansOn(blocks, x).length} /> : null}
-                {open === 'start' ? <TimePick value={start} onChange={setStart} /> : null}
-                <Row label="終わり" icon="clock">
-                  <Txt size={13.5} tone="ink3">次の予定まで（止めるまで測る）</Txt>
+                {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => setD(day0(x))} onDone={() => setOpen(null)} /></Opens> : null}
+                {open === 'start' ? <Opens><TimePick value={start} onChange={moveStart} onDone={() => setOpen(null)} /></Opens> : null}
+                <Row label="終了">
+                  <PickChip on={open === 'endDate'} onPress={() => toggle('endDate')} label={shortDate(endDay)} a11y={`終わる日を変える${nextDay ? '（翌日）' : ''}`} />
+                  <PickChip on={open === 'end'} onPress={() => toggle('end')} label={toClock(end % DAY)} a11y="終わる時刻を変える" />
                 </Row>
+                {open === 'endDate' ? (
+                  <Opens>
+                    <DatePick value={endDay} min={d} max={new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)} onDone={() => setOpen(null)}
+                      onChange={(x) => moveEnd(end % DAY, Math.round((day0(x).getTime() - d.getTime()) / 86_400_000))} />
+                  </Opens>
+                ) : null}
+                {open === 'end' ? <Opens><TimePick value={end % DAY} onChange={(m) => moveEnd(m)} onDone={() => setOpen(null)} /></Opens> : null}
                 <Row label="繰り返し" icon="cal">
                   <Press onPress={() => { haptic.tap(); setWeekly(!weekly); }} hitSlop={8} accessibilityLabel={`繰り返し：${weekly ? '毎週' : 'しない'}。変える`}
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -137,9 +155,9 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
             ) : (
               <>
                 <Row label="日付" first>
-                  <Chip on={open === 'date'} onPress={() => toggle('date')} label={shortDate(d)} a11y="日付を変える" />
+                  <PickChip on={open === 'date'} onPress={() => toggle('date')} label={shortDate(d)} a11y="日付を変える" />
                 </Row>
-                {open === 'date' ? <Month value={d} onPick={(x) => { setD(x); setOpen(null); }} /> : null}
+                {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => setD(day0(x))} onDone={() => setOpen(null)} /></Opens> : null}
               </>
             )}
           </Group>
@@ -205,14 +223,14 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
 /** A white rounded card on the sheet's gray. */
 function Group({ children }: { children: React.ReactNode }) {
   const t = useT();
-  return <View style={{ backgroundColor: t.surface, borderRadius: 18, overflow: 'hidden' }}>{children}</View>;
+  return <Animated.View layout={SMOOTH} style={{ backgroundColor: t.surface, borderRadius: 18, overflow: 'hidden' }}>{children}</Animated.View>;
 }
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View style={{ gap: 6 }}>
+    <Animated.View layout={SMOOTH} style={{ gap: 6 }}>
       <Txt size={13.5} w="600" tone="ink3" style={{ paddingLeft: 12 }}>{title}</Txt>
       {children}
-    </View>
+    </Animated.View>
   );
 }
 /** A labeled line of a group: the label on the left, what it's set to on the right. */
@@ -223,70 +241,6 @@ function Row({ label, icon, first, children }: { label: string; icon?: 'clock' |
       {icon ? <Icon name={icon} size={16} color={t.ink2} /> : null}
       <Txt size={15.5} style={{ flex: 1 }}>{label}</Txt>
       {children}
-    </View>
-  );
-}
-function Chip({ label, on, onPress, a11y }: { label: string; on?: boolean; onPress?: () => void; a11y: string }) {
-  const t = useT();
-  return (
-    <Press onPress={onPress ?? (() => {})} disabled={!onPress} scale={0.95} accessibilityLabel={a11y}
-      style={{ height: 34, paddingHorizontal: 12, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.blueSoft : t.sunken }}>
-      <Txt num size={14.5} w="500" color={on ? t.blue : t.ink}>{label}</Txt>
-    </Press>
-  );
-}
-/** A time, in 15 minutes: the hour, then the minutes. */
-function TimePick({ value, onChange }: { value: number; onChange: (m: number) => void }) {
-  const t = useT();
-  const h = Math.floor(value / 60), m = value % 60;
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap', paddingHorizontal: 14, paddingVertical: 12, backgroundColor: t.canvas }}>
-      <Stepper value={h} min={0} max={23} onChange={(x) => onChange(x * 60 + m)} unit="時" label="時" />
-      <Choice value={String(m - (m % 15))} onChange={(x) => onChange(h * 60 + Number(x))} options={['0', '15', '30', '45'].map((x) => ({ v: x, label: `${x.padStart(2, '0')}分` }))} />
-    </View>
-  );
-}
-/** A month to pick a day from (not before today); dots for the plans already on a day. */
-function Month({ value, onPick, dots }: { value: Date; onPick: (d: Date) => void; dots?: (d: Date) => number }) {
-  const t = useT();
-  const today = day0(new Date());
-  const [m, setM] = useState(() => new Date(value.getFullYear(), value.getMonth(), 1));
-  const lead = mondayIndex(m);
-  const count = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
-  const cells: (Date | null)[] = [...Array(lead).fill(null), ...Array.from({ length: count }, (_, i) => new Date(m.getFullYear(), m.getMonth(), i + 1))];
-  while (cells.length % 7) cells.push(null);
-  const atThisMonth = m.getFullYear() === today.getFullYear() && m.getMonth() === today.getMonth();
-  const shift = (by: number) => { haptic.tap(); setM(new Date(m.getFullYear(), m.getMonth() + by, 1)); };
-  return (
-    <View style={{ paddingHorizontal: 10, paddingBottom: 10, backgroundColor: t.canvas }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 4 }}>
-        <Txt num size={15} w="700" style={{ flex: 1 }}>{`${m.getFullYear()}年${m.getMonth() + 1}月`}</Txt>
-        <Press onPress={() => shift(-1)} disabled={atThisMonth} hitSlop={8} scale={0.9} accessibilityLabel="前の月" style={{ padding: 6, opacity: atThisMonth ? 0.3 : 1 }}>
-          <Icon name="back" size={16} color={t.blue} />
-        </Press>
-        <Press onPress={() => shift(1)} hitSlop={8} scale={0.9} accessibilityLabel="次の月" style={{ padding: 6 }}>
-          <Icon name="chev" size={16} color={t.blue} />
-        </Press>
-      </View>
-      <View style={{ flexDirection: 'row' }}>
-        {DOW.map((w) => <Txt key={w} size={11} w="700" tone="ink3" style={{ width: `${100 / 7}%`, textAlign: 'center', paddingBottom: 4 }}>{w}</Txt>)}
-      </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-        {cells.map((x, i) => {
-          if (!x) return <View key={`e${i}`} style={{ width: `${100 / 7}%`, height: 42 }} />;
-          const past = x < today, on = dateKey(x) === dateKey(value), isToday = x.getTime() === today.getTime();
-          const n = dots?.(x) ?? 0;
-          return (
-            <Press key={dateKey(x)} onPress={() => { haptic.tap(); onPick(x); }} disabled={past} scale={0.9} accessibilityLabel={`${jpDate(x)}${n ? `。予定${n}件` : ''}`}
-              style={{ width: `${100 / 7}%`, height: 42, alignItems: 'center', justifyContent: 'center', opacity: past ? 0.3 : 1 }}>
-              <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.blue : 'transparent' }}>
-                <Txt num size={14.5} w={on || isToday ? '700' : '500'} color={on ? '#fff' : isToday ? t.blue : t.ink}>{x.getDate()}</Txt>
-              </View>
-              {n ? <View style={{ position: 'absolute', bottom: 2, width: 4, height: 4, borderRadius: 2, backgroundColor: t.ink3 }} /> : null}
-            </Press>
-          );
-        })}
-      </View>
     </View>
   );
 }

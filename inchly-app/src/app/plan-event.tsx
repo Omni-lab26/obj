@@ -1,28 +1,23 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { pad } from '@/data';
 import { updateGroup, useStore } from '@/store';
-import { hair, lift, radius, type, useT } from '@/theme';
-import { Btn, haptic, Press, Txt } from '@/ui/base';
+import { hair, lift, radius, useT } from '@/theme';
+import { Btn, haptic, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Field, Label, RadioCards, Stepper } from '@/ui/Form';
+import { DatePick, Opens, PickChip, SMOOTH, TimePick } from '@/ui/DateTime';
 import { setPendingGroupTab } from '@/ui/GroupParts';
-import { Rolling } from '@/ui/Rolling';
-import { TimeScrubber } from '@/ui/TimeScrubber';
 import { toast } from '@/ui/Toast';
 
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
-const DAYS = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return d; });
 type Kind = 'もくもく自習' | '時間チャレンジ' | '振り返り会';
 type Who = 'all' | 'invited';
 
-// Start time: 6:00–24:00, snapping to 15 minutes.
-const START = 6 * 60;
-const END = 24 * 60;
-const hourMark = (m: number) => `${m / 60}時`;
 
 export default function PlanEvent() {
   const t = useT();
@@ -30,16 +25,16 @@ export default function PlanEvent() {
   const { g: gid = 'g1' } = useLocalSearchParams<{ g?: string }>();
   const members = useStore((s) => (s.groups.find((x) => x.id === gid) ?? s.groups[0]).m);
   const [kind, setKind] = useState<Kind>('もくもく自習');
-  const [day, setDay] = useState(4);
+  const [d, setD] = useState(() => { const x = new Date(); return new Date(x.getFullYear(), x.getMonth(), x.getDate() + 4); });
   const [minutes, setMinutes] = useState(21 * 60);
-  const showMinutes = useCallback((v: number | null) => { if (v !== null) setMinutes(v); }, []);
+  const [open, setOpen] = useState<'date' | 'time' | null>(null);
+  const toggle = (k: 'date' | 'time') => { haptic.tap(); setOpen(open === k ? null : k); };
   const [who, setWho] = useState<Who>('all');
   const [cap, setCap] = useState(12);
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [phase, setPhase] = useState<'idle' | 'saving' | 'done'>('idle');
 
-  const d = DAYS[day];
   const time = `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
 
   const plan = () => {
@@ -77,31 +72,16 @@ export default function PlanEvent() {
 
           <View>
             <View style={{ paddingHorizontal: 16 }}><Label>2. いつ？</Label></View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
-              {DAYS.map((x, i) => {
-                const on = i === day;
-                return (
-                  <Press key={i} onPress={() => setDay(i)} scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }}
-                    style={{ width: 46, paddingVertical: 6, borderRadius: radius.inner, alignItems: 'center', backgroundColor: on ? t.ink : t.surface,
-                      borderWidth: hair, borderColor: on ? t.ink : t.line2 }}>
-                    <Txt size={10.5} color={on ? t.onInk : t.ink3} lh={14}>{WD[x.getDay()]}</Txt>
-                    <Txt num size={16} w="700" color={on ? t.onInk : t.ink} lh={20}>{x.getDate()}</Txt>
-                    <Txt size={10} color={on ? t.onInk : t.ink3} lh={13}>{i === 0 ? '今日' : `${x.getMonth() + 1}月`}</Txt>
-                  </Press>
-                );
-              })}
-            </ScrollView>
-            {/* bencho time scrubber: readout on top, fisheye ruler below */}
-            <View style={[{ marginHorizontal: 16, marginTop: 10, borderRadius: radius.card, backgroundColor: t.surface, paddingTop: 14, paddingHorizontal: 14, paddingBottom: 10 }, lift(t)]}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 6 }}>
-                <Rolling value={time} size={type.figure + 2} weight="700" />
-                <Txt size={12} w="600" tone="ink3" style={{ marginBottom: 4 }}>から</Txt>
+            {/* the day and the start, picked as on an iPhone, right under their row */}
+            <Animated.View layout={SMOOTH} style={[{ marginHorizontal: 16, borderRadius: radius.card, backgroundColor: t.surface, overflow: 'hidden' }, lift(t)]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 52, paddingHorizontal: 14 }}>
+                <Txt size={15.5} style={{ flex: 1 }}>開始</Txt>
+                <PickChip on={open === 'date'} onPress={() => toggle('date')} label={`${d.getMonth() + 1}月${d.getDate()}日（${WD[d.getDay()]}）`} a11y="日を変える" />
+                <PickChip on={open === 'time'} onPress={() => toggle('time')} label={`${Math.floor(minutes / 60)}:${pad(minutes % 60)}`} a11y="始める時刻を変える" />
               </View>
-              <View style={{ marginTop: 16 }}>
-                <TimeScrubber value={minutes} onChange={setMinutes} onPreview={showMinutes} min={START} max={END} step={15} px={2} minor={5} mid={15} major={60}
-                  label={hourMark} bg={t.surface} a11y="開始時刻" />
-              </View>
-            </View>
+              {open === 'date' ? <Opens><DatePick value={d} min={new Date()} onChange={setD} onDone={() => setOpen(null)} /></Opens> : null}
+              {open === 'time' ? <Opens><TimePick value={minutes} onChange={setMinutes} onDone={() => setOpen(null)} /></Opens> : null}
+            </Animated.View>
           </View>
 
           <View style={{ paddingHorizontal: 16 }}>

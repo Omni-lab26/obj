@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { addSubject, commitRecord, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
+import { addSubject, commitRecord, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
 import { subj } from '../../data';
 import { addDays, dateKey } from '../time';
 
@@ -112,6 +112,22 @@ describe('subjects', () => {
   });
   it('fills in chart settings added later', () => {
     expect(migrate({ v: 3, chart: { range: 'week', kind: 'bar', palette: 'blue' } }).chart).toMatchObject({ range: 'week', detail: 'subject' });
+  });
+});
+
+describe('a session across midnight', () => {
+  it('splits into the day before and the day it ended', () => {
+    expect(splitAtMidnight(90, new Date(2026, 9, 22, 0, 30))).toEqual([
+      { min: 60, date: '2026-10-21', at: '24:00' },
+      { min: 30, date: '2026-10-22', at: '0:30' },
+    ]);
+    expect(splitAtMidnight(45, new Date(2026, 9, 22, 21, 0))).toEqual([{ min: 45, date: '2026-10-22', at: '21:00' }]);
+    expect(splitAtMidnight(30, new Date(2026, 9, 22, 0, 0))).toEqual([{ min: 30, date: '2026-10-21', at: '24:00' }]);
+  });
+  it('records both parts, so the day before keeps its streak', () => {
+    reset({ running: true, paused: true, base: 90 * 60, subj: 'ma', lastDay: '2026-10-22' });
+    commitRecord({ now: new Date(2026, 9, 22, 0, 30) });
+    expect(getState().sessions.map((x) => [x.date, x.min])).toEqual([['2026-10-21', 60], ['2026-10-22', 30]]);
   });
 });
 

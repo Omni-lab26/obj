@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { ROOM, subj } from '../data';
 import { addDays, dateKey, daysUntil as untilDate, jpDate, parseKey } from '../lib/time';
@@ -7,7 +8,8 @@ import { Block } from '../lib/timetable';
 import { addSession, addTodo, block, getState, moveTodo, removeDeadline, removeSession, removeTodo, Session, Todo, toggleFollow, updateSession, updateTodo, useStore, useSubjects } from '../store';
 import { hair, useT } from '../theme';
 import { Avatar, Btn, haptic, Txt } from './base';
-import { Choice, Field, Label, RadioCards, Stepper } from './Form';
+import { DatePick, DurationPick, Opens, PickChip, SMOOTH } from './DateTime';
+import { Choice, Field, Label, RadioCards } from './Form';
 import { planCalendar, planSheet } from './PlanSheets';
 import { openSheet } from './Sheet';
 import { toast } from './Toast';
@@ -24,6 +26,7 @@ export function sessionSheet(existing?: Session) {
   openSheet((close) => <SessionForm close={close} existing={existing} />);
 }
 function SessionForm({ close, existing }: { close: () => void; existing?: Session }) {
+  const t = useT();
   const subjOpts = useSubjOpts();
   const [s, setS] = useState(existing?.s ?? getState().subj);
   const [min, setMin] = useState(existing?.min ?? 30);
@@ -31,8 +34,8 @@ function SessionForm({ close, existing }: { close: () => void; existing?: Sessio
   const yesterday = addDays(today, -1);
   const [date, setDate] = useState(existing?.date ?? today);
   const [note, setNote] = useState(existing?.note ?? '');
-  // today and yesterday, plus the record's own day when it's older
-  const days = [{ v: today, label: '今日' }, { v: yesterday, label: '昨日' }, ...(existing && existing.date < yesterday ? [{ v: existing.date, label: jpDate(parseKey(existing.date), false) }] : [])];
+  const [open, setOpen] = useState<'date' | 'len' | null>(null);
+  const toggle = (k: 'date' | 'len') => { haptic.tap(); setOpen(open === k ? null : k); };
   const save = () => {
     if (existing) updateSession(existing.id, { s, min, date, note: note.trim() || undefined });
     else addSession({ s, min, date, at: date === today ? clockNow() : '—', note: note.trim() || undefined, manual: true });
@@ -47,17 +50,19 @@ function SessionForm({ close, existing }: { close: () => void; existing?: Sessio
         <Label>科目</Label>
         <Choice value={s} onChange={setS} options={subjOpts} />
       </View>
-      <View>
-        <Label sub="長押しで早送り、数字を上下にドラッグしても変えられます">勉強した時間</Label>
-        <Stepper value={min} min={1} max={600} onChange={setMin} unit="分" label="勉強した時間" />
-        <View style={{ marginTop: 10 }}>
-          <Choice value={String(min)} onChange={(v) => setMin(Number(v))} options={[15, 30, 45, 60, 90].map((m) => ({ v: String(m), label: `${m}分` }))} />
+      {/* when and how long, picked as on an iPhone, right under their row */}
+      <Animated.View layout={SMOOTH} style={{ borderRadius: 16, backgroundColor: t.sunken, overflow: 'hidden' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 14 }}>
+          <Txt size={15.5} style={{ flex: 1 }}>いつ</Txt>
+          <PickChip on={open === 'date'} onPress={() => toggle('date')} label={date === today ? '今日' : date === yesterday ? '昨日' : jpDate(parseKey(date), false)} a11y="勉強した日を変える" />
         </View>
-      </View>
-      <View>
-        <Label>いつ</Label>
-        <Choice value={date} onChange={setDate} options={days} />
-      </View>
+        {open === 'date' ? <Opens><DatePick value={parseKey(date)} max={new Date()} onChange={(x) => setDate(dateKey(x))} onDone={() => setOpen(null)} /></Opens> : null}
+        <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 14, borderTopWidth: hair, borderTopColor: t.line }}>
+          <Txt size={15.5} style={{ flex: 1 }}>勉強した時間</Txt>
+          <PickChip on={open === 'len'} onPress={() => toggle('len')} label={min >= 60 ? `${Math.floor(min / 60)}時間${min % 60 ? `${min % 60}分` : ''}` : `${min}分`} a11y="勉強した時間を変える" />
+        </View>
+        {open === 'len' ? <Opens><DurationPick value={min} onChange={setMin} /></Opens> : null}
+      </Animated.View>
       <Field label="メモ（任意）" value={note} onChangeText={setNote} max={40} />
       <Btn kind="primary" wide label={existing ? '保存する' : '追加する'} onPress={save} />
       {existing ? (
@@ -91,7 +96,7 @@ function TodoForm({ close, existing }: { close: () => void; existing?: Todo }) {
   return (
     <View style={{ gap: 18 }}>
       <Txt size={18} w="700">{existing ? 'ToDoを編集' : 'ToDoを追加'}</Txt>
-      <Field label="やること" value={text} onChangeText={setText} max={40} error={err} onBlur={() => setTouched(true)} autoFocus={!existing} />
+      <Field label="やること" value={text} onChangeText={setText} max={40} error={err} onBlur={() => setTouched(true)} />
       <View>
         <Label>科目</Label>
         <Choice value={s} onChange={setS} options={subjOpts} />

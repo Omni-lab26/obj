@@ -7,7 +7,8 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { hm, pad, PERSON_COLOR, subj } from '@/data';
 import { celebrate } from '@/moments';
-import { addPost, commitRecord, elapsedOf, getState, togglePause, useStore } from '@/store';
+import { addPost, commitRecord, elapsedOf, getState, splitAtMidnight, togglePause, useStore } from '@/store';
+import { dateKey } from '@/lib/time';
 import { hair, useT } from '@/theme';
 import { Empty, haptic, Press, SubjCoin, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
@@ -50,6 +51,8 @@ export default function Record() {
     );
   }
 
+  // past midnight, the part before it goes to the day before
+  const todayPart = splitAtMidnight(min, end).filter((x) => x.date === dateKey(end)).reduce((n, x) => n + x.min, 0);
   const left = MAX - note.length;
   const tooLong = left < 0;
   const adjust = (d: number) => { haptic.tap(); setMin((m) => Math.max(1, Math.min(600, m + d))); };
@@ -97,7 +100,7 @@ export default function Record() {
                 <Txt size={15} w="800">{sj.name}</Txt>
                 <Txt size={12.5} tone="ink3" numberOfLines={1} style={{ flex: 1 }}>{sj.task}</Txt>
               </View>
-              <TextInput value={note} onChangeText={setNote} multiline autoFocus placeholder="どこまでやった？ どうだった？" placeholderTextColor={t.ink3}
+              <TextInput value={note} onChangeText={setNote} multiline placeholder="どこまでやった？ どうだった？" placeholderTextColor={t.ink3}
                 accessibilityLabel="メモ" style={{ minHeight: 120, fontSize: 18, lineHeight: 26, color: t.ink, textAlignVertical: 'top', padding: 0, marginTop: -4, outlineStyle: 'none' } as object} />
               {/* what's attached: the subject, the time (fixable), how it went against the plan */}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
@@ -110,7 +113,7 @@ export default function Record() {
                   <Txt num size={13} w="800" accessibilityLabel={`勉強した時間 ${min}分`}>{`${min}分`}</Txt>
                   <Press onPress={() => adjust(5)} haptics={false} hitSlop={8} scale={0.85} accessibilityLabel="5分ふやす"><Icon name="plus" size={13} color={POST_BLUE} width={2.4} /></Press>
                 </Chip>
-                <Chip><Txt num size={12.5} w="700" tone="ink2">{`${clock(start)}〜${clock(end)}`}</Txt></Chip>
+                <Chip><Txt num size={12.5} w="700" tone="ink2">{`${clock(start)}〜${start.getDate() !== end.getDate() ? '翌' : ''}${clock(end)}`}</Txt></Chip>
                 {plan ? <Chip><Txt size={12.5} w="700" tone="ink2">{min > plan ? `予定の${plan}分をこえて` : `予定の${plan}分の中で`}</Txt></Chip> : null}
               </View>
               <Press onPress={() => { haptic.tap(); setShare((v) => !v); }} scale={0.98} accessibilityRole="switch" accessibilityState={{ checked: share }}
@@ -124,7 +127,7 @@ export default function Record() {
 
         {/* along the bottom: today's total, and how much room the memo has left */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: insets.bottom + 10, borderTopWidth: hair, borderTopColor: t.line }}>
-          <Txt num size={12.5} tone="ink3" style={{ flex: 1 }}>{`今日 ${hm(before)} → `}<Txt num size={12.5} w="700">{hm(before + min)}</Txt></Txt>
+          <Txt num size={12.5} tone="ink3" style={{ flex: 1 }}>{`今日 ${hm(before)} → `}<Txt num size={12.5} w="700">{hm(before + todayPart)}</Txt>{todayPart < min ? <Txt size={12} tone="ink3">{`（前の日に${min - todayPart}分）`}</Txt> : null}</Txt>
           {note.length ? <Txt num size={12} color={tooLong ? t.red : t.ink3}>{String(left)}</Txt> : null}
           <Ring used={note.length} />
         </View>

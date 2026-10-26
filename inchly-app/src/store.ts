@@ -90,6 +90,29 @@ let seq = 100;
 export const newId = (p: string) => `${p}${Date.now().toString(36)}${(seq++).toString(36)}`;
 const clockOf = (d: Date) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
 
+/**
+ * A session that ended at `end` after `min` minutes, as the days it fell on:
+ * past midnight, the part before it goes to the day before (so that day keeps
+ * its time and its streak), the rest to the day it ended. Earliest first.
+ */
+export function splitAtMidnight(min: number, end: Date): { min: number; date: string; at: string }[] {
+  const out: { min: number; date: string; at: string }[] = [];
+  const stop = end.getTime();
+  let a = stop - min * 60_000;
+  while (a < stop) {
+    const day = new Date(a);
+    const midnight = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1).getTime();
+    const b = Math.min(stop, midnight);
+    const m = Math.round((b - a) / 60_000);
+    if (m > 0) out.push({ min: m, date: dateKey(day), at: b === midnight ? '24:00' : clockOf(new Date(b)) });
+    a = b;
+  }
+  // rounding never loses or adds a minute
+  const rest = out.slice(0, -1).reduce((n, x) => n + x.min, 0);
+  if (out.length) out[out.length - 1].min = Math.max(1, min - rest);
+  return out.length ? out : [{ min, date: dateKey(end), at: clockOf(end) }];
+}
+
 /** A fresh account: nothing recorded, nothing planned. */
 export const INITIAL: State = {
   account: null,
@@ -343,13 +366,14 @@ export const MAX_TICKETS = 3;
  * earns a rest ticket. Returns the minutes, whether a ticket was earned, the
  * EXP it brought, and the new level if it went up.
  */
-export function commitRecord(opts?: { todoId?: string; note?: string; min?: number }): { min: number; ticket: boolean; exp: number; levelUp: number | null } {
+export function commitRecord(opts?: { todoId?: string; note?: string; min?: number; now?: Date }): { min: number; ticket: boolean; exp: number; levelUp: number | null } {
   const s = state;
-  const now = new Date();
+  const now = opts?.now ?? new Date();
   const today = dateKey(now);
-  const min = Math.max(1, Math.round(opts?.min ?? elapsedOf(s) / 60));
+  const min = Math.max(1, Math.round(opts?.min ?? elapsedOf(s, now.getTime()) / 60));
   const todo = s.todos.find((x) => x.id === opts?.todoId);
-  const sessions = [...s.sessions, { id: newId('s'), s: s.subj, min, date: today, at: clockOf(now), note: opts?.note ?? todo?.t }];
+  const note = opts?.note ?? todo?.t;
+  const sessions = [...s.sessions, ...splitAtMidnight(min, now).map((x) => ({ id: newId('s'), s: s.subj, note, ...x }))];
   const run = streakOf(sessions, s.restDays, now);
   const ticket = !byDay(s.sessions).has(today) && run > 0 && run % 7 === 0 && s.restTickets < MAX_TICKETS;
   setState({

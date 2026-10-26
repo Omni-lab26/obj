@@ -117,7 +117,7 @@ function RoomSearch({ close, pick }: { close: () => void; pick: (v: string) => v
   return (
     <View style={{ gap: 14 }}>
       <Txt size={17} w="700">絞り込みを追加</Txt>
-      <Field label="志望校・名前でさがす" value={q} onChangeText={setQ} max={20} autoFocus />
+      <Field label="志望校・名前でさがす" value={q} onChangeText={setQ} max={20} />
       <View>
         <Txt size={12} w="600" tone="ink2" style={{ marginBottom: 4 }}>志望校で絞り込む</Txt>
         {schools.length ? schools.map((x, i) => {
