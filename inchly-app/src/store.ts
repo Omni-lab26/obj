@@ -8,7 +8,7 @@ import { cancelReminder, configureNotifications, notificationsAllowed, replaceRe
 import { deadlineReminders, goalReminderAt, timetableReminders } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
 import { Block } from './lib/timetable';
-import { applyDesign, DEFAULT_DESIGN, Design, STREAKS, themeId } from './design';
+import { applyDesign, BACKDROPS, DEFAULT_DESIGN, Design, STREAKS, themeId } from './design';
 import { Done, expOf, levelOf, TODO_CAP, TODO_EXP } from './lib/exp';
 import { celebrate } from './moments';
 import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
@@ -37,8 +37,6 @@ export type Chart = { range: 'day' | 'week'; kind: ChartKind; palette: ChartPale
 export type TimerMode = 'up' | 'goal';
 /** How the timer draws the time: big digits, a clock with hands, or flip cards. */
 export type ClockFace = 'digital' | 'analog' | 'flip';
-/** What's behind the study screen: the koi pond, people walking over a glass floor, or the centered card's subject color. */
-export type StudyBg = 'pond' | 'sea' | 'walk' | 'color';
 export type { Block };
 
 export type State = {
@@ -90,7 +88,6 @@ export type State = {
   timetable: Block[]; // study blocks planned by the clock, repeating weekly
   timerMode: TimerMode;
   clockFace: ClockFace;
-  studyBg: StudyBg;
   studyTodo: string | null; // the ToDo this session works on (picked on the record page)
   todoLog: Done[]; // every ToDo finished and when, kept after the list is cleared (for EXP)
 };
@@ -171,7 +168,6 @@ export const INITIAL: State = {
   timetable: [],
   timerMode: 'up',
   clockFace: 'digital',
-  studyBg: 'pond',
   studyTodo: null,
   todoLog: [],
 };
@@ -304,9 +300,6 @@ export function startFrom(x: { s: string; todoId?: string; min?: number; next?: 
 /** Puts the day's plans in this order (the timer's cards). */
 export function setDayOrder(ids: string[], now: Date = new Date()) {
   setState({ dayOrder: { date: dateKey(now), ids } });
-}
-export function setStudyBg(b: StudyBg) {
-  setState({ studyBg: b });
 }
 export function setClockFace(f: ClockFace) {
   setState({ clockFace: f });
@@ -680,9 +673,13 @@ export function migrate(saved: Record<string, unknown>, now: Date = new Date()):
   if (out.chart && typeof out.chart === 'object') out.chart = { ...INITIAL.chart, ...(out.chart as object) };
   if (out.design && typeof out.design === 'object') {
     const d = { ...INITIAL.design, ...(out.design as object) } as Design;
+    // the timer's background (studyBg) became the 背景 behind every page; its 科目の色 is 背景 なし
+    if (!('backdrop' in (out.design as object)) && typeof saved.studyBg === 'string') d.backdrop = saved.studyBg === 'color' ? 'none' : (saved.studyBg as Design['backdrop']);
+    if (!(d.backdrop in BACKDROPS)) d.backdrop = INITIAL.design.backdrop;
     // a replaced theme becomes its successor; the old black and orange streak capsules are peach now
     out.design = { ...d, theme: themeId(d.theme), streak: d.streak in STREAKS ? d.streak : 'peach' };
   }
+  delete out.studyBg;
   // coins, the store and missions are gone; drop what older saves kept for them
   for (const k of ['coins', 'boost', 'owned', 'claimed', 'eventsClaimed']) delete out[k];
   delete out.v;

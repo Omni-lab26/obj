@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } 
 
 import { ease, font, hair, noOutline, radius, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
+import { Pane } from './Glass';
 import { Icon } from './Icon';
 import { Counter } from './Counter';
 
@@ -80,6 +81,7 @@ export function RadioCards<K extends string>({ options, value, onChange }: { opt
           <Press key={o.v} onPress={() => onChange(o.v)} scale={0.985} accessibilityRole="radio" accessibilityState={{ checked: on }}
             style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 11, paddingHorizontal: 12, borderRadius: radius.inner, backgroundColor: t.surface,
               borderWidth: on ? 1.25 : hair, borderColor: on ? t.ink : t.line2 }}>
+            <Pane radius={radius.inner} small />
             <Dot on={on} />
             <View style={{ flex: 1 }}>
               <Txt size={13.5} w="600" lh={19}>{o.title}</Txt>

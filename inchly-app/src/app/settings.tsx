@@ -13,6 +13,7 @@ import { NavBar, Screen } from '@/ui/Chrome';
 import { Choice, RadioCards } from '@/ui/Form';
 import { openSheet } from '@/ui/Sheet';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 // Settings: who sees you, who can message you, which notices, and your data.
 function Section({ title, foot, children }: { title: string; foot?: string; children: ReactNode }) {
@@ -20,7 +21,7 @@ function Section({ title, foot, children }: { title: string; foot?: string; chil
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 22 }}>
       <Txt size={12} w="600" tone="ink2" style={{ paddingHorizontal: 4, paddingBottom: 8 }}>{title}</Txt>
-      <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, paddingHorizontal: 14 }, lift(t)]}>{children}</View>
+      <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, paddingHorizontal: 14 }, lift(t)]}><Pane radius={radius.card} />{children}</View>
       {foot ? <Txt size={11.5} tone="ink3" lh={17} style={{ paddingHorizontal: 4, paddingTop: 6 }}>{foot}</Txt> : null}
     </View>
   );

@@ -184,8 +184,27 @@ const RENAMED: Record<string, ThemeId> = { pop: 'piix', popWhite: 'piix', popNig
 export const themeId = (id: string): ThemeId => (id in THEMES ? (id as ThemeId) : RENAMED[id] ?? 'standard');
 export const themeOf = (id: ThemeId): ThemeDef => THEMES[themeId(id)];
 
-export type Design = { theme: ThemeId; bg: keyof typeof BGS; ink: keyof typeof INKS; corners: keyof typeof CORNERS; card: keyof typeof CARDS; streak: keyof typeof STREAKS; timer: keyof typeof TIMERS };
-export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'black', corners: 'm', card: 'pearl', streak: 'peach', timer: 'night' };
+/**
+ * 背景: what moves behind every page (and the timer) — the koi pond, sharks in
+ * a pale sea, people walking over a glass floor — or none (the plain ground,
+ * and the timer in the subject's color). Only with the standard theme: the
+ * other themes have their own ground. The cards over it are glass.
+ */
+export type Backdrop = 'none' | 'pond' | 'sea' | 'walk';
+export const BACKDROPS: Record<Backdrop, { label: string; dark: boolean }> = {
+  none: { label: 'なし', dark: false },
+  pond: { label: '鯉の池', dark: true },
+  sea: { label: 'サメの海', dark: false },
+  walk: { label: '歩く人', dark: false },
+};
+
+export type Design = {
+  theme: ThemeId; bg: keyof typeof BGS; ink: keyof typeof INKS; corners: keyof typeof CORNERS; card: keyof typeof CARDS; streak: keyof typeof STREAKS; timer: keyof typeof TIMERS;
+  backdrop: Backdrop;
+};
+export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'black', corners: 'm', card: 'pearl', streak: 'peach', timer: 'night', backdrop: 'pond' };
+/** The backdrop in use: the one picked, with the standard theme; none with the others. */
+export const backdropOf = (d: Design): Backdrop => (themeId(d.theme) === 'standard' && d.backdrop in BACKDROPS ? d.backdrop : 'none');
 
 let design: Design = DEFAULT_DESIGN;
 let version = 0;
@@ -194,12 +213,12 @@ export const onDesign = (l: () => void) => { listeners.add(l); return () => { li
 export const getDesign = () => design;
 export const designVersion = () => version;
 
-/** Theme switching is hidden until the themes are finished: everyone gets the standard look, and the saved choice is kept for later. */
-export const THEMES_OPEN = false;
+/** Theme switching is open (false hides it: everyone gets the standard look, and the saved choice is kept for later). */
+export const THEMES_OPEN = true;
 
 /** Called by the store whenever the saved design changes. */
 export function applyDesign(d: Design) {
-  if (!THEMES_OPEN) d = DEFAULT_DESIGN;
+  if (!THEMES_OPEN) d = { ...DEFAULT_DESIGN, backdrop: d.backdrop };
   if (d === design) return;
   design = d;
   version += 1;

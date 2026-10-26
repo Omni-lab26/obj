@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { ReactNode, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
@@ -15,6 +15,7 @@ import { NavBar, Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
 import { Stamp } from '@/ui/Sticker';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 // "Record this study": opened by 終わる on the timer (the clock is paused), or
 // for a study set aside when you went on to the next plan (?held=id).
@@ -86,7 +87,9 @@ export default function Record() {
   };
 
   return (
-    <Screen bg={t.surface}>
+    <Screen bg={t.backdrop !== 'none' ? undefined : t.surface}>
+      {/* over a 背景, the composer is one sheet of glass */}
+      {t.backdrop !== 'none' ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.surface }]}><Pane radius={0} /></View> : null}
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* 続ける on the left, 記録する on the right, as a post would have them */}
         <View style={{ height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>

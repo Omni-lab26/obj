@@ -13,6 +13,7 @@ import { Sticker, StickerName } from '@/ui/Sticker';
 import { SwipeRow } from '@/ui/SwipeRow';
 import { Segmented } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 type Filter = 'all' | 'imp' | 'study';
 
@@ -120,6 +121,7 @@ export default function Notifications() {
           <View key={d}>
             <Txt size={12} w="600" tone="ink2" style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 8 }}>{d}</Txt>
             <View style={[{ marginHorizontal: 16, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
+              <Pane radius={radius.card} />
               <View style={{ borderRadius: radius.card, overflow: 'hidden' }}>
                 {list.filter((n) => n.day === d).map((n, i) => (
                   <View key={n.id} style={{ borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>

@@ -6,6 +6,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withS
 import type { Reaction } from '../design';
 import { AVATAR } from '../photos';
 import { ease, face, hair, lift, onColor, radius, Theme, useT } from '../theme';
+import { Pane } from './Glass';
 import { Icon, IconName } from './Icon';
 import { TextureFill } from './Texture';
 
@@ -235,11 +236,12 @@ export function AvatarStack({ people, size = 28, ring, max = 4 }: { people: { n:
 }
 
 // ---------- layout helpers ----------
-/** White card on the cool canvas: rounded 20, soft shadow, no border. */
+/** White card on the cool canvas: rounded, a faint edge, no border — or, over a 背景, glass (Pane). */
 export function Card({ children, style, pad = 14 }: { children?: ReactNode; style?: StyleProp<ViewStyle>; pad?: number }) {
   const t = useT();
   return (
     <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, padding: pad }, lift(t), style]}>
+      <Pane radius={radius.card} />
       {t.cardTexture ? <TextureFill texture={t.texture} radius={radius.card} opacity={0.7} /> : null}
       {children}
     </View>

@@ -14,6 +14,7 @@ import { Icon } from '@/ui/Icon';
 import { openSheet } from '@/ui/Sheet';
 import { Segmented } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 type Kind = 'uni' | 'user';
 const RECENT = ['東京大学 理科一類', '青チャート 数III', 'もくもく会'];
@@ -218,7 +219,8 @@ export default function Search() {
       <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" stickyHeaderIndices={showHeader ? [0] : undefined}
         contentContainerStyle={{ paddingBottom: insets.bottom + (picked.length >= 2 ? 96 : 24) }}>
         {showHeader ? (
-          <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6, backgroundColor: t.canvas, borderBottomWidth: hair, borderBottomColor: t.line }}>
+          <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6, backgroundColor: t.backdrop !== 'none' ? t.surface : t.canvas, borderBottomWidth: hair, borderBottomColor: t.line }}>
+            <Pane radius={0} />
             <Txt size={11.5} tone="ink3" style={{ flex: 1 }}>大学・学部</Txt>
             <Txt size={11.5} tone="ink3" style={{ width: COLS[0], textAlign: 'right' }}>偏差値</Txt>
             <Txt size={11.5} tone="ink3" style={{ width: COLS[1], textAlign: 'right' }}>志望者</Txt>

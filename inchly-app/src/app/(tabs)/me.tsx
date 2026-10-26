@@ -12,6 +12,7 @@ import { composeSheet, PostRow } from '@/ui/PostParts';
 import { ChartsPage, LogPage } from '@/ui/RecordsPanel';
 import { UnderTabs } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 type Tab = 'growth' | 'log' | 'charts' | 'posts';
 
@@ -71,11 +72,13 @@ export default function Me() {
           <Btn kind="line" small label="カードを共有" onPress={() => toast('カードの画像を保存しました')} style={{ flex: 1 }} />
         </View>
 
-        <View style={{ paddingTop: 14, backgroundColor: t.canvas }} onLayout={(e) => { tabsY.current = e.nativeEvent.layout.y + 14; }}>
+        <View style={{ paddingTop: 14, backgroundColor: t.backdrop !== 'none' ? t.surface : t.canvas }} onLayout={(e) => { tabsY.current = e.nativeEvent.layout.y + 14; }}>
+          <Pane radius={0} />
           <UnderTabs value={tab} onChange={go} options={[{ v: 'growth', label: '成長' }, { v: 'log', label: '記録' }, { v: 'charts', label: 'グラフ' }, { v: 'posts', label: '投稿' }]} />
         </View>
         {tab === 'growth' ? <Growth /> : tab === 'log' ? <LogPage /> : tab === 'charts' ? <ChartsPage /> : (
           <View style={{ backgroundColor: t.surface }}>
+            <Pane radius={0} />
             {mine.length ? mine.map((p, i) => <PostRow key={p.id} p={p} first={i === 0} />) : <Empty title="まだ投稿していません" sub="今日の記録をつけて投稿できます" />}
             <View style={{ padding: 16 }}>
               <Btn kind="quiet" wide icon="plus" label="投稿する" onPress={composeSheet} />

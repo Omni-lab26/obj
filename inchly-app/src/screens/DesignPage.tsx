@@ -5,16 +5,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_PEACH, STREAKS, THEMES, themeOf, ThemeId, TIMERS, useDesign } from '@/design';
+import { type Backdrop, BACKDROPS, BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_PEACH, STREAKS, THEMES, themeOf, ThemeId, TIMERS, useDesign } from '@/design';
 import { setDesign } from '@/store';
 import { faceFor, focus, hair, lift, radius, useT } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
+import { BackdropSwatch } from '@/ui/BackdropSheet';
 import { Wordmark } from '@/ui/Brand';
 import { Sticker } from '@/ui/Sticker';
 import { Segmented } from '@/ui/Tabs';
 import { TextureFill } from '@/ui/Texture';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 // デザイン: home slides over to it (src/screens/home/HomeScreen), and settings
 // opens it as a page of its own (src/app/design.tsx). Every choice applies at
@@ -47,13 +49,21 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
 
       {standard ? (
       <>
-      <Section title="背景">
+      <Section title="背景" sub="すべてのページとタイマーのうしろで動きます。カードはすりガラスに">
+        <Options value={d.backdrop} onChange={(backdrop) => set({ backdrop })} cols={4} items={BACKDROP_ORDER.map((k) => ({ k, label: BACKDROPS[k].label, swatch: (
+          <View style={{ alignItems: 'center' }}><BackdropSwatch id={k} /></View>
+        ) }))} />
+      </Section>
+
+      {d.backdrop === 'none' ? (
+      <Section title="地の色">
         <Options value={d.bg} onChange={(bg) => set({ bg })} cols={5} items={keys(BGS).map((k) => ({ k, label: BGS[k].label, swatch: (
           <View style={{ width: '100%', aspectRatio: 1, borderRadius: 12, backgroundColor: BGS[k].canvas, borderWidth: hair, borderColor: t.line2, padding: 7, justifyContent: 'flex-end' }}>
             <View style={{ height: '45%', borderRadius: 5, backgroundColor: '#fff', ...lift(t) }} />
           </View>
         ) }))} />
       </Section>
+      ) : null}
 
       <Section title="メインの色" sub="文字とボタンの色">
         <Options value={d.ink} onChange={(ink) => set({ ink })} cols={5} items={keys(INKS).map((k) => ({ k, label: INKS[k].label, swatch: (
@@ -69,7 +79,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
         ) }))} />
       </Section>
       </>
-      ) : <Txt size={11.5} tone="ink3" style={{ paddingHorizontal: 20, paddingTop: 12 }}>背景・メインの色・角・タイマーの色は、テーマで決まります（スタンダードを選ぶと自分で選べます）</Txt>}
+      ) : <Txt size={11.5} tone="ink3" style={{ paddingHorizontal: 20, paddingTop: 12 }}>背景（鯉の池など）・地の色・メインの色・角・タイマーの色は、テーマで決まります（スタンダードを選ぶと自分で選べます）</Txt>}
 
       <Section title="マイページのカード">
         <Options value={d.card} onChange={(card) => set({ card })} cols={3} items={keys(CARDS).map((k) => ({ k, label: CARDS[k].label, swatch: <MiniCard look={k} /> }))} />
@@ -105,6 +115,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
 }
 
 const keys = <T extends object>(o: T) => Object.keys(o) as (keyof T)[];
+const BACKDROP_ORDER: Backdrop[] = ['pond', 'sea', 'walk', 'none'];
 
 function Section({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
   return (
@@ -130,6 +141,7 @@ function Options<K extends string | number | symbol>({ value, onChange, items, c
           <Press key={String(x.k)} onPress={() => onChange(x.k)} haptics={false} scale={0.95} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={x.label}
             style={{ width: `${(100 - (cols - 1) * 2.4) / cols}%`, padding: cols > 3 ? 4 : 6, gap: 6, borderRadius: radius.inner + 4, alignItems: 'center',
               backgroundColor: t.surface, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line }}>
+            <Pane radius={radius.inner + 4} small />
             {x.swatch}
             <Txt size={cols > 3 ? 10 : 11} w={on ? '700' : '500'} tone={on ? 'ink' : 'ink2'} numberOfLines={1} style={{ letterSpacing: cols > 3 ? -0.3 : 0 }}>{x.label}</Txt>
           </Press>
@@ -206,6 +218,7 @@ function Preview() {
   return (
     <View style={{ marginHorizontal: 16, marginTop: 6, borderRadius: radius.card + 6, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line2, padding: 12, gap: 10 }}>
       <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, padding: 12, gap: 8 }, lift(t)]}>
+        <Pane radius={radius.card} />
         <Txt size={11} tone="ink2">今日の勉強</Txt>
         <Txt num size={24} w="700">3<Txt size={11} tone="ink3">時間 </Txt>24<Txt size={11} tone="ink3">分</Txt></Txt>
         <View style={{ flexDirection: 'row', gap: 6 }}>

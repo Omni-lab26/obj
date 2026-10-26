@@ -18,6 +18,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MomentHost } from '@/screens/MomentHost';
 import { getState, hydrate, startStudy, useDayRollover, useReminders, useStore } from '@/store';
 import { bundledFontsLoaded, useT } from '@/theme';
+import { BackdropEngine } from '@/ui/backdrop/Backdrop';
 import { SheetHost } from '@/ui/Sheet';
 import { isRoomShape, StudyRoom } from '@/ui/StudyRoom';
 import { toast, ToastHost } from '@/ui/Toast';
@@ -73,6 +74,8 @@ export default function RootLayout() {
       <StatusBar style={room ? 'light' : t.dark ? 'light' : 'dark'} hidden={room} />
       {/* userSelect: dragging sliders and charts with a mouse shouldn't select text on web */}
       <GestureHandlerRootView style={[{ flex: 1, backgroundColor: t.canvas }, Platform.OS === 'web' && ({ userSelect: 'none' } as object)]}>
+        {/* the 背景 runs here, once; every page shows it (ui/backdrop) */}
+        <BackdropEngine />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>
           <Stack.Screen name="(tabs)" />
           {/* the timer draws its own coming up and going down (like Apple Music's player), over the screen it came from */}

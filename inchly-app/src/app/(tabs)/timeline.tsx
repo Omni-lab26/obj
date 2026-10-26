@@ -10,6 +10,7 @@ import { Screen, SearchBtn, TopBar, useBarsTop, useTabPad } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
 import { composeSheet, PostRow } from '@/ui/PostParts';
 import { UnderTabs } from '@/ui/Tabs';
+import { Pane } from '@/ui/Glass';
 
 type Feed = 'all' | 'following';
 
@@ -31,7 +32,9 @@ export default function Timeline() {
     <Screen>
       <TopBar title="タイムライン" right={<SearchBtn />} />
       <UnderTabs value={feed} onChange={go} options={[{ v: 'all', label: 'おすすめ' }, { v: 'following', label: 'フォロー中' }]} />
-      <ScrollView ref={scroll} style={{ flex: 1, backgroundColor: t.surface }} contentContainerStyle={{ paddingBottom: pad + 40 }}>
+      <View style={{ flex: 1, backgroundColor: t.surface }}>
+      <Pane radius={0} />
+      <ScrollView ref={scroll} style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: pad + 40 }}>
         <Animated.View key={feed} entering={FadeIn.duration(200)}>
           {list.length ? list.map((p, i) => <PostRow key={p.id} p={p} first={i === 0} />) : (
             <View style={{ paddingTop: 40 }}>
@@ -40,6 +43,7 @@ export default function Timeline() {
           )}
         </Animated.View>
       </ScrollView>
+      </View>
       {/* write: a round button above the tab bar and the study bar, where the thumb already is */}
       <Press onPress={composeSheet} scale={0.9} accessibilityLabel="投稿する"
         style={{ position: 'absolute', right: 20, bottom: barsTop + 12, width: 54, height: 54, borderRadius: 27, backgroundColor: t.ink,

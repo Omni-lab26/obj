@@ -11,6 +11,7 @@ import { lift, radius, useT } from '../theme';
 import { cascade, useAppear } from './appear';
 import { haptic, Press, Txt } from './base';
 import { useSeries } from './series';
+import { Pane } from './Glass';
 
 // The graph card on My Page's 成長 page, as a deck: swipe it sideways for a
 // different graph — this week first, then the running total (the card My
@@ -78,8 +79,8 @@ export function GraphDeck({ last }: { last: ReactNode }) {
               accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
               onAccessibilityAction={(e) => go(e.nativeEvent.actionName === 'increment' ? 1 : -1)}>
               <Animated.View style={[{ flexDirection: 'row', alignItems: 'flex-start', gap: GAP, paddingHorizontal: 16 }, row]}>
-                <View style={sized}><WeekPage w={cardW - 28} h={h} /></View>
-                <View style={sized}>{last}</View>
+                <View style={sized}><Pane radius={radius.card} /><WeekPage w={cardW - 28} h={h} /></View>
+                <View style={sized}><Pane radius={radius.card} />{last}</View>
               </Animated.View>
             </View>
           </GestureDetector>

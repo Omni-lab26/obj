@@ -1,7 +1,7 @@
-import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
 import { ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn, FadeOut, interpolateColor, LayoutAnimationConfig, LinearTransition, makeMutable, type SharedValue,
   useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withDelay, withTiming, ZoomOut,
@@ -14,7 +14,8 @@ import type { Zone, Zones } from '@/screens/layout';
 import { jpHm, session, startBlock, useSession } from '@/screens/model';
 import { jpDate } from '@/lib/time';
 import { deckOf, endOf, suggestion, type Block } from '@/lib/timetable';
-import { doneOn, elapsedOf, finishBlock, getState, type Held, type StudyBg, togglePause, useStore } from '@/store';
+import type { Backdrop } from '@/design';
+import { doneOn, elapsedOf, finishBlock, getState, type Held, togglePause, useStore } from '@/store';
 import { focus } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { Dialog } from '@/ui/Dialog';
@@ -22,9 +23,11 @@ import { Icon } from '@/ui/Icon';
 import { orderSheet } from '@/ui/OrderSheet';
 import { PlanArt } from '@/ui/PlanArt';
 import { planSheet } from '@/ui/PlanSheets';
-import { KoiPond } from '@/ui/pond/KoiPond';
-import { FLOOR, themeSheet } from '@/ui/StudyTheme';
-import { WalkFloor } from '@/ui/walk/WalkFloor';
+import { BackdropView } from '@/ui/backdrop/Backdrop';
+import { backdropAvoid, feedAt, FLOOR, isDarkBackdrop, useBackdrop } from '@/ui/backdrop/shared';
+import { WalkerTags } from '@/ui/backdrop/Tags';
+import { backdropSheet } from '@/ui/BackdropSheet';
+import { Pane } from '@/ui/Glass';
 import { closeTimer, fmt, TimerFrame } from './standard';
 
 // The timer as today's plans, one card each, side by side like a music app's
@@ -73,13 +76,13 @@ const cardBox = shared<Box | null>(null);
 type Tone = { light: boolean; ink: string; ink2: string; ink3: string; chip: string; shade: string };
 const ON_DARK: Tone = { light: false, ink: '#F3F5F9', ink2: 'rgba(243,245,249,0.66)', ink3: 'rgba(243,245,249,0.4)', chip: 'rgba(255,255,255,0.12)', shade: 'rgba(0,0,0,0.55)' };
 const ON_LIGHT: Tone = { light: true, ink: '#161616', ink2: 'rgba(22,22,22,0.6)', ink3: 'rgba(22,22,22,0.38)', chip: 'rgba(22,22,22,0.06)', shade: 'transparent' };
-/** The pale backgrounds: the sea and the glass floor. */
-const isLight = (bg: StudyBg) => bg === 'walk' || bg === 'sea';
-const useTone = () => (isLight(useStore((s) => s.studyBg)) ? ON_LIGHT : ON_DARK);
+/** The pale backgrounds: the sea and the glass floor (none: the subject's color, dark). */
+const isLight = (b: Backdrop) => b !== 'none' && !isDarkBackdrop(b);
+const useTone = () => (isLight(useBackdrop()) ? ON_LIGHT : ON_DARK);
 
 export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
-  const bg = useStore((s) => s.studyBg);
-  const look = looking.use() && bg !== 'color';
+  const bg = useBackdrop();
+  const look = looking.use() && bg !== 'none';
   // the timer opens with its words, whatever it was left as
   useEffect(() => () => looking.set(false), []);
   // faded out, the page also steps aside (its layout kept), so nothing of it is in the way of the background
@@ -96,20 +99,34 @@ export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
   );
 }
 
-/** What's behind the page, and (in 眺める) the time and a way back over it. */
-function Back({ bg, look }: { bg: StudyBg; look: boolean }) {
-  const { width, height } = useWindowDimensions();
+/** What's behind the page: the 背景 (the same koi as on every page; here they keep off the card), or the card's color. */
+function Back({ bg, look }: { bg: Backdrop; look: boolean }) {
   const box = cardBox.use();
   // while you look, nothing to keep off
   const avoid = look ? null : box;
+  useEffect(() => { backdropAvoid.set(avoid); }, [avoid]);
+  useEffect(() => () => { backdropAvoid.set(null); }, []);
   return (
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
       <BackProbe />
-      {bg === 'pond' ? <KoiPond width={width} height={height} cell={9} seed={23} feedable avoid={avoid} />
-        : bg === 'sea' ? <KoiPond width={width} height={height} cell={9} seed={31} feedable avoid={avoid} school="shark" />
-        : bg === 'walk' ? <WalkFloor width={width} height={height} avoid={avoid} names={look} floor={FLOOR} />
-        : <DeckWash />}
+      {bg === 'none' ? <DeckWash /> : <Water feedable={bg !== 'walk'} />}
     </View>
+  );
+}
+/** The 背景 behind the timer; a tap on the water feeds the koi (or the sharks). */
+function Water({ feedable }: { feedable: boolean }) {
+  const [tap] = useState(() => Gesture.Tap().maxDuration(400).onEnd((e) => {
+    'worklet';
+    feedAt(e.x, e.y);
+    scheduleOnRN(haptic.soft);
+  }));
+  tap.enabled(feedable);
+  return (
+    <GestureDetector gesture={tap}>
+      <View pointerEvents={feedable ? 'auto' : 'none'} style={StyleSheet.absoluteFill}>
+        <BackdropView always />
+      </View>
+    </GestureDetector>
   );
 }
 
@@ -133,17 +150,18 @@ function DeckWash() {
   );
 }
 
-const HINTS: Record<StudyBg, string> = {
-  pond: '水面をタップすると、エサをあげられます', sea: '海をタップすると、サメが寄ってきます', walk: 'いま勉強している人たちが、上を歩いていきます', color: '',
+const HINTS: Record<Backdrop, string> = {
+  pond: '水面をタップすると、エサをあげられます', sea: '海をタップすると、サメが寄ってきます', walk: 'いま勉強している人たちが、上を歩いていきます', none: '',
 };
 /** 眺める: the time, small and quiet at the top, a way back, and (for a while) what you can do. */
-function Looking({ bg }: { bg: StudyBg }) {
+function Looking({ bg }: { bg: Backdrop }) {
   const ss = useSession();
   const tone = isLight(bg) ? ON_LIGHT : ON_DARK;
   const [hint, setHint] = useState(true);
   useEffect(() => { const id = setTimeout(() => setHint(false), 6000); return () => clearTimeout(id); }, []);
   return (
     <Animated.View entering={FadeIn.duration(600).delay(200)} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      {bg === 'walk' ? <WalkerTags /> : null}
       <View pointerEvents="box-none" style={{ position: 'absolute', top: 64, left: 0, right: 0, alignItems: 'center', gap: 8 }}>
         <Txt num size={34} w="700" color={ss.paused ? (tone.light ? CRIMSON : CRIMSON_ON_DARK) : tone.ink} style={{ textShadowColor: tone.shade, textShadowRadius: 12 }}>
           {fmt(ss.running ? ss.elapsed : 0)}
@@ -168,18 +186,18 @@ export function CardTop() {
   const ss = { running: useStore((s) => s.running), paused: useStore((s) => s.paused) };
   const name = subj(useStore((s) => s.subj)).name;
   const tone = useTone();
-  const bg = useStore((s) => s.studyBg);
+  const bg = useBackdrop();
   const state = ss.running ? `${name}を勉強中` : 'これから';
   return (
     <View pointerEvents="box-none" style={{ alignItems: 'center' }}>
       <Press onPress={() => closeTimer()} hitSlop={14} accessibilityLabel="小さくする（下にスライドでも）" style={{ marginTop: 6, width: 40, height: 5, borderRadius: 3, backgroundColor: tone.light ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.45)' }} />
       <View pointerEvents="box-none" style={{ height: 44, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
-        <TopChip tone={tone} label="テーマ" a11y="テーマ（勉強中の背景）を選ぶ" onPress={themeSheet} />
+        <TopChip tone={tone} label="背景" a11y="背景を選ぶ" onPress={backdropSheet} />
         <View pointerEvents="none" style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           {ss.running && !ss.paused ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#39FF14' }} /> : null}
           <Txt size={12} w="700" color={ss.paused ? (tone.light ? CRIMSON : CRIMSON_ON_DARK) : tone.ink2} numberOfLines={1}>{state}</Txt>
         </View>
-        {bg !== 'color' ? <TopChip tone={tone} label="眺める" a11y="背景を眺める（文字とボタンを消す）" onPress={() => looking.set(true)} /> : <View style={{ width: 64 }} />}
+        {bg !== 'none' ? <TopChip tone={tone} label="眺める" a11y="背景を眺める（文字とボタンを消す）" onPress={() => looking.set(true)} /> : <View style={{ width: 64 }} />}
       </View>
     </View>
   );
@@ -392,27 +410,31 @@ function mix(a: string, b: string, t: number) {
   return `#${((ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).padStart(6, '0')}`;
 }
 /**
- * How a card is colored: quiet, and a little of the background in it — on
- * the koi pond, the deep blue-grey of the water; on the sea, frosted glass;
- * on the glass floor, near white; with 科目の色, the subject's color taken down. The subject's own
- * color shows only in its cover, quieted too.
+ * How a card is colored: quiet, and a little of the background in it. Over
+ * a 背景 the card is glass, as on every page (ui/Glass Pane) — dark over the
+ * koi pond, white over the sea and the glass floor — with no edge, so it
+ * melts into what's behind; with no 背景, the subject's color taken down. The
+ * subject's own color shows only in its cover, quieted too.
  */
 type Skin = {
   paper: string; edge: string; ink: string; ink2: string; ink3: string; solid: string; onSolid: string; outline: string; cover: string; dim: string; live: string; stop: string;
-  /** frosted glass: the sea shows through, blurred */
+  /** glass: what's behind shows through, blurred */
   frost?: boolean;
 };
-function skinOf(bg: StudyBg, c: string): Skin {
+function skinOf(bg: Backdrop, c: string): Skin {
   if (bg === 'walk' || bg === 'sea') {
-    const light: Skin = { paper: '#FBFBF9', edge: 'rgba(0,0,0,0.10)', ink: '#1A1A18', ink2: 'rgba(26,26,24,0.6)', ink3: 'rgba(26,26,24,0.4)', solid: '#1A1A18', onSolid: '#FBFBF9',
-      outline: 'rgba(26,26,24,0.2)', cover: mix(c, '#D9D7D0', 0.45), dim: FLOOR, live: '#1E7A46', stop: CRIMSON };
-    return bg === 'walk' ? light : { ...light, paper: 'rgba(250,250,248,0.55)', edge: 'rgba(255,255,255,0.9)', cover: mix(c, '#D3D9E0', 0.5), frost: true };
+    return { paper: 'rgba(250,250,248,0.42)', edge: 'transparent', ink: '#1A1A18', ink2: 'rgba(26,26,24,0.64)', ink3: 'rgba(26,26,24,0.44)', solid: '#1A1A18', onSolid: '#FBFBF9',
+      outline: 'rgba(26,26,24,0.22)', cover: mix(c, bg === 'sea' ? '#D3D9E0' : '#D9D7D0', 0.48), dim: FLOOR, live: '#1E7A46', stop: CRIMSON, frost: true };
   }
-  const base = bg === 'pond' ? '#16202A' : mix(c, '#12141A', 0.72);
+  if (bg === 'pond') {
+    return { paper: 'rgba(14,20,28,0.36)', edge: 'transparent', ink: '#E8ECEF', ink2: 'rgba(232,236,239,0.68)', ink3: 'rgba(232,236,239,0.46)', solid: '#E8ECEF', onSolid: '#121A23',
+      outline: 'rgba(232,236,239,0.24)', cover: mix(c, '#16202A', 0.38), dim: '#000000', live: '#5FD08E', stop: CRIMSON_ON_DARK, frost: true };
+  }
+  const base = mix(c, '#12141A', 0.72);
   return { paper: base, edge: 'rgba(255,255,255,0.09)', ink: '#E8ECEF', ink2: 'rgba(232,236,239,0.62)', ink3: 'rgba(232,236,239,0.4)', solid: '#E8ECEF', onSolid: base,
-    outline: 'rgba(232,236,239,0.22)', cover: mix(c, bg === 'pond' ? '#16202A' : '#12141A', 0.38), dim: '#000000', live: '#5FD08E', stop: CRIMSON_ON_DARK };
+    outline: 'rgba(232,236,239,0.22)', cover: mix(c, '#12141A', 0.38), dim: '#000000', live: '#5FD08E', stop: CRIMSON_ON_DARK };
 }
-const useSkin = (c: string) => skinOf(useStore((s) => s.studyBg), c);
+const useSkin = (c: string) => skinOf(useBackdrop(), c);
 
 /**
  * A plan's card, like a notebook: its picture at the top (the photo you
@@ -435,8 +457,8 @@ function PlanCard({ b, no, i, x, step, k, tone, live, held, begin, record, more 
   const state = live ? (paused ? '一時停止中' : '勉強中') : held ? `記録まち · ${min}分` : time;
   const fs = (v: number, lo: number) => Math.max(lo, v * k);
   return (
-    <View style={{ flex: 1, backgroundColor: sk.paper, borderRadius: 16 * k, borderWidth: sk.frost ? 1 : StyleSheet.hairlineWidth, borderColor: sk.edge, overflow: 'hidden' }}>
-      {sk.frost ? <BlurView intensity={Platform.OS === 'web' ? 22 : 40} tint="light" style={StyleSheet.absoluteFill} /> : null}
+    <View style={{ flex: 1, backgroundColor: sk.paper, borderRadius: 16 * k, borderWidth: sk.frost ? 0 : StyleSheet.hairlineWidth, borderColor: sk.edge }}>
+      {sk.frost ? <Pane radius={16 * k} /> : null}
       {/* the picture */}
       <View style={{ position: 'absolute', left: 14 * k, top: 14 * k, width: art + 2 * k, height: art, borderRadius: 10 * k, overflow: 'hidden', backgroundColor: sk.cover }}>
         <Animated.View style={drift}>

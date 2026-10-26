@@ -3,6 +3,7 @@
 import { TODO_CAP, TODO_EXP } from '../exp';
 import { addSubject, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
 import { subj } from '../../data';
+import { backdropOf, DEFAULT_DESIGN } from '../../design';
 import { addDays, dateKey } from '../time';
 
 const reset = (patch = {}) => setState({ ...INITIAL, ...patch });
@@ -199,6 +200,23 @@ describe('migrate', () => {
   it('drops the coins and store that older saves kept', () => {
     const out = migrate({ v: 3, coins: 1240, boost: 1, owned: ['x'], claimed: { day: '', ids: [] }, restTickets: 2 });
     expect(out).toEqual({ restTickets: 2 });
+  });
+  it("turns the timer's background into the 背景 behind every page", () => {
+    const design = { theme: 'standard', bg: 'warm' };
+    expect(migrate({ v: 3, design, studyBg: 'sea' }).design?.backdrop).toBe('sea');
+    // 科目の色 was the timer without a background
+    expect(migrate({ v: 3, design, studyBg: 'color' }).design?.backdrop).toBe('none');
+    expect(migrate({ v: 3, design }).design).toMatchObject({ backdrop: 'pond', bg: 'warm' });
+    expect('studyBg' in migrate({ v: 3, design, studyBg: 'walk' })).toBe(false);
+    // a choice made since stays
+    expect(migrate({ v: 3, design: { ...design, backdrop: 'walk' }, studyBg: 'pond' }).design?.backdrop).toBe('walk');
+  });
+});
+
+describe('背景', () => {
+  it('goes with the standard theme only', () => {
+    expect(backdropOf({ ...DEFAULT_DESIGN, backdrop: 'sea' })).toBe('sea');
+    expect(backdropOf({ ...DEFAULT_DESIGN, theme: 'terminal', backdrop: 'sea' })).toBe('none');
   });
 });
 

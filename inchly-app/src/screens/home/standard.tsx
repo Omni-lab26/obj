@@ -26,6 +26,7 @@ import { Rolling } from '@/ui/Rolling';
 import { Sticker } from '@/ui/Sticker';
 import { StudyChart } from '@/ui/StudyChart';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 // The standard home, as sections. It is the base layout's own drawing — and
 // what any theme falls back to for a section it doesn't draw itself (in that
@@ -240,6 +241,7 @@ function Todos() {
   if (!total) {
     return (
       <Press onPress={() => todoSheet()} scale={0.985} accessibilityLabel="ToDoを追加" style={[box, { gap: 10 }]}>
+        <Pane radius={radius.card} />
         <Icon name="plus" size={14} color={t.ink} />
         <Txt size={13.5} w="600" style={{ flex: 1 }}>ToDoを追加</Txt>
         <Txt size={11.5} tone="ink3">やることを決めておくと始めやすい</Txt>
@@ -248,6 +250,7 @@ function Todos() {
   }
   return (
     <Press onPress={go.study} scale={0.985} accessibilityLabel={`ToDo のこり${total - done}つ。勉強のページを開く`} style={box}>
+      <Pane radius={radius.card} />
       <View>
         <Txt size={11} tone="ink3" lh={14}>ToDo</Txt>
         <Txt num size={17} w="700" lh={21}>{done}<Txt size={12} tone="ink3">{` / ${total}`}</Txt></Txt>
@@ -323,6 +326,7 @@ export function Peers() {
   return (
     <Press onPress={go.community} scale={0.985}
       style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
+      <Pane radius={radius.card} />
       <AvatarStack ring={t.surface} size={28} max={4} people={[...(joined ? [{ n: me, c: '#6E56CF' }] : []), ...peers]} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>

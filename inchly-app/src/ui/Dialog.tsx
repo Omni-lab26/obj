@@ -66,7 +66,7 @@ export function Dialog({ open, close, title, aside, children }: { open: boolean;
         </View>
         <View pointerEvents="box-none" style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <Animated.View accessibilityViewIsModal pointerEvents={open ? 'auto' : 'none'}
-            style={[{ width: '100%', maxWidth: 420, maxHeight: height * 0.72, borderRadius: radius.card + 6, backgroundColor: t.surface, boxShadow: t.shadow2, overflow: 'hidden' }, box]}>
+            style={[{ width: '100%', maxWidth: 420, maxHeight: height * 0.72, borderRadius: radius.card + 6, backgroundColor: t.backdrop !== 'none' ? (t.dark ? 'rgba(16,22,30,0.78)' : 'rgba(250,250,252,0.8)') : t.surface, boxShadow: t.shadow2, overflow: 'hidden' }, box]}>
             <Animated.View style={[{ flexShrink: 1 }, inner]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingTop: 16, paddingBottom: 8 }}>
                 <Txt size={17} w="700">{title}</Txt>

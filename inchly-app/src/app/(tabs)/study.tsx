@@ -46,7 +46,7 @@ export default function Study() {
         </View>
         <Timetable />
         <View style={{ paddingHorizontal: 16, paddingTop: 14 }}><Deadlines /></View>
-        <View style={{ height: 8, backgroundColor: t.canvas }} />
+        <View style={{ height: 8, backgroundColor: t.backdrop !== 'none' ? 'transparent' : t.canvas }} />
       </ScrollView>
     </Screen>
   );

@@ -16,6 +16,7 @@ import { Icon } from '@/ui/Icon';
 import { Stamp, STAMPS, Sticker, StickerName } from '@/ui/Sticker';
 import { UnderTabs } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 type Tab = 'chat' | 'events' | 'shared';
 const ME = 'あなた';
@@ -112,6 +113,7 @@ function Chat({ g }: { g: Group }) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       {/* who's studying right now */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: t.surface, borderBottomWidth: hair, borderBottomColor: t.line }}>
+        <Pane radius={0} />
         <LiveDot size={6} />
         <AvatarStack people={present.map((p) => ({ n: p[0], c: p[1] }))} size={24} ring={t.surface} max={3} />
         <View style={{ flex: 1, minWidth: 0 }}>
@@ -125,6 +127,7 @@ function Chat({ g }: { g: Group }) {
       </ScrollView>
       {/* dock: quick study actions above the composer */}
       <View style={{ backgroundColor: t.surface, borderTopWidth: hair, borderTopColor: t.line, paddingBottom: Math.max(insets.bottom, 8) }}>
+        <Pane radius={0} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={{ gap: 6, paddingHorizontal: 12, paddingTop: 8 }}>
           {QA.map((a) => (
             <Press key={a.q} onPress={() => quick(a.q)} scale={0.94}

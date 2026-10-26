@@ -13,6 +13,7 @@ import { TimerPart, Zone, Zones } from '@/screens/layout';
 import { jpHm, session, useSession, useToday } from '@/screens/model';
 import { type ClockFace, elapsedOf, getState, setClockFace, setTarget, startStudy, togglePause, useStore, useSubjects } from '@/store';
 import { focus, useT } from '@/theme';
+import { setRevealing } from '@/ui/backdrop/live';
 import { haptic, Press, SubjTile, Txt } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { LiveDot } from '@/ui/GroupParts';
@@ -76,16 +77,22 @@ export function TimerFrame({ zones, wash, light, over }: {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const y = useSharedValue(height); // starts below the screen and comes up
+  // pulled down (or going), the page under it draws its 背景 again (live.ts)
+  useEffect(() => () => { setRevealing(false); }, []);
   const [pull] = useState(() => Gesture.Pan().activeOffsetY(12).failOffsetX([-20, 20])
+    .onStart(() => { scheduleOnRN(setRevealing, true); })
     .onUpdate((e) => { y.set(Math.max(0, e.translationY)); })
     .onEnd((e) => {
       if (e.translationY > 140 || e.velocityY > 900) {
         y.set(withTiming(height, { duration: 240, easing: Easing.out(Easing.quad) }, (done) => { if (done) scheduleOnRN(left); }));
-      } else y.set(withSpring(0, { duration: 380, dampingRatio: 0.86 }));
+      } else y.set(withSpring(0, { duration: 380, dampingRatio: 0.86 }, (done) => { if (done) scheduleOnRN(setRevealing, false); }));
     }));
   useEffect(() => {
     y.set(withSpring(0, { duration: 520, dampingRatio: 0.92 }));
-    const out = () => y.set(withTiming(height, { duration: 300, easing: Easing.in(Easing.cubic) }, (done) => { if (done) scheduleOnRN(left); }));
+    const out = () => {
+      setRevealing(true);
+      y.set(withTiming(height, { duration: 300, easing: Easing.in(Easing.cubic) }, (done) => { if (done) scheduleOnRN(left); }));
+    };
     leave = out;
     return () => { if (leave === out) leave = null; };
   }, [y, height]);

@@ -8,6 +8,7 @@ import { lift, radius, type, useT } from '../theme';
 import { useReplay } from './appear';
 import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
+import { Pane } from './Glass';
 
 // A value card with a line you can scrub and a time-window switch.
 // Here: weekly mock-test deviation scores.
@@ -107,7 +108,8 @@ export function ScoreCard() {
   const [whole, dec] = shown.toFixed(1).split('.');
   return (
     <View style={[{ borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
-      <View style={{ paddingTop: 14, paddingHorizontal: 14, paddingBottom: 12, borderRadius: radius.card, backgroundColor: t.surface }}>
+      <Pane radius={radius.card} />
+      <View style={{ paddingTop: 14, paddingHorizontal: 14, paddingBottom: 12, borderRadius: radius.card, backgroundColor: t.backdrop !== 'none' ? 'transparent' : t.surface }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />
           <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>全統記述模試 · 偏差値</Txt>

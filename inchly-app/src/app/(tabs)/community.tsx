@@ -17,6 +17,7 @@ import { Rolling } from '@/ui/Rolling';
 import { openSheet } from '@/ui/Sheet';
 import { Segmented, UnderTabs } from '@/ui/Tabs';
 import { Sticker } from '@/ui/Sticker';
+import { Pane } from '@/ui/Glass';
 
 type Tab = 'live' | 'rank' | 'groups';
 
@@ -84,6 +85,7 @@ function Live() {
         </Press>
       </ScrollView>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: 16, marginTop: 8, paddingVertical: 2, borderRadius: radius.card, backgroundColor: t.surface, ...lift(t) }}>
+        <Pane radius={radius.card} />
         {me && (scope === 'all' || f === 'follow') ? <Seat name={myName} color={PERSON_COLOR['はる']} label="あなた" sub={subj(getState().subj).name} time={`${mineMin}分`} you /> : null}
         {people.map((p) => <Seat key={p.h} name={p.n} color={p.c} label={p.n} sub={p.s} time={hms(p.t + since).replace(/^00:/, '')} />)}
       </View>

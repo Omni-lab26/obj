@@ -16,6 +16,7 @@ import { RadioCards } from '@/ui/Form';
 import { LiveDot } from '@/ui/GroupParts';
 import { Icon } from '@/ui/Icon';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 // Friends studying now, like a portfolio's holdings: who, what, how long
 // today and against yesterday, and a line of their last seven days. Four at
@@ -75,6 +76,7 @@ export function Friends() {
   };
   return (
     <View style={[{ borderRadius: radius.card, backgroundColor: t.surface, paddingTop: 12, paddingBottom: 6 }, lift(t)]}>
+      <Pane radius={radius.card} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingBottom: 4 }}>
         <Txt size={15} w="700">いま勉強中の友達</Txt>
         <LiveDot size={5} />

@@ -13,6 +13,7 @@ import { Field, Label, RadioCards, Stepper } from '@/ui/Form';
 import { DatePick, Opens, PickChip, SMOOTH, TimePick } from '@/ui/DateTime';
 import { setPendingGroupTab } from '@/ui/GroupParts';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
 type Kind = 'もくもく自習' | '時間チャレンジ' | '振り返り会';
@@ -74,6 +75,7 @@ export default function PlanEvent() {
             <View style={{ paddingHorizontal: 16 }}><Label>2. いつ？</Label></View>
             {/* the day and the start, picked as on an iPhone, right under their row */}
             <Animated.View layout={SMOOTH} style={[{ marginHorizontal: 16, borderRadius: radius.card, backgroundColor: t.surface, overflow: 'hidden' }, lift(t)]}>
+              <Pane radius={radius.card} />
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 52, paddingHorizontal: 14 }}>
                 <Txt size={15.5} style={{ flex: 1 }}>開始</Txt>
                 <PickChip on={open === 'date'} onPress={() => toggle('date')} label={`${d.getMonth() + 1}月${d.getDate()}日（${WD[d.getDay()]}）`} a11y="日を変える" />

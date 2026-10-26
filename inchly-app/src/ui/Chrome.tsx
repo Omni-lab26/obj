@@ -8,6 +8,7 @@ import { Notif, NOTIFS, ROOM } from '../data';
 import { State, useStore } from '../store';
 import { hair, type, useT } from '../theme';
 import { IconBtn, Txt } from './base';
+import { BackdropView } from './backdrop/Backdrop';
 import { TextureFill } from './Texture';
 
 /** Notices the settings let through: the kind is switched on and nobody in it is blocked. */
@@ -55,7 +56,6 @@ export function useTabPad() {
   return useBarsTop() + 20;
 }
 
-/** Full-height screen on the canvas colour with the top safe area applied. */
 /** Light falling on the gray from the top, fading by the middle: the page reads airy, a little see-through. */
 function Haze() {
   return (
@@ -74,13 +74,14 @@ function Haze() {
   );
 }
 
+/** A full-height page with the top safe area applied: on the 背景 if there is one (the same koi on every page), else the canvas color. `bg`: a color of its own instead. */
 export function Screen({ children, style, bg }: { children: ReactNode; style?: ViewStyle; bg?: string }) {
   const t = useT();
   const insets = useSafeAreaInsets();
   return (
     <View style={[{ flex: 1, backgroundColor: bg ?? t.canvas, paddingTop: insets.top }, style]}>
-      {/* the theme's texture, behind everything (not on screens with their own color, like the timer); without one, a haze of light from the top */}
-      {bg ? null : t.texture ? <TextureFill texture={t.texture} /> : t.dark ? null : <Haze />}
+      {/* the 背景, or the theme's texture, behind everything (not on screens with their own color, like the timer); without either, a haze of light from the top */}
+      {bg ? null : t.backdrop !== 'none' ? <BackdropView /> : t.texture ? <TextureFill texture={t.texture} /> : t.dark ? null : <Haze />}
       {children}
     </View>
   );

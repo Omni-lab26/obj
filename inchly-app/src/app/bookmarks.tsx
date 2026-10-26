@@ -6,6 +6,7 @@ import { useT } from '@/theme';
 import { Empty } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { PostRow } from '@/ui/PostParts';
+import { Pane } from '@/ui/Glass';
 
 // Posts you saved from the timeline, the last one saved first. Opened from the
 // menu home slides aside for; take one out with its bookmark button.
@@ -18,13 +19,16 @@ export default function Bookmarks() {
   return (
     <Screen>
       <NavBar title="ブックマーク" />
-      <ScrollView style={{ flex: 1, backgroundColor: t.surface }} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
+      <View style={{ flex: 1, backgroundColor: t.surface }}>
+      <Pane radius={0} />
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
         {list.length ? list.map((p, i) => <PostRow key={p.id} p={p} first={i === 0} />) : (
           <View style={{ paddingTop: 40 }}>
             <Empty title="ブックマークはまだありません" sub="タイムラインの投稿の しおりのボタンを押すと、ここに残ります" />
           </View>
         )}
       </ScrollView>
+      </View>
     </Screen>
   );
 }

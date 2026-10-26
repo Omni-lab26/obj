@@ -91,8 +91,8 @@ export function SheetHost() {
           <Animated.View accessibilityViewIsModal
             style={[{ width: '100%', maxWidth: 440, maxHeight: '100%', borderRadius: 26, overflow: 'hidden', boxShadow: '0px 0px 0px 0.5px rgba(255,255,255,0.7), 0px 24px 60px rgba(20,24,32,0.22)' }, pa]}>
             {/* frosted glass: the blurred page through a milky film */}
-            <BlurView intensity={Platform.OS === 'web' ? 30 : 60} tint="light" style={StyleSheet.absoluteFill} />
-            <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(246,247,249,0.72)' }]} />
+            <BlurView intensity={Platform.OS === 'web' ? 30 : 60} tint={t.dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+            <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.dark ? 'rgba(20,26,34,0.72)' : 'rgba(246,247,249,0.72)' }]} />
             <ScrollView bounces={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ padding: 16 }}>
               {render(close)}
             </ScrollView>
@@ -109,8 +109,13 @@ export function SheetHost() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '90%' }} pointerEvents="box-none">
         <Animated.View
           onLayout={(e) => { height.set(e.nativeEvent.layout.height); }}
-          style={[{ backgroundColor: grouped ? t.canvas : t.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28 }, sa]}
+          style={[{ backgroundColor: t.backdrop !== 'none' ? (t.dark ? 'rgba(16,22,30,0.62)' : 'rgba(246,247,249,0.66)') : grouped ? t.canvas : t.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28 }, sa]}
           accessibilityViewIsModal>
+          {t.backdrop !== 'none' ? (
+            <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderTopLeftRadius: 28, borderTopRightRadius: 28, overflow: 'hidden', zIndex: -1 }]}>
+              <BlurView intensity={Platform.OS === 'web' ? 40 : 70} tint={t.dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+            </View>
+          ) : null}
           <View {...pan.panHandlers} style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>
             <View style={{ width: 38, height: 5, borderRadius: 3, backgroundColor: t.line2 }} />
           </View>

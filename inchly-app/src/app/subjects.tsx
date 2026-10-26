@@ -12,6 +12,7 @@ import { Icon } from '@/ui/Icon';
 import { useAreaColors } from '@/ui/series';
 import { openSheet } from '@/ui/Sheet';
 import { toast } from '@/ui/Toast';
+import { Pane } from '@/ui/Glass';
 
 // 科目と色: split subjects as finely as you like (数IA, 古文, 日本史 …), each
 // in a 教科 so charts can also add them up, each with its own color.
@@ -43,6 +44,7 @@ export default function Subjects() {
                 <Txt size={12} w="700" tone="ink2">{a.name}</Txt>
               </View>
               <View style={[{ backgroundColor: t.surface, borderRadius: radius.card }, lift(t)]}>
+                <Pane radius={radius.card} />
                 {list.map((x, i) => (
                   <Press key={x.id} onPress={() => subjectSheet(x)} scale={0.99} accessibilityLabel={`${x.name}。編集`}
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 14, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
@@ -80,6 +82,7 @@ export default function Subjects() {
           <View style={{ paddingHorizontal: 16, paddingTop: 22 }}>
             <Txt size={12} w="700" tone="ink2" style={{ paddingHorizontal: 4, paddingBottom: 8 }}>しまった科目（記録はグラフに残ります）</Txt>
             <View style={[{ backgroundColor: t.surface, borderRadius: radius.card }, lift(t)]}>
+              <Pane radius={radius.card} />
               {hidden.map((x, i) => (
                 <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 14, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
                   <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: x.c, opacity: 0.5 }} />

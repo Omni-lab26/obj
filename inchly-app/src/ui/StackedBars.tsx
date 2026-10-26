@@ -11,6 +11,7 @@ import { haptic, Txt } from './base';
 import { Rolling } from './Rolling';
 import { SeriesSet, useSeries } from './series';
 import { Segmented } from './Tabs';
+import { Pane } from './Glass';
 
 // bencho "stacked bars": twenty days (or weeks) of study as stacked bars by
 // subject. Run a finger along them: one column is ringed, the rest fade, and a
@@ -133,6 +134,7 @@ export function StackedBars() {
 
   return (
     <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, padding: 14, gap: 12 }, lift(t)]}>
+      <Pane radius={radius.card} />
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Txt size={12} w="500" tone="ink2" lh={16}>{mode === 'day' ? '勉強時間 · 直近20日' : '勉強時間 · 直近20週'}</Txt>

@@ -10,6 +10,7 @@ import { Avatar, haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { personSheet } from '@/ui/Editors';
 import { UnderTabs } from '@/ui/Tabs';
+import { Pane } from '@/ui/Glass';
 
 type Tab = 'following' | 'followers';
 
@@ -38,7 +39,9 @@ export default function Follows() {
     <Screen>
       <NavBar title={`@${handle}`} />
       <UnderTabs value={tab} onChange={setTab} options={[{ v: 'following', label: 'フォロー' }, { v: 'followers', label: 'フォロワー' }]} />
-      <ScrollView style={{ flex: 1, backgroundColor: t.surface }} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
+      <View style={{ flex: 1, backgroundColor: t.surface }}>
+      <Pane radius={0} />
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
         {list.map((p, i) => (
           <Press key={p.h} onPress={() => personSheet(p.n, p.c)} scale={0.99}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10 }}>
@@ -53,6 +56,7 @@ export default function Follows() {
         ))}
         {list.length ? null : <Txt size={13} tone="ink3" style={{ textAlign: 'center', paddingTop: 40 }}>まだいません</Txt>}
       </ScrollView>
+      </View>
     </Screen>
   );
 }
