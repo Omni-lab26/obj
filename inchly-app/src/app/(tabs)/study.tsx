@@ -6,7 +6,7 @@ import { subj } from '@/data';
 import { Deadlines } from '@/screens/home/standard';
 import { blocksOn, endOf, slotsOf, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
-import { getState, setTarget, setTimerMode, startFrom, toggleTodo, useNow, useStore } from '@/store';
+import { getState, startFrom, toggleTodo, useNow, useStore } from '@/store';
 import { hair, onColor, type, useT } from '@/theme';
 import { Card, haptic, Press, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
@@ -14,11 +14,10 @@ import { blockSheet, todoSheet } from '@/ui/Editors';
 import { planCalendar } from '@/ui/PlanSheets';
 import { TodoRow } from '@/ui/HomeParts';
 import { Icon } from '@/ui/Icon';
-import { Segmented } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 
 // The middle tab: where studying starts. Plan it here (the timetable, the
-// ToDos and the deadlines they lead to, how the timer counts), and start from what you planned, so the
+// ToDos and the deadlines they lead to), and start from what you planned, so the
 // subject is always the one you chose. Starting opens the timer on top; while
 // it runs, the study bar on the tab bar brings it back.
 
@@ -48,7 +47,6 @@ export default function Study() {
         <Timetable />
         <Todos />
         <View style={{ paddingHorizontal: 16, paddingTop: 14 }}><Deadlines /></View>
-        <TimerPrefs />
         <View style={{ height: 8, backgroundColor: t.canvas }} />
       </ScrollView>
     </Screen>
@@ -161,43 +159,6 @@ function Todos() {
             <Txt size={13} tone="ink3">やることを1つ決めておくと、始めるのが早くなります</Txt>
           </Press>
         )}
-      </Card>
-    </>
-  );
-}
-
-// ---------- how the timer counts ----------
-function TimerPrefs() {
-  const t = useT();
-  const mode = useStore((x) => x.timerMode);
-  const target = useStore((x) => x.targetMin);
-  const running = useStore((x) => x.running);
-  return (
-    <>
-      <View style={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 8 }}>
-        <Txt size={type.head} w="700">タイマー</Txt>
-      </View>
-      <Card style={{ marginHorizontal: 16, gap: 14 }} pad={14}>
-        <View style={{ gap: 8 }}>
-          <Txt size={13} w="600">数え方</Txt>
-          <Segmented value={mode} onChange={setTimerMode} options={[{ v: 'up', label: '勉強した時間（増える）' }, { v: 'goal', label: '目安まで（減る）' }]} />
-          <Txt size={11.5} tone="ink3">{mode === 'up' ? '0から数えます。この時間がそのまま記録になります' : '決めた長さから数え下げます。目盛りで残りを直せます'}</Txt>
-        </View>
-        <View style={{ gap: 8 }}>
-          <Txt size={13} w="600">{running ? '目安（いまの勉強）' : '目安'}</Txt>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            {[25, 50, 90, 120].map((m) => {
-              const on = Math.round(target) === m;
-              return (
-                <Press key={m} onPress={() => { haptic.tap(); setTarget(m); }} scale={0.94} accessibilityRole="radio" accessibilityState={{ checked: on }}
-                  style={{ flex: 1, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.ink : t.sunken }}>
-                  <Txt num size={13} w="700" color={on ? t.onInk : t.ink}>{m >= 60 ? `${m / 60}時間` : `${m}分`}</Txt>
-                </Press>
-              );
-            })}
-          </View>
-          <Txt size={11.5} tone="ink3">目安の時間になったら知らせます。時間割から始めると、その長さが目安になります</Txt>
-        </View>
       </Card>
     </>
   );
