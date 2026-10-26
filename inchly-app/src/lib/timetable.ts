@@ -10,9 +10,9 @@ import { dateKey, mondayIndex } from './time';
 /**
  * days: 0 = Monday … 6 = Sunday. start: 'H:MM' (older plans may have none).
  * min: 0 — it runs until the next plan starts (older plans: their length). date: 'YYYY-MM-DD' for a plan on that one day only
- * (days is then ignored). note: a memo written with it.
+ * (days is then ignored). note: a memo written with it. icon: a photo picked for it (see lib/planIcon); none draws the subject's color and initial.
  */
-export type Block = { id: string; s: string; t?: string; start?: string; min: number; days: number[]; date?: string; note?: string };
+export type Block = { id: string; s: string; t?: string; start?: string; min: number; days: number[]; date?: string; note?: string; icon?: string };
 /** Plans with no time go after the timed ones. */
 const startOf = (b: Block) => (b.start ? toMin(b.start) : 24 * 60);
 

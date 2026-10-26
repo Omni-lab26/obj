@@ -7,17 +7,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ease, useT } from '../theme';
 
 // Bottom sheet. openSheet(close => <Content/>) from anywhere; drag the grabber
-// (or the top of the sheet) down to dismiss, or tap the scrim.
+// (or the top of the sheet) down to dismiss, or tap the scrim. A screen shown
+// over everything (the timer) mounts its own host; the newest host opens it.
 type Render = (close: () => void) => ReactNode;
-let setter: ((r: Render | null, grouped: boolean) => void) | null = null;
-let closer: (() => void) | null = null;
+type Host = { open: (r: Render, grouped: boolean) => void; close: () => void };
+const hosts: Host[] = [];
+const top = () => hosts[hosts.length - 1];
 
 /** grouped: the sheet's ground is the page gray, for white grouped cards inside (like a calendar's new-event sheet). */
 export function openSheet(render: Render, opts?: { grouped?: boolean }) {
-  setter?.(render, !!opts?.grouped);
+  top()?.open(render, !!opts?.grouped);
 }
 export function closeSheet() {
-  closer?.();
+  top()?.close();
 }
 
 export function SheetHost() {
@@ -36,10 +38,12 @@ export function SheetHost() {
     scrim.set(withTiming(0, { duration: 240 }));
   };
   useEffect(() => {
-    setter = (r, g) => { setGrouped(g); setRender(() => r); };
-    closer = close;
-    return () => { setter = null; closer = null; };
-  });
+    // close only moves shared values and clears this host, so the first one stays right
+    const me: Host = { open: (r, g) => { setGrouped(g); setRender(() => r); }, close };
+    hosts.push(me);
+    return () => { hosts.splice(hosts.indexOf(me), 1); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     if (render) {
       y.set(H);
@@ -53,7 +57,7 @@ export function SheetHost() {
       onMoveShouldSetPanResponder: (_, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
       onPanResponderMove: (_, g) => { y.set(Math.max(0, g.dy)); },
       onPanResponderRelease: (_, g) => {
-        if (g.dy > 110 || g.vy > 1.1) closer?.();
+        if (g.dy > 110 || g.vy > 1.1) close();
         else y.set(withTiming(0, { duration: 260, easing: ease.spring }));
       },
     }),

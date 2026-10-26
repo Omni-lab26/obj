@@ -58,6 +58,11 @@ export function useLeft() {
 export const STANDARD_ZONES = (): Zones => ({ head: ['top', 'subject'], center: ['readout', 'today'], foot: ['switcher', 'progress', 'main', 'record'] });
 
 export function StandardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
+  return <TimerFrame zones={zones} wash={<Wash />} />;
+}
+
+/** The timer's page: always dark, a color wash behind, and pulled down (by its bar, or anywhere) it shrinks back to the study bar. */
+export function TimerFrame({ zones, wash }: { zones: Record<Zone, ReactNode>; wash: ReactNode }) {
   useT(); // the timer's color follows the theme
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -76,7 +81,7 @@ export function StandardTimerPage({ zones }: { zones: Record<Zone, ReactNode> })
       <Animated.View style={[{ flex: 1, overflow: 'hidden' }, follow]}>
         <Screen bg={focus.bg} style={{ paddingBottom: insets.bottom + 12 }}>
           <StatusBar style="light" />
-          <Wash />
+          {wash}
           {zones.head}
           <View style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>{zones.center}</View>
           <View>{zones.foot}</View>
@@ -378,9 +383,9 @@ function Main() {
         style={{ width: 62, height: 58, borderRadius: 29, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' }}>
         <Icon name={paused ? 'play' : 'pause'} size={20} color={focus.ink} filled />
       </Press>
-      <Press onPress={session.finish} scale={0.96} accessibilityLabel="記録する"
+      <Press onPress={session.finish} scale={0.96} accessibilityLabel="終わる（記録する）"
         style={{ flex: 1, height: 58, borderRadius: 29, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
-        <Txt size={17} w="800" color={focus.bg}>記録する</Txt>
+        <Txt size={17} w="800" color={focus.bg}>終わる</Txt>
       </Press>
     </View>
   );

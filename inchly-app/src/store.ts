@@ -50,6 +50,8 @@ export type State = {
   targetMin: number; // planned length of this focus session
   planMin: number | null; // started from the timetable: minutes until the next plan starts; null = just measuring
   planNext: { s: string; at: string } | null; // that next plan: its subject and start
+  planBlock: string | null; // the timetable block this session was started from (ending it finishes the plan)
+  doneBlocks: { id: string; date: string }[]; // plans finished on a day: their cards leave that day's timer
   todos: Todo[];
   deadlines: Deadline[];
   following: string[];
@@ -127,6 +129,8 @@ export const INITIAL: State = {
   targetMin: 60,
   planMin: null,
   planNext: null,
+  planBlock: null,
+  doneBlocks: [],
   todos: [],
   deadlines: [],
   following: [],
@@ -176,7 +180,7 @@ export function demoState(now: Date = new Date()): Partial<State> {
     { id: 's6', s: 'ma', min: 33, date: yesterday, at: '22:05' },
   ];
   return {
-    running: true, paused: false, startedAt: now.getTime(), base: 2350, subj: 'en', planMin: 60, targetMin: 60, planNext: { s: 'ma', at: '19:00' },
+    running: true, paused: false, startedAt: now.getTime(), base: 2350, subj: 'en', planMin: 60, targetMin: 60, planNext: { s: 'ma', at: '19:00' }, planBlock: 'b2', doneBlocks: [{ id: 'b1', date: today }],
     sessions: [...past, ...recent],
     todos: [
       { id: 't1', s: 'ph', t: '名問の森 15', d: false, carried: 2, dl: 'd1' },
@@ -256,21 +260,22 @@ export function startStudy(id?: string) {
     if (s.paused) setState({ paused: false, startedAt: Date.now() });
     return;
   }
-  setState({ running: true, paused: false, startedAt: Date.now(), base: 0, subj: next, studyTodo: null, planMin: null, planNext: null });
+  setState({ running: true, paused: false, startedAt: Date.now(), base: 0, subj: next, studyTodo: null, planMin: null, planNext: null, planBlock: null });
   if (!s.running) celebrate({ kind: 'start', subject: next });
 }
 /**
  * Start from something planned: a timetable block or a ToDo. The subject is
  * set from it, the block's length becomes the target, and a ToDo is carried
- * to the record page. While already studying, this switches only if the
+ * to the record page; a block is remembered, so ending the session finishes
+ * that plan for the day. While already studying, this switches only if the
  * session is under a minute old (as the timer allows).
  */
-export function startFrom(x: { s: string; todoId?: string; min?: number; next?: { s: string; at: string } }): boolean {
+export function startFrom(x: { s: string; todoId?: string; min?: number; next?: { s: string; at: string }; blockId?: string }): boolean {
   const s = state;
   if (s.running && elapsedOf(s) > 60 && x.s !== s.subj) return false;
   setState({
     running: true, paused: false, startedAt: Date.now(), base: s.running && x.s === s.subj ? elapsedOf(s) : 0,
-    subj: x.s, studyTodo: x.todoId ?? null, planMin: x.min || null, planNext: x.min ? x.next ?? null : null, ...(x.min ? { targetMin: x.min } : {}),
+    subj: x.s, studyTodo: x.todoId ?? null, planMin: x.min || null, planNext: x.min ? x.next ?? null : null, planBlock: x.blockId ?? null, ...(x.min ? { targetMin: x.min } : {}),
   });
   if (!s.running) celebrate({ kind: 'start', subject: x.s });
   return true;
@@ -287,8 +292,20 @@ export function saveBlock(b: Omit<Block, 'id'> & { id?: string }) {
   }));
 }
 export function removeBlock(id: string) {
-  setState((s) => ({ timetable: s.timetable.filter((x) => x.id !== id) }));
+  setState((s) => ({ timetable: s.timetable.filter((x) => x.id !== id), planBlock: s.planBlock === id ? null : s.planBlock }));
 }
+/** Finished on a day (a week of these is kept): the plan's card leaves that day's timer. */
+const withDone = (list: State['doneBlocks'], id: string, date: string) =>
+  [...list.filter((x) => x.date >= addDays(date, -7) && !(x.id === id && x.date === date)), { id, date }];
+/** Finishes a plan for today without recording anything (its card goes). */
+export function finishBlock(id: string, now: Date = new Date()) {
+  setState((s) => ({ doneBlocks: withDone(s.doneBlocks, id, dateKey(now)) }));
+}
+/** The ids of the plans finished on that day. */
+export const doneOn = (s: Pick<State, 'doneBlocks'>, d: Date = new Date()) => {
+  const k = dateKey(d);
+  return new Set(s.doneBlocks.filter((x) => x.date === k).map((x) => x.id));
+};
 export function togglePause() {
   const s = state;
   if (!s.running) return;
@@ -377,7 +394,9 @@ export function commitRecord(opts?: { todoId?: string; note?: string; min?: numb
   const run = streakOf(sessions, s.restDays, now);
   const ticket = !byDay(s.sessions).has(today) && run > 0 && run % 7 === 0 && s.restTickets < MAX_TICKETS;
   setState({
-    running: false, paused: false, base: 0, studyTodo: null, planMin: null, planNext: null,
+    running: false, paused: false, base: 0, studyTodo: null, planMin: null, planNext: null, planBlock: null,
+    // a session started from a plan finishes it, on the day it started
+    doneBlocks: s.planBlock ? withDone(s.doneBlocks, s.planBlock, dateKey(new Date(now.getTime() - min * 60_000))) : s.doneBlocks,
     sessions,
     todos: todo ? s.todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x)) : s.todos,
     todoLog: todo && !todo.d ? [...s.todoLog, { id: todo.id, date: today }] : s.todoLog,

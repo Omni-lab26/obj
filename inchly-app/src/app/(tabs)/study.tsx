@@ -4,9 +4,10 @@ import { ScrollView, View } from 'react-native';
 
 import { subj } from '@/data';
 import { Deadlines } from '@/screens/home/standard';
-import { blocksOn, endOf, nextOf, slotsOf, spanEnd, type Block, type Slot } from '@/lib/timetable';
+import { blocksOn, endOf, slotsOf, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
-import { getState, startFrom, useNow, useStore } from '@/store';
+import { startBlock } from '@/screens/model';
+import { doneOn, getState, useNow, useStore } from '@/store';
 import { hair, onColor, type, useT } from '@/theme';
 import { Card, haptic, Press, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
@@ -22,16 +23,9 @@ import { toast } from '@/ui/Toast';
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 
-/** Start from a plan and open the timer, big in the middle. Refused once a different subject has run for over a minute. */
-/** Starting a plan now: how long until it ends (its end, or the next plan's start), and that next plan when it runs until one. */
-function untilNext(blocks: readonly Block[], b: Block, d: Date) {
-  const left = spanEnd(blocks, b, d) - (d.getHours() * 60 + d.getMinutes());
-  if (left <= 0) return {};
-  const n = b.min ? undefined : nextOf(blocks, b, d);
-  return { min: left, next: n?.start ? { s: n.s, at: n.start } : undefined };
-}
-function go(x: { s: string; todoId?: string; min?: number; next?: { s: string; at: string } }) {
-  if (!startFrom(x)) {
+/** Start a plan and open the timer. Refused once a different subject has run for over a minute. */
+function go(b: Block) {
+  if (!startBlock(b)) {
     haptic.warn();
     toast(`いまは${subj(getState().subj).name}を勉強中です`, '記録してから次の科目を始めましょう');
     return;
@@ -67,6 +61,8 @@ function Timetable() {
   const [day, setDay] = useState(today);
   const blocks = useStore((x) => x.timetable);
   const running = useStore((x) => x.running);
+  const doneList = useStore((x) => x.doneBlocks);
+  const done = doneOn({ doneBlocks: doneList }, d);
   // the chosen weekday: today with live states, another day as a plain list
   const list: (Slot | { block: Block; state: 'plain' })[] = day === today
     ? slotsOf(blocks, d)
@@ -91,8 +87,9 @@ function Timetable() {
       <Card style={{ marginHorizontal: 16 }} pad={0}>
         {list.length ? list.map(({ block: b, state }, i) => {
           const sj = subj(b.s);
-          const past = state === 'past';
-          const live = state === 'now';
+          const finished = day === today && done.has(b.id);
+          const past = state === 'past' || finished;
+          const live = state === 'now' && !finished;
           return (
             <Press key={b.id} onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。編集`}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingLeft: 12, paddingRight: 10, borderTopWidth: i ? hair : 0, borderTopColor: t.line,
@@ -110,14 +107,14 @@ function Timetable() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Txt size={14.5} w="700">{sj.name}</Txt>
                   {live ? <View style={{ paddingHorizontal: 6, height: 18, borderRadius: 9, backgroundColor: t.ink, justifyContent: 'center' }}><Txt size={10} w="800" color={t.onInk}>いま</Txt></View> : null}
-                  {state === 'next' ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
+                  {finished ? <Txt size={11} w="600" tone="ink3">終わった</Txt> : state === 'next' ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
                   {b.date ? <Txt size={11} w="600" tone="ink3">この日だけ</Txt> : null}
                 </View>
                 <Txt size={12} tone="ink2" numberOfLines={1}>{[b.t ?? sj.task, b.min ? `${b.min}分` : ''].filter(Boolean).join(' · ')}</Txt>
                 {b.note ? <Txt size={11.5} tone="ink3" numberOfLines={1}>{b.note}</Txt> : null}
               </View>
               {past || state === 'plain' ? null : (
-                <Press onPress={() => go({ s: b.s, ...untilNext(blocks, b, new Date()) })} haptics={false} scale={0.9} hitSlop={6} disabled={running}
+                <Press onPress={() => go(b)} haptics={false} scale={0.9} hitSlop={6} disabled={running}
                   accessibilityLabel={`${sj.name}を始める`}
                   style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: live ? sj.c : t.sunken, alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name="play" size={14} color={live ? onColor(sj.c) : t.ink} />

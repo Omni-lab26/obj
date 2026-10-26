@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { addSubject, commitRecord, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
+import { addSubject, commitRecord, doneOn, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
 import { subj } from '../../data';
 import { addDays, dateKey } from '../time';
 
@@ -151,6 +151,32 @@ describe('the plan a session measures against', () => {
     expect(getState().planMin).toBeNull();
     startStudy('en');
     expect(getState().planMin).toBeNull();
+  });
+});
+
+describe('finishing a plan', () => {
+  it('ending a session started from a plan finishes that plan on the day it started', () => {
+    reset();
+    startFrom({ s: 'ma', min: 60, blockId: 'b3' });
+    expect(getState().planBlock).toBe('b3');
+    const now = new Date(2026, 9, 27, 0, 20); // 40 minutes, from 23:40 the day before
+    commitRecord({ min: 40, now });
+    expect(getState().planBlock).toBeNull();
+    expect(doneOn(getState(), new Date(2026, 9, 26))).toEqual(new Set(['b3']));
+    expect(doneOn(getState(), now).size).toBe(0);
+  });
+  it('just measuring finishes nothing', () => {
+    reset();
+    startStudy('en');
+    commitRecord({ min: 10 });
+    expect(getState().doneBlocks).toEqual([]);
+  });
+  it('can finish a plan for today without recording, once, and keeps only a week', () => {
+    const today = new Date(2026, 9, 26, 12);
+    reset({ doneBlocks: [{ id: 'old', date: addDays(dateKey(today), -9) }] });
+    finishBlock('b1', today);
+    finishBlock('b1', today);
+    expect(getState().doneBlocks).toEqual([{ id: 'b1', date: '2026-10-26' }]);
   });
 });
 

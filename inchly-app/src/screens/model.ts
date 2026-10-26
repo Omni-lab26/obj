@@ -5,8 +5,8 @@ import { PEOPLE, subj } from '../data';
 import { celebrate } from '../moments';
 import { dayOf, hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { daysUntil, dateKey } from '../lib/time';
-import { endOf, minutesUntil, nextOf, suggestion, toMin } from '../lib/timetable';
-import { commitRecord, elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
+import { type Block, endOf, minutesUntil, nextOf, spanEnd, suggestion, toMin } from '../lib/timetable';
+import { commitRecord, doneOn, elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
 import { haptic } from '../ui/base';
 import { toast } from '../ui/Toast';
 
@@ -110,7 +110,7 @@ export function useTargetNudge() {
  * ('next'), else the first open ToDo ('todo'), else the last subject ('last').
  */
 export type Pick = {
-  s: string; what: string; min?: number; todoId?: string;
+  s: string; what: string; min?: number; todoId?: string; blockId?: string;
   /** the plan after it, when this one runs until it starts */
   next?: { s: string; at: string };
   from: 'now' | 'next' | 'todo' | 'last';
@@ -119,9 +119,13 @@ export type Pick = {
 };
 export function useNext(): Pick {
   const now = useNow(30_000);
-  const timetable = useStore((s) => s.timetable);
+  const all = useStore((s) => s.timetable);
+  const doneList = useStore((s) => s.doneBlocks);
   const todos = useStore((s) => s.todos);
   const cur = useStore((s) => s.subj);
+  // a plan finished today isn't offered again
+  const done = doneOn({ doneBlocks: doneList }, new Date(now));
+  const timetable = all.filter((b) => !done.has(b.id));
   const slot = suggestion(timetable, new Date(now));
   if (slot) {
     const b = slot.block, d = new Date(now);
@@ -129,7 +133,7 @@ export function useNext(): Pick {
     const n = nextOf(timetable, b, d);
     const left = n?.start ? toMin(n.start) - (d.getHours() * 60 + d.getMinutes()) : 0;
     const min = b.min || (left > 0 ? left : undefined);
-    return { s: b.s, what: b.t ?? subj(b.s).task, min, next: !b.min && min && n?.start ? { s: n.s, at: n.start } : undefined, from: slot.state === 'now' ? 'now' : 'next', start: b.start, end: endOf(b), inMin: minutesUntil(b, d) };
+    return { s: b.s, what: b.t ?? subj(b.s).task, blockId: b.id, min, next: !b.min && min && n?.start ? { s: n.s, at: n.start } : undefined, from: slot.state === 'now' ? 'now' : 'next', start: b.start, end: endOf(b), inMin: minutesUntil(b, d) };
   }
   const todo = todos.find((x) => !x.d);
   if (todo) return { s: todo.s, what: todo.t, todoId: todo.id, from: 'todo' };
@@ -140,7 +144,7 @@ export const pickLabel = (p: Pick) =>
   p.from === 'now' ? (p.end ? `いま · ${p.start}〜${p.end}` : `いま · ${p.start}から`) : p.from === 'next' ? `次は · ${p.start}から` : p.from === 'todo' ? '次は · ToDo' : '次は';
 /** Starts what was picked and opens the timer. False when another subject is already under way. */
 export function startPick(p: Pick): boolean {
-  if (!startFrom({ s: p.s, min: p.min, next: p.next, todoId: p.todoId })) {
+  if (!startFrom({ s: p.s, min: p.min, next: p.next, todoId: p.todoId, blockId: p.blockId })) {
     haptic.warn();
     toast(`いまは${subj(getState().subj).name}を勉強中です`, '記録してから次の科目を始めましょう');
     return false;
@@ -148,6 +152,18 @@ export function startPick(p: Pick): boolean {
   haptic.firm();
   router.push('/timer');
   return true;
+}
+
+/** Starting a plan now: how long until it ends (its end, or the next plan's start), and that next plan when it runs until one. */
+export function untilNext(blocks: readonly Block[], b: Block, d: Date): { min?: number; next?: { s: string; at: string } } {
+  const left = spanEnd(blocks, b, d) - (d.getHours() * 60 + d.getMinutes());
+  if (left <= 0) return {};
+  const n = b.min ? undefined : nextOf(blocks, b, d);
+  return { min: left, next: n?.start ? { s: n.s, at: n.start } : undefined };
+}
+/** Starts a timetable plan (ending the session finishes it for today). False when another subject is already under way. */
+export function startBlock(b: Block, now: Date = new Date()): boolean {
+  return startFrom({ s: b.s, blockId: b.id, ...untilNext(getState().timetable, b, now) });
 }
 
 /** The streak and this week (Monday first): studied, today, still to come. */

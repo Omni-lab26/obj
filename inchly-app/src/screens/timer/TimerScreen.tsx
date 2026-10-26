@@ -4,14 +4,15 @@ import { arrangeZones, ExtraKind, TIMER, TimerPart, Zone } from '@/screens/layou
 import { useTargetNudge } from '@/screens/model';
 import type { TimerKit } from '@/themes/types';
 import { showStudyBar } from '@/ui/Chrome';
-import { STANDARD_PARTS, STANDARD_ZONES, StandardTimerPage } from './standard';
+import { SheetHost } from '@/ui/Sheet';
+import { CARD_PARTS, CARD_ZONES, CardTimerPage } from './cards';
+import { STANDARD_PARTS, StandardTimerPage } from './standard';
 
 // The timer, for every theme: the base parts (layout.ts) in three zones, each
 // drawn by the theme or, where it draws nothing of its own, the standard way.
 // With no theme timer at all, the standard drawing places the parts its own way.
-// the standard drawing only measures: no today line or slide-to-record of its own (記録する sits by the pause button)
-const Nothing = () => null;
-const STANDARD: TimerKit = { arrange: STANDARD_ZONES, parts: { today: Nothing, record: Nothing } };
+// the standard drawing is today's plans as cards (cards.tsx), with the time studied fixed under them
+const STANDARD: TimerKit = { arrange: CARD_ZONES, Page: CardTimerPage, parts: CARD_PARTS };
 export function TimerScreen({ kit = STANDARD }: { kit?: TimerKit }) {
   const zones = useMemo(() => arrangeZones(TIMER, kit.arrange), [kit.arrange]);
   // a study bar swiped away comes back once you've looked at the timer
@@ -26,6 +27,8 @@ export function TimerScreen({ kit = STANDARD }: { kit?: TimerKit }) {
     <>
       <Page zones={drawn} />
       <TargetNudge />
+      {/* the timer covers the app, so sheets opened from it (a new plan) come up over it */}
+      <SheetHost />
     </>
   );
 }

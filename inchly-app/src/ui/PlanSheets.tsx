@@ -4,19 +4,23 @@ import Animated from 'react-native-reanimated';
 
 import { SUBJECT_COLORS } from '../data';
 import { dateKey, mondayIndex, parseKey } from '../lib/time';
+import { pickPlanIcon } from '../lib/planIcon';
 import { Block, toClock, toMin } from '../lib/timetable';
 import { addDeadline, addSubject, removeBlock, saveBlock, updateSubject, useSubjects } from '../store';
 import { font, hair, noOutline, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
 import { DatePick, Opens, PickChip, SMOOTH, TimePick } from './DateTime';
 import { Icon } from './Icon';
+import { PlanArt } from './PlanArt';
 import { openSheet } from './Sheet';
 import { toast } from './Toast';
 
 // Adding to the timetable, or a deadline (each its own sheet), laid out like a
 // calendar's new event: ✕, what you're adding, and ✓ along the top; the title; the start and the end (each
 // a day and a time — the end can be the next day), and repeat; then the
-// subject with its color (for the charts), and a memo. Days and times are
+// subject with its color (for the charts), and a memo. A plan has an icon,
+// shown big on its card in the timer: a photo (the pencil opens the library),
+// or the subject's color and initial. Days and times are
 // picked as on an iPhone, opening right under their row; the keyboard waits
 // until you tap a field.
 
@@ -51,6 +55,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const [name, setName] = useState(known?.name ?? '');
   const [color, setColor] = useState(known?.c ?? SUBJECT_COLORS[0]);
   const [note, setNote] = useState(existing?.note ?? '');
+  const [icon, setIcon] = useState(existing?.icon);
   const [open, setOpen] = useState<Open>(null);
 
   const plan = kind === 'plan';
@@ -64,6 +69,12 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   // moving the start keeps the length; an end before the start goes to the next day
   const moveStart = (m: number) => { setEnd(m + (end - start)); setStart(m); };
   const moveEnd = (m: number, offset = Math.floor(end / DAY)) => { let e = offset * DAY + m; if (e <= start) e += DAY; setEnd(Math.min(start + DAY, e)); };
+  const choose = async () => {
+    Keyboard.dismiss();
+    setOpen(null);
+    const got = await pickPlanIcon().catch(() => null);
+    if (got) { haptic.soft(); setIcon(got); }
+  };
   const typeName = (v: string) => { setName(v); const m = subjects.find((x) => x.name === v.trim()); if (m) setColor(m.c); };
 
   const save = () => {
@@ -82,7 +93,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
     if (match && match.c !== color) updateSubject(match.id, { c: color });
     if (!s) s = addSubject({ name: name.trim(), area: 'other', c: color });
     saveBlock({
-      id: existing?.id, s, t: title.trim(), note: note.trim() || undefined,
+      id: existing?.id, s, t: title.trim(), note: note.trim() || undefined, icon,
       start: toClock(start), min: end - start,
       days: weekly ? (existing && !existing.date ? existing.days : [mondayIndex(d)]) : [], date: weekly ? undefined : dateKey(d),
     });
@@ -114,6 +125,26 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
             <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder={plan ? '何をやる？（例：青チャート 例題41〜50）' : '締切の名前（例：英検 申込）'}
               placeholderTextColor={t.ink3} multiline onFocus={typing} accessibilityLabel={plan ? '何をやるか' : '締切の名前'}
               style={[{ minHeight: 64, margin: 10, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: t.sunken, fontSize: 21, lineHeight: 28, fontFamily: font.text, fontWeight: '700', color: t.ink, textAlignVertical: 'top' }, noOutline]} />
+            {plan ? (
+              // the icon: the pencil on it opens the photo library
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingBottom: 12 }}>
+                <Press onPress={choose} scale={0.94} accessibilityLabel={icon ? 'アイコンの写真を選び直す' : 'アイコンにする写真を選ぶ'}>
+                  <PlanArt icon={icon} name={name.trim() || '？'} color={color} size={60} radius={12} />
+                  <View style={{ position: 'absolute', right: -6, top: -6, width: 26, height: 26, borderRadius: 13, backgroundColor: t.ink, borderWidth: 2, borderColor: t.surface, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="edit" size={12} color={t.onInk} />
+                  </View>
+                </Press>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Txt size={15} w="600">アイコン</Txt>
+                  <Txt size={12} tone="ink3">{icon ? 'タイマーのカードに大きく出ます' : '鉛筆で写真から選べます。選ばないときは科目の色と頭文字'}</Txt>
+                </View>
+                {icon ? (
+                  <Press onPress={() => { haptic.tap(); setIcon(undefined); }} hitSlop={8} scale={0.94} accessibilityLabel="アイコンの写真を外す">
+                    <Txt size={13.5} w="600" color={t.blue}>外す</Txt>
+                  </Press>
+                ) : null}
+              </View>
+            ) : null}
           </Group>
           <Group>
             {plan ? (

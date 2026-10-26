@@ -16,7 +16,7 @@ import { Icon } from '@/ui/Icon';
 import { Stamp } from '@/ui/Sticker';
 import { toast } from '@/ui/Toast';
 
-// "Record this study": opened by 記録する on the timer (the clock is paused).
+// "Record this study": opened by 終わる on the timer (the clock is paused).
 // Written like a post: the subject and the time at the top (the time can be
 // fixed by 5 minutes), a memo of how far you got and how it went, and whether
 // it stays yours or goes to the timeline too. 記録する saves it; 続ける goes back
