@@ -29,13 +29,13 @@ export default function EngineSkia({ kind, width, height }: EngineProps) {
     const line = Skia.Paint();
     line.setStyle(PaintStyle.Stroke);
     line.setStrokeWidth(StyleSheet.hairlineWidth);
-    line.setColor(Skia.Color(sea ? 'rgba(20,30,40,0.06)' : 'rgba(255,255,255,0.04)'));
+    line.setColor(Skia.Color('rgba(20,34,40,0.06)'));
     const floor = Skia.Paint();
     return {
       atlas, slots, at, grid: makeGrid(cols, rows, CELL), line, tiles: Skia.Paint(), floor, ground: Skia.Color(GROUND[kind]),
       effect: kind === 'walk' ? Skia.RuntimeEffect.Make(FLOOR_SKSL) : null, bounds: Skia.XYWHRect(0, 0, width, height),
     };
-  }, [px, pr, cols, rows, sea, kind, width, height]);
+  }, [px, pr, cols, rows, kind, width, height]);
   // until the first frame: the bare ground
   useEffect(() => {
     if (!backdropPicture.value) backdropPicture.value = createPicture((c) => c.drawColor(fixed.ground), fixed.bounds);

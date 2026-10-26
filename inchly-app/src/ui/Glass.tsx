@@ -24,10 +24,10 @@ const web = Platform.OS === 'web';
 // Android blurs only what's wrapped for it; there the glass is a thicker film instead
 const blurs = Platform.OS !== 'android';
 
-/** Light across glass: bright at the top left, gone by the middle, a faint return at the bottom right. */
-function Sheen({ radius, dark, strong }: { radius: number; dark: boolean; strong?: boolean }) {
+/** Light across glass: bright at the top left, gone by the middle, a faint return at the bottom right. strength: 1 the bars, about half for cards. */
+function Sheen({ radius, dark, strength = 0.55 }: { radius: number; dark: boolean; strength?: number }) {
   const id = useId().replace(/:/g, '');
-  const a = (dark ? 0.1 : 0.42) * (strong ? 1 : 0.55);
+  const a = (dark ? 0.1 : 0.42) * strength;
   return (
     <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
       <Defs>
@@ -64,7 +64,7 @@ export function Glass({ children, style, radius = 999, interactive, tint, flat }
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius, overflow: 'hidden', zIndex: -1 }]}>
         {blurs ? <BlurView intensity={web ? 55 : 70} tint={dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} /> : null}
         <View style={[StyleSheet.absoluteFill, { backgroundColor: film, borderRadius: radius }]} />
-        <Sheen radius={radius} dark={dark} strong />
+        <Sheen radius={radius} dark={dark} strength={1} />
         <View style={[StyleSheet.absoluteFill, { borderRadius: radius, boxShadow: dark ? RIM_DARK : RIM }]} />
       </View>
       {children}
@@ -78,8 +78,14 @@ export function Glass({ children, style, radius = 999, interactive, tint, flat }
  * faint haze of its own color just outside, so the card melts into the koi
  * instead of sitting on them. The card's own background is the film; put the
  * pane first inside it.
+ * `liquid`: a little more of Liquid Glass, kept quiet (the timer's cards) —
+ * a bright rim catching the light at the top, a hairline of light all round,
+ * light gathering just inside the edge, and the card lifted a touch.
  */
-export function Pane({ radius, small }: { radius: number; /** a small tile among many: a denser film instead of a live blur (blurs cost) */ small?: boolean }) {
+const LIQUID_RIM = 'inset 0px 1px 0px rgba(255,255,255,0.92), inset 0px 0px 0px 0.75px rgba(255,255,255,0.5), inset 0px -1px 0px rgba(255,255,255,0.28), inset 0px 0px 22px rgba(255,255,255,0.26), inset 0px -3px 8px rgba(20,40,44,0.035)';
+export function Pane({ radius, small, liquid }: {
+  radius: number; /** a small tile among many: a denser film instead of a live blur (blurs cost) */ small?: boolean; liquid?: boolean;
+}) {
   const t = useT();
   if (t.backdrop === 'none') return null;
   const dark = t.dark;
@@ -87,12 +93,13 @@ export function Pane({ radius, small }: { radius: number; /** a small tile among
     return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius, zIndex: -1, backgroundColor: dark ? 'rgba(12,18,26,0.55)' : 'rgba(255,255,255,0.55)' }]} />;
   }
   return (
-    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius, zIndex: -1, boxShadow: dark ? '0px 0px 24px 2px rgba(8,14,20,0.32)' : '0px 0px 24px 2px rgba(255,255,255,0.4)' }]}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius, zIndex: -1,
+      boxShadow: dark ? '0px 0px 24px 2px rgba(8,14,20,0.32)' : liquid ? '0px 10px 28px rgba(30,45,50,0.07), 0px 0px 22px 2px rgba(255,255,255,0.32)' : '0px 0px 24px 2px rgba(255,255,255,0.4)' }]}>
       <View style={[StyleSheet.absoluteFill, { borderRadius: radius, overflow: 'hidden' }]}>
         {blurs ? <BlurView intensity={web ? 60 : 80} tint={dark ? 'systemUltraThinMaterialDark' : 'systemUltraThinMaterialLight'} style={StyleSheet.absoluteFill} />
           : <View style={[StyleSheet.absoluteFill, { backgroundColor: dark ? 'rgba(14,20,28,0.62)' : 'rgba(255,255,255,0.6)' }]} />}
-        <Sheen radius={radius} dark={dark} />
-        <View style={[StyleSheet.absoluteFill, { borderRadius: radius, boxShadow: dark ? 'inset 0px 1px 0px rgba(255,255,255,0.06)' : 'inset 0px 1px 0px rgba(255,255,255,0.5)' }]} />
+        <Sheen radius={radius} dark={dark} strength={liquid ? 0.75 : 0.55} />
+        <View style={[StyleSheet.absoluteFill, { borderRadius: radius, boxShadow: dark ? 'inset 0px 1px 0px rgba(255,255,255,0.06)' : liquid ? LIQUID_RIM : 'inset 0px 1px 0px rgba(255,255,255,0.5)' }]} />
       </View>
     </View>
   );

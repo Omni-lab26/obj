@@ -13,7 +13,7 @@ import { openSheet } from './Sheet';
 
 export const BACKDROP_NOTES: Record<Backdrop, string> = {
   none: 'いつもの地の色。タイマーは科目の色に染まります',
-  pond: '暗い池を鯉がゆっくり泳ぎます。カードはすりガラス。タイマーでは水面をタップするとエサ',
+  pond: '白い池を鯉がゆっくり泳ぎ、蓮の葉が浮かびます。カードはすりガラス。タイマーでは水面をタップするとエサ',
   sea: '白い海を、シュモクザメやジンベエザメが泳ぎます。カードはすりガラス',
   walk: 'ガラスの床の下から見上げるように、いま勉強している人たちが上を歩いていきます',
 };
@@ -56,7 +56,8 @@ function BackdropChoice({ close }: { close: () => void }) {
 }
 /** A tiny picture of each background. */
 export function BackdropSwatch({ id }: { id: Backdrop }) {
-  const cell = (c: string, i: number) => <View key={i} style={{ width: 6, height: 6, borderRadius: 1.5, backgroundColor: c }} />;
+  // a koi's tiles, with the faint dark rim they have in the pale water
+  const cell = (c: string, i: number) => <View key={i} style={{ width: 6, height: 6, borderRadius: 1.5, backgroundColor: c, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(47,68,70,0.35)' }} />;
   const frame = { width: 50, height: 64, borderRadius: 10, overflow: 'hidden' as const, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(0,0,0,0.12)' };
   if (id === 'pond') {
     return (
@@ -64,6 +65,7 @@ export function BackdropSwatch({ id }: { id: Backdrop }) {
         <View style={{ flexDirection: 'row', gap: 2 }}>{['#F1EBE0', '#D8442A', '#D8442A', '#F1EBE0'].map(cell)}</View>
         <View style={{ flexDirection: 'row', gap: 2, marginLeft: 8 }}>{['#D8442A', '#F1EBE0', '#F1EBE0'].map(cell)}</View>
         <View style={{ flexDirection: 'row', gap: 2, marginLeft: 4, marginTop: 6 }}>{['#E2B04A', '#E2B04A', '#E2B04A'].map(cell)}</View>
+        <View style={{ position: 'absolute', right: 5, top: 5, width: 12, height: 12, borderRadius: 6, backgroundColor: '#8FB585' }} />
       </View>
     );
   }

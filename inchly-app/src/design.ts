@@ -187,13 +187,14 @@ export const themeOf = (id: ThemeId): ThemeDef => THEMES[themeId(id)];
 /**
  * 背景: what moves behind every page (and the timer) — the koi pond, sharks in
  * a pale sea, people walking over a glass floor — or none (the plain ground,
- * and the timer in the subject's color). Only with the standard theme: the
- * other themes have their own ground. The cards over it are glass.
+ * and the timer in the subject's color). All of them pale, so the app stays
+ * white. Only with the standard theme: the other themes have their own
+ * ground. The cards over it are glass.
  */
 export type Backdrop = 'none' | 'pond' | 'sea' | 'walk';
 export const BACKDROPS: Record<Backdrop, { label: string; dark: boolean }> = {
   none: { label: 'なし', dark: false },
-  pond: { label: '鯉の池', dark: true },
+  pond: { label: '鯉の池', dark: false },
   sea: { label: 'サメの海', dark: false },
   walk: { label: '歩く人', dark: false },
 };

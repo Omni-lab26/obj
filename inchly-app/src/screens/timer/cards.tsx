@@ -411,24 +411,21 @@ function mix(a: string, b: string, t: number) {
 }
 /**
  * How a card is colored: quiet, and a little of the background in it. Over
- * a 背景 the card is glass, as on every page (ui/Glass Pane) — dark over the
- * koi pond, white over the sea and the glass floor — with no edge, so it
- * melts into what's behind; with no 背景, the subject's color taken down. The
- * subject's own color shows only in its cover, quieted too.
+ * a 背景 the card is white glass, a touch of Liquid Glass in it (ui/Glass
+ * Pane liquid: a rim catching the light, kept quiet); with no 背景, the
+ * subject's color taken down. The subject's own color shows only in its
+ * cover, quieted too.
  */
 type Skin = {
   paper: string; edge: string; ink: string; ink2: string; ink3: string; solid: string; onSolid: string; outline: string; cover: string; dim: string; live: string; stop: string;
   /** glass: what's behind shows through, blurred */
   frost?: boolean;
 };
+const COVER_BASE: Record<Exclude<Backdrop, 'none'>, string> = { pond: '#D3DDD9', sea: '#D3D9E0', walk: '#D9D7D0' };
 function skinOf(bg: Backdrop, c: string): Skin {
-  if (bg === 'walk' || bg === 'sea') {
-    return { paper: 'rgba(250,250,248,0.42)', edge: 'transparent', ink: '#1A1A18', ink2: 'rgba(26,26,24,0.64)', ink3: 'rgba(26,26,24,0.44)', solid: '#1A1A18', onSolid: '#FBFBF9',
-      outline: 'rgba(26,26,24,0.22)', cover: mix(c, bg === 'sea' ? '#D3D9E0' : '#D9D7D0', 0.48), dim: FLOOR, live: '#1E7A46', stop: CRIMSON, frost: true };
-  }
-  if (bg === 'pond') {
-    return { paper: 'rgba(14,20,28,0.36)', edge: 'transparent', ink: '#E8ECEF', ink2: 'rgba(232,236,239,0.68)', ink3: 'rgba(232,236,239,0.46)', solid: '#E8ECEF', onSolid: '#121A23',
-      outline: 'rgba(232,236,239,0.24)', cover: mix(c, '#16202A', 0.38), dim: '#000000', live: '#5FD08E', stop: CRIMSON_ON_DARK, frost: true };
+  if (bg !== 'none') {
+    return { paper: 'rgba(250,250,248,0.4)', edge: 'transparent', ink: '#1A1A18', ink2: 'rgba(26,26,24,0.64)', ink3: 'rgba(26,26,24,0.44)', solid: '#1A1A18', onSolid: '#FBFBF9',
+      outline: 'rgba(26,26,24,0.22)', cover: mix(c, COVER_BASE[bg], 0.48), dim: FLOOR, live: '#1E7A46', stop: CRIMSON, frost: true };
   }
   const base = mix(c, '#12141A', 0.72);
   return { paper: base, edge: 'rgba(255,255,255,0.09)', ink: '#E8ECEF', ink2: 'rgba(232,236,239,0.62)', ink3: 'rgba(232,236,239,0.4)', solid: '#E8ECEF', onSolid: base,
@@ -458,7 +455,7 @@ function PlanCard({ b, no, i, x, step, k, tone, live, held, begin, record, more 
   const fs = (v: number, lo: number) => Math.max(lo, v * k);
   return (
     <View style={{ flex: 1, backgroundColor: sk.paper, borderRadius: 16 * k, borderWidth: sk.frost ? 0 : StyleSheet.hairlineWidth, borderColor: sk.edge }}>
-      {sk.frost ? <Pane radius={16 * k} /> : null}
+      {sk.frost ? <Pane radius={16 * k} liquid /> : null}
       {/* the picture */}
       <View style={{ position: 'absolute', left: 14 * k, top: 14 * k, width: art + 2 * k, height: art, borderRadius: 10 * k, overflow: 'hidden', backgroundColor: sk.cover }}>
         <Animated.View style={drift}>
@@ -526,12 +523,15 @@ function CardBtn({ sk, k, solid, label, icon, a11y, onPress }: { sk: Skin; k: nu
   );
 }
 
-/** The card in front: adds a plan to today. Clear, with only an edge. */
+/** The card in front: adds a plan to today. Clear, with only an edge (over a 背景, clear glass). */
 function AddCard({ w, h, k, tone, onPress }: { w: number; h: number; k: number; tone: Tone; onPress: () => void }) {
+  // over a 背景 it's glass like the other cards (and needs no edge)
+  const glass = useBackdrop() !== 'none';
   return (
     <Press onPress={onPress} haptics={false} scale={0.98} accessibilityLabel="今日の時間割に予定を追加"
-      style={{ width: w, height: h, borderRadius: 16 * k, borderWidth: 1, borderColor: tone.light ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.22)',
-        backgroundColor: tone.light ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', gap: 6 * k, paddingHorizontal: 24 * k }}>
+      style={{ width: w, height: h, borderRadius: 16 * k, borderWidth: glass ? 0 : 1, borderColor: tone.light ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.22)',
+        backgroundColor: glass ? 'rgba(255,255,255,0.22)' : tone.light ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', gap: 6 * k, paddingHorizontal: 24 * k }}>
+      {glass ? <Pane radius={16 * k} liquid /> : null}
       <Icon name="plus" size={22 * k} color={tone.ink} width={1.6} />
       <Txt size={Math.max(14, 16 * k)} w="700" color={tone.ink}>予定を追加</Txt>
       <Txt size={Math.max(11.5, 12.5 * k)} color={tone.ink2} style={{ textAlign: 'center' }}>今日の時間割に入れます</Txt>
@@ -568,9 +568,13 @@ function Elapsed({ tone }: { tone: Tone }) {
     : ss.next ? `次 ${ss.next.subject.name} ${ss.next.at}まで`
     : ss.plan ? (over ? `予定を ${fmt(sec - ss.plan)} こえて` : `あと ${fmt(ss.plan - sec)}`)
     : `今日 ${hm(today)}`;
+  // over a 背景, the time sits on a quiet pane of glass, so the koi passing under it never cover it
+  const glass = useBackdrop() !== 'none';
   return (
-    <View pointerEvents="none" style={{ marginHorizontal: 20, marginTop: 22 }} accessible accessibilityRole={ss.plan ? 'progressbar' : undefined}
+    <View pointerEvents="none" accessible accessibilityRole={ss.plan ? 'progressbar' : undefined}
+      style={glass ? { marginHorizontal: 10, marginTop: 14, paddingHorizontal: 10, paddingTop: 8, paddingBottom: 12, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.3)' } : { marginHorizontal: 20, marginTop: 22 }}
       accessibilityLabel={ss.running ? `勉強した時間 ${fmt(sec)}${ss.paused ? '（一時停止中）' : ''}。${top}。${below}` : `${top}。${below}`}>
+      {glass ? <Pane radius={18} /> : null}
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>
         <Txt num size={40} w="700" lh={46} color={!ss.running ? tone.ink3 : ss.paused ? (tone.light ? CRIMSON : CRIMSON_ON_DARK) : tone.ink}
           style={{ textShadowColor: tone.shade, textShadowRadius: 10 }}>{fmt(sec)}</Txt>

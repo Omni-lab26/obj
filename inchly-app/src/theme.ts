@@ -49,27 +49,20 @@ const light = {
 export type Theme = typeof light;
 
 /**
- * The colors over a 背景. The koi pond is dark water, so the page goes dark
- * with it: light words, and cards of dark glass. Over the pale sea and the
- * glass floor, the light page, with cards of white glass. A card's color here
- * is its glass's film (ui/Glass Pane blurs what's behind it); cards lie flat,
- * with no edge, so they melt into what's behind.
+ * The colors over a 背景. Every 背景 is pale (the koi's water near white, the
+ * sea, the glass floor), so the page stays light: dark words, cards of white
+ * glass. A card's color here is its glass's film (ui/Glass Pane blurs what's
+ * behind it); cards lie flat, with no edge, so they melt into what's behind.
  */
 const FLAT = '0px 0px 0px 0px transparent';
+const glassy = (canvas: string, film: number): Partial<Theme> => ({
+  canvas, surface: `rgba(255,255,255,${film})`, sunken: 'rgba(17,20,23,0.05)', ink2: '#3E4450', ink3: '#656C78', shadow1: FLAT,
+  grass: ['rgba(17,20,23,0.07)', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C'],
+});
 const OVER: Record<Exclude<Backdrop, 'none'>, Partial<Theme>> = {
-  pond: {
-    canvas: '#0B1117', surface: 'rgba(16,24,33,0.5)', sunken: 'rgba(255,255,255,0.07)', line: 'rgba(255,255,255,0.09)', line2: 'rgba(255,255,255,0.18)',
-    ink: '#EEF2F5', ink2: 'rgba(238,242,245,0.74)', ink3: 'rgba(238,242,245,0.52)', onInk: '#0B1117', dark: true, shadow1: FLAT, scrim: 'rgba(0,0,0,0.5)',
-    grass: ['rgba(255,255,255,0.1)', '#2C6B47', '#3F9A63', '#5ED18A', '#9BE8B7'],
-  },
-  sea: {
-    canvas: '#F5F5F3', surface: 'rgba(255,255,255,0.5)', sunken: 'rgba(17,20,23,0.05)', ink2: '#3E4450', ink3: '#656C78', shadow1: FLAT,
-    grass: ['rgba(17,20,23,0.07)', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C'],
-  },
-  walk: {
-    canvas: '#F1F1EE', surface: 'rgba(255,255,255,0.55)', sunken: 'rgba(17,20,23,0.05)', ink2: '#3E4450', ink3: '#656C78', shadow1: FLAT,
-    grass: ['rgba(17,20,23,0.07)', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C'],
-  },
+  pond: glassy('#E8EEEB', 0.5),
+  sea: glassy('#F5F5F3', 0.5),
+  walk: glassy('#F1F1EE', 0.55),
 };
 
 // ---------- following the design you pick (design.ts) ----------

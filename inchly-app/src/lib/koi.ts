@@ -1,5 +1,6 @@
-// The koi pond behind the study screen: a few koi swimming slowly in dark
-// water, drawn on a grid of small tiles and marks (a mosaic, not a picture).
+// The koi pond behind the pages: a few koi swimming slowly in pale water (or
+// dark, for the app icon), drawn on a grid of small tiles and marks (a mosaic,
+// not a picture).
 // Each koi is a spine that follows its head, with a body that swells behind
 // the head and tapers to a fanned tail, pectoral fins, a tail that beats as
 // it swims, and the patterns of real varieties (紅白, 大正三色, 昭和, 黄金, 浅黄,
@@ -55,7 +56,8 @@ export type Pond = {
   /** the light on the water, worked out a few times a second (it moves slowly) and copied into each frame */
   wm: Uint8Array; wa: Float32Array; wAt: number;
   /** the water: the koi pond (dark) or the sea with sharks (light) */
-  sea: boolean; water: number; hi: number; deepTo: number;
+  /** sharks (else koi); pale water (else dark) */
+  sea: boolean; pale: boolean; water: number; hi: number; deepTo: number;
 };
 
 // ---------- small math ----------
@@ -119,9 +121,14 @@ const angleTo = (from: number, to: number) => {
 // ---------- colors ----------
 export const WATER = 0x0b1117;
 const WATER_HI = 0x7fa6bd; // light on the water
+/** The pale pond: water near white, a breath of green in it; the light on it a soft grey-green. */
+export const POND = 0xe8eeeb;
+const POND_HI = 0x97b2ae, POND_DEEP = 0xd3ddd9, POND_EDGE = 0x2f4446;
 const WHITE = 0xf1ebe0, RED = 0xd8442a, DEEP_RED = 0xb8321f, INK = 0x1d1b1a, GOLD = 0xe2b04a, GOLD_HI = 0xf7dd8e;
 const ASAGI = 0x7488a6, ASAGI_HI = 0xa9b7cc, ORANGE = 0xde7a3c, CHA = 0xa3713f, CHA_HI = 0xc8955b;
 const PAD = 0x3d6b3c, PAD_HI = 0x5d8c4f, PAD_DARK = 0x2a4a2b, PETAL = 0xeaa6bd, PETAL_HI = 0xfbd9e3, FOOD = 0xd9a659;
+// the pads in pale water: lighter, softer greens
+const PALE_PAD = 0x7fa776, PALE_PAD_HI = 0x9fc196, PALE_PAD_DARK = 0x5b8455;
 
 export const SEA = 0xf5f5f3;
 const SEA_HI = 0xaeb6c0; // the light on a pale sea, as dashes
@@ -214,9 +221,11 @@ const tailAt = (kind: number) => {
 };
 
 // ---------- making a pond ----------
-export function makePond(cols: number, rows: number, seed = 7, count = 6, school: 'koi' | 'shark' = 'koi'): Pond {
+/** water: the koi's pond pale (the app) or dark (the icon); the sea is always pale. */
+export function makePond(cols: number, rows: number, seed = 7, count = 6, school: 'koi' | 'shark' = 'koi', water: 'pale' | 'dark' = 'pale'): Pond {
   'worklet';
   const sea = school === 'shark';
+  const pale = sea || water === 'pale';
   const size = cols * rows;
   const p: Pond = {
     cols, rows, t: 0, r: seed | 0, acc: 0, koi: [], food: [], ripples: [], pads: [],
@@ -224,7 +233,7 @@ export function makePond(cols: number, rows: number, seed = 7, count = 6, school
     cover: new Float32Array(size), avoid: null,
     nd: new Float32Array(size), nu: new Float32Array(size), ns: new Float32Array(size),
     wm: new Uint8Array(size), wa: new Float32Array(size), wAt: -1,
-    sea, water: sea ? SEA : WATER, hi: sea ? SEA_HI : WATER_HI, deepTo: sea ? 0xdfe4e9 : 0x16303a,
+    sea, pale, water: sea ? SEA : pale ? POND : WATER, hi: sea ? SEA_HI : pale ? POND_HI : WATER_HI, deepTo: sea ? 0xdfe4e9 : pale ? POND_DEEP : 0x16303a,
   };
   const kinds = sea ? [6, 7, 9, 8, 6, 9, 7] : [0, 3, 1, 4, 2, 0, 5, 1];
   // how wide each kind is for its length
@@ -447,7 +456,7 @@ export function paint(p: Pond) {
           const k = (1 - Math.abs(d - rad) / 0.85) * life * (ring ? 0.55 : 1);
           if (k <= 0) continue;
           const i = y * cols + x;
-          if (k * 0.9 > p.markA[i]) { p.mark[i] = k > 0.6 ? 7 : k > 0.35 ? 3 : 2; p.markRGB[i] = p.sea ? 0x8e99a6 : 0xbfd6e4; p.markA[i] = k * 0.9; }
+          if (k * 0.9 > p.markA[i]) { p.mark[i] = k > 0.6 ? 7 : k > 0.35 ? 3 : 2; p.markRGB[i] = p.sea ? 0x8e99a6 : p.pale ? 0x6f8f8b : 0xbfd6e4; p.markA[i] = k * 0.9; }
         }
       }
     }
@@ -530,7 +539,7 @@ export function paint(p: Pond) {
             // light along the back, shade at the sides
             c = mixRGB(c, 0xffffff, 0.14 * (1 - v * v));
             c = mixRGB(c, 0x000000, 0.22 * Math.pow(av, 3));
-            if (tail) c = mixRGB(c, 0xffffff, 0.3);
+            if (tail) c = p.pale ? mixRGB(c, p.water, 0.15) : mixRGB(c, 0xffffff, 0.3);
           }
           // deeper is dimmer, into the water's own color
           c = mixRGB(c, p.deepTo, k.depth * 0.5);
@@ -538,8 +547,10 @@ export function paint(p: Pond) {
           // the tail fin is thin: lighter, and the water shows through
           put(p, i, tail ? s * 0.62 : s, c, tail ? 1 : 0);
         } else if (d < W + (shark ? 1.1 : 1.9) && bu > 0.02 && bu < 0.98) {
-          // the halo: a few marks just outside the body, fading out (a shark's is closer, its outline cleaner)
-          const c = mixRGB(mixRGB(k.pat[Math.round(bu * (PU - 1)) * PV + (side < 0 ? 0 : PV - 1)], p.water, 0.25), p.deepTo, k.depth * 0.5);
+          // the halo: a few marks just outside the body, fading out (a shark's is closer, its outline cleaner);
+          // in pale water a koi's is darker, so its white still shows against the water
+          const edge = p.pale && !shark;
+          const c = mixRGB(mixRGB(k.pat[Math.round(bu * (PU - 1)) * PV + (side < 0 ? 0 : PV - 1)], edge ? POND_EDGE : p.water, edge ? 0.4 : 0.25), p.deepTo, k.depth * 0.5);
           put(p, y * cols + x, (shark ? 0.22 : 0.3) * (1 - (d - W - 0.5) / (shark ? 0.6 : 1.4)) * deep, c, 2);
         }
         if (shark && d >= W + 0.3) {
@@ -563,7 +574,7 @@ export function paint(p: Pond) {
           const out = d - W;
           const along = 1 - Math.abs(bu - 0.22) / 0.1;
           if (out < reach * along && along > 0) {
-            const c = mixRGB(mixRGB(k.pat[Math.round(0.3 * (PU - 1)) * PV + (side < 0 ? 0 : PV - 1)], 0xffffff, 0.45), 0x1d3b44, k.depth * 0.55);
+            const c = mixRGB(mixRGB(k.pat[Math.round(0.3 * (PU - 1)) * PV + (side < 0 ? 0 : PV - 1)], p.pale ? POND_EDGE : 0xffffff, p.pale ? 0.3 : 0.45), p.pale ? p.deepTo : 0x1d3b44, k.depth * 0.55);
             put(p, i, 0.55 * along * deep * (1 - out / (reach + 0.01)), c, 1);
           }
         }
@@ -583,10 +594,10 @@ export function paint(p: Pond) {
         if (ang < 0.32 && r > d.r * 0.2) continue; // the notch
         const i = y * cols + x;
         const vein = Math.abs(Math.sin((Math.atan2(oy, ox) - d.a) * 4.5)) < 0.22 && r > d.r * 0.25;
-        const c = mixRGB(PAD, PAD_HI, clamp(1 - r / d.r, 0, 1) * 0.5 + (noise(x * 0.5, y * 0.5, 9) - 0.5) * 0.4);
+        const c = mixRGB(p.pale ? PALE_PAD : PAD, p.pale ? PALE_PAD_HI : PAD_HI, clamp(1 - r / d.r, 0, 1) * 0.5 + (noise(x * 0.5, y * 0.5, 9) - 0.5) * 0.4);
         p.cover[i] = 1;
         p.tile[i] = 0.25 + s * 0.68; p.tileRGB[i] = c;
-        p.mark[i] = vein ? 5 : clamp(Math.round(6 + s * 3), 1, RAMP); p.markRGB[i] = vein ? PAD_HI : PAD_DARK; p.markA[i] = vein ? 0.8 : 0.6;
+        p.mark[i] = vein ? 5 : clamp(Math.round(6 + s * 3), 1, RAMP); p.markRGB[i] = vein ? (p.pale ? PALE_PAD_HI : PAD_HI) : p.pale ? PALE_PAD_DARK : PAD_DARK; p.markA[i] = vein ? 0.8 : 0.6;
         if (d.flower && r < d.r * 0.42) {
           const petal = r < d.r * 0.16 ? 0xf5d76e : mixRGB(PETAL, PETAL_HI, 1 - r / (d.r * 0.42));
           p.tile[i] = 0.92; p.tileRGB[i] = petal; p.mark[i] = r < d.r * 0.16 ? 11 : 8; p.markRGB[i] = mixRGB(petal, 0xffffff, 0.5); p.markA[i] = 0.8;

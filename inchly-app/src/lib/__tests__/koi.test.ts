@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { feed, makePond, MARKS, paint, SEA, step } from '../koi';
+import { feed, makePond, MARKS, paint, POND, SEA, step, WATER } from '../koi';
 
 describe('the koi pond', () => {
   it('keeps its koi in (or just past the edge of) the pond, bodies whole', () => {
@@ -27,6 +27,20 @@ describe('the koi pond', () => {
     expect(given).toBeGreaterThan(2);
     for (let i = 0; i < 30 * 30 && p.food.length; i++) step(p, 1 / 30);
     expect(p.food.length).toBeLessThan(given);
+  });
+  it('is pale water (so the app stays white), dark only when asked, and a koi still stands out from it', () => {
+    const p = makePond(36, 78, 3, 5);
+    expect(p.pale).toBe(true);
+    expect(p.water).toBe(POND);
+    expect(makePond(36, 78, 3, 5, 'koi', 'dark').water).toBe(WATER);
+    for (let i = 0; i < 60; i++) step(p, 1 / 30);
+    paint(p);
+    // the marks around each koi are darker than the water
+    const lum = (c: number) => ((c >> 16) & 255) * 0.3 + ((c >> 8) & 255) * 0.59 + (c & 255) * 0.11;
+    let n = 0, sum = 0;
+    for (let i = 0; i < p.cols * p.rows; i++) if (p.cover[i] > 0 && p.tile[i] === 0 && p.mark[i]) { n++; sum += lum(p.markRGB[i]); }
+    expect(n).toBeGreaterThan(20);
+    expect(sum / n).toBeLessThan(lum(POND) - 40);
   });
   it('paints tiles and marks into the grid', () => {
     const p = makePond(36, 78, 3, 5);

@@ -2,7 +2,7 @@ import type { SkPicture } from '@shopify/react-native-skia';
 import { makeMutable } from 'react-native-reanimated';
 
 import { type Backdrop, backdropOf, BACKDROPS, useDesign } from '../../design';
-import { feed, type Pond, SEA, WATER } from '../../lib/koi';
+import { feed, POND, type Pond, SEA } from '../../lib/koi';
 import type { Crowd } from '../../lib/walkers';
 
 // The 背景 (design.ts Backdrop) is one world — the koi, the sharks or the
@@ -17,7 +17,7 @@ export const CELL = 9;
 export const FLOOR = '#F1F1EE';
 const hex = (n: number) => `#${n.toString(16).padStart(6, '0')}`;
 /** The ground of each 背景, under what moves on it (and while it loads). */
-export const GROUND: Record<Exclude<Backdrop, 'none'>, string> = { pond: hex(WATER), sea: hex(SEA), walk: FLOOR };
+export const GROUND: Record<Exclude<Backdrop, 'none'>, string> = { pond: hex(POND), sea: hex(SEA), walk: FLOOR };
 
 /** What the engine drew last. */
 export const backdropPicture = makeMutable<SkPicture | null>(null);
