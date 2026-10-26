@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Walkers</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #f4f4f3; }
+  body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  canvas { position: absolute; inset: 0; display: block; }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<canvas id="ui"></canvas>
+<script src="shared/host.js"></script>
+<script>
+// Invisible passers-by: only their shoes and the blur of their legs show,
+// printed as a halftone. A tracker tags some of them as they cross.
+(() => {
+  const { clamp, lerp, rand, angleDiff } = Host;
+
+  const PAPER = [0.957, 0.957, 0.953];
+  const INK = [0.043, 0.043, 0.051];
+  const TAGS = ['#6f5ce6', '#e07b2a', '#2f6fe0', '#1f9e8f', '#d6455d'];
+  const NAMES = ['PAPER\\', 'NOMAD', 'ECHO', 'KITE', 'WREN', 'ORBIT', 'MOSS', 'LUMEN', 'DRIFT', 'HALO', 'FERN', 'VOLT'];
+  const SCRAMBLE = '#%&/\\<>*+=:;01';
+
+  const glCanvas = document.getElementById('gl');
+  const uiCanvas = document.getElementById('ui');
+  const glEntry = Host.canvas(glCanvas, 2);
+  const uiEntry = Host.canvas(uiCanvas, 3);
+  const ui = uiCanvas.getContext('2d');
+  const gl = glCanvas.getContext('webgl', { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: 'low-power' });
+
+  // ── renderer ──────────────────────────────────────────────────────────
+  // Each shape is a tapered capsule (a→b, radius ra→rb) with its own blur and
+  // ink amount. The shader multiplies their coverage like layered washes, then
+  // prints the result through a 45° halftone screen.
+  let MAX = 24;
+  let prog = null;
+  let loc = {};
+  let segData = new Float32Array(MAX * 4);
+  let parData = new Float32Array(MAX * 4);
+
+  function shaderSource() {
+    return `
+precision highp float;
+#define MAX ${MAX}
+uniform vec2 uRes;
+uniform float uScale;
+uniform float uPitch;
+uniform int uCount;
+uniform vec4 uSeg[MAX];
+uniform vec4 uPar[MAX];
+uniform vec3 uPaper;
+uniform vec3 uInk;
+
+float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+
+void main() {
+  vec2 frag = gl_FragCoord.xy;
+  vec2 p = vec2(frag.x, uRes.y - frag.y) / uScale;
+  float keep = 1.0;
+  for (int i = 0; i < MAX; i++) {
+    if (i >= uCount) break;
+    vec4 s = uSeg[i];
+    vec4 q = uPar[i];
+    vec2 pa = p - s.xy;
+    vec2 ba = s.zw - s.xy;
+    float h = clamp(dot(pa, ba) / max(dot(ba, ba), 0.0001), 0.0, 1.0);
+    float d = length(pa - ba * h) - mix(q.x, q.y, h);
+    float c = 1.0 - smoothstep(-q.z, q.z, d);
+    keep *= 1.0 - q.w * c;
+  }
+  float v = 1.0 - keep;
+
+  vec2 cell = mat2(0.7071, 0.7071, -0.7071, 0.7071) * frag / uPitch;
+  float dist = length(fract(cell) - 0.5);
+  float rad = sqrt(v) * 0.72;
+  float aa = 0.8 / uPitch;
+  // Fade tiny dots out instead of letting the AA band print a dot on blank paper.
+  float dots = (1.0 - smoothstep(rad - aa, rad + aa, dist)) * clamp(rad / aa - 0.5, 0.0, 1.0);
+  float cov = mix(dots, 1.0, smoothstep(0.8, 0.95, v));
+
+  float grain = (hash(floor(frag)) - 0.5) * 0.018;
+  gl_FragColor = vec4(mix(uPaper, uInk, cov) + grain, 1.0);
+}`;
+  }
+
+  function compile(type, src) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+    return sh;
+  }
+
+  function initGL() {
+    // Two vec4 per shape; leave headroom for the scalar uniforms.
+    const vecs = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) || 64;
+    MAX = clamp(Math.floor((vecs - 8) / 2), 16, 40);
+    segData = new Float32Array(MAX * 4);
+    parData = new Float32Array(MAX * 4);
+    prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, 'attribute vec2 a; void main() { gl_Position = vec4(a, 0.0, 1.0); }'));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, shaderSource()));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const a = gl.getAttribLocation(prog, 'a');
+    gl.enableVertexAttribArray(a);
+    gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+    for (const n of ['uRes', 'uScale', 'uPitch', 'uCount', 'uSeg', 'uPar', 'uPaper', 'uInk']) loc[n] = gl.getUniformLocation(prog, n);
+    gl.uniform3fv(loc.uPaper, PAPER);
+    gl.uniform3fv(loc.uInk, INK);
+  }
+
+  let shapeCount = 0;
+  function shape(ax, ay, bx, by, ra, rb, soft, ink) {
+    if (shapeCount >= MAX || ink <= 0.005) return;
+    const o = shapeCount * 4;
+    segData[o] = ax;
+    segData[o + 1] = ay;
+    segData[o + 2] = bx;
+    segData[o + 3] = by;
+    parData[o] = ra;
+    parData[o + 1] = rb;
+    parData[o + 2] = Math.max(0.7, soft);
+    parData[o + 3] = ink;
+    shapeCount++;
+  }
+
+  function draw() {
+    gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+    gl.uniform2f(loc.uRes, glCanvas.width, glCanvas.height);
+    gl.uniform1f(loc.uScale, glEntry.dpr);
+    // Screen pitch scales with the shoe so the print reads the same on any device.
+    gl.uniform1f(loc.uPitch, Math.max(2.4, shoe * 0.034 * glEntry.dpr));
+    gl.uniform1i(loc.uCount, shapeCount);
+    gl.uniform4fv(loc.uSeg, segData);
+    gl.uniform4fv(loc.uPar, parData);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  // ── walkers ───────────────────────────────────────────────────────────
+  let shoe = 40; // shoe length, CSS px
+  let walkers = [];
+  let reticles = [];
+  let serial = 0;
+
+  const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+  function makeWalker(anywhere) {
+    const m = shoe * 3;
+    let x;
+    let y;
+    if (anywhere) {
+      x = rand(0, Host.w);
+      y = rand(0, Host.h);
+    } else {
+      const edge = Math.floor(rand(0, 4));
+      x = edge === 0 ? -m : edge === 1 ? Host.w + m : rand(0, Host.w);
+      y = edge === 2 ? -m : edge === 3 ? Host.h + m : rand(0, Host.h);
+    }
+    const aim = { x: rand(Host.w * 0.2, Host.w * 0.8), y: rand(Host.h * 0.2, Host.h * 0.8) };
+    const heading = Math.atan2(aim.y - y, aim.x - x);
+    const cruise = shoe * rand(1.9, 2.5);
+    const w = {
+      x,
+      y,
+      heading,
+      turn: 0,
+      speed: cruise,
+      cruise,
+      vTarget: cruise,
+      stepDur: rand(0.4, 0.5),
+      phase: rand(0, 1),
+      swing: 0,
+      stepping: true,
+      pauseIn: rand(4, 12),
+      pauseLeft: 0,
+      flee: 0,
+      seed: rand(0, 100),
+      feet: [0, 1].map(() => ({ x, y, a: heading, fx: x, fy: y, fa: heading, tx: x, ty: y, ta: heading })),
+      // Tracker tag
+      id: ++serial,
+      name: NAMES[Math.floor(rand(0, NAMES.length))],
+      color: TAGS[Math.floor(rand(0, TAGS.length))],
+      tagged: Math.random() < 0.6,
+      tagT: rand(1, 4),
+      tagAge: 0,
+      box: null,
+    };
+    // Feet start planted either side of the body.
+    for (const [k, f] of w.feet.entries()) {
+      const side = k === 0 ? -1 : 1;
+      const back = k === w.swing ? -0.5 : 0.5;
+      f.x = f.fx = f.tx = x + Math.cos(heading) * shoe * back - Math.sin(heading) * side * shoe * 0.3;
+      f.y = f.fy = f.ty = y + Math.sin(heading) * shoe * back + Math.cos(heading) * side * shoe * 0.3;
+    }
+    planStep(w);
+    return w;
+  }
+
+  // Choose where the swinging foot will land: ahead of where the body will be.
+  function planStep(w) {
+    const f = w.feet[w.swing];
+    const side = w.swing === 0 ? -1 : 1;
+    const ahead = w.speed * w.stepDur;
+    const h = w.heading + w.turn * w.stepDur;
+    const cx = w.x + Math.cos(w.heading) * ahead + Math.cos(h) * ahead * 0.5;
+    const cy = w.y + Math.sin(w.heading) * ahead + Math.sin(h) * ahead * 0.5;
+    f.fx = f.x;
+    f.fy = f.y;
+    f.fa = f.a;
+    f.tx = cx - Math.sin(h) * side * shoe * 0.3;
+    f.ty = cy + Math.cos(h) * side * shoe * 0.3;
+    f.ta = h + side * 0.12;
+  }
+
+  function update(w, dt, t) {
+    // Wander: a slow, smooth turn, nudged back on-screen when straying.
+    const n = Math.sin(t * 0.31 + w.seed) * 0.6 + Math.sin(t * 0.73 + w.seed * 2.1) * 0.4;
+    w.turn = n * 0.35;
+    const cx = Host.w / 2;
+    const cy = Host.h / 2;
+    const out = Math.max(Math.abs(w.x - cx) - Host.w / 2, Math.abs(w.y - cy) - Host.h / 2);
+    if (out > -shoe && w.flee <= 0) {
+      const home = Math.atan2(cy - w.y, cx - w.x);
+      w.turn += clamp(angleDiff(home, w.heading), -1, 1) * 0.5;
+    }
+    w.heading += w.turn * dt * (w.speed > 1 ? 1 : 0);
+
+    // Occasionally stop for a moment, as if reading a phone.
+    w.pauseIn -= dt;
+    if (w.pauseIn <= 0 && w.pauseLeft <= 0 && w.flee <= 0) {
+      w.pauseLeft = rand(1.2, 3);
+      w.pauseIn = rand(9, 18);
+    }
+    if (w.pauseLeft > 0) {
+      w.pauseLeft -= dt;
+      w.vTarget = 0;
+      if (w.pauseLeft <= 0) {
+        w.heading += rand(-0.9, 0.9);
+        w.vTarget = w.cruise;
+      }
+    }
+    if (w.flee > 0) {
+      w.flee -= dt;
+      w.vTarget = w.cruise * 1.5;
+      if (w.flee <= 0) w.vTarget = w.cruise;
+    }
+    w.speed = lerp(w.speed, w.vTarget, 1 - Math.exp(-dt * 3));
+    const stepDur = w.stepDur / (w.flee > 0 ? 1.35 : 1);
+
+    w.x += Math.cos(w.heading) * w.speed * dt;
+    w.y += Math.sin(w.heading) * w.speed * dt;
+
+    if (w.stepping) {
+      w.phase += dt / stepDur;
+      if (w.phase >= 1) {
+        const f = w.feet[w.swing];
+        f.x = f.tx;
+        f.y = f.ty;
+        f.a = f.ta;
+        w.phase -= 1;
+        w.swing = 1 - w.swing;
+        if (w.speed < w.cruise * 0.25) {
+          w.stepping = false;
+          w.phase = 0;
+        } else {
+          planStep(w);
+        }
+      }
+    } else if (w.speed > w.cruise * 0.3) {
+      w.stepping = true;
+      w.phase = 0;
+      planStep(w);
+    }
+    if (w.stepping) {
+      const f = w.feet[w.swing];
+      const e = easeInOut(clamp(w.phase, 0, 1));
+      f.x = lerp(f.fx, f.tx, e);
+      f.y = lerp(f.fy, f.ty, e);
+      f.a = f.fa + angleDiff(f.ta, f.fa) * e;
+    }
+
+    // Tag: blink on and off now and then.
+    w.tagT -= dt;
+    if (w.tagT <= 0) {
+      w.tagged = !w.tagged;
+      w.tagT = w.tagged ? rand(4, 9) : rand(2, 6);
+      w.tagAge = 0;
+      if (w.tagged) w.box = null;
+    }
+    w.tagAge += dt;
+  }
+
+  function offscreen(w) {
+    const m = shoe * 5;
+    return w.x < -m || w.y < -m || w.x > Host.w + m || w.y > Host.h + m;
+  }
+
+  // Shapes for one walker: two legs (big, soft washes) then two shoes.
+  function emit(w) {
+    const hipX = w.x + Math.cos(w.heading) * shoe * 0.5;
+    const hipY = w.y + Math.sin(w.heading) * shoe * 0.5 - shoe * 2.1;
+    const r = shoe * 0.22;
+    for (let k = 0; k < 2; k++) {
+      const f = w.feet[k];
+      const swinging = w.stepping && k === w.swing;
+      const lift = swinging ? Math.sin(Math.PI * clamp(w.phase, 0, 1)) : 0;
+      // Leg: from the ankle up toward the hip, blurrier while it swings.
+      const ax = f.x - Math.cos(f.a) * shoe * 0.18;
+      const ay = f.y - Math.sin(f.a) * shoe * 0.18;
+      const kx = lerp(ax, hipX, 0.55);
+      const ky = lerp(ay, hipY, 0.55);
+      shape(ax, ay, kx, ky, r * 0.8, r * 1.25, shoe * (0.32 + lift * 0.25), 0.3 - lift * 0.06);
+      shape(kx, ky, hipX + (k ? 1 : -1) * r, hipY, r * 1.25, r * 1.9, shoe * (0.55 + lift * 0.2), 0.16);
+    }
+    for (let k = 0; k < 2; k++) {
+      const f = w.feet[k];
+      const swinging = w.stepping && k === w.swing;
+      const lift = swinging ? Math.sin(Math.PI * clamp(w.phase, 0, 1)) : 0;
+      const hl = shoe / 2 - r;
+      const dx = Math.cos(f.a) * hl;
+      const dy = Math.sin(f.a) * hl;
+      if (swinging) {
+        // Motion smear: stretch the shoe back along the path it just travelled.
+        const back = clamp(w.phase - 0.22, 0, 1);
+        const e = easeInOut(back);
+        const px = lerp(f.fx, f.tx, e);
+        const py = lerp(f.fy, f.ty, e);
+        shape(px - dx, py - dy, f.x + dx, f.y + dy, r * (1 + lift * 0.15), r * (1 + lift * 0.25), 2 + lift * shoe * 0.22, 0.95 - lift * 0.35);
+      } else {
+        shape(f.x - dx, f.y - dy, f.x + dx, f.y + dy, r, r * 1.04, 1.2, 1);
+      }
+    }
+  }
+
+  // ── tracker overlay ───────────────────────────────────────────────────
+  function drawBrackets(x0, y0, x1, y1, len, color, alpha) {
+    ui.globalAlpha = alpha;
+    ui.strokeStyle = color;
+    ui.lineWidth = 1.25;
+    ui.beginPath();
+    ui.moveTo(x0, y0 + len); ui.lineTo(x0, y0); ui.lineTo(x0 + len, y0);
+    ui.moveTo(x1 - len, y0); ui.lineTo(x1, y0); ui.lineTo(x1, y0 + len);
+    ui.moveTo(x0, y1 - len); ui.lineTo(x0, y1); ui.lineTo(x0 + len, y1);
+    ui.moveTo(x1 - len, y1); ui.lineTo(x1, y1); ui.lineTo(x1, y1 - len);
+    ui.stroke();
+  }
+
+  function drawTag(w, dt) {
+    const pad = shoe * 0.35;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const f of w.feet) {
+      x0 = Math.min(x0, f.x - shoe / 2);
+      y0 = Math.min(y0, f.y - shoe / 2);
+      x1 = Math.max(x1, f.x + shoe / 2);
+      y1 = Math.max(y1, f.y + shoe / 2);
+    }
+    const target = [x0 - pad, y0 - pad, x1 + pad, y1 + pad];
+    if (!w.box) {
+      // Lock-on: start wide and snap in.
+      const cx = (target[0] + target[2]) / 2;
+      const cy = (target[1] + target[3]) / 2;
+      const s = 1.9;
+      w.box = target.map((v, i) => (i % 2 === 0 ? cx + (v - cx) * s : cy + (v - cy) * s));
+    }
+    const k = 1 - Math.exp(-dt * 7);
+    for (let i = 0; i < 4; i++) w.box[i] = lerp(w.box[i], target[i], k);
+    const [bx0, by0, bx1, by1] = w.box;
+    const fadeIn = clamp(w.tagAge / 0.35, 0, 1);
+    const fadeOut = clamp(w.tagT / 0.3, 0, 1);
+    const a = Math.min(fadeIn, fadeOut);
+    if (a <= 0) return;
+    drawBrackets(bx0, by0, bx1, by1, Math.min(10, (bx1 - bx0) * 0.25), w.color, a);
+
+    // Name types itself in through a scramble.
+    const full = w.name;
+    const shown = Math.floor(w.tagAge * 22);
+    let text = '';
+    for (let i = 0; i < full.length; i++) {
+      text += i < shown - 3 ? full[i] : i < shown ? SCRAMBLE[(Math.random() * SCRAMBLE.length) | 0] : '';
+    }
+    const fs = 10;
+    ui.font = `700 ${fs}px ui-monospace, "SF Mono", Menlo, monospace`;
+    ui.textBaseline = 'bottom';
+    const tx = bx0;
+    const ty = by0 - 5;
+    // A faint offset copy gives the type a slightly embossed, printed feel.
+    ui.globalAlpha = a * 0.28;
+    ui.fillStyle = w.color;
+    spaced(text, tx + 0.8, ty + 0.8, fs * 0.72);
+    ui.globalAlpha = a;
+    spaced(text, tx, ty, fs * 0.72);
+    if (shown > full.length) {
+      ui.font = `400 ${fs}px ui-monospace, "SF Mono", Menlo, monospace`;
+      ui.fillStyle = '#9a9a9a';
+      spaced(String(w.id).padStart(2, '0'), tx + full.length * fs * 0.72 + 6, ty, fs * 0.72);
+    }
+    ui.globalAlpha = 1;
+  }
+
+  function spaced(text, x, y, step) {
+    for (let i = 0; i < text.length; i++) ui.fillText(text[i], x + i * step, y);
+  }
+
+  function drawReticles(dt) {
+    for (let i = reticles.length - 1; i >= 0; i--) {
+      const r = reticles[i];
+      r.age += dt;
+      if (r.age > 0.9) {
+        reticles.splice(i, 1);
+        continue;
+      }
+      const e = 1 - Math.pow(1 - clamp(r.age / 0.35, 0, 1), 3);
+      const size = lerp(56, 22, e);
+      const a = 1 - clamp((r.age - 0.45) / 0.45, 0, 1);
+      drawBrackets(r.x - size / 2, r.y - size / 2, r.x + size / 2, r.y + size / 2, 7, '#1b1b1f', a * 0.8);
+      ui.globalAlpha = a * 0.8;
+      ui.fillStyle = '#1b1b1f';
+      ui.fillRect(r.x - 1, r.y - 1, 2, 2);
+    }
+    ui.globalAlpha = 1;
+  }
+
+  // ── scene ─────────────────────────────────────────────────────────────
+  function targetCount() {
+    const area = (Host.w * Host.h) / (390 * 844);
+    return clamp(Math.round(4 * Math.sqrt(area)), 3, Math.floor(MAX / 4));
+  }
+
+  function resize() {
+    shoe = clamp(Math.min(Host.w, Host.h) * 0.105, 34, 64);
+    if (!walkers.length) {
+      for (let i = 0; i < targetCount(); i++) walkers.push(makeWalker(true));
+    }
+  }
+
+  function frame(dt, t) {
+    shapeCount = 0;
+    for (let i = 0; i < walkers.length; i++) {
+      const w = walkers[i];
+      update(w, dt, t);
+      if (offscreen(w) && w.flee <= 0) walkers[i] = makeWalker(false);
+    }
+    while (walkers.length < targetCount()) walkers.push(makeWalker(false));
+    if (Host.warming) {
+      // Tags still need to settle on their targets during warm-up.
+      for (const w of walkers) w.box = null;
+      return;
+    }
+    for (const w of walkers) emit(w);
+    if (gl) draw();
+
+    const dpr = uiEntry.dpr;
+    ui.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ui.clearRect(0, 0, Host.w, Host.h);
+    for (const w of walkers) if (w.tagged) drawTag(w, dt);
+    drawReticles(dt);
+  }
+
+  // Tapping startles nearby walkers: they turn away and hurry off.
+  function tap(x, y) {
+    reticles.push({ x, y, age: 0 });
+    const reach = Math.min(Host.w, Host.h) * 0.45;
+    for (const w of walkers) {
+      const d = Math.hypot(w.x - x, w.y - y);
+      if (d > reach) continue;
+      w.heading = Math.atan2(w.y - y, w.x - x) + rand(-0.3, 0.3);
+      w.flee = rand(0.8, 1.2);
+      w.pauseLeft = 0;
+      if (!w.tagged) {
+        w.tagged = true;
+        w.tagAge = 0;
+        w.box = null;
+      }
+      w.tagT = Math.max(w.tagT, 3);
+    }
+  }
+
+  if (gl) {
+    initGL();
+    glCanvas.addEventListener('webglcontextlost', (e) => e.preventDefault());
+    glCanvas.addEventListener('webglcontextrestored', initGL);
+  }
+  Host.start({ frame, resize, tap });
+})();
+</script>
+</body>
+</html>

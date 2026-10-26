@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Koi</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #121212; }
+  body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  canvas { position: absolute; inset: 0; display: block; }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<canvas id="fx"></canvas>
+<script src="shared/host.js"></script>
+<script src="shared/ascii-sea.js"></script>
+<script>
+// Koi pond after night falls: koi drawn in type over a dark grid. Tap to feed.
+(() => {
+  const { lerp, noise2 } = Host;
+
+  // Palette indices used by paint() below.
+  const WHITE = 0, RED = 1, DEEP = 2, GOLD = 3, SUMI = 4, BLUE = 5, GRAY = 6, ORANGE = 7;
+  const palette = [
+    { fill: '#d8d2ca', glyph: '#1d1a17' }, // white
+    { fill: '#c4483a', glyph: '#f6e4dc' }, // red
+    { fill: '#9a372e', glyph: '#efd2c9' }, // deep red
+    { fill: '#a88e46', glyph: '#1f1a0c' }, // gold
+    { fill: '#383432', glyph: '#a39d96' }, // sumi black
+    { fill: '#8c93c8', glyph: '#181a2c' }, // asagi blue
+    { fill: '#7b7672', glyph: '#ece8e4' }, // gray
+    { fill: '#cc743e', glyph: '#2a1409' }, // orange
+  ];
+
+  const KOHAKU = 0, SANKE = 1, SHOWA = 2, OGON = 3, ASAGI = 4, TANCHO = 5, CHAGOI = 6;
+
+  const koi = {
+    id: 'koi',
+    length: 17,
+    width: 0.19,
+    profile: (u) =>
+      u < 0.08 ? lerp(0.5, 0.86, u / 0.08)
+      : u < 0.32 ? lerp(0.86, 1, (u - 0.08) / 0.24)
+      : lerp(1, 0.15, Math.pow((u - 0.32) / 0.68, 1.1)),
+    speed: 1.7,
+    agility: 1,
+    beat: 3.2,
+    wave: 0.05,
+    fins: [
+      { at: 0.22, len: 0.16, root: 0.06, tip: 0.075, sweep: 0.95, flap: 1, solid: 0.6 },
+      { at: 0.55, len: 0.09, root: 0.04, tip: 0.045, sweep: 0.75, flap: 0.6, solid: 0.5 },
+    ],
+    tail: 0.32,
+    tailSpread: 0.2,
+    tailShape: 0.75,
+    fork: 0.22,
+    tailSolid: 0.6,
+    hammer: 0,
+    shimmer: 2.2,
+    patterns: 7,
+    patternScale: [5.5, 1.6],
+    fillFrom: 0.06,
+    accents: [],
+    palette,
+    paint(t, s, n, part, pattern, h) {
+      const fin = part === 1 || part === 2;
+      const side = Math.abs(s);
+      switch (pattern) {
+        case KOHAKU:
+          if (fin) return WHITE;
+          return n > 0.47 || (t < 0.1 && n > 0.3) ? (side > 0.75 ? DEEP : RED) : WHITE;
+        case SANKE: {
+          if (fin) return h > 0.8 ? SUMI : WHITE;
+          const spots = noise2(t * 14, s * 4, 77);
+          if (spots > 0.74 && t > 0.15) return SUMI;
+          return n > 0.52 ? RED : WHITE;
+        }
+        case SHOWA:
+          if (fin) return t < 0.6 && h > 0.6 ? SUMI : WHITE;
+          return n > 0.58 ? RED : n < 0.28 ? WHITE : SUMI;
+        case OGON:
+          return fin ? (h > 0.5 ? GOLD : WHITE) : side < 0.45 && n > 0.55 ? WHITE : GOLD;
+        case ASAGI:
+          if (fin) return ORANGE;
+          return side > 0.68 ? (t < 0.12 ? BLUE : ORANGE) : h > 0.85 ? WHITE : BLUE;
+        case TANCHO:
+          return !fin && t < 0.16 && side < 0.6 ? RED : WHITE;
+        default: // CHAGOI
+          return fin ? GRAY : n > 0.6 ? ORANGE : GRAY;
+      }
+    },
+  };
+
+  AsciiSea.create({
+    theme: {
+      bg: '#121212',
+      grid: 'rgba(255,255,255,0.045)',
+      vignette: ['rgba(46,40,36,0.55)', 'rgba(10,10,10,0)'],
+      glow: true,
+      shadow: [0, 0, 0],
+      shadowAlpha: 0.2,
+      shadowOffset: 0.15,
+    },
+    species: [koi],
+    school: [
+      { species: 'koi', depth: 0.05, pattern: KOHAKU },
+      { species: 'koi', depth: 0.25, pattern: SHOWA },
+      { species: 'koi', depth: 0.15, pattern: OGON },
+      { species: 'koi', depth: 0.45, pattern: ASAGI },
+      { species: 'koi', depth: 0.1, pattern: SANKE },
+      { species: 'koi', depth: 0.65, pattern: TANCHO, scales: false },
+      { species: 'koi', depth: 0.8, pattern: CHAGOI, scales: false },
+    ],
+    particles: 'specks',
+    ambientGlyph: '#4c4a48',
+    rippleGlyph: '#b9b2a8',
+    pellet: { fill: '#d9a441', glyph: '#2a1e08' },
+  });
+})();
+</script>
+</body>
+</html>
