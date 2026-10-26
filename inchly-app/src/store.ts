@@ -57,6 +57,7 @@ export type State = {
   friendHidden: string[]; // handles swiped off home's friends list
   posts: Post[];
   helpful: string[]; // post ids
+  bookmarks: string[]; // post ids you saved, newest first
   roomFilters: string[]; // extra 志望校 chips in the study room
   notifRead: number[];
   notifGone: number[];
@@ -109,6 +110,7 @@ export const INITIAL: State = {
   friendHidden: [],
   posts: POSTS.filter((p) => !p.mine),
   helpful: [],
+  bookmarks: [],
   roomFilters: [],
   notifRead: [],
   notifGone: [],
@@ -603,6 +605,12 @@ export function toggleFollow(h: string) {
 }
 export function toggleHelpful(id: string) {
   setState((s) => ({ helpful: toggleIn(s.helpful, id) }));
+}
+/** Saves a post to your bookmarks, or takes it out. Returns whether it is saved now. */
+export function toggleBookmark(id: string): boolean {
+  const on = !state.bookmarks.includes(id);
+  setState((s) => ({ bookmarks: on ? [id, ...s.bookmarks] : s.bookmarks.filter((x) => x !== id) }));
+  return on;
 }
 export function addPost(p: Omit<Post, 'id'>) {
   setState((s) => ({ posts: [{ ...p, id: newId('m') }, ...s.posts] }));

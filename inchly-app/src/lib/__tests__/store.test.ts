@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { addSubject, commitRecord, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, toggleTodo, updateSubject } from '../../store';
+import { addSubject, commitRecord, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
 import { subj } from '../../data';
 import { addDays, dateKey } from '../time';
 
@@ -112,6 +112,29 @@ describe('subjects', () => {
   });
   it('fills in chart settings added later', () => {
     expect(migrate({ v: 3, chart: { range: 'week', kind: 'bar', palette: 'blue' } }).chart).toMatchObject({ range: 'week', detail: 'subject' });
+  });
+});
+
+describe('bookmarks', () => {
+  it('saves newest first and takes one out again', () => {
+    reset();
+    expect(toggleBookmark('p1')).toBe(true);
+    expect(toggleBookmark('p4')).toBe(true);
+    expect(getState().bookmarks).toEqual(['p4', 'p1']);
+    expect(toggleBookmark('p1')).toBe(false);
+    expect(getState().bookmarks).toEqual(['p4']);
+  });
+});
+
+describe('the plan a session measures against', () => {
+  it('comes from a timetable block, is none when just starting, and clears on record', () => {
+    reset();
+    startFrom({ s: 'ma', min: 45 });
+    expect(getState().planMin).toBe(45);
+    commitRecord({ min: 10 });
+    expect(getState().planMin).toBeNull();
+    startStudy('en');
+    expect(getState().planMin).toBeNull();
   });
 });
 

@@ -14,7 +14,7 @@ import { toast } from '@/ui/Toast';
 
 // The menu that home slides aside for (slide home to the right, or press the
 // handle on its left edge): the app's places that aren't tabs — settings,
-// subjects and colors, the theme — then each subject, one tap to start it
+// subjects and colors, saved posts, the theme — then each subject, one tap to start it
 // (studying that isn't in the timetable starts here), and at the bottom a way
 // to plan.
 
@@ -29,10 +29,12 @@ export function SideMenu({ close, leave }: { close: () => void; leave: () => voi
   const account = useStore((s) => s.account);
   const subjects = useSubjects();
   const running = useStore((s) => s.running);
+  const saved = useStore((s) => s.bookmarks.length);
   const open = (path: Parameters<typeof router.push>[0]) => () => { leave(); router.push(path); };
   const items: Item[] = [
     { icon: 'gear', label: '設定', go: open('/settings') },
     { icon: 'book', label: '科目と色', go: open('/subjects') },
+    { icon: 'bookmark', label: 'ブックマーク', sub: saved ? String(saved) : undefined, go: open('/bookmarks') },
     { icon: 'bell', label: 'お知らせ', go: open('/notifications') },
     { icon: 'users', label: 'フォロー', go: open('/follows') },
     { icon: 'sun', label: 'テーマ', ...(THEMES_OPEN ? { go: open('/design') } : { sub: '準備中' }) },

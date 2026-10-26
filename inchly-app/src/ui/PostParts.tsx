@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import { PERSON_COLOR, Post, subj } from '../data';
-import { addPost, getState, toggleHelpful, useStore } from '../store';
+import { addPost, getState, toggleBookmark, toggleHelpful, useStore } from '../store';
 import { ease, hair, useT } from '../theme';
 import { Avatar, Btn, haptic, Press, Txt } from './base';
 import { personSheet } from './Editors';
@@ -69,6 +69,7 @@ export function PostRow({ p, first }: { p: Post; first?: boolean }) {
             <Txt num size={12.5} tone="ink3">{p.r}</Txt>
           </Press>
           <Helpful id={p.id} base={p.u} />
+          <Bookmark id={p.id} />
           <Press onPress={() => toast('リンクをコピーしました')} hitSlop={8} accessibilityLabel="共有" style={{ height: 32, justifyContent: 'center' }}>
             <Icon name="share" size={16} color={t.ink3} />
           </Press>
@@ -97,6 +98,28 @@ function Helpful({ id, base }: { id: string; base: number }) {
         {burst ? <Burst key={burst} color="#FFC23D" /> : null}
       </View>
       <Rolling value={String(base + (on ? 1 : 0))} size={12.5} weight={on ? '700' : '400'} color={on ? '#B86E00' : t.ink3} />
+    </Press>
+  );
+}
+
+/** Save the post for later; saved ones are in the menu's ブックマーク. */
+function Bookmark({ id }: { id: string }) {
+  const t = useT();
+  const on = useStore((s) => s.bookmarks.includes(id));
+  const s = useSharedValue(1);
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
+  const press = () => {
+    const now = toggleBookmark(id);
+    if (now) {
+      haptic.soft();
+      s.set(withSequence(withTiming(1.35, { duration: 110, easing: ease.out }), withSpring(1, { damping: 8, stiffness: 260 })));
+      toast('ブックマークしました', 'メニューの「ブックマーク」から見られます');
+    } else haptic.tap();
+  };
+  return (
+    <Press onPress={press} haptics={false} scale={0.94} hitSlop={8} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={on ? 'ブックマークを外す' : 'ブックマーク'}
+      style={{ height: 32, justifyContent: 'center' }}>
+      <Animated.View style={a}><Icon name="bookmark" size={16} color={on ? t.blue : t.ink3} filled={on} /></Animated.View>
     </Press>
   );
 }

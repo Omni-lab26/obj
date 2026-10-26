@@ -85,6 +85,7 @@ export default function RootLayout() {
           <Stack.Screen name="subjects" />
           <Stack.Screen name="design" options={{ animation: 'slide_from_left' }} />
           <Stack.Screen name="follows" />
+          <Stack.Screen name="bookmarks" />
           <Stack.Screen name="record" />
           <Stack.Screen name="welcome" options={{ animation: 'fade', gestureEnabled: false }} />
         </Stack>
