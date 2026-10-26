@@ -32,7 +32,7 @@ export function planSheet(o: { date?: Date; existing?: Block; kind?: Kind } = {}
 /** The timetable's 追加: a new plan for today (the day can be changed in the sheet). */
 export const planCalendar = () => planSheet({ date: new Date() });
 
-type Open = 'date' | 'start' | 'endDate' | 'end' | 'color' | null;
+type Open = 'date' | 'start' | 'endDate' | 'end' | 'color' | 'new' | null;
 const DAY = 24 * 60;
 
 function Editor({ close, date, existing, kind: kind0 }: { close: () => void; date?: Date; existing?: Block; kind: Kind }) {
@@ -186,17 +186,22 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
                 ))}
               </View>
             ) : null}
-            {subjects.length ? (
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
-                {subjects.map((x) => (
-                  <Press key={x.id} onPress={() => { haptic.tap(); setName(x.name); setColor(x.c); }} scale={0.94} accessibilityLabel={`${x.name}にする`}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 5, height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: match?.id === x.id ? t.sunken : 'transparent', borderWidth: hair, borderColor: t.line2 }}>
-                    <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: x.c }} />
-                    <Txt size={12.5} w="600" tone="ink2">{x.name}</Txt>
-                  </Press>
-                ))}
-              </View>
-            ) : null}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
+              {subjects.map((x) => (
+                <Press key={x.id} onPress={() => { haptic.tap(); setName(x.name); setColor(x.c); }} scale={0.94} accessibilityLabel={`${x.name}にする`}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 5, height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: match?.id === x.id ? t.sunken : 'transparent', borderWidth: hair, borderColor: t.line2 }}>
+                  <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: x.c }} />
+                  <Txt size={12.5} w="600" tone="ink2">{x.name}</Txt>
+                </Press>
+              ))}
+              {/* a new subject, right here: its name and color */}
+              <Press onPress={() => toggle('new')} scale={0.94} accessibilityLabel="科目を足す" accessibilityState={{ expanded: open === 'new' }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: open === 'new' ? t.blueSoft : 'transparent', borderWidth: hair, borderColor: open === 'new' ? t.blue : t.line2, borderStyle: 'dashed' }}>
+                <Icon name="plus" size={11} color={t.blue} />
+                <Txt size={12.5} w="600" color={t.blue}>科目を足す</Txt>
+              </Press>
+            </View>
+            {open === 'new' ? <Opens><NewSubject onAdd={(x) => { setName(x.name); setColor(x.c); setOpen(null); }} /></Opens> : null}
           </Group>
         </Section>
       ) : null}
@@ -216,6 +221,45 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
           </Press>
         </Group>
       ) : null}
+    </View>
+  );
+}
+
+/** Adds a subject (name and color) on the spot, and hands it back to put on the plan. */
+function NewSubject({ onAdd }: { onAdd: (x: { name: string; c: string }) => void }) {
+  const t = useT();
+  const subjects = useSubjects();
+  const used = new Set(subjects.map((x) => x.c));
+  const [name, setName] = useState('');
+  const [c, setC] = useState(() => SUBJECT_COLORS.find((x) => !used.has(x)) ?? SUBJECT_COLORS[0]);
+  const add = () => {
+    const n = name.trim();
+    if (!n) { haptic.warn(); toast('科目の名前を入れてください'); return; }
+    const same = subjects.find((x) => x.name === n);
+    if (same) { haptic.tap(); toast(`「${n}」はもうあります`, 'その科目にしました'); onAdd({ name: same.name, c: same.c }); return; }
+    addSubject({ name: n, area: 'other', c });
+    haptic.success();
+    toast(`科目に「${n}」を足しました`, '設定 › 科目と色 から直せます');
+    onAdd({ name: n, c });
+  };
+  return (
+    <View style={{ alignSelf: 'stretch', padding: 14, gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: c }} />
+        <TextInput value={name} onChangeText={(v) => setName(v.slice(0, 12))} placeholder="新しい科目（例：日本史）" placeholderTextColor={t.ink3} accessibilityLabel="新しい科目の名前"
+          onSubmitEditing={add} returnKeyType="done"
+          style={[{ flex: 1, minWidth: 0, fontSize: 16, fontFamily: font.text, fontWeight: '600', color: t.ink, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10, backgroundColor: t.sunken }, noOutline]} />
+        <Press onPress={add} scale={0.94} accessibilityLabel="この科目を足す"
+          style={{ height: 38, paddingHorizontal: 14, borderRadius: 19, backgroundColor: t.blue, alignItems: 'center', justifyContent: 'center' }}>
+          <Txt size={14} w="700" color="#fff">足す</Txt>
+        </Press>
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {SUBJECT_COLORS.map((x) => (
+          <Press key={x} onPress={() => { haptic.tap(); setC(x); }} scale={0.88} accessibilityRole="radio" accessibilityState={{ checked: x === c }} accessibilityLabel={`色 ${x}`}
+            style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: x, borderWidth: x === c ? 3 : 0, borderColor: t.surface, boxShadow: x === c ? `0px 0px 0px 2px ${x}` : undefined }} />
+        ))}
+      </View>
     </View>
   );
 }
