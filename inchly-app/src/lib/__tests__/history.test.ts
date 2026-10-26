@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { dayOf, grassOf, hourlyOf, levelOf, minutesIn, regroup, streakOf, todayMinutes, weekOf, withLive } from '../history';
+import { areaColorsOf, dayOf, grassOf, hourlyOf, levelOf, minutesIn, regroup, streakOf, todayMinutes, weekOf, withLive } from '../history';
 
 const now = new Date(2026, 9, 21, 12);
 const recs = [
@@ -75,5 +75,16 @@ describe('history', () => {
   it('adds subjects up into their 教科', () => {
     const area: Record<string, string> = { ph: 'sci', ch: 'sci', en: 'en', sj1: 'ma' };
     expect(regroup({ ph: 30, ch: 20, en: 10, sj1: 5 }, (id) => area[id])).toEqual({ sci: 50, en: 10, ma: 5 });
+  });
+});
+
+describe('areaColorsOf', () => {
+  const subjects = [
+    { id: 'ph', area: 'sci', c: '#30B0C7' }, { id: 'ch', area: 'sci', c: '#FF2D55' },
+    { id: 'ma', area: 'ma', c: '#0EA5E9' }, { id: 'ja', area: 'ja', c: '#D9A300' },
+  ];
+  it('gives each 教科 its most-studied subject\'s color, else its first subject\'s', () => {
+    expect(areaColorsOf(subjects, [{ s: 'ch', min: 90 }, { s: 'ph', min: 40 }, { s: 'ma', min: 10 }])).toEqual({ sci: '#FF2D55', ma: '#0EA5E9', ja: '#D9A300' });
+    expect(areaColorsOf(subjects, [])).toEqual({ sci: '#30B0C7', ma: '#0EA5E9', ja: '#D9A300' });
   });
 });

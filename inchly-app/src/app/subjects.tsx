@@ -9,6 +9,7 @@ import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Choice, Field, Label } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
+import { useAreaColors } from '@/ui/series';
 import { openSheet } from '@/ui/Sheet';
 import { toast } from '@/ui/Toast';
 
@@ -20,6 +21,7 @@ export default function Subjects() {
   const insets = useSafeAreaInsets();
   const subjects = useStore((s) => s.subjects);
   const shown = subjects.filter((x) => !x.hidden);
+  const areaC = useAreaColors();
   const hidden = subjects.filter((x) => x.hidden);
   const names = new Set(subjects.map((x) => x.name));
   const presets = PRESETS.filter((p) => !names.has(p.name));
@@ -37,7 +39,7 @@ export default function Subjects() {
           return (
             <View key={a.id} style={{ paddingHorizontal: 16, paddingTop: 18 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 4, paddingBottom: 8 }}>
-                <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: a.c }} />
+                <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: areaC[a.id] }} />
                 <Txt size={12} w="700" tone="ink2">{a.name}</Txt>
               </View>
               <View style={[{ backgroundColor: t.surface, borderRadius: radius.card }, lift(t)]}>
