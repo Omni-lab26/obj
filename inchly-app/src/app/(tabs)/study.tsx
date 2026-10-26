@@ -6,18 +6,17 @@ import { subj } from '@/data';
 import { Deadlines } from '@/screens/home/standard';
 import { blocksOn, endOf, slotsOf, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
-import { getState, startFrom, toggleTodo, useNow, useStore } from '@/store';
+import { getState, startFrom, useNow, useStore } from '@/store';
 import { hair, onColor, type, useT } from '@/theme';
 import { Card, haptic, Press, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
-import { blockSheet, todoSheet } from '@/ui/Editors';
+import { blockSheet } from '@/ui/Editors';
 import { planCalendar } from '@/ui/PlanSheets';
-import { TodoRow } from '@/ui/HomeParts';
 import { Icon } from '@/ui/Icon';
 import { toast } from '@/ui/Toast';
 
-// The middle tab: where studying starts. Plan it here (the timetable, the
-// ToDos and the deadlines they lead to), and start from what you planned, so the
+// The middle tab: where studying starts. Plan it here (the timetable and the
+// deadlines), and start from what you planned, so the
 // subject is always the one you chose. Starting opens the timer on top; while
 // it runs, the study bar on the tab bar brings it back.
 
@@ -45,7 +44,6 @@ export default function Study() {
           <Txt size={12} tone="ink3">{jpDate(new Date())}</Txt>
         </View>
         <Timetable />
-        <Todos />
         <View style={{ paddingHorizontal: 16, paddingTop: 14 }}><Deadlines /></View>
         <View style={{ height: 8, backgroundColor: t.canvas }} />
       </ScrollView>
@@ -119,44 +117,6 @@ function Timetable() {
           <Press onPress={() => planCalendar()} style={{ paddingVertical: 18, paddingHorizontal: 16, alignItems: 'center', gap: 4 }}>
             <Txt size={13.5} w="600">{day === today ? '今日の時間割はまだありません' : `${DOW[day]}曜日の時間割はまだありません`}</Txt>
             <Txt size={12} tone="ink3">「追加」からカレンダーで日を選んで、時間と科目を決めておくと、その時間に1タップで始められます</Txt>
-          </Press>
-        )}
-      </Card>
-    </>
-  );
-}
-
-// ---------- ToDos, each startable ----------
-function Todos() {
-  const t = useT();
-  const todos = useStore((x) => x.todos);
-  const running = useStore((x) => x.running);
-  const done = todos.filter((x) => x.d).length;
-  return (
-    <>
-      <View style={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 8, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-        <Txt size={type.head} w="700">ToDo</Txt>
-        <Txt size={12} w="500" tone="ink3" num style={{ flex: 1 }}>{`${done}/${todos.length}`}</Txt>
-        <AddLink label="追加" onPress={() => todoSheet()} />
-      </View>
-      <Card style={{ marginHorizontal: 16 }} pad={0}>
-        {todos.map((td, i) => (
-          <View key={td.id} style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <TodoRow todo={td} first={i === 0} onToggle={() => { const exp = toggleTodo(td.id); if (exp) toast('ToDoを完了しました', `+${exp} EXP`); }} onEdit={() => todoSheet(td)} />
-            </View>
-            {td.d ? <View style={{ width: 48 }} /> : (
-              <Press onPress={() => go({ s: td.s, todoId: td.id })} haptics={false} scale={0.9} hitSlop={6} disabled={running}
-                accessibilityLabel={`${td.t}を始める`}
-                style={{ width: 34, height: 34, marginRight: 12, borderRadius: 17, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="play" size={12} color={t.ink} />
-              </Press>
-            )}
-          </View>
-        ))}
-        {todos.length ? null : (
-          <Press onPress={() => todoSheet()} style={{ paddingVertical: 16, alignItems: 'center' }}>
-            <Txt size={13} tone="ink3">やることを1つ決めておくと、始めるのが早くなります</Txt>
           </Press>
         )}
       </Card>
