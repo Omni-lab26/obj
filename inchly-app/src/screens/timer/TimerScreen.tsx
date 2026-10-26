@@ -9,7 +9,9 @@ import { STANDARD_PARTS, STANDARD_ZONES, StandardTimerPage } from './standard';
 // The timer, for every theme: the base parts (layout.ts) in three zones, each
 // drawn by the theme or, where it draws nothing of its own, the standard way.
 // With no theme timer at all, the standard drawing places the parts its own way.
-const STANDARD: TimerKit = { arrange: STANDARD_ZONES };
+// the standard drawing only measures: no today line or slide-to-record of its own (記録する sits by the pause button)
+const Nothing = () => null;
+const STANDARD: TimerKit = { arrange: STANDARD_ZONES, parts: { today: Nothing, record: Nothing } };
 export function TimerScreen({ kit = STANDARD }: { kit?: TimerKit }) {
   const zones = useMemo(() => arrangeZones(TIMER, kit.arrange), [kit.arrange]);
   // a study bar swiped away comes back once you've looked at the timer

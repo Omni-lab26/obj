@@ -3,12 +3,12 @@ import { StatusBar } from 'expo-status-bar';
 import { ComponentType, ReactNode, useSyncExternalStore } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Line, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { hm, pad } from '@/data';
 import { TimerPart, Zone, Zones } from '@/screens/layout';
 import { jpHm, session, useSession, useToday } from '@/screens/model';
-import { elapsedOf, getState, setTarget, startStudy, togglePause, useStore, useSubjects } from '@/store';
+import { type ClockFace, elapsedOf, getState, setClockFace, setTarget, startStudy, togglePause, useStore, useSubjects } from '@/store';
 import { focus, useT } from '@/theme';
 import { haptic, Press, SubjTile, Txt } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
@@ -19,14 +19,13 @@ import { SlideToRecord } from '@/ui/SlideToRecord';
 import { TimeScrubber } from '@/ui/TimeScrubber';
 
 // The standard timer, as parts: a music app's now-playing page, always dark,
-// washed at the top in the subject's color. It opens from the study bar. On
-// top, what you're studying; under it the time and the two rulers (hours
-// above, minutes below) that set it — drag or fling either; then the subjects
-// you study, each ready to start; at the bottom スタート (or pause) and, once
-// under way, slide to record, which pauses the clock and opens the record
-// page. By default the readout counts up (the time that gets recorded) and the
-// rulers set the 目安; in 目安 mode it counts down. A theme's timer falls back
-// to these for any part it doesn't draw.
+// washed at the top in the subject's color. It only measures: the time you've
+// studied, big in the middle (tap it for another face: digits, hands, flip
+// cards). Started from the timetable, a line under it fills in green toward the
+// block's length and turns red past it. At the bottom, pause and 記録する,
+// which stops the clock and opens the memo. Before a session, the subjects you
+// study, each ready to start. A theme's timer falls back to these for any part
+// it doesn't draw.
 export const fmt = (sec: number) => {
   const v = Math.max(0, Math.round(sec));
   const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60, x = v % 60;
@@ -53,7 +52,7 @@ export function useLeft() {
 
 // ---------- page ----------
 /** Where the standard drawing puts its parts: the subjects sit low, above the button, and fill the room left. */
-export const STANDARD_ZONES = (): Zones => ({ head: ['top', 'subject'], center: ['readout', 'progress', 'today'], foot: ['switcher', 'main', 'record'] });
+export const STANDARD_ZONES = (): Zones => ({ head: ['top', 'subject'], center: ['readout', 'today'], foot: ['switcher', 'progress', 'main', 'record'] });
 
 export function StandardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
   useT(); // the timer's color follows the theme
@@ -63,8 +62,8 @@ export function StandardTimerPage({ zones }: { zones: Record<Zone, ReactNode> })
       <StatusBar style="light" />
       <Wash />
       {zones.head}
-      <View style={{ paddingTop: 14 }}>{zones.center}</View>
-      <View style={{ flex: 1, minHeight: 0 }}>{zones.foot}</View>
+      <View style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>{zones.center}</View>
+      <View>{zones.foot}</View>
     </Screen>
   );
 }
@@ -90,39 +89,41 @@ function Wash() {
 
 // ---------- parts ----------
 export const closeTimer = () => (router.canGoBack() ? router.back() : router.replace('/'));
-/** The grabber and a way down, back to the study bar. */
+/** A way down (back to the study bar), where things stand, and the button for another clock face. */
 function Top() {
+  const ss = useSession();
+  const face = useStore((x) => x.clockFace);
+  const state = ss.running ? (ss.paused ? '一時停止中' : '勉強中') : 'これから';
   return (
-    <View style={{ height: 40, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }}>
-      <Press onPress={closeTimer} scale={0.86} accessibilityLabel="閉じる" hitSlop={6}
-        style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ height: 44, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12 }}>
+      <Press onPress={closeTimer} scale={0.86} accessibilityLabel="小さくする" hitSlop={6}
+        style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)' }}>
         <View style={{ transform: [{ rotate: '-90deg' }] }}>
-          <Icon name="back" size={22} color={focus.ink2} />
+          <Icon name="back" size={18} color={focus.ink2} />
         </View>
       </Press>
-      <View style={{ flex: 1, alignItems: 'center' }}>
-        <Press onPress={closeTimer} hitSlop={12} accessibilityLabel="小さくする" style={{ width: 40, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.22)' }} />
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        {ss.running ? <LiveDot size={5} color={ss.paused ? '#F2B705' : undefined} /> : null}
+        <Txt size={12} w="700" color={focus.ink2}>{state}</Txt>
       </View>
-      <View style={{ width: 40 }} />
+      <Press onPress={nextFace} scale={0.86} accessibilityLabel={`文字盤を変える（いまは${FACE_NAME[face]}）`} hitSlop={6}
+        style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)' }}>
+        <Icon name="clock" size={17} color={focus.ink2} />
+      </Press>
     </View>
   );
 }
 
-/** What you're studying, first: its tile, its name, the task. */
+/** What you're studying: its tile, its name, the task. */
 function Subject() {
   const ss = useSession();
-  const state = ss.running ? (ss.paused ? '一時停止中' : '勉強中') : 'これから';
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingTop: 8 }} accessible accessibilityLabel={`${state} ${ss.subject.name} ${ss.task}`}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingTop: 8 }} accessible accessibilityLabel={`${ss.subject.name} ${ss.task}`}>
       <View style={{ borderRadius: 14, boxShadow: '0px 8px 20px rgba(0,0,0,0.3)' }}>
-        <SubjTile name={ss.subject.name} color={ss.subject.c} size={60} />
+        <SubjTile name={ss.subject.name} color={ss.subject.c} size={56} />
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          {ss.running ? <LiveDot size={5} color={ss.paused ? '#F2B705' : undefined} /> : null}
-          <Txt size={11.5} w="600" color={focus.ink2}>{state}</Txt>
-        </View>
-        <Txt size={24} w="800" lh={30} color={focus.ink} numberOfLines={1}>{ss.subject.name}</Txt>
+        <Txt size={22} w="800" lh={28} color={focus.ink} numberOfLines={1}>{ss.subject.name}</Txt>
         <Txt size={13} color={focus.ink2} numberOfLines={1}>{ss.task}</Txt>
       </View>
     </View>
@@ -139,12 +140,13 @@ function Switcher() {
   const subjects = useSubjects();
   const parts = useToday().parts;
   const locked = ss.running && !ss.canSwitch;
+  if (ss.running) return null; // under way, the page is just the clock
   const start = (id: string) => {
     if (!ss.running) { startStudy(id); haptic.firm(); return; }
     session.switchTo(id);
   };
   return (
-    <View style={{ flex: 1, minHeight: 120, marginTop: 16 }}>
+    <View style={{ maxHeight: 280, marginTop: 4 }}>
       <View style={{ paddingHorizontal: 20, paddingBottom: 6 }}>
         <Txt size={15} w="700" color={focus.ink}>科目</Txt>
         <Txt size={11.5} color={focus.ink3}>
@@ -188,31 +190,99 @@ function Switcher() {
   );
 }
 
-/** The big number: the time studied, or (目安 mode) the time left — or what a moving ruler is on. */
+const FACES: ClockFace[] = ['digital', 'analog', 'flip'];
+const FACE_NAME: Record<ClockFace, string> = { digital: 'デジタル', analog: '針', flip: 'めくり' };
+const nextFace = () => { haptic.tap(); const f = getState().clockFace; setClockFace(FACES[(FACES.indexOf(f) + 1) % FACES.length]); };
+
+/** The time studied, big: as digits, a clock with hands, or flip cards. Tap it for the next face. */
 function Readout() {
   const ss = useSession();
-  const p = useRulerPreview();
-  const left = useLeft();
-  const rem = ss.target - ss.elapsed;
-  const up = ss.mode === 'up';
-  const sec = up ? (ss.running ? ss.elapsed : ss.target) : ss.over ? -rem : ss.running ? rem : ss.target;
-  const over = !up && ss.over;
-  const side = up ? (ss.running ? '勉強した時間' : 'に集中') : ss.over ? '超過' : ss.running ? '残り' : 'に集中';
-  const moving = p.h !== null || p.m !== null;
-  const set = Math.min(300, (p.h ?? left.h) * 60 + (p.m ?? Math.floor(left.m))) * 60;
-  const shown = moving ? (up && ss.running ? ss.elapsed + set : set) : sec;
+  const face = useStore((x) => x.clockFace);
+  const sec = ss.running ? ss.elapsed : 0;
+  const v = Math.max(0, Math.floor(sec));
+  const h = Math.floor(v / 3600), m = Math.floor(v / 60) % 60, x = v % 60;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 8, opacity: ss.paused && !moving ? 0.5 : 1 }}
-      accessible accessibilityLabel={`${side} ${fmt(shown)}`}>
-      {over && !moving ? <Txt num size={38} w="500" color={focus.green} style={{ marginBottom: 6 }}>+</Txt> : null}
-      <Rolling value={fmt(shown)} size={56} weight="600" color={over && !moving ? focus.green : focus.ink} />
-      <Txt size={13} w="600" color={over && !moving ? focus.green : focus.ink2} style={{ marginBottom: 10 }}>{moving ? (up && ss.running ? 'を目安に' : 'に設定') : side}</Txt>
+    <Press onPress={nextFace} haptics={false} scale={0.98} accessibilityLabel={`勉強した時間 ${fmt(sec)}。押すと文字盤が変わります`}
+      style={{ alignItems: 'center', gap: 10, opacity: ss.paused ? 0.55 : 1 }}>
+      {face === 'analog' ? <Hands sec={v} color={ss.subject.c} /> : face === 'flip' ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {h ? <><Card2 text={String(h)} narrow /><Txt num size={40} w="700" color={focus.ink3}>:</Txt></> : null}
+          <Card2 text={pad(m)} />
+          <Txt num size={40} w="700" color={focus.ink3}>:</Txt>
+          <Card2 text={pad(x)} />
+        </View>
+      ) : (
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+          <Rolling value={h ? `${h}:${pad(m)}` : pad(m)} size={80} weight="600" color={focus.ink} />
+          <Txt num size={38} w="600" lh={46} color={focus.ink3}>{`:${pad(x)}`}</Txt>
+        </View>
+      )}
+      {face === 'analog' ? <Txt num size={20} w="700" color={focus.ink}>{fmt(sec)}</Txt> : null}
+      <Txt size={11} color={focus.ink3}>{`押すと文字盤が変わります（${FACE_NAME[face]}）`}</Txt>
+    </Press>
+  );
+}
+/** One flip card. */
+function Card2({ text, narrow }: { text: string; narrow?: boolean }) {
+  return (
+    <View style={{ width: narrow ? 64 : 100, height: 120, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center', boxShadow: '0px 8px 18px rgba(0,0,0,0.35)' }}>
+      <Txt num size={70} w="700" lh={80} color={focus.ink}>{text}</Txt>
+      <View style={{ position: 'absolute', left: 0, right: 0, top: 59, height: 2, backgroundColor: focus.bg }} />
     </View>
   );
 }
+/** A clock with hands: the long one goes round once an hour, the thin one (the subject's color) once a minute. */
+function Hands({ sec, color }: { sec: number; color: string }) {
+  const S = 220, c = S / 2;
+  const at = (deg: number, r: number) => { const t = (deg * Math.PI) / 180; return { x: c + Math.sin(t) * r, y: c - Math.cos(t) * r }; };
+  const ticks = Array.from({ length: 60 }, (_, i) => {
+    const big = i % 5 === 0, a = at(i * 6, big ? c - 14 : c - 9), b = at(i * 6, c - 3);
+    return <Line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={big ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.28)'} strokeWidth={big ? 3 : 1.5} strokeLinecap="round" />;
+  });
+  const mm = at(((sec / 60) % 60) * 6, c - 36), ss = at((sec % 60) * 6, c - 16), tail = at((sec % 60) * 6 + 180, 16);
+  return (
+    <Svg width={S} height={S} accessible={false}>
+      <Circle cx={c} cy={c} r={c - 1} fill="rgba(255,255,255,0.06)" />
+      {ticks}
+      <Line x1={c} y1={c} x2={mm.x} y2={mm.y} stroke="#fff" strokeWidth={6} strokeLinecap="round" />
+      <Line x1={tail.x} y1={tail.y} x2={ss.x} y2={ss.y} stroke={color} strokeWidth={2.5} strokeLinecap="round" />
+      <Circle cx={c} cy={c} r={6} fill="#fff" />
+    </Svg>
+  );
+}
 
-/** The two rulers that set the time (in 目安 mode, the time left; counting up, the 目安), under a line that says where things stand. */
+/**
+ * Started from the timetable: a plain line that fills in green toward the
+ * block's length and turns all red once past it. Just measuring, there's no
+ * line — only today's total.
+ */
 function Progress() {
+  const ss = useSession();
+  const today = useStore((s) => s.todayMin);
+  if (!ss.running || !ss.plan) {
+    return <Txt size={12} color={focus.ink3} style={{ textAlign: 'center', marginHorizontal: 20, marginBottom: 14 }}>{`今日 ${hm(today)}`}</Txt>;
+  }
+  const over = ss.elapsed > ss.plan;
+  const f = Math.min(1, ss.elapsed / ss.plan);
+  const col = over ? OVER : WITHIN;
+  return (
+    <View style={{ marginHorizontal: 20, marginBottom: 16, gap: 8 }} accessible accessibilityRole="progressbar"
+      accessibilityLabel={over ? `予定の${Math.round(ss.plan / 60)}分を${fmt(ss.elapsed - ss.plan)}こえています` : `予定の${Math.round(ss.plan / 60)}分まで あと${fmt(ss.plan - ss.elapsed)}`}>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+        <Txt size={12} color={focus.ink2} style={{ flex: 1 }}>{`予定 ${Math.round(ss.plan / 60)}分`}</Txt>
+        <Txt num size={13} w="700" color={col}>{over ? `+${fmt(ss.elapsed - ss.plan)}` : `あと ${fmt(ss.plan - ss.elapsed)}`}</Txt>
+      </View>
+      <View style={{ height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.16)', overflow: 'hidden' }}>
+        <View style={{ width: `${f * 100}%`, height: '100%', borderRadius: 2, backgroundColor: col }} />
+      </View>
+    </View>
+  );
+}
+const WITHIN = '#30D158';
+const OVER = '#FF453A';
+
+/** The two rulers that set the time (in 目安 mode, the time left; counting up, the 目安). The standard timer only measures now; a theme can still use these. */
+export function Rulers() {
   const ss = useSession();
   const left = useLeft();
   const targetMin = ss.target / 60;
@@ -264,24 +334,30 @@ function Today() {
   );
 }
 
-/** スタート, then pause and resume: one wide button under the subjects. */
+/** Before a session, スタート; under way, pause (or resume) and 記録する, which stops the clock and opens the memo. */
 function Main() {
   const running = useStore((s) => s.running);
   const paused = useStore((s) => s.paused);
-  const playing = running && !paused;
-  const press = () => {
-    haptic.firm();
-    if (!running) startStudy();
-    else togglePause();
-  };
-  const label = playing ? '一時停止' : running ? '再開' : 'スタート';
+  if (!running) {
+    return (
+      <View style={{ marginTop: 10, marginHorizontal: 24 }}>
+        <Press onPress={() => { haptic.firm(); startStudy(); }} haptics={false} scale={0.96} accessibilityLabel="スタート"
+          style={{ height: 58, borderRadius: 29, backgroundColor: focus.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
+          <Icon name="play" size={18} color={focus.bg} filled />
+          <Txt size={17} w="800" color={focus.bg}>スタート</Txt>
+        </Press>
+      </View>
+    );
+  }
   return (
-    <View style={{ marginTop: 10, marginHorizontal: 24 }}>
-      <Press onPress={press} haptics={false} scale={0.96} accessibilityLabel={label}
-        style={{ height: 56, borderRadius: 28, backgroundColor: playing ? focus.raise : focus.ink, borderWidth: playing ? 1 : 0, borderColor: focus.line,
-          flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
-        <Icon name={playing ? 'pause' : 'play'} size={18} color={playing ? focus.ink : focus.bg} filled />
-        <Txt size={17} w="800" color={playing ? focus.ink : focus.bg}>{label}</Txt>
+    <View style={{ flexDirection: 'row', gap: 10, marginHorizontal: 20 }}>
+      <Press onPress={() => { haptic.soft(); togglePause(); }} haptics={false} scale={0.92} accessibilityLabel={paused ? '再開' : '一時停止'}
+        style={{ width: 62, height: 58, borderRadius: 29, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name={paused ? 'play' : 'pause'} size={20} color={focus.ink} filled />
+      </Press>
+      <Press onPress={session.finish} scale={0.96} accessibilityLabel="記録する"
+        style={{ flex: 1, height: 58, borderRadius: 29, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+        <Txt size={17} w="800" color={focus.bg}>記録する</Txt>
       </Press>
     </View>
   );

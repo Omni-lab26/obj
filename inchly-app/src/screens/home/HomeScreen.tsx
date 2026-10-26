@@ -1,69 +1,68 @@
 import { ComponentType, useCallback, useEffect, useMemo, useState } from 'react';
-import { BackHandler, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { DesignPage } from '@/screens/DesignPage';
 import { arrange, HOME, Kind, SectionKind } from '@/screens/layout';
 import { designReveal } from '@/screens/reveal';
+import { MENU_SHARE, SideMenu } from '@/screens/SideMenu';
 import type { HomeKit, SectionProps } from '@/themes/types';
+import { useT } from '@/theme';
 import { haptic } from '@/ui/base';
 import { STANDARD_SECTIONS, StandardFrame, StandardHandle, StandardHeader, StandardPage } from './standard';
 
 // Home, for every theme: the base blocks (layout.ts) in the theme's order,
 // each piece drawn by the theme or, where it draws nothing of its own, the
-// standard way in its colors. Slide it to the right and the デザイン page comes
-// in from the left with your finger (the handle on the left edge brings it in
-// too); slide that page back to the left, or tap back, and home returns.
+// standard way in its colors. Slide it to the right and it moves aside with
+// your finger for the menu underneath (settings, subjects, the theme, a quick
+// start); the handle on the left edge opens it too. Slide home back to the
+// left, or tap it, and it returns.
 
 const SETTLE = { duration: 420, dampingRatio: 0.9 };
-/** The slide to デザイン (and its handle) is put away for now; デザイン is still in 設定. */
-const DESIGN_SLIDE = false;
-/** Past a third of the way, or flung, it goes the rest of the way; otherwise it slides back. */
-const decide = (at: number, v: number, opening: boolean) => {
+/** Past halfway, or flung, it goes the rest of the way; otherwise it goes back. */
+const decide = (at: number, v: number) => {
   'worklet';
-  return opening ? at > 0.33 || v > 650 : at > 0.67 && v > -650;
+  return v > 600 || (v > -600 && at > 0.5);
 };
 
 export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
+  const t = useT();
   const blocks = useMemo(() => arrange(HOME, kit.arrange), [kit.arrange]);
   const Page = kit.Page ?? StandardPage;
   const Header = kit.Header ?? StandardHeader;
   const Frame = kit.Frame ?? StandardFrame;
   const Handle = kit.DesignHandle ?? StandardHandle;
   const { width } = useWindowDimensions();
-  const w = useSharedValue(width);
-  useEffect(() => { w.set(width); }, [width, w]);
-  // the デザイン page is there: coming in, open, or going back out
+  const menuW = Math.round(width * MENU_SHARE);
+  const w = useSharedValue(menuW);
+  useEffect(() => { w.set(menuW); }, [menuW, w]);
+  // the menu is there: opening, open, or closing
   const [shown, setShown] = useState(false);
-  const moving = useSharedValue(false);
+  const from = useSharedValue(0);
 
   const settle = useCallback((open: boolean) => {
     designReveal.set(withSpring(open ? 1 : 0, SETTLE, (done) => { if (done && !open) scheduleOnRN(setShown, false); }));
   }, []);
   const open = useCallback(() => { setShown(true); haptic.soft(); settle(true); }, [settle]);
   const close = useCallback(() => settle(false), [settle]);
+  /** Off to another screen: the menu is put away at once, under it. */
+  const leave = useCallback(() => { designReveal.set(0); setShown(false); }, []);
 
-  // home → デザイン: only a slide to the right, so scrolling up and down is left alone
-  const [bringIn] = useState(() => Gesture.Pan().enabled(DESIGN_SLIDE).activeOffsetX(14).failOffsetY([-22, 22])
-    .onStart(() => { moving.set(true); scheduleOnRN(setShown, true); })
-    .onUpdate((e) => { designReveal.set(Math.min(1, Math.max(0, e.translationX / w.get()))); })
+  // home → menu: only a slide to the right, so scrolling and the swipes inside home are left alone
+  const [bringIn] = useState(() => Gesture.Pan().activeOffsetX(14).failOffsetY([-22, 22])
+    .onStart(() => { from.set(designReveal.get()); scheduleOnRN(setShown, true); })
+    .onUpdate((e) => { designReveal.set(Math.min(1, Math.max(0, from.get() + e.translationX / w.get()))); })
     .onFinalize((e) => {
-      if (!moving.get()) return;
-      moving.set(false);
-      const go = decide(designReveal.get(), e.velocityX, true);
-      if (go) scheduleOnRN(haptic.soft);
+      const go = decide(designReveal.get(), e.velocityX);
+      if (go && from.get() < 0.5) scheduleOnRN(haptic.soft);
       designReveal.set(withSpring(go ? 1 : 0, SETTLE, (done) => { if (done && !go) scheduleOnRN(setShown, false); }));
     }));
-  // デザイン → home: a slide to the left
+  // menu → home: slide home back to the left (or tap it)
   const [takeOut] = useState(() => Gesture.Pan().activeOffsetX(-14).failOffsetY([-22, 22])
-    .onStart(() => { moving.set(true); })
     .onUpdate((e) => { designReveal.set(Math.min(1, Math.max(0, 1 + e.translationX / w.get()))); })
     .onFinalize((e) => {
-      if (!moving.get()) return;
-      moving.set(false);
-      const stay = decide(designReveal.get(), e.velocityX, false);
+      const stay = decide(designReveal.get(), e.velocityX);
       designReveal.set(withSpring(stay ? 1 : 0, SETTLE, (done) => { if (done && !stay) scheduleOnRN(setShown, false); }));
     }));
 
@@ -75,14 +74,22 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
   }, [shown, close]);
   useEffect(() => () => { designReveal.set(0); }, []);
 
-  // home gives way a little and dims; the page comes in from the left edge
-  const homeAway = useAnimatedStyle(() => ({ transform: [{ translateX: designReveal.value * w.value * 0.28 }] }));
-  const dim = useAnimatedStyle(() => ({ opacity: designReveal.value * 0.32 }));
-  const page = useAnimatedStyle(() => ({ transform: [{ translateX: (designReveal.value - 1) * w.value }] }));
+  // home moves aside by the menu's width, its corner rounds and it dims a little; the menu comes in a little from the left
+  const homeAway = useAnimatedStyle(() => ({
+    transform: [{ translateX: designReveal.value * w.value }],
+    borderRadius: designReveal.value * 28,
+  }));
+  const dim = useAnimatedStyle(() => ({ opacity: designReveal.value * 0.12 }));
+  const menu = useAnimatedStyle(() => ({ opacity: Math.min(1, designReveal.value * 1.6), transform: [{ translateX: (designReveal.value - 1) * w.value * 0.25 }] }));
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: t.canvas }}>
+      {shown ? (
+        <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, width: menuW }, menu]}>
+          <SideMenu close={close} leave={leave} />
+        </Animated.View>
+      ) : null}
       <GestureDetector gesture={bringIn}>
-        <Animated.View style={[{ flex: 1 }, homeAway]} collapsable={false}>
+        <Animated.View style={[{ flex: 1, overflow: 'hidden', boxShadow: '-6px 0px 30px rgba(0,0,0,0.14)' }, homeAway]} collapsable={false}>
           <Page header={<Header />}>
             {blocks.map((b, i) => (
               <Frame key={b.id} block={b} index={i}>
@@ -90,17 +97,16 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
               </Frame>
             ))}
           </Page>
-          {DESIGN_SLIDE ? <Handle onPress={open} /> : null}
+          <Handle onPress={open} />
           <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }, dim]} />
+          {/* while the menu is out, a tap on home brings it back */}
+          {shown ? (
+            <GestureDetector gesture={takeOut}>
+              <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityRole="button" accessibilityLabel="メニューを閉じる" />
+            </GestureDetector>
+          ) : null}
         </Animated.View>
       </GestureDetector>
-      {shown ? (
-        <GestureDetector gesture={takeOut}>
-          <Animated.View style={[StyleSheet.absoluteFill, { boxShadow: '8px 0px 28px rgba(0,0,0,0.18)' }, page]}>
-            <DesignPage onClose={close} />
-          </Animated.View>
-        </GestureDetector>
-      ) : null}
     </View>
   );
 }

@@ -33,6 +33,8 @@ export type ChartPalette = 'ink' | 'blue' | 'orange' | 'grape' | 'navy' | 'teal'
 export type Chart = { range: 'day' | 'week'; kind: ChartKind; palette: ChartPalette; detail: 'subject' | 'area' };
 /** How the timer counts: up from zero (what gets recorded), or down to a planned length. */
 export type TimerMode = 'up' | 'goal';
+/** How the timer draws the time: big digits, a clock with hands, or flip cards. */
+export type ClockFace = 'digital' | 'analog' | 'flip';
 export type { Block };
 
 export type State = {
@@ -46,6 +48,7 @@ export type State = {
   todayMin: number; // derived from sessions, kept for readers
   goalMin: number;
   targetMin: number; // planned length of this focus session
+  planMin: number | null; // the timetable block's length when started from it; null = just measuring
   todos: Todo[];
   deadlines: Deadline[];
   following: string[];
@@ -76,6 +79,7 @@ export type State = {
   design: Design; // the look you picked on the デザイン page
   timetable: Block[]; // study blocks planned by the clock, repeating weekly
   timerMode: TimerMode;
+  clockFace: ClockFace;
   studyTodo: string | null; // the ToDo this session works on (picked on the record page)
   todoLog: Done[]; // every ToDo finished and when, kept after the list is cleared (for EXP)
 };
@@ -96,6 +100,7 @@ export const INITIAL: State = {
   todayMin: 0,
   goalMin: 180,
   targetMin: 60,
+  planMin: null,
   todos: [],
   deadlines: [],
   following: [],
@@ -125,6 +130,7 @@ export const INITIAL: State = {
   design: DEFAULT_DESIGN,
   timetable: [],
   timerMode: 'up',
+  clockFace: 'digital',
   studyTodo: null,
   todoLog: [],
 };
@@ -143,7 +149,7 @@ export function demoState(now: Date = new Date()): Partial<State> {
     { id: 's6', s: 'ma', min: 33, date: yesterday, at: '22:05' },
   ];
   return {
-    running: true, paused: false, startedAt: now.getTime(), base: 2350, subj: 'en',
+    running: true, paused: false, startedAt: now.getTime(), base: 2350, subj: 'en', planMin: 60, targetMin: 60,
     sessions: [...past, ...recent],
     todos: [
       { id: 't1', s: 'ph', t: '名問の森 15', d: false, carried: 2, dl: 'd1' },
@@ -223,7 +229,7 @@ export function startStudy(id?: string) {
     if (s.paused) setState({ paused: false, startedAt: Date.now() });
     return;
   }
-  setState({ running: true, paused: false, startedAt: Date.now(), base: 0, subj: next, studyTodo: null });
+  setState({ running: true, paused: false, startedAt: Date.now(), base: 0, subj: next, studyTodo: null, planMin: null });
   if (!s.running) celebrate({ kind: 'start', subject: next });
 }
 /**
@@ -237,10 +243,13 @@ export function startFrom(x: { s: string; todoId?: string; min?: number }): bool
   if (s.running && elapsedOf(s) > 60 && x.s !== s.subj) return false;
   setState({
     running: true, paused: false, startedAt: Date.now(), base: s.running && x.s === s.subj ? elapsedOf(s) : 0,
-    subj: x.s, studyTodo: x.todoId ?? null, ...(x.min ? { targetMin: x.min } : {}),
+    subj: x.s, studyTodo: x.todoId ?? null, planMin: x.min ?? null, ...(x.min ? { targetMin: x.min } : {}),
   });
   if (!s.running) celebrate({ kind: 'start', subject: x.s });
   return true;
+}
+export function setClockFace(f: ClockFace) {
+  setState({ clockFace: f });
 }
 export function setTimerMode(m: TimerMode) {
   setState({ timerMode: m });
@@ -340,7 +349,7 @@ export function commitRecord(opts?: { todoId?: string; note?: string; min?: numb
   const run = streakOf(sessions, s.restDays, now);
   const ticket = !byDay(s.sessions).has(today) && run > 0 && run % 7 === 0 && s.restTickets < MAX_TICKETS;
   setState({
-    running: false, paused: false, base: 0, studyTodo: null,
+    running: false, paused: false, base: 0, studyTodo: null, planMin: null,
     sessions,
     todos: todo ? s.todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x)) : s.todos,
     todoLog: todo && !todo.d ? [...s.todoLog, { id: todo.id, date: today }] : s.todoLog,

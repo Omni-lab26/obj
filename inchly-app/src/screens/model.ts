@@ -49,6 +49,8 @@ export function useSession() {
   return {
     running: s.running, paused: s.paused, subject: sj, task: todo?.t ?? sj.task,
     elapsed, target, remaining: Math.max(0, target - elapsed), over: s.running && elapsed > target,
+    /** the timetable block's length in seconds when started from it; null when just measuring */
+    plan: s.planMin ? Math.round(s.planMin * 60) : null,
     /** 'up' counts the time studied (what is recorded); 'goal' counts down to the target */
     mode: s.timerMode,
     /** the subject can change before starting and in the first minute */
@@ -71,19 +73,19 @@ export const session = {
   },
 };
 
-/** One nudge when the target is reached, while the timer is open. */
+/** One nudge when the timetable block's length is reached, while the timer is open (just measuring, there is none). */
 export function useTargetNudge() {
   const now = useNow();
   const running = useStore((s) => s.running);
-  const target = useStore((s) => s.targetMin);
-  const over = useStore((s) => s.running && elapsedOf(s, now) > s.targetMin * 60);
+  const target = useStore((s) => s.planMin ?? 0);
+  const over = useStore((s) => s.running && !!s.planMin && elapsedOf(s, now) > s.planMin * 60);
   const nudged = useRef(false);
   useEffect(() => {
     if (!running) nudged.current = false;
     else if (over && !nudged.current) {
       nudged.current = true;
       haptic.success();
-      toast(`目標の${Math.round(target)}分に届きました`, 'このまま続けても、記録してもOK');
+      toast(`予定の${Math.round(target)}分に届きました`, 'このまま続けても、記録してもOK');
       celebrate({ kind: 'target', min: Math.round(target) });
     }
   }, [over, running, target]);
