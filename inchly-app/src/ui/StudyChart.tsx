@@ -102,7 +102,6 @@ export function StudyChart() {
   const liveNow = cols.reduce((a, c) => a + c.live, 0);
   const max = day ? 60 : Math.max(goalMin, ...cols.map((c) => c.total)) * 1.08;
   const yOf = (m: number) => (Math.min(m, max) / max) * PLOT;
-  const main = PALETTES[chart.palette].c;
   const n = cols.length;
   const gap = day ? 2 : 10;
   const bw = w ? (w - gap * (n - 1)) / n : 0;
@@ -148,11 +147,11 @@ export function StudyChart() {
             <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: hair, backgroundColor: t.line2 }} />
             <Animated.View style={[{ flex: 1 }, growA]}>
               {chart.kind === 'line' ? (
-                <LineMarks cols={cols} w={w} bw={bw} gap={gap} yOf={yOf} color={main} sel={sel} />
+                <LineMarks cols={cols} w={w} bw={bw} gap={gap} yOf={yOf} series={series.list} liveC={liveC} sel={sel} />
               ) : (
                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', gap }}>
                   {cols.map((c, i) => (
-                    <BarMark key={i} c={c} h={yOf(c.total)} rec={yOf(c.total - c.live)} stack={chart.kind === 'stack'} main={main} liveC={liveC} series={series.list}
+                    <BarMark key={i} c={c} h={yOf(c.total)} rec={yOf(c.total - c.live)} stack={chart.kind === 'stack'} liveC={liveC} series={series.list}
                       dim={sel !== null && sel !== i} />
                   ))}
                 </View>
@@ -181,7 +180,7 @@ export function StudyChart() {
         </View>
       </View>
 
-      {chart.kind === 'stack' && used.length ? (
+      {used.length ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
           {used.map((x) => (
             <View key={x.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -201,15 +200,18 @@ export function StudyChart() {
   );
 }
 
-/** One column: recorded minutes solid (by subject when stacked), the running timer paler on top. */
-function BarMark({ c, h, rec, stack, main, liveC, series, dim }: { c: Col; h: number; rec: number; stack: boolean; main: string; liveC: string; series: Series[]; dim: boolean }) {
+/** The subject (or 教科) a column was studied most in: what a plain bar or a point on the line is colored by. */
+const topOf = (c: Col, series: Series[]) => series.reduce<Series | null>((b, x) => ((c.parts[x.key] ?? 0) > (b ? c.parts[b.key] ?? 0 : 0) ? x : b), null);
+
+/** One column: recorded minutes solid — by subject when stacked, else all in the color of its main subject — the running timer paler on top. */
+function BarMark({ c, h, rec, stack, liveC, series, dim }: { c: Col; h: number; rec: number; stack: boolean; liveC: string; series: Series[]; dim: boolean }) {
   const t = useT();
   if (h <= 0) return <View style={{ flex: 1 }} />;
   const segs: { c: string; h: number; o?: number }[] = [];
   if (stack && c.total > 0) {
     series.forEach((x) => { const m = c.parts[x.key] ?? 0; if (m > 0) segs.push({ c: x.c, h: (m / (c.total - c.live || 1)) * rec }); });
-  } else if (rec > 0) segs.push({ c: main, h: rec });
-  if (h - rec > 0.5) segs.push({ c: stack ? liveC : main, h: h - rec, o: 0.4 });
+  } else if (rec > 0) segs.push({ c: topOf(c, series)?.c ?? liveC, h: rec });
+  if (h - rec > 0.5) segs.push({ c: liveC, h: h - rec, o: 0.4 });
   return (
     <View style={{ flex: 1, height: Math.max(3, h), borderTopLeftRadius: 4, borderTopRightRadius: 4, overflow: 'hidden', opacity: dim ? 0.35 : 1, flexDirection: 'column-reverse' }}>
       {segs.map((s, i) => (
@@ -220,22 +222,24 @@ function BarMark({ c, h, rec, stack, main, liveC, series, dim }: { c: Col; h: nu
   );
 }
 
-function LineMarks({ cols, w, bw, gap, yOf, color, sel }: { cols: Col[]; w: number; bw: number; gap: number; yOf: (m: number) => number; color: string; sel: number | null }) {
+/** The line: each stretch in the color of the subject studied most where it arrives, a dot on every point that has time in that color. */
+function LineMarks({ cols, w, bw, gap, yOf, series, liveC, sel }: { cols: Col[]; w: number; bw: number; gap: number; yOf: (m: number) => number; series: Series[]; liveC: string; sel: number | null }) {
   const t = useT();
   if (!w) return null;
-  const pts = cols.map((c, i) => ({ x: i * (bw + gap) + bw / 2, y: PLOT - yOf(c.total), c }));
+  const pts = cols.map((c, i) => ({ x: i * (bw + gap) + bw / 2, y: PLOT - yOf(c.total), c, color: c.total > 0 ? topOf(c, series)?.c ?? liveC : t.line2 }));
   const shown = pts.filter((p) => !p.c.future || p.c.total > 0);
   if (!shown.length) return null;
   const d = shown.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   const area = `${d} L${shown[shown.length - 1].x.toFixed(1)},${PLOT} L${shown[0].x.toFixed(1)},${PLOT} Z`;
-  const last = shown[shown.length - 1];
   return (
     <Svg width={w} height={PLOT}>
-      <Path d={area} fill={color} fillOpacity={0.08} />
-      <Path d={d} stroke={color} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+      <Path d={area} fill={t.ink} fillOpacity={0.04} />
+      {shown.slice(1).map((p, i) => (
+        <Line key={p.x} x1={shown[i].x} y1={shown[i].y} x2={p.x} y2={p.y} stroke={p.color} strokeWidth={2.5} strokeLinecap="round" />
+      ))}
       {sel !== null ? <Line x1={pts[sel].x} x2={pts[sel].x} y1={0} y2={PLOT} stroke={t.line2} strokeWidth={1} /> : null}
-      {(sel !== null ? [pts[sel]] : [last]).map((p) => (
-        <Circle key={p.x} cx={p.x} cy={p.y} r={4} fill={color} stroke={t.surface} strokeWidth={2} />
+      {shown.filter((p) => p.c.total > 0).map((p) => (
+        <Circle key={p.x} cx={p.x} cy={p.y} r={sel !== null && p === pts[sel] ? 5 : 3.5} fill={p.color} stroke={t.surface} strokeWidth={1.5} />
       ))}
     </Svg>
   );
@@ -259,55 +263,39 @@ function ChartSettings({ close }: { close: () => void }) {
           return (
             <Press key={k.v} onPress={() => setChart({ kind: k.v })} scale={0.96} accessibilityRole="radio" accessibilityState={{ checked: on }}
               style={{ flex: 1, padding: 10, gap: 8, borderRadius: 14, backgroundColor: on ? t.surface : t.sunken, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line }}>
-              <KindPreview kind={k.v} color={PALETTES[chart.palette].c} />
+              <KindPreview kind={k.v} />
               <Txt size={12.5} w="700" style={{ textAlign: 'center' }}>{k.label}</Txt>
             </Press>
           );
         })}
       </View>
-      {stack ? (
-        <>
-          <Txt size={13} w="700" style={{ marginTop: 8 }}>色分けの細かさ</Txt>
-          <Segmented value={chart.detail} onChange={(v) => setChart({ detail: v })} options={[{ v: 'subject', label: '科目ごと（数IA・古文…）' }, { v: 'area', label: '教科ごと（数学・国語…）' }]} />
-          <Press onPress={() => { close(); router.push('/subjects'); }} scale={0.98} accessibilityRole="button"
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: t.sunken }}>
-            <View style={{ flexDirection: 'row' }}>
-              {subjects.slice(0, 6).map((x, i) => <View key={x.id} style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: x.c, marginLeft: i ? -4 : 0, borderWidth: 1.5, borderColor: t.sunken }} />)}
-            </View>
-            <Txt size={13} w="600" style={{ flex: 1 }}>科目と色を編集</Txt>
-            <Txt size={11.5} tone="ink3">{`${subjects.length}科目`}</Txt>
-            <Icon name="chev" size={13} color={t.ink3} />
-          </Press>
-        </>
-      ) : null}
-      <Txt size={13} w="700" style={{ marginTop: 8 }}>{stack ? '棒と折れ線の色' : '色'}</Txt>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {(Object.keys(PALETTES) as ChartPalette[]).map((p) => {
-          const on = chart.palette === p;
-          return (
-            <Press key={p} onPress={() => setChart({ palette: p })} scale={0.94} accessibilityRole="radio" accessibilityState={{ checked: on }}
-              style={{ width: '23%', flexGrow: 1, alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: 14, backgroundColor: on ? t.surface : t.sunken, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line, opacity: stack ? 0.6 : 1 }}>
-              <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: PALETTES[p].c, alignItems: 'center', justifyContent: 'center' }}>
-                {on ? <Icon name="check" size={13} color="#fff" width={3} /> : null}
-              </View>
-              <Txt size={11.5} w="600" tone="ink2">{PALETTES[p].label}</Txt>
-            </Press>
-          );
-        })}
-      </View>
+      <Txt size={13} w="700" style={{ marginTop: 8 }}>色の分け方</Txt>
+      <Segmented value={chart.detail} onChange={(v) => setChart({ detail: v })} options={[{ v: 'subject', label: '科目ごと（数IA・古文…）' }, { v: 'area', label: '教科ごと（数学・国語…）' }]} />
+      <Txt size={11.5} tone="ink3">{stack ? '色分けは科目ごとに積みます' : chart.kind === 'bar' ? '棒は、その時間にいちばん勉強した科目の色' : '線と点は、その時間にいちばん勉強した科目の色'}</Txt>
+      <Press onPress={() => { close(); router.push('/subjects'); }} scale={0.98} accessibilityRole="button"
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: t.sunken }}>
+        <View style={{ flexDirection: 'row' }}>
+          {subjects.slice(0, 6).map((x, i) => <View key={x.id} style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: x.c, marginLeft: i ? -4 : 0, borderWidth: 1.5, borderColor: t.sunken }} />)}
+        </View>
+        <Txt size={13} w="600" style={{ flex: 1 }}>科目と色を編集</Txt>
+        <Txt size={11.5} tone="ink3">{`${subjects.length}科目`}</Txt>
+        <Icon name="chev" size={13} color={t.ink3} />
+      </Press>
       <Btn kind="primary" label="完了" onPress={close} style={{ marginTop: 10 }} />
     </View>
   );
 }
 
 const PREVIEW = [0.35, 0.7, 0.5, 0.9, 0.6];
-function KindPreview({ kind, color }: { kind: ChartKind; color: string }) {
+function KindPreview({ kind }: { kind: ChartKind }) {
   const H = 34;
+  const subjects = useSubjects();
+  const cOf = (i: number) => subjects[i % Math.max(1, subjects.length)]?.c ?? SUBJECT_COLORS[i];
   if (kind === 'line') {
-    const d = PREVIEW.map((v, i) => `${i ? 'L' : 'M'}${6 + i * 14},${H - v * (H - 4)}`).join(' ');
+    const at = (v: number, i: number) => ({ x: 6 + i * 14, y: H - v * (H - 4) });
     return (
       <Svg width="100%" height={H} viewBox={`0 0 68 ${H}`}>
-        <Path d={d} stroke={color} strokeWidth={2} fill="none" strokeLinejoin="round" />
+        {PREVIEW.slice(1).map((v, i) => { const a = at(PREVIEW[i], i), b = at(v, i + 1); return <Line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={cOf(i + 1)} strokeWidth={2} strokeLinecap="round" />; })}
       </Svg>
     );
   }
@@ -317,7 +305,7 @@ function KindPreview({ kind, color }: { kind: ChartKind; color: string }) {
         <View key={i} style={{ width: 8, height: v * H, borderTopLeftRadius: 2, borderTopRightRadius: 2, overflow: 'hidden', flexDirection: 'column-reverse' }}>
           {kind === 'stack'
             ? [0.5, 0.3, 0.2].map((f, k) => <View key={k} style={{ height: f * v * H, backgroundColor: SUBJECT_COLORS[(i * 3 + k * 5) % SUBJECT_COLORS.length] }} />)
-            : <View style={{ flex: 1, backgroundColor: color }} />}
+            : <View style={{ flex: 1, backgroundColor: cOf(i) }} />}
         </View>
       ))}
     </View>

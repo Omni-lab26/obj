@@ -11,7 +11,8 @@ import { Account, setState, signIn } from '@/store';
 import { hair, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { Wordmark } from '@/ui/Brand';
-import { Choice, Field, Label, Stepper } from '@/ui/Form';
+import { Opens, PickChip, SMOOTH, YearPick } from '@/ui/DateTime';
+import { Choice, Field, Label } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
 import { toast } from '@/ui/Toast';
 
@@ -29,6 +30,7 @@ export default function Welcome() {
   const [name, setName] = useState('');
   const [grade, setGrade] = useState<(typeof GRADES)[number]>('高3');
   const [year, setYear] = useState(2008);
+  const [yearOpen, setYearOpen] = useState(false);
   const [aim, setAim] = useState('');
   const [goal, setGoal] = useState(180);
   const [notify, setNotify] = useState({ peers: true, deadlines: true, goal: true });
@@ -120,7 +122,13 @@ export default function Welcome() {
               </View>
               <View>
                 <Label sub="年齢の確認だけに使い、ほかの人には見えません">生まれた年</Label>
-                <Stepper value={year} min={1990} max={2016} onChange={setYear} unit="年" label="生まれた年" />
+                <Animated.View layout={SMOOTH} style={{ borderRadius: 14, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line, overflow: 'hidden' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 14 }}>
+                    <Txt size={15.5} style={{ flex: 1 }}>生まれた年</Txt>
+                    <PickChip on={yearOpen} onPress={() => { haptic.tap(); setYearOpen(!yearOpen); }} label={`${year}年`} a11y="生まれた年を変える" />
+                  </View>
+                  {yearOpen ? <Opens><YearPick value={year} onChange={setYear} min={1990} max={2016} /></Opens> : null}
+                </Animated.View>
                 {tooYoung ? (
                   <Txt size={12.5} tone="red" style={{ marginTop: 8 }}>Inchly は13歳から使えます。</Txt>
                 ) : minor ? (

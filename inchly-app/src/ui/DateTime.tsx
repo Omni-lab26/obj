@@ -1,4 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
 import { createElement, ReactNode } from 'react';
 import { Keyboard, Platform, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
@@ -70,6 +71,18 @@ export function DurationPick({ value, onChange }: { value: number; onChange: (mi
   return (
     <DateTimePicker value={at(new Date(), Math.min(23 * 60 + 55, value))} mode="countdown" display="spinner" locale="ja-JP" minuteInterval={5} textColor={t.ink} themeVariant="light"
       onValueChange={(_, d) => onChange(Math.max(1, d.getHours() * 60 + d.getMinutes()))} style={{ height: 190 }} />
+  );
+}
+
+/** A year on iOS's wheel (Android: its picker; the web: a select), newest first, as Apple asks for a birth year. */
+export function YearPick({ value, onChange, min, max }: { value: number; onChange: (y: number) => void; min: number; max: number }) {
+  const t = useT();
+  const years = Array.from({ length: max - min + 1 }, (_, i) => max - i);
+  return (
+    <Picker selectedValue={value} onValueChange={(v) => onChange(Number(v))} mode="dialog" accessibilityLabel="年"
+      itemStyle={{ fontSize: 21, color: t.ink, height: 190 }} style={IOS ? { width: '100%', height: 190 } : { margin: 10, fontSize: 17 }}>
+      {years.map((y) => <Picker.Item key={y} label={`${y}年`} value={y} />)}
+    </Picker>
   );
 }
 
