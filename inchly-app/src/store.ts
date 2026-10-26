@@ -37,6 +37,8 @@ export type Chart = { range: 'day' | 'week'; kind: ChartKind; palette: ChartPale
 export type TimerMode = 'up' | 'goal';
 /** How the timer draws the time: big digits, a clock with hands, or flip cards. */
 export type ClockFace = 'digital' | 'analog' | 'flip';
+/** What's behind the study screen: the koi pond, or the centered card's subject color. */
+export type StudyBg = 'pond' | 'color';
 export type { Block };
 
 export type State = {
@@ -88,6 +90,7 @@ export type State = {
   timetable: Block[]; // study blocks planned by the clock, repeating weekly
   timerMode: TimerMode;
   clockFace: ClockFace;
+  studyBg: StudyBg;
   studyTodo: string | null; // the ToDo this session works on (picked on the record page)
   todoLog: Done[]; // every ToDo finished and when, kept after the list is cleared (for EXP)
 };
@@ -168,6 +171,7 @@ export const INITIAL: State = {
   timetable: [],
   timerMode: 'up',
   clockFace: 'digital',
+  studyBg: 'pond',
   studyTodo: null,
   todoLog: [],
 };
@@ -300,6 +304,9 @@ export function startFrom(x: { s: string; todoId?: string; min?: number; next?: 
 /** Puts the day's plans in this order (the timer's cards). */
 export function setDayOrder(ids: string[], now: Date = new Date()) {
   setState({ dayOrder: { date: dateKey(now), ids } });
+}
+export function setStudyBg(b: StudyBg) {
+  setState({ studyBg: b });
 }
 export function setClockFace(f: ClockFace) {
   setState({ clockFace: f });

@@ -101,8 +101,9 @@ export function TimerFrame({ zones, wash }: { zones: Record<Zone, ReactNode>; wa
             <StatusBar style="light" />
             {wash}
             {zones.head}
-            <View style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>{zones.center}</View>
-            <View>{zones.foot}</View>
+            {/* the zones let touches through where they draw nothing (to a background that takes them) */}
+            <View pointerEvents="box-none" style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>{zones.center}</View>
+            <View pointerEvents="box-none">{zones.foot}</View>
           </Screen>
         </Animated.View>
       </GestureDetector>

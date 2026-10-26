@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
-  FadeIn, interpolateColor, LayoutAnimationConfig, LinearTransition, makeMutable, type SharedValue,
-  useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, ZoomOut,
+  FadeIn, FadeOut, interpolateColor, LayoutAnimationConfig, LinearTransition, makeMutable, type SharedValue,
+  useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withTiming, ZoomOut,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
@@ -13,7 +13,7 @@ import type { Zone, Zones } from '@/screens/layout';
 import { jpHm, session, startBlock, useSession } from '@/screens/model';
 import { jpDate } from '@/lib/time';
 import { deckOf, endOf, suggestion, type Block } from '@/lib/timetable';
-import { doneOn, elapsedOf, finishBlock, getState, type Held, togglePause, useStore } from '@/store';
+import { doneOn, elapsedOf, finishBlock, getState, type Held, setStudyBg, type StudyBg, togglePause, useStore } from '@/store';
 import { focus, onColor } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { Dialog } from '@/ui/Dialog';
@@ -22,6 +22,8 @@ import { Icon } from '@/ui/Icon';
 import { orderSheet } from '@/ui/OrderSheet';
 import { PlanArt } from '@/ui/PlanArt';
 import { planSheet } from '@/ui/PlanSheets';
+import { KoiPond } from '@/ui/pond/KoiPond';
+import { openSheet } from '@/ui/Sheet';
 import { closeTimer, fmt, TimerFrame } from './standard';
 
 // The timer as today's plans, one card each, side by side like a music app's
@@ -48,8 +50,127 @@ const washColor = makeMutable(ADD_COLOR);
 
 export const CARD_ZONES = (): Zones => ({ head: ['top'], center: ['switcher'], foot: [] });
 
+// 池を見る: the words and buttons fade away and the pond is all there is (tap it to feed the koi)
+let only = false;
+const onlySubs = new Set<() => void>();
+const setPondOnly = (v: boolean) => { only = v; onlySubs.forEach((f) => f()); };
+const usePondOnly = () => useSyncExternalStore((f) => { onlySubs.add(f); return () => { onlySubs.delete(f); }; }, () => only, () => only);
+
 export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
-  return <TimerFrame zones={zones} wash={<DeckWash />} />;
+  const bg = useStore((s) => s.studyBg);
+  const pondOnly = usePondOnly() && bg === 'pond';
+  // the timer opens with its words, whatever it was left as
+  useEffect(() => () => setPondOnly(false), []);
+  const fade = useAnimatedStyle(() => ({ opacity: withTiming(pondOnly ? 0 : 1, { duration: 450 }) }), [pondOnly]);
+  const wrap = (n: ReactNode, grow?: boolean) => (
+    <Animated.View pointerEvents={pondOnly ? 'none' : 'box-none'} style={[grow ? { flex: 1, alignSelf: 'stretch' } : null, fade]}>{n}</Animated.View>
+  );
+  return (
+    <TimerFrame zones={{ head: wrap(zones.head), center: wrap(zones.center, true), foot: wrap(zones.foot) }}
+      wash={bg === 'pond' ? <PondWash only={pondOnly} /> : <DeckWash />} />
+  );
+}
+
+/**
+ * The koi pond behind the study screen. With the words up, it's dimmed a
+ * little and shaded where they sit, with a breath of the centered card's
+ * color; in 池を見る it's all there is, at full light, and a tap feeds the koi.
+ */
+function PondWash({ only: on }: { only: boolean }) {
+  const { width, height } = useWindowDimensions();
+  const veil = useAnimatedStyle(() => ({ opacity: withTiming(on ? 0 : 1, { duration: 500 }) }), [on]);
+  const tint = useAnimatedStyle(() => ({ backgroundColor: washColor.value }));
+  return (
+    <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      <KoiPond width={width} height={height} feedable={on} />
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, veil]}>
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: 0.1 }, tint]} />
+        <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+          <Defs>
+            <LinearGradient id="pondveil" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={focus.bg} stopOpacity={0.7} />
+              <Stop offset="0.2" stopColor={focus.bg} stopOpacity={0.25} />
+              <Stop offset="0.5" stopColor={focus.bg} stopOpacity={0.15} />
+              <Stop offset="0.74" stopColor={focus.bg} stopOpacity={0.55} />
+              <Stop offset="1" stopColor={focus.bg} stopOpacity={0.85} />
+            </LinearGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#pondveil)" />
+        </Svg>
+      </Animated.View>
+      {on ? <PondOnly /> : null}
+    </View>
+  );
+}
+
+/** 池を見る: the time, small and quiet at the top, a way back, and (for a while) how to feed. */
+function PondOnly() {
+  const ss = useSession();
+  const [hint, setHint] = useState(true);
+  useEffect(() => { const id = setTimeout(() => setHint(false), 6000); return () => clearTimeout(id); }, []);
+  return (
+    <Animated.View entering={FadeIn.duration(600).delay(200)} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      <View pointerEvents="box-none" style={{ position: 'absolute', top: 64, left: 0, right: 0, alignItems: 'center', gap: 8 }}>
+        <Txt num size={34} w="700" color={ss.paused ? CRIMSON_ON_DARK : focus.ink} style={{ textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 12 }}>
+          {fmt(ss.running ? ss.elapsed : 0)}
+        </Txt>
+        <Press onPress={() => { haptic.tap(); setPondOnly(false); }} scale={0.94} hitSlop={8} accessibilityLabel="池を見るのをやめる"
+          style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.14)', justifyContent: 'center' }}>
+          <Txt size={12.5} w="700" color={focus.ink}>戻る</Txt>
+        </Press>
+      </View>
+      {hint ? (
+        <Animated.View exiting={FadeOut.duration(800)} pointerEvents="none" style={{ position: 'absolute', bottom: 46, left: 0, right: 0, alignItems: 'center' }}>
+          <Txt size={12.5} color={focus.ink2}>水面をタップすると、エサをあげられます</Txt>
+        </Animated.View>
+      ) : null}
+    </Animated.View>
+  );
+}
+
+/** What's behind the study screen. */
+export function bgSheet() {
+  openSheet((close) => <BgChoice close={close} />, { grouped: true });
+}
+function BgChoice({ close }: { close: () => void }) {
+  const cur = useStore((s) => s.studyBg);
+  const items: { id: StudyBg; name: string; sub: string; c: string[] }[] = [
+    { id: 'pond', name: '鯉の池', sub: '暗い池を鯉がゆっくり泳ぎます。「池を見る」で池だけにして、水面をタップするとエサをあげられます', c: ['#0B1117', '#D8442A', '#F1EBE0', '#E2B04A'] },
+    { id: 'color', name: '科目の色', sub: '真ん中のカードの科目の色に、画面が染まります', c: ['#5856D6', '#E8590C', '#1C9AB0', '#0B0F17'] },
+  ];
+  return (
+    <View style={{ gap: 14, paddingTop: 2 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ width: 64 }} />
+        <Txt size={17} w="700" style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">勉強中の背景</Txt>
+        <Btn kind="primary" small label="できた" onPress={close} style={{ width: 64 }} />
+      </View>
+      {items.map((x) => {
+        const on = cur === x.id;
+        return (
+          <Press key={x.id} onPress={() => { haptic.tap(); setStudyBg(x.id); }} scale={0.98} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={x.name}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 18, backgroundColor: '#fff', borderWidth: 2, borderColor: on ? '#1D9BF0' : 'transparent' }}>
+            <View style={{ width: 54, height: 72, borderRadius: 12, overflow: 'hidden', backgroundColor: x.c[0], padding: 8, gap: 5, justifyContent: 'center' }}>
+              {x.id === 'pond' ? (
+                <>
+                  <View style={{ flexDirection: 'row', gap: 2 }}>{[1, 1, 2, 2, 1].map((k, i) => <View key={i} style={{ width: 6, height: 6, borderRadius: 1.5, backgroundColor: x.c[k] }} />)}</View>
+                  <View style={{ flexDirection: 'row', gap: 2, marginLeft: 8 }}>{[2, 1, 1, 2].map((k, i) => <View key={i} style={{ width: 6, height: 6, borderRadius: 1.5, backgroundColor: x.c[k] }} />)}</View>
+                  <View style={{ flexDirection: 'row', gap: 2, marginLeft: 4 }}>{[3, 3, 3].map((k, i) => <View key={i} style={{ width: 6, height: 6, borderRadius: 1.5, backgroundColor: x.c[k] }} />)}</View>
+                </>
+              ) : (
+                <View style={{ position: 'absolute', inset: 0, backgroundColor: x.c[1], opacity: 0.85 }} />
+              )}
+            </View>
+            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+              <Txt size={16} w="700">{x.name}</Txt>
+              <Txt size={12.5} tone="ink3">{x.sub}</Txt>
+            </View>
+            <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: on ? 7 : 1.5, borderColor: on ? '#1D9BF0' : '#C7CBD3' }} />
+          </Press>
+        );
+      })}
+    </View>
+  );
 }
 
 /** The centered card's color over the page: strong at the top, darker toward the buttons. */
@@ -75,15 +196,28 @@ function DeckWash() {
 /** The grabber (pull the page down by it, or anywhere, to make it small again) and where things stand. */
 export function CardTop() {
   const ss = useSession();
+  const bg = useStore((s) => s.studyBg);
   const state = ss.running ? `${ss.subject.name}を勉強中` : 'これから';
   return (
     <View style={{ alignItems: 'center' }}>
       <Press onPress={() => closeTimer()} hitSlop={14} accessibilityLabel="小さくする（下にスライドでも）" style={{ marginTop: 6, width: 40, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.45)' }} />
-      <View style={{ height: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 20 }}>
-        {ss.running && !ss.paused ? <LiveDot size={5} /> : null}
-        <Txt size={12} w="700" color={ss.paused ? CRIMSON_ON_DARK : focus.ink2} numberOfLines={1}>{state}</Txt>
+      <View style={{ height: 44, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
+        <TopChip label="背景" a11y="勉強中の背景を選ぶ" onPress={bgSheet} />
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          {ss.running && !ss.paused ? <LiveDot size={5} /> : null}
+          <Txt size={12} w="700" color={ss.paused ? CRIMSON_ON_DARK : focus.ink2} numberOfLines={1}>{state}</Txt>
+        </View>
+        {bg === 'pond' ? <TopChip label="池を見る" a11y="池だけを見る（文字とボタンを消す）" onPress={() => setPondOnly(true)} /> : <View style={{ width: 64 }} />}
       </View>
     </View>
+  );
+}
+function TopChip({ label, a11y, onPress }: { label: string; a11y: string; onPress: () => void }) {
+  return (
+    <Press onPress={() => { haptic.tap(); onPress(); }} scale={0.94} hitSlop={6} accessibilityLabel={a11y}
+      style={{ minWidth: 64, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' }}>
+      <Txt size={12} w="700" color={focus.ink}>{label}</Txt>
+    </Press>
   );
 }
 const CRIMSON_ON_DARK = '#FF4D6D';
