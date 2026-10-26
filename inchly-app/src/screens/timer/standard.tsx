@@ -69,7 +69,9 @@ export function StandardTimerPage({ zones }: { zones: Record<Zone, ReactNode> })
  * slides away into the study bar, else it springs back. Always dark, a color
  * wash behind.
  */
-export function TimerFrame({ zones, wash }: { zones: Record<Zone, ReactNode>; wash: ReactNode }) {
+export function TimerFrame({ zones, wash, light, over }: {
+  zones: Record<Zone, ReactNode>; wash: ReactNode; /** a light page (dark status bar) */ light?: boolean; /** drawn over the zones */ over?: ReactNode;
+}) {
   useT(); // the timer's color follows the theme
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -98,12 +100,13 @@ export function TimerFrame({ zones, wash }: { zones: Record<Zone, ReactNode>; wa
       <GestureDetector gesture={pull}>
         <Animated.View style={[{ flex: 1, overflow: 'hidden' }, sheet]}>
           <Screen bg={focus.bg} style={{ paddingBottom: insets.bottom + 12 }}>
-            <StatusBar style="light" />
+            <StatusBar style={light ? 'dark' : 'light'} />
             {wash}
             {zones.head}
             {/* the zones let touches through where they draw nothing (to a background that takes them) */}
             <View pointerEvents="box-none" style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>{zones.center}</View>
             <View pointerEvents="box-none">{zones.foot}</View>
+            {over}
           </Screen>
         </Animated.View>
       </GestureDetector>

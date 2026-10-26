@@ -6,7 +6,7 @@ import { celebrate } from '../moments';
 import { dayOf, hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { daysUntil, dateKey } from '../lib/time';
 import { type Block, endOf, minutesUntil, nextOf, spanEnd, suggestion, toMin } from '../lib/timetable';
-import { commitAll, commitRecord, doneOn, elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
+import { commitAll, commitRecord, doneOn, planNow, elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
 import { haptic } from '../ui/base';
 import { toast } from '../ui/Toast';
 
@@ -175,6 +175,18 @@ export function untilNext(blocks: readonly Block[], b: Block, d: Date): { min?: 
   if (left <= 0) return {};
   const n = b.min ? undefined : nextOf(blocks, b, d);
   return { min: left, next: n?.start ? { s: n.s, at: n.start } : undefined };
+}
+/**
+ * 勉強を開始 with a subject: the plan of that subject whose time has come (or
+ * the next one today) if there is one; else it goes into today's timetable
+ * from now (planNow) and starts.
+ */
+export function startSubject(s: string, now: Date = new Date()): void {
+  const st = getState();
+  const done = doneOn(st, now);
+  const today = st.timetable.filter((b) => b.s === s && !done.has(b.id));
+  const slot = suggestion(today, now);
+  startBlock(slot ? slot.block : planNow(s, now), now);
 }
 /** Starts a timetable plan (ending the session finishes it for today). False when another subject is already under way. */
 export function startBlock(b: Block, now: Date = new Date()): boolean {

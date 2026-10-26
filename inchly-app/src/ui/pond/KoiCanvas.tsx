@@ -1,7 +1,7 @@
 import {
   Atlas, Canvas, createPicture, drawAsImageFromPicture, FillType, LinearGradient, Path, Skia, type SkColor, type SkPath, type SkRect, type SkRSXform, vec,
 } from '@shopify/react-native-skia';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PixelRatio, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
@@ -16,7 +16,8 @@ import { haptic } from '../base';
 // Drawn 30 times a second (the marks are a mosaic; the motion stays smooth).
 
 /** water: draw the dark water and its grid (else the pond is see-through, over what's behind). fade: how much of the height melts away at the top and bottom (0..0.5). */
-export type PondProps = { width: number; height: number; cell?: number; feedable?: boolean; seed?: number; water?: boolean; fade?: number };
+/** avoid: a rectangle (in points) the koi swim around, never under (the card). */
+export type PondProps = { width: number; height: number; cell?: number; feedable?: boolean; seed?: number; water?: boolean; fade?: number; avoid?: { x: number; y: number; w: number; h: number } | null };
 
 /** A mark's shape, white, in a cell `s` across. */
 function markPath(kind: string, s: number): SkPath {
@@ -65,7 +66,7 @@ function makeAtlas(px: number) {
   return drawAsImageFromPicture(pic, { width: px * n, height: px });
 }
 
-export default function KoiCanvas({ width, height, cell = 9, feedable = false, seed = 7, water = true, fade = 0 }: PondProps) {
+export default function KoiCanvas({ width, height, cell = 9, feedable = false, seed = 7, water = true, fade = 0, avoid = null }: PondProps) {
   const cols = Math.ceil(width / cell), rows = Math.ceil(height / cell);
   const pr = Math.min(3, PixelRatio.get());
   const px = Math.round(cell * pr);
@@ -82,6 +83,10 @@ export default function KoiCanvas({ width, height, cell = 9, feedable = false, s
   }, [px, pr, cols, rows, cell]);
 
   const state = useSharedValue<Pond | null>(null);
+  // the card's place, in cells, read by the koi as they swim
+  const keep = useSharedValue<Pond['avoid']>(null);
+  const ax = avoid ? avoid.x / cell : 0, ay = avoid ? avoid.y / cell : 0, aw = avoid ? avoid.w / cell : 0, ah = avoid ? avoid.h / cell : 0;
+  useEffect(() => { keep.set(avoid ? { x0: ax, y0: ay, x1: ax + aw, y1: ay + ah } : null); }, [avoid, ax, ay, aw, ah, keep]);
   const acc = useSharedValue(1);
   const sprites = useSharedValue<SkRect[]>([]);
   const transforms = useSharedValue<SkRSXform[]>([]);
@@ -97,6 +102,7 @@ export default function KoiCanvas({ width, height, cell = 9, feedable = false, s
       for (let i = 0; i < 300; i++) step(p, 1 / 30); // already swimming when it shows
       state.value = p;
     }
+    p.avoid = keep.value;
     const dt = (f.timeSincePreviousFrame ?? 16) / 1000;
     step(p, dt);
     acc.value += dt;

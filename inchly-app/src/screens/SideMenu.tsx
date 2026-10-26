@@ -2,15 +2,14 @@ import { router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { subj } from '@/data';
 import { THEMES_OPEN } from '@/design';
-import { getState, startFrom, useStore, useSubjects } from '@/store';
+import { startSubject } from '@/screens/model';
+import { getState, useStore, useSubjects } from '@/store';
 import { hair, useT } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
 import { Wordmark } from '@/ui/Brand';
 import { Icon, type IconName } from '@/ui/Icon';
 import { planCalendar } from '@/ui/PlanSheets';
-import { toast } from '@/ui/Toast';
 
 // The menu that home slides aside for (slide home to the right, or press the
 // handle on its left edge): the app's places that aren't tabs — settings,
@@ -39,12 +38,9 @@ export function SideMenu({ close, leave }: { close: () => void; leave: () => voi
     { icon: 'users', label: 'フォロー', go: open('/follows') },
     { icon: 'sun', label: 'テーマ', ...(THEMES_OPEN ? { go: open('/design') } : { sub: '準備中' }) },
   ];
+  // its plan if it has one now, else it goes into today's timetable from now
   const start = (id: string) => {
-    if (!startFrom({ s: id })) {
-      haptic.warn();
-      toast(`いまは${subj(getState().subj).name}を勉強中です`, '記録してから次の科目を始めましょう');
-      return;
-    }
+    startSubject(id);
     haptic.firm();
     leave();
     router.push('/timer');

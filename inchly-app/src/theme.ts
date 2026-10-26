@@ -4,13 +4,14 @@ import { Easing } from 'react-native-reanimated';
 
 import { BGS, CORNERS, designVersion, FAMILIES, getDesign, INKS, onDesign, Reaction, refreshDesign, Texture, themeOf, ThemeFont, TIMERS } from './design';
 
-// Light only. A cool blue-white canvas, white cards on a faint edge and a
+// Light only. A soft gray canvas with light falling on it from the top (a
+// little see-through, like frosted glass), white cards on a faint edge and a
 // short soft shadow, near-black ink for text and primary buttons. Green is for
 // study and gains, blue for actions, red for shortfalls.
 const light = {
-  canvas: '#F4F5F8',
+  canvas: '#ECEDF0',
   surface: '#FFFFFF',
-  sunken: '#EFF1F5',
+  sunken: '#E4E6EA',
   line: 'rgba(17,20,23,0.08)',
   line2: 'rgba(17,20,23,0.15)',
   ink: '#121417',

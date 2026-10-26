@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { addSubject, commitAll, commitHeld, commitRecord, doneOn, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
+import { addSubject, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
 import { subj } from '../../data';
 import { addDays, dateKey } from '../time';
 
@@ -241,5 +241,14 @@ describe('going on to the next plan', () => {
     expect(getState().held).toEqual([]);
     expect(getState().sessions.slice(-2).map((x) => [x.s, x.min])).toEqual([['ma', 42], ['ph', 30]]);
     expect(doneOn(getState(), new Date(t0))).toEqual(new Set(['c', 'd']));
+  });
+});
+
+describe('studying something not in the timetable', () => {
+  it('puts it in today\'s timetable from now (to the 5 minutes), running until the next plan', () => {
+    reset();
+    const b = planNow('ch', new Date(2026, 9, 26, 11, 13));
+    expect(b).toEqual(expect.objectContaining({ s: 'ch', start: '11:10', min: 0, days: [], date: '2026-10-26' }));
+    expect(getState().timetable).toContainEqual(b);
   });
 });

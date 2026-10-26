@@ -36,6 +36,8 @@ export type Pond = {
   tile: Float32Array; tileRGB: Uint32Array; mark: Uint8Array; markRGB: Uint32Array; markA: Float32Array;
   /** per cell: how strongly a fish is drawn there already (to layer them) */
   cover: Float32Array;
+  /** a place the koi keep clear of (the card on the study screen), in cells */
+  avoid: { x0: number; y0: number; x1: number; y1: number } | null;
 };
 
 // ---------- small math ----------
@@ -153,7 +155,7 @@ export function makePond(cols: number, rows: number, seed = 7, count = 6): Pond 
   const p: Pond = {
     cols, rows, t: 0, r: seed | 0, acc: 0, koi: [], food: [], ripples: [], pads: [],
     tile: new Float32Array(size), tileRGB: new Uint32Array(size), mark: new Uint8Array(size), markRGB: new Uint32Array(size), markA: new Float32Array(size),
-    cover: new Float32Array(size),
+    cover: new Float32Array(size), avoid: null,
   };
   const kinds = [0, 3, 1, 4, 2, 0, 5, 1];
   // koi in proportion to the pond (a low, wide band of a pond has smaller ones)
@@ -210,6 +212,24 @@ export function step(p: Pond, dtIn: number) {
     if (k.x > cols - m) dx -= ((k.x - (cols - m)) / m) * 1.6;
     if (k.y < mv) dy += ((mv - k.y) / mv) * 2.2;
     if (k.y > rows - mv) dy -= ((k.y - (rows - mv)) / mv) * 2.2;
+    // around the card, never under it: from the head, and from a little ahead of it
+    if (p.avoid) {
+      const b = p.avoid, reach = k.w * 2 + 3;
+      for (let look = 0; look < 2; look++) {
+        const hx = k.x + Math.cos(k.a) * k.len * 0.45 * look, hy = k.y + Math.sin(k.a) * k.len * 0.45 * look;
+        const qx = clamp(hx, b.x0, b.x1), qy = clamp(hy, b.y0, b.y1);
+        let ox = hx - qx, oy = hy - qy, d = Math.sqrt(ox * ox + oy * oy);
+        if (d < 0.01) {
+          // inside it: out by the nearest side
+          const l = hx - b.x0, rr = b.x1 - hx, t = hy - b.y0, bt = b.y1 - hy, m = Math.min(l, rr, t, bt);
+          ox = m === l ? -1 : m === rr ? 1 : 0; oy = m === t ? -1 : m === bt ? 1 : 0; d = 0.01;
+          dx += ox * 4; dy += oy * 4;
+        } else if (d < reach) {
+          const f = (1 - d / reach) * (look ? 2.2 : 3);
+          dx += (ox / d) * f; dy += (oy / d) * f;
+        }
+      }
+    }
     for (const o of p.koi) {
       if (o === k || Math.abs(o.depth - k.depth) > 0.3) continue;
       const ox = k.x - o.x, oy = k.y - o.y, d2 = ox * ox + oy * oy, r = (k.w + o.w) * 2.2;

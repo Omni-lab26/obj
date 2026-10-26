@@ -7,7 +7,7 @@ import { useSyncExternalStore } from 'react';
 // React Native imports here, so the store and its tests can load it.)
 
 export const BGS = {
-  cool: { label: 'クール', canvas: '#F4F5F8', sunken: '#EFF1F5' },
+  cool: { label: 'クール', canvas: '#ECEDF0', sunken: '#E4E6EA' }, // a soft gray, with light falling from the top (Chrome.Screen)
   warm: { label: 'ウォーム', canvas: '#F6F3EE', sunken: '#EEEAE3' },
   white: { label: 'ホワイト', canvas: '#FFFFFF', sunken: '#F2F3F6' },
   lilac: { label: 'ラベンダー', canvas: '#F5F3FB', sunken: '#ECE8F6' },

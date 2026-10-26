@@ -37,8 +37,8 @@ export type Chart = { range: 'day' | 'week'; kind: ChartKind; palette: ChartPale
 export type TimerMode = 'up' | 'goal';
 /** How the timer draws the time: big digits, a clock with hands, or flip cards. */
 export type ClockFace = 'digital' | 'analog' | 'flip';
-/** What's behind the study screen: the koi pond, or the centered card's subject color. */
-export type StudyBg = 'pond' | 'color';
+/** What's behind the study screen: the koi pond, people walking over a glass floor, or the centered card's subject color. */
+export type StudyBg = 'pond' | 'walk' | 'color';
 export type { Block };
 
 export type State = {
@@ -313,6 +313,17 @@ export function setClockFace(f: ClockFace) {
 }
 export function setTimerMode(m: TimerMode) {
   setState({ timerMode: m });
+}
+/**
+ * Studying something the timetable doesn't have yet: it goes in as today's
+ * plan, starting now (to the 5 minutes) and running until the next plan.
+ * Returns that plan, to start it from.
+ */
+export function planNow(s: string, now: Date = new Date()): Block {
+  const m = Math.floor((now.getHours() * 60 + now.getMinutes()) / 5) * 5;
+  const b: Block = { id: newId('b'), s, start: `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`, min: 0, days: [], date: dateKey(now) };
+  setState((st) => ({ timetable: [...st.timetable, b] }));
+  return b;
 }
 export function saveBlock(b: Omit<Block, 'id'> & { id?: string }) {
   setState((s) => ({

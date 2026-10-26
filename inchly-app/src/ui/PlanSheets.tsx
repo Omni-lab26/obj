@@ -31,7 +31,7 @@ const DEADLINE_RED = '#FF3B30';
 
 type Kind = 'plan' | 'deadline';
 export function planSheet(o: { date?: Date; existing?: Block; kind?: Kind } = {}) {
-  openSheet((close) => <Editor close={close} date={o.date} existing={o.existing} kind={o.kind ?? 'plan'} />, { grouped: true });
+  openSheet((close) => <Editor close={close} date={o.date} existing={o.existing} kind={o.kind ?? 'plan'} />, { grouped: true, center: true });
 }
 /** The timetable's 追加: a new plan for today (the day can be changed in the sheet). */
 export const planCalendar = () => planSheet({ date: new Date() });
@@ -60,7 +60,6 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
 
   const plan = kind === 'plan';
   const match = subjects.find((x) => x.name === name.trim());
-  const accent = plan ? color : DEADLINE_RED;
   const toggle = (k: Open) => { haptic.tap(); if (k !== 'new') Keyboard.dismiss(); setOpen(open === k ? null : k); };
   // typing closes whatever picker is open, as in Calendar
   const typing = () => { if (open && open !== 'new') setOpen(null); };
@@ -104,27 +103,24 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
 
   return (
     <View style={{ gap: 14, paddingTop: 2 }}>
-      {/* ✕, what you're adding, ✓ */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Press onPress={close} scale={0.9} hitSlop={6} accessibilityLabel="閉じる"
-          style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="x" size={17} color={t.ink} />
+      {/* やめる, what you're adding, 追加 — words, as in Calendar */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 36 }}>
+        <Press onPress={close} scale={0.94} hitSlop={8} accessibilityLabel="やめる" style={{ minWidth: 56 }}>
+          <Txt size={15.5} tone="ink2">やめる</Txt>
         </Press>
-        <Txt size={17} w="700" style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">{plan ? (existing ? '予定を編集' : '予定を追加') : '締切を追加'}</Txt>
-        <Press onPress={save} scale={0.9} hitSlop={6} accessibilityLabel={existing ? '保存する' : '追加する'}
-          style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: accent, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="check" size={18} color="#fff" />
+        <Txt size={16.5} w="700" style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">{plan ? (existing ? '予定を編集' : '予定を追加') : '締切を追加'}</Txt>
+        <Press onPress={save} scale={0.94} hitSlop={8} accessibilityLabel={existing ? '保存する' : '追加する'} style={{ minWidth: 56, alignItems: 'flex-end' }}>
+          <Txt size={15.5} w="800" color={plan ? t.ink : DEADLINE_RED}>{existing ? '保存' : '追加'}</Txt>
         </Press>
       </View>
 
-      {/* the title and the when, with the subject's color down the side */}
+      {/* the title and the when */}
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <View style={{ width: 4, borderRadius: 2, backgroundColor: accent }} />
         <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
           <Group>
             <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder={plan ? '何をやる？（例：青チャート 例題41〜50）' : '締切の名前（例：英検 申込）'}
               placeholderTextColor={t.ink3} multiline onFocus={typing} accessibilityLabel={plan ? '何をやるか' : '締切の名前'}
-              style={[{ minHeight: 64, margin: 10, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: t.sunken, fontSize: 21, lineHeight: 28, fontFamily: font.text, fontWeight: '700', color: t.ink, textAlignVertical: 'top' }, noOutline]} />
+              style={[{ minHeight: 60, margin: 8, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(20,24,32,0.04)', fontSize: 20, lineHeight: 27, fontFamily: font.text, fontWeight: '700', color: t.ink, textAlignVertical: 'top' }, noOutline]} />
             {plan ? (
               // the icon: the pencil on it opens the photo library
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingBottom: 12 }}>
@@ -218,9 +214,9 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
               ))}
               {/* a new subject, right here: its name and color */}
               <Press onPress={() => toggle('new')} scale={0.94} accessibilityLabel="科目を足す" accessibilityState={{ expanded: open === 'new' }}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: open === 'new' ? t.blueSoft : 'transparent', borderWidth: hair, borderColor: open === 'new' ? t.blue : t.line2, borderStyle: 'dashed' }}>
-                <Icon name="plus" size={11} color={t.blue} />
-                <Txt size={12.5} w="600" color={t.blue}>科目を足す</Txt>
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: open === 'new' ? 'rgba(20,24,32,0.06)' : 'transparent', borderWidth: hair, borderColor: t.line2, borderStyle: 'dashed' }}>
+                <Icon name="plus" size={11} color={t.ink} />
+                <Txt size={12.5} w="600" color={t.ink}>科目を足す</Txt>
               </Press>
             </View>
             {open === 'new' ? <Opens><NewSubject onAdd={(x) => { setName(x.name); setColor(x.c); setOpen(null); }} /></Opens> : null}
@@ -286,10 +282,13 @@ function NewSubject({ onAdd }: { onAdd: (x: { name: string; c: string }) => void
   );
 }
 
-/** A white rounded card on the sheet's gray. */
+/** A see-through white group on the frosted pane, with a bright hairline edge. */
 function Group({ children }: { children: React.ReactNode }) {
-  const t = useT();
-  return <Animated.View layout={SMOOTH} style={{ backgroundColor: t.surface, borderRadius: 18, overflow: 'hidden' }}>{children}</Animated.View>;
+  return (
+    <Animated.View layout={SMOOTH} style={{ backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 16, overflow: 'hidden', borderWidth: hair, borderColor: 'rgba(255,255,255,0.95)' }}>
+      {children}
+    </Animated.View>
+  );
 }
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

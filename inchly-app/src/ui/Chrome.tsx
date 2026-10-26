@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { ReactNode, useSyncExternalStore } from 'react';
-import { View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient as SvgGradient, Rect, Stop } from 'react-native-svg';
 
 import { Notif, NOTIFS, ROOM } from '../data';
 import { State, useStore } from '../store';
@@ -23,8 +24,9 @@ export function useUnread() {
   return NOTIFS.filter(allowed({ notify, blocked })).filter((n) => !read.includes(n.id) && !gone.includes(n.id)).length;
 }
 
-// The tab bar floats over the content, and while you study the study bar sits
-// on top of it, so tab screens leave room under their last item for what's there.
+// The tab bar floats over the content, with the study bar always on top of it
+// (the session under way, or the timetable's plan), so tab screens leave room
+// under their last item for what's there.
 export const TAB_BAR_H = 62;
 export const tabBarBottom = (inset: number) => Math.max(inset - 6, 12);
 export const STUDY_BAR_H = 56;
@@ -39,11 +41,10 @@ const setBarAway = (v: boolean) => { if (v === barAway) return; barAway = v; bar
 const onBarAway = (f: () => void) => { barSubs.add(f); return () => { barSubs.delete(f); }; };
 export const hideStudyBar = () => setBarAway(true);
 export const showStudyBar = () => setBarAway(false);
-/** The study bar is up: a session is under way and it hasn't been swiped away. */
+/** The study bar is always up (studying, it's the session; otherwise the timetable's plan), unless put away. */
 export function useStudyBarShown() {
-  const running = useStore((s) => s.running);
   const away = useSyncExternalStore(onBarAway, () => barAway, () => barAway);
-  return running && !away;
+  return !away;
 }
 /** The top of what floats at the bottom of a tab screen: the study bar while it's up, else the tab bar. */
 export function useBarsTop() {
@@ -55,13 +56,31 @@ export function useTabPad() {
 }
 
 /** Full-height screen on the canvas colour with the top safe area applied. */
+/** Light falling on the gray from the top, fading by the middle: the page reads airy, a little see-through. */
+function Haze() {
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Svg width="100%" height="100%">
+        <Defs>
+          <SvgGradient id="haze" x1="0" y1="0" x2="0.35" y2="1">
+            <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.75} />
+            <Stop offset="0.45" stopColor="#FFFFFF" stopOpacity={0.18} />
+            <Stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
+          </SvgGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#haze)" />
+      </Svg>
+    </View>
+  );
+}
+
 export function Screen({ children, style, bg }: { children: ReactNode; style?: ViewStyle; bg?: string }) {
   const t = useT();
   const insets = useSafeAreaInsets();
   return (
     <View style={[{ flex: 1, backgroundColor: bg ?? t.canvas, paddingTop: insets.top }, style]}>
-      {/* the theme's texture, behind everything (not on screens with their own color, like the timer) */}
-      {bg ? null : <TextureFill texture={t.texture} />}
+      {/* the theme's texture, behind everything (not on screens with their own color, like the timer); without one, a haze of light from the top */}
+      {bg ? null : t.texture ? <TextureFill texture={t.texture} /> : t.dark ? null : <Haze />}
       {children}
     </View>
   );
