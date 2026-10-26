@@ -75,7 +75,7 @@ export function SheetHost() {
           <View {...pan.panHandlers} style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>
             <View style={{ width: 38, height: 5, borderRadius: 3, backgroundColor: t.line2 }} />
           </View>
-          <ScrollView bounces={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 20 }}>
+          <ScrollView bounces={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 20 }}>
             {render(close)}
           </ScrollView>
         </Animated.View>

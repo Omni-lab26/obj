@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { Keyboard, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { SUBJECT_COLORS } from '../data';
@@ -13,8 +13,8 @@ import { Icon } from './Icon';
 import { openSheet } from './Sheet';
 import { toast } from './Toast';
 
-// Adding to the timetable or a deadline, laid out like a calendar's new event:
-// ✕, 予定 / 締切, and ✓ along the top; the title; the start and the end (each
+// Adding to the timetable, or a deadline (each its own sheet), laid out like a
+// calendar's new event: ✕, what you're adding, and ✓ along the top; the title; the start and the end (each
 // a day and a time — the end can be the next day), and repeat; then the
 // subject with its color (for the charts), and a memo. Days and times are
 // picked as on an iPhone, opening right under their row; the keyboard waits
@@ -39,7 +39,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const t = useT();
   const subjects = useSubjects();
   const today = day0(new Date());
-  const [kind, setKind] = useState<Kind>(existing ? 'plan' : kind0);
+  const kind: Kind = existing ? 'plan' : kind0;
   const [title, setTitle] = useState(existing?.t ?? '');
   const [d, setD] = useState(() => (existing?.date ? parseKey(existing.date) : day0(date ?? new Date())));
   const nextHour = Math.min(22, new Date().getHours() + 1) * 60;
@@ -56,7 +56,9 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const plan = kind === 'plan';
   const match = subjects.find((x) => x.name === name.trim());
   const accent = plan ? color : DEADLINE_RED;
-  const toggle = (k: Open) => { haptic.tap(); setOpen(open === k ? null : k); };
+  const toggle = (k: Open) => { haptic.tap(); if (k !== 'new') Keyboard.dismiss(); setOpen(open === k ? null : k); };
+  // typing closes whatever picker is open, as in Calendar
+  const typing = () => { if (open && open !== 'new') setOpen(null); };
   const endDay = new Date(d.getFullYear(), d.getMonth(), d.getDate() + Math.floor(end / DAY));
   const nextDay = end >= DAY;
   // moving the start keeps the length; an end before the start goes to the next day
@@ -97,18 +99,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
           style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="x" size={17} color={t.ink} />
         </Press>
-        <View style={{ flex: 1, flexDirection: 'row', height: 40, borderRadius: 20, backgroundColor: t.surface, padding: 3 }} accessibilityRole="tablist">
-          {([['plan', '予定'], ['deadline', '締切']] as const).map(([k, label]) => {
-            const on = kind === k;
-            return (
-              <Press key={k} onPress={() => { if (!existing) { haptic.tap(); setKind(k); setOpen(null); } }} disabled={!!existing && !on} scale={0.96}
-                accessibilityRole="tab" accessibilityState={{ selected: on }}
-                style={{ flex: 1, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.sunken : 'transparent' }}>
-                <Txt size={14} w={on ? '700' : '500'} tone={on ? 'ink' : 'ink2'}>{label}</Txt>
-              </Press>
-            );
-          })}
-        </View>
+        <Txt size={17} w="700" style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">{plan ? (existing ? '予定を編集' : '予定を追加') : '締切を追加'}</Txt>
         <Press onPress={save} scale={0.9} hitSlop={6} accessibilityLabel={existing ? '保存する' : '追加する'}
           style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: accent, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="check" size={18} color="#fff" />
@@ -121,7 +112,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
         <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
           <Group>
             <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder={plan ? '何をやる？（例：青チャート 例題41〜50）' : '締切の名前（例：英検 申込）'}
-              placeholderTextColor={t.ink3} multiline accessibilityLabel={plan ? '何をやるか' : '締切の名前'}
+              placeholderTextColor={t.ink3} multiline onFocus={typing} accessibilityLabel={plan ? '何をやるか' : '締切の名前'}
               style={[{ minHeight: 64, margin: 10, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: t.sunken, fontSize: 21, lineHeight: 28, fontFamily: font.text, fontWeight: '700', color: t.ink, textAlignVertical: 'top' }, noOutline]} />
           </Group>
           <Group>
@@ -169,7 +160,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
           <Group>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 14, paddingRight: 10, minHeight: 64 }}>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <TextInput value={name} onChangeText={(v) => typeName(v.slice(0, 12))} placeholder="科目（例：数学）" placeholderTextColor={t.ink3} accessibilityLabel="科目"
+                <TextInput value={name} onChangeText={(v) => typeName(v.slice(0, 12))} placeholder="科目（例：数学）" placeholderTextColor={t.ink3} onFocus={typing} accessibilityLabel="科目"
                   style={[{ fontSize: 16, fontFamily: font.text, fontWeight: '600', color: t.ink, paddingVertical: 8 }, noOutline]} />
                 <Txt size={12} tone="ink3">{name.trim() ? (match ? 'いまの科目' : '新しい科目として足します') : '色はグラフでその科目の色になります'}</Txt>
               </View>
@@ -209,7 +200,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
       <Section title="メモ">
         <Group>
           <TextInput value={note} onChangeText={(v) => setNote(v.slice(0, 200))} placeholder={plan ? '持ち物、気をつけること、前回の続きなど' : '受付の時間、持ち物など'} placeholderTextColor={t.ink3}
-            multiline accessibilityLabel="メモ" style={[{ minHeight: 80, padding: 14, fontSize: 15, lineHeight: 22, fontFamily: font.text, color: t.ink, textAlignVertical: 'top' }, noOutline]} />
+            multiline onFocus={typing} accessibilityLabel="メモ" style={[{ minHeight: 80, padding: 14, fontSize: 15, lineHeight: 22, fontFamily: font.text, color: t.ink, textAlignVertical: 'top' }, noOutline]} />
         </Group>
       </Section>
 

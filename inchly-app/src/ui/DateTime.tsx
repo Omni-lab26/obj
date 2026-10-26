@@ -1,6 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { createElement, ReactNode } from 'react';
-import { Platform, View } from 'react-native';
+import { Keyboard, Platform, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { dateKey, parseKey } from '../lib/time';
@@ -73,11 +73,11 @@ export function DurationPick({ value, onChange }: { value: number; onChange: (mi
   );
 }
 
-/** The chip on the right of a row that opens a picker; blue while open, as on iOS. */
+/** The chip on the right of a row that opens a picker; blue while open, as on iOS. The keyboard goes away as it opens, so the wheels aren't hidden behind it. */
 export function PickChip({ label, on, onPress, a11y }: { label: string; on?: boolean; onPress?: () => void; a11y: string }) {
   const t = useT();
   return (
-    <Press onPress={onPress ?? (() => {})} disabled={!onPress} scale={0.95} accessibilityLabel={a11y} accessibilityState={{ expanded: !!on }}
+    <Press onPress={() => { Keyboard.dismiss(); onPress?.(); }} disabled={!onPress} scale={0.95} accessibilityLabel={a11y} accessibilityState={{ expanded: !!on }}
       style={{ height: 34, paddingHorizontal: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: t.sunken }}>
       <Txt num size={16} w="500" color={on ? t.blue : t.ink}>{label}</Txt>
     </Press>
