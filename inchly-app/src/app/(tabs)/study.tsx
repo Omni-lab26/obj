@@ -1,18 +1,17 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, useWindowDimensions, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
-import { hms, subj } from '@/data';
+import { subj } from '@/data';
 import { Deadlines } from '@/screens/home/standard';
-import { blocksOn, endOf, minutesUntil, slotsOf, suggestion, type Block, type Slot } from '@/lib/timetable';
+import { blocksOn, endOf, slotsOf, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
-import { elapsedOf, getState, setTarget, setTimerMode, startFrom, toggleTodo, togglePause, useNow, useStore, useSubjects } from '@/store';
-import { focus, hair, onColor, radius, type, useT } from '@/theme';
+import { getState, setTarget, setTimerMode, startFrom, toggleTodo, useNow, useStore } from '@/store';
+import { hair, onColor, type, useT } from '@/theme';
 import { Card, haptic, Press, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
 import { blockSheet, todoSheet } from '@/ui/Editors';
 import { planCalendar } from '@/ui/PlanSheets';
-import { LiveDot } from '@/ui/GroupParts';
 import { TodoRow } from '@/ui/HomeParts';
 import { Icon } from '@/ui/Icon';
 import { Segmented } from '@/ui/Tabs';
@@ -20,11 +19,12 @@ import { toast } from '@/ui/Toast';
 
 // The middle tab: where studying starts. Plan it here (the timetable, the
 // ToDos and the deadlines they lead to, how the timer counts), and start from what you planned, so the
-// subject is always the one you chose. The timer itself opens on top.
+// subject is always the one you chose. Starting opens the timer on top; while
+// it runs, the study bar on the tab bar brings it back.
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 
-/** Start from a plan; the study bar comes up on the tab bar (tap it for the timer). Refused once a different subject has run for over a minute. */
+/** Start from a plan and open the timer, big in the middle. Refused once a different subject has run for over a minute. */
 function go(x: { s: string; todoId?: string; min?: number }) {
   if (!startFrom(x)) {
     haptic.warn();
@@ -32,6 +32,7 @@ function go(x: { s: string; todoId?: string; min?: number }) {
     return;
   }
   haptic.firm();
+  router.push('/timer');
 }
 
 export default function Study() {
@@ -45,7 +46,6 @@ export default function Study() {
           <Txt size={12} tone="ink3">{jpDate(new Date())}</Txt>
         </View>
         <Timetable />
-        <Now />
         <Todos />
         <View style={{ paddingHorizontal: 16, paddingTop: 14 }}><Deadlines /></View>
         <TimerPrefs />
@@ -53,96 +53,6 @@ export default function Study() {
       </ScrollView>
     </Screen>
   );
-}
-
-// ---------- now: what you're studying, or what's next ----------
-function Now() {
-  const t = useT();
-  const now = useNow();
-  const narrow = useWindowDimensions().width < 360; // the two wide buttons keep to one line on a small phone
-  const s = useStore((x) => x);
-  const subjects = useSubjects();
-  const sj = subj(s.subj);
-  if (s.running) {
-    const e = elapsedOf(s, now);
-    const todo = s.todos.find((x) => x.id === s.studyTodo);
-    return (
-      <Press onPress={() => router.push('/timer')} scale={0.98} accessibilityLabel={`${sj.name}を勉強中 ${hms(e)}。タイマーを開く`}
-        style={{ marginHorizontal: 16, marginTop: 18, borderRadius: radius.card + 4, backgroundColor: focus.bg, padding: 16, gap: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <LiveDot size={6} color={s.paused ? t.amber : undefined} />
-          <Txt size={12} w="600" color={focus.ink2}>{s.paused ? '一時停止中' : '勉強中'}</Txt>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: sj.c }} />
-          <Txt size={26} w="800" color={focus.ink}>{sj.name}</Txt>
-          <Txt size={13} color={focus.ink2} numberOfLines={1} style={{ flex: 1 }}>{todo?.t ?? sj.task}</Txt>
-        </View>
-        <Txt num size={40} w="600" lh={46} color={focus.ink}>{hms(e)}</Txt>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Press onPress={() => { haptic.soft(); togglePause(); }} haptics={false} scale={0.92} accessibilityLabel={s.paused ? '再開' : '一時停止'}
-            style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: focus.ink, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name={s.paused ? 'play' : 'pause'} size={16} color={focus.bg} />
-          </Press>
-          <Press onPress={() => router.push('/timer')} scale={0.96} style={{ flex: 1, height: 46, borderRadius: 23, backgroundColor: focus.raise, alignItems: 'center', justifyContent: 'center' }}>
-            <Txt size={narrow ? 12.5 : 14} w="700" color={focus.ink} numberOfLines={1}>タイマーを開く</Txt>
-          </Press>
-          <Press onPress={() => { const c = getState(); if (c.running && !c.paused) togglePause(); router.push('/record'); }} scale={0.96}
-            style={{ flex: 1, height: 46, borderRadius: 23, backgroundColor: '#F2B705', alignItems: 'center', justifyContent: 'center' }}>
-            <Txt size={narrow ? 12.5 : 14} w="800" color="#2E2200" numberOfLines={1}>終わって記録</Txt>
-          </Press>
-        </View>
-      </Press>
-    );
-  }
-  // not studying: suggest the timetable's block, else the first open ToDo
-  const d = new Date(now);
-  const slot = suggestion(s.timetable, d);
-  const todo = s.todos.find((x) => !x.d);
-  const pick = slot ? { s: slot.block.s, what: slot.block.t ?? subj(slot.block.s).task, min: slot.block.min, when: whenOf(slot, d) }
-    : todo ? { s: todo.s, what: todo.t, todoId: todo.id, when: 'ToDo の一番上' } : null;
-  return (
-    <Card style={{ marginHorizontal: 16, marginTop: 18 }} pad={16}>
-      {pick ? (
-        <View style={{ gap: 12 }}>
-          <View style={{ gap: 2 }}>
-            <Txt size={12} w="600" tone="ink3">{`次は · ${pick.when}`}</Txt>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: subj(pick.s).c }} />
-              <Txt size={26} w="800">{subj(pick.s).name}</Txt>
-              <Txt size={13} tone="ink2" numberOfLines={1} style={{ flex: 1 }}>{pick.what}</Txt>
-            </View>
-          </View>
-          <Press onPress={() => go({ s: pick.s, min: 'min' in pick ? pick.min : undefined, todoId: 'todoId' in pick ? pick.todoId : undefined })} haptics={false} scale={0.97}
-            accessibilityLabel={`${subj(pick.s).name}を始める`}
-            style={{ height: 54, borderRadius: 27, backgroundColor: subj(pick.s).c, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <Icon name="play" size={16} color={onColor(subj(pick.s).c)} />
-            <Txt size={16} w="800" color={onColor(subj(pick.s).c)}>{`${subj(pick.s).name}を始める`}</Txt>
-          </Press>
-        </View>
-      ) : (
-        <Txt size={14} w="700">何から始める？</Txt>
-      )}
-      {/* or any subject, in one tap */}
-      <Txt size={11.5} tone="ink3" style={{ marginTop: 14, marginBottom: 8 }}>{pick ? 'ほかの科目ですぐ始める' : '科目を押すとすぐ始まります'}</Txt>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-        {subjects.map((x) => (
-          <Press key={x.id} onPress={() => go({ s: x.id })} haptics={false} scale={0.94} accessibilityLabel={`${x.name}を始める`}
-            style={{ width: subjects.length > 5 ? '31.5%' : undefined, flexGrow: 1, flexBasis: subjects.length > 5 ? undefined : 0, paddingHorizontal: 6, height: 40, borderRadius: 12, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 5 }}>
-            <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: x.c }} />
-            <Txt size={13} w="700" numberOfLines={1}>{x.name}</Txt>
-          </Press>
-        ))}
-      </View>
-    </Card>
-  );
-}
-
-function whenOf(slot: Slot, now: Date) {
-  const b = slot.block;
-  if (slot.state === 'now') return `いま（${b.start}〜${endOf(b)}）`;
-  const m = minutesUntil(b, now);
-  return `${b.start}から（あと${m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ? `${m % 60}分` : ''}` : `${m}分`}）`;
 }
 
 // ---------- the timetable ----------
