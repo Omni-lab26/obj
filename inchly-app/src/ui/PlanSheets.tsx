@@ -159,6 +159,10 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
                   placeholderTextColor={t.ink3} multiline onFocus={typing} accessibilityLabel="何をやるか"
                   style={[{ flex: 1, minWidth: 0, minHeight: 84, paddingTop: 2, fontSize: 17, lineHeight: 24, fontFamily: font.text, fontWeight: '600', color: t.ink, textAlignVertical: 'top' }, noOutline]} />
               </View>
+              {/* what you've written before (plans' やること, records' contents), one row: a tap puts it in */}
+              <View style={{ paddingHorizontal: 12, paddingBottom: 10, marginTop: -2 }}>
+                <ContentHints s={match?.id ?? null} typed={title} onPick={(w) => setTitle(w.slice(0, 40))} />
+              </View>
               {/* the subjects as the icons to pick; a photo can stand in for the picture */}
               {open === 'subject' ? (
                 <Opens>
