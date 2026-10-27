@@ -3,7 +3,7 @@ import { AppState } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { AreaId, demoHistory, GROUPS, Group, Post, POSTS, setSubjects, SUBJ, subj, SUBJECT_COLORS, Subject } from './data';
+import { AreaId, demoHistory, fixColors, GROUPS, Group, OTHER_COLORS, Post, POSTS, setSubjects, shadeFor, SUBJ, subj, Subject } from './data';
 import { cancelReminder, configureNotifications, notificationsAllowed, replaceReminders, scheduleReminder } from './lib/notify';
 import { deadlineReminders, goalReminderAt, timetableReminders } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
@@ -30,9 +30,8 @@ export type DmFrom = 'following' | 'groups' | 'all';
 export type FriendSort = 'time' | 'name' | 'mine';
 export type ExtraTab = 'events' | 'exams' | 'me';
 export type ChartKind = 'bar' | 'stack' | 'line';
-export type ChartPalette = 'ink' | 'blue' | 'orange' | 'grape' | 'navy' | 'teal' | 'rose' | 'amber';
-/** detail: one color per subject, or subjects added up by 教科. */
-export type Chart = { range: 'day' | 'week'; kind: ChartKind; palette: ChartPalette; detail: 'subject' | 'area' };
+/** detail: one color per subject, or subjects added up by 教科. (The colors are the subjects' own, fixed: no palette to pick.) */
+export type Chart = { range: 'day' | 'week'; kind: ChartKind; detail: 'subject' | 'area' };
 /** How the timer counts: up from zero (what gets recorded), or down to a planned length. */
 export type TimerMode = 'up' | 'goal';
 /** How the timer draws the time: big digits, a clock with hands, or flip cards. */
@@ -162,7 +161,7 @@ export const INITIAL: State = {
   restTickets: 1, // one to start with, so a single missed day doesn't undo the first week
   restDays: [],
   extraTab: null,
-  chart: { range: 'day', kind: 'stack', palette: 'ink', detail: 'subject' },
+  chart: { range: 'day', kind: 'stack', detail: 'subject' },
   subjects: SUBJ,
   design: DEFAULT_DESIGN,
   timetable: [],
@@ -369,17 +368,29 @@ export const useSubjects = () => {
   const list = useStore((s) => s.subjects);
   return useMemo(() => list.filter((x) => !x.hidden), [list]);
 };
-/** Adds a subject; its color is the first one not taken yet. Returns its id. */
+/**
+ * Adds a subject. Its color is fixed (data.ts AREA_SHADES): its 教科's next
+ * shade; only one in その他 takes the color given (else the first free one). Returns its id.
+ */
 export function addSubject(x: { name: string; area: AreaId; c?: string }): string {
   const s = state;
-  const used = new Set(s.subjects.map((y) => y.c));
   const id = newId('sj');
-  const c = x.c ?? SUBJECT_COLORS.find((k) => !used.has(k)) ?? SUBJECT_COLORS[s.subjects.length % SUBJECT_COLORS.length];
+  const c = x.area === 'other' && x.c && OTHER_COLORS.includes(x.c) ? x.c : shadeFor(x.area, s.subjects);
   setState({ subjects: [...s.subjects, { id, name: x.name.trim(), area: x.area, c }] });
   return id;
 }
+/** Renames, moves to another 教科, hides …; a subject's color changes only with its 教科 (its new 教科's next shade), or by choice in その他. */
 export function updateSubject(id: string, patch: Partial<Omit<Subject, 'id'>>) {
-  setState((s) => ({ subjects: s.subjects.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
+  setState((s) => ({
+    subjects: s.subjects.map((x) => {
+      if (x.id !== id) return x;
+      const next = { ...x, ...patch };
+      const others = s.subjects.filter((y) => y.id !== id);
+      if (next.area === 'other') next.c = patch.c && OTHER_COLORS.includes(patch.c) ? patch.c : x.area === 'other' ? x.c : shadeFor('other', others);
+      else next.c = next.area === x.area ? x.c : shadeFor(next.area, others);
+      return next;
+    }),
+  }));
 }
 /**
  * Removes a subject. One with records is hidden instead, so old days keep
@@ -670,7 +681,13 @@ export function migrate(saved: Record<string, unknown>, now: Date = new Date()):
     delete out.syncedAt;
   }
   // settings saved before a field existed get its default
-  if (out.chart && typeof out.chart === 'object') out.chart = { ...INITIAL.chart, ...(out.chart as object) };
+  if (out.chart && typeof out.chart === 'object') {
+    // the chart's own palette is gone: charts draw in the subjects' fixed colors
+    const { palette: _gone, ...chart } = out.chart as Record<string, unknown>;
+    out.chart = { ...INITIAL.chart, ...chart };
+  }
+  // colors became fixed by 教科: older saves' subjects take their 教科's shades
+  if (Array.isArray(out.subjects)) out.subjects = fixColors(out.subjects as Subject[]);
   if (out.design && typeof out.design === 'object') {
     const d = { ...INITIAL.design, ...(out.design as object) } as Design;
     // the timer's background (studyBg) became the 背景 behind every page; its 科目の色 is 背景 なし

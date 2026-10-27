@@ -2,7 +2,7 @@
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
 import { addSubject, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
-import { subj } from '../../data';
+import { AREA_SHADES, OTHER_COLORS, subj } from '../../data';
 import { backdropOf, DEFAULT_DESIGN } from '../../design';
 import { addDays, dateKey } from '../time';
 
@@ -95,14 +95,31 @@ describe('ToDo EXP', () => {
 });
 
 describe('subjects', () => {
-  it('adds one with the first unused color, and subj() sees it', () => {
+  it("adds one in its 教科's next shade, fixed; subj() sees it", () => {
     reset();
-    const id = addSubject({ name: '数IA', area: 'ma' });
+    const id = addSubject({ name: '数IA', area: 'ma', c: '#EC4899' });
     const x = subj(id);
     expect(x.name).toBe('数IA');
-    expect(getState().subjects.filter((y) => y.c === x.c)).toHaveLength(1);
-    updateSubject(id, { name: '数学IA' });
+    // 数学 has the first orange: 数IA takes the next, whatever was asked for
+    expect(x.c).toBe(AREA_SHADES.ma[1]);
+    updateSubject(id, { name: '数学IA', c: '#EC4899' });
     expect(subj(id).name).toBe('数学IA');
+    expect(subj(id).c).toBe(AREA_SHADES.ma[1]);
+    // moved to another 教科, it takes that one's shade
+    updateSubject(id, { area: 'soc' });
+    expect(AREA_SHADES.soc).toContain(subj(id).c);
+    // only その他 has a color you pick (from hues no 教科 uses)
+    const o = addSubject({ name: '検定', area: 'other', c: OTHER_COLORS[2] });
+    expect(subj(o).c).toBe(OTHER_COLORS[2]);
+    updateSubject(o, { c: OTHER_COLORS[4] });
+    expect(subj(o).c).toBe(OTHER_COLORS[4]);
+  });
+  it("puts an older save's subjects on their 教科's colors", () => {
+    const out = migrate({ v: 3, subjects: [
+      { id: 'ph', name: '物理', c: '#30B0C7', area: 'sci' }, { id: 'ch', name: '化学', c: '#FF2D55', area: 'sci' },
+      { id: 'x', name: '検定', c: '#EC4899', area: 'other' },
+    ] }).subjects!;
+    expect(out.map((x) => x.c)).toEqual(['#30B0C7', AREA_SHADES.sci[1], '#EC4899']);
   });
   it('removes an unused subject, hides one with records, keeps at least one', () => {
     reset({ sessions: [{ id: 'r', s: 'en', min: 30, date: dateKey(), at: '20:00' }], subj: 'en' });
@@ -115,7 +132,9 @@ describe('subjects', () => {
     expect(removeSubject('en')).toBe('last');
   });
   it('fills in chart settings added later', () => {
-    expect(migrate({ v: 3, chart: { range: 'week', kind: 'bar', palette: 'blue' } }).chart).toMatchObject({ range: 'week', detail: 'subject' });
+    const chart = migrate({ v: 3, chart: { range: 'week', kind: 'bar', palette: 'blue' } }).chart!;
+    expect(chart).toMatchObject({ range: 'week', detail: 'subject' });
+    expect(chart).not.toHaveProperty('palette'); // the charts draw in the subjects' own colors
   });
 });
 

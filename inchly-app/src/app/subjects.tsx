@@ -2,27 +2,29 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AREAS, AreaId, PRESETS, Subject, SUBJECT_COLORS } from '@/data';
+import { AREAS, AreaId, guessArea, OTHER_COLORS, PRESETS, shadeFor, Subject } from '@/data';
 import { addSubject, moveSubject, removeSubject, updateSubject, useStore } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
 import { Btn, haptic, Press, SubjCoin, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Choice, Field, Label } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
-import { useAreaColors } from '@/ui/series';
+import { AREA_COLORS } from '@/ui/series';
 import { openSheet } from '@/ui/Sheet';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
 
 // 科目と色: split subjects as finely as you like (数IA, 古文, 日本史 …), each
-// in a 教科 so charts can also add them up, each with its own color.
+// in a 教科 so charts can also add them up. Colors are fixed: a subject takes
+// its 教科's next shade when it's made (数学 orange, 数IA a deeper orange …)
+// and keeps it; only その他 has colors to pick (data.ts AREA_SHADES).
 
 export default function Subjects() {
   const t = useT();
   const insets = useSafeAreaInsets();
   const subjects = useStore((s) => s.subjects);
   const shown = subjects.filter((x) => !x.hidden);
-  const areaC = useAreaColors();
+  const areaC = AREA_COLORS;
   const hidden = subjects.filter((x) => x.hidden);
   const names = new Set(subjects.map((x) => x.name));
   const presets = PRESETS.filter((p) => !names.has(p.name));
@@ -31,7 +33,7 @@ export default function Subjects() {
       <NavBar title="科目と色" />
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <Txt size={12.5} tone="ink2" lh={19} style={{ paddingHorizontal: 20, paddingTop: 6 }}>
-          科目は細かく分けられます。グラフは「科目ごと」でも、教科ごとにまとめても見られます（グラフの歯車から切り替え）。
+          科目は細かく分けられます。色は教科で決まっていて（同じ教科の科目は同じ色の濃淡）、グラフでもどこでも同じ色です。グラフは「科目ごと」でも、教科ごとにまとめても見られます（グラフの歯車から切り替え）。
         </Txt>
 
         {AREAS.map((a) => {
@@ -105,9 +107,14 @@ function SubjectForm({ close, existing }: { close: () => void; existing?: Subjec
   const t = useT();
   const subjects = useStore((s) => s.subjects);
   const [name, setName] = useState(existing?.name ?? '');
-  const [area, setArea] = useState<AreaId>(existing?.area ?? 'other');
-  const taken = new Set(subjects.filter((x) => x.id !== existing?.id).map((x) => x.c));
-  const [c, setC] = useState(existing?.c ?? SUBJECT_COLORS.find((k) => !taken.has(k)) ?? SUBJECT_COLORS[0]);
+  // the 教科: what you pick, else what the name points to (数IA → 数学)
+  const [picked, setPicked] = useState<AreaId | null>(existing?.area ?? null);
+  const area = picked ?? guessArea(name);
+  const others = subjects.filter((x) => x.id !== existing?.id);
+  const taken = new Set(others.map((x) => x.c));
+  const [mine, setMine] = useState(existing?.area === 'other' ? existing.c : shadeFor('other', others));
+  // the color it will have: its 教科's (kept if it stays in its 教科), or the one picked in その他
+  const c = area === 'other' ? mine : existing && existing.area === area ? existing.c : shadeFor(area, others);
   const [touched, setTouched] = useState(false);
   const dup = subjects.some((x) => x.id !== existing?.id && !x.hidden && x.name === name.trim());
   const err = touched && !name.trim() ? '科目の名前を入れてください' : dup ? '同じ名前の科目があります' : undefined;
@@ -130,28 +137,35 @@ function SubjectForm({ close, existing }: { close: () => void; existing?: Subjec
   return (
     <View style={{ gap: 18 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: c }} />
+        <SubjCoin name={name.trim() || '？'} color={c} area={area} size={28} />
         <Txt size={18} w="700">{existing ? '科目を編集' : '科目を追加'}</Txt>
       </View>
       <Field label="名前（例：数IA、古文、日本史）" value={name} onChangeText={setName} max={12} error={err} onBlur={() => setTouched(true)} />
       <View>
-        <Label sub="「教科ごと」のグラフでまとめる先">教科</Label>
-        <Choice value={area} onChange={setArea} options={AREAS.map((a) => ({ v: a.id, label: a.name }))} />
+        <Label sub="「教科ごと」のグラフでまとめる先。色もこれで決まります">教科</Label>
+        <Choice value={area} onChange={setPicked} options={AREAS.map((a) => ({ v: a.id, label: a.name }))} />
       </View>
       <View>
-        <Label sub="ほかの科目で使っている色には点が付いています">色</Label>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }} accessibilityRole="radiogroup">
-          {SUBJECT_COLORS.map((k) => {
-            const on = k === c;
-            return (
-              <Press key={k} onPress={() => { haptic.tap(); setC(k); }} scale={0.88} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`色 ${k}`}
-                style={{ width: '16%', aspectRatio: 1, borderRadius: 999, backgroundColor: k, alignItems: 'center', justifyContent: 'center',
-                  borderWidth: on ? 3 : 0, borderColor: t.surface, boxShadow: on ? `0px 0px 0px 2px ${k}` : undefined }}>
-                {on ? <Icon name="check" size={16} color="#fff" width={3} /> : taken.has(k) ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.85)' }} /> : null}
-              </Press>
-            );
-          })}
-        </View>
+        <Label sub={area === 'other' ? 'その他の科目だけ、教科にない色から選べます' : '教科の色で決まっています（同じ教科の科目は濃淡で分かれます）'}>色</Label>
+        {area === 'other' ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }} accessibilityRole="radiogroup">
+            {OTHER_COLORS.map((k) => {
+              const on = k === c;
+              return (
+                <Press key={k} onPress={() => { haptic.tap(); setMine(k); }} scale={0.88} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`色 ${k}`}
+                  style={{ width: '16%', aspectRatio: 1, borderRadius: 999, backgroundColor: k, alignItems: 'center', justifyContent: 'center',
+                    borderWidth: on ? 3 : 0, borderColor: t.surface, boxShadow: on ? `0px 0px 0px 2px ${k}` : undefined }}>
+                  {on ? <Icon name="check" size={16} color="#fff" width={3} /> : taken.has(k) ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.85)' }} /> : null}
+                </Press>
+              );
+            })}
+          </View>
+        ) : (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <SubjCoin name={name.trim() || AREAS.find((a) => a.id === area)!.name} color={c} area={area} size={30} />
+            <Txt size={13} tone="ink2">{`${AREAS.find((a) => a.id === area)!.name}の色`}</Txt>
+          </View>
+        )}
       </View>
       <Btn kind="primary" wide label={existing ? '保存する' : '追加する'} onPress={save} />
       {existing ? (

@@ -1,4 +1,5 @@
 /// <reference types="jest" />
+import { guessArea } from '../../data';
 import { glyphOf } from '../../ui/SubjectGlyph';
 
 describe("a subject's picture", () => {
@@ -20,5 +21,17 @@ describe("a subject's picture", () => {
     expect(glyphOf('青チャート', 'ma')).toBe('pi');
     expect(glyphOf('ピアノ', 'other')).toBeNull();
     expect(glyphOf('ピアノ')).toBeNull();
+  });
+});
+
+describe('which 教科 a name points to', () => {
+  it('guesses from the name, その他 when it cannot tell', () => {
+    expect(guessArea('数IA')).toBe('ma');
+    expect(guessArea('日本史')).toBe('soc');
+    expect(guessArea('英検')).toBe('en');
+    expect(guessArea('古文')).toBe('ja');
+    expect(guessArea('物理基礎')).toBe('sci');
+    expect(guessArea('情報I')).toBe('info');
+    expect(guessArea('簿記')).toBe('other');
   });
 });

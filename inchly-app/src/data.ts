@@ -13,13 +13,61 @@ export const AREAS: { id: AreaId; name: string; c: string }[] = [
 ];
 export const area = (id: AreaId) => AREAS.find((g) => g.id === id) ?? AREAS[AREAS.length - 1];
 
-/** Colors to pick for a subject: deep and mid tones that read on white and on the dark timer. No greens (green is the grass). */
-export const SUBJECT_COLORS = [
-  '#5856D6', '#2F6BFF', '#0EA5E9', '#30B0C7', '#1E3A8A',
-  '#8B5CF6', '#A855F7', '#7E22CE', '#D946EF', '#EC4899',
-  '#FF2D55', '#E5484D', '#FF6B4A', '#FF9500', '#F5A524',
-  '#D9A300', '#A0522D', '#C8A27A', '#64748B', '#3F3F46',
-];
+// Colors are fixed, so a chart reads at a glance and means the same everywhere:
+// each 教科 has its hue, and its subjects take its shades in turn (英語 the
+// first purple, 英単語 the next …), given once when the subject is made and
+// never changed (an icon likewise follows the subject: ui/SubjectGlyph). Only
+// a subject in その他 has a color you pick — from hues no 教科 uses. No greens
+// (green is the grass and the timer's line).
+export const AREA_SHADES: Record<AreaId, string[]> = {
+  en: ['#5856D6', '#7B79E8', '#3E3CB0', '#9E9CF2', '#2C2A8C'],
+  ma: ['#FF9500', '#D97706', '#FFB547', '#B45309', '#FFCB7A'],
+  ja: ['#D9A300', '#B88600', '#E9C24A', '#8F6A00'],
+  sci: ['#30B0C7', '#1F7FB0', '#0EA5E9', '#16607A'],
+  soc: ['#A0522D', '#C2410C', '#7A3A1C', '#C8865A', '#5E2A12'],
+  info: ['#64748B', '#475569', '#94A3B8'],
+  other: [],
+};
+/** The colors to pick for a subject in その他: none of a 教科's hues. */
+export const OTHER_COLORS = ['#EC4899', '#D946EF', '#FF2D55', '#E5484D', '#A855F7', '#7E22CE', '#C8A27A', '#3F3F46'];
+
+/** The color a new subject in `area` gets: the first of its 教科's shades no other subject there has (round again when all are taken). */
+export function shadeFor(area: AreaId, others: readonly { area: AreaId; c: string }[]): string {
+  const shades = AREA_SHADES[area];
+  if (!shades.length) {
+    const used = new Set(others.map((x) => x.c));
+    return OTHER_COLORS.find((c) => !used.has(c)) ?? OTHER_COLORS[others.length % OTHER_COLORS.length];
+  }
+  const mine = others.filter((x) => x.area === area);
+  const used = new Set(mine.map((x) => x.c));
+  return shades.find((c) => !used.has(c)) ?? shades[mine.length % shades.length];
+}
+
+/** Puts every subject on its 教科's colors: one already on a free shade of its 教科 keeps it; the rest take the next free one, in order. (For saves from before colors were fixed.) */
+export function fixColors<T extends { area: AreaId; c: string }>(list: readonly T[]): T[] {
+  const out: T[] = [];
+  for (const x of list) {
+    const shades = AREA_SHADES[x.area] ?? [];
+    if (!shades.length) { out.push(x); continue; }
+    const taken = out.some((y) => y.area === x.area && y.c === x.c);
+    out.push(shades.includes(x.c) && !taken ? x : { ...x, c: shadeFor(x.area, out) });
+  }
+  return out;
+}
+
+/** Which 教科 a subject's name points to (数IA → 数学, 日本史 → 社会 …), その他 when it can't tell. */
+export function guessArea(name: string): AreaId {
+  const n = name.trim();
+  const preset = PRESETS.find((p) => p.name === n);
+  if (preset) return preset.area;
+  if (/英|リスニング|TOEIC|TOEFL|IELTS|English/i.test(n)) return 'en';
+  if (/数|算/.test(n)) return 'ma';
+  if (/国語|現代文|現文|古文|漢文|古典|小論/.test(n)) return 'ja';
+  if (/物理|化学|生物|地学|理科|物基|化基|生基/.test(n)) return 'sci';
+  if (/史|地理|政|経|倫理|公共|社会/.test(n)) return 'soc';
+  if (/情報|プログラ/.test(n)) return 'info';
+  return 'other';
+}
 
 /** A subject you study. task: what you're on in it (sample text); week/goal: sample hours for the weekly view. */
 export type Subject = { id: string; name: string; c: string; area: AreaId; task?: string; week?: number; goal?: number; hidden?: boolean };
@@ -28,7 +76,7 @@ export const SUBJ: Subject[] = [
   { id: 'en', name: '英語', c: '#5856D6', area: 'en', task: '長文読解 第3講', week: 6.5, goal: 7 },
   { id: 'ma', name: '数学', c: '#FF9500', area: 'ma', task: '青チャート 数III 例題41〜50', week: 5.8, goal: 8 },
   { id: 'ph', name: '物理', c: '#30B0C7', area: 'sci', task: '名問の森 電磁気 15', week: 4.1, goal: 5 },
-  { id: 'ch', name: '化学', c: '#FF2D55', area: 'sci', task: '有機 構造決定 演習', week: 2.9, goal: 3 },
+  { id: 'ch', name: '化学', c: '#1F7FB0', area: 'sci', task: '有機 構造決定 演習', week: 2.9, goal: 3 },
   { id: 'ja', name: '国語', c: '#D9A300', area: 'ja', task: '古文単語 315 · 61〜80', week: 1.6, goal: 3 },
 ];
 /** Subjects people often split into, offered as one-tap additions. */

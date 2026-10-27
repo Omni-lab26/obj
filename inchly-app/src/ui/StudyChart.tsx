@@ -4,13 +4,13 @@ import { LayoutChangeEvent, Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 
-import { pad, SUBJECT_COLORS } from '../data';
+import { AREAS, pad } from '../data';
 import { hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { dateKey } from '../lib/time';
-import { ChartKind, ChartPalette, elapsedOf, setChart, useNow, useStore, useSubjects } from '../store';
+import { ChartKind, elapsedOf, setChart, useNow, useStore, useSubjects } from '../store';
 import { ease, hair, useT } from '../theme';
 import { useReplay } from './appear';
-import { Btn, haptic, Press, Txt } from './base';
+import { Btn, haptic, Press, SubjTile, Txt } from './base';
 import { Icon } from './Icon';
 import { openSheet } from './Sheet';
 import { Series, useSeries } from './series';
@@ -18,19 +18,10 @@ import { Segmented } from './Tabs';
 
 // Home's study-time graph: today hour by hour (24 vertical bars) or this week
 // day by day (7), switched with 日 / 週. The gear at the top right picks the
-// chart (bars, by subject, line) and its color. Tap a bar for its numbers.
-// Never green: green is the grass.
+// chart (bars, by subject, line) and by subject or by 教科. The colors are the
+// subjects' own, fixed (data.ts AREA_SHADES), and the key beside it shows each
+// one's icon too. Tap a bar for its numbers. Never green: green is the grass.
 
-export const PALETTES: Record<ChartPalette, { label: string; c: string }> = {
-  ink: { label: 'インク', c: '#121417' },
-  navy: { label: 'ネイビー', c: '#1E3A8A' },
-  blue: { label: 'ブルー', c: '#2F6BFF' },
-  teal: { label: 'ティール', c: '#0E9AB0' },
-  grape: { label: 'グレープ', c: '#8B5CF6' },
-  rose: { label: 'ローズ', c: '#E11D74' },
-  orange: { label: 'オレンジ', c: '#F07B1D' },
-  amber: { label: 'アンバー', c: '#C98A00' },
-};
 const KINDS: { v: ChartKind; label: string }[] = [
   { v: 'stack', label: '色分け' },
   { v: 'bar', label: '棒' },
@@ -184,7 +175,8 @@ export function StudyChart() {
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
           {used.map((x) => (
             <View key={x.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: x.c }} />
+              {/* its icon in its color, so a name never rests on telling two shades apart */}
+              <SubjTile name={x.name} color={x.c} area={x.area} size={14} radius={3} />
               <Txt size={11} tone="ink2">{x.name}</Txt>
             </View>
           ))}
@@ -290,7 +282,7 @@ const PREVIEW = [0.35, 0.7, 0.5, 0.9, 0.6];
 function KindPreview({ kind }: { kind: ChartKind }) {
   const H = 34;
   const subjects = useSubjects();
-  const cOf = (i: number) => subjects[i % Math.max(1, subjects.length)]?.c ?? SUBJECT_COLORS[i];
+  const cOf = (i: number) => subjects[i % Math.max(1, subjects.length)]?.c ?? AREAS[i % AREAS.length].c;
   if (kind === 'line') {
     const at = (v: number, i: number) => ({ x: 6 + i * 14, y: H - v * (H - 4) });
     return (
@@ -304,7 +296,7 @@ function KindPreview({ kind }: { kind: ChartKind }) {
       {PREVIEW.map((v, i) => (
         <View key={i} style={{ width: 8, height: v * H, borderTopLeftRadius: 2, borderTopRightRadius: 2, overflow: 'hidden', flexDirection: 'column-reverse' }}>
           {kind === 'stack'
-            ? [0.5, 0.3, 0.2].map((f, k) => <View key={k} style={{ height: f * v * H, backgroundColor: SUBJECT_COLORS[(i * 3 + k * 5) % SUBJECT_COLORS.length] }} />)
+            ? [0.5, 0.3, 0.2].map((f, k) => <View key={k} style={{ height: f * v * H, backgroundColor: cOf(i * 3 + k) }} />)
             : <View style={{ flex: 1, backgroundColor: cOf(i) }} />}
         </View>
       ))}

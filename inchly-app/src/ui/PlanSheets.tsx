@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Keyboard, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { SUBJECT_COLORS } from '../data';
+import { AREAS, guessArea, OTHER_COLORS, shadeFor, subj } from '../data';
 import { dateKey, mondayIndex, parseKey } from '../lib/time';
 import { pickPlanIcon } from '../lib/planIcon';
 import { Block, toClock, toMin } from '../lib/timetable';
-import { addDeadline, addSubject, removeBlock, saveBlock, updateSubject, useSubjects } from '../store';
+import { addDeadline, addSubject, removeBlock, saveBlock, useSubjects } from '../store';
 import { font, hair, noOutline, useT } from '../theme';
 import { haptic, Press, SubjTile, Txt } from './base';
 import { DatePick, Opens, PickChip, SMOOTH, TimePick } from './DateTime';
@@ -63,7 +63,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const weekly = !!existing && !existing.date;
   const known = existing ? subjects.find((x) => x.id === existing.s) : undefined;
   const [name, setName] = useState(known?.name ?? '');
-  const [color, setColor] = useState(known?.c ?? SUBJECT_COLORS[0]);
+  const [color, setColor] = useState(known?.c ?? OTHER_COLORS[0]);
   const [note, setNote] = useState(existing?.note ?? '');
   const [icon, setIcon] = useState(existing?.icon);
   const [open, setOpen] = useState<Open>(null);
@@ -92,10 +92,10 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
       return;
     }
     if (!name.trim()) { haptic.warn(); setOpen('subject'); toast('アイコン（科目）を選んでください', '記録とグラフは科目ごとに分かれます'); return; }
-    // the subject: one you have (its color follows what you picked), or a new one
+    // the subject: one you have, or a new one
     let s = match?.id;
-    if (match && match.c !== color) updateSubject(match.id, { c: color });
-    if (!s) s = addSubject({ name: name.trim(), area: 'other', c: color });
+    // a new one goes in the 教科 its name points to, in that 教科's color (colors are fixed: data.ts)
+    if (!s) s = addSubject({ name: name.trim(), area: guessArea(name), c: color });
     saveBlock({
       id: existing?.id, s, t: title.trim(), note: note.trim() || undefined, icon,
       start: toClock(start), min: len,
@@ -269,22 +269,23 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   );
 }
 
-/** Adds a subject (name and color) on the spot, and hands it back to put on the plan. */
+/** Adds a subject on the spot, and hands it back to put on the plan. Its 教科 comes from its name (日本史 → 社会) and with it its fixed color; only one in その他 has a color to pick. */
 function NewSubject({ onAdd }: { onAdd: (x: { name: string; c: string }) => void }) {
   const t = useT();
   const subjects = useSubjects();
-  const used = new Set(subjects.map((x) => x.c));
   const [name, setName] = useState('');
-  const [c, setC] = useState(() => SUBJECT_COLORS.find((x) => !used.has(x)) ?? SUBJECT_COLORS[0]);
+  const area = guessArea(name);
+  const [mine, setMine] = useState(() => shadeFor('other', subjects));
+  const c = area === 'other' ? mine : shadeFor(area, subjects);
   const add = () => {
     const n = name.trim();
     if (!n) { haptic.warn(); toast('科目の名前を入れてください'); return; }
     const same = subjects.find((x) => x.name === n);
     if (same) { haptic.tap(); toast(`「${n}」はもうあります`, 'その科目にしました'); onAdd({ name: same.name, c: same.c }); return; }
-    addSubject({ name: n, area: 'other', c });
+    const id = addSubject({ name: n, area, c });
     haptic.success();
-    toast(`科目に「${n}」を足しました`, '設定 › 科目と色 から直せます');
-    onAdd({ name: n, c });
+    toast(`科目に「${n}」を足しました`, `${AREAS.find((a) => a.id === area)!.name}の色 · 設定 › 科目と色 から直せます`);
+    onAdd({ name: n, c: subj(id).c });
   };
   return (
     <View style={{ alignSelf: 'stretch', padding: 14, gap: 12 }}>
@@ -298,12 +299,16 @@ function NewSubject({ onAdd }: { onAdd: (x: { name: string; c: string }) => void
           <Txt size={16} w="600" color={t.blue}>足す</Txt>
         </Press>
       </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {SUBJECT_COLORS.map((x) => (
-          <Press key={x} onPress={() => { haptic.tap(); setC(x); }} scale={0.88} accessibilityRole="radio" accessibilityState={{ checked: x === c }} accessibilityLabel={`色 ${x}`}
-            style={{ width: 26, height: 26, borderRadius: 5, backgroundColor: x, borderWidth: x === c ? 3 : 0, borderColor: t.surface, boxShadow: x === c ? `0px 0px 0px 2px ${x}` : undefined }} />
-        ))}
-      </View>
+      {area === 'other' ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {OTHER_COLORS.map((x) => (
+            <Press key={x} onPress={() => { haptic.tap(); setMine(x); }} scale={0.88} accessibilityRole="radio" accessibilityState={{ checked: x === c }} accessibilityLabel={`色 ${x}`}
+              style={{ width: 26, height: 26, borderRadius: 5, backgroundColor: x, borderWidth: x === c ? 3 : 0, borderColor: t.surface, boxShadow: x === c ? `0px 0px 0px 2px ${x}` : undefined }} />
+          ))}
+        </View>
+      ) : (
+        <Txt size={12} tone="ink3">{`${AREAS.find((a) => a.id === area)!.name}の科目として、${AREAS.find((a) => a.id === area)!.name}の色になります`}</Txt>
+      )}
     </View>
   );
 }

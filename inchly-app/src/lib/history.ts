@@ -114,22 +114,6 @@ export function weekOf(recs: readonly Rec[], now: Date = new Date()): (Day & { d
 
 export { dateKey };
 
-/**
- * The color each 教科 takes in charts: that of its most-studied subject (all
- * records; on a tie, the one first in your list), else its first subject's.
- * 教科 with no subjects aren't in it.
- */
-export function areaColorsOf(subjects: readonly { id: string; area: string; c: string }[], sessions: readonly { s: string; min: number }[]): Record<string, string> {
-  const total: Record<string, number> = {};
-  for (const x of sessions) total[x.s] = (total[x.s] ?? 0) + x.min;
-  const best: Record<string, { c: string; min: number }> = {};
-  for (const x of subjects) {
-    const m = total[x.id] ?? 0;
-    if (!best[x.area] || m > best[x.area].min) best[x.area] = { c: x.c, min: m };
-  }
-  return Object.fromEntries(Object.entries(best).map(([k, v]) => [k, v.c]));
-}
-
 /** Add up minutes by subject into minutes by some other key (a subject's 教科, say). */
 export function regroup(parts: Parts, keyOf: (subjectId: string) => string): Parts {
   const out: Parts = {};
