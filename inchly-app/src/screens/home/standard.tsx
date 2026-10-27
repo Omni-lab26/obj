@@ -355,15 +355,3 @@ function AddLink({ label, onPress }: { label: string; onPress: () => void }) {
 export const STANDARD_SECTIONS: Record<SectionKind, ComponentType<SectionProps>> = {
   grass: Grass, streak: Streak, today: Today, peers: Friends, badges: HomeBadges, chart: Chart, now: Now, todos: Todos, deadlines: Deadlines,
 };
-
-/** The handle on the left edge that opens the デザイン page. */
-export function StandardHandle({ onPress }: { onPress: () => void }) {
-  const t = useT();
-  return (
-    <Press onPress={onPress} hitSlop={{ top: 20, bottom: 20, left: 4, right: 14 }} scale={0.9} accessibilityRole="button" accessibilityLabel="メニューを開く"
-      style={{ position: 'absolute', left: 0, top: '42%', width: 14, height: 56, borderTopRightRadius: 8, borderBottomRightRadius: 8, backgroundColor: t.surface,
-        borderWidth: hair, borderLeftWidth: 0, borderColor: t.line2, alignItems: 'center', justifyContent: 'center', ...lift(t) }}>
-      <View style={{ width: 3, height: 20, borderRadius: 2, backgroundColor: t.ink3 }} />
-    </Press>
-  );
-}

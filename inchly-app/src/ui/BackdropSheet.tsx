@@ -2,8 +2,10 @@ import { StyleSheet, View } from 'react-native';
 
 import { type Backdrop, BACKDROPS, CARD_FILLS, type CardFill, FROSTS, themeId, themeOf, useDesign } from '../design';
 import { setDesign } from '../store';
+import { useT } from '../theme';
 import { FLOOR, GROUND } from './backdrop/shared';
-import { Btn, haptic, Press, Txt } from './base';
+import { haptic, Press, Txt } from './base';
+import { Icon } from './Icon';
 import { openSheet } from './Sheet';
 import { Segmented } from './Tabs';
 
@@ -24,6 +26,7 @@ export function backdropSheet() {
   openSheet((close) => <BackdropChoice close={close} />, { grouped: true });
 }
 function BackdropChoice({ close }: { close: () => void }) {
+  const t = useT();
   const d = useDesign();
   const standard = themeId(d.theme) === 'standard';
   const cur = standard ? d.backdrop : 'none';
@@ -32,7 +35,13 @@ function BackdropChoice({ close }: { close: () => void }) {
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <View style={{ width: 64 }} />
         <Txt size={17} w="700" style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">背景</Txt>
-        <Btn kind="primary" small label="できた" onPress={close} style={{ width: 64 }} />
+        <View style={{ width: 64, alignItems: 'flex-end' }}>
+          {/* 保存 as iOS draws it now: a ✓ in a filled circle */}
+          <Press onPress={close} scale={0.92} hitSlop={8} accessibilityRole="button" accessibilityLabel="保存"
+            style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.blue, alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="check" size={18} color="#fff" />
+          </Press>
+        </View>
       </View>
       <Txt size={12.5} tone="ink3" style={{ textAlign: 'center' }}>
         {standard ? 'すべてのページとタイマーのうしろで動きます' : `背景はスタンダードのテーマで使えます（いまは ${themeOf(d.theme).label}）。選ぶとスタンダードに戻ります`}

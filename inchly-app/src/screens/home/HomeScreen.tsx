@@ -10,13 +10,14 @@ import { MENU_SHARE, SideMenu } from '@/screens/SideMenu';
 import type { HomeKit, SectionProps } from '@/themes/types';
 import { useT } from '@/theme';
 import { haptic } from '@/ui/base';
-import { STANDARD_SECTIONS, StandardFrame, StandardHandle, StandardHeader, StandardPage } from './standard';
+import { STANDARD_SECTIONS, StandardFrame, StandardHeader, StandardPage } from './standard';
 
 // Home, for every theme: the base blocks (layout.ts) in the theme's order,
 // each piece drawn by the theme or, where it draws nothing of its own, the
 // standard way in its colors. Slide it to the right and it moves aside with
-// your finger for the menu underneath (settings, subjects, the theme, a quick
-// start); the handle on the left edge opens it too. Slide home back to the
+// your finger for the menu underneath (settings, subjects, the theme and the
+// 背景). A theme may add a handle on the left edge; the standard home has
+// none (VoiceOver gets メニューを開く as an action). Slide home back to the
 // left, or tap it, and it returns.
 
 const SETTLE = { duration: 420, dampingRatio: 0.9 };
@@ -32,7 +33,7 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
   const Page = kit.Page ?? StandardPage;
   const Header = kit.Header ?? StandardHeader;
   const Frame = kit.Frame ?? StandardFrame;
-  const Handle = kit.DesignHandle ?? StandardHandle;
+  const Handle = kit.DesignHandle;
   const { width } = useWindowDimensions();
   const menuW = Math.round(width * MENU_SHARE);
   const w = useSharedValue(menuW);
@@ -89,7 +90,8 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
         </Animated.View>
       ) : null}
       <GestureDetector gesture={bringIn}>
-        <Animated.View style={[{ flex: 1, overflow: 'hidden', boxShadow: '-6px 0px 30px rgba(0,0,0,0.14)' }, homeAway]} collapsable={false}>
+        <Animated.View style={[{ flex: 1, overflow: 'hidden', boxShadow: '-6px 0px 30px rgba(0,0,0,0.14)' }, homeAway]} collapsable={false}
+          accessibilityActions={[{ name: 'menu', label: 'メニューを開く' }]} onAccessibilityAction={(e) => { if (e.nativeEvent.actionName === 'menu') open(); }}>
           <Page header={<Header />}>
             {blocks.map((b, i) => (
               <Frame key={b.id} block={b} index={i}>
@@ -97,7 +99,7 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
               </Frame>
             ))}
           </Page>
-          <Handle onPress={open} />
+          {Handle ? <Handle onPress={open} /> : null}
           <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }, dim]} />
           {/* while the menu is out, a tap on home brings it back */}
           {shown ? (

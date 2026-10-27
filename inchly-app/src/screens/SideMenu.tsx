@@ -3,10 +3,9 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BACKDROPS, themeId, themeOf, useDesign } from '@/design';
-import { startSubject } from '@/screens/model';
-import { getState, useStore, useSubjects } from '@/store';
-import { hair, useT } from '@/theme';
-import { haptic, Press, Txt } from '@/ui/base';
+import { useStore } from '@/store';
+import { useT } from '@/theme';
+import { Press, Txt } from '@/ui/base';
 import { Wordmark } from '@/ui/Brand';
 import { Icon, type IconName } from '@/ui/Icon';
 import { planCalendar } from '@/ui/PlanSheets';
@@ -14,11 +13,10 @@ import { BackdropView } from '@/ui/backdrop/Backdrop';
 import { backdropSheet } from '@/ui/BackdropSheet';
 import { Pane } from '@/ui/Glass';
 
-// The menu that home slides aside for (slide home to the right, or press the
-// handle on its left edge): the app's places that aren't tabs — settings,
-// subjects and colors, saved posts, the テーマ and the 背景 — then each subject, one tap to start it
-// (studying that isn't in the timetable starts here), and at the bottom a way
-// to plan.
+// The menu that home slides aside for (slide home to the right): the app's places that aren't tabs — settings,
+// subjects and colors, saved posts, the テーマ and the 背景 — and at the bottom
+// a way to plan. (Studying that isn't in the timetable starts from the study
+// bar's 勉強を開始.)
 
 /** How much of the screen the menu takes; home stays in view to its right. */
 export const MENU_SHARE = 0.78;
@@ -29,8 +27,6 @@ export function SideMenu({ close, leave }: { close: () => void; leave: () => voi
   const t = useT();
   const insets = useSafeAreaInsets();
   const account = useStore((s) => s.account);
-  const subjects = useSubjects();
-  const running = useStore((s) => s.running);
   const saved = useStore((s) => s.bookmarks.length);
   const d = useDesign();
   const standard = themeId(d.theme) === 'standard';
@@ -45,13 +41,6 @@ export function SideMenu({ close, leave }: { close: () => void; leave: () => voi
     { icon: 'sun', label: 'テーマ', sub: themeOf(d.theme).label, go: open('/design') },
     { icon: 'waves', label: '背景', sub: standard ? BACKDROPS[d.backdrop].label : 'スタンダードのみ', go: () => { close(); setTimeout(backdropSheet, 280); } },
   ];
-  // its plan if it has one now, else it goes into today's timetable from now
-  const start = (id: string) => {
-    startSubject(id);
-    haptic.firm();
-    leave();
-    router.push('/timer');
-  };
   return (
     <View style={{ flex: 1, backgroundColor: t.canvas, paddingTop: insets.top + 14, paddingBottom: insets.bottom + 14, overflow: 'hidden' }}>
       <BackdropView />
@@ -70,22 +59,6 @@ export function SideMenu({ close, leave }: { close: () => void; leave: () => voi
               <Icon name={x.icon} size={21} color={t.ink} />
               <Txt size={16} w="600" style={{ flex: 1 }}>{x.label}</Txt>
               {x.sub ? <Txt size={11.5} tone="ink3">{x.sub}</Txt> : null}
-            </Press>
-          ))}
-        </View>
-
-        <View style={{ height: hair, backgroundColor: t.line }} />
-
-        <View style={{ gap: 4 }}>
-          <Txt size={12} w="700" tone="ink3">すぐ始める</Txt>
-          {subjects.map((x) => (
-            <Press key={x.id} onPress={() => start(x.id)} haptics={false} scale={0.97} accessibilityLabel={`${x.name}を始める`}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 14, height: 44 }}>
-              <View style={{ width: 21, alignItems: 'center' }}>
-                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: x.c }} />
-              </View>
-              <Txt size={15.5} w="500" style={{ flex: 1 }} numberOfLines={1}>{x.name}</Txt>
-              {running && getState().subj === x.id ? <Txt size={11.5} w="700" color={t.greenInk}>勉強中</Txt> : <Icon name="play" size={11} color={t.ink3} filled />}
             </Press>
           ))}
         </View>
