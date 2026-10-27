@@ -81,7 +81,7 @@ export function StandardTabBar({ items, running, paused, mins, insets }: TabBarP
   const lens = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: tabBarBottom(insets.bottom), paddingHorizontal: 20 }}>
-      <Glass style={{ height: TAB_BAR_H }}>
+      <Glass soft style={{ height: TAB_BAR_H }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist">
           {item ? <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 4, bottom: 4, width: item, borderRadius: 28, backgroundColor: 'rgba(118,118,128,0.14)' }, lens]} /> : null}
           {items.map((it) => (

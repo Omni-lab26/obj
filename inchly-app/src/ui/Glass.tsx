@@ -9,8 +9,9 @@ import { useT } from '../theme';
 // Liquid Glass for the control layer (tab bar, study bar, nav buttons,
 // segmented controls, sheets, toasts, composer, timer controls), and a
 // quieter frosted glass for cards over a 背景 (Pane).
-// iOS 26: the system material (UIGlassEffect), clear — the most glass-like:
-// what's behind shows through, bent at the edges — interactive when pressable.
+// iOS 26: the system material (UIGlassEffect) — clear (what's behind shows
+// through, bent at the edges), or regular with a white film where it should
+// blur more (the tab bar a little, the study bar most) — interactive when pressable.
 // Everywhere else: a strong blur with the color pulled up, a thin film, light
 // falling across it from the top left, and a bright, soft rim — so the layer
 // reads as glass on older iPhones, Android and the web too.
@@ -43,28 +44,29 @@ function Sheen({ radius, dark, strength = 0.55 }: { radius: number; dark: boolea
   );
 }
 
-export function Glass({ children, style, radius = 999, interactive, tint, flat, frost }: {
+export function Glass({ children, style, radius = 999, interactive, tint, flat, frost, soft }: {
   children?: ReactNode; style?: StyleProp<ViewStyle>; radius?: number; interactive?: boolean;
   /** a coloured glass (e.g. the tint) instead of clear */ tint?: string;
   /** no drop shadow: glass lying on glass (a pill inside the tab bar) */ flat?: boolean;
   /** frosted, not clear: words on it are read at a glance (the study bar) */ frost?: boolean;
+  /** between clear and frosted: what's behind is still there but well blurred (the tab bar) */ soft?: boolean;
 }) {
   const dark = useT().dark;
   if (LIQUID) {
     return (
-      <GlassView glassEffectStyle={frost ? 'regular' : 'clear'} isInteractive={interactive}
-        tintColor={tint ?? (dark ? `rgba(8,12,18,${frost ? 0.5 : 0.28})` : `rgba(255,255,255,${frost ? 0.55 : 0.14})`)}
+      <GlassView glassEffectStyle={frost || soft ? 'regular' : 'clear'} isInteractive={interactive}
+        tintColor={tint ?? (dark ? `rgba(8,12,18,${frost ? 0.5 : soft ? 0.36 : 0.28})` : `rgba(255,255,255,${frost ? 0.55 : soft ? 0.4 : 0.14})`)}
         colorScheme={dark ? 'dark' : 'light'} style={[{ borderRadius: radius }, style]}>
         {children}
       </GlassView>
     );
   }
-  const film = tint ?? (dark ? `rgba(18,22,32,${blurs ? (frost ? 0.72 : 0.4) : 0.86})` : `rgba(255,255,255,${blurs ? (frost ? 0.74 : 0.3) : 0.86})`);
+  const film = tint ?? (dark ? `rgba(18,22,32,${blurs ? (frost ? 0.72 : soft ? 0.6 : 0.4) : 0.86})` : `rgba(255,255,255,${blurs ? (frost ? 0.74 : soft ? 0.62 : 0.3) : 0.86})`);
   return (
     // zIndex: the material sits under the content even when the content is an unpositioned SVG (web)
     <View style={[{ borderRadius: radius, zIndex: 0 }, !flat && { boxShadow: DROP }, style]}>
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: radius, overflow: 'hidden', zIndex: -1 }]}>
-        {blurs ? <BlurView intensity={web ? 55 : 70} tint={dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} /> : null}
+        {blurs ? <BlurView intensity={soft ? (web ? 80 : 95) : web ? 55 : 70} tint={dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} /> : null}
         <View style={[StyleSheet.absoluteFill, { backgroundColor: film, borderRadius: radius }]} />
         <Sheen radius={radius} dark={dark} strength={1} />
         <View style={[StyleSheet.absoluteFill, { borderRadius: radius, boxShadow: dark ? RIM_DARK : RIM }]} />
