@@ -5,8 +5,8 @@ import Animated from 'react-native-reanimated';
 import { SUBJECT_COLORS } from '../data';
 import { dateKey, mondayIndex, parseKey } from '../lib/time';
 import { pickPlanIcon } from '../lib/planIcon';
-import { Block, blocksOn, toClock, toMin } from '../lib/timetable';
-import { addDeadline, addSubject, removeBlock, saveBlock, updateSubject, useStore, useSubjects } from '../store';
+import { Block, toClock, toMin } from '../lib/timetable';
+import { addDeadline, addSubject, removeBlock, saveBlock, updateSubject, useSubjects } from '../store';
 import { font, hair, noOutline, useT } from '../theme';
 import { haptic, Press, SubjTile, Txt } from './base';
 import { DatePick, Opens, PickChip, SMOOTH, TimePick } from './DateTime';
@@ -19,13 +19,12 @@ import { toast } from './Toast';
 // is and 追加 along the top, then only what a plan needs — the icon and what to
 // do side by side (the top of its card in the timer), the start time, a memo.
 // The icon is the subject: tap it to pick one from the subjects' pictures (化学
-// is a flask …) or add one; a photo can stand in for the picture. Under the
-// start, one-tap times (いまから, 次の空き …). A plan runs 60
-// minutes (an edited one keeps its length, and a weekly one stays weekly).
+// is a flask …) or add one; a photo can stand in for the picture. A plan runs
+// 60 minutes (an edited one keeps its length, and a weekly one stays weekly).
 // Drawn the way iOS draws a new event, and kept low in contrast: やめる and 追加
 // as blue text, small grey names over white groups, the start as Calendar's
-// 開始 row with the day and the time in grey chips that open iOS's pickers, the
-// one-tap times in grey (blue when picked). The keyboard waits for a tap.
+// 開始 row with the day and the time in grey chips that open iOS's pickers.
+// The keyboard waits for a tap.
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 const day0 = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -58,14 +57,12 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const end = start + len;
   // a weekly plan stays weekly; a new one is for its day (repeat is set from the timetable's …)
   const weekly = !!existing && !existing.date;
-  const blocks = useStore((x) => x.timetable);
   const known = existing ? subjects.find((x) => x.id === existing.s) : undefined;
   const [name, setName] = useState(known?.name ?? '');
   const [color, setColor] = useState(known?.c ?? SUBJECT_COLORS[0]);
   const [note, setNote] = useState(existing?.note ?? '');
   const [icon, setIcon] = useState(existing?.icon);
   const [open, setOpen] = useState<Open>(null);
-  const [picked, setPicked] = useState<string>();
 
   const plan = kind === 'plan';
   const match = subjects.find((x) => x.name === name.trim());
@@ -73,19 +70,6 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   // typing closes whatever picker is open, as in Calendar
   const typing = () => { if (open && open !== 'new') setOpen(null); };
   const nextDay = end >= DAY;
-  // starting times to pick with one tap: from now on (today), or the usual times (another day), and the first gap that fits
-  const nowMin = Math.ceil((new Date().getHours() * 60 + new Date().getMinutes()) / 5) * 5;
-  const isToday = d.getTime() === today.getTime();
-  const firstFree = (from: number) => {
-    const taken = blocksOn(blocks, d).filter((b) => b.start && b.id !== existing?.id).map((b) => [toMin(b.start!), toMin(b.start!) + (b.min || 60)] as const).sort((a, b) => a[0] - b[0]);
-    let at = from;
-    for (const [a, b] of taken) { if (at + len <= a) break; if (at < b) at = b; }
-    return at;
-  };
-  const picks = (isToday
-    ? [{ label: 'いまから', m: nowMin }, { label: '30分後', m: nowMin + 30 }, { label: '1時間後', m: nowMin + 60 }, { label: '次の空き', m: firstFree(nowMin) }]
-    : [{ label: '朝', m: 7 * 60 }, { label: '夕方', m: 17 * 60 }, { label: '夜', m: 20 * 60 }, { label: '次の空き', m: firstFree(9 * 60) }]
-  ).filter((x) => x.m < DAY);
   const choose = async () => {
     Keyboard.dismiss();
     setOpen(null);
@@ -198,7 +182,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
             </Group>
           </Field>
 
-          {/* the start as in Calendar: 開始, then the day and the time as grey chips that open iOS's pickers under the row; a few times to pick with one tap below */}
+          {/* the start as in Calendar: 開始, then the day and the time as grey chips that open iOS's pickers under the row */}
           <Field>
             <Group>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 56 }}>
@@ -210,20 +194,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
                 <PickChip label={toClock(start)} on={open === 'start'} onPress={() => toggle('start')} a11y="始める時刻を変える" />
               </View>
               {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => setD(day0(x))} onDone={() => setOpen(null)} /></Opens> : null}
-              {open === 'start' ? <Opens><TimePick value={start} onChange={(m) => { setStart(m); setPicked(undefined); }} onDone={() => setOpen(null)} /></Opens> : null}
-              <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 10, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
-                {picks.map((x, i) => {
-                  // two picks can land on the same time (いまから and 次の空き): mark the one tapped, else the first
-                  const on = x.m === start && (picked && picks.some((y) => y.label === picked && y.m === start) ? picked === x.label : picks.findIndex((y) => y.m === start) === i);
-                  return (
-                    <Press key={x.label} onPress={() => { haptic.tap(); setStart(x.m); setPicked(x.label); setOpen(null); }} scale={0.95} accessibilityLabel={`${x.label}（${toClock(x.m)}）から`} accessibilityState={{ selected: on }}
-                      style={{ flex: 1, height: 42, borderRadius: 6, backgroundColor: on ? 'rgba(47,107,255,0.1)' : t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-                      <Txt size={12} w={on ? '600' : '400'} color={on ? t.blue : t.ink2}>{x.label}</Txt>
-                      <Txt num size={11} color={on ? t.blue : t.ink3}>{toClock(x.m)}</Txt>
-                    </Press>
-                  );
-                })}
-              </View>
+              {open === 'start' ? <Opens><TimePick value={start} onChange={setStart} onDone={() => setOpen(null)} /></Opens> : null}
             </Group>
           </Field>
         </>
