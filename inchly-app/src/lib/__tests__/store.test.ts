@@ -177,6 +177,25 @@ describe('the plan a session measures against', () => {
   });
 });
 
+describe('what a record was about', () => {
+  it("keeps the plan's memo (else its やること) on the record, beside the memo written when recording", () => {
+    reset({ timetable: [
+      { id: 'p1', s: 'ph', t: '名問の森', note: '相対性理論', start: '20:00', min: 60, days: [], date: dateKey() },
+      { id: 'p2', s: 'ma', t: '青チャート 例題41〜50', start: '21:00', min: 60, days: [], date: dateKey() },
+    ] });
+    startFrom({ s: 'ph', min: 60, blockId: 'p1' });
+    commitRecord({ min: 30, note: '特殊相対論まで' });
+    startFrom({ s: 'ma', min: 60, blockId: 'p2' });
+    commitRecord({ min: 20 });
+    startStudy('en');
+    commitRecord({ min: 10 });
+    const [a, b, c] = getState().sessions.slice(-3);
+    expect(a).toMatchObject({ s: 'ph', what: '相対性理論', note: '特殊相対論まで' });
+    expect(b).toMatchObject({ s: 'ma', what: '青チャート 例題41〜50' });
+    expect(c.what).toBeUndefined(); // not from a plan
+  });
+});
+
 describe('finishing a plan', () => {
   it('ending a session started from a plan finishes that plan on the day it started', () => {
     reset();

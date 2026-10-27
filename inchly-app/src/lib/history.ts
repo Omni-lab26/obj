@@ -114,6 +114,39 @@ export function weekOf(recs: readonly Rec[], now: Date = new Date()): (Day & { d
 
 export { dateKey };
 
+/** What a record was about: what its plan said (memo, else やること), else the memo written when recording; '' when nothing was. */
+export const contentOf = (r: { what?: string; note?: string }) => (r.what ?? r.note ?? '').trim();
+
+export type Contents = { s: string; min: number; items: { what: string; min: number }[] }[];
+/**
+ * What was studied in one chart column — a whole day, or one hour of it (as
+ * hourlyOf counts it) — by subject (most first), and in each, by what it was
+ * about (most first; '' for records that say nothing).
+ */
+export function contentsOf(recs: readonly (Rec & { at?: string; what?: string; note?: string })[], date: string, hour?: number): Contents {
+  const by = new Map<string, Map<string, number>>();
+  const put = (s: string, what: string, min: number) => {
+    if (min <= 0) return;
+    const m = by.get(s) ?? new Map<string, number>();
+    m.set(what, (m.get(what) ?? 0) + min);
+    by.set(s, m);
+  };
+  const next = addDays(date, 1);
+  for (const r of recs) {
+    if (hour === undefined) { if (r.date === date) put(r.s, contentOf(r), r.min); continue; }
+    const end = clock(r.at ?? '');
+    if (!Number.isFinite(end)) continue;
+    // the record's span on this day, in minutes from midnight, cut to the hour
+    const span = r.date === date ? [Math.max(0, end - r.min), end] : r.date === next && end - r.min < 0 ? [1440 + end - r.min, 1440] : null;
+    if (!span) continue;
+    put(r.s, contentOf(r), Math.min(span[1], (hour + 1) * 60) - Math.max(span[0], hour * 60));
+  }
+  return [...by].map(([s, m]) => {
+    const items = [...m].map(([what, min]) => ({ what, min })).sort((a, b) => b.min - a.min);
+    return { s, min: items.reduce((n, x) => n + x.min, 0), items };
+  }).sort((a, b) => b.min - a.min);
+}
+
 /** Add up minutes by subject into minutes by some other key (a subject's 教科, say). */
 export function regroup(parts: Parts, keyOf: (subjectId: string) => string): Parts {
   const out: Parts = {};

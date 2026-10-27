@@ -246,9 +246,17 @@ export function rng(seed: number) {
 // rest day 23 days ago so the streak reads 23 with today's study.
 const SUBJ_IDS = ['en', 'ma', 'ph', 'ch', 'ja'];
 const SUBJ_WEIGHT = [0.3, 0.3, 0.17, 0.13, 0.1];
+/** What the sample records were about, per subject (as a plan's memo would say). */
+const SUBJ_WHAT = [
+  ['長文読解', '英単語', '英文法', 'リスニング'],
+  ['数III 微分', 'ベクトル', '確率', '整数'],
+  ['相対性理論', '電磁気', '波動', '力学'],
+  ['有機 構造決定', '理論 化学平衡', '無機'],
+  ['古文単語', '漢文 句法', '現代文 評論'],
+];
 export const DEMO_STREAK_GAP = 23;
-export function demoHistory(now: Date): { s: string; min: number; daysAgo: number; at: string }[] {
-  const out: { s: string; min: number; daysAgo: number; at: string }[] = [];
+export function demoHistory(now: Date): { s: string; min: number; daysAgo: number; at: string; what: string }[] {
+  const out: { s: string; min: number; daysAgo: number; at: string; what: string }[] = [];
   for (let daysAgo = 2; daysAgo < 365; daysAgo++) {
     const r = rng(2026 + daysAgo * 7919);
     const d = new Date(now);
@@ -269,7 +277,8 @@ export function demoHistory(now: Date): { s: string; min: number; daysAgo: numbe
     pool.forEach((p, n) => {
       const m = n === pool.length - 1 ? left : Math.round(((p.w / tot) * min) / 5) * 5;
       left -= m;
-      if (m > 0) out.push({ s: SUBJ_IDS[p.idx], min: m, daysAgo, at: `${hour}:${n % 2 ? '30' : '00'}` });
+      const topics = SUBJ_WHAT[p.idx];
+      if (m > 0) out.push({ s: SUBJ_IDS[p.idx], min: m, daysAgo, at: `${hour}:${n % 2 ? '30' : '00'}`, what: topics[Math.floor(r() * topics.length)] });
       hour += Math.max(1, Math.round(m / 60));
     });
   }

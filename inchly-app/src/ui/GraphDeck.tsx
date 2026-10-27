@@ -9,7 +9,8 @@ import { dayOf } from '../lib/history';
 import { useStore } from '../store';
 import { lift, radius, useT } from '../theme';
 import { cascade, useAppear } from './appear';
-import { haptic, Press, Txt } from './base';
+import { haptic, Press, SubjTile, Txt } from './base';
+import { breakdownSheet } from './Breakdown';
 import { useSeries } from './series';
 import { Pane } from './Glass';
 
@@ -198,23 +199,26 @@ function WeekPage({ w, h }: { w: number; h: number }) {
       </View>
       <View style={{ flex: 1 }} />
       {day ? (
-        // the day's detail: its date and total, then each subject's minutes
-        <View style={{ gap: 4 }}>
-          <Txt size={12} w="700" lh={16}>{`${day.date.getMonth() + 1}月${day.date.getDate()}日（${WD[day.date.getDay()]}）· ${day.min ? jpHm(day.min) : '記録なし'}`}</Txt>
+        // the day's detail: its date and total, then each subject's minutes; a tap opens what was studied (Breakdown)
+        <Press onPress={() => breakdownSheet(day.date)} disabled={!day.min} scale={0.98} accessibilityRole="button" accessibilityLabel={`${label(sel!)}に勉強した内容を見る`} style={{ gap: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Txt size={12} w="700" lh={16} style={{ flex: 1 }}>{`${day.date.getMonth() + 1}月${day.date.getDate()}日（${WD[day.date.getDay()]}）· ${day.min ? jpHm(day.min) : '記録なし'}`}</Txt>
+            {day.min ? <Txt size={11.5} w="600" color={t.blue}>内訳 ›</Txt> : null}
+          </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 10, rowGap: 2 }}>
             {used.filter((s) => (day.parts[s.key] ?? 0) > 0).map((s) => (
               <View key={s.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <View style={{ width: 7, height: 7, borderRadius: 2, backgroundColor: s.c }} />
+                <SubjTile name={s.name} color={s.c} area={s.area} size={13} radius={3} />
                 <Txt num size={11} tone="ink2">{`${s.name} ${hmc(day.parts[s.key] ?? 0)}`}</Txt>
               </View>
             ))}
           </View>
-        </View>
+        </Press>
       ) : (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
           {used.map((s) => (
             <View key={s.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <View style={{ width: 7, height: 7, borderRadius: 2, backgroundColor: s.c }} />
+              <SubjTile name={s.name} color={s.c} area={s.area} size={13} radius={3} />
               <Txt size={11} tone="ink3">{s.name}</Txt>
             </View>
           ))}

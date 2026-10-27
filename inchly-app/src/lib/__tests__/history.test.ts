@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { dayOf, grassOf, hourlyOf, levelOf, minutesIn, regroup, streakOf, todayMinutes, weekOf, withLive } from '../history';
+import { contentsOf, dayOf, grassOf, hourlyOf, levelOf, minutesIn, regroup, streakOf, todayMinutes, weekOf, withLive } from '../history';
 
 const now = new Date(2026, 9, 21, 12);
 const recs = [
@@ -78,3 +78,24 @@ describe('history', () => {
   });
 });
 
+
+describe('contentsOf', () => {
+  const recs = [
+    { s: 'ph', min: 45, date: '2026-10-27', at: '20:45', what: '相対性理論' },
+    { s: 'ph', min: 30, date: '2026-10-27', at: '21:30', what: '電磁気' },
+    { s: 'ph', min: 15, date: '2026-10-27', at: '22:00', note: '相対性理論' },
+    { s: 'ma', min: 20, date: '2026-10-27', at: '7:20' },
+    { s: 'en', min: 50, date: '2026-10-26', at: '20:00', what: '長文読解' },
+  ];
+  it('a day: by subject, then by what it was about (the plan, else the memo), longest first', () => {
+    expect(contentsOf(recs, '2026-10-27')).toEqual([
+      { s: 'ph', min: 90, items: [{ what: '相対性理論', min: 60 }, { what: '電磁気', min: 30 }] },
+      { s: 'ma', min: 20, items: [{ what: '', min: 20 }] },
+    ]);
+  });
+  it('an hour: only the minutes inside it', () => {
+    // 20:00–20:45 相対性理論, 21:00–21:30 電磁気, 21:45–22:00 相対性理論
+    expect(contentsOf(recs, '2026-10-27', 20)).toEqual([{ s: 'ph', min: 45, items: [{ what: '相対性理論', min: 45 }] }]);
+    expect(contentsOf(recs, '2026-10-27', 21)).toEqual([{ s: 'ph', min: 45, items: [{ what: '電磁気', min: 30 }, { what: '相対性理論', min: 15 }] }]);
+  });
+});

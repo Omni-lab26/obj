@@ -18,7 +18,8 @@ import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 // A record is dated ('YYYY-MM-DD'); "today" always comes from the device clock.
 
 /** One study session, on the calendar day it was recorded. */
-export type Session = { id: string; s: string; min: number; date: string; at: string; note?: string; manual?: boolean };
+/** what: what it was about — the plan's memo (else its やること) when it came from a plan; note: the memo written when recording. */
+export type Session = { id: string; s: string; min: number; date: string; at: string; note?: string; what?: string; manual?: boolean };
 export type Todo = { id: string; s: string; t: string; d: boolean; carried?: number; dl?: string; doneOn?: string }; // carried: days it has slid; dl: deadline id
 /** A session stopped to go on to another plan, not recorded yet: its subject, time, when it stopped, and the plan it came from. */
 export type Held = { id: string; s: string; sec: number; end: number; blockId?: string; planMin?: number };
@@ -175,14 +176,14 @@ export const INITIAL: State = {
 export function demoState(now: Date = new Date()): Partial<State> {
   const today = dateKey(now);
   const yesterday = addDays(today, -1);
-  const past: Session[] = demoHistory(now).map((h, i) => ({ id: `h${i}`, s: h.s, min: h.min, date: addDays(today, -h.daysAgo), at: h.at }));
+  const past: Session[] = demoHistory(now).map((h, i) => ({ id: `h${i}`, s: h.s, min: h.min, date: addDays(today, -h.daysAgo), at: h.at, what: h.what }));
   const recent: Session[] = [
     { id: 's1', s: 'ja', min: 30, date: today, at: '6:30', note: '古文単語 61〜80' },
     { id: 's2', s: 'en', min: 60, date: today, at: '7:40', note: '長文読解 第3講' },
-    { id: 's3', s: 'en', min: 35, date: today, at: '17:40' },
+    { id: 's3', s: 'en', min: 35, date: today, at: '17:40', what: '長文読解' },
     { id: 's4', s: 'ma', min: 40, date: today, at: '19:00', note: '青チャート 例題38〜40' },
-    { id: 's5', s: 'ph', min: 55, date: yesterday, at: '20:10' },
-    { id: 's6', s: 'ma', min: 33, date: yesterday, at: '22:05' },
+    { id: 's5', s: 'ph', min: 55, date: yesterday, at: '20:10', what: '相対性理論' },
+    { id: 's6', s: 'ma', min: 33, date: yesterday, at: '22:05', what: 'ベクトル' },
   ];
   return {
     running: true, paused: false, startedAt: now.getTime(), base: 2350, subj: 'en', planMin: 60, targetMin: 60, planNext: { s: 'ma', at: '19:00' }, planBlock: 'b2', doneBlocks: [{ id: 'b1', date: today }],
@@ -436,7 +437,10 @@ function saveRecords(recs: Rec[], now: Date, rest: Partial<State>): Recorded {
   for (const r of recs) {
     const todo = todos.find((x) => x.id === r.todoId);
     const note = r.note ?? todo?.t;
-    sessions = [...sessions, ...splitAtMidnight(r.min, r.end).map((x) => ({ id: newId('s'), s: r.s, note, ...x }))];
+    // what it was about: the plan's memo (else its やること), so a chart can show more than the subject
+    const plan = r.blockId ? s.timetable.find((b) => b.id === r.blockId) : undefined;
+    const what = plan?.note?.trim() || plan?.t?.trim() || undefined;
+    sessions = [...sessions, ...splitAtMidnight(r.min, r.end).map((x) => ({ id: newId('s'), s: r.s, note, ...(what ? { what } : {}), ...x }))];
     if (todo) {
       if (!todo.d) todoLog = [...todoLog, { id: todo.id, date: today }];
       todos = todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x));

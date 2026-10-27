@@ -5,12 +5,13 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 
 import { AREAS, pad } from '../data';
-import { hourlyOf, Parts, weekOf, withLive } from '../lib/history';
+import { contentsOf, hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { dateKey } from '../lib/time';
 import { ChartKind, elapsedOf, setChart, useNow, useStore, useSubjects } from '../store';
 import { ease, hair, useT } from '../theme';
 import { useReplay } from './appear';
 import { Btn, haptic, Press, SubjTile, Txt } from './base';
+import { Breakdown } from './Breakdown';
 import { Icon } from './Icon';
 import { openSheet } from './Sheet';
 import { Series, useSeries } from './series';
@@ -36,7 +37,7 @@ const jpHm = (m: number) => {
   return r >= 60 ? `${Math.floor(r / 60)}時間${r % 60 ? `${r % 60}分` : ''}` : `${r}分`;
 };
 
-type Col = { label: string; parts: Parts; live: number; total: number; future: boolean; now: boolean };
+type Col = { label: string; date: string; parts: Parts; live: number; total: number; future: boolean; now: boolean };
 
 /** The graph part of home's 今日の勉強 card: it sits under the day's total, so it shows no big figure of its own. */
 export function StudyChart() {
@@ -48,6 +49,8 @@ export function StudyChart() {
   const running = useStore((s) => s.running);
   const subjId = useStore((s) => s.subj);
   const elapsed = useStore((s) => elapsedOf(s, now));
+  // what the session under way is about: its plan's memo, else its やること
+  const liveWhat = useStore((s) => { const b = s.planBlock ? s.timetable.find((x) => x.id === s.planBlock) : undefined; return b?.note?.trim() || b?.t?.trim() || ''; });
   // the tapped column, forgotten when the range or kind changes
   const [picked, setPicked] = useState<{ k: string; i: number } | null>(null);
   const view = `${chart.range}:${chart.kind}:${chart.detail}`;
@@ -66,14 +69,14 @@ export function StudyChart() {
       const rec = hourlyOf(sessions, today);
       const all = running ? withLive(rec, now - elapsed * 1000, now, today, subjId) : rec;
       return rec.min.map((m, h) => ({
-        label: h % 6 === 0 ? `${h}` : '', parts: series.of(rec.parts[h]), live: all.min[h] - m, total: all.min[h],
+        label: h % 6 === 0 ? `${h}` : '', date: today, parts: series.of(rec.parts[h]), live: all.min[h] - m, total: all.min[h],
         future: h > d.getHours(), now: h === d.getHours(),
       }));
     }
     return weekOf(sessions, d).map((x, i) => {
       const isToday = x.date === today;
       const live = isToday ? liveMin : 0;
-      return { label: DOW[i], parts: series.of(x.parts), live, total: x.min + live, future: x.date > today, now: isToday };
+      return { label: DOW[i], date: x.date, parts: series.of(x.parts), live, total: x.min + live, future: x.date > today, now: isToday };
     });
     // d and liveMin follow now and elapsed
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,6 +117,9 @@ export function StudyChart() {
   }
 
   const used = series.list.filter((x) => cols.some((c) => (c.parts[x.key] ?? 0) > 0) || (running && x.key === liveKey && liveMin > 0));
+  // the tapped column, opened up: what was studied in it, subject by subject
+  const contents = useMemo(() => (sel === null || !cols[sel] ? null : contentsOf(sessions, cols[sel].date, day ? sel : undefined)), [sel, cols, sessions, day]);
+  const liveHere = sel !== null && cols[sel] && cols[sel].live >= 1 ? { s: subjId, what: liveWhat, min: cols[sel].live } : null;
 
   return (
     <View>
@@ -188,9 +194,11 @@ export function StudyChart() {
           ) : null}
         </View>
       ) : null}
+      {contents ? <Breakdown list={contents} live={liveHere} /> : sel === null && used.length ? <Txt size={11} tone="ink3" style={{ marginTop: 8 }}>棒を押すと、何を勉強したかの内訳が出ます</Txt> : null}
     </View>
   );
 }
+
 
 /** The subject (or 教科) a column was studied most in: what a plain bar or a point on the line is colored by. */
 const topOf = (c: Col, series: Series[]) => series.reduce<Series | null>((b, x) => ((c.parts[x.key] ?? 0) > (b ? c.parts[b.key] ?? 0 : 0) ? x : b), null);
