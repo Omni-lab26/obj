@@ -22,8 +22,8 @@ import { toast } from './Toast';
 // is a flask …) or add one; a photo can stand in for the picture. The end is
 // optional: left empty, the plan runs until the next one (a weekly one stays weekly).
 // Drawn the way iOS draws a new event, and kept low in contrast: やめる and 追加
-// as blue text, small grey names over white groups, 時刻 and 終了 as Calendar's
-// rows with the day and the times in grey chips that open iOS's pickers.
+// as blue text, small grey names over white groups, 日付 and 時刻 (start 〜 end)
+// as Calendar's rows, in grey chips that open iOS's pickers.
 // The keyboard waits for a tap.
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
@@ -185,33 +185,34 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
             </Group>
           </Field>
 
-          {/* 時刻 and 終了 as in Calendar: the day and the times as grey chips that open iOS's pickers under their row; the end can stay empty */}
+          {/* 日付, then 時刻 with the start and the end side by side, as grey chips that open iOS's pickers under their row; the end can stay empty */}
           <Field>
             <Group>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 52 }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Txt size={16}>時刻</Txt>
+                  <Txt size={16}>日付</Txt>
                   {weekly ? <Txt size={12} tone="ink3" numberOfLines={1}>{`毎週${DOW[mondayIndex(d)]}曜`}</Txt> : null}
                 </View>
                 <PickChip label={chipDate(d)} on={open === 'date'} onPress={() => toggle('date')} a11y="始める日を変える" />
-                <PickChip label={toClock(start)} on={open === 'start'} onPress={() => toggle('start')} a11y="始める時刻を変える" />
               </View>
               {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => setD(day0(x))} onDone={() => setOpen(null)} /></Opens> : null}
-              {open === 'start' ? <Opens><TimePick value={start} onChange={setStart} onDone={() => setOpen(null)} /></Opens> : null}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 52, borderTopWidth: hair, borderTopColor: t.line }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 16, paddingRight: 10, minHeight: 52, borderTopWidth: hair, borderTopColor: t.line }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Txt size={16}>終了</Txt>
-                  <Txt num size={12} tone="ink3" numberOfLines={1}>{len ? `${nextDay ? '翌日 · ' : ''}${lenLabel}` : 'なくてもOK'}</Txt>
+                  <Txt size={16}>時刻</Txt>
+                  <Txt num size={12} tone="ink3" numberOfLines={1}>{len ? `${nextDay ? '翌日まで · ' : ''}${lenLabel}` : '終わりはなくてもOK'}</Txt>
                 </View>
+                <PickChip label={toClock(start)} on={open === 'start'} onPress={() => toggle('start')} a11y="始める時刻を変える" />
+                <Txt size={15} tone="ink3">〜</Txt>
+                <PickChip label={len ? toClock(end % DAY) : 'なし'} on={open === 'end'} a11y={len ? '終わる時刻を変える' : '終わる時刻を入れる'}
+                  onPress={() => { if (!len) setLen(60); toggle('end'); }} />
                 {len ? (
                   <Press onPress={() => { haptic.tap(); setLen(0); if (open === 'end') setOpen(null); }} hitSlop={10} scale={0.9} accessibilityLabel="終わる時刻を消す"
                     style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="x" size={11} color={t.ink3} />
                   </Press>
                 ) : null}
-                <PickChip label={len ? toClock(end % DAY) : 'なし'} on={open === 'end'} a11y={len ? '終わる時刻を変える' : '終わる時刻を入れる'}
-                  onPress={() => { if (!len) setLen(60); toggle('end'); }} />
               </View>
+              {open === 'start' ? <Opens><TimePick value={start} onChange={setStart} onDone={() => setOpen(null)} /></Opens> : null}
               {open === 'end' && len ? <Opens><TimePick value={end % DAY} onChange={setEnd} onDone={() => setOpen(null)} /></Opens> : null}
             </Group>
           </Field>
