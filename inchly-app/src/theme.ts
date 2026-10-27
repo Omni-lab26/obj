@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { Platform, StyleSheet, TextStyle } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 
-import { type Backdrop, backdropOf, BGS, CORNERS, designVersion, FAMILIES, getDesign, INKS, onDesign, Reaction, refreshDesign, Texture, themeOf, ThemeFont, TIMERS } from './design';
+import { type Backdrop, backdropOf, BGS, CARD_FILM, CORNERS, designVersion, FAMILIES, getDesign, INKS, onDesign, Reaction, refreshDesign, Texture, themeOf, ThemeFont, TIMERS } from './design';
 
 // Light only. A soft gray canvas with light falling on it from the top (a
 // little see-through, like frosted glass), white cards on a faint edge and a
@@ -59,10 +59,11 @@ const glassy = (canvas: string, film: number): Partial<Theme> => ({
   canvas, surface: `rgba(255,255,255,${film})`, sunken: 'rgba(17,20,23,0.05)', ink2: '#3E4450', ink3: '#656C78', shadow1: FLAT,
   grass: ['rgba(17,20,23,0.07)', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C'],
 });
-const OVER: Record<Exclude<Backdrop, 'none'>, Partial<Theme>> = {
-  pond: glassy('#E8EEEB', 0.5),
-  sea: glassy('#F5F5F3', 0.5),
-  walk: glassy('#F1F1EE', 0.55),
+// the cards' white follows カードの背景 (design.cardFill)
+const OVER: Record<Exclude<Backdrop, 'none'>, (film: number) => Partial<Theme>> = {
+  pond: (f) => glassy('#E8EEEB', f),
+  sea: (f) => glassy('#F5F5F3', f),
+  walk: (f) => glassy('#F1F1EE', Math.min(0.92, f + 0.05)),
 };
 
 // ---------- following the design you pick (design.ts) ----------
@@ -77,7 +78,7 @@ function follow() {
   } else {
     palette = { ...light, canvas: BGS[d.bg].canvas, sunken: BGS[d.bg].sunken, ink: INKS[d.ink].ink, press };
     const b = backdropOf(d);
-    if (b !== 'none') palette = { ...palette, ...OVER[b], backdrop: b };
+    if (b !== 'none') palette = { ...palette, ...OVER[b](CARD_FILM[d.cardFill ?? 1]), backdrop: b };
   }
   // radius, focus and the typeface are plain values read during render;
   // components that read them also read the theme, so they re-render with them

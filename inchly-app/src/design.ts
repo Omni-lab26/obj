@@ -204,10 +204,17 @@ export type Design = {
   backdrop: Backdrop;
   /** how much the pages frost the 背景 (backdrop/Veil): 0 none … 3 strong */
   frost: Frost;
+  /** how solid a card is over the 背景: 0 thin glass … 3 near white (theme.ts, the timer's cards) */
+  cardFill: CardFill;
 };
+export type CardFill = 0 | 1 | 2 | 3;
+export const CARD_FILLS: { v: CardFill; label: string }[] = [{ v: 0, label: 'うすい' }, { v: 1, label: 'ふつう' }, { v: 2, label: 'こい' }, { v: 3, label: '白' }];
+/** A card's white over a 背景, by cardFill: the pages' cards, and (a little lighter) the timer's. */
+export const CARD_FILM = [0.3, 0.5, 0.7, 0.9];
+export const TIMER_FILM = [0.22, 0.4, 0.62, 0.86];
 export type Frost = 0 | 1 | 2 | 3;
 export const FROSTS: { v: Frost; label: string }[] = [{ v: 0, label: 'なし' }, { v: 1, label: '弱め' }, { v: 2, label: 'ふつう' }, { v: 3, label: '強め' }];
-export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'black', corners: 'm', card: 'pearl', streak: 'peach', timer: 'night', backdrop: 'pond', frost: 2 };
+export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'black', corners: 'm', card: 'pearl', streak: 'peach', timer: 'night', backdrop: 'pond', frost: 2, cardFill: 1 };
 /** The backdrop in use: the one picked, with the standard theme; none with the others. */
 export const backdropOf = (d: Design): Backdrop => (themeId(d.theme) === 'standard' && d.backdrop in BACKDROPS ? d.backdrop : 'none');
 
@@ -223,7 +230,7 @@ export const THEMES_OPEN = true;
 
 /** Called by the store whenever the saved design changes. */
 export function applyDesign(d: Design) {
-  if (!THEMES_OPEN) d = { ...DEFAULT_DESIGN, backdrop: d.backdrop, frost: d.frost };
+  if (!THEMES_OPEN) d = { ...DEFAULT_DESIGN, backdrop: d.backdrop, frost: d.frost, cardFill: d.cardFill };
   if (d === design) return;
   design = d;
   version += 1;

@@ -9,7 +9,7 @@ import { recordsCsv } from '@/lib/csv';
 import { DmFrom, getState, isMinor, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
-import { backdropSheet, FrostControl } from '@/ui/BackdropSheet';
+import { backdropSheet, CardFillControl, FrostControl } from '@/ui/BackdropSheet';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Choice, RadioCards } from '@/ui/Form';
 import { openSheet } from '@/ui/Sheet';
@@ -134,7 +134,7 @@ export default function Settings() {
             <Txt size={13} tone="ink3">{BACKDROPS[backdropOf(s.design)].label}</Txt>
             <Txt size={16} tone="ink3">›</Txt>
           </Press>
-          <View style={{ paddingTop: 10, paddingBottom: 14, borderTopWidth: hair, borderTopColor: t.line }}><FrostControl /></View>
+          <View style={{ paddingTop: 10, paddingBottom: 14, gap: 16, borderTopWidth: hair, borderTopColor: t.line }}><FrostControl /><CardFillControl /></View>
         </Section> : null}
 
         <Section title="科目">

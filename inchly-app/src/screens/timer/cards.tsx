@@ -14,7 +14,7 @@ import type { Zone, Zones } from '@/screens/layout';
 import { jpHm, session, startBlock, useSession } from '@/screens/model';
 import { jpDate } from '@/lib/time';
 import { deckOf, endOf, suggestion, type Block } from '@/lib/timetable';
-import type { Backdrop } from '@/design';
+import { type Backdrop, TIMER_FILM, useDesign } from '@/design';
 import { doneOn, elapsedOf, finishBlock, getState, type Held, togglePause, useStore } from '@/store';
 import { focus } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
@@ -423,16 +423,16 @@ type Skin = {
   frost?: boolean;
 };
 const COVER_BASE: Record<Exclude<Backdrop, 'none'>, string> = { pond: '#D3DDD9', sea: '#D3D9E0', walk: '#D9D7D0' };
-function skinOf(bg: Backdrop, c: string): Skin {
+function skinOf(bg: Backdrop, c: string, film = 0.4): Skin {
   if (bg !== 'none') {
-    return { paper: 'rgba(250,250,248,0.4)', edge: 'transparent', ink: '#1A1A18', ink2: 'rgba(26,26,24,0.64)', ink3: 'rgba(26,26,24,0.44)', solid: '#1A1A18', onSolid: '#FBFBF9',
+    return { paper: `rgba(250,250,248,${film})`, edge: 'transparent', ink: '#1A1A18', ink2: 'rgba(26,26,24,0.64)', ink3: 'rgba(26,26,24,0.44)', solid: '#1A1A18', onSolid: '#FBFBF9',
       outline: 'rgba(26,26,24,0.22)', cover: mix(c, COVER_BASE[bg], 0.48), dim: FLOOR, live: '#1E7A46', stop: CRIMSON, frost: true };
   }
   const base = mix(c, '#12141A', 0.72);
   return { paper: base, edge: 'rgba(255,255,255,0.09)', ink: '#E8ECEF', ink2: 'rgba(232,236,239,0.62)', ink3: 'rgba(232,236,239,0.4)', solid: '#E8ECEF', onSolid: base,
     outline: 'rgba(232,236,239,0.22)', cover: mix(c, '#12141A', 0.38), dim: '#000000', live: '#5FD08E', stop: CRIMSON_ON_DARK };
 }
-const useSkin = (c: string) => skinOf(useBackdrop(), c);
+const useSkin = (c: string) => skinOf(useBackdrop(), c, TIMER_FILM[useDesign().cardFill ?? 1]);
 
 /**
  * A plan's card, like a notebook: its picture at the top (the photo you
@@ -574,9 +574,10 @@ function Elapsed({ tone }: { tone: Tone }) {
     : `今日 ${hm(today)}`;
   // over a 背景, the time sits on a quiet pane of glass, so the koi passing under it never cover it
   const glass = useBackdrop() !== 'none';
+  const fill = useDesign().cardFill ?? 1;
   return (
     <View pointerEvents="none" accessible accessibilityRole={ss.plan ? 'progressbar' : undefined}
-      style={glass ? { marginHorizontal: 10, marginTop: 14, paddingHorizontal: 10, paddingTop: 8, paddingBottom: 12, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.3)' } : { marginHorizontal: 20, marginTop: 22 }}
+      style={glass ? { marginHorizontal: 10, marginTop: 14, paddingHorizontal: 10, paddingTop: 8, paddingBottom: 12, borderRadius: 18, backgroundColor: `rgba(255,255,255,${TIMER_FILM[fill] * 0.8})` } : { marginHorizontal: 20, marginTop: 22 }}
       accessibilityLabel={ss.running ? `勉強した時間 ${fmt(sec)}${ss.paused ? '（一時停止中）' : ''}。${top}。${below}` : `${top}。${below}`}>
       {glass ? <Pane radius={18} blur /> : null}
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>

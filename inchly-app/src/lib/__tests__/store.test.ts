@@ -218,6 +218,8 @@ describe('migrate', () => {
     expect(migrate({ v: 3, design: { theme: 'standard' } }).design?.frost).toBe(2);
     expect(migrate({ v: 3, design: { theme: 'standard', frost: 0 } }).design?.frost).toBe(0);
     expect(migrate({ v: 3, design: { theme: 'standard', frost: 9 } }).design?.frost).toBe(2);
+    expect(migrate({ v: 3, design: { theme: 'standard' } }).design?.cardFill).toBe(1);
+    expect(migrate({ v: 3, design: { theme: 'standard', cardFill: 3 } }).design?.cardFill).toBe(3);
   });
 });
 

@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { type Backdrop, BACKDROPS, FROSTS, themeId, themeOf, useDesign } from '../design';
+import { type Backdrop, BACKDROPS, CARD_FILLS, type CardFill, FROSTS, themeId, themeOf, useDesign } from '../design';
 import { setDesign } from '../store';
 import { FLOOR, GROUND } from './backdrop/shared';
 import { Btn, haptic, Press, Txt } from './base';
@@ -52,7 +52,7 @@ function BackdropChoice({ close }: { close: () => void }) {
           </Press>
         );
       })}
-      <View style={{ paddingTop: 6 }}><FrostControl /></View>
+      <View style={{ paddingTop: 6, gap: 14 }}><FrostControl /><CardFillControl /></View>
     </View>
   );
 }
@@ -112,6 +112,22 @@ export function FrostControl() {
       </View>
       <Segmented fit value={String(d.frost ?? 2)} onChange={(v) => { haptic.tap(); setDesign({ frost: Number(v) as (typeof FROSTS)[number]['v'] }); }}
         options={FROSTS.map((f) => ({ v: String(f.v), label: f.label }))} />
+    </View>
+  );
+}
+
+/** カードの背景: how solid the cards are over the 背景 — thin glass to near white. */
+export function CardFillControl() {
+  const d = useDesign();
+  const on = themeId(d.theme) === 'standard' && d.backdrop !== 'none';
+  return (
+    <View style={{ gap: 8, opacity: on ? 1 : 0.45 }} pointerEvents={on ? 'auto' : 'none'}>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+        <Txt size={14} w="600">カードの背景</Txt>
+        <Txt size={11.5} tone="ink3" style={{ flex: 1 }}>{on ? 'カードをどれだけ白くするか。うすいほど背景が透ける（タイマーのカードも）' : '背景を選ぶと変えられます'}</Txt>
+      </View>
+      <Segmented fit value={String(d.cardFill ?? 1)} onChange={(v) => { haptic.tap(); setDesign({ cardFill: Number(v) as CardFill }); }}
+        options={CARD_FILLS.map((f) => ({ v: String(f.v), label: f.label }))} />
     </View>
   );
 }
