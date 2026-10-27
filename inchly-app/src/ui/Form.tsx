@@ -96,7 +96,7 @@ export function RadioCards<K extends string>({ options, value, onChange }: { opt
 function Dot({ on }: { on: boolean }) {
   const t = useT();
   const s = useSharedValue(on ? 1 : 0);
-  useEffect(() => { s.value = withTiming(on ? 1 : 0, { duration: 260, easing: ease.spring }); }, [on, s]);
+  useEffect(() => { s.value = withTiming(on ? 1 : 0, { duration: 260, easing: ease.ios }); }, [on, s]);
   const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   return (
     <View style={{ width: 18, height: 18, marginTop: 1, borderRadius: 9, borderWidth: 1.25, borderColor: on ? t.ink : t.ink3, alignItems: 'center', justifyContent: 'center' }}>

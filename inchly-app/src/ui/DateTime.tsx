@@ -5,7 +5,7 @@ import { Keyboard, Platform, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { dateKey, parseKey } from '../lib/time';
-import { hair, useT } from '../theme';
+import { ease, hair, useT } from '../theme';
 import { Press, Txt } from './base';
 import { Stepper } from './Form';
 
@@ -17,8 +17,8 @@ import { Stepper } from './Form';
 
 const IOS = Platform.OS === 'ios';
 const WEB = Platform.OS === 'web';
-/** Rows and what opens under them slide into place together. */
-export const SMOOTH = LinearTransition.springify().damping(22).stiffness(220);
+/** Rows and what opens under them slide into place together, with iOS's curve: no spring, no bounce. */
+export const SMOOTH = LinearTransition.duration(340).easing(ease.ios);
 
 const at = (day: Date, min: number) => new Date(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(min / 60), min % 60);
 const clock = (min: number) => `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`;
@@ -37,7 +37,7 @@ function WebField({ type, value, onChange, min, max, step }: { type: 'date' | 't
 export function Opens({ children }: { children: ReactNode }) {
   const t = useT();
   return (
-    <Animated.View entering={FadeIn.duration(220)} exiting={FadeOut.duration(140)} layout={SMOOTH}
+    <Animated.View entering={FadeIn.duration(240).easing(ease.ios)} exiting={FadeOut.duration(140)} layout={SMOOTH}
       style={{ borderTopWidth: hair, borderTopColor: t.line, alignItems: IOS ? 'center' : 'stretch' }}>
       {children}
     </Animated.View>

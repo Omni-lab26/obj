@@ -19,8 +19,9 @@ import { toast } from './Toast';
 // is and 追加 along the top, then only what a plan needs — the icon and what to
 // do side by side (the top of its card in the timer), the start time, a memo.
 // The icon is the subject: tap it to pick one from the subjects' pictures (化学
-// is a flask …) or add one; a photo can stand in for the picture. The end is
-// optional: left empty, the plan runs until the next one (a weekly one stays weekly).
+// is a flask …) or make a new one; 足す picks a photo to stand in for the
+// picture. The end is optional: left empty, the plan runs until the next one (a
+// weekly one stays weekly). Things move with iOS's curve, never a bounce.
 // Drawn the way iOS draws a new event, and kept low in contrast: やめる and 追加
 // as blue text, small grey names over white groups, 日付 and 時刻 (start 〜 end)
 // as Calendar's rows, in grey chips that open iOS's pickers.
@@ -162,22 +163,29 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
                         </Press>
                       );
                     })}
-                    <Press onPress={() => toggle('new')} scale={0.92} accessibilityLabel="科目を足す"
+                    {/* 足す: a photo of your own as the icon (the subject stays what it is) */}
+                    <Press onPress={choose} scale={0.92} accessibilityLabel={icon ? 'アイコンの写真を選び直す' : 'アイコンにする写真を選ぶ'} accessibilityState={{ checked: !!icon }}
                       style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
-                      <View style={{ padding: 2 }}>
-                        <View style={{ width: 38, height: 38, borderRadius: 5, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line2, alignItems: 'center', justifyContent: 'center' }}>
-                          <Icon name="plus" size={15} color={t.ink2} />
-                        </View>
+                      <View style={{ padding: 2, borderRadius: 8, borderWidth: 2, borderColor: icon ? t.blue : 'transparent' }}>
+                        {icon ? <PlanArt icon={icon} name={name.trim() || '？'} color={color} size={38} radius={5} /> : (
+                          <View style={{ width: 38, height: 38, borderRadius: 5, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line2, alignItems: 'center', justifyContent: 'center' }}>
+                            <Icon name="plus" size={15} color={t.ink2} />
+                          </View>
+                        )}
                       </View>
-                      <Txt size={11.5} tone="ink2">足す</Txt>
+                      <Txt size={11.5} w={icon ? '600' : '400'} color={icon ? t.blue : t.ink2}>{icon ? '写真' : '足す'}</Txt>
                     </Press>
                   </View>
                   <View style={{ alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
-                    <Txt size={12} tone="ink3" style={{ flex: 1 }}>{icon ? '写真がアイコンになっています' : '科目の絵の代わりに写真も使えます'}</Txt>
-                    <Press onPress={icon ? () => { haptic.tap(); setIcon(undefined); } : choose} hitSlop={8} scale={0.94} accessibilityLabel={icon ? 'アイコンの写真を外す' : 'アイコンにする写真を選ぶ'}
-                      style={{ height: 30, paddingHorizontal: 12, borderRadius: 6, backgroundColor: t.sunken, justifyContent: 'center' }}>
-                      <Txt size={13} w="500" color={t.blue}>{icon ? '写真を外す' : '写真を選ぶ'}</Txt>
+                    <Press onPress={() => toggle('new')} hitSlop={8} scale={0.94} accessibilityLabel="科目を足す" style={{ flex: 1, height: 30, justifyContent: 'center' }}>
+                      <Txt size={13} w="500" color={t.blue}>新しい科目をつくる</Txt>
                     </Press>
+                    {icon ? (
+                      <Press onPress={() => { haptic.tap(); setIcon(undefined); }} hitSlop={8} scale={0.94} accessibilityLabel="アイコンの写真を外す"
+                        style={{ height: 30, paddingHorizontal: 12, borderRadius: 6, backgroundColor: t.sunken, justifyContent: 'center' }}>
+                        <Txt size={13} w="500" color={t.ink2}>写真を外す</Txt>
+                      </Press>
+                    ) : null}
                   </View>
                 </Opens>
               ) : null}

@@ -57,9 +57,9 @@ export function SheetHost() {
   useEffect(() => {
     if (render) {
       y.set(H);
-      y.set(withTiming(0, { duration: 380, easing: ease.out }));
+      y.set(withTiming(0, { duration: 420, easing: ease.ios }));
       pop.set(0);
-      pop.set(withTiming(1, { duration: 320, easing: ease.out }));
+      pop.set(withTiming(1, { duration: 340, easing: ease.ios }));
       scrim.set(withTiming(1, { duration: 300 }));
     }
   }, [render, H, y, scrim, pop]);
@@ -70,14 +70,15 @@ export function SheetHost() {
       onPanResponderMove: (_, g) => { y.set(Math.max(0, g.dy)); },
       onPanResponderRelease: (_, g) => {
         if (g.dy > 110 || g.vy > 1.1) close();
-        else y.set(withTiming(0, { duration: 260, easing: ease.spring }));
+        else y.set(withTiming(0, { duration: 300, easing: ease.ios }));
       },
     }),
   );
 
   const sa = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   const ka = useAnimatedStyle(() => ({ opacity: scrim.value }));
-  const pa = useAnimatedStyle(() => ({ opacity: pop.value, transform: [{ scale: 0.96 + pop.value * 0.04 }, { translateY: (1 - pop.value) * 12 }] }));
+  // the centered pane fades in from a hair larger, as an iOS alert does — no overshoot
+  const pa = useAnimatedStyle(() => ({ opacity: pop.value, transform: [{ scale: 1.04 - pop.value * 0.04 }] }));
   if (!render) return null;
   if (center) {
     return (

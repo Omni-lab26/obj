@@ -104,7 +104,7 @@ export function Press({ style, scale = 0.96, react, children, onPressIn, onPress
       case 'sink': case 'misprint': p.set(withTiming(0, { duration: 90 })); break;
       case 'select': p.set(withTiming(0, { duration: 160 })); break;
       case 'soft': p.set(withTiming(0, { duration: 460, easing: ease.out })); break;
-      default: p.set(withTiming(0, { duration: 240, easing: ease.spring }));
+      default: p.set(withTiming(0, { duration: 260, easing: ease.ios }));
     }
   };
   // where the finger came down: a finger that travelled (a swipe that happens to start and end on a wide button) isn't a tap

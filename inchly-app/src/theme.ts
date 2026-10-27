@@ -190,6 +190,8 @@ export const ease = {
   press: Easing.bezier(0.3, 0.9, 0.4, 1),
   spring: Easing.bezier(0.28, 1.3, 0.36, 1),
   out: Easing.bezier(0.22, 1, 0.36, 1),
+  /** iOS's own: sheets, rows making room — fast at first, settling without a bounce */
+  ios: Easing.bezier(0.32, 0.72, 0, 1),
 };
 
 // Separators: two device pixels on iOS, and the same on a retina browser.
