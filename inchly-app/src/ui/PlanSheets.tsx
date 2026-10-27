@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Keyboard, Platform, TextInput, View } from 'react-native';
+import { Keyboard, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { SUBJECT_COLORS } from '../data';
@@ -7,9 +7,9 @@ import { dateKey, mondayIndex, parseKey } from '../lib/time';
 import { pickPlanIcon } from '../lib/planIcon';
 import { Block, blocksOn, toClock, toMin } from '../lib/timetable';
 import { addDeadline, addSubject, removeBlock, saveBlock, updateSubject, useStore, useSubjects } from '../store';
-import { bundledFace, font, hair, noOutline, useT } from '../theme';
+import { font, hair, noOutline, useT } from '../theme';
 import { haptic, Press, SubjTile, Txt } from './base';
-import { DatePick, Opens, SMOOTH, TimePick } from './DateTime';
+import { DatePick, Opens, PickChip, SMOOTH, TimePick } from './DateTime';
 import { Icon } from './Icon';
 import { PlanArt } from './PlanArt';
 import { openSheet } from './Sheet';
@@ -19,19 +19,20 @@ import { toast } from './Toast';
 // is and 追加 along the top, then only what a plan needs — the icon and what to
 // do side by side (the top of its card in the timer), the start time, a memo.
 // The icon is the subject: tap it to pick one from the subjects' pictures (化学
-// is a flask …) or add one; a photo can stand in for the picture. The start is
-// big in mono with one-tap picks under it (いまから, 次の空き …); a plan runs 60
+// is a flask …) or add one; a photo can stand in for the picture. Under the
+// start, one-tap times (いまから, 次の空き …). A plan runs 60
 // minutes (an edited one keeps its length, and a weekly one stays weekly).
-// Drawn crisp and quiet: square-cornered groups on the frosted pane, small mono
-// labels (TASK, START …). The keyboard waits until you tap a field.
+// Drawn the way iOS draws a new event, and kept low in contrast: やめる and 追加
+// as blue text, small grey names over white groups, the start as Calendar's
+// 開始 row with the day and the time in grey chips that open iOS's pickers, the
+// one-tap times in grey (blue when picked). The keyboard waits for a tap.
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 const day0 = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const shortDate = (d: Date) => `${d.getMonth() + 1}月${d.getDate()}日（${DOW[mondayIndex(d)]}）`;
+// the day in its chip, as compact as Calendar's
+const chipDate = (d: Date) => `${d.getMonth() + 1}月${d.getDate()}日(${DOW[mondayIndex(d)]})`;
 const DEADLINE_RED = '#FF3B30';
-// the labels' and the times' face: the bundled mono (Plex) once loaded, the system's until then
-const MONO_FALLBACK = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'ui-monospace, Menlo, monospace' });
-const mono = () => bundledFace('plex') ?? MONO_FALLBACK;
 
 type Kind = 'plan' | 'deadline';
 export function planSheet(o: { date?: Date; existing?: Block; kind?: Kind } = {}) {
@@ -119,48 +120,44 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
 
   const lenLabel = len % 60 === 0 ? `${len / 60}時間` : len > 60 ? `${Math.floor(len / 60)}時間${len % 60}分` : `${len}分`;
   const daysLeft = Math.round((day0(d).getTime() - today.getTime()) / 86_400_000);
-  const accent = plan ? t.ink : DEADLINE_RED;
+  const accent = plan ? t.blue : DEADLINE_RED;
 
   return (
     <View style={{ gap: 16, paddingTop: 2 }}>
-      {/* やめる · what this is · 追加 (a solid pill) */}
+      {/* やめる · what this is · 追加, as text buttons the way iOS lays a new event out */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 40 }}>
         <Press onPress={close} scale={0.94} hitSlop={8} accessibilityLabel="やめる" style={{ minWidth: 64 }}>
-          <Txt size={15} w="500" tone="ink2">やめる</Txt>
+          <Txt size={16} color={accent}>やめる</Txt>
         </Press>
-        <View style={{ flex: 1, alignItems: 'center', gap: 1 }}>
-          <Txt size={10} w="600" tone="ink3" style={{ fontFamily: mono(), letterSpacing: 1.6 }}>{plan ? (existing ? 'EDIT PLAN' : 'NEW PLAN') : 'DEADLINE'}</Txt>
-          <Txt size={16} w="800" accessibilityRole="header" style={{ letterSpacing: -0.2 }}>{plan ? (existing ? '予定を編集' : '予定を追加') : '締切を追加'}</Txt>
-        </View>
-        <Press onPress={save} scale={0.94} hitSlop={6} accessibilityLabel={existing ? '保存する' : '追加する'}
-          style={{ minWidth: 64, height: 32, paddingHorizontal: 16, borderRadius: 6, backgroundColor: accent, alignItems: 'center', justifyContent: 'center' }}>
-          <Txt size={14} w="800" color={plan ? t.onInk : '#fff'}>{existing ? '保存' : '追加'}</Txt>
+        <Txt size={16} w="600" accessibilityRole="header" style={{ flex: 1, textAlign: 'center' }}>{plan ? (existing ? '予定を編集' : '予定を追加') : '締切を追加'}</Txt>
+        <Press onPress={save} scale={0.94} hitSlop={8} accessibilityLabel={existing ? '保存する' : '追加する'} style={{ minWidth: 64, alignItems: 'flex-end' }}>
+          <Txt size={16} w="600" color={accent}>{existing ? '保存' : '追加'}</Txt>
         </Press>
       </View>
 
       {plan ? (
         <>
           {/* the icon (which is the subject) big on the left, what to do beside it — the top of a timer card */}
-          <Field en="TASK" ja="アイコン・やること">
+          <Field label="アイコン・やること">
             <Group>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 12 }}>
                 <Press onPress={() => toggle('subject')} scale={0.95} accessibilityLabel={name.trim() ? `アイコン（科目）：${name.trim()}。変える` : 'アイコン（科目）を選ぶ'} accessibilityState={{ expanded: open === 'subject' }}
                   style={{ alignItems: 'center', gap: 5 }}>
                   {name.trim() || icon ? (
-                    <View style={{ borderRadius: 9, borderWidth: 2, borderColor: open === 'subject' ? t.ink : 'transparent', padding: 1 }}>
+                    <View style={{ borderRadius: 9, borderWidth: 2, borderColor: open === 'subject' ? t.blue : 'transparent', padding: 1 }}>
                       <PlanArt icon={icon} name={name.trim() || '？'} color={color} size={80} radius={7} />
                     </View>
                   ) : (
                     <View style={{ width: 84, height: 84, borderRadius: 8, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line2, alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                       <Icon name="plus" size={18} color={t.ink2} />
-                      <Txt size={10.5} w="700" tone="ink3">科目</Txt>
+                      <Txt size={11} tone="ink3">科目</Txt>
                     </View>
                   )}
-                  <Txt size={11} w="700" tone={name.trim() ? 'ink2' : 'ink3'} numberOfLines={1} style={{ maxWidth: 84 }}>{name.trim() || 'アイコン'}</Txt>
+                  <Txt size={11.5} tone={name.trim() ? 'ink2' : 'ink3'} numberOfLines={1} style={{ maxWidth: 84 }}>{name.trim() || 'アイコン'}</Txt>
                 </Press>
                 <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder="青チャート 例題41〜50"
                   placeholderTextColor={t.ink3} multiline onFocus={typing} accessibilityLabel="何をやるか"
-                  style={[{ flex: 1, minWidth: 0, minHeight: 84, paddingTop: 2, fontSize: 20, lineHeight: 27, fontFamily: font.display, fontWeight: '800', letterSpacing: -0.4, color: t.ink, textAlignVertical: 'top' }, noOutline]} />
+                  style={[{ flex: 1, minWidth: 0, minHeight: 84, paddingTop: 2, fontSize: 17, lineHeight: 24, fontFamily: font.text, fontWeight: '600', color: t.ink, textAlignVertical: 'top' }, noOutline]} />
               </View>
               {/* the subjects as the icons to pick; a photo can stand in for the picture */}
               {open === 'subject' ? (
@@ -171,10 +168,10 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
                       return (
                         <Press key={x.id} onPress={() => { haptic.tap(); setName(x.name); setColor(x.c); setOpen(null); }} scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`${x.name}にする`}
                           style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
-                          <View style={{ padding: 2, borderRadius: 8, borderWidth: 2, borderColor: on ? t.ink : 'transparent' }}>
+                          <View style={{ padding: 2, borderRadius: 8, borderWidth: 2, borderColor: on ? t.blue : 'transparent' }}>
                             <SubjTile name={x.name} color={x.c} area={x.area} size={38} radius={5} />
                           </View>
-                          <Txt size={11} w={on ? '800' : '600'} tone={on ? 'ink' : 'ink2'} numberOfLines={1}>{x.name}</Txt>
+                          <Txt size={11.5} w={on ? '600' : '400'} color={on ? t.blue : t.ink2} numberOfLines={1}>{x.name}</Txt>
                         </Press>
                       );
                     })}
@@ -185,14 +182,14 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
                           <Icon name="plus" size={15} color={t.ink2} />
                         </View>
                       </View>
-                      <Txt size={11} w="600" tone="ink2">足す</Txt>
+                      <Txt size={11.5} tone="ink2">足す</Txt>
                     </Press>
                   </View>
                   <View style={{ alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
                     <Txt size={12} tone="ink3" style={{ flex: 1 }}>{icon ? '写真がアイコンになっています' : '科目の絵の代わりに写真も使えます'}</Txt>
                     <Press onPress={icon ? () => { haptic.tap(); setIcon(undefined); } : choose} hitSlop={8} scale={0.94} accessibilityLabel={icon ? 'アイコンの写真を外す' : 'アイコンにする写真を選ぶ'}
-                      style={{ height: 28, paddingHorizontal: 12, borderRadius: 4, borderWidth: hair, borderColor: t.line2, justifyContent: 'center' }}>
-                      <Txt size={12} w="700" tone="ink2">{icon ? '写真を外す' : '写真を選ぶ'}</Txt>
+                      style={{ height: 30, paddingHorizontal: 12, borderRadius: 6, backgroundColor: t.sunken, justifyContent: 'center' }}>
+                      <Txt size={13} w="500" color={t.blue}>{icon ? '写真を外す' : '写真を選ぶ'}</Txt>
                     </Press>
                   </View>
                 </Opens>
@@ -201,79 +198,74 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
             </Group>
           </Field>
 
-          {/* the start: the time big, its day beside it, and a few times to pick with one tap */}
-          <Field en="START" ja="開始時間">
+          {/* the start as in Calendar: 開始, then the day and the time as grey chips that open iOS's pickers under the row; a few times to pick with one tap below */}
+          <Field>
             <Group>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 10 }}>
-                <Press onPress={() => toggle('start')} scale={0.96} hitSlop={6} accessibilityLabel="始める時刻を変える" accessibilityState={{ expanded: open === 'start' }} style={{ flex: 1 }}>
-                  <Txt num size={38} w="600" lh={44} color={open === 'start' ? t.blue : t.ink} style={{ fontFamily: mono(), letterSpacing: -1.2 }}>{toClock(start)}</Txt>
-                </Press>
-                <View style={{ alignItems: 'flex-end', gap: 5, paddingBottom: 4 }}>
-                  <Press onPress={() => toggle('date')} scale={0.95} hitSlop={6} accessibilityLabel="始める日を変える" accessibilityState={{ expanded: open === 'date' }}
-                    style={{ height: 24, paddingHorizontal: 8, borderRadius: 3, backgroundColor: open === 'date' ? 'rgba(47,107,255,0.12)' : t.sunken, justifyContent: 'center' }}>
-                    <Txt size={12} w="600" color={open === 'date' ? t.blue : t.ink2}>{`${shortDate(d)}${weekly ? ` · 毎週${DOW[mondayIndex(d)]}曜` : ''}`}</Txt>
-                  </Press>
-                  <Txt size={10.5} tone="ink3" style={{ fontFamily: mono() }}>{`${lenLabel} · ${toClock(end % DAY)}まで`}</Txt>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 56 }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Txt size={16}>開始</Txt>
+                  <Txt num size={12} tone="ink3" numberOfLines={1}>{`${weekly ? `毎週${DOW[mondayIndex(d)]}曜 · ` : ''}${toClock(end % DAY)}まで（${lenLabel}）`}</Txt>
                 </View>
+                <PickChip label={chipDate(d)} on={open === 'date'} onPress={() => toggle('date')} a11y="始める日を変える" />
+                <PickChip label={toClock(start)} on={open === 'start'} onPress={() => toggle('start')} a11y="始める時刻を変える" />
               </View>
-              <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 12, paddingBottom: 12 }}>
+              {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => setD(day0(x))} onDone={() => setOpen(null)} /></Opens> : null}
+              {open === 'start' ? <Opens><TimePick value={start} onChange={(m) => { setStart(m); setPicked(undefined); }} onDone={() => setOpen(null)} /></Opens> : null}
+              <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 10, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
                 {picks.map((x, i) => {
                   // two picks can land on the same time (いまから and 次の空き): mark the one tapped, else the first
                   const on = x.m === start && (picked && picks.some((y) => y.label === picked && y.m === start) ? picked === x.label : picks.findIndex((y) => y.m === start) === i);
                   return (
                     <Press key={x.label} onPress={() => { haptic.tap(); setStart(x.m); setPicked(x.label); setOpen(null); }} scale={0.95} accessibilityLabel={`${x.label}（${toClock(x.m)}）から`} accessibilityState={{ selected: on }}
-                      style={{ flex: 1, height: 40, borderRadius: 5, borderWidth: hair, borderColor: on ? t.ink : t.line2, backgroundColor: on ? t.ink : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
-                      <Txt size={11} w="700" color={on ? t.onInk : t.ink2}>{x.label}</Txt>
-                      <Txt size={10} color={on ? t.onInk : t.ink3} style={{ fontFamily: mono() }}>{toClock(x.m)}</Txt>
+                      style={{ flex: 1, height: 42, borderRadius: 6, backgroundColor: on ? 'rgba(47,107,255,0.1)' : t.sunken, alignItems: 'center', justifyContent: 'center' }}>
+                      <Txt size={12} w={on ? '600' : '400'} color={on ? t.blue : t.ink2}>{x.label}</Txt>
+                      <Txt num size={11} color={on ? t.blue : t.ink3}>{toClock(x.m)}</Txt>
                     </Press>
                   );
                 })}
               </View>
-              {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => setD(day0(x))} onDone={() => setOpen(null)} /></Opens> : null}
-              {open === 'start' ? <Opens><TimePick value={start} onChange={setStart} onDone={() => setOpen(null)} /></Opens> : null}
             </Group>
           </Field>
         </>
       ) : (
         <>
-          <Field en="TASK" ja="締切">
+          <Field label="締切">
             <Group>
               <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder="英検 申込"
                 placeholderTextColor={t.ink3} multiline onFocus={typing} accessibilityLabel="締切の名前"
-                style={[{ minHeight: 56, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 10, fontSize: 22, lineHeight: 29, fontFamily: font.display, fontWeight: '800', letterSpacing: -0.4, color: t.ink, textAlignVertical: 'top' }, noOutline]} />
+                style={[{ minHeight: 56, paddingHorizontal: 16, paddingTop: 15, paddingBottom: 12, fontSize: 17, lineHeight: 24, fontFamily: font.text, fontWeight: '600', color: t.ink, textAlignVertical: 'top' }, noOutline]} />
             </Group>
           </Field>
-          <Field en="WHEN" ja="いつ">
+          <Field>
             <Group>
-              <Press onPress={() => toggle('date')} scale={0.98} accessibilityLabel="日付を変える" accessibilityState={{ expanded: open === 'date' }}
-                style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 16, paddingVertical: 14 }}>
-                <View style={{ flex: 1 }}>
-                  <Txt size={10} w="600" tone="ink3" style={{ fontFamily: mono(), letterSpacing: 1.4 }}>DATE</Txt>
-                  <Txt size={26} w="800" color={open === 'date' ? DEADLINE_RED : t.ink} style={{ letterSpacing: -0.5 }}>{shortDate(d)}</Txt>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 56 }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Txt size={16}>締切日</Txt>
+                  <Txt num size={12} color={daysLeft <= 3 ? DEADLINE_RED : t.ink3}>{daysLeft <= 0 ? '今日' : `あと${daysLeft}日`}</Txt>
                 </View>
-                <View style={{ height: 22, paddingHorizontal: 8, borderRadius: 3, backgroundColor: 'rgba(255,59,48,0.1)', justifyContent: 'center', marginBottom: 4 }}>
-                  <Txt size={12} w="700" color={DEADLINE_RED} style={{ fontFamily: mono() }}>{daysLeft <= 0 ? '今日' : `あと${daysLeft}日`}</Txt>
-                </View>
-              </Press>
+                <PickChip label={chipDate(d)} on={open === 'date'} onPress={() => toggle('date')} a11y="日付を変える" />
+              </View>
               {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => setD(day0(x))} onDone={() => setOpen(null)} /></Opens> : null}
             </Group>
           </Field>
         </>
       )}
 
-      <Field en="NOTE" ja="メモ">
+      <Field label="メモ">
         <Group>
           <TextInput value={note} onChangeText={(v) => setNote(v.slice(0, 200))} placeholder={plan ? '持ち物、気をつけること、前回の続きなど' : '受付の時間、持ち物など'} placeholderTextColor={t.ink3}
             multiline onFocus={typing} accessibilityLabel="メモ" style={[{ minHeight: 76, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, lineHeight: 22, fontFamily: font.text, color: t.ink, textAlignVertical: 'top' }, noOutline]} />
-          <Txt size={10} tone="ink3" style={{ fontFamily: mono(), textAlign: 'right', paddingHorizontal: 12, paddingBottom: 8 }}>{`${note.length}/200`}</Txt>
+          <Txt num size={11} tone="ink3" style={{ textAlign: 'right', paddingHorizontal: 12, paddingBottom: 8 }}>{`${note.length}/200`}</Txt>
         </Group>
       </Field>
 
       {existing ? (
-        <Press onPress={() => { removeBlock(existing.id); haptic.warn(); close(); toast('予定を削除しました'); }} accessibilityLabel="この予定を削除"
-          style={{ height: 44, borderRadius: 6, borderWidth: hair, borderColor: 'rgba(255,59,48,0.35)', alignItems: 'center', justifyContent: 'center' }}>
-          <Txt size={14.5} w="700" color={DEADLINE_RED}>予定を削除</Txt>
-        </Press>
+        <Group>
+          <Press onPress={() => { removeBlock(existing.id); haptic.warn(); close(); toast('予定を削除しました'); }} accessibilityLabel="この予定を削除"
+            style={{ height: 48, alignItems: 'center', justifyContent: 'center' }}>
+            <Txt size={16} color={DEADLINE_RED}>予定を削除</Txt>
+          </Press>
+        </Group>
       ) : null}
     </View>
   );
@@ -302,10 +294,10 @@ function NewSubject({ onAdd }: { onAdd: (x: { name: string; c: string }) => void
         <View style={{ width: 14, height: 14, borderRadius: 3, backgroundColor: c }} />
         <TextInput value={name} onChangeText={(v) => setName(v.slice(0, 12))} placeholder="新しい科目（例：日本史）" placeholderTextColor={t.ink3} accessibilityLabel="新しい科目の名前"
           onSubmitEditing={add} returnKeyType="done"
-          style={[{ flex: 1, minWidth: 0, fontSize: 16, fontFamily: font.text, fontWeight: '600', color: t.ink, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 4, backgroundColor: t.sunken }, noOutline]} />
+          style={[{ flex: 1, minWidth: 0, fontSize: 16, fontFamily: font.text, color: t.ink, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6, backgroundColor: t.sunken }, noOutline]} />
         <Press onPress={add} scale={0.94} accessibilityLabel="この科目を足す"
-          style={{ height: 38, paddingHorizontal: 14, borderRadius: 6, backgroundColor: t.ink, alignItems: 'center', justifyContent: 'center' }}>
-          <Txt size={14} w="700" color={t.onInk}>足す</Txt>
+          style={{ height: 38, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' }}>
+          <Txt size={16} w="600" color={t.blue}>足す</Txt>
         </Press>
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -322,20 +314,16 @@ function NewSubject({ onAdd }: { onAdd: (x: { name: string; c: string }) => void
 function Group({ children }: { children: React.ReactNode }) {
   const t = useT();
   return (
-    <Animated.View layout={SMOOTH} style={{ backgroundColor: t.dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.84)', borderRadius: 8, overflow: 'hidden',
-      borderWidth: hair, borderColor: t.dark ? 'rgba(255,255,255,0.12)' : 'rgba(11,13,14,0.11)' }}>
+    <Animated.View layout={SMOOTH} style={{ backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)', borderRadius: 10, overflow: 'hidden' }}>
       {children}
     </Animated.View>
   );
 }
-/** A part of the form: a small mono label in English with its Japanese name, then its card. */
-function Field({ en, ja, children }: { en: string; ja: string; children: React.ReactNode }) {
+/** A part of the form: its name (if the row doesn't say it), small and grey as over a group in iOS's Settings, then its card. */
+function Field({ label, children }: { label?: string; children: React.ReactNode }) {
   return (
-    <Animated.View layout={SMOOTH} style={{ gap: 7 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingLeft: 4 }}>
-        <Txt size={10} w="600" tone="ink3" style={{ fontFamily: mono(), letterSpacing: 1.6 }}>{en}</Txt>
-        <Txt size={12} w="700" tone="ink2">{ja}</Txt>
-      </View>
+    <Animated.View layout={SMOOTH} style={{ gap: 6 }}>
+      {label ? <Txt size={13} tone="ink3" style={{ paddingLeft: 16 }}>{label}</Txt> : null}
       {children}
     </Animated.View>
   );
