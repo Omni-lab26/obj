@@ -14,7 +14,8 @@
 //
 // Pure functions over plain data and typed arrays, marked as worklets, so the
 // same code runs on the UI thread in the app (Reanimated + Skia) and in a
-// browser (the prototype). `step` moves things on; `paint` fills the grid.
+// browser (the prototype). `step` moves things on; `paint` fills the grid;
+// `soft` lists round shapes for the cheap, blurred drawing behind the pages.
 
 /** Marks, from faint to dense; index 0 is none. Drawn as small shapes, not letters. */
 export const MARKS = ['', 'dot', 'dot2', 'colon', 'tri', 'plus', 'cross', 'ring', 'star', 'hash', 'grid', 'disc', 'block', 'dash'] as const;
@@ -23,6 +24,11 @@ const RAMP = 12, DASH = 13;
 export type Mark = (typeof MARKS)[number];
 
 const N = 11; // spine points
+// (worklets capture the constants they use where they're defined, so these come before every function)
+/** How many round shapes the soft drawing holds at most. */
+const SHAPES = 420;
+/** Round shapes along each fish, for the soft drawing. */
+const ALONG = 18;
 const RIPPLE_LIFE = 2.8;
 const FOOD_LIFE = 14;
 
@@ -53,11 +59,15 @@ export type Pond = {
   avoid: { x0: number; y0: number; x1: number; y1: number } | null;
   /** scratch, per cell: the nearest point on the koi being drawn (distance², how far along, which side) */
   nd: Float32Array; nu: Float32Array; ns: Float32Array;
-  /** the light on the water, worked out a few times a second (it moves slowly) and copied into each frame */
-  wm: Uint8Array; wa: Float32Array; wAt: number;
+  /** the light on the water, a band of rows worked out each frame (it moves slowly) and copied into each frame */
+  wm: Uint8Array; wa: Float32Array; wAt: number; wRow: number;
   /** the water: the koi pond (dark) or the sea with sharks (light) */
   /** sharks (else koi); pale water (else dark) */
   sea: boolean; pale: boolean; water: number; hi: number; deepTo: number;
+  /** scratch: a fish's spine as drawn (made once, not each frame) */
+  qx: Float32Array; qy: Float32Array;
+  /** the soft drawing (see `soft`): x, y, r, color, alpha per round shape */
+  shapes: Float32Array;
 };
 
 // ---------- small math ----------
@@ -232,8 +242,9 @@ export function makePond(cols: number, rows: number, seed = 7, count = 6, school
     tile: new Float32Array(size), tileRGB: new Uint32Array(size), mark: new Uint8Array(size), markRGB: new Uint32Array(size), markA: new Float32Array(size),
     cover: new Float32Array(size), avoid: null,
     nd: new Float32Array(size), nu: new Float32Array(size), ns: new Float32Array(size),
-    wm: new Uint8Array(size), wa: new Float32Array(size), wAt: -1,
+    wm: new Uint8Array(size), wa: new Float32Array(size), wAt: -1, wRow: 0,
     sea, pale, water: sea ? SEA : pale ? POND : WATER, hi: sea ? SEA_HI : pale ? POND_HI : WATER_HI, deepTo: sea ? 0xdfe4e9 : pale ? POND_DEEP : 0x16303a,
+    qx: new Float32Array(N), qy: new Float32Array(N), shapes: new Float32Array(SHAPES * 5),
   };
   const kinds = sea ? [6, 7, 9, 8, 6, 9, 7] : [0, 3, 1, 4, 2, 0, 5, 1];
   // how wide each kind is for its length
@@ -390,6 +401,72 @@ export function step(p: Pond, dtIn: number) {
   }
 }
 
+// ---------- drawing ----------
+/** A fish's spine as drawn: the tail swings side to side, more toward its end. */
+function pose(k: Koi, px: Float32Array, py: Float32Array) {
+  'worklet';
+  const amp = (0.28 + Math.min(1, k.v / 3) * 0.22 + Math.abs(k.turn) * 0.15) * (k.w / 1.8) * (isShark(k.kind) ? 0.75 : 1);
+  for (let j = 0; j < N; j++) {
+    const a = j < N - 1 ? Math.atan2(k.sy[j] - k.sy[j + 1], k.sx[j] - k.sx[j + 1]) : Math.atan2(k.sy[j - 1] - k.sy[j], k.sx[j - 1] - k.sx[j]);
+    const f = j / (N - 1);
+    const off = Math.sin(k.phase - j * 0.62) * amp * Math.pow(f, 1.5);
+    px[j] = k.sx[j] - Math.sin(a) * off;
+    py[j] = k.sy[j] + Math.cos(a) * off;
+  }
+}
+
+/**
+ * The pond drawn soft, for behind the frosted pages: no grid — each fish a
+ * row of round shapes along its body in its own colors (the drawing blurs
+ * them into one soft fish), the pads, the rings and the food. Into
+ * p.shapes as x, y, r (cells), color (0xRRGGBB), alpha (below 0: a ring,
+ * not filled); returns how many. The deep fish come first and are mixed into
+ * the water instead of made see-through, so nothing has to be layered.
+ * A few hundred numbers a frame, against the mosaic's thousands of cells.
+ */
+export function soft(p: Pond): number {
+  'worklet';
+  const o = p.shapes;
+  let n = 0;
+  const add = (x: number, y: number, r: number, c: number, a: number) => {
+    if (n >= SHAPES) return;
+    const i = n * 5;
+    o[i] = x; o[i + 1] = y; o[i + 2] = r; o[i + 3] = c; o[i + 4] = a;
+    n++;
+  };
+  const px = p.qx, py = p.qy;
+  for (const k of p.koi) {
+    pose(k, px, py);
+    const shark = isShark(k.kind), tailFrom = tailAt(k.kind);
+    for (let s = 0; s < ALONG; s++) {
+      const u = 0.02 + (s / (ALONG - 1)) * 0.95;
+      const f = u * (N - 1), j = Math.min(N - 2, Math.floor(f)), t = f - j;
+      const x = px[j] + (px[j + 1] - px[j]) * t, y = py[j] + (py[j + 1] - py[j]) * t;
+      const tail = u > tailFrom;
+      const r = Math.max(0.5, k.w * width(k.kind, u)) * (tail ? 0.75 : 1);
+      let c = k.pat[Math.round(u * (PU - 1)) * PV + ((PV - 1) >> 1)];
+      c = shark ? mixRGB(c, 0x1b2230, 0.1) : mixRGB(c, 0xffffff, 0.1);
+      if (tail) c = mixRGB(c, p.water, 0.35);
+      // deeper is dimmer: into the water's own color
+      c = mixRGB(mixRGB(c, p.deepTo, k.depth * 0.5), p.water, k.depth * 0.35);
+      add(x, y, r, c, 1);
+    }
+  }
+  for (const d of p.pads) {
+    add(d.x, d.y, d.r, p.pale ? PALE_PAD : PAD, 1);
+    if (d.flower) add(d.x, d.y, d.r * 0.4, PETAL, 1);
+  }
+  for (const r of p.ripples) {
+    const life = 1 - r.t / RIPPLE_LIFE;
+    add(r.x, r.y, r.t * 4.2 * r.s + 0.4, p.sea ? 0x8e99a6 : 0x6f8f8b, -life * 0.7);
+  }
+  for (const f of p.food) {
+    if (f.t < 0) continue;
+    add(f.x, f.y, 0.35, FOOD, Math.min(1, f.t * 4) * Math.min(1, (FOOD_LIFE - f.t) / 2));
+  }
+  return n;
+}
+
 // ---------- drawing into the grid ----------
 /** Tiles start at this strength; below it, a mark alone. */
 const TILE_AT = 0.42;
@@ -424,21 +501,24 @@ export function paint(p: Pond) {
   'worklet';
   const { cols, rows, t } = p;
   p.tile.fill(0); p.cover.fill(0);
-  // the water: light moving over it, here and there (worked out five times a second)
-  if (p.wAt < 0 || t - p.wAt > 0.2) {
-    p.wAt = t;
-    p.wm.fill(0); p.wa.fill(0);
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        const c = noise(x * 0.16 + t * 0.05, y * 0.16 - t * 0.03, t * 0.08);
-        if (p.sea) {
-          // a pale sea: the light lies on it as short dashes, sparse
-          if (c > 0.74) { const i = y * cols + x; p.wm[i] = DASH; p.wa[i] = (c - 0.74) * 1.6; }
-        } else if (c > 0.7) {
-          const i = y * cols + x;
-          p.wm[i] = c > 0.83 ? 3 : c > 0.77 ? 2 : 1;
-          p.wa[i] = (c - 0.7) * 0.9;
-        }
+  // the water: light moving over it, here and there. It moves slowly, so a
+  // quarter of the rows is worked out each frame (all of them the first time):
+  // the cost spread evenly instead of a spike every so often.
+  const all = p.wAt < 0;
+  p.wAt = t;
+  const ya = all ? 0 : p.wRow, yb = all ? rows : Math.min(rows, ya + Math.ceil(rows / 4));
+  p.wRow = yb >= rows ? 0 : yb;
+  for (let y = ya; y < yb; y++) {
+    for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      const c = noise(x * 0.16 + t * 0.05, y * 0.16 - t * 0.03, t * 0.08);
+      p.wm[i] = 0; p.wa[i] = 0;
+      if (p.sea) {
+        // a pale sea: the light lies on it as short dashes, sparse
+        if (c > 0.74) { p.wm[i] = DASH; p.wa[i] = (c - 0.74) * 1.6; }
+      } else if (c > 0.7) {
+        p.wm[i] = c > 0.83 ? 3 : c > 0.77 ? 2 : 1;
+        p.wa[i] = (c - 0.7) * 0.9;
       }
     }
   }
@@ -471,18 +551,12 @@ export function paint(p: Pond) {
     p.tile[i] = 0.5 * a; p.tileRGB[i] = FOOD; p.mark[i] = 11; p.markRGB[i] = 0xf6d79a; p.markA[i] = a;
   }
   // the koi, deep ones first
+  const px = p.qx, py = p.qy;
   for (const k of p.koi) {
     const shark = isShark(k.kind);
-    const amp = (0.28 + Math.min(1, k.v / 3) * 0.22 + Math.abs(k.turn) * 0.15) * (k.w / 1.8) * (shark ? 0.75 : 1);
-    // the spine as drawn: the tail swings side to side, more toward its end
-    const px = new Float32Array(N), py = new Float32Array(N);
+    pose(k, px, py);
     let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
     for (let j = 0; j < N; j++) {
-      const a = j < N - 1 ? Math.atan2(k.sy[j] - k.sy[j + 1], k.sx[j] - k.sx[j + 1]) : Math.atan2(k.sy[j - 1] - k.sy[j], k.sx[j - 1] - k.sx[j]);
-      const f = j / (N - 1);
-      const off = Math.sin(k.phase - j * 0.62) * amp * Math.pow(f, 1.5);
-      px[j] = k.sx[j] - Math.sin(a) * off;
-      py[j] = k.sy[j] + Math.cos(a) * off;
       if (px[j] < minX) minX = px[j]; if (px[j] > maxX) maxX = px[j];
       if (py[j] < minY) minY = py[j]; if (py[j] > maxY) maxY = py[j];
     }

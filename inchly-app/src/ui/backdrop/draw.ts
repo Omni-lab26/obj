@@ -64,11 +64,13 @@ export function makeGrid(cols: number, rows: number, cell: number) {
 
 // The glass floor, seen from below: a fine halftone screen of dots at 45°,
 // darker where someone's shadow falls; a sole on the glass is solid ink with a
-// crisp edge, and blurs into dots as it lifts.
+// crisp edge, and blurs into dots as it lifts. soft: the shadows alone,
+// smooth (behind the frosted pages).
 export const FLOOR_SKSL = `
 uniform float pitch;
 uniform float scale;
 uniform float3 ink;
+uniform float soft;
 uniform float4 bodies[${MAX_WALKERS}];
 uniform float4 heads[${MAX_WALKERS}];
 uniform float4 feet[${MAX_WALKERS * 2}];
@@ -115,6 +117,11 @@ half4 main(float2 xy) {
     return half4(0.0);
   }
   shade = clamp(shade, 0.0, 1.0);
+  // soft (behind the frosted pages): the shadows themselves, smooth, no dots
+  if (soft > 0.5) {
+    float sa = max(shade * 0.5, solid * 0.6);
+    return half4(half3(ink) * sa, sa);
+  }
   float2 g = float2(xy.x + xy.y, xy.y - xy.x) * 0.70710678 / pitch;
   float2 cell = fract(g) - 0.5;
   // dots grow with the shade and fade out at its rim, so the shadow has no edge

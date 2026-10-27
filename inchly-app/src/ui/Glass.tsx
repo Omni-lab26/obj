@@ -78,7 +78,7 @@ export function Glass({ children, style, radius = 999, interactive, tint, flat, 
 
 /**
  * A card's glass over a 背景 (none without one): on the frosted 背景 of the
- * pages, a white film (the frost behind does the blurring; on the timer it
+ * pages, a white film (the 背景 behind is drawn soft already; on the timer it
  * blurs itself), light falls across it, and its edge is soft — no line and no shadow, a
  * faint haze of its own color just outside, so the card melts into the koi
  * instead of sitting on them. The card's own background is the film; put the
@@ -90,7 +90,7 @@ export function Glass({ children, style, radius = 999, interactive, tint, flat, 
 const LIQUID_RIM = 'inset 0px 1px 0px rgba(255,255,255,0.92), inset 0px 0px 0px 0.75px rgba(255,255,255,0.5), inset 0px -1px 0px rgba(255,255,255,0.28), inset 0px 0px 22px rgba(255,255,255,0.26), inset 0px -3px 8px rgba(20,40,44,0.035)';
 export function Pane({ radius, small, liquid, blur }: {
   radius: number; /** a small tile among many: a denser film instead of a live blur (blurs cost) */ small?: boolean; liquid?: boolean;
-  /** blur what's behind (on the timer, where the 背景 isn't frosted); the pages' 背景 is frosted already (backdrop/Veil) */ blur?: boolean;
+  /** blur what's behind (on the timer, where the 背景 isn't frosted); the pages' 背景 is drawn soft already (backdrop/shared.ts) */ blur?: boolean;
 }) {
   const t = useT();
   if (t.backdrop === 'none') return null;

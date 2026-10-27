@@ -14,6 +14,7 @@ import { jpHm, session, useSession, useToday } from '@/screens/model';
 import { type ClockFace, elapsedOf, getState, setClockFace, setTarget, startStudy, togglePause, useStore, useSubjects } from '@/store';
 import { focus, useT } from '@/theme';
 import { setRevealing } from '@/ui/backdrop/live';
+import { holdBackdrop } from '@/ui/backdrop/shared';
 import { haptic, Press, SubjTile, Txt } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { LiveDot } from '@/ui/GroupParts';
@@ -81,7 +82,7 @@ export function TimerFrame({ zones, wash, light, over }: {
   useEffect(() => () => { setRevealing(false); }, []);
   const [pull] = useState(() => Gesture.Pan().activeOffsetY(12).failOffsetX([-20, 20])
     .onStart(() => { scheduleOnRN(setRevealing, true); })
-    .onUpdate((e) => { y.set(Math.max(0, e.translationY)); })
+    .onUpdate((e) => { holdBackdrop(); y.set(Math.max(0, e.translationY)); })
     .onEnd((e) => {
       if (e.translationY > 140 || e.velocityY > 900) {
         y.set(withTiming(height, { duration: 240, easing: Easing.out(Easing.quad) }, (done) => { if (done) scheduleOnRN(left); }));

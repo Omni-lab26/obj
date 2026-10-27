@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { feed, makePond, MARKS, paint, POND, SEA, step, WATER } from '../koi';
+import { feed, makePond, MARKS, paint, POND, SEA, soft, step, WATER } from '../koi';
 
 describe('the koi pond', () => {
   it('keeps its koi in (or just past the edge of) the pond, bodies whole', () => {
@@ -13,6 +13,39 @@ describe('the koi pond', () => {
       const seg = Math.hypot(k.sx[1] - k.sx[0], k.sy[1] - k.sy[0]);
       expect(seg).toBeCloseTo(k.len / 10, 3);
     }
+  });
+  it('drawn soft: a row of round shapes along each koi, in its colors, plus the pads — a few hundred numbers, not a grid', () => {
+    const p = makePond(44, 95, 23, 7);
+    for (let i = 0; i < 300; i++) step(p, 1 / 30);
+    feed(p, 20, 40);
+    step(p, 0.5);
+    const n = soft(p);
+    expect(n).toBeGreaterThanOrEqual(p.koi.length * 18 + p.pads.length);
+    expect(n * 5).toBeLessThanOrEqual(p.shapes.length);
+    let rings = 0;
+    for (let i = 0; i < n; i++) {
+      const [x, y, r, c, a] = p.shapes.slice(i * 5, i * 5 + 5);
+      for (const v of [x, y, r, c, a]) expect(Number.isFinite(v)).toBe(true);
+      expect(r).toBeGreaterThan(0);
+      expect(c).toBeGreaterThanOrEqual(0);
+      expect(c).toBeLessThanOrEqual(0xffffff);
+      expect(Math.abs(a)).toBeLessThanOrEqual(1);
+      if (a < 0) rings++;
+    }
+    // the tap left a ripple: drawn as a ring
+    expect(rings).toBeGreaterThan(0);
+    // the first shapes follow the first (deepest) koi, head to tail
+    const k = p.koi[0];
+    expect(Math.hypot(p.shapes[0] - k.x, p.shapes[1] - k.y)).toBeLessThan(k.len * 0.2);
+  });
+  it("the water's light is worked out a band of rows at a time, after the first frame", () => {
+    const p = makePond(40, 80, 5, 4);
+    paint(p);
+    const first = p.wRow;
+    expect(first).toBe(0);
+    step(p, 1 / 15);
+    paint(p);
+    expect(p.wRow).toBe(Math.ceil(80 / 4));
   });
   it('draws the deep koi before the ones near the surface', () => {
     const p = makePond(36, 78, 3, 5);

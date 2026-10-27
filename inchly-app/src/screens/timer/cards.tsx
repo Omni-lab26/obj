@@ -25,7 +25,7 @@ import { PlanArt } from '@/ui/PlanArt';
 import { glyphOf, SubjectGlyph } from '@/ui/SubjectGlyph';
 import { planSheet } from '@/ui/PlanSheets';
 import { BackdropView } from '@/ui/backdrop/Backdrop';
-import { backdropAvoid, feedAt, FLOOR, isDarkBackdrop, useBackdrop } from '@/ui/backdrop/shared';
+import { backdropAvoid, feedAt, FLOOR, holdBackdrop, isDarkBackdrop, useBackdrop } from '@/ui/backdrop/shared';
 import { WalkerTags } from '@/ui/backdrop/Tags';
 import { backdropSheet } from '@/ui/BackdropSheet';
 import { Pane } from '@/ui/Glass';
@@ -274,6 +274,8 @@ function Deck({ height }: { height: number }) {
   const turned = (i: number) => { setShown(i); haptic.tap(); };
   const onScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
+      // the cards are moving: the 背景's mosaic waits, so the swipe has the thread
+      holdBackdrop();
       x.value = e.contentOffset.x;
       const i = Math.max(0, Math.min(n - 1, Math.round(e.contentOffset.x / step)));
       if (i !== page.value) { page.value = i; scheduleOnRN(turned, i); }

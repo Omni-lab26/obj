@@ -7,9 +7,18 @@ import type { Crowd } from '../../lib/walkers';
 
 // The 背景 (design.ts Backdrop) is one world — the koi, the sharks or the
 // people on the glass floor — run once (BackdropEngine, at the root) and drawn
-// into a picture that every page, the side menu and the timer show
+// into pictures that every page, the side menu and the timer show
 // (BackdropView). The same koi everywhere, and the work done once however many
-// pages are open: a page only puts the picture on the screen.
+// pages are open: a page only puts a picture on the screen.
+//
+// Two drawings, made only while someone shows them:
+// - soft: behind the frosted pages — each fish a few blurred round shapes,
+//   the blur drawn in (no live blur of the screen over it). Cheap: a few
+//   hundred numbers a frame.
+// - sharp: the mosaic, where the 背景 is looked at (the timer, 眺める, and
+//   pages with 背景のぼかし off). Its thousands of cells are the costly part,
+//   so it's drawn less often, and hardly at all while a finger is moving
+//   something (holdBackdrop), so swipes and scrolls keep the thread.
 
 /** The cell of the koi's and sharks' grid, in points. */
 export const CELL = 9;
@@ -19,8 +28,22 @@ const hex = (n: number) => `#${n.toString(16).padStart(6, '0')}`;
 /** The ground of each 背景, under what moves on it (and while it loads). */
 export const GROUND: Record<Exclude<Backdrop, 'none'>, string> = { pond: hex(POND), sea: hex(SEA), walk: FLOOR };
 
-/** What the engine drew last. */
+/** What the engine drew last: the mosaic (sharp) and the blurred one (soft). */
 export const backdropPicture = makeMutable<SkPicture | null>(null);
+export const backdropSoft = makeMutable<SkPicture | null>(null);
+/** How many views show each drawing now: the engine draws only what someone shows. */
+export const sharpUsers = makeMutable(0);
+export const softUsers = makeMutable(0);
+/** The engine's clock (ms), and until when a finger is moving something (the mosaic waits). */
+export const backdropClock = makeMutable(0);
+export const backdropHeld = makeMutable(0);
+/** A swipe, a scroll or a pull under way: the mosaic is drawn rarely for a moment, so the gesture has the thread. Call it as it moves. */
+export function holdBackdrop() {
+  'worklet';
+  backdropHeld.value = backdropClock.value + 350;
+}
+/** The soft drawing's blur (points), by 背景のぼかし (設定): off (the pages show the mosaic), light, normal, strong. */
+export const SOFT_BLUR = [0, 4, 8, 13] as const;
 /** A rectangle (in points) for the koi and the walkers to keep off: the timer's card, while the timer is open. */
 export const backdropAvoid = makeMutable<{ x: number; y: number; w: number; h: number } | null>(null);
 /** The world: koi or sharks (a pond, in cells), or people (a crowd, in points). */

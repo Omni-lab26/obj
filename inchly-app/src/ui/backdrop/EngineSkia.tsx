@@ -1,21 +1,27 @@
-import { BlendMode, createPicture, PaintStyle, Skia, type SkColor, type SkRect, type SkRSXform } from '@shopify/react-native-skia';
+import { BlendMode, BlurStyle, createPicture, PaintStyle, Skia, type SkColor, type SkRect, type SkRSXform } from '@shopify/react-native-skia';
 import { useEffect, useMemo } from 'react';
 import { PixelRatio, StyleSheet } from 'react-native';
 import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
 
-import { makePond, MARKS, paint, step } from '../../lib/koi';
+import { makePond, MARKS, paint, soft, step } from '../../lib/koi';
 import { crowdUniforms, makeCrowd, MAX_WALKERS, stepCrowd } from '../../lib/walkers';
 import { FLOOR_SKSL, makeAtlas, makeGrid } from './draw';
-import { backdropAvoid, backdropPicture, backdropWorld, CELL, GROUND, walkerTags, type World } from './shared';
+import { backdropAvoid, backdropClock, backdropHeld, backdropPicture, backdropSoft, backdropWorld, CELL, GROUND, sharpUsers, softUsers, walkerTags, type World } from './shared';
 
-// The engine: moves the world on, on the UI thread, and draws it into a
-// picture — the koi and sharks 24 times a second (a mosaic of tinted tiles and
-// marks from one atlas, in one call; the colors made once and reused), the
-// glass floor 30 times (one shader). Renders nothing itself.
+// The engine: moves the world on, on the UI thread, 30 times a second, and
+// draws only what someone shows (shared.ts):
+// - soft, behind the frosted pages: each fish as round shapes in its colors,
+//   blurred as they're drawn (Skia's blurred circles are cheap on the GPU), so
+//   no view has to blur the screen live; 30 times a second.
+// - sharp, the mosaic (the timer, 眺める): thousands of tinted tiles and marks
+//   from one atlas, in one call — the costly part — 15 times a second, and
+//   only every fourth time (7.5) while a finger is moving something.
+// The glass floor is one shader either way (soft: its shadows smooth).
+// Renders nothing itself.
 
-export type EngineProps = { kind: World['kind']; width: number; height: number };
+export type EngineProps = { kind: World['kind']; width: number; height: number; /** the soft drawing's blur, points */ blur: number };
 
-export default function EngineSkia({ kind, width, height }: EngineProps) {
+export default function EngineSkia({ kind, width, height, blur }: EngineProps) {
   const cols = Math.ceil(width / CELL), rows = Math.ceil(height / CELL);
   const pr = Math.min(3, PixelRatio.get());
   const px = Math.round(CELL * pr);
@@ -30,26 +36,48 @@ export default function EngineSkia({ kind, width, height }: EngineProps) {
     line.setStyle(PaintStyle.Stroke);
     line.setStrokeWidth(StyleSheet.hairlineWidth);
     line.setColor(Skia.Color('rgba(20,34,40,0.06)'));
-    const floor = Skia.Paint();
     return {
-      atlas, slots, at, grid: makeGrid(cols, rows, CELL), line, tiles: Skia.Paint(), floor, ground: Skia.Color(GROUND[kind]),
+      atlas, slots, at, grid: makeGrid(cols, rows, CELL), line, tiles: Skia.Paint(), floor: Skia.Paint(), ground: Skia.Color(GROUND[kind]),
       effect: kind === 'walk' ? Skia.RuntimeEffect.Make(FLOOR_SKSL) : null, bounds: Skia.XYWHRect(0, 0, width, height),
     };
   }, [px, pr, cols, rows, kind, width, height]);
+  // the soft drawing's paints: a blurred fill, and a blurred ring for the ripples
+  const softPaints = useMemo(() => {
+    const sigma = Math.max(1, blur);
+    const fill = Skia.Paint();
+    fill.setAntiAlias(true);
+    fill.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, sigma, true));
+    const ring = Skia.Paint();
+    ring.setAntiAlias(true);
+    ring.setStyle(PaintStyle.Stroke);
+    ring.setStrokeWidth(2.5);
+    ring.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, Math.max(1, sigma * 0.5), true));
+    return { fill, ring };
+  }, [blur]);
   // until the first frame: the bare ground
   useEffect(() => {
-    if (!backdropPicture.value) backdropPicture.value = createPicture((c) => c.drawColor(fixed.ground), fixed.bounds);
+    const bare = createPicture((c) => c.drawColor(fixed.ground), fixed.bounds);
+    if (!backdropPicture.value) backdropPicture.value = bare;
+    if (!backdropSoft.value) backdropSoft.value = bare;
   }, [fixed]);
 
   const acc = useSharedValue(1);
+  const ticks = useSharedValue(0);
   // colors made once and reused (a color with its strength taken to 1/32): no new objects each frame
   const tints = useSharedValue<Record<number, SkColor> | null>(null);
   const made = useSharedValue(0);
   const count = sea ? Math.max(3, Math.min(5, Math.round((cols * rows) / 1000))) : Math.max(3, Math.min(7, Math.round((cols * rows) / 560)));
   const { atlas, slots, at, grid, line, tiles, floor, ground, effect, bounds } = fixed;
+  const { fill, ring } = softPaints;
 
   useFrameCallback((f) => {
     'worklet';
+    backdropClock.value = f.timestamp;
+    // 30 times a second, however fast the screen refreshes
+    acc.value += (f.timeSincePreviousFrame ?? 16) / 1000;
+    if (acc.value < 1 / 30) return;
+    const dt = acc.value;
+    acc.value = 0;
     let w = backdropWorld.value;
     if (!w || w.kind !== kind || w.w !== width || w.h !== height) {
       w = { kind, w: width, h: height, pond: null, crowd: null };
@@ -64,27 +92,39 @@ export default function EngineSkia({ kind, width, height }: EngineProps) {
       }
       backdropWorld.value = w;
     }
-    const dt = (f.timeSincePreviousFrame ?? 16) / 1000;
+    const wantSoft = softUsers.value > 0, wantSharp = sharpUsers.value > 0;
     const a = backdropAvoid.value;
+    let cache = tints.value;
+    // kept to a size: started afresh when it has grown large
+    if (!cache || made.value > 20000) { cache = {}; tints.value = cache; made.value = 0; }
+    const tint = (c: number, s: number) => {
+      const q = Math.min(31, Math.round(s * 31)), key = c * 32 + q;
+      let col = cache![key];
+      if (!col) { col = Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, q / 31); cache![key] = col; made.value += 1; }
+      return col;
+    };
+
     if (w.crowd) {
       const c = w.crowd;
       c.avoid = a ? { x0: a.x, y0: a.y, x1: a.x + a.w, y1: a.y + a.h } : null;
       stepCrowd(c, dt);
-      acc.value += dt;
-      if (acc.value < 1 / 30 || !effect) return;
-      acc.value = 0;
+      if (!effect || !(wantSoft || wantSharp)) return;
       const u = {
         bodies: new Array(MAX_WALKERS * 4).fill(0), heads: new Array(MAX_WALKERS * 4).fill(0), feet: new Array(MAX_WALKERS * 8).fill(0),
       };
       crowdUniforms(c, u);
       const scale = Math.min(1.5, Math.max(0.9, Math.min(width, height) / 393));
-      // in the shader's order: pitch, scale, ink, bodies, heads, feet
-      floor.setShader(effect.makeShader([3.4, scale, 0.09, 0.09, 0.09, ...u.bodies, ...u.heads, ...u.feet]));
-      const rec = Skia.PictureRecorder();
-      const cv = rec.beginRecording(bounds);
-      cv.drawColor(ground);
-      cv.drawPaint(floor);
-      backdropPicture.value = rec.finishRecordingAsPicture();
+      // in the shader's order: pitch, scale, ink, soft, bodies, heads, feet
+      const draw = (softly: boolean) => {
+        floor.setShader(effect.makeShader([3.4, scale, 0.09, 0.09, 0.09, softly ? 1 : 0, ...u.bodies, ...u.heads, ...u.feet]));
+        const rec = Skia.PictureRecorder();
+        const cv = rec.beginRecording(bounds);
+        cv.drawColor(ground);
+        cv.drawPaint(floor);
+        return rec.finishRecordingAsPicture();
+      };
+      if (wantSharp) backdropPicture.value = draw(false);
+      if (wantSoft) backdropSoft.value = draw(true);
       // the tags: where each walker is and who
       const t = new Array(MAX_WALKERS * 4).fill(0);
       for (let i = 0; i < c.walkers.length && i < MAX_WALKERS; i++) {
@@ -94,37 +134,37 @@ export default function EngineSkia({ kind, width, height }: EngineProps) {
       walkerTags.value = t;
       return;
     }
+
     const p = w.pond;
     if (!p) return;
     p.avoid = a ? { x0: a.x / CELL, y0: a.y / CELL, x1: (a.x + a.w) / CELL, y1: (a.y + a.h) / CELL } : null;
     step(p, dt);
-    acc.value += dt;
-    if (acc.value < 1 / 24) return;
-    acc.value = 0;
+
+    if (wantSoft) {
+      const n = soft(p), o = p.shapes;
+      const rec = Skia.PictureRecorder();
+      const cv = rec.beginRecording(bounds);
+      cv.drawColor(ground);
+      for (let i = 0; i < n; i++) {
+        const j = i * 5, s = o[j + 4];
+        if (s > -0.01 && s < 0.01) continue;
+        const pt = s < 0 ? ring : fill;
+        pt.setColor(tint(o[j + 3], Math.abs(s)));
+        cv.drawCircle(o[j] * CELL, o[j + 1] * CELL, o[j + 2] * CELL, pt);
+      }
+      backdropSoft.value = rec.finishRecordingAsPicture();
+    }
+
+    if (!wantSharp) return;
+    ticks.value += 1;
+    if (ticks.value % (f.timestamp < backdropHeld.value ? 4 : 2) !== 0) return;
     paint(p);
-    let cache = tints.value;
-    // kept to a size: started afresh when it has grown large
-    if (!cache || made.value > 20000) { cache = {}; tints.value = cache; made.value = 0; }
     const S: SkRect[] = [], T: SkRSXform[] = [], C: SkColor[] = [];
     const n = cols * rows;
     for (let i = 0; i < n; i++) {
       const tl = p.tile[i], mk = p.mark[i];
-      if (tl > 0.01) {
-        const c = p.tileRGB[i];
-        S.push(slots[0]); T.push(at[i]);
-        const q = Math.min(31, Math.round(tl * 31)), key = c * 32 + q;
-        let col = cache[key];
-        if (!col) { col = Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, q / 31); cache[key] = col; made.value += 1; }
-        C.push(col);
-      }
-      if (mk) {
-        const c = p.markRGB[i];
-        S.push(slots[mk]); T.push(at[i]);
-        const q = Math.min(31, Math.round(p.markA[i] * 31)), key = c * 32 + q;
-        let col = cache[key];
-        if (!col) { col = Float32Array.of(((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255, q / 31); cache[key] = col; made.value += 1; }
-        C.push(col);
-      }
+      if (tl > 0.01) { S.push(slots[0]); T.push(at[i]); C.push(tint(p.tileRGB[i], tl)); }
+      if (mk) { S.push(slots[mk]); T.push(at[i]); C.push(tint(p.markRGB[i], p.markA[i])); }
     }
     const rec = Skia.PictureRecorder();
     const cv = rec.beginRecording(bounds);
