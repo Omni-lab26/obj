@@ -22,6 +22,7 @@ import { BackdropEngine } from '@/ui/backdrop/Backdrop';
 import { SheetHost } from '@/ui/Sheet';
 import { isRoomShape, StudyRoom } from '@/ui/StudyRoom';
 import { toast, ToastHost } from '@/ui/Toast';
+import { TourHost } from '@/ui/Tour';
 
 // Simulated "someone started studying" pushes, so the live layer is visible in the mock.
 const FEED: [string, string][] = [['kaito', '物理'], ['れん', '世界史'], ['ひなた', '数学']];
@@ -61,7 +62,9 @@ export default function RootLayout() {
   });
   useEffect(() => { if (fonts) bundledFontsLoaded(); }, [fonts]);
   const signedIn = useStore((s) => !!s.account);
-  useFeed(ready && signedIn);
+  // not while the first-run 使い方 is up (a push would cover what it points at)
+  const toured = useStore((s) => s.tourDone);
+  useFeed(ready && signedIn && toured);
   useDayRollover();
   useReminders();
   // sideways, the whole app becomes the study room (see StudyRoom)
@@ -97,6 +100,7 @@ export default function RootLayout() {
         {room ? <StudyRoom /> : null}
         <MomentHost />
         <ToastHost />
+        {room ? null : <TourHost />}
       </GestureHandlerRootView>
     </ThemeProvider>
   );

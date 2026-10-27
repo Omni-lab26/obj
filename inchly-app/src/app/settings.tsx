@@ -154,6 +154,15 @@ export default function Settings() {
           </Press>
         </Section>
 
+        <Section title="使い方">
+          {/* the first-run bubbles again, on home */}
+          <Press onPress={() => { haptic.tap(); setState({ tourDone: false }); if (router.canGoBack()) router.back(); else router.replace('/'); }} scale={0.99} accessibilityRole="button" accessibilityLabel="使い方をもう一度見る"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10 }}>
+            <Txt size={14} w="500" style={{ flex: 1 }}>使い方をもう一度見る</Txt>
+            <Txt size={16} tone="ink3">›</Txt>
+          </Press>
+        </Section>
+
         <Section title="1日の目標">
           <View style={{ paddingVertical: 12 }}>
             <Choice value={String(s.goalMin)} onChange={(v) => setState({ goalMin: Number(v) })} options={[60, 120, 180, 240, 300].map((m) => ({ v: String(m), label: `${m / 60}時間` }))} />

@@ -94,6 +94,7 @@ export type State = {
   clockFace: ClockFace;
   studyTodo: string | null; // the ToDo this session works on (picked on the record page)
   todoLog: Done[]; // every ToDo finished and when, kept after the list is cleared (for EXP)
+  tourDone: boolean; // the first-run 使い方 (ui/Tour) was seen or skipped
 };
 
 let seq = 100;
@@ -175,6 +176,7 @@ export const INITIAL: State = {
   clockFace: 'digital',
   studyTodo: null,
   todoLog: [],
+  tourDone: false,
 };
 
 /** The sample account: a year of history, a plan, people it follows, a session under way. */

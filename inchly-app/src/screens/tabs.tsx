@@ -16,6 +16,7 @@ import { showStudyBar, TAB_BAR_H, tabBarBottom, useStudyBarShown } from '@/ui/Ch
 import { replayCharts } from '@/ui/appear';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
+import { TourSpot } from '@/ui/Tour';
 
 /** The tabs (layout.TABS) as the navigator has them, each with what a tap does. (The timer opens only from the study bar.) */
 export function useTabItems({ state, navigation }: BottomTabBarProps): TabItem[] {
@@ -82,17 +83,19 @@ export function StandardTabBar({ items, running, paused, mins, insets }: TabBarP
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist">
           {item ? <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 4, bottom: 4, width: item, borderRadius: 28, backgroundColor: 'rgba(118,118,128,0.14)' }, lens]} /> : null}
           {items.map((it) => (
-            <Press key={it.key} scale={0.86} accessibilityRole="tab" accessibilityState={{ selected: it.focused }} onPress={it.onPress}
-              accessibilityLabel={it.center ? (running ? `${it.label} · 勉強中 ${mins}分` : `${it.label}（時間割・ToDo・タイマー）`) : it.label}
-              style={{ flex: 1, height: TAB_BAR_H - 8, alignItems: 'center', justifyContent: 'center' }}>
-              <View>
-                <Icon name={it.icon} size={25} color={it.focused ? t.ink : t.ink2} filled={it.focused} width={it.focused ? 1.9 : 1.6} />
-                {/* the middle tab while studying, seen from another tab: a fluorescent green dot on the clock (crimson when paused) */}
-                {it.center && running && !it.focused ? (
-                  <View style={{ position: 'absolute', top: -2, right: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: paused ? CRIMSON : NEON, borderWidth: 1.5, borderColor: t.surface }} />
-                ) : null}
-              </View>
-            </Press>
+            <TourSpot key={it.key} id={`tab-${it.name}`} style={{ flex: 1 }}>
+              <Press scale={0.86} accessibilityRole="tab" accessibilityState={{ selected: it.focused }} onPress={it.onPress}
+                accessibilityLabel={it.center ? (running ? `${it.label} · 勉強中 ${mins}分` : `${it.label}（時間割・ToDo・タイマー）`) : it.label}
+                style={{ height: TAB_BAR_H - 8, alignItems: 'center', justifyContent: 'center' }}>
+                <View>
+                  <Icon name={it.icon} size={25} color={it.focused ? t.ink : t.ink2} filled={it.focused} width={it.focused ? 1.9 : 1.6} />
+                  {/* the middle tab while studying, seen from another tab: a fluorescent green dot on the clock (crimson when paused) */}
+                  {it.center && running && !it.focused ? (
+                    <View style={{ position: 'absolute', top: -2, right: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: paused ? CRIMSON : NEON, borderWidth: 1.5, borderColor: t.surface }} />
+                  ) : null}
+                </View>
+              </Press>
+            </TourSpot>
           ))}
         </View>
       </Glass>

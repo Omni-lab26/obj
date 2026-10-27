@@ -26,6 +26,7 @@ import { Rolling } from '@/ui/Rolling';
 import { Sticker } from '@/ui/Sticker';
 import { StudyChart } from '@/ui/StudyChart';
 import { toast } from '@/ui/Toast';
+import { TourSpot } from '@/ui/Tour';
 import { Pane } from '@/ui/Glass';
 
 // The standard home, as sections. It is the base layout's own drawing — and
@@ -60,7 +61,7 @@ export function StandardHeader() {
         <Avatar name={me} color="#6E56CF" size={34} />
       </Press>
       {/* everything about the app, one place: the gear at the top right */}
-      <IconBtn outline name="gear" label="設定" onPress={go.settings} />
+      <TourSpot id="settings"><IconBtn outline name="gear" label="設定" onPress={go.settings} /></TourSpot>
     </View>
   );
 }

@@ -15,6 +15,7 @@ import { STUDY_BAR_H, studyBarBottom } from '@/ui/Chrome';
 import { Dialog } from '@/ui/Dialog';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
+import { TourSpot } from '@/ui/Tour';
 
 // The study bar, like a music app's mini player, always on the tab bar on every
 // tab. Not studying, it shows the timetable: the plan whose time has come (with
@@ -143,11 +144,13 @@ function PlanBar({ insets }: { insets: EdgeInsets }) {
               <Txt num size={11.5} lh={15} color={now ? t.ink2 : t.ink3} numberOfLines={1}>{timed ? (now && b?.note ? `${when} · ${b.note}` : when) : 'このあとの予定はありません'}</Txt>
             </View>
           </Press>
-          <Press onPress={begin} haptics={false} scale={0.95} accessibilityLabel={now ? `${sj.name}の勉強を開始` : '勉強を開始'}
-            style={{ height: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Icon name="play" size={11} color={t.onInk} filled />
-            <Txt size={13} w="700" color={t.onInk}>勉強を開始</Txt>
-          </Press>
+          <TourSpot id="start">
+            <Press onPress={begin} haptics={false} scale={0.95} accessibilityLabel={now ? `${sj.name}の勉強を開始` : '勉強を開始'}
+              style={{ height: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Icon name="play" size={11} color={t.onInk} filled />
+              <Txt size={13} w="700" color={t.onInk}>勉強を開始</Txt>
+            </Press>
+          </TourSpot>
         </View>
       </Glass>
     </View>
@@ -161,35 +164,37 @@ function RunningBar({ insets }: { insets: EdgeInsets }) {
   const press = () => { haptic.soft(); togglePause(); };
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: studyBarBottom(insets.bottom), paddingHorizontal: 20 }}>
-      <SwipeToRecord>
-        <Glass radius={20} frost style={{ height: STUDY_BAR_H }}>
-          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 6, gap: 4 }}>
-            <Press onPress={go.timer} scale={0.98} accessibilityRole="button"
-              accessibilityLabel={`${ss.subject.name}を${ss.paused ? '一時停止中' : '勉強中'}。${line(ss)}。タイマーを開く`}
-              style={{ flex: 1, minWidth: 0, height: STUDY_BAR_H, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <View>
-                <SubjTile name={ss.subject.name} color={ss.subject.c} size={40} />
-                {playing ? <View style={{ position: 'absolute', left: -3, top: -3, width: 11, height: 11, borderRadius: 6, backgroundColor: NEON, borderWidth: 2, borderColor: t.surface }} /> : null}
-              </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Txt size={14} w="600" lh={18} color={ss.paused ? CRIMSON : undefined} numberOfLines={1}>{ss.subject.name}</Txt>
-                <Txt num size={11.5} lh={15} color={ss.paused ? CRIMSON : t.ink3} numberOfLines={1}>{line(ss)}</Txt>
-              </View>
-            </Press>
-            <Press onPress={press} haptics={false} scale={0.86} hitSlop={6}
-              accessibilityLabel={playing ? '一時停止' : '再開'}
-              style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name={playing ? 'pause' : 'play'} size={20} color={t.ink} filled />
-            </Press>
-          </View>
-          {/* from the timetable: how far toward the block's length, green inside it, red past it */}
-          {ss.plan ? (
-            <View pointerEvents="none" style={{ position: 'absolute', left: 16, right: 16, bottom: 0, height: 2.5, borderRadius: 2, backgroundColor: t.line, overflow: 'hidden' }}>
-              <View style={{ width: `${Math.min(100, (ss.elapsed / ss.plan) * 100)}%`, height: '100%', backgroundColor: ss.elapsed > ss.plan ? '#FF453A' : '#30D158' }} />
+      <TourSpot id="bar">
+        <SwipeToRecord>
+          <Glass radius={20} frost style={{ height: STUDY_BAR_H }}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 6, gap: 4 }}>
+              <Press onPress={go.timer} scale={0.98} accessibilityRole="button"
+                accessibilityLabel={`${ss.subject.name}を${ss.paused ? '一時停止中' : '勉強中'}。${line(ss)}。タイマーを開く`}
+                style={{ flex: 1, minWidth: 0, height: STUDY_BAR_H, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View>
+                  <SubjTile name={ss.subject.name} color={ss.subject.c} size={40} />
+                  {playing ? <View style={{ position: 'absolute', left: -3, top: -3, width: 11, height: 11, borderRadius: 6, backgroundColor: NEON, borderWidth: 2, borderColor: t.surface }} /> : null}
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Txt size={14} w="600" lh={18} color={ss.paused ? CRIMSON : undefined} numberOfLines={1}>{ss.subject.name}</Txt>
+                  <Txt num size={11.5} lh={15} color={ss.paused ? CRIMSON : t.ink3} numberOfLines={1}>{line(ss)}</Txt>
+                </View>
+              </Press>
+              <Press onPress={press} haptics={false} scale={0.86} hitSlop={6}
+                accessibilityLabel={playing ? '一時停止' : '再開'}
+                style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name={playing ? 'pause' : 'play'} size={20} color={t.ink} filled />
+              </Press>
             </View>
-          ) : null}
-        </Glass>
-      </SwipeToRecord>
+            {/* from the timetable: how far toward the block's length, green inside it, red past it */}
+            {ss.plan ? (
+              <View pointerEvents="none" style={{ position: 'absolute', left: 16, right: 16, bottom: 0, height: 2.5, borderRadius: 2, backgroundColor: t.line, overflow: 'hidden' }}>
+                <View style={{ width: `${Math.min(100, (ss.elapsed / ss.plan) * 100)}%`, height: '100%', backgroundColor: ss.elapsed > ss.plan ? '#FF453A' : '#30D158' }} />
+              </View>
+            ) : null}
+          </Glass>
+        </SwipeToRecord>
+      </TourSpot>
     </View>
   );
 }
