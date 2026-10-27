@@ -4,9 +4,10 @@ import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from 'react-native-svg'
 
 import { iconUri } from '../lib/planIcon';
 import { Txt } from './base';
+import { glyphOf, SubjectGlyph } from './SubjectGlyph';
 
 // A plan's picture: the photo picked for it, or, without one, the subject's
-// color (lighter at the top left) with its first letter, big.
+// color (lighter at the top left) with its picture (SubjectGlyph) or first letter, big.
 
 /** The color mixed toward white (t > 0) or black (t < 0). */
 export function tint(hex: string, t: number) {
@@ -21,6 +22,7 @@ export function PlanArt({ icon, name, color, size, radius }: { icon?: string; na
     return <Image source={{ uri: iconUri(icon) }} style={{ width: size, height: size, borderRadius: radius }} contentFit="cover" transition={150} accessibilityIgnoresInvertColors />;
   }
   const id = `art${color.slice(1)}`;
+  const glyph = glyphOf(name);
   return (
     <View style={{ width: size, height: size, borderRadius: radius, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} style={{ position: 'absolute' }}>
@@ -33,7 +35,8 @@ export function PlanArt({ icon, name, color, size, radius }: { icon?: string; na
         <Rect width={size} height={size} fill={`url(#${id})`} />
         <Circle cx={size * 0.72} cy={size * 0.76} r={size * 0.3} fill="rgba(255,255,255,0.14)" />
       </Svg>
-      <Txt size={size * 0.46} w="800" lh={size * 0.56} color="rgba(255,255,255,0.94)">{[...name][0] ?? ''}</Txt>
+      {glyph ? <SubjectGlyph glyph={glyph} size={size * 0.56} color="rgba(255,255,255,0.94)" width={1.7} />
+        : <Txt size={size * 0.46} w="800" lh={size * 0.56} color="rgba(255,255,255,0.94)">{[...name][0] ?? ''}</Txt>}
     </View>
   );
 }

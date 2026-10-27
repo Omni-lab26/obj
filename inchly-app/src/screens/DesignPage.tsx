@@ -10,7 +10,7 @@ import { setDesign } from '@/store';
 import { faceFor, focus, hair, lift, radius, useT } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
-import { BackdropSwatch } from '@/ui/BackdropSheet';
+import { BackdropSwatch, FrostControl } from '@/ui/BackdropSheet';
 import { Wordmark } from '@/ui/Brand';
 import { Sticker } from '@/ui/Sticker';
 import { Segmented } from '@/ui/Tabs';
@@ -53,6 +53,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
         <Options value={d.backdrop} onChange={(backdrop) => set({ backdrop })} cols={4} items={BACKDROP_ORDER.map((k) => ({ k, label: BACKDROPS[k].label, swatch: (
           <View style={{ alignItems: 'center' }}><BackdropSwatch id={k} /></View>
         ) }))} />
+        {d.backdrop !== 'none' ? <FrostControl /> : null}
       </Section>
 
       {d.backdrop === 'none' ? (

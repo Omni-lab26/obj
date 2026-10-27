@@ -676,6 +676,7 @@ export function migrate(saved: Record<string, unknown>, now: Date = new Date()):
     // the timer's background (studyBg) became the 背景 behind every page; its 科目の色 is 背景 なし
     if (!('backdrop' in (out.design as object)) && typeof saved.studyBg === 'string') d.backdrop = saved.studyBg === 'color' ? 'none' : (saved.studyBg as Design['backdrop']);
     if (!(d.backdrop in BACKDROPS)) d.backdrop = INITIAL.design.backdrop;
+    if (![0, 1, 2, 3].includes(d.frost)) d.frost = INITIAL.design.frost;
     // a replaced theme becomes its successor; the old black and orange streak capsules are peach now
     out.design = { ...d, theme: themeId(d.theme), streak: d.streak in STREAKS ? d.streak : 'peach' };
   }

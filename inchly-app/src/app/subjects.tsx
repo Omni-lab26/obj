@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AREAS, AreaId, PRESETS, Subject, SUBJECT_COLORS } from '@/data';
 import { addSubject, moveSubject, removeSubject, updateSubject, useStore } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
-import { Btn, haptic, Press, Txt } from '@/ui/base';
+import { Btn, haptic, Press, SubjCoin, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Choice, Field, Label } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
@@ -48,7 +48,7 @@ export default function Subjects() {
                 {list.map((x, i) => (
                   <Press key={x.id} onPress={() => subjectSheet(x)} scale={0.99} accessibilityLabel={`${x.name}。編集`}
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 14, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
-                    <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: x.c }} />
+                    <SubjCoin name={x.name} color={x.c} area={x.area} size={28} />
                     <Txt size={15} w="600" style={{ flex: 1 }}>{x.name}</Txt>
                     <Icon name="chev" size={13} color={t.ink3} />
                   </Press>
@@ -85,7 +85,7 @@ export default function Subjects() {
               <Pane radius={radius.card} />
               {hidden.map((x, i) => (
                 <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 14, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
-                  <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: x.c, opacity: 0.5 }} />
+                  <View style={{ opacity: 0.5 }}><SubjCoin name={x.name} color={x.c} area={x.area} size={28} /></View>
                   <Txt size={15} w="500" tone="ink2" style={{ flex: 1 }}>{x.name}</Txt>
                   <Btn small kind="line" label="戻す" onPress={() => { updateSubject(x.id, { hidden: false }); toast(`「${x.name}」を戻しました`); }} />
                 </View>

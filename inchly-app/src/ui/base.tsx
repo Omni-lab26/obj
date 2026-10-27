@@ -3,10 +3,12 @@ import { ReactNode, useRef } from 'react';
 import { ActivityIndicator, GestureResponderEvent, Image, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
+import type { AreaId } from '../data';
 import type { Reaction } from '../design';
 import { AVATAR } from '../photos';
 import { ease, face, hair, lift, onColor, radius, Theme, useT } from '../theme';
 import { Pane } from './Glass';
+import { glyphOf, SubjectGlyph } from './SubjectGlyph';
 import { Icon, IconName } from './Icon';
 import { TextureFill } from './Texture';
 
@@ -208,18 +210,24 @@ export function Avatar({ name, color, size = 32, ring }: { name: string; color: 
   );
 }
 /** A subject's coin, like a wallet's token icon: its first character, white on the subject colour. */
-export function SubjCoin({ name, color, size = 36 }: { name: string; color: string; size?: number }) {
+export function SubjCoin({ name, color, size = 36, area }: { name: string; color: string; size?: number; area?: AreaId }) {
+  const g = glyphOf(name, area);
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: '#fff', fontSize: size * 0.44, lineHeight: size * 0.56, fontWeight: '700', fontFamily: face(size * 0.44) }}>{[...name][0]}</Text>
+      {g ? <SubjectGlyph glyph={g} size={size * 0.6} color="#fff" width={2} /> : (
+        <Text style={{ color: '#fff', fontSize: size * 0.44, lineHeight: size * 0.56, fontWeight: '700', fontFamily: face(size * 0.44) }}>{[...name][0]}</Text>
+      )}
     </View>
   );
 }
-/** A subject as a small square tile, like an album cover: its color and its first letter. */
-export function SubjTile({ name, color, size = 40 }: { name: string; color: string; size?: number }) {
+/** A subject's square: its color, with its picture (SubjectGlyph) or first letter. */
+export function SubjTile({ name, color, size = 40, area }: { name: string; color: string; size?: number; area?: AreaId }) {
+  const g = glyphOf(name, area);
   return (
     <View style={{ width: size, height: size, borderRadius: size * 0.24, backgroundColor: color, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: onColor(color), fontSize: size * 0.42, lineHeight: size * 0.54, fontWeight: '700', fontFamily: face(size * 0.42) }}>{[...name][0]}</Text>
+      {g ? <SubjectGlyph glyph={g} size={size * 0.62} color={onColor(color)} width={1.9} /> : (
+        <Text style={{ color: onColor(color), fontSize: size * 0.42, lineHeight: size * 0.54, fontWeight: '700', fontFamily: face(size * 0.42) }}>{[...name][0]}</Text>
+      )}
     </View>
   );
 }

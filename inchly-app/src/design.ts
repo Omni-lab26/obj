@@ -202,8 +202,12 @@ export const BACKDROPS: Record<Backdrop, { label: string; dark: boolean }> = {
 export type Design = {
   theme: ThemeId; bg: keyof typeof BGS; ink: keyof typeof INKS; corners: keyof typeof CORNERS; card: keyof typeof CARDS; streak: keyof typeof STREAKS; timer: keyof typeof TIMERS;
   backdrop: Backdrop;
+  /** how much the pages frost the 背景 (backdrop/Veil): 0 none … 3 strong */
+  frost: Frost;
 };
-export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'black', corners: 'm', card: 'pearl', streak: 'peach', timer: 'night', backdrop: 'pond' };
+export type Frost = 0 | 1 | 2 | 3;
+export const FROSTS: { v: Frost; label: string }[] = [{ v: 0, label: 'なし' }, { v: 1, label: '弱め' }, { v: 2, label: 'ふつう' }, { v: 3, label: '強め' }];
+export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'black', corners: 'm', card: 'pearl', streak: 'peach', timer: 'night', backdrop: 'pond', frost: 2 };
 /** The backdrop in use: the one picked, with the standard theme; none with the others. */
 export const backdropOf = (d: Design): Backdrop => (themeId(d.theme) === 'standard' && d.backdrop in BACKDROPS ? d.backdrop : 'none');
 
@@ -219,7 +223,7 @@ export const THEMES_OPEN = true;
 
 /** Called by the store whenever the saved design changes. */
 export function applyDesign(d: Design) {
-  if (!THEMES_OPEN) d = { ...DEFAULT_DESIGN, backdrop: d.backdrop };
+  if (!THEMES_OPEN) d = { ...DEFAULT_DESIGN, backdrop: d.backdrop, frost: d.frost };
   if (d === design) return;
   design = d;
   version += 1;

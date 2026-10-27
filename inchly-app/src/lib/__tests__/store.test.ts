@@ -42,12 +42,15 @@ describe('recording', () => {
   // the six days before today, each with a record
   const week = () => Array.from({ length: 6 }, (_, i) => ({ id: `w${i}`, s: 'en', min: 30, date: addDays(dateKey(), -(i + 1)), at: '20:00' }));
   it('saves on today’s date and stops the clock', () => {
+    // at noon, so the 25 minutes don't reach back past midnight (they'd be split between two days)
+    jest.useFakeTimers({ now: new Date(2026, 9, 21, 12), doNotFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
     reset({ running: true, base: 25 * 60, startedAt: Date.now() });
     expect(commitRecord()).toEqual({ min: 25, ticket: false, exp: 25, levelUp: null });
     const s = getState();
     expect(s.sessions.at(-1)?.date).toBe(dateKey());
     expect(s.running).toBe(false);
     expect(s.todayMin).toBe(25);
+    jest.useRealTimers();
   });
   it('a record that crosses a level says so', () => {
     reset({ running: true, base: 80 * 60, startedAt: Date.now() }); // 0 → 80 EXP: Lv.1 → Lv.2 at 72
@@ -210,6 +213,11 @@ describe('migrate', () => {
     expect('studyBg' in migrate({ v: 3, design, studyBg: 'walk' })).toBe(false);
     // a choice made since stays
     expect(migrate({ v: 3, design: { ...design, backdrop: 'walk' }, studyBg: 'pond' }).design?.backdrop).toBe('walk');
+  });
+  it('gives older saves the usual frost on the 背景, and keeps a choice', () => {
+    expect(migrate({ v: 3, design: { theme: 'standard' } }).design?.frost).toBe(2);
+    expect(migrate({ v: 3, design: { theme: 'standard', frost: 0 } }).design?.frost).toBe(0);
+    expect(migrate({ v: 3, design: { theme: 'standard', frost: 9 } }).design?.frost).toBe(2);
   });
 });
 

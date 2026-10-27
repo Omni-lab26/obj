@@ -3,12 +3,13 @@ import { ReactNode } from 'react';
 import { ScrollView, Share, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { THEMES_OPEN } from '@/design';
+import { backdropOf, BACKDROPS, THEMES_OPEN } from '@/design';
 import { subj } from '@/data';
 import { recordsCsv } from '@/lib/csv';
 import { DmFrom, getState, isMinor, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
+import { backdropSheet, FrostControl } from '@/ui/BackdropSheet';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Choice, RadioCards } from '@/ui/Form';
 import { openSheet } from '@/ui/Sheet';
@@ -120,10 +121,20 @@ export default function Settings() {
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10 }}>
             <View style={{ flex: 1 }}>
               <Txt size={14} w="500">デザイン</Txt>
-              <Txt size={12} tone="ink3">背景・メインの色・角・カード・タイマー。ホームを右にスワイプでも開きます</Txt>
+              <Txt size={12} tone="ink3">テーマ・背景・メインの色・角・カード・タイマー</Txt>
             </View>
             <Txt size={16} tone="ink3">›</Txt>
           </Press>
+          <Press onPress={backdropSheet} scale={0.99} accessibilityRole="button" accessibilityLabel={`背景を変える（いまは ${BACKDROPS[backdropOf(s.design)].label}）`}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
+            <View style={{ flex: 1 }}>
+              <Txt size={14} w="500">背景</Txt>
+              <Txt size={12} tone="ink3">すべてのページとタイマーのうしろで動くもの（スタンダードのテーマのとき）</Txt>
+            </View>
+            <Txt size={13} tone="ink3">{BACKDROPS[backdropOf(s.design)].label}</Txt>
+            <Txt size={16} tone="ink3">›</Txt>
+          </Press>
+          <View style={{ paddingTop: 10, paddingBottom: 14, borderTopWidth: hair, borderTopColor: t.line }}><FrostControl /></View>
         </Section> : null}
 
         <Section title="科目">

@@ -1,10 +1,11 @@
 import { StyleSheet, View } from 'react-native';
 
-import { type Backdrop, BACKDROPS, themeId, themeOf, useDesign } from '../design';
+import { type Backdrop, BACKDROPS, FROSTS, themeId, themeOf, useDesign } from '../design';
 import { setDesign } from '../store';
 import { FLOOR, GROUND } from './backdrop/shared';
 import { Btn, haptic, Press, Txt } from './base';
 import { openSheet } from './Sheet';
+import { Segmented } from './Tabs';
 
 // 背景: what moves behind every page and the timer (design.ts Backdrop) — the
 // koi pond, sharks in a pale sea, people walking over a glass floor, or none.
@@ -51,6 +52,7 @@ function BackdropChoice({ close }: { close: () => void }) {
           </Press>
         );
       })}
+      <View style={{ paddingTop: 6 }}><FrostControl /></View>
     </View>
   );
 }
@@ -94,6 +96,22 @@ export function BackdropSwatch({ id }: { id: Backdrop }) {
   return (
     <View style={[frame, { backgroundColor: '#ECEDF0', padding: 8, justifyContent: 'flex-end' }]}>
       <View style={{ height: 22, borderRadius: 5, backgroundColor: '#fff' }} />
+    </View>
+  );
+}
+
+/** 背景のぼかし: how much the pages frost the 背景 (the timer keeps it sharp). */
+export function FrostControl() {
+  const d = useDesign();
+  const on = themeId(d.theme) === 'standard' && d.backdrop !== 'none';
+  return (
+    <View style={{ gap: 8, opacity: on ? 1 : 0.45 }} pointerEvents={on ? 'auto' : 'none'}>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+        <Txt size={14} w="600">背景のぼかし</Txt>
+        <Txt size={11.5} tone="ink3" style={{ flex: 1 }}>{on ? 'ページのうしろの背景をどれだけぼかすか。タイマーはくっきりのまま' : '背景を選ぶと変えられます'}</Txt>
+      </View>
+      <Segmented fit value={String(d.frost ?? 2)} onChange={(v) => { haptic.tap(); setDesign({ frost: Number(v) as (typeof FROSTS)[number]['v'] }); }}
+        options={FROSTS.map((f) => ({ v: String(f.v), label: f.label }))} />
     </View>
   );
 }

@@ -22,6 +22,7 @@ import { Dialog } from '@/ui/Dialog';
 import { Icon } from '@/ui/Icon';
 import { orderSheet } from '@/ui/OrderSheet';
 import { PlanArt } from '@/ui/PlanArt';
+import { glyphOf, SubjectGlyph } from '@/ui/SubjectGlyph';
 import { planSheet } from '@/ui/PlanSheets';
 import { BackdropView } from '@/ui/backdrop/Backdrop';
 import { backdropAvoid, feedAt, FLOOR, isDarkBackdrop, useBackdrop } from '@/ui/backdrop/shared';
@@ -448,6 +449,7 @@ function PlanCard({ b, no, i, x, step, k, tone, live, held, begin, record, more 
   const sj = subj(b.s);
   const sk = useSkin(sj.c);
   const art = Math.round(251 * k);
+  const glyph = glyphOf(sj.name, sj.area);
   const drift = useAnimatedStyle(() => ({ transform: [{ translateX: Math.max(-1, Math.min(1, (x.value - i * step) / step)) * 0.05 * step }, { scale: 1.14 }] }));
   const time = b.start ? (b.min ? `${b.start}–${endOf(b)}` : `${b.start}から`) : '時刻なし';
   const min = held ? Math.max(1, Math.round(held.sec / 60)) : 0;
@@ -463,6 +465,8 @@ function PlanCard({ b, no, i, x, step, k, tone, live, held, begin, record, more 
         </Animated.View>
         {b.icon ? null : (
           <View pointerEvents="none" style={[StyleSheet.absoluteFill, { padding: 14 * k, justifyContent: 'space-between' }]}>
+            {/* the subject's picture, big and quiet on its cover (化学 a flask …) */}
+            {glyph ? <View style={{ position: 'absolute', right: 16 * k, top: 40 * k }}><SubjectGlyph glyph={glyph} size={art * 0.42} color="rgba(255,255,255,0.5)" width={1.4} /></View> : null}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Txt num size={fs(11, 10)} w="600" color="rgba(255,255,255,0.78)">{String(no).padStart(2, '0')}</Txt>
               <Txt num size={fs(11, 10)} w="600" color="rgba(255,255,255,0.78)">{b.start ?? ''}</Txt>
