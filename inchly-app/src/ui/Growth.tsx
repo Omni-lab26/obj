@@ -5,13 +5,11 @@ import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, with
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
-import { THEMES_OPEN } from '../design';
 import { dayOf } from '../lib/history';
 import { Session, useStore, useStreak } from '../store';
 import { ease, lift, useT } from '../theme';
 import { Card, haptic, Press, Txt } from './base';
 import { Rolling } from './Rolling';
-import { ThemeCard } from '../screens/ThemeCard';
 import { useReplay } from './appear';
 import { DECK_H, GraphDeck } from './GraphDeck';
 import { Sticker, StickerName } from './Sticker';
@@ -115,8 +113,6 @@ export function Growth() {
           <Versus label="1日平均 · 先月より" up={g.avgNow >= g.avgThen} value={`${Math.round(Math.abs(g.avgNow - g.avgThen))}分`} />
         </View>
 
-        {/* the badges moved to home; here, the themes to try on (hidden until they are finished) */}
-        {THEMES_OPEN ? <ThemeCard /> : null}
       </View>
     </View>
   );

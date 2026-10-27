@@ -10,6 +10,7 @@ import { DmFrom, getState, isMinor, LiveScope, setState, unblock, useNow, useSto
 import { hair, lift, radius, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { backdropSheet, CardFillControl, FrostControl } from '@/ui/BackdropSheet';
+import { ThemeCard } from '@/screens/ThemeCard';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Choice, RadioCards } from '@/ui/Form';
 import { openSheet } from '@/ui/Sheet';
@@ -117,8 +118,10 @@ export default function Settings() {
         </Section>
 
         {THEMES_OPEN ? <Section title="見た目">
+          {/* the themes, to try one on the spot (it was on マイページ) */}
+          <ThemeCard bare />
           <Press onPress={() => router.push('/design')} scale={0.99} accessibilityRole="button" accessibilityLabel="デザインを変える"
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10 }}>
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
             <View style={{ flex: 1 }}>
               <Txt size={14} w="500">デザイン</Txt>
               <Txt size={12} tone="ink3">テーマ・背景・メインの色・角・カード・タイマー</Txt>
