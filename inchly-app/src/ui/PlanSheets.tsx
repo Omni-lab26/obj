@@ -19,11 +19,11 @@ import { toast } from './Toast';
 // is and 追加 along the top, then only what a plan needs — the icon and what to
 // do side by side (the top of its card in the timer), the start time, a memo.
 // The icon is the subject: tap it to pick one from the subjects' pictures (化学
-// is a flask …) or add one; a photo can stand in for the picture. A plan runs
-// 60 minutes (an edited one keeps its length, and a weekly one stays weekly).
+// is a flask …) or add one; a photo can stand in for the picture. The end is
+// optional: left empty, the plan runs until the next one (a weekly one stays weekly).
 // Drawn the way iOS draws a new event, and kept low in contrast: やめる and 追加
-// as blue text, small grey names over white groups, the start as Calendar's
-// 開始 row with the day and the time in grey chips that open iOS's pickers.
+// as blue text, small grey names over white groups, 時刻 and 終了 as Calendar's
+// rows with the day and the times in grey chips that open iOS's pickers.
 // The keyboard waits for a tap.
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
@@ -40,7 +40,7 @@ export function planSheet(o: { date?: Date; existing?: Block; kind?: Kind } = {}
 /** The timetable's 追加: a new plan for today (the day can be changed in the sheet). */
 export const planCalendar = () => planSheet({ date: new Date() });
 
-type Open = 'date' | 'start' | 'subject' | 'new' | null;
+type Open = 'date' | 'start' | 'end' | 'subject' | 'new' | null;
 const DAY = 24 * 60;
 
 function Editor({ close, date, existing, kind: kind0 }: { close: () => void; date?: Date; existing?: Block; kind: Kind }) {
@@ -52,9 +52,12 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const [d, setD] = useState(() => (existing?.date ? parseKey(existing.date) : day0(date ?? new Date())));
   const nextHour = Math.min(22, new Date().getHours() + 1) * 60;
   const [start, setStart] = useState(existing?.start ? toMin(existing.start) : nextHour);
-  // only the start is set here: a plan runs an hour (or as long as it did), and the timer can go on past it
-  const len = existing?.min || 60;
+  // the end is optional: a length in minutes, 0 for none (the plan then runs until the next one starts).
+  // Moving the start keeps the length, as in Calendar.
+  const [len, setLen] = useState(existing?.min ?? 0);
   const end = start + len;
+  // the end picked on its wheel, after the start (past midnight: the next day)
+  const setEnd = (m: number) => setLen(((m - start + DAY) % DAY) || DAY);
   // a weekly plan stays weekly; a new one is for its day (repeat is set from the timetable's …)
   const weekly = !!existing && !existing.date;
   const known = existing ? subjects.find((x) => x.id === existing.s) : undefined;
@@ -94,12 +97,12 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
     if (!s) s = addSubject({ name: name.trim(), area: 'other', c: color });
     saveBlock({
       id: existing?.id, s, t: title.trim(), note: note.trim() || undefined, icon,
-      start: toClock(start), min: end - start,
+      start: toClock(start), min: len,
       days: weekly ? (existing && !existing.date ? existing.days : [mondayIndex(d)]) : [], date: weekly ? undefined : dateKey(d),
     });
     haptic.success();
     close();
-    toast(existing ? '予定を保存しました' : '予定を追加しました', `${weekly ? `毎週${DOW[mondayIndex(d)]}曜` : shortDate(d)} ${toClock(start)}から${nextDay ? '（翌日まで）' : ''} · ${name.trim()}`);
+    toast(existing ? '予定を保存しました' : '予定を追加しました', `${weekly ? `毎週${DOW[mondayIndex(d)]}曜` : shortDate(d)} ${toClock(start)}から${len ? `${nextDay ? '翌' : ''}${toClock(end % DAY)}まで` : ''} · ${name.trim()}`);
   };
 
   const lenLabel = len % 60 === 0 ? `${len / 60}時間` : len > 60 ? `${Math.floor(len / 60)}時間${len % 60}分` : `${len}分`;
@@ -182,19 +185,34 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
             </Group>
           </Field>
 
-          {/* the start as in Calendar: 開始, then the day and the time as grey chips that open iOS's pickers under the row */}
+          {/* 時刻 and 終了 as in Calendar: the day and the times as grey chips that open iOS's pickers under their row; the end can stay empty */}
           <Field>
             <Group>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 56 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 52 }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Txt size={16}>開始</Txt>
-                  <Txt num size={12} tone="ink3" numberOfLines={1}>{`${weekly ? `毎週${DOW[mondayIndex(d)]}曜 · ` : ''}${toClock(end % DAY)}まで（${lenLabel}）`}</Txt>
+                  <Txt size={16}>時刻</Txt>
+                  {weekly ? <Txt size={12} tone="ink3" numberOfLines={1}>{`毎週${DOW[mondayIndex(d)]}曜`}</Txt> : null}
                 </View>
                 <PickChip label={chipDate(d)} on={open === 'date'} onPress={() => toggle('date')} a11y="始める日を変える" />
                 <PickChip label={toClock(start)} on={open === 'start'} onPress={() => toggle('start')} a11y="始める時刻を変える" />
               </View>
               {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => setD(day0(x))} onDone={() => setOpen(null)} /></Opens> : null}
               {open === 'start' ? <Opens><TimePick value={start} onChange={setStart} onDone={() => setOpen(null)} /></Opens> : null}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 52, borderTopWidth: hair, borderTopColor: t.line }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Txt size={16}>終了</Txt>
+                  <Txt num size={12} tone="ink3" numberOfLines={1}>{len ? `${nextDay ? '翌日 · ' : ''}${lenLabel}` : 'なくてもOK'}</Txt>
+                </View>
+                {len ? (
+                  <Press onPress={() => { haptic.tap(); setLen(0); if (open === 'end') setOpen(null); }} hitSlop={10} scale={0.9} accessibilityLabel="終わる時刻を消す"
+                    style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="x" size={11} color={t.ink3} />
+                  </Press>
+                ) : null}
+                <PickChip label={len ? toClock(end % DAY) : 'なし'} on={open === 'end'} a11y={len ? '終わる時刻を変える' : '終わる時刻を入れる'}
+                  onPress={() => { if (!len) setLen(60); toggle('end'); }} />
+              </View>
+              {open === 'end' && len ? <Opens><TimePick value={end % DAY} onChange={setEnd} onDone={() => setOpen(null)} /></Opens> : null}
             </Group>
           </Field>
         </>
