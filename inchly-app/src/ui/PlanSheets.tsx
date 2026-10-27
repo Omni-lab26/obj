@@ -6,7 +6,7 @@ import { AREAS, guessArea, OTHER_COLORS, shadeFor, subj } from '../data';
 import { dateKey, mondayIndex, parseKey } from '../lib/time';
 import { pickPlanIcon } from '../lib/planIcon';
 import { Block, toClock, toMin } from '../lib/timetable';
-import { addDeadline, addSubject, removeBlock, saveBlock, useSubjects } from '../store';
+import { addDeadline, addSubject, dropIcon, keepIcon, removeBlock, saveBlock, useStore, useSubjects } from '../store';
 import { font, hair, noOutline, useT } from '../theme';
 import { haptic, Press, SubjTile, Txt } from './base';
 import { DatePick, Opens, PickChip, SMOOTH, TimePick } from './DateTime';
@@ -19,9 +19,11 @@ import { toast } from './Toast';
 // is and 追加 along the top, then only what a plan needs — the icon and what to
 // do side by side (the top of its card in the timer), the start time, a memo.
 // The icon is the subject: tap it to pick one from the subjects' pictures (化学
-// is a flask …) or make a new one; 足す picks a photo to stand in for the
-// picture. The end is optional: left empty, the plan runs until the next one (a
-// weekly one stays weekly). Things move with iOS's curve, never a bounce.
+// is a flask …) or make a new one; 足す (always last) picks a photo to stand in
+// for the picture, and keeps it as your own icon — next time it's in the grid,
+// with the subject it was picked with (long press takes it off). The times are
+// optional: no start, the plan is just for its day; no end, it runs until the
+// next one (a weekly one stays weekly). Things move with iOS's curve, never a bounce.
 // Drawn the way iOS draws a new event, and kept low in contrast: やめる and 追加
 // as blue text, small grey names over white groups, 日付 and 時刻 (start 〜 end)
 // as Calendar's rows, in grey chips that open iOS's pickers.
@@ -52,13 +54,16 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const [title, setTitle] = useState(existing?.t ?? '');
   const [d, setD] = useState(() => (existing?.date ? parseKey(existing.date) : day0(date ?? new Date())));
   const nextHour = Math.min(22, new Date().getHours() + 1) * 60;
-  const [start, setStart] = useState(existing?.start ? toMin(existing.start) : nextHour);
+  // the start is optional too (null: no time — the plan is just for its day)
+  const [start, setStartAt] = useState<number | null>(existing?.start ? toMin(existing.start) : null);
+  const setStart = (m: number) => setStartAt(m);
   // the end is optional: a length in minutes, 0 for none (the plan then runs until the next one starts).
   // Moving the start keeps the length, as in Calendar.
-  const [len, setLen] = useState(existing?.min ?? 0);
-  const end = start + len;
+  const [len, setLen] = useState(existing?.start ? existing.min ?? 0 : 0);
+  const at = start ?? 0;
+  const end = at + len;
   // the end picked on its wheel, after the start (past midnight: the next day)
-  const setEnd = (m: number) => setLen(((m - start + DAY) % DAY) || DAY);
+  const setEnd = (m: number) => setLen(((m - at + DAY) % DAY) || DAY);
   // a weekly plan stays weekly; a new one is for its day (repeat is set from the timetable's …)
   const weekly = !!existing && !existing.date;
   const known = existing ? subjects.find((x) => x.id === existing.s) : undefined;
@@ -67,6 +72,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const [note, setNote] = useState(existing?.note ?? '');
   const [icon, setIcon] = useState(existing?.icon);
   const [open, setOpen] = useState<Open>(null);
+  const mine = useStore((x) => x.myIcons);
 
   const plan = kind === 'plan';
   const match = subjects.find((x) => x.name === name.trim());
@@ -78,7 +84,8 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
     Keyboard.dismiss();
     setOpen(null);
     const got = await pickPlanIcon().catch(() => null);
-    if (got) { haptic.soft(); setIcon(got); }
+    // kept as your own icon, with the subject chosen now, to pick again next time
+    if (got) { haptic.soft(); setIcon(got); keepIcon(got, match?.id); }
   };
 
   const save = () => {
@@ -98,12 +105,12 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
     if (!s) s = addSubject({ name: name.trim(), area: guessArea(name), c: color });
     saveBlock({
       id: existing?.id, s, t: title.trim(), note: note.trim() || undefined, icon,
-      start: toClock(start), min: len,
+      start: start === null ? undefined : toClock(start), min: start === null ? 0 : len,
       days: weekly ? (existing && !existing.date ? existing.days : [mondayIndex(d)]) : [], date: weekly ? undefined : dateKey(d),
     });
     haptic.success();
     close();
-    toast(existing ? '予定を保存しました' : '予定を追加しました', `${weekly ? `毎週${DOW[mondayIndex(d)]}曜` : shortDate(d)} ${toClock(start)}から${len ? `${nextDay ? '翌' : ''}${toClock(end % DAY)}まで` : ''} · ${name.trim()}`);
+    toast(existing ? '予定を保存しました' : '予定を追加しました', `${weekly ? `毎週${DOW[mondayIndex(d)]}曜` : shortDate(d)}${start === null ? '' : ` ${toClock(start)}から${len ? `${nextDay ? '翌' : ''}${toClock(end % DAY)}まで` : ''}`} · ${name.trim()}`);
   };
 
   const lenLabel = len % 60 === 0 ? `${len / 60}時間` : len > 60 ? `${Math.floor(len / 60)}時間${len % 60}分` : `${len}分`;
@@ -163,17 +170,31 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
                         </Press>
                       );
                     })}
-                    {/* 足す: a photo of your own as the icon (the subject stays what it is) */}
-                    <Press onPress={choose} scale={0.92} accessibilityLabel={icon ? 'アイコンの写真を選び直す' : 'アイコンにする写真を選ぶ'} accessibilityState={{ checked: !!icon }}
-                      style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
-                      <View style={{ padding: 2, borderRadius: 8, borderWidth: 2, borderColor: icon ? t.blue : 'transparent' }}>
-                        {icon ? <PlanArt icon={icon} name={name.trim() || '？'} color={color} size={38} radius={5} /> : (
-                          <View style={{ width: 38, height: 38, borderRadius: 5, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line2, alignItems: 'center', justifyContent: 'center' }}>
-                            <Icon name="plus" size={15} color={t.ink2} />
+                    {/* your own icons: photos picked before, each with the subject it was picked with (long press: remove) */}
+                    {mine.map((x) => {
+                      const on = icon === x.icon;
+                      const xs = x.s ? subjects.find((y) => y.id === x.s) : undefined;
+                      return (
+                        <Press key={x.id} onPress={() => { haptic.tap(); setIcon(x.icon); if (xs) { setName(xs.name); setColor(xs.c); } setOpen(null); }}
+                          onLongPress={() => { haptic.warn(); dropIcon(x.id); toast('アイコンを外しました', 'この予定の写真はそのまま'); }}
+                          scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`自分のアイコン${xs ? `（${xs.name}）` : ''}にする。長押しで外す`}
+                          style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
+                          <View style={{ padding: 2, borderRadius: 8, borderWidth: 2, borderColor: on ? t.blue : 'transparent' }}>
+                            <PlanArt icon={x.icon} name={xs?.name ?? '？'} color={xs?.c ?? color} size={38} radius={5} />
                           </View>
-                        )}
+                          <Txt size={11.5} w={on ? '600' : '400'} color={on ? t.blue : t.ink2} numberOfLines={1}>{xs?.name ?? '写真'}</Txt>
+                        </Press>
+                      );
+                    })}
+                    {/* 足す, always last: a photo of your own, kept as an icon to use again */}
+                    <Press onPress={choose} scale={0.92} accessibilityLabel="写真からアイコンを作る"
+                      style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
+                      <View style={{ padding: 2 }}>
+                        <View style={{ width: 38, height: 38, borderRadius: 5, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line2, alignItems: 'center', justifyContent: 'center' }}>
+                          <Icon name="plus" size={15} color={t.ink2} />
+                        </View>
                       </View>
-                      <Txt size={11.5} w={icon ? '600' : '400'} color={icon ? t.blue : t.ink2}>{icon ? '写真' : '足す'}</Txt>
+                      <Txt size={11.5} tone="ink2">足す</Txt>
                     </Press>
                   </View>
                   <View style={{ alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
@@ -207,20 +228,26 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 16, paddingRight: 10, minHeight: 52, borderTopWidth: hair, borderTopColor: t.line }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Txt size={16}>時刻</Txt>
-                  <Txt num size={12} tone="ink3" numberOfLines={1}>{len ? `${nextDay ? '翌日まで · ' : ''}${lenLabel}` : '終わりはなくてもOK'}</Txt>
+                  {len ? <Txt num size={12} tone="ink3" numberOfLines={1}>{`${nextDay ? '翌日まで · ' : ''}${lenLabel}`}</Txt> : null}
                 </View>
-                <PickChip label={toClock(start)} on={open === 'start'} onPress={() => toggle('start')} a11y="始める時刻を変える" />
-                <Txt size={15} tone="ink3">〜</Txt>
-                <PickChip label={len ? toClock(end % DAY) : 'なし'} on={open === 'end'} a11y={len ? '終わる時刻を変える' : '終わる時刻を入れる'}
-                  onPress={() => { if (!len) setLen(60); toggle('end'); }} />
-                {len ? (
-                  <Press onPress={() => { haptic.tap(); setLen(0); if (open === 'end') setOpen(null); }} hitSlop={10} scale={0.9} accessibilityLabel="終わる時刻を消す"
-                    style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="x" size={11} color={t.ink3} />
-                  </Press>
-                ) : null}
+                {/* neither is needed: なし until you tap it (then the next hour, or an hour after the start) */}
+                <PickChip label={start === null ? 'なし' : toClock(start)} on={open === 'start'} a11y={start === null ? '始める時刻を入れる' : '始める時刻を変える'}
+                  onPress={() => { if (start === null) setStartAt(nextHour); toggle('start'); }} />
+                {start === null ? null : (
+                  <>
+                    <Txt size={15} tone="ink3">〜</Txt>
+                    <PickChip label={len ? toClock(end % DAY) : 'なし'} on={open === 'end'} a11y={len ? '終わる時刻を変える' : '終わる時刻を入れる'}
+                      onPress={() => { if (!len) setLen(60); toggle('end'); }} />
+                    {/* ×: takes off the end, else the start */}
+                    <Press onPress={() => { haptic.tap(); if (len) setLen(0); else setStartAt(null); setOpen(null); }} hitSlop={10} scale={0.9}
+                      accessibilityLabel={len ? '終わる時刻を消す' : '始める時刻を消す'}
+                      style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon name="x" size={11} color={t.ink3} />
+                    </Press>
+                  </>
+                )}
               </View>
-              {open === 'start' ? <Opens><TimePick value={start} onChange={setStart} onDone={() => setOpen(null)} /></Opens> : null}
+              {open === 'start' && start !== null ? <Opens><TimePick value={start} onChange={setStart} onDone={() => setOpen(null)} /></Opens> : null}
               {open === 'end' && len ? <Opens><TimePick value={end % DAY} onChange={setEnd} onDone={() => setOpen(null)} /></Opens> : null}
             </Group>
           </Field>

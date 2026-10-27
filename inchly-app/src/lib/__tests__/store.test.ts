@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { addSubject, startFree, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
+import { addSubject, dropIcon, keepIcon, MAX_ICONS, startFree, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
 import { AREA_SHADES, FREE, OTHER_COLORS, subj } from '../../data';
 import { backdropOf, DEFAULT_DESIGN } from '../../design';
 import { addDays, dateKey } from '../time';
@@ -210,6 +210,20 @@ describe('自習 (studying with no plan to hand)', () => {
     // its card in today's timetable becomes what it turned out to be
     expect(getState().timetable.find((b) => b.id === plan.id)).toMatchObject({ s: 'ph', t: '相対性理論' });
     expect(getState().running).toBe(false);
+  });
+});
+
+describe('your own icons', () => {
+  it('keeps a picked photo with its subject, newest first, once each, a dozen at most', () => {
+    reset();
+    keepIcon('a.jpg', 'ph');
+    keepIcon('b.jpg');
+    keepIcon('a.jpg', 'ph');
+    expect(getState().myIcons.map((x) => [x.icon, x.s])).toEqual([['a.jpg', 'ph'], ['b.jpg', undefined]]);
+    for (let i = 0; i < 20; i++) keepIcon(`${i}.jpg`);
+    expect(getState().myIcons).toHaveLength(MAX_ICONS);
+    dropIcon(getState().myIcons[0].id);
+    expect(getState().myIcons[0].icon).toBe('18.jpg');
   });
 });
 

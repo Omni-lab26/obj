@@ -23,6 +23,8 @@ export type Session = { id: string; s: string; min: number; date: string; at: st
 export type Todo = { id: string; s: string; t: string; d: boolean; carried?: number; dl?: string; doneOn?: string }; // carried: days it has slid; dl: deadline id
 /** A session stopped to go on to another plan, not recorded yet: its subject, time, when it stopped, and the plan it came from. */
 export type Held = { id: string; s: string; sec: number; end: number; blockId?: string; planMin?: number };
+/** A photo made into an icon (lib/planIcon), kept to use again; s: the subject it was picked with, which picking it brings along. */
+export type MyIcon = { id: string; icon: string; s?: string };
 export type Deadline = { id: string; t: string; mo: number; day: number; urgent?: boolean; note?: string };
 export type Account = { name: string; handle: string; grade: string; birthYear: number; aim: string; via: 'apple' | 'mail' | 'demo' };
 export type LiveScope = 'all' | 'followers' | 'none';
@@ -54,6 +56,7 @@ export type State = {
   planNext: { s: string; at: string } | null; // that next plan: its subject and start
   planBlock: string | null; // the timetable block this session was started from (ending it finishes the plan)
   doneBlocks: { id: string; date: string }[]; // plans finished on a day: their cards leave that day's timer
+  myIcons: MyIcon[]; // photos made into icons on the plan form, kept to pick again (newest first)
   held: Held[]; // sessions stopped to go on to the next plan, waiting to be recorded (one by one, or all at the end)
   dayOrder: { date: string; ids: string[] } | null; // the order you put the day's plans in (the timer's cards)
   todos: Todo[];
@@ -135,6 +138,7 @@ export const INITIAL: State = {
   planNext: null,
   planBlock: null,
   doneBlocks: [],
+  myIcons: [],
   held: [],
   dayOrder: null,
   todos: [],
@@ -317,6 +321,14 @@ export function planNow(s: string, now: Date = new Date()): Block {
   const b: Block = { id: newId('b'), s, start: `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`, min: 0, days: [], date: dateKey(now) };
   setState((st) => ({ timetable: [...st.timetable, b] }));
   return b;
+}
+/** Your own icons: a photo picked on the plan form is kept (with the subject it was picked with), newest first, a dozen at most. */
+export const MAX_ICONS = 12;
+export function keepIcon(icon: string, s?: string) {
+  setState((st) => ({ myIcons: [{ id: newId('i'), icon, ...(s ? { s } : {}) }, ...st.myIcons.filter((x) => x.icon !== icon)].slice(0, MAX_ICONS) }));
+}
+export function dropIcon(id: string) {
+  setState((st) => ({ myIcons: st.myIcons.filter((x) => x.id !== id) }));
 }
 export function saveBlock(b: Omit<Block, 'id'> & { id?: string }) {
   setState((s) => ({
