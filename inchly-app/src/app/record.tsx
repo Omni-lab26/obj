@@ -24,7 +24,8 @@ import { Pane } from '@/ui/Glass';
 // it stays yours or goes to the timeline too. 記録する saves it and goes back
 // to where you were (the timer stays as it was); 続ける goes back too, and the
 // clock runs again. 自習 (started with no plan) has no subject yet: here you
-// pick it, and write what you studied — that's what the charts show (contents).
+// can pick it, and write what you studied (the charts show it as contents) —
+// or not: recorded as 自習, it waits on the study page to be sorted.
 
 const clock = (d: Date) => `${d.getHours()}:${pad(d.getMinutes())}`;
 const MAX = 140;
@@ -73,10 +74,10 @@ export default function Record() {
 
   const save = () => {
     if (tooLong) { haptic.warn(); return; }
-    if (free && !pick) { haptic.warn(); toast('科目を選んでください', 'グラフは科目ごとに分かれます'); return; }
     setPhase('saving');
     const text = note.trim();
-    const about = free ? { s: pick!, what: what.trim() || undefined } : {};
+    // 自習 with no subject picked is recorded as 自習, to sort later (the study page's あとで仕分け)
+    const about = free ? { s: pick ?? FREE, what: what.trim() || undefined } : {};
     const done = h ? commitHeld(h.id, { note: text || undefined, min, ...about }) : commitRecord({ todoId, note: text || undefined, min, ...about });
     if (!done) { router.back(); return; }
     const { min: m, ticket, exp, levelUp } = done;
@@ -115,7 +116,10 @@ export default function Record() {
           {free ? (
             // 自習: which subject it was (needed: the charts are by subject), and what — the charts' contents
             <View style={{ gap: 10, paddingBottom: 16, marginBottom: 14, borderBottomWidth: hair, borderBottomColor: t.line }}>
-              <Txt size={13} w="700" tone="ink2">{pick ? '科目' : '何の科目を勉強した？'}</Txt>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+                <Txt size={13} w="700" tone="ink2">{pick ? '科目' : '何の科目を勉強した？'}</Txt>
+                {pick ? null : <Txt size={11.5} tone="ink3" style={{ flex: 1 }} numberOfLines={1}>選ばなくても記録できます（あとで仕分け）</Txt>}
+              </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 6 }} accessibilityRole="radiogroup">
                 {subjects.map((x) => {
                   const on = pick === x.id;

@@ -1,23 +1,26 @@
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, TextInput, View } from 'react-native';
 
-import { subj } from '@/data';
+import { FREE, subj } from '@/data';
 import { Deadlines } from '@/screens/home/standard';
 import { blocksOn, endOf, slotsOf, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
-import { doneOn, useNow, useStore } from '@/store';
-import { hair, type, useT } from '@/theme';
-import { Card, Press, Txt } from '@/ui/base';
+import { doneOn, type Session, updateSession, useNow, useStore, useSubjects } from '@/store';
+import { hair, noOutline, type, useT } from '@/theme';
+import { Card, haptic, Press, SubjTile, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
 import { blockSheet } from '@/ui/Editors';
 import { planCalendar } from '@/ui/PlanSheets';
+import { openSheet } from '@/ui/Sheet';
+import { toast } from '@/ui/Toast';
 import { Icon } from '@/ui/Icon';
 import { PlanArt } from '@/ui/PlanArt';
 
 // The middle tab: the plan — the timetable and the deadlines. Each row is the
 // time, the plan's icon, and its subject with the memo under it; a tap edits it.
 // Nothing starts here: studying is run from the study bar above the tab bar
-// (勉強を開始, and the timer opens only from there).
+// (勉強を開始, and the timer opens only from there). At the top, あとで仕分け:
+// 自習 recorded without a subject, each waiting for one (and what it was).
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 
@@ -31,6 +34,7 @@ export default function Study() {
           <Txt size={type.title + 4} w="800">勉強</Txt>
           <Txt size={12} tone="ink3">{jpDate(new Date())}</Txt>
         </View>
+        <Unsorted />
         <Timetable />
         <View style={{ paddingHorizontal: 16, paddingTop: 14 }}><Deadlines /></View>
         <View style={{ height: 8, backgroundColor: t.backdrop !== 'none' ? 'transparent' : t.canvas }} />
@@ -121,5 +125,85 @@ function AddLink({ label, onPress }: { label: string; onPress: () => void }) {
       <Icon name="plus" size={12} color={t.greenInk} />
       <Txt size={12.5} w="600" color={t.greenInk}>{label}</Txt>
     </Press>
+  );
+}
+
+// ---------- あとで仕分け ----------
+const md = (key: string) => { const [, m, d] = key.split('-').map(Number); return `${m}/${d}`; };
+const span = (x: Session) => {
+  const [h, m] = x.at.split(':').map(Number);
+  const a = h * 60 + m - x.min;
+  const c = (v: number) => `${Math.floor(((v % 1440) + 1440) % 1440 / 60)}:${String(((v % 60) + 60) % 60).padStart(2, '0')}`;
+  return `${c(a)}〜${x.at}`;
+};
+/** 自習 recorded with no subject: one row each, newest first; a tap gives it one (charts are by subject). */
+function Unsorted() {
+  const t = useT();
+  const sessions = useStore((x) => x.sessions);
+  const list = sessions.filter((x) => x.s === FREE).slice().reverse();
+  if (!list.length) return null;
+  return (
+    <View style={{ paddingTop: 14 }}>
+      <View style={{ paddingHorizontal: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+        <Txt size={type.head} w="700">あとで仕分け</Txt>
+        <Txt size={12} tone="ink3" style={{ flex: 1 }} numberOfLines={1}>{`科目のない自習 ${list.length}件`}</Txt>
+      </View>
+      <Card style={{ marginHorizontal: 16 }} pad={0}>
+        {list.map((x, i) => (
+          <Press key={x.id} onPress={() => sortSheet(x)} scale={0.99} accessibilityLabel={`${md(x.date)} ${span(x)} ${x.min}分の自習。科目を付ける`}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingLeft: 12, paddingRight: 12, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
+            <View style={{ width: 48 }}>
+              <Txt num size={13} w="700" lh={16}>{md(x.date)}</Txt>
+              <Txt num size={11} tone="ink3" lh={14}>{x.at}</Txt>
+            </View>
+            <SubjTile name="自習" color={subj(FREE).c} area="other" size={38} radius={9} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Txt size={14.5} w="700">{`自習 ${x.min}分`}</Txt>
+              <Txt size={12} tone={x.what || x.note ? 'ink2' : 'ink3'} numberOfLines={1}>{x.what || x.note || span(x)}</Txt>
+            </View>
+            <Txt size={12.5} w="600" color={t.blue}>仕分ける</Txt>
+          </Press>
+        ))}
+      </Card>
+    </View>
+  );
+}
+function sortSheet(x: Session) {
+  openSheet((close) => <SortForm x={x} close={close} />, { grouped: true, center: true, corner: 12 });
+}
+/** One 自習 record: what it was (optional), then a tap on its subject saves it. */
+function SortForm({ x, close }: { x: Session; close: () => void }) {
+  const t = useT();
+  const subjects = useSubjects();
+  const [what, setWhat] = useState(x.what ?? '');
+  const put = (id: string) => {
+    haptic.success();
+    updateSession(x.id, { s: id, what: what.trim() || undefined });
+    close();
+    toast(`${subj(id).name}に仕分けました`, `${md(x.date)} ${x.min}分${what.trim() ? ` · ${what.trim()}` : ''}`);
+  };
+  return (
+    <View style={{ gap: 14 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 40 }}>
+        <Press onPress={close} scale={0.94} hitSlop={8} accessibilityLabel="やめる" style={{ minWidth: 64 }}>
+          <Txt size={16} color={t.blue}>やめる</Txt>
+        </Press>
+        <Txt size={16} w="600" accessibilityRole="header" style={{ flex: 1, textAlign: 'center' }}>仕分ける</Txt>
+        <View style={{ minWidth: 64 }} />
+      </View>
+      <Txt size={13} tone="ink2" style={{ textAlign: 'center' }}>{`${md(x.date)} ${span(x)} · 自習 ${x.min}分`}</Txt>
+      <TextInput value={what} onChangeText={(v) => setWhat(v.slice(0, 30))} placeholder="内容（例：相対性理論）" placeholderTextColor={t.ink3} accessibilityLabel="勉強した内容"
+        style={[{ height: 44, paddingHorizontal: 14, borderRadius: 10, backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)', fontSize: 16, color: t.ink }, noOutline]} />
+      <Txt size={12.5} tone="ink3" style={{ paddingLeft: 4 }}>科目を押すと仕分けられます</Txt>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', borderRadius: 10, paddingVertical: 6, backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)' }} accessibilityRole="radiogroup">
+        {subjects.map((s) => (
+          <Press key={s.id} onPress={() => put(s.id)} scale={0.92} accessibilityLabel={`${s.name}に仕分ける`}
+            style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
+            <SubjTile name={s.name} color={s.c} area={s.area} size={40} radius={8} />
+            <Txt size={11.5} tone="ink2" numberOfLines={1}>{s.name}</Txt>
+          </Press>
+        ))}
+      </View>
+    </View>
   );
 }

@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { addSubject, dropIcon, keepIcon, MAX_ICONS, startFree, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
+import { addSubject, dropIcon, keepIcon, MAX_ICONS, startFree, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSession, updateSubject } from '../../store';
 import { AREA_SHADES, FREE, OTHER_COLORS, subj } from '../../data';
 import { backdropOf, DEFAULT_DESIGN } from '../../design';
 import { addDays, dateKey } from '../time';
@@ -210,6 +210,15 @@ describe('自習 (studying with no plan to hand)', () => {
     // its card in today's timetable becomes what it turned out to be
     expect(getState().timetable.find((b) => b.id === plan.id)).toMatchObject({ s: 'ph', t: '相対性理論' });
     expect(getState().running).toBe(false);
+  });
+  it('can be recorded with no subject, as 自習, and sorted later', () => {
+    reset();
+    startFree();
+    commitRecord({ min: 25, s: FREE });
+    const x = getState().sessions.at(-1)!;
+    expect(x.s).toBe(FREE);
+    updateSession(x.id, { s: 'ma', what: 'ベクトル' });
+    expect(getState().sessions.at(-1)).toMatchObject({ s: 'ma', what: 'ベクトル', min: 25 });
   });
 });
 
