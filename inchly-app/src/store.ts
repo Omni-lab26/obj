@@ -19,7 +19,8 @@ import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
 
 /** One study session, on the calendar day it was recorded. */
 /** what: what it was about — the plan's memo (else its やること) when it came from a plan; note: the memo written when recording. */
-export type Session = { id: string; s: string; min: number; date: string; at: string; note?: string; what?: string; manual?: boolean };
+/** block: the timetable plan it came from (so 自習 sorted later can change its plan too). kept: 自習 left as 自習 on purpose (several subjects at once, or not worth writing) — not waiting to be sorted. */
+export type Session = { id: string; s: string; min: number; date: string; at: string; note?: string; what?: string; manual?: boolean; block?: string; kept?: boolean };
 export type Todo = { id: string; s: string; t: string; d: boolean; carried?: number; dl?: string; doneOn?: string }; // carried: days it has slid; dl: deadline id
 /** A session stopped to go on to another plan, not recorded yet: its subject, time, when it stopped, and the plan it came from. */
 export type Held = { id: string; s: string; sec: number; end: number; blockId?: string; planMin?: number };
@@ -441,7 +442,7 @@ export const MAX_TICKETS = 3;
  */
 export type Recorded = { min: number; ticket: boolean; exp: number; levelUp: number | null };
 /** s and what: given on the record page for 自習 (the subject and what it was), else the session's own. */
-type Rec = { s: string; min: number; end: Date; note?: string; todoId?: string; blockId?: string; what?: string };
+type Rec = { s: string; min: number; end: Date; note?: string; todoId?: string; blockId?: string; what?: string; kept?: boolean };
 /** Saves these records (each split at midnight; a plan's is finished on the day it started), with what they earned; `rest` goes into the same update. */
 function saveRecords(recs: Rec[], now: Date, rest: Partial<State>): Recorded {
   const s = state;
@@ -455,7 +456,7 @@ function saveRecords(recs: Rec[], now: Date, rest: Partial<State>): Recorded {
     const what = r.what?.trim() || plan?.note?.trim() || plan?.t?.trim() || undefined;
     // 自習's plan becomes what it turned out to be: its subject, and what was studied
     if (plan && plan.s === FREE && r.s !== FREE) timetable = timetable.map((b) => (b.id === plan.id ? { ...b, s: r.s, ...(what ? { t: what } : {}) } : b));
-    sessions = [...sessions, ...splitAtMidnight(r.min, r.end).map((x) => ({ id: newId('s'), s: r.s, note, ...(what ? { what } : {}), ...x }))];
+    sessions = [...sessions, ...splitAtMidnight(r.min, r.end).map((x) => ({ id: newId('s'), s: r.s, note, ...(what ? { what } : {}), ...(r.blockId ? { block: r.blockId } : {}), ...(r.kept ? { kept: true } : {}), ...x }))];
     if (todo) {
       if (!todo.d) todoLog = [...todoLog, { id: todo.id, date: today }];
       todos = todos.map((x) => (x.id === todo.id ? { ...x, d: true, doneOn: today } : x));
@@ -471,13 +472,13 @@ function saveRecords(recs: Rec[], now: Date, rest: Partial<State>): Recorded {
 }
 const STOPPED: Partial<State> = { running: false, paused: false, base: 0, studyTodo: null, planMin: null, planNext: null, planBlock: null };
 /** The session under way, as a record. */
-type RecOpts = { todoId?: string; note?: string; min?: number; s?: string; what?: string };
+type RecOpts = { todoId?: string; note?: string; min?: number; s?: string; what?: string; kept?: boolean };
 const current = (s: State, now: Date, opts?: RecOpts): Rec => ({
   s: opts?.s ?? s.subj, min: Math.max(1, Math.round(opts?.min ?? elapsedOf(s, now.getTime()) / 60)), end: now,
-  note: opts?.note, todoId: opts?.todoId, blockId: s.planBlock ?? undefined, what: opts?.what,
+  note: opts?.note, todoId: opts?.todoId, blockId: s.planBlock ?? undefined, what: opts?.what, kept: opts?.kept,
 });
 const ofHeld = (h: Held, opts?: RecOpts): Rec => ({
-  s: opts?.s ?? h.s, min: Math.max(1, Math.round(opts?.min ?? h.sec / 60)), end: new Date(h.end), note: opts?.note, blockId: h.blockId, what: opts?.what,
+  s: opts?.s ?? h.s, min: Math.max(1, Math.round(opts?.min ?? h.sec / 60)), end: new Date(h.end), note: opts?.note, blockId: h.blockId, what: opts?.what, kept: opts?.kept,
 });
 
 /** Starts 自習: studying with no plan to hand, the subject left for the record page. It goes into today's timetable from now, as the timer's card. */
@@ -510,6 +511,23 @@ export function addSession(x: Omit<Session, 'id'>) {
 }
 export function updateSession(id: string, patch: Partial<Session>) {
   setState((s) => ({ sessions: s.sessions.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
+}
+/** Sorts a 自習 record recorded with no subject: it takes the subject (and what it was), and so does its 自習 plan in the timetable. */
+export function sortFree(id: string, s: string, what?: string) {
+  setState((st) => {
+    const x = st.sessions.find((y) => y.id === id);
+    if (!x) return {};
+    const w = what?.trim() || undefined;
+    return {
+      sessions: st.sessions.map((y) => (y.id === id ? { ...y, s, what: w } : y)),
+      timetable: x.block ? st.timetable.map((b) => (b.id === x.block && b.s === FREE ? { ...b, s, ...(w ? { t: w } : {}) } : b)) : st.timetable,
+    };
+  });
+}
+/** Leaves a 自習 record as 自習 (it stops waiting to be sorted; the charts keep it as 自習). */
+export function keepFree(id: string, what?: string) {
+  const w = what?.trim() || undefined;
+  setState((st) => ({ sessions: st.sessions.map((y) => (y.id === id ? { ...y, kept: true, ...(w ? { what: w } : {}) } : y)) }));
 }
 export function removeSession(id: string) {
   setState((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) }));

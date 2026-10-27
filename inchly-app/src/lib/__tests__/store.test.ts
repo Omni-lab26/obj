@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { addSubject, dropIcon, keepIcon, MAX_ICONS, startFree, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSession, updateSubject } from '../../store';
+import { addSubject, dropIcon, keepIcon, MAX_ICONS, startFree, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, keepFree, sortFree, updateSubject } from '../../store';
 import { AREA_SHADES, FREE, OTHER_COLORS, subj } from '../../data';
 import { backdropOf, DEFAULT_DESIGN } from '../../design';
 import { addDays, dateKey } from '../time';
@@ -217,8 +217,21 @@ describe('自習 (studying with no plan to hand)', () => {
     commitRecord({ min: 25, s: FREE });
     const x = getState().sessions.at(-1)!;
     expect(x.s).toBe(FREE);
-    updateSession(x.id, { s: 'ma', what: 'ベクトル' });
+    expect(x.block).toBeTruthy();
+    sortFree(x.id, 'ma', 'ベクトル');
     expect(getState().sessions.at(-1)).toMatchObject({ s: 'ma', what: 'ベクトル', min: 25 });
+    // its 自習 plan in the timetable becomes the subject too
+    expect(getState().timetable.find((b) => b.id === x.block)).toMatchObject({ s: 'ma', t: 'ベクトル' });
+    // or kept as 自習 on purpose: it stops waiting to be sorted
+    startFree();
+    commitRecord({ min: 50, s: FREE, kept: true });
+    expect(getState().sessions.at(-1)).toMatchObject({ s: FREE, kept: true });
+    startFree();
+    commitRecord({ min: 15, s: FREE });
+    const y = getState().sessions.at(-1)!;
+    expect(y.kept).toBeUndefined();
+    keepFree(y.id, '英単語と古文');
+    expect(getState().sessions.at(-1)).toMatchObject({ s: FREE, kept: true, what: '英単語と古文' });
   });
 });
 

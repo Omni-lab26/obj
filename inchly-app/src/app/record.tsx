@@ -47,6 +47,7 @@ export default function Record() {
   const [pick, setPick] = useState<string | null>(null);
   const [what, setWhat] = useState('');
   const sid = free ? pick ?? FREE : own;
+  const keepFree = free && pick === FREE;
   const sj = subj(sid);
   const [min, setMin] = useState(() => Math.max(1, Math.round((h ? h.sec : elapsedOf(getState())) / 60)));
   const [end] = useState(() => (h ? new Date(h.end) : new Date()));
@@ -77,7 +78,8 @@ export default function Record() {
     setPhase('saving');
     const text = note.trim();
     // 自習 with no subject picked is recorded as 自習, to sort later (the study page's あとで仕分け)
-    const about = free ? { s: pick ?? FREE, what: what.trim() || undefined } : {};
+    // 自習のまま: kept as 自習 on purpose (not sorted later); nothing picked: 自習, waiting in あとで仕分け
+    const about = free ? { s: pick && pick !== FREE ? pick : FREE, what: what.trim() || undefined, kept: pick === FREE } : {};
     const done = h ? commitHeld(h.id, { note: text || undefined, min, ...about }) : commitRecord({ todoId, note: text || undefined, min, ...about });
     if (!done) { router.back(); return; }
     const { min: m, ticket, exp, levelUp } = done;
@@ -118,9 +120,17 @@ export default function Record() {
             <View style={{ gap: 10, paddingBottom: 16, marginBottom: 14, borderBottomWidth: hair, borderBottomColor: t.line }}>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
                 <Txt size={13} w="700" tone="ink2">{pick ? '科目' : '何の科目を勉強した？'}</Txt>
-                {pick ? null : <Txt size={11.5} tone="ink3" style={{ flex: 1 }} numberOfLines={1}>選ばなくても記録できます（あとで仕分け）</Txt>}
+                {pick ? null : <Txt size={11.5} tone="ink3" style={{ flex: 1 }} numberOfLines={1}>選ばなければ、あとで仕分けに</Txt>}
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 6 }} accessibilityRole="radiogroup">
+                {/* 自習のまま: several subjects at once, or nothing worth writing — kept as 自習, not sorted later */}
+                <Press onPress={() => { haptic.tap(); setPick(keepFree ? null : FREE); }} scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: keepFree }} accessibilityLabel="自習のまま（仕分けない）"
+                  style={{ width: 64, alignItems: 'center', gap: 4 }}>
+                  <View style={{ padding: 2, borderRadius: 10, borderWidth: 2, borderColor: keepFree ? t.blue : 'transparent' }}>
+                    <SubjTile name="自習" color={subj(FREE).c} area="other" size={40} radius={8} />
+                  </View>
+                  <Txt size={11.5} w={keepFree ? '700' : '500'} color={keepFree ? t.blue : t.ink2} numberOfLines={1}>自習のまま</Txt>
+                </Press>
                 {subjects.map((x) => {
                   const on = pick === x.id;
                   return (

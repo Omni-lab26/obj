@@ -5,7 +5,7 @@ import { FREE, subj } from '@/data';
 import { Deadlines } from '@/screens/home/standard';
 import { blocksOn, endOf, slotsOf, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
-import { doneOn, type Session, updateSession, useNow, useStore, useSubjects } from '@/store';
+import { doneOn, keepFree, type Session, sortFree, useNow, useStore, useSubjects } from '@/store';
 import { hair, noOutline, type, useT } from '@/theme';
 import { Card, haptic, Press, SubjTile, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
@@ -140,7 +140,7 @@ const span = (x: Session) => {
 function Unsorted() {
   const t = useT();
   const sessions = useStore((x) => x.sessions);
-  const list = sessions.filter((x) => x.s === FREE).slice().reverse();
+  const list = sessions.filter((x) => x.s === FREE && !x.kept).slice().reverse();
   if (!list.length) return null;
   return (
     <View style={{ paddingTop: 14 }}>
@@ -178,7 +178,7 @@ function SortForm({ x, close }: { x: Session; close: () => void }) {
   const [what, setWhat] = useState(x.what ?? '');
   const put = (id: string) => {
     haptic.success();
-    updateSession(x.id, { s: id, what: what.trim() || undefined });
+    sortFree(x.id, id, what);
     close();
     toast(`${subj(id).name}に仕分けました`, `${md(x.date)} ${x.min}分${what.trim() ? ` · ${what.trim()}` : ''}`);
   };
@@ -204,6 +204,12 @@ function SortForm({ x, close }: { x: Session; close: () => void }) {
           </Press>
         ))}
       </View>
+      {/* several subjects at once, or not worth sorting: it stays 自習 and leaves the list */}
+      <Press onPress={() => { haptic.tap(); keepFree(x.id, what); close(); toast('自習のままにしました', 'グラフでは「自習」として残ります'); }} scale={0.97} accessibilityLabel="自習のままにする"
+        style={{ height: 46, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)' }}>
+        <Txt size={15} w="600" color={t.blue}>自習のままにする</Txt>
+        <Txt size={11} tone="ink3">いくつかの科目をまとめてやったときなど</Txt>
+      </Press>
     </View>
   );
 }
