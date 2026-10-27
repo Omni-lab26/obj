@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -6,33 +5,21 @@ import { subj } from '@/data';
 import { Deadlines } from '@/screens/home/standard';
 import { blocksOn, endOf, slotsOf, type Block, type Slot } from '@/lib/timetable';
 import { jpDate, mondayIndex } from '@/lib/time';
-import { startBlock } from '@/screens/model';
-import { doneOn, getState, useNow, useStore } from '@/store';
-import { hair, onColor, type, useT } from '@/theme';
-import { Card, haptic, Press, Txt } from '@/ui/base';
+import { doneOn, useNow, useStore } from '@/store';
+import { hair, type, useT } from '@/theme';
+import { Card, Press, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
 import { blockSheet } from '@/ui/Editors';
 import { planCalendar } from '@/ui/PlanSheets';
 import { Icon } from '@/ui/Icon';
-import { toast } from '@/ui/Toast';
+import { PlanArt } from '@/ui/PlanArt';
 
-// The middle tab: where studying starts. Plan it here (the timetable and the
-// deadlines), and start from what you planned, so the
-// subject is always the one you chose. Starting opens the timer on top; while
-// it runs, the study bar on the tab bar brings it back.
+// The middle tab: the plan — the timetable and the deadlines. Each row is the
+// time, the plan's icon, and its subject with the memo under it; a tap edits it.
+// Nothing starts here: studying is run from the study bar above the tab bar
+// (勉強を開始, and the timer opens only from there).
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
-
-/** Start a plan and open the timer. Refused once a different subject has run for over a minute. */
-function go(b: Block) {
-  if (!startBlock(b)) {
-    haptic.warn();
-    toast(`いまは${subj(getState().subj).name}を勉強中です`, '記録してから次の科目を始めましょう');
-    return;
-  }
-  haptic.firm();
-  router.push('/timer');
-}
 
 export default function Study() {
   const t = useT();
@@ -60,7 +47,6 @@ function Timetable() {
   const today = mondayIndex(d);
   const [day, setDay] = useState(today);
   const blocks = useStore((x) => x.timetable);
-  const running = useStore((x) => x.running);
   const doneList = useStore((x) => x.doneBlocks);
   const done = doneOn({ doneBlocks: doneList }, d);
   // the chosen weekday: today with live states, another day as a plain list
@@ -102,24 +88,18 @@ function Timetable() {
                   </>
                 ) : <Txt size={10.5} w="600" tone="ink3" lh={14} numberOfLines={1}>時刻なし</Txt>}
               </View>
-              <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: sj.c }} />
+              {/* the plan's icon: its photo, or its subject's picture */}
+              <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={38} radius={9} />
               <View style={{ flex: 1, minWidth: 0 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Txt size={14.5} w="700">{sj.name}</Txt>
+                  <Txt size={14.5} w="700" numberOfLines={1} style={{ flexShrink: 1 }}>{sj.name}</Txt>
                   {live ? <View style={{ paddingHorizontal: 6, height: 18, borderRadius: 9, backgroundColor: t.ink, justifyContent: 'center' }}><Txt size={10} w="800" color={t.onInk}>いま</Txt></View> : null}
                   {finished ? <Txt size={11} w="600" tone="ink3">終わった</Txt> : state === 'next' ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
                   {b.date ? <Txt size={11} w="600" tone="ink3">この日だけ</Txt> : null}
                 </View>
-                <Txt size={12} tone="ink2" numberOfLines={1}>{[b.t ?? sj.task, b.min ? `${b.min}分` : ''].filter(Boolean).join(' · ')}</Txt>
-                {b.note ? <Txt size={11.5} tone="ink3" numberOfLines={1}>{b.note}</Txt> : null}
+                {/* under it, the memo (no memo: what to do) */}
+                {b.note || b.t ? <Txt size={12} tone="ink2" numberOfLines={1}>{b.note || b.t}</Txt> : null}
               </View>
-              {past || state === 'plain' ? null : (
-                <Press onPress={() => go(b)} haptics={false} scale={0.9} hitSlop={6} disabled={running}
-                  accessibilityLabel={`${sj.name}を始める`}
-                  style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: live ? sj.c : t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="play" size={14} color={live ? onColor(sj.c) : t.ink} />
-                </Press>
-              )}
             </Press>
           );
         }) : (

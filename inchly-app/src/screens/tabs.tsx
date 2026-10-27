@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -18,9 +17,8 @@ import { replayCharts } from '@/ui/appear';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
 
-/** The tabs (layout.TABS) as the navigator has them, each with what a tap does. The middle one ('study') opens the timer when tapped again while studying. */
+/** The tabs (layout.TABS) as the navigator has them, each with what a tap does. (The timer opens only from the study bar.) */
 export function useTabItems({ state, navigation }: BottomTabBarProps): TabItem[] {
-  const running = useStore((s) => s.running);
   return TABS.flatMap((tab) => {
     const i = state.routes.findIndex((r) => r.name === tab.name);
     const r = state.routes[i];
@@ -28,7 +26,6 @@ export function useTabItems({ state, navigation }: BottomTabBarProps): TabItem[]
     const focused = state.index === i;
     const center = tab.name === 'study';
     const onPress = () => {
-      if (center && focused && running) { router.push('/timer'); return; }
       const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
       if (!focused && !e.defaultPrevented) navigation.navigate(r.name, r.params);
     };
