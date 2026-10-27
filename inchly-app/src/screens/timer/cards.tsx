@@ -438,8 +438,8 @@ const useSkin = (c: string) => skinOf(useBackdrop(), c, TIMER_FILM[useDesign().c
  * A plan's card, like a notebook: its picture at the top (the photo you
  * picked, or a plain cover in the subject's quieted color with its name), the
  * subject and time, what to do, the memo, and its buttons at the bottom —
- * 始める; while it runs, 一時停止 and 終わる; paused, 再開 and 終わる; set aside,
- * 記録する and 続ける. ··· has the rest.
+ * 始める; while it runs, only symbols as on a player (■ 終わる, ❚❚ 一時停止 / ▶
+ * 再開, ··· the rest); set aside, 記録する and 続ける, and ··· has the rest.
  */
 function PlanCard({ b, no, i, x, step, k, tone, live, held, begin, record, more }: {
   b: Block; no: number; i: number; x: SharedValue<number>; step: number; k: number; tone: Tone; live: boolean; held?: Held;
@@ -491,14 +491,17 @@ function PlanCard({ b, no, i, x, step, k, tone, live, held, begin, record, more 
       </View>
 
       {/* everything about it happens here */}
+      {live ? (
+        // while it runs: the symbols alone, as a player's — ■ ends (and records), ❚❚ / ▶ pauses and resumes, ··· the rest
+        <View style={{ position: 'absolute', left: 14 * k, right: 14 * k, top: 378 * k, height: 52 * k, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly' }}>
+          <GlyphBtn k={k} icon="stop" size={24} color={sk.ink} a11y={`${sj.name}を終わる（記録する）`} onPress={session.finish} />
+          <GlyphBtn k={k} icon={paused ? 'play' : 'pause'} size={36} color={sk.ink} a11y={paused ? `${sj.name}を再開` : `${sj.name}を一時停止`}
+            onPress={() => { haptic.soft(); togglePause(); }} />
+          <GlyphBtn k={k} icon="more" size={24} color={sk.ink2} a11y={`${sj.name}の予定のメニュー`} onPress={more} />
+        </View>
+      ) : (
       <View style={{ position: 'absolute', left: 14 * k, right: 10 * k, top: 384 * k, height: 40 * k, flexDirection: 'row', alignItems: 'center', gap: 8 * k }}>
-        {live ? (
-          <>
-            <CardBtn sk={sk} k={k} solid={paused} label={paused ? '再開' : '一時停止'} icon={paused ? 'play' : 'pause'} a11y={paused ? `${sj.name}を再開` : `${sj.name}を一時停止`}
-              onPress={() => { haptic.soft(); togglePause(); }} />
-            <CardBtn sk={sk} k={k} solid={!paused} label="終わる" a11y={`${sj.name}を終わる（記録する）`} onPress={session.finish} />
-          </>
-        ) : held ? (
+        {held ? (
           <>
             <CardBtn sk={sk} k={k} solid label={`記録する · ${min}分`} a11y={`${sj.name} ${min}分を記録する`} onPress={() => record(held)} />
             <CardBtn sk={sk} k={k} label="続ける" a11y={`${sj.name}を続きから始める`} onPress={() => begin(b)} />
@@ -511,7 +514,18 @@ function PlanCard({ b, no, i, x, step, k, tone, live, held, begin, record, more 
           <Icon name="more" size={20 * k} color={sk.ink2} />
         </Press>
       </View>
+      )}
     </View>
+  );
+}
+
+/** A player's button: only its symbol, no frame or words (the name is for VoiceOver). */
+function GlyphBtn({ k, icon, size, color, a11y, onPress }: { k: number; icon: 'play' | 'pause' | 'stop' | 'more'; size: number; color: string; a11y: string; onPress: () => void }) {
+  return (
+    <Press onPress={onPress} haptics={false} scale={0.86} hitSlop={6} accessibilityLabel={a11y}
+      style={{ width: 56 * k, height: 52 * k, alignItems: 'center', justifyContent: 'center' }}>
+      <Icon name={icon} size={size * k} color={color} filled />
+    </Press>
   );
 }
 
