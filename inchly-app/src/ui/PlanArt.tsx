@@ -35,7 +35,8 @@ export function PlanArt({ icon, name, color, size, radius }: { icon?: string; na
         <Rect width={size} height={size} fill={`url(#${id})`} />
         <Circle cx={size * 0.72} cy={size * 0.76} r={size * 0.3} fill="rgba(255,255,255,0.14)" />
       </Svg>
-      {glyph ? <SubjectGlyph glyph={glyph} size={size * 0.56} color="rgba(255,255,255,0.94)" width={1.7} />
+      {/* in a view of its own, so it's drawn over the gradient on the web too */}
+      {glyph ? <View><SubjectGlyph glyph={glyph} size={size * 0.56} color="rgba(255,255,255,0.94)" width={1.7} /></View>
         : <Txt size={size * 0.46} w="800" lh={size * 0.56} color="rgba(255,255,255,0.94)">{[...name][0] ?? ''}</Txt>}
     </View>
   );
