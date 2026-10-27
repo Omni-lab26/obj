@@ -11,7 +11,8 @@ import { ease, useT } from '../theme';
 // (or the top of the sheet) down to dismiss, or tap the scrim. A screen shown
 // over everything (the timer) mounts its own host; the newest host opens it.
 type Render = (close: () => void) => ReactNode;
-type Opts = { grouped?: boolean; center?: boolean };
+/** corner: the centered pane's corner radius (26 unless said). */
+type Opts = { grouped?: boolean; center?: boolean; corner?: number };
 type Host = { open: (r: Render, o: Opts) => void; close: () => void };
 const hosts: Host[] = [];
 const top = () => hosts[hosts.length - 1];
@@ -33,6 +34,7 @@ export function SheetHost() {
   const [render, setRender] = useState<Render | null>(null);
   const [grouped, setGrouped] = useState(false);
   const [center, setCenter] = useState(false);
+  const [corner, setCorner] = useState(26);
   const pop = useSharedValue(0); // the centered pane: 0 away, 1 here
   const H = Dimensions.get('window').height;
   const y = useSharedValue(H);
@@ -47,7 +49,7 @@ export function SheetHost() {
   };
   useEffect(() => {
     // close only moves shared values and clears this host, so the first one stays right
-    const me: Host = { open: (r, o) => { setGrouped(!!o.grouped); setCenter(!!o.center); setRender(() => r); }, close };
+    const me: Host = { open: (r, o) => { setGrouped(!!o.grouped); setCenter(!!o.center); setCorner(o.corner ?? 26); setRender(() => r); }, close };
     hosts.push(me);
     return () => { hosts.splice(hosts.indexOf(me), 1); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -89,7 +91,7 @@ export function SheetHost() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} pointerEvents="box-none"
           style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', paddingTop: insets.top + 12, paddingBottom: insets.bottom + 12, paddingHorizontal: 12 }]}>
           <Animated.View accessibilityViewIsModal
-            style={[{ width: '100%', maxWidth: 440, maxHeight: '100%', borderRadius: 26, overflow: 'hidden', boxShadow: '0px 0px 0px 0.5px rgba(255,255,255,0.7), 0px 24px 60px rgba(20,24,32,0.22)' }, pa]}>
+            style={[{ width: '100%', maxWidth: 440, maxHeight: '100%', borderRadius: corner, overflow: 'hidden', boxShadow: '0px 0px 0px 0.5px rgba(255,255,255,0.7), 0px 24px 60px rgba(20,24,32,0.22)' }, pa]}>
             {/* frosted glass: the blurred page through a milky film */}
             <BlurView intensity={Platform.OS === 'web' ? 30 : 60} tint={t.dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
             <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.dark ? 'rgba(20,26,34,0.72)' : 'rgba(246,247,249,0.72)' }]} />

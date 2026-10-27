@@ -221,10 +221,10 @@ export function SubjCoin({ name, color, size = 36, area }: { name: string; color
   );
 }
 /** A subject's square: its color, with its picture (SubjectGlyph) or first letter. */
-export function SubjTile({ name, color, size = 40, area }: { name: string; color: string; size?: number; area?: AreaId }) {
+export function SubjTile({ name, color, size = 40, area, radius: r }: { name: string; color: string; size?: number; area?: AreaId; radius?: number }) {
   const g = glyphOf(name, area);
   return (
-    <View style={{ width: size, height: size, borderRadius: size * 0.24, backgroundColor: color, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: size, height: size, borderRadius: r ?? size * 0.24, backgroundColor: color, alignItems: 'center', justifyContent: 'center' }}>
       {g ? <SubjectGlyph glyph={g} size={size * 0.62} color={onColor(color)} width={1.9} /> : (
         <Text style={{ color: onColor(color), fontSize: size * 0.42, lineHeight: size * 0.54, fontWeight: '700', fontFamily: face(size * 0.42) }}>{[...name][0]}</Text>
       )}
