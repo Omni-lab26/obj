@@ -32,8 +32,8 @@ export default function Study() {
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: pad }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4, flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-          <Txt size={type.title + 4} w="800">勉強</Txt>
-          <Txt size={12} tone="ink3">{jpDate(new Date())}</Txt>
+          {/* no page name (the tab bar says where you are): just today's date */}
+          <Txt size={13} w="600" tone="ink2" accessibilityRole="header">{jpDate(new Date())}</Txt>
         </View>
         <Unsorted />
         <Timetable />

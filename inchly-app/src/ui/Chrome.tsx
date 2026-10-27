@@ -6,7 +6,7 @@ import Svg, { Defs, LinearGradient as SvgGradient, Rect, Stop } from 'react-nati
 
 import { Notif, NOTIFS, ROOM } from '../data';
 import { State, useStore } from '../store';
-import { hair, type, useT } from '../theme';
+import { hair, useT } from '../theme';
 import { IconBtn, Txt } from './base';
 import { BackdropView } from './backdrop/Backdrop';
 import { TextureFill } from './Texture';
@@ -87,12 +87,12 @@ export function Screen({ children, style, bg }: { children: ReactNode; style?: V
   );
 }
 
-/** Large title for tab roots. Each tab brings only the actions it needs (or none). */
+/** A tab page's top: its buttons at the right. The page's name isn't written (the tab bar says where you are); VoiceOver still reads it. */
 export function TopBar({ title, sub, right }: { title: string; sub?: ReactNode; right?: ReactNode }) {
   return (
     <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40 }}>
-        <Txt size={type.title} w="700" lh={30} style={{ flex: 1 }}>{title}</Txt>
+        <View accessible accessibilityRole="header" accessibilityLabel={title} style={{ flex: 1, alignSelf: 'stretch' }} />
         {right}
       </View>
       {sub ? <View style={{ marginTop: 2 }}>{sub}</View> : null}
