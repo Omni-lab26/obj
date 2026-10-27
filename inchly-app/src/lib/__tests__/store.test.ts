@@ -1,8 +1,8 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { addSubject, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
-import { AREA_SHADES, OTHER_COLORS, subj } from '../../data';
+import { addSubject, startFree, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, updateSubject } from '../../store';
+import { AREA_SHADES, FREE, OTHER_COLORS, subj } from '../../data';
 import { backdropOf, DEFAULT_DESIGN } from '../../design';
 import { addDays, dateKey } from '../time';
 
@@ -193,6 +193,23 @@ describe('what a record was about', () => {
     expect(a).toMatchObject({ s: 'ph', what: '相対性理論', note: '特殊相対論まで' });
     expect(b).toMatchObject({ s: 'ma', what: '青チャート 例題41〜50' });
     expect(c.what).toBeUndefined(); // not from a plan
+  });
+});
+
+describe('自習 (studying with no plan to hand)', () => {
+  it('starts at once with no subject; the record page gives it one, and what it was', () => {
+    reset();
+    startFree(new Date(2026, 9, 27, 21, 3));
+    const st = getState();
+    expect(st.subj).toBe(FREE);
+    expect(subj(FREE).name).toBe('自習');
+    const plan = st.timetable.find((b) => b.id === st.planBlock)!;
+    expect(plan).toMatchObject({ s: FREE, start: '21:00', min: 0 });
+    commitRecord({ min: 40, s: 'ph', what: '相対性理論', note: 'ローレンツ変換まで' });
+    expect(getState().sessions.at(-1)).toMatchObject({ s: 'ph', min: 40, what: '相対性理論', note: 'ローレンツ変換まで' });
+    // its card in today's timetable becomes what it turned out to be
+    expect(getState().timetable.find((b) => b.id === plan.id)).toMatchObject({ s: 'ph', t: '相対性理論' });
+    expect(getState().running).toBe(false);
   });
 });
 

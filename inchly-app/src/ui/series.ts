@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { AREAS, type AreaId, subj } from '../data';
+import { AREAS, type AreaId, FREE, subj } from '../data';
 import { Parts, regroup } from '../lib/history';
 import { useStore } from '../store';
 
@@ -25,6 +25,9 @@ export function useSeries(detail: 'subject' | 'area' = 'subject'): SeriesSet {
     }
     // hidden subjects stay in the list so old days keep their colors
     const list = subjects.map((x) => ({ key: x.id, name: x.name, c: x.c, area: x.area }));
-    return { list: [...list, { key: '?', name: '削除した科目', c: '#8C93A0', area: 'other' as const }], keyOf: (id: string) => (subjects.some((x) => x.id === id) ? id : '?'), of: (p: Parts) => regroup(p, (id) => (subjects.some((x) => x.id === id) ? id : '?')) };
+    // 自習 recorded without a subject (まとめて記録) keeps its own grey
+    const known = (id: string) => id === FREE || subjects.some((x) => x.id === id);
+    const keyOf = (id: string) => (known(id) ? id : '?');
+    return { list: [...list, { key: FREE, name: '自習', c: '#8C93A0', area: 'other' as const }, { key: '?', name: '削除した科目', c: '#8C93A0', area: 'other' as const }], keyOf, of: (p: Parts) => regroup(p, keyOf) };
   }, [detail, subjects]);
 }

@@ -1,27 +1,26 @@
 import { router } from 'expo-router';
 import { ReactNode, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { subj } from '@/data';
-import type { Block } from '@/lib/timetable';
-import { clock, go, jpHm, session, startBlock, startSubject, useNext, useSession, useToday } from '@/screens/model';
-import { getState, startFrom, togglePause, useStore, useSubjects } from '@/store';
+import { FREE, subj } from '@/data';
+import { clock, go, jpHm, session, useNext, useSession } from '@/screens/model';
+import { getState, startFree, startFrom, togglePause, useStore } from '@/store';
 import { useT } from '@/theme';
 import { Btn, haptic, Press, SubjTile, Txt } from '@/ui/base';
 import { STUDY_BAR_H, studyBarBottom } from '@/ui/Chrome';
 import { Dialog } from '@/ui/Dialog';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
-import { openSheet } from '@/ui/Sheet';
 
 // The study bar, like a music app's mini player, always on the tab bar on every
 // tab. Not studying, it shows the timetable: the plan whose time has come (with
-// ▶), else the next one. Once you start (from it, the study page, the menu,
-// anywhere), it shows the time studied and pause. Tap it and the timer opens. Pull it down to put it
+// ▶), else the next one. 勉強を開始 starts that plan, or — when no plan's time
+// has come — 自習 at once and opens the timer (the subject and what it was are
+// written on the record page). Once you start, it shows the time studied and pause. Tap it and the timer opens. Pull it down to put it
 // away: the time stops and it asks whether to record (the clock never runs
 // on with the bar gone). It goes when you record.
 
@@ -75,12 +74,15 @@ function AskBody({ save, saveAll, memo, goOn }: { save: () => void; saveAll: () 
       <Txt size={14} tone="ink2" style={{ marginBottom: 6 }}>
         {`${ss.subject.name} ${min}分${held.length ? `（ほかに記録まちが${held.length}つ）` : ''}。バーを消すと時間は止まります。記録すると今日の合計に入ります`}
       </Txt>
-      {held.length ? (
+      {ss.subject.id === FREE ? (
+        // 自習: the subject and what it was are written on the record page
+        <Btn kind="primary" wide label={`${min}分を記録する（科目と内容を書く）`} onPress={memo} />
+      ) : held.length ? (
         <Btn kind="primary" wide label={`ぜんぶ記録する（${jpHm(all)}）`} onPress={saveAll} />
       ) : (
         <Btn kind="primary" wide label={`${min}分を記録する`} onPress={save} />
       )}
-      <Btn kind="quiet" wide label="メモを書いて記録する" onPress={memo} />
+      {ss.subject.id === FREE ? null : <Btn kind="quiet" wide label="メモを書いて記録する" onPress={memo} />}
       <Btn kind="ghost" wide label="続ける" onPress={goOn} />
     </View>
   );
@@ -118,8 +120,10 @@ function PlanBar({ insets }: { insets: EdgeInsets }) {
     : timed ? `次 · ${pick.start}から${pick.inMin && pick.inMin > 0 && pick.inMin < 90 ? `（あと${pick.inMin}分）` : ''}` : '';
   const begin = () => {
     if (now) { haptic.firm(); startFrom({ s: pick.s, min: pick.min, next: pick.next, blockId: pick.blockId }); return; }
-    haptic.tap();
-    startSheet(timed ? b : undefined);
+    // no plan's time has come: 自習 at once, straight to the timer; its subject and what it was are written when it's recorded
+    haptic.firm();
+    startFree();
+    router.push('/timer');
   };
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: studyBarBottom(insets.bottom), paddingHorizontal: 20 }}>
@@ -146,55 +150,6 @@ function PlanBar({ insets }: { insets: EdgeInsets }) {
           </Press>
         </View>
       </Glass>
-    </View>
-  );
-}
-
-/** What to study, when no plan's time has come: the next plan (from now), or any subject — which then goes into today's timetable. */
-export function startSheet(next?: Block) {
-  openSheet((close) => <StartChoice close={close} next={next} />, { grouped: true, center: true });
-}
-function StartChoice({ close, next }: { close: () => void; next?: Block }) {
-  const t = useT();
-  const subjects = useSubjects();
-  const parts = useToday().parts;
-  const go = (f: () => void) => { haptic.firm(); f(); close(); };
-  const nsj = next ? subj(next.s) : null;
-  return (
-    <View style={{ gap: 12 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 36 }}>
-        <Press onPress={close} scale={0.94} hitSlop={8} accessibilityLabel="やめる" style={{ minWidth: 56 }}>
-          <Txt size={15.5} tone="ink2">やめる</Txt>
-        </Press>
-        <Txt size={16.5} w="700" style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">何を勉強する？</Txt>
-        <View style={{ minWidth: 56 }} />
-      </View>
-      {next && nsj ? (
-        <Press onPress={() => go(() => startBlock(next))} scale={0.98} accessibilityLabel={`次の予定の${nsj.name}を今から始める`}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.95)' }}>
-          <SubjTile name={nsj.name} color={nsj.c} size={36} />
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Txt size={11.5} tone="ink3">次の予定を、今から</Txt>
-            <Txt size={15} w="700" numberOfLines={1}>{`${nsj.name}${next.t ? ` · ${next.t}` : ''}`}</Txt>
-          </View>
-          <Txt num size={12} tone="ink3">{next.start ? `${next.start}から` : ''}</Txt>
-        </Press>
-      ) : null}
-      <View style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.95)' }}>
-        {subjects.map((x, i) => {
-          const min = parts.find((p) => p.id === x.id)?.min ?? 0;
-          return (
-            <Press key={x.id} onPress={() => go(() => startSubject(x.id))} scale={0.99} accessibilityLabel={`${x.name}を始める`}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, height: 52, paddingHorizontal: 14, borderTopWidth: i ? StyleSheet.hairlineWidth : 0, borderTopColor: t.line }}>
-              <View style={{ width: 9, height: 9, borderRadius: 3, backgroundColor: x.c }} />
-              <Txt size={15.5} w="600" style={{ flex: 1 }} numberOfLines={1}>{x.name}</Txt>
-              <Txt num size={12} tone="ink3">{min ? `今日 ${jpHm(min)}` : ''}</Txt>
-              <Icon name="play" size={11} color={t.ink2} filled />
-            </Press>
-          );
-        })}
-      </View>
-      <Txt size={12} tone="ink3" style={{ paddingHorizontal: 4 }}>時間割にない勉強は、今の時刻から今日の時間割に入ります</Txt>
     </View>
   );
 }

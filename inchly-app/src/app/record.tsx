@@ -5,12 +5,12 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
-import { hm, pad, PERSON_COLOR, subj } from '@/data';
+import { FREE, hm, pad, PERSON_COLOR, subj } from '@/data';
 import { celebrate } from '@/moments';
-import { addPost, commitHeld, commitRecord, elapsedOf, getState, splitAtMidnight, togglePause, useStore } from '@/store';
+import { addPost, commitHeld, commitRecord, elapsedOf, getState, splitAtMidnight, togglePause, useStore, useSubjects } from '@/store';
 import { dateKey } from '@/lib/time';
 import { hair, useT } from '@/theme';
-import { Empty, haptic, Press, SubjCoin, Txt } from '@/ui/base';
+import { Empty, haptic, Press, SubjCoin, SubjTile, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
 import { Stamp } from '@/ui/Sticker';
@@ -23,7 +23,8 @@ import { Pane } from '@/ui/Glass';
 // fixed by 5 minutes), a memo of how far you got and how it went, and whether
 // it stays yours or goes to the timeline too. 記録する saves it and goes back
 // to where you were (the timer stays as it was); 続ける goes back too, and the
-// clock runs again.
+// clock runs again. 自習 (started with no plan) has no subject yet: here you
+// pick it, and write what you studied — that's what the charts show (contents).
 
 const clock = (d: Date) => `${d.getHours()}:${pad(d.getMinutes())}`;
 const MAX = 140;
@@ -38,7 +39,13 @@ export default function Record() {
   const [h] = useState(() => getState().held.find((x) => x.id === heldId));
   const livePlan = useStore((s) => s.planMin);
   const plan = h ? h.planMin ?? null : livePlan;
-  const [sid] = useState(() => h?.s ?? getState().subj);
+  const [own] = useState(() => h?.s ?? getState().subj);
+  // 自習: the subject is picked here, and what it was written
+  const free = own === FREE;
+  const subjects = useSubjects();
+  const [pick, setPick] = useState<string | null>(null);
+  const [what, setWhat] = useState('');
+  const sid = free ? pick ?? FREE : own;
   const sj = subj(sid);
   const [min, setMin] = useState(() => Math.max(1, Math.round((h ? h.sec : elapsedOf(getState())) / 60)));
   const [end] = useState(() => (h ? new Date(h.end) : new Date()));
@@ -66,15 +73,17 @@ export default function Record() {
 
   const save = () => {
     if (tooLong) { haptic.warn(); return; }
+    if (free && !pick) { haptic.warn(); toast('科目を選んでください', 'グラフは科目ごとに分かれます'); return; }
     setPhase('saving');
     const text = note.trim();
-    const done = h ? commitHeld(h.id, { note: text || undefined, min }) : commitRecord({ todoId, note: text || undefined, min });
+    const about = free ? { s: pick!, what: what.trim() || undefined } : {};
+    const done = h ? commitHeld(h.id, { note: text || undefined, min, ...about }) : commitRecord({ todoId, note: text || undefined, min, ...about });
     if (!done) { router.back(); return; }
     const { min: m, ticket, exp, levelUp } = done;
     if (share) {
       const a = getState().account;
       addPost({ n: a?.name ?? 'はる', h: a?.handle ?? 'haru_study', c: PERSON_COLOR['はる'], m: a?.grade ?? '高3', mine: true, w: 'たった今',
-        t: text || `${sj.name}を${m}分`, tags: [], u: 0, r: 0, rec: { s: sid, min: m, note: text || undefined } });
+        t: text || `${sj.name}${free && what.trim() ? `（${what.trim()}）` : ''}を${m}分`, tags: [], u: 0, r: 0, rec: { s: sid, min: m, note: text || undefined } });
     }
     haptic.success();
     setPhase('done');
@@ -103,12 +112,35 @@ export default function Record() {
         </View>
 
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 24 }}>
+          {free ? (
+            // 自習: which subject it was (needed: the charts are by subject), and what — the charts' contents
+            <View style={{ gap: 10, paddingBottom: 16, marginBottom: 14, borderBottomWidth: hair, borderBottomColor: t.line }}>
+              <Txt size={13} w="700" tone="ink2">{pick ? '科目' : '何の科目を勉強した？'}</Txt>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 6 }} accessibilityRole="radiogroup">
+                {subjects.map((x) => {
+                  const on = pick === x.id;
+                  return (
+                    <Press key={x.id} onPress={() => { haptic.tap(); setPick(x.id); }} scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={x.name}
+                      style={{ width: 64, alignItems: 'center', gap: 4 }}>
+                      <View style={{ padding: 2, borderRadius: 10, borderWidth: 2, borderColor: on ? t.blue : 'transparent' }}>
+                        <SubjTile name={x.name} color={x.c} area={x.area} size={40} radius={8} />
+                      </View>
+                      <Txt size={11.5} w={on ? '700' : '500'} color={on ? t.blue : t.ink2} numberOfLines={1}>{x.name}</Txt>
+                    </Press>
+                  );
+                })}
+              </ScrollView>
+              <TextInput value={what} onChangeText={(v) => setWhat(v.slice(0, 30))} placeholder="内容（例：相対性理論、例題41〜50）" placeholderTextColor={t.ink3}
+                accessibilityLabel="勉強した内容" returnKeyType="done"
+                style={{ height: 42, paddingHorizontal: 12, borderRadius: 8, backgroundColor: t.sunken, fontSize: 16, color: t.ink, outlineStyle: 'none' } as object} />
+            </View>
+          ) : null}
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <SubjCoin name={sj.name} color={sj.c} size={42} />
             <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
                 <Txt size={15} w="800">{sj.name}</Txt>
-                <Txt size={12.5} tone="ink3" numberOfLines={1} style={{ flex: 1 }}>{sj.task}</Txt>
+                <Txt size={12.5} tone="ink3" numberOfLines={1} style={{ flex: 1 }}>{free ? what.trim() : sj.task}</Txt>
               </View>
               <TextInput value={note} onChangeText={setNote} multiline placeholder="どこまでやった？ どうだった？" placeholderTextColor={t.ink3}
                 accessibilityLabel="メモ" style={{ minHeight: 120, fontSize: 18, lineHeight: 26, color: t.ink, textAlignVertical: 'top', padding: 0, marginTop: -4, outlineStyle: 'none' } as object} />

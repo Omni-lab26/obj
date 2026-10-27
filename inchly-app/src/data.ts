@@ -96,9 +96,16 @@ export const setSubjects = (list: Subject[]) => { current = list; };
 /** Every subject, hidden ones included (charts still need their names and colors). */
 export const allSubjects = () => current;
 const GONE: Subject = { id: '?', name: '削除した科目', c: '#8C93A0', area: 'other' };
+/**
+ * 自習: studying started with no plan to hand (勉強を開始 when none's time
+ * has come) — no subject yet. The subject, and what it was, are written when
+ * it's recorded (the record page); until then it shows as 自習, in grey.
+ */
+export const FREE = '_free';
+const FREE_SUBJECT: Subject = { id: FREE, name: '自習', c: '#8C93A0', area: 'other' };
 /** A subject by id, with task always a string (subjects you add have none). */
 export const subj = (id: string): Subject & { task: string } => {
-  const x = current.find((s) => s.id === id) ?? (id === '?' ? GONE : { ...GONE, id });
+  const x = current.find((s) => s.id === id) ?? (id === FREE ? FREE_SUBJECT : id === '?' ? GONE : { ...GONE, id });
   return { ...x, task: x.task ?? '' };
 };
 

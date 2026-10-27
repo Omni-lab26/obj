@@ -3,7 +3,7 @@ import { AppState } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { AreaId, demoHistory, fixColors, GROUPS, Group, OTHER_COLORS, Post, POSTS, setSubjects, shadeFor, SUBJ, subj, Subject } from './data';
+import { AreaId, demoHistory, fixColors, FREE, GROUPS, Group, OTHER_COLORS, Post, POSTS, setSubjects, shadeFor, SUBJ, subj, Subject } from './data';
 import { cancelReminder, configureNotifications, notificationsAllowed, replaceReminders, scheduleReminder } from './lib/notify';
 import { deadlineReminders, goalReminderAt, timetableReminders } from './lib/reminders';
 import { byDay, streakOf, todayMinutes } from './lib/history';
@@ -428,18 +428,21 @@ export const MAX_TICKETS = 3;
  * EXP it brought, and the new level if it went up.
  */
 export type Recorded = { min: number; ticket: boolean; exp: number; levelUp: number | null };
-type Rec = { s: string; min: number; end: Date; note?: string; todoId?: string; blockId?: string };
+/** s and what: given on the record page for 自習 (the subject and what it was), else the session's own. */
+type Rec = { s: string; min: number; end: Date; note?: string; todoId?: string; blockId?: string; what?: string };
 /** Saves these records (each split at midnight; a plan's is finished on the day it started), with what they earned; `rest` goes into the same update. */
 function saveRecords(recs: Rec[], now: Date, rest: Partial<State>): Recorded {
   const s = state;
   const today = dateKey(now);
-  let sessions = s.sessions, todos = s.todos, todoLog = s.todoLog, doneBlocks = s.doneBlocks;
+  let sessions = s.sessions, todos = s.todos, todoLog = s.todoLog, doneBlocks = s.doneBlocks, timetable = s.timetable;
   for (const r of recs) {
     const todo = todos.find((x) => x.id === r.todoId);
     const note = r.note ?? todo?.t;
     // what it was about: the plan's memo (else its やること), so a chart can show more than the subject
     const plan = r.blockId ? s.timetable.find((b) => b.id === r.blockId) : undefined;
-    const what = plan?.note?.trim() || plan?.t?.trim() || undefined;
+    const what = r.what?.trim() || plan?.note?.trim() || plan?.t?.trim() || undefined;
+    // 自習's plan becomes what it turned out to be: its subject, and what was studied
+    if (plan && plan.s === FREE && r.s !== FREE) timetable = timetable.map((b) => (b.id === plan.id ? { ...b, s: r.s, ...(what ? { t: what } : {}) } : b));
     sessions = [...sessions, ...splitAtMidnight(r.min, r.end).map((x) => ({ id: newId('s'), s: r.s, note, ...(what ? { what } : {}), ...x }))];
     if (todo) {
       if (!todo.d) todoLog = [...todoLog, { id: todo.id, date: today }];
@@ -449,27 +452,34 @@ function saveRecords(recs: Rec[], now: Date, rest: Partial<State>): Recorded {
   }
   const run = streakOf(sessions, s.restDays, now);
   const ticket = !byDay(s.sessions).has(today) && run > 0 && run % 7 === 0 && s.restTickets < MAX_TICKETS;
-  setState({ ...rest, sessions, todos, todoLog, doneBlocks, restTickets: s.restTickets + (ticket ? 1 : 0) });
+  setState({ ...rest, sessions, todos, todoLog, doneBlocks, timetable, restTickets: s.restTickets + (ticket ? 1 : 0) });
   const before = expOf(s.sessions, s.goalMin, s.todoLog), after = expOf(sessions, s.goalMin, todoLog);
   const lv0 = levelOf(before).lv, lv1 = levelOf(after).lv;
   return { min: recs.reduce((n, r) => n + r.min, 0), ticket, exp: after - before, levelUp: lv1 > lv0 ? lv1 : null };
 }
 const STOPPED: Partial<State> = { running: false, paused: false, base: 0, studyTodo: null, planMin: null, planNext: null, planBlock: null };
 /** The session under way, as a record. */
-const current = (s: State, now: Date, opts?: { todoId?: string; note?: string; min?: number }): Rec => ({
-  s: s.subj, min: Math.max(1, Math.round(opts?.min ?? elapsedOf(s, now.getTime()) / 60)), end: now,
-  note: opts?.note, todoId: opts?.todoId, blockId: s.planBlock ?? undefined,
+type RecOpts = { todoId?: string; note?: string; min?: number; s?: string; what?: string };
+const current = (s: State, now: Date, opts?: RecOpts): Rec => ({
+  s: opts?.s ?? s.subj, min: Math.max(1, Math.round(opts?.min ?? elapsedOf(s, now.getTime()) / 60)), end: now,
+  note: opts?.note, todoId: opts?.todoId, blockId: s.planBlock ?? undefined, what: opts?.what,
 });
-const ofHeld = (h: Held, opts?: { note?: string; min?: number }): Rec => ({
-  s: h.s, min: Math.max(1, Math.round(opts?.min ?? h.sec / 60)), end: new Date(h.end), note: opts?.note, blockId: h.blockId,
+const ofHeld = (h: Held, opts?: RecOpts): Rec => ({
+  s: opts?.s ?? h.s, min: Math.max(1, Math.round(opts?.min ?? h.sec / 60)), end: new Date(h.end), note: opts?.note, blockId: h.blockId, what: opts?.what,
 });
 
-export function commitRecord(opts?: { todoId?: string; note?: string; min?: number; now?: Date }): Recorded {
+/** Starts 自習: studying with no plan to hand, the subject left for the record page. It goes into today's timetable from now, as the timer's card. */
+export function startFree(now: Date = new Date()): boolean {
+  const b = planNow(FREE, now);
+  return startFrom({ s: FREE, blockId: b.id }, now.getTime());
+}
+
+export function commitRecord(opts?: RecOpts & { now?: Date }): Recorded {
   const now = opts?.now ?? new Date();
   return saveRecords([current(state, now, opts)], now, STOPPED);
 }
 /** Records one held session (the one under way, if any, goes on). */
-export function commitHeld(id: string, opts?: { note?: string; min?: number; now?: Date }): Recorded | null {
+export function commitHeld(id: string, opts?: RecOpts & { now?: Date }): Recorded | null {
   const h = state.held.find((x) => x.id === id);
   if (!h) return null;
   return saveRecords([ofHeld(h, opts)], opts?.now ?? new Date(), { held: state.held.filter((x) => x !== h) });
