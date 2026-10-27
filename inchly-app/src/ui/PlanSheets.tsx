@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Keyboard, TextInput, View } from 'react-native';
+import { Keyboard, Switch, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { AREAS, guessArea, OTHER_COLORS, shadeFor, subj } from '../data';
@@ -9,6 +9,7 @@ import { Block, toClock, toMin } from '../lib/timetable';
 import { addDeadline, addSubject, dropIcon, keepIcon, removeBlock, saveBlock, useStore, useSubjects } from '../store';
 import { font, hair, noOutline, useT } from '../theme';
 import { haptic, Press, SubjTile, Txt } from './base';
+import { ContentHints } from './ContentHints';
 import { DatePick, Opens, PickChip, SMOOTH, TimePick } from './DateTime';
 import { Icon } from './Icon';
 import { PlanArt } from './PlanArt';
@@ -23,7 +24,8 @@ import { toast } from './Toast';
 // for the picture, and keeps it as your own icon — next time it's in the grid,
 // with the subject it was picked with (long press takes it off). The times are
 // optional: no start, the plan is just for its day; no end, it runs until the
-// next one (a weekly one stays weekly). Things move with iOS's curve, never a bounce.
+// next one. 毎週 makes it come back on its weekday every week. Things move
+// with iOS's curve, never a bounce.
 // Drawn the way iOS draws a new event, and kept low in contrast: やめる and 追加
 // as blue text, small grey names over white groups, 日付 and 時刻 (start 〜 end)
 // as Calendar's rows, in grey chips that open iOS's pickers.
@@ -64,8 +66,11 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const end = at + len;
   // the end picked on its wheel, after the start (past midnight: the next day)
   const setEnd = (m: number) => setLen(((m - at + DAY) % DAY) || DAY);
-  // a weekly plan stays weekly; a new one is for its day (repeat is set from the timetable's …)
-  const weekly = !!existing && !existing.date;
+  // 毎週: the plan comes back on its weekday every week (a weekly one keeps its days until its day is changed)
+  const [weekly, setWeekly] = useState(!!existing && !existing.date);
+  const [moved, setMoved] = useState(false);
+  const days = existing && !existing.date && !moved ? existing.days : [mondayIndex(d)];
+  const daysLabel = `毎週${days.map((i) => DOW[i]).join('・')}曜`;
   const known = existing ? subjects.find((x) => x.id === existing.s) : undefined;
   const [name, setName] = useState(known?.name ?? '');
   const [color, setColor] = useState(known?.c ?? OTHER_COLORS[0]);
@@ -106,11 +111,11 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
     saveBlock({
       id: existing?.id, s, t: title.trim(), note: note.trim() || undefined, icon,
       start: start === null ? undefined : toClock(start), min: start === null ? 0 : len,
-      days: weekly ? (existing && !existing.date ? existing.days : [mondayIndex(d)]) : [], date: weekly ? undefined : dateKey(d),
+      days: weekly ? days : [], date: weekly ? undefined : dateKey(d),
     });
     haptic.success();
     close();
-    toast(existing ? '予定を保存しました' : '予定を追加しました', `${weekly ? `毎週${DOW[mondayIndex(d)]}曜` : shortDate(d)}${start === null ? '' : ` ${toClock(start)}から${len ? `${nextDay ? '翌' : ''}${toClock(end % DAY)}まで` : ''}`} · ${name.trim()}`);
+    toast(existing ? '予定を保存しました' : '予定を追加しました', `${weekly ? daysLabel : shortDate(d)}${start === null ? '' : ` ${toClock(start)}から${len ? `${nextDay ? '翌' : ''}${toClock(end % DAY)}まで` : ''}`} · ${name.trim()}`);
   };
 
   const lenLabel = len % 60 === 0 ? `${len / 60}時間` : len > 60 ? `${Math.floor(len / 60)}時間${len % 60}分` : `${len}分`;
@@ -220,11 +225,19 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 52 }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Txt size={16}>日付</Txt>
-                  {weekly ? <Txt size={12} tone="ink3" numberOfLines={1}>{`毎週${DOW[mondayIndex(d)]}曜`}</Txt> : null}
                 </View>
                 <PickChip label={chipDate(d)} on={open === 'date'} onPress={() => toggle('date')} a11y="始める日を変える" />
               </View>
-              {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => setD(day0(x))} onDone={() => setOpen(null)} /></Opens> : null}
+              {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => { setD(day0(x)); setMoved(true); }} onDone={() => setOpen(null)} /></Opens> : null}
+              {/* 毎週: the same plan on this weekday every week (school, a cram school …) */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 12, minHeight: 52, borderTopWidth: hair, borderTopColor: t.line }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Txt size={16}>毎週</Txt>
+                  <Txt size={12} tone="ink3" numberOfLines={1}>{weekly ? `${daysLabel}にくり返す` : 'この日だけ'}</Txt>
+                </View>
+                <Switch value={weekly} onValueChange={(v) => { haptic.tap(); setWeekly(v); }} accessibilityLabel={`毎週${DOW[mondayIndex(d)]}曜にくり返す`}
+                  trackColor={{ true: t.green, false: t.line2 }} thumbColor="#fff" ios_backgroundColor={t.line2} />
+              </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 16, paddingRight: 10, minHeight: 52, borderTopWidth: hair, borderTopColor: t.line }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Txt size={16}>時刻</Txt>
@@ -280,6 +293,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
         <Group>
           <TextInput value={note} onChangeText={(v) => setNote(v.slice(0, 200))} placeholder={plan ? '持ち物、気をつけること、前回の続きなど' : '受付の時間、持ち物など'} placeholderTextColor={t.ink3}
             multiline onFocus={typing} accessibilityLabel="メモ" style={[{ minHeight: 76, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, lineHeight: 22, fontFamily: font.text, color: t.ink, textAlignVertical: 'top' }, noOutline]} />
+          {plan ? <View style={{ paddingHorizontal: 12, paddingBottom: 6 }}><ContentHints s={match?.id ?? null} typed={note} onPick={setNote} /></View> : null}
           <Txt num size={11} tone="ink3" style={{ textAlign: 'right', paddingHorizontal: 12, paddingBottom: 8 }}>{`${note.length}/200`}</Txt>
         </Group>
       </Field>

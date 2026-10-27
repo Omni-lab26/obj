@@ -11,6 +11,7 @@ import { addPost, commitHeld, commitRecord, elapsedOf, getState, splitAtMidnight
 import { dateKey } from '@/lib/time';
 import { hair, useT } from '@/theme';
 import { Empty, haptic, Press, SubjCoin, SubjTile, Txt } from '@/ui/base';
+import { ContentHints } from '@/ui/ContentHints';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
 import { Stamp } from '@/ui/Sticker';
@@ -147,6 +148,8 @@ export default function Record() {
               <TextInput value={what} onChangeText={(v) => setWhat(v.slice(0, 30))} placeholder="内容（例：相対性理論、例題41〜50）" placeholderTextColor={t.ink3}
                 accessibilityLabel="勉強した内容" returnKeyType="done"
                 style={{ height: 42, paddingHorizontal: 12, borderRadius: 8, backgroundColor: t.sunken, fontSize: 16, color: t.ink, outlineStyle: 'none' } as object} />
+              {/* what you've written before, so it's written the same way (and adds up as one) */}
+              <ContentHints s={pick && pick !== FREE ? pick : null} typed={what} onPick={setWhat} />
             </View>
           ) : null}
           <View style={{ flexDirection: 'row', gap: 12 }}>

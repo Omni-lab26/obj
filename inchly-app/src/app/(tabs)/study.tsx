@@ -9,6 +9,7 @@ import { doneOn, keepFree, type Session, sortFree, useNow, useStore, useSubjects
 import { hair, noOutline, type, useT } from '@/theme';
 import { Card, haptic, Press, SubjTile, Txt } from '@/ui/base';
 import { Screen, useTabPad } from '@/ui/Chrome';
+import { ContentHints } from '@/ui/ContentHints';
 import { blockSheet } from '@/ui/Editors';
 import { planCalendar } from '@/ui/PlanSheets';
 import { openSheet } from '@/ui/Sheet';
@@ -194,6 +195,7 @@ function SortForm({ x, close }: { x: Session; close: () => void }) {
       <Txt size={13} tone="ink2" style={{ textAlign: 'center' }}>{`${md(x.date)} ${span(x)} · 自習 ${x.min}分`}</Txt>
       <TextInput value={what} onChangeText={(v) => setWhat(v.slice(0, 30))} placeholder="内容（例：相対性理論）" placeholderTextColor={t.ink3} accessibilityLabel="勉強した内容"
         style={[{ height: 44, paddingHorizontal: 14, borderRadius: 10, backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)', fontSize: 16, color: t.ink }, noOutline]} />
+      <ContentHints s={null} typed={what} onPick={setWhat} />
       <Txt size={12.5} tone="ink3" style={{ paddingLeft: 4 }}>科目を押すと仕分けられます</Txt>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', borderRadius: 10, paddingVertical: 6, backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)' }} accessibilityRole="radiogroup">
         {subjects.map((s) => (
