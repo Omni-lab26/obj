@@ -117,12 +117,13 @@ const clockOf = (m: number) => `${Math.floor(m / 60)}:${String(m % 60).padStart(
 // - the line solid where the day is behind you, dotted where it's still to come,
 //   and a thin red mark at this minute;
 // - every row on one grid (time · line · text · right end), so nothing drifts;
-// - what a stop is, by its shape: done, its icon small on the line (and, on the
-//   right, a small bar of the minutes against the plan, orange past it); its time
-//   gone by undone, an empty ring (crossed out); a 自習 not sorted yet, a dashed
-//   ring (仕分ける); to come, a small white ring (its icon on the right); the plan
-//   under way, its icon on the line itself.
-const TIME_W = 50, RAIL_W = 34, PAD = 12;
+// - what a stop is, by its shape: done, its icon small on the line with a black ✓
+//   (and, on the right, a small bar of the minutes against the plan, orange past
+//   it); its time gone by undone, its icon faded with a gray ×, crossed out, and
+//   やらなかった; a 自習 not sorted yet, a dashed ring (仕分ける); to come, a small
+//   white ring (its icon, larger, on the right); the plan under way, its icon on
+//   the line itself and a red Now.
+const TIME_W = 50, RAIL_W = 38, PAD = 12;
 const rowStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, paddingHorizontal: PAD };
 const OVER = '#FF9F0A';
 const NOW_RED = '#FF3B30';
@@ -157,7 +158,7 @@ function Rail({ first, last, ahead, children }: { first?: boolean; last?: boolea
 }
 /** The card's own white, solid (a ring around a node so the line seems to pass behind it). */
 const useBlank = () => (useT().dark ? '#24272B' : '#FFFFFF');
-function Node({ kind }: { kind: 'miss' | 'free' | 'later' }) {
+function Node({ kind }: { kind: 'free' | 'later' }) {
   const t = useT();
   const blank = useBlank();
   const d = kind === 'later' ? 10 : 12;
@@ -175,10 +176,24 @@ function TimeCol({ children }: { children: ReactNode }) {
 function Clock({ children, ...p }: Parameters<typeof Txt>[0]) {
   return <Txt num numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} {...p}>{children}</Txt>;
 }
-/** A finished plan's icon, small on the line (on the card's white, so the line seems to pass behind it). */
-function DoneArt({ b }: { b: Block }) {
+/**
+ * A plan behind you, its icon small on the line (on the card's white, so the line
+ * seems to pass behind it), told apart at a glance: done, in full color with a
+ * black ✓ badge; not done, faded with a gray × badge.
+ */
+function StopArt({ b, done }: { b: Block; done: boolean }) {
+  const t = useT();
+  const blank = useBlank();
   const sj = subj(b.s);
-  return <View style={{ padding: 2, borderRadius: 7, backgroundColor: useBlank() }}><PlanArt icon={b.icon} name={sj.name} color={sj.c} size={18} radius={5} /></View>;
+  return (
+    <View style={{ padding: 2, borderRadius: 8, backgroundColor: blank }}>
+      <View style={{ opacity: done ? 1 : 0.32 }}><PlanArt icon={b.icon} name={sj.name} color={sj.c} size={22} radius={6} /></View>
+      <View style={{ position: 'absolute', right: -4, bottom: -4, width: 15, height: 15, borderRadius: 7.5, borderWidth: 2, borderColor: blank,
+        backgroundColor: done ? t.ink : t.ink3, alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name={done ? 'check' : 'x'} size={8} color={done ? t.onInk : blank} width={3} />
+      </View>
+    </View>
+  );
 }
 
 /** Behind you: one thin line. */
@@ -202,21 +217,25 @@ function StopRow({ st, first, last }: { st: Stop; first: boolean; last: boolean 
   return (
     <Press onPress={() => blockSheet(b)} scale={0.99}
       accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。${st.finished ? `終わった${st.min ? ` ${st.min}分${plan ? `（予定${plan}分）` : ''}` : ''}` : 'やらずに時間が過ぎた'}。編集`}
-      style={[rowStyle, { minHeight: 34 }]}>
+      style={[rowStyle, { minHeight: 40 }]}>
       <TimeCol><Clock size={12} tone="ink3">{b.start ?? '—'}</Clock></TimeCol>
-      <Rail first={first} last={last}>{st.finished ? <DoneArt b={b} /> : <Node kind="miss" />}</Rail>
-      <Txt size={12.5} tone={st.finished ? 'ink2' : 'ink3'} numberOfLines={1} style={{ flex: 1, minWidth: 0, paddingLeft: 6 }}>
-        <Txt size={12.5} w={st.finished ? '600' : '500'} tone={st.finished ? 'ink' : 'ink3'} style={st.finished ? null : { textDecorationLine: 'line-through' }}>{sj.name}</Txt>
+      <Rail first={first} last={last}><StopArt b={b} done={st.finished} /></Rail>
+      <Txt size={13} tone={st.finished ? 'ink2' : 'ink3'} numberOfLines={1} style={{ flex: 1, minWidth: 0, paddingLeft: 6 }}>
+        <Txt size={13} w={st.finished ? '700' : '500'} tone={st.finished ? 'ink' : 'ink3'} style={st.finished ? null : { textDecorationLine: 'line-through' }}>{sj.name}</Txt>
         {b.note || b.t ? ` · ${b.note || b.t}` : ''}
       </Txt>
-      {st.finished ? <Meter min={st.min} plan={plan} color={sj.c} /> : null}
+      {st.finished ? <Meter min={st.min} plan={plan} color={sj.c} /> : (
+        <View style={{ marginLeft: 8, paddingHorizontal: 7, height: 20, borderRadius: 10, borderWidth: hair, borderColor: t.line2, justifyContent: 'center' }}>
+          <Txt size={10.5} w="600" tone="ink3">やらなかった</Txt>
+        </View>
+      )}
     </Press>
   );
 }
 /** How long it was studied against its plan: a small bar in the subject's color (orange on past the plan), and the minutes. */
 function Meter({ min, plan, color }: { min: number; plan: number; color: string }) {
   const t = useT();
-  if (!min) return <Txt size={12} w="700" color={t.greenInk}>✓</Txt>;
+  if (!min) return <Txt size={11.5} w="600" tone="ink2" style={{ marginLeft: 8 }}>完了</Txt>;
   const done = plan ? Math.min(1, min / plan) : 1;
   const extra = plan && min > plan ? Math.min(0.4, (min - plan) / plan) : 0;
   return (
@@ -248,24 +267,33 @@ function AheadRow({ b, live, next, last }: { b: Block; live: boolean; next: bool
   return (
     <Press onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}${live ? '。いまの予定' : next ? '。つぎの予定' : ''}。編集`}
       // the live row's gray ground is inset, and its padding takes up the inset, so its columns stay on the grid
-      style={[rowStyle, { minHeight: 58 }, live ? { marginHorizontal: 6, paddingHorizontal: PAD - 6, borderRadius: 12, backgroundColor: t.sunken } : null]}>
+      style={[rowStyle, { minHeight: 64 }, live ? { marginHorizontal: 6, paddingHorizontal: PAD - 6, borderRadius: 12, backgroundColor: t.sunken } : null]}>
       <TimeCol><Times b={b} /></TimeCol>
       <Rail ahead={!live} last={last}>
         {live ? (
-          <View style={{ padding: 3, borderRadius: 10, backgroundColor: blank }}><PlanArt icon={b.icon} name={sj.name} color={sj.c} size={26} radius={7} /></View>
+          <View style={{ padding: 3, borderRadius: 10, backgroundColor: blank }}><PlanArt icon={b.icon} name={sj.name} color={sj.c} size={30} radius={8} /></View>
         ) : <Node kind="later" />}
       </Rail>
       <View style={{ flex: 1, minWidth: 0, paddingLeft: 6, paddingRight: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Txt size={14.5} w="700" numberOfLines={1} style={{ flexShrink: 1 }}>{sj.name}</Txt>
-          {live ? <View style={{ paddingHorizontal: 6, height: 18, borderRadius: 9, backgroundColor: t.ink, justifyContent: 'center' }}><Txt size={10} w="800" color={t.onInk}>いま</Txt></View> : null}
+          {live ? <NowBadge /> : null}
           {next ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
           {b.date ? <Txt size={11} w="600" tone="ink3">この日だけ</Txt> : null}
         </View>
         {b.note || b.t ? <Txt size={12} tone="ink2" numberOfLines={1}>{b.note || b.t}</Txt> : null}
       </View>
-      {live ? null : <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={38} radius={9} />}
+      {live ? null : <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={46} radius={11} />}
     </Press>
+  );
+}
+
+/** The plan under way: Now, in the same red as this minute's mark. */
+function NowBadge() {
+  return (
+    <View style={{ paddingHorizontal: 7, height: 18, borderRadius: 9, backgroundColor: NOW_RED, justifyContent: 'center' }}>
+      <Txt size={10.5} w="800" color="#FFFFFF" lh={13}>Now</Txt>
+    </View>
   );
 }
 
@@ -280,7 +308,7 @@ function Times({ b }: { b: Block }) {
   );
 }
 
-/** A plan as a row: the time, its icon, the subject with いま / つぎ, and the memo (no memo: what to do). */
+/** A plan as a row: the time, its icon, the subject with Now / つぎ, and the memo (no memo: what to do). */
 function PlanRow({ b, live, next, first }: { b: Block; live: boolean; next: boolean; first: boolean }) {
   const t = useT();
   const sj = subj(b.s);
@@ -293,7 +321,7 @@ function PlanRow({ b, live, next, first }: { b: Block; live: boolean; next: bool
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Txt size={14.5} w="700" numberOfLines={1} style={{ flexShrink: 1 }}>{sj.name}</Txt>
-          {live ? <View style={{ paddingHorizontal: 6, height: 18, borderRadius: 9, backgroundColor: t.ink, justifyContent: 'center' }}><Txt size={10} w="800" color={t.onInk}>いま</Txt></View> : null}
+          {live ? <NowBadge /> : null}
           {next ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
           {b.date ? <Txt size={11} w="600" tone="ink3">この日だけ</Txt> : null}
         </View>
