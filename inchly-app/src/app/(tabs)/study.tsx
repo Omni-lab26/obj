@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 
 import { FREE, subj } from '@/data';
@@ -95,9 +95,8 @@ function Timetable() {
         })}
       </View>
       <Card style={{ marginHorizontal: 16 }} pad={0}>
-        {stops.length ? <DayLine stops={stops} /> : null}
-        {rows.map(({ block: b, state }, i) => (
-          <PlanRow key={b.id} b={b} live={state === 'now'} next={state === 'next'} first={!i && !stops.length} />
+        {isToday && (stops.length || rows.length) ? <TodayLine stops={stops} rows={rows} now={clockOf(d.getHours() * 60 + d.getMinutes())} /> : rows.map(({ block: b, state }, i) => (
+          <PlanRow key={b.id} b={b} live={state === 'now'} next={state === 'next'} first={!i} />
         ))}
         {!rows.length && !stops.length ? (
           <Press onPress={() => planCalendar()} style={{ paddingVertical: 18, paddingHorizontal: 16, alignItems: 'center', gap: 4 }}>
@@ -112,49 +111,158 @@ function Timetable() {
 
 type Stop = { kind: 'plan'; b: Block; at: number; finished: boolean; min: number } | { kind: 'free'; x: Session; at: number };
 const clockOf = (m: number) => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
-/** Behind you today, small on one line like the stations already passed: a dot in the subject's color, the time, what it was, and ✓ / 仕分ける. */
-function DayLine({ stops }: { stops: Stop[] }) {
-  const t = useT();
+
+// Today as one line through the day, like a route map (MOTION.md aside, nothing here moves):
+// - the times right-aligned in one column of fixed-width figures, beside the line;
+// - the line solid where the day is behind you, dotted where it's still to come,
+//   and a thin red mark at this minute;
+// - what a stop is, by its shape: done, a dot in the subject's color (and, on the
+//   right, a small bar of the minutes against the plan, orange past it); its time
+//   gone by undone, an empty ring (crossed out); a 自習 not sorted yet, a dashed
+//   ring (仕分ける); to come, a small white ring (its icon on the right); the plan
+//   under way, its icon on the line itself.
+const TIME_W = 44, RAIL_W = 30;
+const OVER = '#FF9F0A';
+const NOW_RED = '#FF3B30';
+function TodayLine({ stops, rows, now }: { stops: Stop[]; rows: (Slot | { block: Block; state: 'plain' })[]; now: string }) {
+  const n = stops.length + 1 + rows.length;
   return (
-    <View style={{ paddingVertical: 6 }}>
-      {/* the line through the dots */}
-      {stops.length > 1 ? <View pointerEvents="none" style={{ position: 'absolute', left: 12 + 46 + 10 + 4, top: 19, bottom: 19, width: 2, borderRadius: 1, backgroundColor: t.line }} /> : null}
-      {stops.map((st) => {
-        if (st.kind === 'free') {
-          const x = st.x;
-          return (
-            <Press key={x.id} onPress={() => sortSheet(x)} scale={0.99} accessibilityLabel={`${clockOf(Math.max(0, st.at))}から自習 ${x.min}分${x.what ? ` ${x.what}` : ''}。科目を付けて仕分ける`}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 32, paddingLeft: 12, paddingRight: 12 }}>
-              <Txt num size={12} tone="ink3" style={{ width: 46 }}>{clockOf(Math.max(0, st.at))}</Txt>
-              <Dot color={subj(FREE).c} />
-              <Txt size={12.5} tone="ink2" numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>
-                <Txt size={12.5} w="600">{`自習 ${x.min}分`}</Txt>{x.what || x.note ? ` · ${x.what || x.note}` : ''}
-              </Txt>
-              <Txt size={12.5} w="600" color={t.blue}>仕分ける</Txt>
-            </Press>
-          );
-        }
-        const b = st.b, sj = subj(b.s);
-        return (
-          <Press key={b.id} onPress={() => blockSheet(b)} scale={0.99}
-            accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。${st.finished ? `終わった${st.min ? ` ${st.min}分` : ''}` : '時間が過ぎた'}。編集`}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 32, paddingLeft: 12, paddingRight: 12, opacity: st.finished ? 1 : 0.55 }}>
-            <Txt num size={12} tone="ink3" style={{ width: 46 }} numberOfLines={1}>{b.start ?? '—'}</Txt>
-            <Dot color={sj.c} />
-            <Txt size={12.5} tone="ink2" numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>
-              <Txt size={12.5} w="600">{sj.name}</Txt>{b.note || b.t ? ` · ${b.note || b.t}` : ''}
-            </Txt>
-            {st.finished ? <Txt num size={12.5} w="700" color={t.greenInk}>{st.min ? `✓ ${st.min}分` : '✓'}</Txt> : null}
-          </Press>
-        );
-      })}
+    <View style={{ paddingTop: 8, paddingBottom: 10, paddingRight: 12 }}>
+      {stops.map((st, i) => <StopRow key={st.kind === 'free' ? st.x.id : st.b.id} st={st} first={i === 0} last={false} />)}
+      <NowMark at={now} first={!stops.length} last={!rows.length} />
+      {rows.map(({ block: b, state }, i) => (
+        <AheadRow key={b.id} b={b} live={state === 'now'} next={state === 'next'} last={stops.length + 1 + i === n - 1} />
+      ))}
     </View>
   );
 }
-/** A stop on the line: a small dot ringed in the card's white, so the line seems to pass behind it. */
-function Dot({ color }: { color: string }) {
+
+/** The line's piece in one row: solid (behind) or dotted (to come), from above its node and below it. */
+function Rail({ first, last, ahead, children }: { first?: boolean; last?: boolean; ahead?: boolean; children?: ReactNode }) {
   const t = useT();
-  return <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: color, borderWidth: 2, borderColor: t.surface }} />;
+  const piece = (top: boolean) => ahead ? (
+    <View style={{ flex: 1, width: 2, overflow: 'hidden', alignItems: 'center', gap: 3, paddingTop: top ? 0 : 3 }}>
+      {Array.from({ length: 12 }, (_, k) => <View key={k} style={{ width: 2, height: 2, borderRadius: 1, backgroundColor: t.line2 }} />)}
+    </View>
+  ) : <View style={{ flex: 1, width: 2, backgroundColor: t.ink3, opacity: 0.75 }} />;
+  return (
+    <View style={{ width: RAIL_W, alignSelf: 'stretch', alignItems: 'center' }}>
+      {first ? <View style={{ flex: 1 }} /> : piece(true)}
+      <View style={{ alignItems: 'center', justifyContent: 'center' }}>{children}</View>
+      {last ? <View style={{ flex: 1 }} /> : piece(false)}
+    </View>
+  );
+}
+/** The card's own white, solid (a ring around a node so the line seems to pass behind it). */
+const useBlank = () => (useT().dark ? '#24272B' : '#FFFFFF');
+function Node({ kind, color }: { kind: 'done' | 'miss' | 'free' | 'later'; color?: string }) {
+  const t = useT();
+  const blank = useBlank();
+  const d = kind === 'later' ? 10 : 12;
+  return (
+    <View style={{ width: d + 5, height: d + 5, borderRadius: (d + 5) / 2, backgroundColor: blank, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ width: d, height: d, borderRadius: d / 2,
+        backgroundColor: kind === 'done' ? color : blank,
+        borderWidth: kind === 'done' ? 0 : 2, borderStyle: kind === 'free' ? 'dashed' : 'solid', borderColor: kind === 'free' ? subj(FREE).c : t.line2 }} />
+    </View>
+  );
+}
+function TimeCol({ children }: { children: ReactNode }) {
+  return <View style={{ width: TIME_W, alignItems: 'flex-end', justifyContent: 'center', paddingRight: 2 }}>{children}</View>;
+}
+
+/** Behind you: one thin line. */
+function StopRow({ st, first, last }: { st: Stop; first: boolean; last: boolean }) {
+  const t = useT();
+  if (st.kind === 'free') {
+    const x = st.x, at = clockOf(Math.max(0, st.at));
+    return (
+      <Press onPress={() => sortSheet(x)} scale={0.99} accessibilityLabel={`${at}から自習 ${x.min}分${x.what ? ` ${x.what}` : ''}。科目を付けて仕分ける`}
+        style={{ flexDirection: 'row', alignItems: 'center', minHeight: 32 }}>
+        <TimeCol><Txt num size={12} tone="ink3">{at}</Txt></TimeCol>
+        <Rail first={first} last={last}><Node kind="free" /></Rail>
+        <Txt size={12.5} tone="ink2" numberOfLines={1} style={{ flex: 1, minWidth: 0, paddingLeft: 4 }}>
+          <Txt size={12.5} w="600">{`自習 ${x.min}分`}</Txt>{x.what || x.note ? ` · ${x.what || x.note}` : ''}
+        </Txt>
+        <Txt size={12.5} w="600" color={t.blue}>仕分ける</Txt>
+      </Press>
+    );
+  }
+  const b = st.b, sj = subj(b.s), plan = b.min ?? 0;
+  return (
+    <Press onPress={() => blockSheet(b)} scale={0.99}
+      accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。${st.finished ? `終わった${st.min ? ` ${st.min}分${plan ? `（予定${plan}分）` : ''}` : ''}` : 'やらずに時間が過ぎた'}。編集`}
+      style={{ flexDirection: 'row', alignItems: 'center', minHeight: 32 }}>
+      <TimeCol><Txt num size={12} tone="ink3" numberOfLines={1}>{b.start ?? '—'}</Txt></TimeCol>
+      <Rail first={first} last={last}><Node kind={st.finished ? 'done' : 'miss'} color={sj.c} /></Rail>
+      <Txt size={12.5} tone={st.finished ? 'ink2' : 'ink3'} numberOfLines={1} style={{ flex: 1, minWidth: 0, paddingLeft: 4 }}>
+        <Txt size={12.5} w={st.finished ? '600' : '500'} tone={st.finished ? 'ink' : 'ink3'} style={st.finished ? null : { textDecorationLine: 'line-through' }}>{sj.name}</Txt>
+        {b.note || b.t ? ` · ${b.note || b.t}` : ''}
+      </Txt>
+      {st.finished ? <Meter min={st.min} plan={plan} color={sj.c} /> : null}
+    </Press>
+  );
+}
+/** How long it was studied against its plan: a small bar in the subject's color (orange on past the plan), and the minutes. */
+function Meter({ min, plan, color }: { min: number; plan: number; color: string }) {
+  const t = useT();
+  if (!min) return <Txt size={12} w="700" color={t.greenInk}>✓</Txt>;
+  const done = plan ? Math.min(1, min / plan) : 1;
+  const extra = plan && min > plan ? Math.min(0.4, (min - plan) / plan) : 0;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+      <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: t.line, flexDirection: 'row', gap: 1, overflow: 'hidden' }}>
+        <View style={{ flex: done, backgroundColor: color, borderRadius: 2 }} />
+        {extra ? <View style={{ flex: extra, backgroundColor: OVER, borderRadius: 2 }} /> : null}
+        {done < 1 ? <View style={{ flex: 1 - done }} /> : null}
+      </View>
+      <Txt num size={11.5} tone="ink3">{`${min}分`}</Txt>
+    </View>
+  );
+}
+/** This minute: a red dot on the line and a thin red rule across the day. */
+function NowMark({ at, first, last }: { at: string; first: boolean; last: boolean }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 20 }} accessible accessibilityLabel={`いま ${at}`}>
+      <TimeCol><Txt num size={12} w="700" color={NOW_RED}>{at}</Txt></TimeCol>
+      <Rail first={first} last={last}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: NOW_RED }} /></Rail>
+      <View style={{ flex: 1, height: 1.5, backgroundColor: NOW_RED, opacity: 0.55 }} />
+    </View>
+  );
+}
+/** The plan under way (its icon on the line, on a gray ground) and the ones to come (a white ring; the icon on the right). */
+function AheadRow({ b, live, next, last }: { b: Block; live: boolean; next: boolean; last: boolean }) {
+  const t = useT();
+  const blank = useBlank();
+  const sj = subj(b.s);
+  return (
+    <Press onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}${live ? '。いまの予定' : next ? '。つぎの予定' : ''}。編集`}
+      style={{ flexDirection: 'row', alignItems: 'center', minHeight: 58, borderRadius: 12, backgroundColor: live ? t.sunken : 'transparent' }}>
+      <TimeCol>
+        {b.start ? (
+          <>
+            <Txt num size={13} w="700" lh={16}>{b.start}</Txt>
+            {b.min ? <Txt num size={11} tone="ink3" lh={14}>{endOf(b)}</Txt> : <Txt size={11} tone="ink3" lh={14}>から</Txt>}
+          </>
+        ) : <Txt size={10.5} w="600" tone="ink3" numberOfLines={1}>時刻なし</Txt>}
+      </TimeCol>
+      <Rail ahead={!live} last={last}>
+        {live ? (
+          <View style={{ padding: 3, borderRadius: 10, backgroundColor: blank }}><PlanArt icon={b.icon} name={sj.name} color={sj.c} size={26} radius={7} /></View>
+        ) : <Node kind="later" />}
+      </Rail>
+      <View style={{ flex: 1, minWidth: 0, paddingLeft: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Txt size={14.5} w="700" numberOfLines={1} style={{ flexShrink: 1 }}>{sj.name}</Txt>
+          {live ? <View style={{ paddingHorizontal: 6, height: 18, borderRadius: 9, backgroundColor: t.ink, justifyContent: 'center' }}><Txt size={10} w="800" color={t.onInk}>いま</Txt></View> : null}
+          {next ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
+          {b.date ? <Txt size={11} w="600" tone="ink3">この日だけ</Txt> : null}
+        </View>
+        {b.note || b.t ? <Txt size={12} tone="ink2" numberOfLines={1}>{b.note || b.t}</Txt> : null}
+      </View>
+      {live ? null : <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={38} radius={9} />}
+    </Press>
+  );
 }
 
 /** A plan as a row: the time, its icon, the subject with いま / つぎ, and the memo (no memo: what to do). */
