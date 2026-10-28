@@ -42,8 +42,8 @@ import { closeTimer, fmt, TimerFrame } from './standard';
 // one as you go, or all at the end (まとめて記録). A recorded plan's card
 // leaves; the card in front adds one. The card is a music player's, opened
 // big: the picture, the subject and the memo with ♡ (kept to add again), the
-// line toward the plan's end with the time under it, and the buttons (···,
-// ▶ / ❚❚, 記録). Hold the time to pick its face. Under the cards, an ad.
+// line toward the plan's end with the time under it, and the buttons (✎,
+// ▶ / ❚❚, ✓). Hold the time to pick its face. Under the cards, an ad.
 //
 // Behind it all, the theme you pick (テーマ): the koi pond (they swim around
 // the card, never under it), sharks in a pale sea (the cards frosted glass),
@@ -444,7 +444,7 @@ const clock = (sec: number) => {
  * plan's end, the time studied under it on the left (big, in the face you
  * picked: hold it to change) and what's left on the right (−20:43; past the
  * plan +4:12 in orange, the line going on in orange too); and the buttons:
- * ··· the rest, ▶ / ❚❚ big in the middle, 記録 (end and record).
+ * ✎ edits the plan, ▶ / ❚❚ big in the middle, ✓ ends and records (not started: ends the plan).
  */
 function CardFace({ b, w, state, sec, plan, held, begin, record, more, h }: CardProps & { state: CardState; sec: number; plan: number; h: number }) {
   const sj = subj(b.s);
@@ -525,33 +525,35 @@ function CardFace({ b, w, state, sec, plan, held, begin, record, more, h }: Card
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
           <Press onLongPress={() => { haptic.firm(); timeFontSheet(); }} delayLongPress={450} haptics={false} scale={1.04}
-            accessibilityRole="button" accessibilityLabel={`勉強した時間 ${left}`} accessibilityHint="長押しで時間のフォントを変えられます">
-            <Text numberOfLines={1} style={{ fontFamily: face.family, fontSize: size, lineHeight: size * 1.15, letterSpacing: face.spacing * size, color: state === 'idle' || state === 'paused' ? CARD.ink2 : CARD.ink, fontVariant: ['tabular-nums'] }}>{left}</Text>
+            accessibilityRole="button" accessibilityLabel={`勉強した時間 ${left}`} accessibilityHint="長押しで時間のフォントを変えられます" style={{ flexShrink: 1, minWidth: 0 }}>
+            {/* no set line height: the tall faces (縦長) would be cut at the top and bottom; a long time shrinks to fit rather than being cut at the side */}
+            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}
+              style={{ fontFamily: face.family, fontSize: size, paddingVertical: size * 0.06, includeFontPadding: false, letterSpacing: face.spacing * size, color: state === 'idle' || state === 'paused' ? CARD.ink2 : CARD.ink, fontVariant: ['tabular-nums'] }}>{left}</Text>
           </Press>
-          <Text numberOfLines={1} style={{ fontSize: fs(15), color: over ? EXTRA : CARD.ink2, fontWeight: over ? '700' : '400', fontVariant: ['tabular-nums'], paddingBottom: 4 * k }}>{right}</Text>
+          <Text numberOfLines={1} style={{ flexShrink: 0, marginLeft: 10 * k, fontSize: fs(15), color: over ? EXTRA : CARD.ink2, fontWeight: over ? '700' : '400', fontVariant: ['tabular-nums'], paddingBottom: 4 * k }}>{right}</Text>
         </View>
       </View>
 
-      {/* ··· / ▶ ❚❚ / 記録 */}
+      {/* ✎ 編集 / ▶ ❚❚ / ✓ 記録 */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 34 * k }}>
-        <Side k={k} icon="more" a11y={`${sj.name}の予定のメニュー`} onPress={more} />
+        <Side k={k} icon="edit" a11y={`${sj.name}の予定を編集`} onPress={() => { haptic.tap(); planSheet({ existing: b }); }} />
         <Press onPress={main.go} haptics={false} scale={0.9} accessibilityLabel={main.a11y}
           style={{ width: 70 * k, height: 70 * k, borderRadius: 35 * k, backgroundColor: CARD.ink, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name={main.icon} size={26 * k} color="#fff" filled />
         </Press>
-        <Side k={k} icon="check" label="記録" a11y={state === 'held' ? `${sj.name} ${Math.max(1, Math.round(sec / 60))}分を記録する` : `${sj.name}を終わって記録する`} onPress={rec} />
+        {/* not started yet: ✓ offers ending the plan without studying (the menu), as recording needs a session */}
+        <Side k={k} icon="check" a11y={state === 'held' ? `${sj.name} ${Math.max(1, Math.round(sec / 60))}分を記録する` : running ? `${sj.name}を終わって記録する` : `${sj.name}の予定を終わりにする`} onPress={rec ?? more} />
       </View>
     </View>
   );
 }
 
-/** The buttons beside the big one: an outline symbol (and a word under it), as a player's ⏮ ⏭; faded when there's nothing to do. */
-function Side({ k, icon, label, a11y, onPress }: { k: number; icon: 'more' | 'check'; label?: string; a11y: string; onPress: (() => void) | null }) {
+/** The buttons beside the big one: an outline symbol alone, as a player's ⏮ ⏭ (the name is for VoiceOver). */
+function Side({ k, icon, a11y, onPress }: { k: number; icon: 'edit' | 'check'; a11y: string; onPress: () => void }) {
   return (
-    <Press onPress={onPress ?? undefined} disabled={!onPress} scale={0.86} hitSlop={8} accessibilityLabel={a11y}
-      style={{ width: 52 * k, height: 52 * k, alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+    <Press onPress={onPress} scale={0.86} hitSlop={8} accessibilityLabel={a11y}
+      style={{ width: 52 * k, height: 52 * k, alignItems: 'center', justifyContent: 'center' }}>
       <Icon name={icon} size={26 * k} color={CARD.ink} width={1.8} />
-      {label ? <Text style={{ fontSize: Math.max(10, 11 * k), fontWeight: '600', color: CARD.ink2 }}>{label}</Text> : null}
     </Press>
   );
 }
