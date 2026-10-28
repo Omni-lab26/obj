@@ -17,8 +17,9 @@ import { openSheet } from './Sheet';
 import { toast } from './Toast';
 
 // Adding to the timetable, or a deadline (each its own sheet): やめる, what this
-// is and 追加 along the top, then only what a plan needs — the icon and what to
-// do side by side (the top of its card in the timer), the start time, a memo.
+// is and 追加 along the top, then only what a plan needs, top to bottom: its icon
+// (app-icon size) beside the 教科 over the メモ (as its row in the timetable), the
+// day (a week of days in a row, the calendar for later), the time.
 // The icon is the subject: tap it to pick one from the subjects' pictures (化学
 // is a flask …) or make a new one; 足す (always last) picks a photo to stand in
 // for the picture, and keeps it as your own icon — next time it's in the grid,
@@ -29,6 +30,8 @@ import { toast } from './Toast';
 // Drawn the way iOS draws a new event, and kept low in contrast: やめる and 追加
 // as blue text, small grey names over white groups, 日付 and 時刻 (start 〜 end)
 // as Calendar's rows, in grey chips that open iOS's pickers.
+// The plan's メモ is the one line under its subject everywhere (saved as what to
+// do; an older plan's separate memo is folded into it when it's edited).
 // A new plan starts with よく使う: the plans kept with ♡ on their timer card,
 // in a row; a tap fills the form in with one (long press lets it go).
 // The keyboard waits for a tap.
@@ -55,7 +58,8 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const subjects = useSubjects();
   const today = day0(new Date());
   const kind: Kind = existing ? 'plan' : kind0;
-  const [title, setTitle] = useState(existing?.t ?? '');
+  // a plan's メモ (what to do; an older separate memo comes first), or the deadline's name
+  const [title, setTitle] = useState(existing ? existing.note || existing.t || '' : '');
   const [d, setD] = useState(() => (existing?.date ? parseKey(existing.date) : day0(date ?? new Date())));
   const nextHour = Math.min(22, new Date().getHours() + 1) * 60;
   // the start is optional too (null: no time — the plan is just for its day)
@@ -85,7 +89,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const takeFav = (f: Fav) => {
     haptic.tap();
     const sj = subj(f.s);
-    setName(sj.name); setColor(sj.c); setTitle(f.t); setNote(f.note ?? ''); setIcon(f.icon);
+    setName(sj.name); setColor(sj.c); setTitle(f.note || f.t || ''); setIcon(f.icon);
     setStartAt(f.start ? toMin(f.start) : null); setLen(f.start ? f.min ?? 0 : 0);
     setOpen(null);
   };
@@ -105,8 +109,8 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   };
 
   const save = () => {
-    if (!title.trim()) { haptic.warn(); toast(plan ? '何をやるかを入れてください' : '締切の名前を入れてください'); return; }
     if (!plan) {
+      if (!title.trim()) { haptic.warn(); toast('締切の名前を入れてください'); return; }
       const days = Math.round((day0(d).getTime() - day0(new Date()).getTime()) / 86_400_000);
       addDeadline({ t: title.trim(), mo: d.getMonth() + 1, day: d.getDate(), urgent: days <= 21, note: note.trim() || undefined });
       haptic.success();
@@ -114,13 +118,13 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
       toast('締切を追加しました', `${shortDate(d)} · あと${days}日`);
       return;
     }
-    if (!name.trim()) { haptic.warn(); setOpen('subject'); toast('アイコン（科目）を選んでください', '記録とグラフは科目ごとに分かれます'); return; }
+    if (!name.trim()) { haptic.warn(); setOpen('subject'); toast('教科を選んでください', '記録とグラフは教科ごとに分かれます'); return; }
     // the subject: one you have, or a new one
     let s = match?.id;
     // a new one goes in the 教科 its name points to, in that 教科's color (colors are fixed: data.ts)
     if (!s) s = addSubject({ name: name.trim(), area: guessArea(name), c: color });
     saveBlock({
-      id: existing?.id, s, t: title.trim(), note: note.trim() || undefined, icon,
+      id: existing?.id, s, t: title.trim() || undefined, note: undefined, icon,
       start: start === null ? undefined : toClock(start), min: start === null ? 0 : len,
       days: weekly ? days : [], date: weekly ? undefined : dateKey(d),
     });
@@ -171,32 +175,36 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
 
       {plan ? (
         <>
-          {/* the icon (which is the subject) big on the left, what to do beside it — the top of a timer card */}
-          <Field label="アイコン・やること">
-            <Group>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 12 }}>
-                <Press onPress={() => toggle('subject')} scale={0.95} accessibilityLabel={name.trim() ? `アイコン（科目）：${name.trim()}。変える` : 'アイコン（科目）を選ぶ'} accessibilityState={{ expanded: open === 'subject' }}
-                  style={{ alignItems: 'center', gap: 5 }}>
-                  {name.trim() || icon ? (
-                    <View style={{ borderRadius: 9, borderWidth: 2, borderColor: open === 'subject' ? t.blue : 'transparent', padding: 1 }}>
-                      <PlanArt icon={icon} name={name.trim() || '？'} color={color} size={80} radius={7} />
-                    </View>
-                  ) : (
-                    <View style={{ width: 84, height: 84, borderRadius: 8, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line2, alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                      <Icon name="plus" size={18} color={t.ink2} />
-                      <Txt size={11} tone="ink3">科目</Txt>
-                    </View>
-                  )}
-                  <Txt size={11.5} tone={name.trim() ? 'ink2' : 'ink3'} numberOfLines={1} style={{ maxWidth: 84 }}>{name.trim() || 'アイコン'}</Txt>
+          {/* the icon (app-icon size; it is the subject) on the left; on the right the 教科 over the メモ, as the plan's row in the timetable */}
+          <Group>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingLeft: 14, paddingRight: 6, paddingVertical: 12 }}>
+              <Press onPress={() => toggle('subject')} scale={0.94} accessibilityLabel={name.trim() ? `アイコン（教科）：${name.trim()}。変える` : 'アイコン（教科）を選ぶ'} accessibilityState={{ expanded: open === 'subject' }}>
+                {name.trim() || icon ? (
+                  <View style={{ borderRadius: 16, borderWidth: 2, borderColor: open === 'subject' ? t.blue : 'transparent', padding: 1.5 }}>
+                    <PlanArt icon={icon} name={name.trim() || '？'} color={color} size={58} radius={13} />
+                  </View>
+                ) : (
+                  <View style={{ width: 63, height: 63, borderRadius: 15, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line2, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="plus" size={20} color={t.ink2} />
+                  </View>
+                )}
+              </Press>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Press onPress={() => toggle('subject')} scale={0.98} accessibilityLabel={name.trim() ? `教科：${name.trim()}。変える` : '教科を選ぶ'}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 34, paddingRight: 8 }}>
+                  <Txt size={18} w="700" tone={name.trim() ? 'ink' : 'ink3'} numberOfLines={1} style={{ flexShrink: 1 }}>{name.trim() || '教科'}</Txt>
+                  <View style={{ transform: [{ rotate: open === 'subject' ? '-90deg' : '90deg' }] }}><Icon name="chev" size={13} color={t.ink3} /></View>
                 </Press>
-                <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder="青チャート 例題41〜50"
-                  placeholderTextColor={t.ink3} multiline onFocus={typing} accessibilityLabel="何をやるか"
-                  style={[{ flex: 1, minWidth: 0, minHeight: 84, paddingTop: 2, fontSize: 17, lineHeight: 24, fontFamily: font.text, fontWeight: '600', color: t.ink, textAlignVertical: 'top' }, noOutline]} />
+                <View style={{ height: hair, backgroundColor: t.line }} />
+                <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder="メモ（例：青チャート 例題41〜50）"
+                  placeholderTextColor={t.ink3} onFocus={typing} accessibilityLabel="メモ" returnKeyType="done"
+                  style={[{ height: 34, paddingVertical: 0, paddingRight: 8, fontSize: 15, fontFamily: font.text, color: t.ink }, noOutline]} />
               </View>
-              {/* what you've written before (plans' やること, records' contents), one row: a tap puts it in */}
-              <View style={{ paddingHorizontal: 12, paddingBottom: 10, marginTop: -2 }}>
-                <ContentHints s={match?.id ?? null} typed={title} onPick={(w) => setTitle(w.slice(0, 40))} />
-              </View>
+            </View>
+            {/* what you've written before (plans' メモ, records' contents), one row: a tap puts it in */}
+            <View style={{ paddingHorizontal: 12, paddingBottom: 10, marginTop: -4 }}>
+              <ContentHints s={match?.id ?? null} typed={title} onPick={(w) => setTitle(w.slice(0, 40))} />
+            </View>
               {/* the subjects as the icons to pick; a photo can stand in for the picture */}
               {open === 'subject' ? (
                 <Opens>
@@ -254,20 +262,17 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
                 </Opens>
               ) : null}
               {open === 'new' ? <Opens><NewSubject onAdd={(x) => { setName(x.name); setColor(x.c); setOpen(null); }} /></Opens> : null}
-            </Group>
-          </Field>
+          </Group>
 
-          {/* 日付, then 時刻 with the start and the end side by side, as grey chips that open iOS's pickers under their row; the end can stay empty */}
-          <Field>
-            <Group>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 52 }}>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Txt size={16}>日付</Txt>
-                </View>
-                <PickChip label={chipDate(d)} on={open === 'date'} onPress={() => toggle('date')} a11y="始める日を変える" />
-              </View>
-              {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => { setD(day0(x)); setMoved(true); }} onDone={() => setOpen(null)} /></Opens> : null}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 16, paddingRight: 10, minHeight: 52, borderTopWidth: hair, borderTopColor: t.line }}>
+          {/* 曜日: the coming week in a row (one tap), the calendar for a later day */}
+          <Group>
+            <WeekRow d={d} today={today} calendar={open === 'date'} onPick={(x) => { haptic.tap(); setD(x); setMoved(true); if (open === 'date') setOpen(null); }} onCalendar={() => toggle('date')} />
+            {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => { setD(day0(x)); setMoved(true); }} onDone={() => setOpen(null)} /></Opens> : null}
+          </Group>
+
+          {/* 時刻: the start and the end side by side, as grey chips that open iOS's pickers under the row; the end can stay empty */}
+          <Group>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 16, paddingRight: 10, minHeight: 52 }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Txt size={16}>時刻</Txt>
                   {len ? <Txt num size={12} tone="ink3" numberOfLines={1}>{`${nextDay ? '翌日まで · ' : ''}${lenLabel}`}</Txt> : null}
@@ -291,8 +296,7 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
               </View>
               {open === 'start' && start !== null ? <Opens><TimePick value={start} onChange={setStart} onDone={() => setOpen(null)} /></Opens> : null}
               {open === 'end' && len ? <Opens><TimePick value={end % DAY} onChange={setEnd} onDone={() => setOpen(null)} /></Opens> : null}
-            </Group>
-          </Field>
+          </Group>
         </>
       ) : (
         <>
@@ -318,14 +322,15 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
         </>
       )}
 
+      {plan ? null : (
       <Field label="メモ">
         <Group>
-          <TextInput value={note} onChangeText={(v) => setNote(v.slice(0, 200))} placeholder={plan ? '持ち物、気をつけること、前回の続きなど' : '受付の時間、持ち物など'} placeholderTextColor={t.ink3}
-            multiline onFocus={typing} accessibilityLabel="メモ" style={[{ minHeight: 76, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, lineHeight: 22, fontFamily: font.text, color: t.ink, textAlignVertical: 'top' }, noOutline]} />
-          {plan ? <View style={{ paddingHorizontal: 12, paddingBottom: 6 }}><ContentHints s={match?.id ?? null} typed={note} onPick={setNote} /></View> : null}
+          <TextInput value={note} onChangeText={(v) => setNote(v.slice(0, 200))} placeholder="受付の時間、持ち物など" placeholderTextColor={t.ink3}
+            multiline onFocus={typing} accessibilityLabel="締切のメモ" style={[{ minHeight: 76, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, lineHeight: 22, fontFamily: font.text, color: t.ink, textAlignVertical: 'top' }, noOutline]} />
           <Txt num size={11} tone="ink3" style={{ textAlign: 'right', paddingHorizontal: 12, paddingBottom: 8 }}>{`${note.length}/200`}</Txt>
         </Group>
       </Field>
+      )}
 
       {existing ? (
         <Group>
@@ -335,6 +340,37 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
           </Press>
         </Group>
       ) : null}
+    </View>
+  );
+}
+
+/** The coming week as a row of days (今日 first), one tap each; the last cell opens the calendar (and shows a later day picked there). */
+function WeekRow({ d, today, calendar, onPick, onCalendar }: { d: Date; today: Date; calendar: boolean; onPick: (x: Date) => void; onCalendar: () => void }) {
+  const t = useT();
+  const week = Array.from({ length: 7 }, (_, i) => new Date(today.getFullYear(), today.getMonth(), today.getDate() + i));
+  const later = !week.some((x) => x.getTime() === d.getTime());
+  const cell = { flex: 1, height: 54, borderRadius: 12, alignItems: 'center' as const, justifyContent: 'center' as const, gap: 1 };
+  return (
+    <View style={{ flexDirection: 'row', gap: 4, padding: 8 }} accessibilityRole="radiogroup">
+      {week.map((x, i) => {
+        const on = x.getTime() === d.getTime();
+        return (
+          <Press key={i} onPress={() => onPick(x)} scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`${i === 0 ? '今日 ' : ''}${shortDate(x)}`}
+            style={[cell, { backgroundColor: on ? t.ink : 'transparent' }]}>
+            <Txt size={10.5} w="600" lh={13} color={on ? t.onInk : i === 0 ? t.blue : mondayIndex(x) >= 5 ? t.ink2 : t.ink3}>{i === 0 ? '今日' : DOW[mondayIndex(x)]}</Txt>
+            <Txt num size={17} w={on ? '700' : '600'} lh={21} color={on ? t.onInk : t.ink}>{String(x.getDate())}</Txt>
+          </Press>
+        );
+      })}
+      <Press onPress={onCalendar} scale={0.92} accessibilityLabel={later ? `${shortDate(d)}。カレンダーで変える` : 'もっと先の日をカレンダーで選ぶ'} accessibilityState={{ expanded: calendar }}
+        style={[cell, { backgroundColor: later ? t.ink : t.sunken }]}>
+        {later ? (
+          <>
+            <Txt size={10.5} w="600" lh={13} color={t.onInk}>{`${d.getMonth() + 1}月`}</Txt>
+            <Txt num size={17} w="700" lh={21} color={t.onInk}>{String(d.getDate())}</Txt>
+          </>
+        ) : <Icon name="cal" size={18} color={calendar ? t.blue : t.ink2} />}
+      </Press>
     </View>
   );
 }
