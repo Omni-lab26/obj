@@ -1,61 +1,28 @@
-import { type ComponentRef, type ReactNode, type Ref, useEffect, useMemo, useState } from 'react';
+import { type ComponentRef, type ReactNode, type Ref, useEffect, useState } from 'react';
 import { type NativeScrollEvent, type NativeSyntheticEvent, RefreshControl, ScrollView, type ScrollViewProps, StyleSheet, View } from 'react-native';
 import Animated, { cancelAnimation, type SharedValue, useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 import Svg, { Circle, Ellipse, Path, Text as SvgText } from 'react-native-svg';
 
-import { subj } from '../data';
-import { useStore } from '../store';
+import { type LoaderKind, nextLoader } from '../lib/loaders';
 import { font, useT } from '../theme';
 import { BRAND_TICKS } from './Brand';
-import { glyphOf } from './SubjectGlyph';
 import { fadeIn, fadeOut, micro, spin } from './motion';
+
+export type { LoaderKind };
 
 // The loading marks: a small working thing per 教科 — π being circled (数学),
 // electrons round an atom (物理), a benzene ring turning a side at a time
 // (化学), DNA's rungs twisting (生物), the moon round the earth (地学), A B C
 // lighting in turn (英語), a brush circle (国語, 円相), an hourglass turning
-// over (社会), bits flipping (情報). The one shown is the 教科 of what you're
-// studying now (else the subject you've studied most). They turn only while
-// something loads (MOTION.md: spin), on the UI thread.
+// over (社会), bits flipping (情報). Each loading shows another one, never the
+// same twice in a row (nextLoader). They turn only while something loads
+// (MOTION.md: spin), on the UI thread.
 //
 // Where: pulling a tab down to refresh (RefreshScroll), and the timer's cards
 // while they're being made (shown only if that takes more than 0.3s).
 
-export type LoaderKind = 'math' | 'physics' | 'chem' | 'bio' | 'earth' | 'english' | 'japanese' | 'social' | 'info';
 
 const [RED, YELLOW, LIGHT, BLUE, PURPLE] = BRAND_TICKS;
-
-/** A subject's mark, from its picture (lib: SubjectGlyph). */
-export function loaderOf(name: string, area?: Parameters<typeof glyphOf>[1]): LoaderKind {
-  switch (glyphOf(name, area)) {
-    case 'atom': return 'physics';
-    case 'flask': return 'chem';
-    case 'leaf': return 'bio';
-    case 'mountain': return 'earth';
-    case 'bubble': case 'headphones': case 'pen': return 'english';
-    case 'book': case 'scroll': case 'brush': return 'japanese';
-    case 'temple': case 'torii': case 'map': case 'scales': return 'social';
-    case 'laptop': return 'info';
-    default: return 'math';
-  }
-}
-
-/** The mark for now: what's being studied, else the subject with the most time. */
-export function useLoaderKind(): LoaderKind {
-  const running = useStore((s) => (s.running ? s.subj : null));
-  const sessions = useStore((s) => s.sessions);
-  const most = useMemo(() => {
-    const by = new Map<string, number>();
-    for (const x of sessions) by.set(x.s, (by.get(x.s) ?? 0) + x.min);
-    let best: string | null = null, n = -1;
-    by.forEach((m, s) => { if (m > n) { best = s; n = m; } });
-    return best;
-  }, [sessions]);
-  const id = running ?? most;
-  if (!id) return 'math';
-  const s = subj(id);
-  return loaderOf(s.name, s.area);
-}
 
 const DURATION: Record<LoaderKind, number> = { math: 1000, physics: 1400, chem: 1800, bio: 1600, earth: 1600, english: 1200, japanese: 1300, social: 1600, info: 1600 };
 
@@ -64,8 +31,9 @@ const DURATION: Record<LoaderKind, number> = { math: 1000, physics: 1400, chem: 
  * after that long, so something quick never flashes it.
  */
 export function Loader({ kind, size = 32, delay = 0 }: { kind?: LoaderKind; size?: number; delay?: number }) {
-  const mine = useLoaderKind();
-  const k = kind ?? mine;
+  // without a kind: the next one, kept for as long as this one is up
+  const [own] = useState(nextLoader);
+  const k = kind ?? own;
   const p = useSharedValue(0);
   const seen = useSharedValue(delay ? 0 : 1);
   useEffect(() => {
@@ -206,11 +174,13 @@ function Bit({ i, p, color }: { i: number; p: SharedValue<number>; color: string
 export function RefreshScroll({ ref, onRefresh, onScroll, children, ...rest }: ScrollViewProps & { ref?: Ref<ComponentRef<typeof ScrollView>>; onRefresh?: () => void }) {
   const [refreshing, setRefreshing] = useState(false);
   const [pulling, setPulling] = useState(false);
+  // the same mark from the pull to the end of the refresh; the next refresh has another
+  const [kind, setKind] = useState(nextLoader);
   const pull = useSharedValue(0);
   const run = () => {
     setRefreshing(true);
     onRefresh?.();
-    setTimeout(() => setRefreshing(false), 900);
+    setTimeout(() => { setRefreshing(false); setKind(nextLoader()); }, 900);
   };
   const scrolled = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = -e.nativeEvent.contentOffset.y;
@@ -227,11 +197,11 @@ export function RefreshScroll({ ref, onRefresh, onScroll, children, ...rest }: S
       </ScrollView>
       {refreshing ? (
         <Animated.View entering={fadeIn()} exiting={fadeOut()} pointerEvents="none" style={{ position: 'absolute', top: 14, left: 0, right: 0, alignItems: 'center' }}>
-          <Loader size={30} />
+          <Loader kind={kind} size={30} />
         </Animated.View>
       ) : pulling ? (
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: 14, left: 0, right: 0, alignItems: 'center' }, shown]}>
-          <Loader size={30} />
+          <Loader kind={kind} size={30} />
         </Animated.View>
       ) : null}
     </View>
