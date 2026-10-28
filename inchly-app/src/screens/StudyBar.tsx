@@ -125,8 +125,8 @@ export function StandardStudyBar({ insets }: { insets: EdgeInsets }) {
 /**
  * Not studying, the bar always offers 勉強を開始, beside the timetable: when a
  * plan's time has come, that plan — what to do and its memo; before then, the
- * next one and when. 勉強を開始 starts the plan whose time it is; otherwise
- * you pick what to study, it starts, and goes into today's timetable.
+ * next one and when. 勉強を開始 starts the plan the bar shows (the next one
+ * early, with its whole length); with no plan left today, 自習 at once.
  */
 function PlanBar({ insets }: { insets: EdgeInsets }) {
   const t = useT();
@@ -139,8 +139,9 @@ function PlanBar({ insets }: { insets: EdgeInsets }) {
   const when = now ? (pick.end ? `いま · ${pick.start}–${pick.end}` : `いま · ${pick.start}から`)
     : timed ? `次 · ${pick.start}から${pick.inMin && pick.inMin > 0 && pick.inMin < 90 ? `（あと${pick.inMin}分）` : ''}` : '';
   const begin = () => {
-    if (now) { haptic.firm(); startFrom({ s: pick.s, min: pick.min, next: pick.next, blockId: pick.blockId }); return; }
-    // no plan's time has come: 自習 at once, straight to the timer; its subject and what it was are written when it's recorded
+    // the plan the bar shows — its time come, or the next one (started early, it has its whole length): that one
+    if (timed) { haptic.firm(); startFrom({ s: pick.s, min: pick.min, next: pick.next, blockId: pick.blockId }); return; }
+    // no plan left today: 自習 at once, straight to the timer; its subject and what it was are written when it's recorded
     haptic.firm();
     startFree();
     router.push('/timer');
@@ -164,7 +165,7 @@ function PlanBar({ insets }: { insets: EdgeInsets }) {
             </View>
           </Press>
           <TourSpot id="start">
-            <Press onPress={begin} haptics={false} scale={0.95} accessibilityLabel={now ? `${sj.name}の勉強を開始` : '勉強を開始'}
+            <Press onPress={begin} haptics={false} scale={0.95} accessibilityLabel={timed ? `${sj.name}の勉強を開始` : '勉強を開始（自習）'}
               style={{ height: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Icon name="play" size={11} color={t.onInk} filled />
               <Txt size={13} w="700" color={t.onInk}>勉強を開始</Txt>
