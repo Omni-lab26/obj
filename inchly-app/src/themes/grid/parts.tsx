@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useId, useState, useSyncExternalStore } from 'react';
 import { StyleProp, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
-import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import Svg, { Defs, Line, LinearGradient, Path, Pattern, Rect, Stop } from 'react-native-svg';
 
 import { T } from '@/themes/kit';
@@ -99,15 +98,9 @@ export function Window({ id, title, meta, children, style, dark, fixed, row }: {
   );
 }
 
-/** A small square that blinks while something is live (paused: steady and grey). */
+/** A small square, lit while something is live (paused: grey). It holds still (MOTION.md: nothing pulses on and on). */
 export function Blink({ on = true, color = PINK, size = 6 }: { on?: boolean; color?: string; size?: number }) {
-  const o = useSharedValue(1);
-  useEffect(() => {
-    if (on) o.set(withRepeat(withSequence(withTiming(0.15, { duration: 520 }), withTiming(1, { duration: 520 })), -1));
-    else { cancelAnimation(o); o.set(1); }
-  }, [on, o]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value }));
-  return <Animated.View style={[{ width: size, height: size, backgroundColor: on ? color : FRAME }, a]} />;
+  return <View style={{ width: size, height: size, backgroundColor: on ? color : FRAME }} />;
 }
 
 /** Diagonal hatching (for time still running, rest days), as an SVG pattern to fill with. */

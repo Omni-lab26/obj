@@ -1,6 +1,6 @@
 import { memo, ReactNode, useEffect, useRef, useState } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import Svg, { Rect } from 'react-native-svg';
 
 import { T } from '@/themes/kit';
@@ -8,9 +8,10 @@ import { haptic, Press } from '@/ui/base';
 import { L, useLook } from './look';
 
 // What 8bit is built from: windows with a double edge and nicked corners, the
-// ▶ cursor that hops between commands, text that types itself out, gauges in
-// segments, and small sprites drawn from rows of letters. Everything moves in
-// steps, never smoothly.
+// ▶ cursor that marks the command, text that types itself out, gauges in
+// segments, and small sprites drawn from rows of letters. What moves, moves in
+// steps; nothing hops, bobs or blinks on and on (MOTION.md) — the game is in
+// the look.
 
 export const STEP = Easing.steps(1);
 
@@ -48,39 +49,15 @@ export const SPRITES = {
   face: ['.XXXX.', 'XSSSSX', 'XSESEX', 'XSSSSX', '.XSSX.', 'XBBBBX'],
 };
 
-// ---------- motion ----------
-/** On and off in hard steps (a cursor, a live gauge): opacity 1 ↔ `low`. */
-export function useBlink(on: boolean, ms = 420, low = 0.25) {
-  const o = useSharedValue(1);
-  useEffect(() => {
-    if (!on) { o.set(1); return; }
-    o.set(withRepeat(withSequence(withTiming(low, { duration: ms, easing: STEP }), withTiming(1, { duration: ms, easing: STEP })), -1));
-    return () => cancelAnimation(o);
-  }, [on, ms, low, o]);
-  return useAnimatedStyle(() => ({ opacity: o.value }));
+// ---------- marks ----------
+/** The ▶ cursor, still at the command it points to. */
+export function Cursor({ color, px = 1.5 }: { color: string; px?: number }) {
+  return <PixelArt rows={SPRITES.cursor} px={px} colors={{ X: color }} />;
 }
 
-/** The ▶ cursor: hops a pixel or two on the spot, in steps. */
-export function Cursor({ color, px = 1.5, still }: { color: string; px?: number; still?: boolean }) {
-  const x = useSharedValue(0);
-  useEffect(() => {
-    if (still) { x.set(0); return; }
-    x.set(withRepeat(withSequence(withTiming(2 * px, { duration: 280, easing: STEP }), withTiming(0, { duration: 280, easing: STEP })), -1));
-    return () => cancelAnimation(x);
-  }, [still, px, x]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
-  return <Animated.View style={a}><PixelArt rows={SPRITES.cursor} px={px} colors={{ X: color }} /></Animated.View>;
-}
-
-/** The ▼ at the end of a message that has more to say, bobbing in steps. */
+/** The ▼ at the end of a message that has more to say. */
 export function More({ color }: { color: string }) {
-  const y = useSharedValue(0);
-  useEffect(() => {
-    y.set(withRepeat(withSequence(withTiming(2, { duration: 300, easing: STEP }), withTiming(0, { duration: 300, easing: STEP })), -1));
-    return () => cancelAnimation(y);
-  }, [y]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
-  return <Animated.View style={a}><PixelArt rows={SPRITES.down} px={1.5} colors={{ X: color }} /></Animated.View>;
+  return <PixelArt rows={SPRITES.down} px={1.5} colors={{ X: color }} />;
 }
 
 // ---------- typing ----------
@@ -151,7 +128,7 @@ export function Win({ children, title, style, pad = 12, onPress, label, lit, loo
 export type Cmd = { key: string; label: string; run: () => void; a11y?: string; disabled?: boolean; color?: string };
 /**
  * A command menu. The cursor sits on `at` (the likely pick); tap a command and
- * the cursor hops to it first, then it runs.
+ * the cursor moves to it first, then it runs.
  */
 export function Menu({ items, at = 0, look, size = 15, cols, gap = 10 }: { items: Cmd[]; at?: number; look?: L; size?: number; cols?: number; gap?: number }) {
   const own = useLook();
@@ -175,7 +152,7 @@ export function Menu({ items, at = 0, look, size = 15, cols, gap = 10 }: { items
           <Press key={c.key} onPress={() => pick(c)} haptics={false} disabled={c.disabled} scale={0.97} accessibilityRole="button" accessibilityLabel={c.a11y ?? c.label}
             hitSlop={{ top: 4, bottom: 4 }}
             style={[{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 30 }, cols ? { width: `${100 / cols - 4}%` } : null]}>
-            <View style={{ width: 9, alignItems: 'center', opacity: here ? 1 : 0 }}><Cursor color={L.cursor} still={!here} /></View>
+            <View style={{ width: 9, alignItems: 'center', opacity: here ? 1 : 0 }}><Cursor color={L.cursor} /></View>
             <T size={size} lh={Math.round(size * 1.45)} color={c.color ?? (here ? L.text : L.dim)} numberOfLines={1} style={{ flexShrink: 1 }}>{c.label}</T>
           </Press>
         );
@@ -185,18 +162,13 @@ export function Menu({ items, at = 0, look, size = 15, cols, gap = 10 }: { items
 }
 
 // ---------- gauges ----------
-/** A gauge in segments: each cell a color (filled) or null (empty); `blinkFrom` on blinks (the live part). */
-export function Segs({ cells, h = 10, gap = 2, look, blinkFrom }: { cells: (string | null)[]; h?: number; gap?: number; look?: L; blinkFrom?: number }) {
+/** A gauge in segments: each cell a color (filled) or null (empty). */
+export function Segs({ cells, h = 10, gap = 2, look }: { cells: (string | null)[]; h?: number; gap?: number; look?: L }) {
   const own = useLook();
   const L = look ?? own;
-  const live = blinkFrom !== undefined && blinkFrom < cells.length && !!cells[blinkFrom];
-  const b = useBlink(live, 380, 0.35);
   return (
     <View style={{ flexDirection: 'row', gap, padding: 2, borderWidth: 1.5, borderColor: L.edge }}>
-      {cells.map((c, i) => {
-        const st = { flex: 1, height: h, backgroundColor: c ?? L.faint };
-        return live && i >= blinkFrom! && c ? <Animated.View key={i} style={[st, b]} /> : <View key={i} style={st} />;
-      })}
+      {cells.map((c, i) => <View key={i} style={{ flex: 1, height: h, backgroundColor: c ?? L.faint }} />)}
     </View>
   );
 }

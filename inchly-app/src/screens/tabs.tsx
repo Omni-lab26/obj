@@ -1,7 +1,7 @@
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, FadeOutDown, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { TABS } from '@/screens/layout';
@@ -16,6 +16,7 @@ import { showStudyBar, TAB_BAR_H, tabBarBottom, useStudyBarShown } from '@/ui/Ch
 import { replayCharts } from '@/ui/appear';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
+import { fadeIn, fadeOut, move } from '@/ui/motion';
 import { TourSpot } from '@/ui/Tour';
 
 /** The tabs (layout.TABS) as the navigator has them, each with what a tap does. (The timer opens only from the study bar.) */
@@ -56,7 +57,7 @@ export function TabBar(p: BottomTabBarProps) {
   return (
     <Animated.View pointerEvents={away ? 'none' : 'box-none'} style={[StyleSheet.absoluteFill, aside]}>
       {barUp ? (
-        <Animated.View pointerEvents="box-none" entering={FadeInDown.duration(260)} exiting={FadeOutDown.duration(180)} style={StyleSheet.absoluteFill}>
+        <Animated.View pointerEvents="box-none" entering={fadeIn()} exiting={fadeOut()} style={StyleSheet.absoluteFill}>
           <StudyBar insets={p.insets} />
         </Animated.View>
       ) : null}
@@ -75,7 +76,7 @@ export function StandardTabBar({ items, running, paused, mins, insets }: TabBarP
   const item = w ? (w - 8) / items.length : 0;
   const slot = Math.max(0, items.findIndex((x) => x.focused));
   const x = useSharedValue(0);
-  useEffect(() => { if (item) x.set(withSpring(4 + slot * item, { duration: 420, dampingRatio: 0.78 })); }, [slot, item, x]);
+  useEffect(() => { if (item) x.set(move(4 + slot * item)); }, [slot, item, x]);
   const lens = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: tabBarBottom(insets.bottom), paddingHorizontal: 20 }}>

@@ -1,6 +1,5 @@
 import { ComponentType, ReactNode, useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import { hms, pad, subj } from '@/data';
 import { STREAK_PEACH, useDesign } from '@/design';
@@ -191,19 +190,13 @@ function Now({ index }: SectionProps) {
 
 /**
  * The streak, after Caleb Wu's "day streak": a capsule with the flame, the
- * count, and the week as dots. Tap it and the flame jumps.
+ * count, and the week as dots. A tap answers with a tap you feel (no jumping
+ * flame: nothing bounces, MOTION.md).
  */
 function Streak() {
   const t = useT();
   const { streak, tickets, days } = useWeekStreak();
-  const s = useSharedValue(1);
-  const r = useSharedValue(0);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }, { rotate: `${r.value}deg` }] }));
-  const jump = () => {
-    haptic.soft();
-    s.set(withSequence(withTiming(1.3, { duration: 110 }), withSpring(1, { duration: 520, dampingRatio: 0.4 })));
-    r.set(withSequence(withTiming(-14, { duration: 110 }), withSpring(0, { duration: 520, dampingRatio: 0.4 })));
-  };
+  const jump = () => haptic.soft();
   // the capsule's look, from the デザイン page: peach (the default), the main color, or white
   const look = useDesign().streak;
   const light = look === 'white';
@@ -214,7 +207,7 @@ function Streak() {
     <Press onPress={jump} haptics={false} scale={0.98} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}
       style={{ height: 58, borderRadius: 29, backgroundColor: look === 'ink' ? t.ink : light ? t.surface : STREAK_PEACH.bg, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 18,
         borderWidth: light || peach ? hair : 0, borderColor: peach ? STREAK_PEACH.edge : t.line2, ...(light ? lift(t) : null) }}>
-      <Animated.View style={a}><Sticker name="fire" size={42} /></Animated.View>
+      <Sticker name="fire" size={42} />
       <View style={{ marginLeft: 4 }}>
         <Rolling value={pad(streak)} size={17} weight="700" color={fg} />
         <Txt size={11} color={dim} lh={14}>{`日連続 · 休み券 ${tickets}`}</Txt>

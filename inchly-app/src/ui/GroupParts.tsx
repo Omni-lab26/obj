@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { Image, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { PERSON_COLOR } from '@/data';
 import { AVATAR, PHOTO } from '@/photos';
 import { Avatar } from '@/ui/base';
-import { ease, hair, useT } from '@/theme';
+import { hair, useT } from '@/theme';
+import { timed } from '@/ui/motion';
 
 // Pieces shared by the community, group and plan-event screens.
 
@@ -49,24 +50,22 @@ export function GroupMark({ colors, size = 40, members, icon }: { colors: string
   );
 }
 
-/** Small pulsing green dot for "live" counts. */
+/** Small green dot for "live" counts (still: nothing on the page pulses). */
 export function LiveDot({ size = 7, color }: { size?: number; color?: string }) {
   const t = useT();
-  const o = useSharedValue(1);
-  useEffect(() => { o.value = withRepeat(withTiming(0.35, { duration: 900, easing: ease.out }), -1, true); }, [o]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value }));
-  return <Animated.View style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: color ?? t.green }, a]} />;
+  return <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color ?? t.green }} />;
 }
 
 /** Thin progress bar (green fill on a sunken track). */
 export function Bar({ pct, h = 5 }: { pct: number; h?: number }) {
   const t = useT();
   const w = useSharedValue(0);
-  useEffect(() => { w.value = withTiming(Math.max(0, Math.min(100, pct)), { duration: 700, easing: ease.out }); }, [pct, w]);
-  const a = useAnimatedStyle(() => ({ width: `${w.value}%` }));
+  useEffect(() => { w.value = timed(Math.max(0, Math.min(100, pct)), 500); }, [pct, w]);
+  // grown by scaling from the left, not by its width (no layout each frame)
+  const a = useAnimatedStyle(() => ({ transform: [{ scaleX: w.value / 100 }] }));
   return (
     <View style={{ height: h, borderRadius: h / 2, backgroundColor: t.sunken, overflow: 'hidden' }}>
-      <Animated.View style={[{ height: h, borderRadius: h / 2, backgroundColor: t.green }, a]} />
+      <Animated.View style={[{ width: '100%', height: h, borderRadius: h / 2, backgroundColor: t.green, transformOrigin: 'left' }, a]} />
     </View>
   );
 }

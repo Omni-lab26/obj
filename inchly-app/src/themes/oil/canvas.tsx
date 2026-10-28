@@ -1,12 +1,13 @@
 import { ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { GestureResponderEvent, Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Defs, G, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { T } from '@/themes/kit';
 import { hair } from '@/theme';
 import { haptic, Press } from '@/ui/base';
 import { Icon, IconName } from '@/ui/Icon';
+import { dismiss, M, press, release } from '@/ui/motion';
 import { shade, Tier, TIERS, useOil } from './look';
 import { bristles, compose, dabPath, open, Part, Pt, ripples, rng, stars, strokePath, underdrawing } from './paint';
 
@@ -155,8 +156,9 @@ type Smear = { id: number; x: number; y: number; c: string };
 let smearSeq = 0;
 /**
  * Something painted that answers a tap like paint: a smear where you touch it
- * (in one of `colors`), and a little knock that leaves it crooked a moment.
- * A press that travelled (a swipe) doesn't count as a tap.
+ * (in one of `colors`), and it leans a little while it's held, coming straight
+ * again without a wobble when let go. A press that travelled (a swipe)
+ * doesn't count as a tap.
  */
 export function PaintTap({ children, onPress, a11y, colors, tilt = 1.6, smear = true, role, style }: {
   children: ReactNode; onPress?: () => void; a11y: string; colors: string[]; tilt?: number; smear?: boolean;
@@ -169,14 +171,14 @@ export function PaintTap({ children, onPress, a11y, colors, tilt = 1.6, smear = 
   const down = (e: GestureResponderEvent) => {
     const { locationX: x, locationY: y, pageX, pageY } = e.nativeEvent;
     at.current = { x: pageX, y: pageY };
-    r.set(withSequence(withTiming(-tilt, { duration: 90, easing: Easing.out(Easing.quad) }), withSpring(0, { duration: 760, dampingRatio: 0.28 })));
+    r.set(press(-tilt));
     if (!smear || !colors.length) return;
     const id = ++smearSeq;
     setSmears((s) => [...s.slice(-2), { id, x, y, c: colors[id % colors.length] }]);
-    setTimeout(() => setSmears((s) => s.filter((m) => m.id !== id)), 1000);
+    setTimeout(() => setSmears((s) => s.filter((m) => m.id !== id)), 1200);
   };
   return (
-    <Pressable onPressIn={down}
+    <Pressable onPressIn={down} onPressOut={() => r.set(release(0))}
       onPress={(e) => { if (Math.hypot(e.nativeEvent.pageX - at.current.x, e.nativeEvent.pageY - at.current.y) > 12) return; haptic.tap(); onPress?.(); }}
       accessibilityRole={role ?? (onPress ? 'button' : 'image')} accessibilityLabel={a11y} style={style}>
       <Animated.View style={a}>
@@ -195,7 +197,8 @@ function SmearMark({ id, x, y, c }: Smear) {
     const line: Pt[] = Array.from({ length: 7 }, (_, k) => { const s = (k / 6 - 0.5) * L; return [38 + s * Math.cos(th), 20 + s * Math.sin(th) + Math.sin(k) * 1.8] as Pt; });
     return { body: strokePath(line, 17, id), hairs: bristles(line, 17, id) };
   }, [id]);
-  useEffect(() => { o.set(withDelay(300, withTiming(0, { duration: 700, easing: Easing.in(Easing.quad) }))); }, [o]);
+  // it stays a moment, then goes
+  useEffect(() => { o.set(withDelay(800, dismiss(0))); }, [o]);
   const a = useAnimatedStyle(() => ({ opacity: o.value }));
   return (
     <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: x - 38, top: y - 20, width: 76, height: 40 }, a]}>
@@ -236,7 +239,7 @@ export function InkCheck({ on, size = 22, color }: { on: boolean; size?: number;
   const p = useSharedValue(on ? 1 : 0);
   const was = useRef(on);
   useEffect(() => {
-    if (on && !was.current) { p.set(0); p.set(withTiming(1, { duration: 280, easing: Easing.out(Easing.quad) })); }
+    if (on && !was.current) { p.set(0); p.set(withTiming(1, M.micro)); }
     else if (!on) p.set(0);
     was.current = on;
   }, [on, p]);
@@ -246,12 +249,17 @@ export function InkCheck({ on, size = 22, color }: { on: boolean; size?: number;
     return open([[2 + j(), 3 + j()], [size - 2 + j(), 2 + j()], [size - 3 + j(), size - 2 + j()], [2 + j(), size - 3 + j()], [2.5 + j(), 1.5 + j()]]);
   }, [size]);
   const tick = useMemo(() => open([[size * 0.16, size * 0.52], [size * 0.42, size * 0.8], [size * 1.05, size * 0.02]]), [size]);
-  const clip = useAnimatedStyle(() => ({ width: p.value * size * 1.2 }));
+  // the check is uncovered from the left: a window slides right while what's in it slides back (transforms only)
+  const W = size * 1.2;
+  const clip = useAnimatedStyle(() => ({ transform: [{ translateX: (p.value - 1) * W }] }));
+  const clipIn = useAnimatedStyle(() => ({ transform: [{ translateX: (1 - p.value) * W }] }));
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size} style={StyleSheet.absoluteFill}><Path d={box} stroke={color} strokeWidth={1.5} fill="none" strokeLinecap="round" opacity={0.75} /></Svg>
-      <Animated.View style={[{ position: 'absolute', left: 0, top: -4, height: size + 6, overflow: 'hidden' }, clip]}>
-        <Svg width={size * 1.2} height={size + 6}><Path d={tick} stroke={color} strokeWidth={2.6} fill="none" strokeLinecap="round" strokeLinejoin="round" transform="translate(0 4)" /></Svg>
+      <Animated.View style={[{ position: 'absolute', left: 0, top: -4, width: W, height: size + 6, overflow: 'hidden' }, clip]}>
+        <Animated.View style={clipIn}>
+          <Svg width={W} height={size + 6}><Path d={tick} stroke={color} strokeWidth={2.6} fill="none" strokeLinecap="round" strokeLinejoin="round" transform="translate(0 4)" /></Svg>
+        </Animated.View>
       </Animated.View>
     </View>
   );

@@ -1,14 +1,15 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { LayoutChangeEvent, Pressable, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 
 import { AREAS, pad } from '../data';
 import { contentsOf, hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { dateKey } from '../lib/time';
 import { ChartKind, elapsedOf, setChart, useNow, useStore, useSubjects } from '../store';
-import { ease, hair, useT } from '../theme';
+import { hair, useT } from '../theme';
+import { timed } from './motion';
 import { useReplay } from './appear';
 import { Btn, haptic, Press, SubjTile, Txt } from './base';
 import { Breakdown } from './Breakdown';
@@ -87,7 +88,7 @@ export function StudyChart() {
   const replay = useReplay();
   useEffect(() => {
     grow.set(0);
-    grow.set(withTiming(1, { duration: 520, easing: ease.out }));
+    grow.set(timed(1, 500));
   }, [chart.range, chart.kind, chart.detail, grow, replay]);
   const growA = useAnimatedStyle(() => ({ transform: [{ scaleY: grow.get() }], transformOrigin: 'bottom' }));
 

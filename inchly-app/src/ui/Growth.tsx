@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { dayOf } from '../lib/history';
 import { Session, useStore, useStreak } from '../store';
-import { ease, lift, useT } from '../theme';
+import { lift, useT } from '../theme';
 import { Card, haptic, Press, Txt } from './base';
+import { move, timed } from './motion';
 import { Rolling } from './Rolling';
 import { useReplay } from './appear';
 import { DECK_H, GraphDeck } from './GraphDeck';
@@ -124,7 +125,7 @@ function FrameSlider({ value, onChange }: { value: Frame; onChange: (f: Frame) =
   const t = useT();
   const at = FRAMES.findIndex((f) => f.id === value);
   const y = useSharedValue(at * STOP);
-  useEffect(() => { y.set(withSpring(at * STOP, { duration: 320, dampingRatio: 0.8 })); }, [at, y]);
+  useEffect(() => { y.set(move(at * STOP)); }, [at, y]);
   const lens = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   const set = (i: number) => { if (FRAMES[i] && FRAMES[i].id !== value) { haptic.tap(); onChange(FRAMES[i].id); } };
   // only a vertical slide: a sideways one still turns the deck
@@ -165,8 +166,10 @@ function Climb({ curve, next, prev, from }: { curve: number[]; next: number; pre
   const line = curve.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
   const reveal = useSharedValue(0);
   const replay = useReplay();
-  useEffect(() => { if (w) { reveal.value = 0; reveal.value = withDelay(150, withTiming(1, { duration: 1100, easing: ease.out })); } }, [w, reveal, replay]);
-  const clip = useAnimatedStyle(() => ({ width: w * reveal.value }));
+  useEffect(() => { if (w) { reveal.value = 0; reveal.value = withDelay(150, timed(1, 500)); } }, [w, reveal, replay]);
+  // drawn left to right by a window sliding open (moved, not resized): the window comes in from the left, and the line in it goes the other way
+  const clip = useAnimatedStyle(() => ({ transform: [{ translateX: w * (reveal.value - 1) }] }));
+  const counter = useAnimatedStyle(() => ({ transform: [{ translateX: w * (1 - reveal.value) }] }));
   const end = curve[curve.length - 1];
   return (
     <View style={{ height: PLOT_H, marginTop: 12 }} onLayout={(e) => setW(e.nativeEvent.layout.width)}
@@ -178,7 +181,8 @@ function Climb({ curve, next, prev, from }: { curve: number[]; next: number; pre
               <Line key={m} x1={0} x2={w} y1={Y(m)} y2={Y(m)} stroke={m === next ? t.ink2 : t.line2} strokeWidth={0.75} strokeDasharray="3 4" />
             ))}
           </Svg>
-          <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, overflow: 'hidden' }, clip]}>
+          <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, width: w, overflow: 'hidden' }, clip]}>
+            <Animated.View style={counter}>
             <Svg width={w} height={PLOT_H}>
               <Defs>
                 <LinearGradient id="climb" x1="0" y1="0" x2="0" y2="1">
@@ -190,6 +194,7 @@ function Climb({ curve, next, prev, from }: { curve: number[]; next: number; pre
               <Path d={line} fill="none" stroke={t.ink} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
               <Circle cx={X(curve.length - 1)} cy={Y(end)} r={4} fill={t.ink} stroke={t.surface} strokeWidth={1.5} />
             </Svg>
+            </Animated.View>
           </Animated.View>
           {showNext ? <Txt num size={10} w="600" lh={12} tone="ink2" style={{ position: 'absolute', left: 0, top: Y(next) - 14 }}>{`${next}時間`}</Txt> : null}
           {showPrev && prev > lo ? <Txt num size={10} lh={12} tone="ink3" style={{ position: 'absolute', left: 0, top: Y(prev) - 14 }}>{`${prev}時間 達成`}</Txt> : null}
@@ -205,11 +210,12 @@ function Meter({ p }: { p: number }) {
   const t = useT();
   const v = useSharedValue(0);
   const replay = useReplay();
-  useEffect(() => { v.value = 0; v.value = withDelay(400, withTiming(Math.max(0, Math.min(1, p)), { duration: 900, easing: ease.out })); }, [p, v, replay]);
-  const a = useAnimatedStyle(() => ({ width: `${v.value * 100}%` }));
+  useEffect(() => { v.value = 0; v.value = withDelay(400, timed(Math.max(0, Math.min(1, p)), 500)); }, [p, v, replay]);
+  // fills by scaling from the left, not by its width (no layout each frame)
+  const a = useAnimatedStyle(() => ({ transform: [{ scaleX: v.value }] }));
   return (
     <View style={{ height: 6, borderRadius: 3, backgroundColor: t.sunken, overflow: 'hidden' }}>
-      <Animated.View style={[{ height: 6, borderRadius: 3, backgroundColor: t.ink }, a]} />
+      <Animated.View style={[{ width: '100%', height: 6, borderRadius: 3, backgroundColor: t.ink, transformOrigin: 'left' }, a]} />
     </View>
   );
 }

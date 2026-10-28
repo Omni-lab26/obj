@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ReactNode, useEffect, useState } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { Easing, interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, G, Rect } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -17,12 +17,13 @@ import { useT } from '@/theme';
 import { haptic, Press } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
+import { M, move } from '@/ui/motion';
 import { alpha, candy, Mood, pastel } from './look';
 import { Bubbly, Candy, Mochi, Pill, R, Shape, useV } from './parts';
 
 // かわいい's timer: the diary page again, not a dark room. The session is a
 // donut that gets its icing as you go (sprinkles and all, glazed gold past the
-// target), with the mochi sitting on top — hopping while you study, asleep
+// target), with the mochi sitting on top — busy while you study, asleep
 // while you rest. To record, you peel the heart sticker off and stick it on
 // the page: slide it to the right.
 
@@ -153,23 +154,15 @@ function Readout() {
   const label = ss.paused ? 'ひとやすみ中' : up ? (ss.running ? '勉強した時間' : 'これから') : over ? 'こえた時間' : ss.running ? 'のこり' : '集中する時間';
   const text = `${over ? '+' : ''}${fmt(sec)}`;
   const big = text.length > 6 ? D * 0.17 : D * 0.21;
-  // the count squashes a little as each minute turns
-  const minute = Math.floor(ss.elapsed / 60);
-  const s = useSharedValue(1);
-  useEffect(() => {
-    if (!minute) return;
-    s.set(withSequence(withTiming(0.86, { duration: 90 }), withSpring(1, { duration: 520, dampingRatio: 0.35 })));
-  }, [minute, s]);
-  const a = useAnimatedStyle(() => ({ transform: [{ scaleY: s.value }, { scaleX: 2 - s.value }] }));
   return (
     <View style={{ alignItems: 'center', paddingTop: 54 }}>
       <View style={{ width: D, height: D }}>
         <Donut size={D} p={ss.over ? 1 : p} color={ss.subject.c} over={ss.over} />
         <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }} accessible accessibilityLabel={`${label} ${text}`}>
           <T size={12} w="700" lh={16} color={over ? v.deep : t.ink3}>{label}</T>
-          <Animated.View style={[{ opacity: ss.paused ? 0.5 : 1 }, a]}>
+          <View style={{ opacity: ss.paused ? 0.5 : 1 }}>
             <R size={big} lh={Math.round(big * 1.18)} num color={over ? v.deep : t.ink}>{text}</R>
-          </Animated.View>
+          </View>
         </View>
       </View>
       <View style={{ position: 'absolute', top: 0 }}>
@@ -278,7 +271,6 @@ function Record() {
   const [w, setW] = useState(0);
   const max = useSharedValue(1);
   const x = useSharedValue(0);
-  const stick = useSharedValue(1);
   const off = useSharedValue(disabled ? 1 : 0);
   const start = useSharedValue(0);
   useEffect(() => { off.set(disabled ? 1 : 0); }, [disabled, off]);
@@ -286,7 +278,7 @@ function Record() {
     haptic.success();
     session.finish();
     // the sticker comes back once the record page covers this one
-    setTimeout(() => { x.set(withSpring(0, { damping: 18, stiffness: 180 })); }, 700);
+    setTimeout(() => { x.set(move(0)); }, 700);
   };
   useAnimatedReaction(() => x.get() > max.get() * 0.7, (over, prev) => { if (prev !== null && over !== prev) scheduleOnRN(haptic.tap); });
   // the gesture is built once; its worklets read shared values
@@ -301,16 +293,12 @@ function Record() {
       if (off.get()) return;
       const m = max.get(), v0 = x.get();
       if (v0 > m * 0.7 || (e.velocityX > 900 && v0 > m * 0.35)) {
-        x.set(withTiming(m, { duration: 170, easing: Easing.out(Easing.cubic) }, (done) => {
-          if (!done) return;
-          stick.set(withSequence(withTiming(1.25, { duration: 90 }), withSpring(1, { duration: 380, dampingRatio: 0.4 })));
-          scheduleOnRN(finish);
-        }));
+        x.set(withTiming(m, M.micro, (done) => { if (done) scheduleOnRN(finish); }));
       } else {
-        x.set(withSpring(0, { damping: 16, stiffness: 220 }));
+        x.set(move(0, e.velocityX));
       }
     }));
-  const knob = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }, { rotate: `${interpolate(x.value, [0, max.value], [-12, 8])}deg` }, { scale: stick.value }] }));
+  const knob = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }, { rotate: `${interpolate(x.value, [0, max.value], [-12, 8])}deg` }] }));
   const lbl = useAnimatedStyle(() => ({ opacity: interpolate(x.value, [0, max.value * 0.6], [1, 0], 'clamp') }));
   const label = 'ハートを右にはって記録する';
   return (

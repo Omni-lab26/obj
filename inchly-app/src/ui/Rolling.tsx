@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleProp, Text, TextStyle, View } from 'react-native';
-import Animated, { FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withDelay, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { face, useT } from '../theme';
+import { fadeOut, layout, M, move } from './motion';
 
 // Odometer digits, after bencho's "rolling counter":
-// - each digit is a strip that springs to its value with a small overshoot (bounce),
+// - each digit is a strip that rolls to its value on iOS's curve and stops there (no bounce),
 // - columns start right to left, 45 ms apart (stagger),
 // - counting up carries forward (9 → 0 keeps rolling up) and counting down rolls back,
 // - a short motion trail stands in for blur (RN has no text blur filter on iOS),
 // - a new leading column grows in from zero width; a dropped one fades out.
 const STRIP = '01234567890123456789'.split('');
 const STAGGER = 45;
-const SPRING = { duration: 560, dampingRatio: 0.58 } as const;
 
 const num = (s: string) => {
   const n = parseFloat(s.replace(/[^0-9.\-]/g, ''));
@@ -31,18 +31,18 @@ function Col({ d, dir, h, w, delay, style, grow, blur }: { d: number; dir: numbe
     // Carry: rolling up past 9 lands on the second copy, then snaps back silently.
     if (dir > 0 && d < from) {
       const snap = () => { pos.set(d); };
-      pos.set(withDelay(delay, withSpring(d + 10, SPRING, (done) => { if (done) scheduleOnRN(snap); })));
+      pos.set(withDelay(delay, withTiming(d + 10, M.micro, (done) => { if (done) scheduleOnRN(snap); })));
     } else if (dir < 0 && d > from) {
       pos.set(from + 10);
-      pos.set(withDelay(delay, withSpring(d, SPRING)));
+      pos.set(withDelay(delay, withTiming(d, M.micro)));
     } else {
-      pos.set(withDelay(delay, withSpring(d, SPRING)));
+      pos.set(withDelay(delay, withTiming(d, M.micro)));
     }
   }, [d, dir, delay, pos]);
   useEffect(() => {
     if (!w) return;
     // Only a newly added leading column grows in; the rest take their width at once.
-    if (grow) width.set(withSpring(w, { duration: 420, dampingRatio: 0.7 }));
+    if (grow) width.set(move(w));
     else width.set(w);
   }, [w, grow, width]);
 
@@ -62,7 +62,7 @@ function Col({ d, dir, h, w, delay, style, grow, blur }: { d: number; dir: numbe
       <Text key={i} style={[style, { height: h, lineHeight: h, textAlign: 'center', transform: dy ? [{ translateY: dy }] : undefined }]}>{x}</Text>
     ));
   return (
-    <Animated.View exiting={FadeOut.duration(160)} layout={LinearTransition.springify().dampingRatio(0.8).duration(380)} style={[{ height: h, overflow: 'hidden' }, w ? box : null]}>
+    <Animated.View exiting={fadeOut()} layout={layout()} style={[{ height: h, overflow: 'hidden' }, w ? box : null]}>
       <Animated.View style={strip}>
         <Animated.View style={main}>{strips(0)}</Animated.View>
         <Animated.View style={[{ position: 'absolute', top: 0, left: 0, right: 0 }, trail]} pointerEvents="none">{strips(-h * 0.09)}</Animated.View>
@@ -100,7 +100,7 @@ export function Rolling({
         const fromRight = chars.length - i;
         if (!/\d/.test(ch)) {
           return (
-            <Animated.Text key={'s' + fromRight + ch} exiting={FadeOut.duration(160)} layout={LinearTransition.springify().dampingRatio(0.8).duration(380)}
+            <Animated.Text key={'s' + fromRight + ch} exiting={fadeOut()} layout={layout()}
               style={[ts, { height: h, lineHeight: h }]}>{ch}</Animated.Text>
           );
         }

@@ -17,8 +17,10 @@ import type { Crowd } from '../../lib/walkers';
 //   hundred numbers a frame.
 // - sharp: the mosaic, where the 背景 is looked at (the timer, 眺める, and
 //   pages with 背景のぼかし off). Its thousands of cells are the costly part,
-//   so it's drawn less often, and hardly at all while a finger is moving
-//   something (holdBackdrop), so swipes and scrolls keep the thread.
+//   so it's drawn less often.
+// While a finger is on the screen, and while something moves (holdBackdrop),
+// the world stands still: nothing is stepped or drawn, so every frame of a
+// swipe, a scroll or a sheet is the gesture's. It goes on a moment after.
 
 /** The cell of the koi's and sharks' grid, in points. */
 export const CELL = 9;
@@ -37,10 +39,11 @@ export const softUsers = makeMutable(0);
 /** The engine's clock (ms), and until when a finger is moving something (the mosaic waits). */
 export const backdropClock = makeMutable(0);
 export const backdropHeld = makeMutable(0);
-/** A swipe, a scroll or a pull under way: the mosaic is drawn rarely for a moment, so the gesture has the thread. Call it as it moves. */
-export function holdBackdrop() {
+/** A touch, a swipe, a scroll or something moving: the 背景 stands still for `ms` from now (call it again as it goes on). */
+export function holdBackdrop(ms = 350) {
   'worklet';
-  backdropHeld.value = backdropClock.value + 350;
+  const until = backdropClock.value + ms;
+  if (until > backdropHeld.value) backdropHeld.value = until;
 }
 /** The soft drawing's blur (points), by 背景のぼかし (設定): off (the pages show the mosaic), light, normal, strong. */
 export const SOFT_BLUR = [0, 4, 8, 13] as const;

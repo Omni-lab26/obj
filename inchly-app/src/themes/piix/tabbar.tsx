@@ -7,17 +7,18 @@ import type { TabBarProps, TabItem } from '@/themes/types';
 import { haptic } from '@/ui/base';
 import { TAB_BAR_H, tabBarBottom } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
+import { M } from '@/ui/motion';
 import { P, sit } from './look';
 import { Key, STEPS } from './pixel';
 
 // A paper bar sitting on its shadow. The tab you're on gets a lime block that
-// pops in, in steps; the middle is a key of its own — lime to start, dark with
-// the minutes while you study.
+// fades in, in steps (no pop); the middle is a key of its own — lime to start,
+// dark with the minutes while you study.
 
 function Tab({ it }: { it: TabItem }) {
   const s = useSharedValue(it.focused ? 1 : 0);
-  useEffect(() => { s.set(withTiming(it.focused ? 1 : 0, { duration: 150, easing: STEPS })); }, [it.focused, s]);
-  const a = useAnimatedStyle(() => ({ opacity: s.value, transform: [{ scale: 0.5 + 0.5 * s.value }] }));
+  useEffect(() => { s.set(withTiming(it.focused ? 1 : 0, { duration: M.micro.duration, easing: STEPS })); }, [it.focused, s]);
+  const a = useAnimatedStyle(() => ({ opacity: s.value }));
   return (
     <Pressable onPress={() => { haptic.tap(); it.onPress(); }} accessibilityRole="tab" accessibilityState={{ selected: it.focused }} accessibilityLabel={it.label}
       style={{ flex: 1, height: TAB_BAR_H - 8, alignItems: 'center', justifyContent: 'center' }}>

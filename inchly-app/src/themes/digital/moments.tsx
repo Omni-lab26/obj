@@ -1,14 +1,15 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 
 import { subj } from '@/data';
 import type { Moment } from '@/moments';
 import type { MomentKit } from '@/themes/types';
+import { M as MOTION, timed } from '@/ui/motion';
 import { Look, useLook } from './look';
 import { Ann, Blink, J, M, Seg } from './parts';
 
-// デジタル's moments: the device beeps. A display pops up over the screen —
+// デジタル's moments: the device beeps. A display comes up over the screen —
 // the chrono starting, "donE" for a ToDo, the alarm at the target, the
 // figures saved when a session is recorded (and the level, when it goes up).
 
@@ -18,11 +19,11 @@ function useAutoDone(done: () => void, ms: number) {
   useEffect(() => { const id = setTimeout(first, ms); return () => clearTimeout(id); }, [first, ms]);
 }
 
-/** In with a click, hold, out: 0 → 1 → 0. */
+/** In, hold, out: 0 → 1 → 0. */
 function useShow(hold: number) {
   const k = useSharedValue(0);
   useEffect(() => {
-    k.set(withSequence(withTiming(1, { duration: 120, easing: Easing.out(Easing.quad) }), withDelay(hold, withTiming(0, { duration: 200 }))));
+    k.set(withSequence(timed(1, MOTION.fadeIn), withDelay(hold, timed(0, MOTION.fadeOut))));
   }, [k, hold]);
   return k;
 }
@@ -44,7 +45,7 @@ function Start({ moment, done }: { moment: Extract<Moment, { kind: 'start' }>; d
   useAutoDone(done, 1400);
   const L = useLook();
   const k = useShow(950);
-  const a = useAnimatedStyle(() => ({ opacity: k.value, transform: [{ scale: 0.94 + 0.06 * k.value }] }));
+  const a = useAnimatedStyle(() => ({ opacity: k.value, transform: [{ scale: 0.98 + 0.02 * k.value }] }));
   const sj = subj(moment.subject);
   return (
     <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -90,12 +91,13 @@ function Target({ moment, done }: { moment: Extract<Moment, { kind: 'target' }>;
   const L = useLook();
   const f = useSharedValue(0);
   useEffect(() => {
-    f.set(withSequence(withRepeat(withSequence(withTiming(1, { duration: 1 }), withDelay(180, withTiming(0.15, { duration: 1 })), withDelay(160, withTiming(1, { duration: 1 }))), 3), withDelay(400, withTiming(0, { duration: 240 }))));
+    // lit at once, held, then out (one flash, not a blinking loop)
+    f.set(withSequence(withTiming(1, { duration: 1 }), withDelay(900, timed(0, MOTION.fadeOut))));
   }, [f]);
   const frame = useAnimatedStyle(() => ({ opacity: f.value }));
   // the edge of the screen flashes; the alarm's window stays put until it goes
   const k = useShow(1250);
-  const box = useAnimatedStyle(() => ({ opacity: k.value, transform: [{ scale: 0.94 + 0.06 * k.value }] }));
+  const box = useAnimatedStyle(() => ({ opacity: k.value, transform: [{ scale: 0.98 + 0.02 * k.value }] }));
   return (
     <View style={{ flex: 1, justifyContent: 'center' }}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderWidth: 5, borderColor: L.accent }, frame]} />
@@ -120,7 +122,7 @@ function Record({ moment, done }: { moment: Extract<Moment, { kind: 'record' }>;
   useAutoDone(done, moment.level ? 2000 : 1600);
   const L = useLook();
   const k = useShow(moment.level ? 1350 : 1000);
-  const a = useAnimatedStyle(() => ({ opacity: k.value, transform: [{ scale: 0.94 + 0.06 * k.value }] }));
+  const a = useAnimatedStyle(() => ({ opacity: k.value, transform: [{ scale: 0.98 + 0.02 * k.value }] }));
   const sj = subj(moment.subject);
   return (
     <View style={{ flex: 1, justifyContent: 'center' }}>

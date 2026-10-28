@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 
-import { ease, font, useT } from '../theme';
+import { font, useT } from '../theme';
 import { useReplay } from './appear';
 import { haptic, Txt } from './base';
+import { timed } from './motion';
 
 // Inch-ly: "a little at a time". The brand's one motif is the measuring tape —
 // the same ticks as the timer's ruler — used for the wordmark and for today's progress.
@@ -48,9 +49,12 @@ export function InchTape({ minutes, goal, parts }: { minutes: number; goal: numb
   useEffect(() => {
     if (!w) return;
     reveal.set(0);
-    reveal.set(withDelay(150, withTiming(x(Math.min(minutes, end)), { duration: 900, easing: ease.out })));
+    reveal.set(withDelay(150, timed(x(Math.min(minutes, end)), 500)));
   }, [w, minutes, end, replay]); // eslint-disable-line react-hooks/exhaustive-deps
-  const ra = useAnimatedStyle(() => ({ width: reveal.value }));
+  // the reveal is a window sliding open, moved rather than resized (no layout each frame): the window slides in from the left by what's
+  // still hidden, and what's in it slides back the same amount, so the segments stay put
+  const ra = useAnimatedStyle(() => ({ transform: [{ translateX: reveal.value - w }] }));
+  const rb = useAnimatedStyle(() => ({ transform: [{ translateX: w - reveal.value }] }));
   const segs = parts.filter((p) => p.min > 0);
   const starts = segs.map((_, i) => segs.slice(0, i).reduce((a, p) => a + p.min, 0));
   const reached = minutes >= goal;
@@ -90,7 +94,8 @@ export function InchTape({ minutes, goal, parts }: { minutes: number; goal: numb
             {/* track */}
             <View style={{ position: 'absolute', top: 8, left: 0, right: 0, height: BAR, borderRadius: BAR / 2, backgroundColor: t.sunken }} />
             {/* studied: subject segments, revealed left to right */}
-            <Animated.View style={[{ position: 'absolute', top: 2, left: 0, height: BAR + 12, overflow: 'hidden' }, ra]}>
+            <Animated.View style={[{ position: 'absolute', top: 2, left: 0, width: w, height: BAR + 12, overflow: 'hidden' }, ra]}>
+              <Animated.View style={[StyleSheet.absoluteFill, rb]}>
               {segs.map((p, i) => {
                 const on = hot === i;
                 const first = i === 0, lastSeg = i === segs.length - 1;
@@ -100,6 +105,7 @@ export function InchTape({ minutes, goal, parts }: { minutes: number; goal: numb
                     borderTopLeftRadius: first ? BAR / 2 : 2, borderBottomLeftRadius: first ? BAR / 2 : 2, borderTopRightRadius: lastSeg ? BAR / 2 : 2, borderBottomRightRadius: lastSeg ? BAR / 2 : 2 }} />
                 );
               })}
+              </Animated.View>
             </Animated.View>
             {/* ruler: small ticks as room allows, a longer one at each label */}
             {Array.from({ length: end / tick + 1 }, (_, i) => {

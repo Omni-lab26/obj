@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
-import Animated, { Easing, FadeInDown, FadeOutDown, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { G, Line, Path, Rect } from 'react-native-svg';
 
 import { pad, subj } from '@/data';
@@ -12,6 +12,7 @@ import { haptic, Press } from '@/ui/base';
 import { Screen, useBarsTop, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon } from '@/ui/Icon';
+import { fadeIn, fadeOut, micro } from '@/ui/motion';
 import { levelSheet } from '@/ui/Level';
 import { toast } from '@/ui/Toast';
 import { Chip, Cover, Dots, Dotted, P, paint, Patterns, Plated, Swatch, Thump, useInk, usePlates, useSvgId } from './print';
@@ -442,15 +443,15 @@ function Todos() {
 function TodoLine({ td, first, plates }: { td: Todo; first: boolean; plates: ReturnType<typeof usePlates> }) {
   const k = useInk();
   const s = subj(td.s);
-  // the stamp thumps down when the ToDo is ticked (not when it is shown already done)
+  // the stamp is inked in when the ToDo is ticked (not when it is shown already done): it fades in where it lands
   const v = useSharedValue(td.d ? 1 : 0);
   const was = useRef(td.d);
   useEffect(() => {
-    if (td.d && !was.current) { v.set(0); v.set(withTiming(1, { duration: 170, easing: Easing.in(Easing.quad) })); }
+    if (td.d && !was.current) { v.set(0); v.set(micro(1)); }
     else if (!td.d) v.set(0);
     was.current = td.d;
   }, [td.d, v]);
-  const stamp = useAnimatedStyle(() => ({ opacity: Math.min(1, v.value * 3), transform: [{ scale: 2.1 - 1.1 * v.value }, { rotate: '-14deg' }] }));
+  const stamp = useAnimatedStyle(() => ({ opacity: v.value, transform: [{ rotate: '-14deg' }] }));
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 }}>
       {first ? null : <Dotted style={{ position: 'absolute', top: 0, left: 30, right: 0 }} />}
@@ -587,13 +588,10 @@ function Floating() {
   const ss = useSession();
   const barsTop = useBarsTop();
   const no = useNo(ss.subject.id);
-  const bob = useSharedValue(0);
-  useEffect(() => { bob.set(withRepeat(withSequence(withTiming(-3, { duration: 1300 }), withTiming(0, { duration: 1300 })), -1, false)); }, [bob]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: bob.value }, { rotate: '3deg' }] }));
   if (!ss.running) return null;
   return (
-    <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOutDown.duration(160)} style={{ position: 'absolute', right: 18, bottom: barsTop + 14 }}>
-      <Animated.View style={a}>
+    <Animated.View entering={fadeIn()} exiting={fadeOut()} style={{ position: 'absolute', right: 18, bottom: barsTop + 14 }}>
+      <View style={{ transform: [{ rotate: '3deg' }] }}>
         <Cover w={56} h={74} onPress={go.timer} a11y={`${ss.subject.name}を勉強中 ${clock(ss.elapsed)}。タイマーを開く`} live={!ss.paused}>
           <SubjectArt w={56} h={74} id={ss.subject.id} name={ss.subject.name} no={no} />
           <View style={{ position: 'absolute', left: 0, right: 0, bottom: 3, alignItems: 'center' }}>
@@ -602,7 +600,7 @@ function Floating() {
             </View>
           </View>
         </Cover>
-      </Animated.View>
+      </View>
     </Animated.View>
   );
 }

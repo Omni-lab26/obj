@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { hms, ROOM, subj } from '../data';
@@ -9,6 +9,7 @@ import { focus, hair } from '../theme';
 import { Avatar, haptic, Press, Txt } from './base';
 import { LiveDot } from './GroupParts';
 import { Icon } from './Icon';
+import { fadeIn } from './motion';
 
 // Turn the phone on its side and the app becomes a study room, the way Apple
 // Music turns into a cover wall: your timer large on the left, everyone else
@@ -20,17 +21,14 @@ export const isRoomShape = (w: number, h: number) => w > h && h < 500;
 
 export function StudyRoom() {
   const insets = useSafeAreaInsets();
-  const now = useNow();
   const [opened] = useState(() => Date.now());
-  const since = Math.floor((now - opened) / 1000);
-  const s = useStore((x) => x);
+  // only what the room shows; the times that change every second are read by their own small parts (YourTime, DeskTime)
+  const s = { subj: useStore((x) => x.subj), running: useStore((x) => x.running), paused: useStore((x) => x.paused), blocked: useStore((x) => x.blocked), you: useStore((x) => x.account?.name) };
   const sj = subj(s.subj);
   const subjects = useSubjects();
-  const e = elapsedOf(s, now);
   const people = ROOM.filter((p) => !s.blocked.includes(p.n));
-  const today = s.todayMin + (s.running ? Math.floor(e / 60) : 0);
   return (
-    <Animated.View entering={FadeIn.duration(260)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: focus.bg, flexDirection: 'row',
+    <Animated.View entering={fadeIn()} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: focus.bg, flexDirection: 'row',
       paddingLeft: Math.max(insets.left, 20), paddingRight: Math.max(insets.right, 16), paddingTop: Math.max(insets.top, 14), paddingBottom: Math.max(insets.bottom, 12) }}>
       {/* you */}
       <View style={{ flex: 1, justifyContent: 'center', paddingRight: 20 }}>
@@ -38,14 +36,7 @@ export function StudyRoom() {
           {s.running ? <LiveDot size={7} color={s.paused ? '#F5A524' : undefined} /> : null}
           <Txt size={13} w="600" color={focus.ink2}>{s.running ? `${s.paused ? '一時停止中' : '勉強中'} · ${sj.name}` : '勉強部屋'}</Txt>
         </View>
-        <Txt num size={64} w="700" lh={72} color={focus.ink} style={{ marginTop: 4, letterSpacing: -1.5 }} accessibilityLabel={s.running ? `経過 ${hms(e)}` : 'まだ始めていません'}>
-          {hms(s.running ? e : 0)}
-        </Txt>
-        <Txt size={12.5} color={focus.ink3}>{`今日 ${Math.floor(today / 60)}時間${today % 60}分 · 目標 ${s.goalMin / 60}時間`}</Txt>
-        {/* today against the goal */}
-        <View style={{ height: 4, borderRadius: 2, backgroundColor: focus.raise, marginTop: 10, overflow: 'hidden', maxWidth: 300 }}>
-          <View style={{ width: `${Math.min(100, (today / s.goalMin) * 100)}%`, height: 4, borderRadius: 2, backgroundColor: focus.ink }} />
-        </View>
+        <YourTime />
 
         {s.running ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20 }}>
@@ -85,22 +76,51 @@ export function StudyRoom() {
           <Txt size={12} w="600" color={focus.ink2}>{`いま ${people.length + (s.running ? 1 : 0)}人が同じ部屋に`}</Txt>
         </View>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 12 }}>
-          {s.running ? <Desk name={s.account?.name ?? 'はる'} label="あなた" sub={sj.name} time={hms(e).replace(/^00:/, '')} you /> : null}
-          {people.map((p) => <Desk key={p.h} name={p.n} label={p.n} sub={p.s} time={hms(p.t + since).replace(/^00:/, '')} />)}
+          {s.running ? <Desk name={s.you ?? 'はる'} label="あなた" sub={sj.name} you /> : null}
+          {people.map((p) => <Desk key={p.h} name={p.n} label={p.n} sub={p.s} base={p.t} opened={opened} />)}
         </ScrollView>
       </View>
     </Animated.View>
   );
 }
 
-function Desk({ name, label, sub, time, you }: { name: string; label: string; sub: string; time: string; you?: boolean }) {
+/** Your time, today's total and the line toward the goal: the one part of the left side that changes every second. */
+function YourTime() {
+  const now = useNow();
+  const st = useStore((x) => x);
+  const e = elapsedOf(st, now);
+  const today = st.todayMin + (st.running ? Math.floor(e / 60) : 0);
   return (
-    <View style={{ width: '25%', alignItems: 'center', gap: 3 }} accessible accessibilityLabel={`${label} ${sub} ${time}`}>
+    <>
+      <Txt num size={64} w="700" lh={72} color={focus.ink} style={{ marginTop: 4, letterSpacing: -1.5 }} accessibilityLabel={st.running ? `経過 ${hms(e)}` : 'まだ始めていません'}>
+        {hms(st.running ? e : 0)}
+      </Txt>
+      <Txt size={12.5} color={focus.ink3}>{`今日 ${Math.floor(today / 60)}時間${today % 60}分 · 目標 ${st.goalMin / 60}時間`}</Txt>
+      {/* today against the goal */}
+      <View style={{ height: 4, borderRadius: 2, backgroundColor: focus.raise, marginTop: 10, overflow: 'hidden', maxWidth: 300 }}>
+        <View style={{ width: `${Math.min(100, (today / st.goalMin) * 100)}%`, height: 4, borderRadius: 2, backgroundColor: focus.ink }} />
+      </View>
+    </>
+  );
+}
+
+/** A desk's time, ticking on its own (yours from the session, the others' from when the room opened). */
+function DeskTime({ sub, label, base, opened, you }: { sub: string; label: string; base?: number; opened?: number; you?: boolean }) {
+  const now = useNow();
+  const st = useStore((x) => (you ? x : null));
+  const sec = you && st ? elapsedOf(st, now) : (base ?? 0) + Math.floor((now - (opened ?? now)) / 1000);
+  const time = hms(sec).replace(/^00:/, '');
+  return <Txt num size={10.5} color={focus.ink3} numberOfLines={1} accessibilityLabel={`${label} ${sub} ${time}`}>{`${sub} · ${time}`}</Txt>;
+}
+
+function Desk({ name, label, sub, base, opened, you }: { name: string; label: string; sub: string; base?: number; opened?: number; you?: boolean }) {
+  return (
+    <View style={{ width: '25%', alignItems: 'center', gap: 3 }}>
       <View style={{ borderRadius: 26, borderWidth: 2, borderColor: you ? '#F2B705' : 'transparent', padding: 2 }}>
         <Avatar name={name} color="#6E56CF" size={40} />
       </View>
       <Txt size={11.5} w="700" color={focus.ink} numberOfLines={1}>{label}</Txt>
-      <Txt num size={10.5} color={focus.ink3} numberOfLines={1}>{`${sub} · ${time}`}</Txt>
+      <DeskTime sub={sub} label={label} base={base} opened={opened} you={you} />
     </View>
   );
 }

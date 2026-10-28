@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { PERSON_COLOR, Post, subj } from '../data';
 import { addPost, getState, toggleBookmark, toggleHelpful, useStore } from '../store';
-import { ease, hair, useT } from '../theme';
+import { hair, useT } from '../theme';
 import { Avatar, Btn, haptic, Press, Txt } from './base';
 import { personSheet } from './Editors';
 import { Choice, Field } from './Form';
 import { Icon } from './Icon';
+import { fadeIn } from './motion';
 import { Rolling } from './Rolling';
 import { openSheet } from './Sheet';
 import { Sticker } from './Sticker';
@@ -82,20 +83,16 @@ export function PostRow({ p, first }: { p: Post; first?: boolean }) {
 function Helpful({ id, base }: { id: string; base: number }) {
   const t = useT();
   const on = useStore((s) => s.helpful.includes(id));
-  const s = useSharedValue(1);
-  const [burst, setBurst] = useState(0);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   const press = () => {
-    if (!on) { haptic.soft(); s.set(withSequence(withTiming(1.5, { duration: 120, easing: ease.out }), withSpring(1, { damping: 7, stiffness: 260 }))); setBurst((b) => b + 1); }
+    if (!on) haptic.soft();
     toggleHelpful(id);
   };
   return (
     <Press onPress={press} haptics={false} scale={0.94} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel="役に立った" hitSlop={8}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 32 }}>
       <View style={{ width: 18, height: 18, alignItems: 'center', justifyContent: 'center' }}>
-        {/* a pop sticker slaps on when you mark it */}
-        <Animated.View style={a}>{on ? <Sticker name="bulb" size={24} tilt={-8} /> : <Icon name="bulb" size={16} color={t.ink3} />}</Animated.View>
-        {burst ? <Burst key={burst} color="#FFC23D" /> : null}
+        {/* marked: the sticker takes the plain bulb's place, cross-fading (no pop) */}
+        <Animated.View key={on ? 'on' : 'off'} entering={fadeIn()}>{on ? <Sticker name="bulb" size={24} tilt={-8} /> : <Icon name="bulb" size={16} color={t.ink3} />}</Animated.View>
       </View>
       <Rolling value={String(base + (on ? 1 : 0))} size={12.5} weight={on ? '700' : '400'} color={on ? '#B86E00' : t.ink3} />
     </Press>
@@ -106,39 +103,19 @@ function Helpful({ id, base }: { id: string; base: number }) {
 function Bookmark({ id }: { id: string }) {
   const t = useT();
   const on = useStore((s) => s.bookmarks.includes(id));
-  const s = useSharedValue(1);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   const press = () => {
     const now = toggleBookmark(id);
     if (now) {
       haptic.soft();
-      s.set(withSequence(withTiming(1.35, { duration: 110, easing: ease.out }), withSpring(1, { damping: 8, stiffness: 260 })));
       toast('ブックマークしました', 'メニューの「ブックマーク」から見られます');
     } else haptic.tap();
   };
   return (
     <Press onPress={press} haptics={false} scale={0.94} hitSlop={8} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={on ? 'ブックマークを外す' : 'ブックマーク'}
       style={{ height: 32, justifyContent: 'center' }}>
-      <Animated.View style={a}><Icon name="bookmark" size={16} color={on ? t.blue : t.ink3} filled={on} /></Animated.View>
+      <Icon name="bookmark" size={16} color={on ? t.blue : t.ink3} filled={on} />
     </Press>
   );
-}
-
-function Burst({ color }: { color: string }) {
-  return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: '50%', top: '50%' }}>
-      {Array.from({ length: 8 }, (_, k) => <Spark key={k} a={(k / 8) * Math.PI * 2} color={color} />)}
-    </View>
-  );
-}
-function Spark({ a, color }: { a: number; color: string }) {
-  const p = useSharedValue(0);
-  useEffect(() => { p.value = withTiming(1, { duration: 480, easing: ease.out }); }, [p]);
-  const st = useAnimatedStyle(() => ({
-    opacity: 1 - p.value,
-    transform: [{ translateX: Math.cos(a) * 18 * p.value }, { translateY: Math.sin(a) * 18 * p.value }, { scale: 1 - p.value * 0.5 }],
-  }));
-  return <Animated.View style={[{ position: 'absolute', left: -2, top: -2, width: 4, height: 4, borderRadius: 2, backgroundColor: color }, st]} />;
 }
 
 // ---------- writing a post ----------

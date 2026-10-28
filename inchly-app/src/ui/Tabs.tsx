@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { LayoutChangeEvent, Pressable, ScrollView, View, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
-import { ease, hair, useT } from '../theme';
+import { hair, useT } from '../theme';
 import { haptic, Txt } from './base';
+import { move } from './motion';
 
 type Opt<K extends string> = { v: K; label: string };
 type Box = { x: number; w: number };
@@ -18,8 +19,9 @@ function useIndicator(index: number, boxes: Box[]) {
     if (!b) return;
     // First measurement: jump into place and fade in; afterwards slide.
     if (!placed.current) { x.set(b.x); w.set(b.w); o.set(1); placed.current = true; return; }
-    x.set(withTiming(b.x, { duration: 320, easing: ease.out }));
-    w.set(withTiming(b.w, { duration: 320, easing: ease.out }));
+    // slides; its width changes only where the labels differ in length (fit), a single small view
+    x.set(move(b.x));
+    w.set(b.w === w.get() ? b.w : move(b.w));
   }, [index, boxes, x, w, o]);
   const a = useAnimatedStyle(() => ({ opacity: o.value, width: w.value, transform: [{ translateX: x.value }] }));
   return { a };

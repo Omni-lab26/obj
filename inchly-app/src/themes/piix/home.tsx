@@ -1,6 +1,5 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
-import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 
 import { pad, subj } from '@/data';
 import type { Block } from '@/screens/layout';
@@ -15,7 +14,7 @@ import { Icon, IconName } from '@/ui/Icon';
 import { levelSheet } from '@/ui/Level';
 import { toast } from '@/ui/Toast';
 import { alpha, cells, P, ring, sit } from './look';
-import { Box, DotGrid, Flame, Key, Label, Mini, Mood, Pal, PalMark, PixelArt, STEPS } from './pixel';
+import { Box, DotGrid, Flame, Key, Label, Mini, Mood, Pal, PalMark, PixelArt } from './pixel';
 
 // ピクセル箱's home. The pal stands on today's card; under it, today in
 // 10-minute blocks and what to start; a ticker of the numbers; the log as a
@@ -24,17 +23,6 @@ import { Box, DotGrid, Flame, Key, Label, Mini, Mood, Pal, PalMark, PixelArt, ST
 
 const DOW_EN = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const TINTS = [P.stage.lilac, P.stage.sky, P.stage.peach, P.stage.cream];
-
-/** A blink in steps, shared by every live cell so they flash together. */
-function useBlink(on: boolean) {
-  const o = useSharedValue(1);
-  useEffect(() => {
-    if (!on) { o.set(1); return; }
-    o.set(withRepeat(withSequence(withTiming(0.35, { duration: 450, easing: Easing.steps(2) }), withTiming(1, { duration: 450, easing: Easing.steps(2) })), -1));
-    return () => cancelAnimation(o);
-  }, [on, o]);
-  return o;
-}
 
 // ---------- page and header ----------
 function Page({ header, children }: { header: ReactNode; children: ReactNode }) {
@@ -163,8 +151,6 @@ function Blocks({ parts, live, liveColor, goal, unit }: { parts: Slice[]; live: 
   const slots = Math.min(MAX, Math.max(Math.ceil(goal / unit), all.length));
   const more = Math.max(0, all.length - MAX);
   const size = w ? (w - GAP * (PER - 1)) / PER : 0;
-  const blink = useBlink(all.some((x) => x.live));
-  const b = useAnimatedStyle(() => ({ opacity: blink.value }));
   return (
     <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP, minHeight: size || 18 }}
       accessible accessibilityLabel={`今日 ${all.length}マス（1マス${unit}分）。目標は${Math.ceil(goal / unit)}マス`}>
@@ -172,7 +158,7 @@ function Blocks({ parts, live, liveColor, goal, unit }: { parts: Slice[]; live: 
         const c = all[i];
         if (!c) return <View key={i} style={{ width: size, height: size, borderRadius: 3, borderWidth: 1.5, borderColor: alpha(P.ink, 0.28), borderStyle: 'dashed' }} />;
         const cell = <View style={{ width: size, height: size, borderRadius: 3, backgroundColor: c.c, borderWidth: 1.5, borderColor: P.ink }} />;
-        return c.live ? <Animated.View key={i} style={b}>{cell}</Animated.View> : <View key={i}>{cell}</View>;
+        return <View key={i}>{cell}</View>;
       }) : null}
       {more ? <T f="label" size={9} lh={size || 18} color={P.ink2}>{`+${more}`}</T> : null}
     </View>
@@ -221,9 +207,9 @@ function Now() {
 
 // ---------- the ticker ----------
 const SEP = [P.coral, P.sun, P.sky, P.violet];
-function TickerRow({ items, onWidth }: { items: string[]; onWidth?: (w: number) => void }) {
+function TickerRow({ items }: { items: string[] }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center' }} onLayout={onWidth ? (e) => onWidth(e.nativeEvent.layout.width) : undefined}>
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       {items.map((x, i) => (
         <View key={i} style={{ flexDirection: 'row', alignItems: 'center' }}>
           <T f="label" size={11} lh={14} color={P.paper} ls={1.5}>{x}</T>
@@ -233,7 +219,7 @@ function TickerRow({ items, onWidth }: { items: string[]; onWidth?: (w: number) 
     </View>
   );
 }
-/** The day's numbers running past on a dark band, edge to edge. */
+/** The day's numbers on a dark band, edge to edge. */
 function Ticker() {
   const today = useToday();
   const { streak } = useWeekStreak();
@@ -246,23 +232,13 @@ function Ticker() {
     ...(todos.total ? [`TODO ${todos.done}/${todos.total}`] : []),
     ...(pick.from === 'now' || pick.from === 'next' ? [`NEXT ${pick.start}`] : []),
   ];
-  const [w, setW] = useState(0);
-  const x = useSharedValue(0);
-  useEffect(() => {
-    if (!w) return;
-    x.set(0);
-    x.set(withRepeat(withTiming(-w, { duration: w * 30, easing: Easing.linear }), -1));
-    return () => cancelAnimation(x);
-  }, [w, x]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
+  // it stands still (nothing in the app scrolls by itself): the first items, as many as fit
   return (
     <View style={{ marginHorizontal: -16, height: 36, backgroundColor: P.night, overflow: 'hidden', justifyContent: 'center', borderTopWidth: 2, borderBottomWidth: 2, borderColor: P.ink }}
       accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none">
-      <Animated.View style={[{ flexDirection: 'row', position: 'absolute', left: 0 }, a]}>
-        <TickerRow items={items} onWidth={setW} />
+      <View style={{ flexDirection: 'row', position: 'absolute', left: 16 }}>
         <TickerRow items={items} />
-        <TickerRow items={items} />
-      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -274,8 +250,6 @@ function Chart() {
   const liveColor = subj(useStore((s) => s.subj)).c;
   const [w, setW] = useState(0);
   const day = range === 'day';
-  const blink = useBlink(useStore((s) => s.running && !s.paused));
-  const b = useAnimatedStyle(() => ({ opacity: blink.value }));
   // day: 24 hours, 10 minutes a cell (6 at most); week: 7 days, cells sized so the tallest day fits in 10
   const cols = day ? ch.hours.map((x) => ({ key: String(x.h), min: x.min, live: x.live, parts: x.parts, hi: x.now, future: x.future }))
     : ch.week.map((x) => ({ key: x.date, min: x.min, live: x.live, parts: x.parts, hi: x.today, future: x.future }));
@@ -321,7 +295,7 @@ function Chart() {
                   const cell = list[k];
                   const st = { width: cw, height: ch2, borderRadius: day ? 2 : 3 };
                   if (!cell) return <View key={i} style={[st, { backgroundColor: c.future ? 'transparent' : alpha(P.paper, 0.07) }]} />;
-                  return cell.live ? <Animated.View key={i} style={[st, { backgroundColor: cell.c }, b]} /> : <View key={i} style={[st, { backgroundColor: cell.c }]} />;
+                  return <View key={i} style={[st, { backgroundColor: cell.c }]} />;
                 })}
               </View>
             );
@@ -349,22 +323,19 @@ function Chart() {
     </View>
   );
 }
+/** The prompt's cursor: a lit block (it doesn't blink: nothing pulses). */
 function Cursor() {
-  const o = useSharedValue(1);
-  useEffect(() => { o.set(withRepeat(withSequence(withTiming(0, { duration: 500, easing: Easing.steps(1) }), withTiming(1, { duration: 500, easing: Easing.steps(1) })), -1)); return () => cancelAnimation(o); }, [o]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value }));
-  return <Animated.View style={[{ width: 7, height: 13, backgroundColor: P.sun }, a]} />;
+  return <View style={{ width: 7, height: 13, backgroundColor: P.sun }} />;
 }
 
 // ---------- streak ----------
 function Streak() {
   const { streak, tickets, days } = useWeekStreak();
-  const [jump, setJump] = useState(0);
   return (
-    <Press onPress={() => { haptic.soft(); setJump((j) => j + 1); }} scale={0.98} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}
+    <Press onPress={() => haptic.soft()} scale={0.98} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}
       style={{ borderRadius: 22, backgroundColor: P.card, boxShadow: sit(4), padding: 16, gap: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <Flame px={4} lit={streak > 0} jump={jump} />
+        <Flame px={4} lit={streak > 0} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Label text="STREAK" dot={P.sun} />
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 4 }}>
@@ -445,17 +416,11 @@ function TodoChip({ td, tint }: { td: Todo; tint: string }) {
 }
 /** A square box; ticked, it fills lime and the mark lands with a stamp. */
 function Check({ on, label, onPress }: { on: boolean; label: string; onPress: () => void }) {
-  const s = useSharedValue(1);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
-  const press = () => {
-    if (!on) s.set(withSequence(withTiming(1.3, { duration: 90, easing: STEPS }), withTiming(1, { duration: 140, easing: STEPS })));
-    onPress();
-  };
   return (
-    <Pressable onPress={press} accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={label} hitSlop={10}>
-      <Animated.View style={[{ width: 26, height: 26, borderRadius: 7, backgroundColor: on ? P.lime : P.card, borderWidth: 2, borderColor: P.ink, alignItems: 'center', justifyContent: 'center' }, a]}>
+    <Pressable onPress={onPress} accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={label} hitSlop={10}>
+      <View style={{ width: 26, height: 26, borderRadius: 7, backgroundColor: on ? P.lime : P.card, borderWidth: 2, borderColor: P.ink, alignItems: 'center', justifyContent: 'center' }}>
         {on ? <Icon name="check" size={14} color={P.ink} width={3} /> : null}
-      </Animated.View>
+      </View>
     </Pressable>
   );
 }
@@ -515,15 +480,9 @@ function Deadlines() {
 
 // ---------- the crowd ----------
 const CROWD = ['#FF6B4A', '#FFD23F', '#58C8FF', '#6B4CFF', '#FF9EC7', '#FFB547', '#9B8CFF', '#5AD1FF', '#FF8A65', '#F7C948', '#B39DFF', '#4FC3F7'];
-function Bobbing({ i, children }: { i: number; children: ReactNode }) {
-  const y = useSharedValue(0);
-  useEffect(() => {
-    const d = 300 + ((i * 137) % 700);
-    y.set(withRepeat(withSequence(withTiming(-6, { duration: 160, easing: STEPS }), withTiming(0, { duration: 160, easing: STEPS }), withTiming(0, { duration: d })), -1));
-    return () => cancelAnimation(y);
-  }, [i, y]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
-  return <Animated.View style={a}>{children}</Animated.View>;
+/** One of the crowd, standing in its place (they used to bob; nothing bounces now). */
+function Bobbing({ children }: { i: number; children: ReactNode }) {
+  return <View>{children}</View>;
 }
 /** Two rows of tiny someones on two floors; you join at the front when you start. */
 const FRONT = [5, 19, 33, 63, 77, 90];

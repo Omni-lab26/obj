@@ -1,16 +1,17 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 
 import { subj, Subject } from '@/data';
 import { dayOf, minutesIn } from '@/lib/history';
 import { Session, useStore, useSubjects } from '@/store';
-import { ease, hair, useT } from '@/theme';
+import { hair, useT } from '@/theme';
 import { Card, Press, SectionHead, SubjCoin, Txt } from '@/ui/base';
 import { sessionSheet } from '@/ui/Editors';
 import { Heatmap } from '@/ui/Heatmap';
 import { Icon } from '@/ui/Icon';
+import { timed } from '@/ui/motion';
 import { ScoreCard } from '@/ui/ScoreCard';
 import { StackedBars } from '@/ui/StackedBars';
 
@@ -21,8 +22,9 @@ function SubjRow({ s, week, i }: { s: Subject; week: number; i: number }) {
   const p = goal ? Math.min(100, Math.round((week / goal) * 100)) : 100;
   const low = p < 80;
   const w = useSharedValue(0);
-  useEffect(() => { w.value = withDelay(i * 50, withTiming(p, { duration: 700, easing: ease.out })); }, [p, i, w]);
-  const a = useAnimatedStyle(() => ({ width: `${w.value}%` }));
+  useEffect(() => { w.value = withDelay(i * 50, timed(p, 500)); }, [p, i, w]);
+  // grown by scaling from the left, not by its width (no layout each frame)
+  const a = useAnimatedStyle(() => ({ transform: [{ scaleX: w.value / 100 }] }));
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14 }}>
       {i ? <View style={{ position: 'absolute', top: 0, left: 52, right: 0, height: hair, backgroundColor: t.line }} /> : null}
@@ -35,7 +37,7 @@ function SubjRow({ s, week, i }: { s: Subject; week: number; i: number }) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 }}>
           {/* green while on pace, amber when behind */}
           <View style={{ flex: 1, height: 3, borderRadius: 1.5, backgroundColor: t.sunken, overflow: 'hidden' }}>
-            <Animated.View style={[{ height: 3, borderRadius: 1.5, backgroundColor: low ? t.amber : t.green }, a]} />
+            <Animated.View style={[{ width: '100%', height: 3, borderRadius: 1.5, backgroundColor: low ? t.amber : t.green, transformOrigin: 'left' }, a]} />
           </View>
           <Txt size={10.5} w="600" num tone={low ? 'amber' : 'greenInk'} style={{ minWidth: 64, textAlign: 'right' }}>{!goal ? '' : low ? `あと${(goal - week).toFixed(1)}時間` : `${p}%`}</Txt>
         </View>

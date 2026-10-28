@@ -2,24 +2,22 @@ import { BlurView } from 'expo-blur';
 import { ReactNode, useEffect, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { Easing, interpolate, useAnimatedProps, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { interpolate, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { radius, useT } from '../theme';
 import { Press, Txt } from './base';
 import { Icon } from './Icon';
+import { dismiss, M, present, timed } from './motion';
 
-const ABlur = Animated.createAnimatedComponent(BlurView);
 const WEB = Platform.OS === 'web';
 const BLUR = WEB ? 28 : 40;
-// the card settles with a spring that barely overshoots; leaving is quicker than arriving
-const ARRIVE = { duration: 520, dampingRatio: 0.84 };
-const LEAVE = { duration: 170, easing: Easing.in(Easing.quad) };
 
 // A card in the middle of the screen, over the page blurred and a little
-// darker. Opening, the blur deepens while the card rises a little and settles,
-// its contents following a beat later; closing runs it back, quicker. It closes
-// from ✕, a tap outside or back.
+// darker. Opening, the blur fades in (at its full strength: the blur itself is
+// never animated, it's costly) while the card rises a little and settles
+// without going past (ui/motion present), its contents following a beat later;
+// closing runs it back, quicker. It closes from ✕, a tap outside or back.
 export function Dialog({ open, close, title, aside, children }: { open: boolean; close: () => void; title: string; aside?: string; children: ReactNode }) {
   const t = useT();
   const { height } = useWindowDimensions();
@@ -31,22 +29,21 @@ export function Dialog({ open, close, title, aside, children }: { open: boolean;
 
   useEffect(() => {
     if (open) {
-      back.set(withTiming(1, { duration: 340, easing: Easing.out(Easing.cubic) }));
-      card.set(withDelay(40, withSpring(1, ARRIVE)));
+      back.set(timed(1, 330));
+      card.set(withDelay(40, present(1)));
     } else {
-      card.set(withTiming(0, LEAVE));
-      back.set(withTiming(0, { duration: 260, easing: Easing.out(Easing.quad) }, (done) => { if (done) scheduleOnRN(setShown, false); }));
+      card.set(dismiss(0));
+      back.set(withTiming(0, M.leave, (done) => { if (done) scheduleOnRN(setShown, false); }));
     }
   }, [open, back, card]);
 
-  const blur = useAnimatedProps(() => ({ intensity: BLUR * back.value }));
-  const blurWeb = useAnimatedStyle(() => ({ opacity: back.value }));
+  const blurIn = useAnimatedStyle(() => ({ opacity: back.value }));
   const tint = useAnimatedStyle(() => ({ opacity: back.value }));
   const box = useAnimatedStyle(() => {
     const v = card.value;
     return {
       opacity: interpolate(v, [0, 0.45], [0, 1], 'clamp'),
-      transform: [{ translateY: (1 - v) * 22 }, { scale: 0.93 + 0.07 * v }],
+      transform: [{ translateY: (1 - v) * 12 }, { scale: 0.98 + 0.02 * v }],
     };
   });
   const inner = useAnimatedStyle(() => {
@@ -58,9 +55,7 @@ export function Dialog({ open, close, title, aside, children }: { open: boolean;
     <Modal visible={shown} transparent animationType="none" onRequestClose={close} statusBarTranslucent>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View style={StyleSheet.absoluteFill} pointerEvents={open ? 'auto' : 'none'}>
-          {WEB
-            ? <Animated.View style={[StyleSheet.absoluteFill, blurWeb]}><BlurView intensity={BLUR} tint={t.dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} /></Animated.View>
-            : <ABlur animatedProps={blur} tint={t.dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />}
+          <Animated.View style={[StyleSheet.absoluteFill, blurIn]}><BlurView intensity={BLUR} tint={t.dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} /></Animated.View>
           <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.dark ? 'rgba(0,0,0,0.35)' : 'rgba(17,20,23,0.18)' }, tint]} />
           <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="閉じる" />
         </View>

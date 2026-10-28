@@ -73,6 +73,8 @@ export default function EngineSkia({ kind, width, height, blur }: EngineProps) {
   useFrameCallback((f) => {
     'worklet';
     backdropClock.value = f.timestamp;
+    // a finger on the screen, or something moving (holdBackdrop): the world stands still, so the thread is all the gesture's
+    if (f.timestamp < backdropHeld.value) { acc.value = 0; return; }
     // 30 times a second, however fast the screen refreshes
     acc.value += (f.timeSincePreviousFrame ?? 16) / 1000;
     if (acc.value < 1 / 30) return;
@@ -157,7 +159,7 @@ export default function EngineSkia({ kind, width, height, blur }: EngineProps) {
 
     if (!wantSharp) return;
     ticks.value += 1;
-    if (ticks.value % (f.timestamp < backdropHeld.value ? 4 : 2) !== 0) return;
+    if (ticks.value % 2 !== 0) return;
     paint(p);
     const S: SkRect[] = [], T: SkRSXform[] = [], C: SkColor[] = [];
     const n = cols * rows;

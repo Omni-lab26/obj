@@ -1,12 +1,16 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { Dimensions, PanResponder, View } from 'react-native';
-import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Dimensions, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { interpolate, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
-import { ease, useT } from '../theme';
+import { useT } from '../theme';
 import { haptic, Txt } from './base';
+import { dismiss, M, move } from './motion';
 
 // Horizontal swipe on a list row. Right past the threshold = mark read,
 // left = slide out and collapse, then onDelete. Vertical drags pass through to the list.
+// The row follows the finger on the UI thread and goes back (or away) keeping the finger's speed, without a bounce.
 const TH = 90;
 
 export function SwipeRow({ children, onRead, onDelete, bg }: { children: ReactNode; onRead: () => void; onDelete: () => void; bg: string }) {
@@ -14,41 +18,40 @@ export function SwipeRow({ children, onRead, onDelete, bg }: { children: ReactNo
   const x = useSharedValue(0);
   const h = useSharedValue(-1);
   const measured = useSharedValue(0);
-  const crossed = useRef(0);
+  const crossed = useSharedValue(0);
   const cb = useRef({ onRead, onDelete });
   useEffect(() => { cb.current = { onRead, onDelete }; }, [onRead, onDelete]);
 
-  // The responder is created once; its handlers read refs only when a gesture fires, never during render.
+  const tick = () => haptic.tap();
+  const read = () => { haptic.soft(); cb.current.onRead(); };
+  const gone = () => cb.current.onDelete();
+  const away = () => {
+    haptic.firm();
+    // the row closes up after it has slid out
+    h.set(measured.get());
+    h.set(withDelay(160, withTiming(0, M.leave, (done) => { if (done) scheduleOnRN(gone); })));
+  };
+  // The gesture is built once; its worklets read shared values, and the callbacks read the latest handlers from a ref when they fire.
   // eslint-disable-next-line react-hooks/refs
-  const [pan] = useState(() =>
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.6,
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: () => { crossed.current = 0; },
-      onPanResponderMove: (_, g) => {
-        x.set(g.dx);
-        const c = g.dx > TH ? 1 : g.dx < -TH ? -1 : 0;
-        if (c !== crossed.current) { crossed.current = c; if (c) haptic.tap(); }
-      },
-      onPanResponderRelease: (_, g) => {
-        if (g.dx > TH) {
-          x.set(withTiming(0, { duration: 300, easing: ease.out }));
-          haptic.soft();
-          cb.current.onRead();
-        } else if (g.dx < -TH) {
-          haptic.firm();
-          h.set(measured.get());
-          x.set(withTiming(-Dimensions.get('window').width * 1.1, { duration: 180, easing: ease.out }));
-          // Timers on the JS side keep the callbacks out of worklets.
-          setTimeout(() => { h.set(withTiming(0, { duration: 260, easing: ease.out })); }, 180);
-          setTimeout(() => cb.current.onDelete(), 460);
-        } else {
-          x.set(withTiming(0, { duration: 300, easing: ease.out }));
-        }
-      },
-      onPanResponderTerminate: () => { x.set(withTiming(0, { duration: 300, easing: ease.out })); },
-    }),
-  );
+  const [pan] = useState(() => Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-12, 12])
+    .onBegin(() => { crossed.value = 0; })
+    .onUpdate((e) => {
+      x.value = e.translationX;
+      const c = e.translationX > TH ? 1 : e.translationX < -TH ? -1 : 0;
+      if (c !== crossed.value) { crossed.value = c; if (c) scheduleOnRN(tick); }
+    })
+    .onEnd((e) => {
+      if (e.translationX > TH) {
+        x.value = move(0, e.velocityX);
+        scheduleOnRN(read);
+      } else if (e.translationX < -TH) {
+        x.value = dismiss(-Dimensions.get('window').width * 1.1, Math.min(e.velocityX, -800));
+        scheduleOnRN(away);
+      } else x.value = move(0, e.velocityX);
+    })
+    .onFinalize((_, ok) => { if (!ok && x.value !== 0) x.value = move(0); }));
 
   const content = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   const wrap = useAnimatedStyle(() => (h.value < 0 ? {} : { height: h.value, opacity: interpolate(h.value, [0, measured.value || 1], [0, 1]) }));
@@ -62,9 +65,11 @@ export function SwipeRow({ children, onRead, onDelete, bg }: { children: ReactNo
         <Animated.View style={readLbl}><Txt size={13} w="700" color="#fff">既読にする</Txt></Animated.View>
         <Animated.View style={delLbl}><Txt size={13} w="700" color="#fff">削除</Txt></Animated.View>
       </Animated.View>
-      <Animated.View {...pan.panHandlers} style={[{ backgroundColor: bg }, content]}>
-        <View>{children}</View>
-      </Animated.View>
+      <GestureDetector gesture={pan}>
+        <Animated.View style={[{ backgroundColor: bg }, content]}>
+          <View>{children}</View>
+        </Animated.View>
+      </GestureDetector>
     </Animated.View>
   );
 }

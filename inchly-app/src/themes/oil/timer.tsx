@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { Easing, interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -17,6 +17,7 @@ import { elapsedOf, getState, setTarget, startStudy, togglePause, useStore, useS
 import { focus } from '@/theme';
 import { haptic, Press } from '@/ui/base';
 import { Icon } from '@/ui/Icon';
+import { M, move } from '@/ui/motion';
 import { Dab, Easel, Painting, PaintTap, Spotlight } from './canvas';
 import { useOil } from './look';
 import { dabPath, type Part, type Pt, signature, strokePath } from './paint';
@@ -103,12 +104,9 @@ function Switcher() {
   );
 }
 
-/** A slow gleam across paint that's still wet. */
+/** A gleam on paint that's still wet: light catching the varnish, where it lies (it doesn't sweep: nothing loops). */
 function Glint({ w, h }: { w: number; h: number }) {
-  const x = useSharedValue(-w * 0.4);
-  useEffect(() => { x.set(withRepeat(withTiming(w * 1.3, { duration: 3400, easing: Easing.inOut(Easing.quad) }), -1, false)); }, [w, x]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }, { rotate: '18deg' }] }));
-  return <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: -h * 0.3, width: w * 0.14, height: h * 1.6, backgroundColor: 'rgba(255,255,255,0.12)' }, a]} />;
+  return <View pointerEvents="none" style={{ position: 'absolute', top: -h * 0.3, width: w * 0.14, height: h * 1.6, backgroundColor: 'rgba(255,255,255,0.12)', transform: [{ translateX: w * 0.62 }, { rotate: '18deg' }] }} />;
 }
 
 /** This session's canvas on the easel, and the time on its label. */
@@ -279,7 +277,7 @@ function Record() {
     haptic.success();
     session.finish();
     // the pen goes back once the record page covers this one
-    setTimeout(() => x.set(withSpring(0, { damping: 18, stiffness: 180 })), 700);
+    setTimeout(() => x.set(move(0)), 700);
   };
   // one tick as the pen crosses the line, either way
   useAnimatedReaction(() => x.get() > max.get() * 0.7, (over, prev) => { if (prev !== null && over !== prev) scheduleOnRN(haptic.tap); });
@@ -295,12 +293,14 @@ function Record() {
       if (off.get()) return;
       const m = max.get(), p = x.get();
       if (p > m * 0.7 || (e.velocityX > 900 && p > m * 0.35)) {
-        x.set(withTiming(m, { duration: 220, easing: Easing.out(Easing.cubic) }, (done) => { if (done) scheduleOnRN(finish); }));
+        x.set(withTiming(m, M.micro, (done) => { if (done) scheduleOnRN(finish); }));
       } else {
-        x.set(withSpring(0, { damping: 16, stiffness: 200 }));
+        x.set(move(0, e.velocityX));
       }
     }));
-  const reveal = useAnimatedStyle(() => ({ width: Math.max(0, x.value + KNOB * 0.5 - 8) }));
+  // the signature is uncovered up to the pen: a window slides right while what's in it slides back (transforms only, nothing laid out each frame)
+  const reveal = useAnimatedStyle(() => ({ transform: [{ translateX: Math.max(0, x.value + KNOB * 0.5 - 8) - (w - 16) }] }));
+  const revealIn = useAnimatedStyle(() => ({ transform: [{ translateX: (w - 16) - Math.max(0, x.value + KNOB * 0.5 - 8) }] }));
   const knob = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   const hint = useAnimatedStyle(() => ({ opacity: interpolate(x.value, [0, max.value * 0.45], [1, 0], 'clamp') }));
   return (
@@ -316,8 +316,10 @@ function Record() {
           <T size={13.5} lh={18} color={L.ink2} numberOfLines={1}>ペンを右へ。サインして記録する</T>
         </Animated.View>
         {sig ? (
-          <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 8, top: 10, height: 44, overflow: 'hidden' }, reveal]}>
-            <Svg width={w - 16} height={44}><Path d={sig.d} stroke={L.ink} strokeWidth={2.2} fill="none" strokeLinecap="round" strokeLinejoin="round" /></Svg>
+          <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 8, top: 10, width: w - 16, height: 44, overflow: 'hidden' }, reveal]}>
+            <Animated.View style={revealIn}>
+              <Svg width={w - 16} height={44}><Path d={sig.d} stroke={L.ink} strokeWidth={2.2} fill="none" strokeLinecap="round" strokeLinejoin="round" /></Svg>
+            </Animated.View>
           </Animated.View>
         ) : null}
         {w ? (

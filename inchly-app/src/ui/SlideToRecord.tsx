@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { ease, focus } from '../theme';
+import { focus } from '../theme';
 import { haptic, Txt } from './base';
 import { Icon } from './Icon';
+import { M, move } from './motion';
 
 // Slide-to-confirm on the dark timer. The track fills behind the knob and the
-// label fades as you drag; past 70% it finishes by itself, otherwise it springs
-// back. The drag runs on the UI thread; React hears only "passed the line" and "done".
+// label fades as you drag; past 70% it finishes by itself, otherwise it slides
+// back at the finger's speed, without a bounce. The drag runs on the UI thread; React hears only "passed the line" and "done".
 const KNOB = 48;
 const PADDING = 6;
 
@@ -27,7 +28,7 @@ export function SlideToRecord({ onDone, disabled, label = '右へスライドし
     haptic.success();
     doneRef.current();
     // put the knob back once the next screen covers this one
-    setTimeout(() => x.set(withSpring(0, { damping: 18, stiffness: 180 })), 700);
+    setTimeout(() => x.set(move(0)), 700);
   };
   // one tick as the knob crosses the line, either way
   useAnimatedReaction(() => x.get() > max.get() * 0.7, (over, prev) => { if (prev !== null && over !== prev) scheduleOnRN(haptic.tap); });
@@ -46,14 +47,15 @@ export function SlideToRecord({ onDone, disabled, label = '右へスライドし
       const m = max.get(), v = x.get();
       // a quick flick counts too
       if (v > m * 0.7 || (e.velocityX > 900 && v > m * 0.35)) {
-        x.set(withTiming(m, { duration: 180, easing: ease.out }, (done) => { if (done) scheduleOnRN(finish); }));
+        x.set(withTiming(m, M.micro, (done) => { if (done) scheduleOnRN(finish); }));
       } else {
-        x.set(withSpring(0, { damping: 16, stiffness: 220 }));
+        x.set(move(0, e.velocityX));
       }
     }));
 
   const knob = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
-  const fill = useAnimatedStyle(() => ({ width: x.value + KNOB + PADDING * 2 }));
+  // the fill is the track's full width, slid in from the left behind the knob (moved, not resized)
+  const fill = useAnimatedStyle(() => ({ transform: [{ translateX: x.value + KNOB + PADDING * 2 - w }] }));
   const lbl = useAnimatedStyle(() => ({ opacity: interpolate(x.value, [0, max.value * 0.7], [1, 0], 'clamp') }));
 
   return (
@@ -61,7 +63,7 @@ export function SlideToRecord({ onDone, disabled, label = '右へスライドし
       accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
       accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={() => !disabled && onDone()}
       style={{ height: 60, borderRadius: 18, backgroundColor: focus.raise, overflow: 'hidden', opacity: disabled ? 0.35 : 1 }}>
-      <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: 'rgba(46,196,113,0.22)' }, fill]} />
+      <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, width: w, backgroundColor: 'rgba(46,196,113,0.22)' }, fill]} />
       <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: KNOB + PADDING, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }, lbl]}>
         <Txt size={14} color={focus.ink2}>{label}</Txt>
       </Animated.View>

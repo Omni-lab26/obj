@@ -2,10 +2,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { createElement, ReactNode } from 'react';
 import { Keyboard, Platform, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { dateKey, parseKey } from '../lib/time';
-import { ease, hair, useT } from '../theme';
+import { hair, useT } from '../theme';
+import { fadeIn, fadeOut, layout } from './motion';
 import { Press, Txt } from './base';
 import { Stepper } from './Form';
 
@@ -17,8 +18,8 @@ import { Stepper } from './Form';
 
 const IOS = Platform.OS === 'ios';
 const WEB = Platform.OS === 'web';
-/** Rows and what opens under them slide into place together, with iOS's curve: no spring, no bounce. */
-export const SMOOTH = LinearTransition.duration(340).easing(ease.ios);
+/** Rows and what opens under them slide into place together, without a bounce (ui/motion's layout). */
+export const SMOOTH = layout();
 
 const at = (day: Date, min: number) => new Date(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(min / 60), min % 60);
 const clock = (min: number) => `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`;
@@ -37,7 +38,7 @@ function WebField({ type, value, onChange, min, max, step }: { type: 'date' | 't
 export function Opens({ children }: { children: ReactNode }) {
   const t = useT();
   return (
-    <Animated.View entering={FadeIn.duration(240).easing(ease.ios)} exiting={FadeOut.duration(140)} layout={SMOOTH}
+    <Animated.View entering={fadeIn()} exiting={fadeOut()} layout={SMOOTH}
       style={{ borderTopWidth: hair, borderTopColor: t.line, alignItems: IOS ? 'center' : 'stretch' }}>
       {children}
     </Animated.View>

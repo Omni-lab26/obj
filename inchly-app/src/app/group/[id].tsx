@@ -1,7 +1,7 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ComponentRef, useCallback, useEffect, useRef, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeInDown, LinearTransition, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChatMsg, GEvent, Group, hms, subj } from '@/data';
@@ -13,6 +13,7 @@ import { NavBar, Screen } from '@/ui/Chrome';
 import { personSheet } from '@/ui/Editors';
 import { Bar, LiveDot, PeoplePill, takePendingGroupTab } from '@/ui/GroupParts';
 import { Icon } from '@/ui/Icon';
+import { fadeIn, layout, timed } from '@/ui/motion';
 import { Stamp, STAMPS, Sticker, StickerName } from '@/ui/Sticker';
 import { UnderTabs } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
@@ -150,7 +151,7 @@ function Chat({ g }: { g: Group }) {
           </Press>
         </View>
         {tray ? (
-          <Animated.View entering={FadeInDown.duration(200)} style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8, paddingTop: 10 }}>
+          <Animated.View entering={fadeIn()} style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8, paddingTop: 10 }}>
             {STAMPS.map((x) => (
               <View key={x.id} style={{ width: '25%', alignItems: 'center', paddingVertical: 6 }}>
                 <Press onPress={() => sendStamp(x.id)} haptics={false} scale={0.86} accessibilityLabel={`スタンプ「${x.label}」を送る`}>
@@ -168,7 +169,7 @@ function Chat({ g }: { g: Group }) {
 function Msg({ m, i, g, onJoin }: { m: ChatMsg; i: number; g: Group; onJoin: (w: string) => void }) {
   const t = useT();
   const blocked = useStore((x) => x.blocked);
-  const enter = FadeInDown.duration(260);
+  const enter = fadeIn();
   if (m.kind === 'sys') {
     return (
       <Animated.View entering={enter} style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: m.join ? 3 : 4, paddingLeft: 10, paddingRight: m.join ? 3 : 10, borderRadius: 16, backgroundColor: t.dark ? t.sunken : 'rgba(15,23,42,0.05)' }}>
@@ -271,11 +272,12 @@ function Events({ g }: { g: Group }) {
 function EventRow({ e, onToggle }: { e: GEvent; onToggle: () => void }) {
   const t = useT();
   const glow = useSharedValue(e.fresh ? 1 : 0);
-  useEffect(() => { if (e.fresh) glow.value = withDelay(900, withTiming(0, { duration: 1400 })); }, [e.fresh, glow]);
+  // a new one is lit for a moment, then the light fades (no longer than any move: MOTION.md)
+  useEffect(() => { if (e.fresh) glow.value = withDelay(900, timed(0, 600)); }, [e.fresh, glow]);
   const ga = useAnimatedStyle(() => ({ opacity: glow.value }));
   const names = (e.me ? [ME] : []).concat(e.joined);
   return (
-    <Animated.View entering={e.fresh ? FadeInDown.duration(360) : undefined} layout={LinearTransition.duration(240)}
+    <Animated.View entering={e.fresh ? fadeIn() : undefined} layout={layout()}
       style={[{ flexDirection: 'row', gap: 12, marginHorizontal: 16, marginBottom: 10, padding: 14, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.greenSoft, borderRadius: radius.card }, ga]} />
       <View style={{ width: 42, height: 46, borderRadius: 10, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line, alignItems: 'center', justifyContent: 'center' }}>

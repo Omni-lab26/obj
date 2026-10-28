@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { PanResponder, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { CARDS, useDesign } from '@/design';
@@ -8,6 +8,7 @@ import { grassOf } from '@/lib/history';
 import { useStore } from '@/store';
 import { Avatar, haptic, Txt } from '@/ui/base';
 import { Wordmark } from '@/ui/Brand';
+import { move, press as pressTo, release } from '@/ui/motion';
 import { Rolling } from '@/ui/Rolling';
 import { hair, lift, useT } from '@/theme';
 
@@ -15,8 +16,9 @@ const CARD_GRASS = ['', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C']; // the app'
 
 // The study card — the page's centerpiece, in the look picked on the デザイン page, cut to the size of a credit card
 // (ISO/IEC 7810 ID-1, 85.60 × 53.98 mm). The last five weeks of grass sit where
-// the IC chip would be. The sheen drifts on its own; drag a finger across it
-// and the sheen follows while the card tilts.
+// the IC chip would be. The sheen rests at the left edge (nothing drifts on its
+// own); drag a finger across it and the sheen follows while the card tilts,
+// both going back without a bounce when it lifts.
 export const CARD_RATIO = 85.6 / 53.98;
 export function HoloCard({ name, handle, goal, since, stats, lv }: { name: string; handle: string; goal: string; since: string; stats: { v: string; from: string; label: string }[]; lv: number }) {
   const t = useT();
@@ -41,23 +43,21 @@ export function HoloCard({ name, handle, goal, since, stats, lv }: { name: strin
   // All gesture logic lives inside the responder so render never touches refs.
   const [pan] = useState(() => {
     let dragging = false;
-    const idle = () => { sheen.value = withRepeat(withTiming(1, { duration: 2600, easing: Easing.inOut(Easing.quad) }), -1, true); };
     const follow = (x: number, y: number) => {
       if (!cw.value) return;
       const nx = Math.max(-1, Math.min(1, (x / cw.value) * 2 - 1));
       const ny = Math.max(-1, Math.min(1, (y / ch.value) * 2 - 1));
-      sheen.value = withTiming(nx, { duration: 90 });
-      ry.value = withTiming(nx * 7, { duration: 90 });
-      rx.value = withTiming(-ny * 7, { duration: 90 });
+      sheen.value = pressTo(nx);
+      ry.value = pressTo(nx * 7);
+      rx.value = pressTo(-ny * 7);
     };
     const end = () => {
       dragging = false;
-      press.value = withSpring(1, { damping: 14 });
-      rx.value = withSpring(0, { damping: 12 });
-      ry.value = withSpring(0, { damping: 12 });
-      idle();
+      press.value = release(1);
+      rx.value = release(0);
+      ry.value = release(0);
+      sheen.value = move(-1);
     };
-    idle();
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > Math.abs(g.dy),
@@ -65,7 +65,7 @@ export function HoloCard({ name, handle, goal, since, stats, lv }: { name: strin
       onPanResponderGrant: (e) => {
         dragging = true;
         haptic.soft();
-        press.value = withTiming(0.98, { duration: 140 });
+        press.value = pressTo(0.98);
         follow(e.nativeEvent.locationX, e.nativeEvent.locationY);
       },
       onPanResponderMove: (e) => follow(e.nativeEvent.locationX, e.nativeEvent.locationY),

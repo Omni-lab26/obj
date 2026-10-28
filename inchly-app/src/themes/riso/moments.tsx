@@ -1,30 +1,32 @@
 import { useEffect } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence } from 'react-native-reanimated';
 import Svg, { Rect } from 'react-native-svg';
 
 import { subj } from '@/data';
 import type { Moment } from '@/moments';
 import type { MomentKit } from '@/themes/types';
+import { dismiss, micro, present } from '@/ui/motion';
 import { Chip, P, Patterns, StampMark, useInk, useOver, useSvgId } from './print';
 
 // What the press makes of a moment: a fresh sheet runs through when you start,
-// and a rubber stamp thumps down for a ToDo done, the target reached, and a
+// and a rubber stamp is inked in for a ToDo done, the target reached, and a
 // session recorded (a second stamp, the new issue number, when you level up).
+// Nothing slams or bounces: stamps fade in and out where they lie.
 
 type Of<K extends Moment['kind']> = { moment: Extract<Moment, { kind: K }>; done: () => void };
 
-/** A stamp's arc: slammed down from big and faint, held, then lifted away. */
+/** A stamp's arc: inked in from just a touch small, held, then lifted away (never past its size). */
 function useSlam(delay = 0, hold = 700) {
   const v = useSharedValue(0);
   useEffect(() => {
-    v.set(withDelay(delay, withSequence(withTiming(1, { duration: 150, easing: Easing.in(Easing.quad) }), withDelay(hold, withTiming(2, { duration: 260 })))));
+    v.set(withDelay(delay, withSequence(micro(1), withDelay(hold, dismiss(2)))));
   }, [v, delay, hold]);
   return useAnimatedStyle(() => {
     const x = v.value;
     return x <= 1
-      ? { opacity: Math.min(1, x * 2.5), transform: [{ scale: 2.2 - 1.2 * x }] }
-      : { opacity: 2 - x, transform: [{ scale: 1 + (x - 1) * 0.06 }] };
+      ? { opacity: x, transform: [{ scale: 0.98 + 0.02 * x }] }
+      : { opacity: 2 - x, transform: [{ scale: 1 - (x - 1) * 0.02 }] };
   });
 }
 
@@ -36,7 +38,7 @@ function Start({ moment, done }: Of<'start'>) {
   useOver(done, 1400);
   const x = useSharedValue(-width);
   useEffect(() => {
-    x.set(withSequence(withTiming(0, { duration: 260, easing: Easing.out(Easing.cubic) }), withDelay(650, withTiming(width, { duration: 300, easing: Easing.in(Easing.cubic) }))));
+    x.set(withSequence(present(0), withDelay(650, dismiss(width))));
   }, [x, width]);
   const a = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   return (

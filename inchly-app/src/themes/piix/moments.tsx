@@ -5,11 +5,12 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequ
 import { subj } from '@/data';
 import { T } from '@/themes/kit';
 import type { MomentKit } from '@/themes/types';
+import { dismiss, micro } from '@/ui/motion';
 import { P, ring, sit } from './look';
-import { J, Mood, Pal, STEPS } from './pixel';
+import { J, Mood, Pal } from './pixel';
 
-// The pal makes something of what you did: a card pops in (in steps), squares
-// burst out, and it's gone in under two seconds. The toast says the facts.
+// The pal makes something of what you did: a card fades in (no pop), squares
+// burst out once, and it's gone in under two seconds. The toast says the facts.
 
 const BITS = [P.coral, P.sun, P.sky, P.violet, P.lime];
 function Bit({ i, n }: { i: number; n: number }) {
@@ -31,15 +32,15 @@ function Burst({ n = 18 }: { n?: number }) {
   );
 }
 
-/** A card that pops in, holds, and fades; done() when it's gone. */
+/** A card that fades in from just a touch small, holds, and fades; done() when it's gone. */
 function Pop({ done, ms = 1600, bg = P.card, burst, pal, children }: { done: () => void; ms?: number; bg?: string; burst?: boolean; pal?: Mood; children: ReactNode }) {
-  const s = useSharedValue(0.4);
+  const s = useSharedValue(0.98);
   const o = useSharedValue(0);
   const end = useRef(done);
   useEffect(() => { end.current = done; }, [done]);
   useEffect(() => {
-    s.set(withTiming(1, { duration: 170, easing: STEPS }));
-    o.set(withSequence(withTiming(1, { duration: 80 }), withDelay(ms - 380, withTiming(0, { duration: 300 }))));
+    s.set(micro(1));
+    o.set(withSequence(micro(1), withDelay(ms - 500, dismiss(0))));
     const id = setTimeout(() => end.current(), ms);
     return () => clearTimeout(id);
   }, [ms, o, s]);

@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ComponentType, ReactNode, useEffect, useState, useSyncExternalStore } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { Easing, Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { Extrapolation, interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Line, LinearGradient, Rect, Stop } from 'react-native-svg';
@@ -18,6 +18,7 @@ import { holdBackdrop } from '@/ui/backdrop/shared';
 import { haptic, Press, SubjTile, Txt } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { LiveDot } from '@/ui/GroupParts';
+import { dismiss, M, present } from '@/ui/motion';
 import { Icon } from '@/ui/Icon';
 import { Rolling } from '@/ui/Rolling';
 import { SlideToRecord } from '@/ui/SlideToRecord';
@@ -68,8 +69,8 @@ export function StandardTimerPage({ zones }: { zones: Record<Zone, ReactNode> })
  * bottom over the app (the screen it was opened from stays under it, dimmed),
  * and pulled down — by its bar, or anywhere — it follows the finger with
  * round corners, the app showing behind; let go far or fast enough and it
- * slides away into the study bar, else it springs back. Always dark, a color
- * wash behind.
+ * slides away into the study bar on iOS's curve, else it goes back up — never
+ * past the top (ui/motion). Always dark, a color wash behind.
  */
 export function TimerFrame({ zones, wash, light, over }: {
   zones: Record<Zone, ReactNode>; wash: ReactNode; /** a light page (dark status bar) */ light?: boolean; /** drawn over the zones */ over?: ReactNode;
@@ -85,18 +86,20 @@ export function TimerFrame({ zones, wash, light, over }: {
     .onUpdate((e) => { holdBackdrop(); y.set(Math.max(0, e.translationY)); })
     .onEnd((e) => {
       if (e.translationY > 140 || e.velocityY > 900) {
-        y.set(withTiming(height, { duration: 240, easing: Easing.out(Easing.quad) }, (done) => { if (done) scheduleOnRN(left); }));
-      } else y.set(withSpring(0, { duration: 380, dampingRatio: 0.86 }, (done) => { if (done) scheduleOnRN(setRevealing, false); }));
+        y.set(dismiss(height, Math.max(1, e.velocityY), (done) => { if (done) scheduleOnRN(left); }));
+      } else y.set(present(0, e.velocityY)); // back up, keeping the finger's speed (clamped: never past the top)
     }));
   useEffect(() => {
-    y.set(withSpring(0, { duration: 520, dampingRatio: 0.92 }));
+    y.set(present(0));
     const out = () => {
       setRevealing(true);
-      y.set(withTiming(height, { duration: 300, easing: Easing.in(Easing.cubic) }, (done) => { if (done) scheduleOnRN(left); }));
+      y.set(withTiming(height, M.leave, (done) => { if (done) scheduleOnRN(left); }));
     };
     leave = out;
     return () => { if (leave === out) leave = null; };
   }, [y, height]);
+  // back at the top: the page under it stops drawing its 背景 again
+  useAnimatedReaction(() => y.value === 0, (top, was) => { if (top && was === false) scheduleOnRN(setRevealing, false); });
   const sheet = useAnimatedStyle(() => ({
     transform: [{ translateY: y.value }],
     borderRadius: interpolate(y.value, [0, 30], [0, 44], Extrapolation.CLAMP),

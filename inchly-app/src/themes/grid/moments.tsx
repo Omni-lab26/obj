@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence } from 'react-native-reanimated';
 
 import { subj } from '@/data';
 import type { Moment } from '@/moments';
 import { fmt } from '@/screens/timer/standard';
 import type { MomentKit } from '@/themes/types';
 import { useT } from '@/theme';
+import { M as MOTION, present, timed } from '@/ui/motion';
 import { Barcode, Gradient, J, M, pad2, PINK, useSvgId } from './parts';
 
-// 方眼 moments: small windows that type themselves out, a selection box that
-// snaps round a finished ToDo, a scan line for the target, and a receipt for
-// what you recorded. Each is over in under two seconds.
+// 方眼 moments: small windows that type themselves out, a selection box round
+// a finished ToDo, a scan line for the target, and a receipt for what you
+// recorded. Each is over in under two seconds, and nothing bounces (MOTION.md).
 
 type Props<K extends Moment['kind']> = { moment: Extract<Moment, { kind: K }>; done: () => void };
 
@@ -21,7 +22,7 @@ function useShow(ms: number, done: () => void) {
   const ref = useRef(done);
   useEffect(() => { ref.current = done; }, [done]);
   useEffect(() => {
-    o.set(withSequence(withTiming(1, { duration: 140 }), withDelay(ms - 320, withTiming(0, { duration: 180 }))));
+    o.set(withSequence(timed(1, MOTION.fadeIn), withDelay(ms - 320, timed(0, MOTION.fadeOut))));
     const id = setTimeout(() => ref.current(), ms);
     return () => clearTimeout(id);
   }, [ms, o]);
@@ -64,16 +65,13 @@ function Start({ moment, done }: Props<'start'>) {
   );
 }
 
-/** A ToDo done: a dashed selection box snaps round a [x]. */
+/** A ToDo done: a dashed selection box round a [x]. */
 function Todo({ moment, done }: Props<'todo'>) {
   const t = useT();
   const a = useShow(1200, done);
-  const s = useSharedValue(1.25);
-  useEffect(() => { s.set(withTiming(1, { duration: 200, easing: Easing.steps(4) })); }, [s]);
-  const box = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   return (
     <View style={styles.center}>
-      <Animated.View style={[{ paddingHorizontal: 18, paddingVertical: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: t.ink, backgroundColor: 'rgba(243,243,255,0.92)', alignItems: 'center', gap: 2 }, a, box]}>
+      <Animated.View style={[{ paddingHorizontal: 18, paddingVertical: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: t.ink, backgroundColor: 'rgba(243,243,255,0.92)', alignItems: 'center', gap: 2 }, a]}>
         <M b size={20} lh={26}>{moment.all ? '[x] ALL DONE' : '[x] todo.txt'}</M>
         <M size={12} lh={16} color={moment.exp ? PINK : t.ink3}>{moment.exp ? `+${moment.exp} EXP` : 'done'}</M>
       </Animated.View>
@@ -87,7 +85,7 @@ function Target({ moment, done }: Props<'target'>) {
   const { height } = useWindowDimensions();
   const a = useShow(1600, done);
   const y = useSharedValue(0);
-  useEffect(() => { y.set(withTiming(1, { duration: 1300, easing: Easing.inOut(Easing.quad) })); }, [y]);
+  useEffect(() => { y.set(timed(1, 600)); }, [y]);
   const line = useAnimatedStyle(() => ({ transform: [{ translateY: y.value * (height * 0.7) + height * 0.12 }] }));
   const id = useSvgId('scan');
   return (
@@ -102,12 +100,12 @@ function Target({ moment, done }: Props<'target'>) {
   );
 }
 
-/** A session recorded: a receipt slides up with the minutes, the EXP and a code. */
+/** A session recorded: a receipt comes up with the minutes, the EXP and a code. */
 function Record({ moment, done }: Props<'record'>) {
   const t = useT();
   const a = useShow(1900, done);
   const y = useSharedValue(40);
-  useEffect(() => { y.set(withTiming(0, { duration: 260, easing: Easing.out(Easing.cubic) })); }, [y]);
+  useEffect(() => { y.set(present(0)); }, [y]);
   const slide = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   const id = useSvgId('lv');
   const name = subj(moment.subject).name;

@@ -1,6 +1,5 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 
 import { subj } from '@/data';
 import type { Block } from '@/screens/layout';
@@ -16,7 +15,7 @@ import { Icon, IconName } from '@/ui/Icon';
 import { levelSheet } from '@/ui/Level';
 import { toast } from '@/ui/Toast';
 import { bricks, messagePages, say, unitFor, useLook } from './look';
-import { Cap, Cursor, Fig, fill, Menu, More, PixelArt, Segs, SPRITES, STEP, Typed, useBlink, useTyper, Win } from './ui';
+import { Cap, Cursor, Fig, fill, Menu, More, PixelArt, Segs, SPRITES, Typed, useTyper, Win } from './ui';
 
 // 8bit's home: the day as a game's status screen. A status window (today's
 // time and the level as gauges), a message window that types out how the day
@@ -77,9 +76,8 @@ function Today() {
   const me = useStore((s) => s.account?.name ?? 'はる');
   const N = 20;
   const live = ss.running ? ss.elapsed / 60 : 0;
-  // today's gauge: what's recorded in each subject's color, then the session under way (blinking), out of the goal
+  // today's gauge: what's recorded in each subject's color, then the session under way, out of the goal
   const unit = Math.max(1, today.goal / N);
-  const done = bricks(today.parts, 0, '', unit, false);
   const all = bricks(today.parts, live, ss.subject.c, unit, false);
   const cells = Array.from({ length: N }, (_, i) => all[i]?.c ?? null);
   const H = Math.floor(today.min / 60), M = today.min % 60;
@@ -107,7 +105,7 @@ function Today() {
           <T size={12} lh={17} color={L.dim} style={{ flex: 1 }}>{today.reached ? 'もくひょう たっせい！' : `もくひょう ${say(today.goal)}`}</T>
           <Cap size={10} color={L.dim}>{`${hmColon(today.min)}/${hmColon(today.goal)}`}</Cap>
         </View>
-        <Segs cells={cells} blinkFrom={done.length} h={10} />
+        <Segs cells={cells} h={10} />
       </View>
       <View style={{ marginTop: 10, gap: 5 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -160,7 +158,6 @@ function Now() {
   const L = useLook();
   const ss = useSession();
   const pick = useNext();
-  const dot = useBlink(ss.running && !ss.paused, 500);
   if (ss.running) {
     return (
       <Win title={ss.paused ? 'ひとやすみちゅう' : '勉強ちゅう'}>
@@ -171,7 +168,7 @@ function Now() {
             <T size={17} lh={24} color={L.text} numberOfLines={1}>{ss.subject.name}</T>
             {ss.task ? <T size={12} lh={17} color={L.dim} numberOfLines={1}>{ss.task}</T> : null}
           </View>
-          <Animated.View style={[{ width: 7, height: 7, backgroundColor: ss.paused ? L.exp : L.hp }, dot]} />
+          <View style={{ width: 7, height: 7, backgroundColor: ss.paused ? L.exp : L.hp }} />
           <Fig size={22} color={L.text}>{clock(ss.elapsed)}</Fig>
         </Press>
         <Menu cols={3} gap={4} items={[
@@ -235,7 +232,7 @@ function Chart() {
           <Press key={r} onPress={() => { if (r !== range) { haptic.tap(); setChart({ range: r }); } }} haptics={false} scale={0.94} accessibilityRole="tab" accessibilityState={{ selected: r === range }}
             accessibilityLabel={r === 'day' ? '1時間ごと' : '1日ごと'} hitSlop={6}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6, height: 24 }}>
-            <View style={{ width: 7, opacity: r === range ? 1 : 0 }}><Cursor color={L.cursor} px={1.2} still={r !== range} /></View>
+            <View style={{ width: 7, opacity: r === range ? 1 : 0 }}><Cursor color={L.cursor} px={1.2} /></View>
             <T size={13} lh={18} color={r === range ? L.text : L.dim}>{r === 'day' ? 'ひ' : 'しゅう'}</T>
           </Press>
         ))}
@@ -267,7 +264,7 @@ function Chart() {
         </View>
       ) : null}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, paddingTop: 8, borderTopWidth: 1.5, borderTopColor: L.faint }}>
-        <Cursor color={L.cursor} still />
+        <Cursor color={L.cursor} />
         <T size={13} lh={19} color={L.text} numberOfLines={1} style={{ flex: 1 }}>{foot}</T>
       </View>
     </Win>
@@ -276,17 +273,12 @@ function Chart() {
 function Column({ x, unit, rows, bh, gap, h, liveColor, on, onPress }: { x: Col; unit: number; rows: number; bh: number; gap: number; h: number; liveColor: string; on: boolean; onPress: () => void }) {
   const L = useLook();
   const all = bricks(x.parts, x.live, liveColor, unit, true).slice(0, rows);
-  const liveAt = all.findIndex((b) => b.live);
-  const b = useBlink(liveAt >= 0, 380, 0.35);
   return (
     <Press onPress={onPress} haptics={false} scale={1} accessibilityRole="button" accessibilityLabel={`${x.name} ${say(x.min)}`}
       style={{ flex: 1, height: h, justifyContent: 'flex-end', alignItems: 'stretch' }}>
       {on ? <View style={{ alignItems: 'center', marginBottom: 2 }}><PixelArt rows={SPRITES.down} px={1.2} colors={{ X: L.cursor }} /></View> : null}
       <View style={{ flexDirection: 'column-reverse', gap, opacity: x.future ? 0.4 : 1 }}>
-        {all.length ? all.map((k, i) => {
-          const st = { height: bh, backgroundColor: k.c };
-          return k.live ? <Animated.View key={i} style={[st, b]} /> : <View key={i} style={st} />;
-        }) : <View style={{ height: 1.5, backgroundColor: x.mark ? L.cursor : L.faint }} />}
+        {all.length ? all.map((k, i) => <View key={i} style={{ height: bh, backgroundColor: k.c }} />) : <View style={{ height: 1.5, backgroundColor: x.mark ? L.cursor : L.faint }} />}
       </View>
     </Press>
   );
@@ -296,10 +288,9 @@ function Column({ x, unit, rows, bh, gap, h, liveColor, on, onPress }: { x: Col;
 function Streak() {
   const L = useLook();
   const { streak, tickets, days } = useWeekStreak();
-  const [wave, setWave] = useState(0);
   const star = L.mark === 'star';
   return (
-    <Win title="れんぞく" onPress={() => { haptic.soft(); setWave((w) => w + 1); }} label={`${streak}日連続で勉強中。休み券${tickets}枚`}>
+    <Win title="れんぞく" onPress={() => haptic.soft()} label={`${streak}日連続で勉強中。休み券${tickets}枚`}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6 }}>
         <Fig size={30} color={L.text}>{String(streak)}</Fig>
         <T size={14} lh={22} color={L.text} style={{ marginBottom: 2 }}>日 れんぞく</T>
@@ -312,29 +303,19 @@ function Streak() {
         </View>
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
-        {days.map((d, i) => <Mark key={d.date} i={i} wave={wave} label={d.label} studied={d.studied} rest={d.rest} today={d.today} future={d.future} star={star} />)}
+        {days.map((d, i) => <Mark key={d.date} label={d.label} studied={d.studied} rest={d.rest} today={d.today} future={d.future} star={star} />)}
       </View>
     </Win>
   );
 }
-function Mark({ i, wave, label, studied, rest, today, future, star }: { i: number; wave: number; label: string; studied: boolean; rest: boolean; today: boolean; future: boolean; star: boolean }) {
+function Mark({ label, studied, rest, today, future, star }: { label: string; studied: boolean; rest: boolean; today: boolean; future: boolean; star: boolean }) {
   const L = useLook();
-  const y = useSharedValue(0);
-  useEffect(() => {
-    if (!wave) return;
-    y.set(withDelay(i * 70, withSequence(withTiming(-6, { duration: 90, easing: STEP }), withTiming(0, { duration: 120, easing: STEP }))));
-  }, [wave, i, y]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
-  const waiting = today && !studied;
-  const b = useBlink(waiting, 520, 0.3);
   const full = studied || rest;
   const rows = full ? (star ? SPRITES.star : SPRITES.heart) : (star ? SPRITES.starEmpty : SPRITES.heartEmpty);
   const color = rest ? L.mp : full ? (star ? L.exp : L.hp) : future ? L.faint : L.dim;
   return (
     <View style={{ alignItems: 'center', gap: 4 }}>
-      <Animated.View style={[a, waiting ? b : null]}>
-        <PixelArt rows={rows} px={3} colors={{ X: color, W: '#FFFFFF' }} />
-      </Animated.View>
+      <PixelArt rows={rows} px={3} colors={{ X: color, W: '#FFFFFF' }} />
       <T size={11} lh={15} color={today ? L.cursor : L.dim}>{label}</T>
     </View>
   );
@@ -389,7 +370,7 @@ function Quest({ t, first }: { t: Todo; first: boolean }) {
       {t.d ? null : (
         <Press onPress={() => startTodo(t)} scale={0.9} hitSlop={6} accessibilityLabel={`${t.t}を始める`}
           style={{ width: 30, height: 26, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: first ? L.cursor : L.faint }}>
-          <Cursor color={first ? L.cursor : L.dim} still={!first} />
+          <Cursor color={first ? L.cursor : L.dim} />
         </Press>
       )}
     </View>

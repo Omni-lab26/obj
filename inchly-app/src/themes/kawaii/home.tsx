@@ -1,6 +1,5 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import { pad, subj } from '@/data';
 import type { Block } from '@/screens/layout';
@@ -16,7 +15,7 @@ import { Icon } from '@/ui/Icon';
 import { levelSheet } from '@/ui/Level';
 import { toast } from '@/ui/Toast';
 import { alpha, candy, Mood, pastel } from './look';
-import { Bubble, Bubbly, Candy, Card, Chip, Dashed, HeartCheck, Mochi, Pill, R, Shape, Title, Twinkle, usePulse, useV, Wiggle } from './parts';
+import { Bubble, Bubbly, Candy, Card, Chip, Dashed, HeartCheck, Mochi, Pill, R, Shape, Title, Twinkle, useV, Wiggle } from './parts';
 
 // かわいい's home: a page of a sticker diary. Today sits on a taped card with
 // the mochi perched on its edge, saying how it's going; the day is a candy
@@ -79,7 +78,7 @@ function HeroFrame({ children }: { children: ReactNode }) {
     <View style={{ paddingTop: 58 }}>
       {/* a twinkle or two in the margin, where the mochi's bubble doesn't reach */}
       {narrow ? null : <Twinkle color={v.sun} size={16} style={{ left: 8, top: 22 }} />}
-      {narrow ? null : <Twinkle color={v.accent2} size={11} delay={600} style={{ left: 34, top: 8 }} />}
+      {narrow ? null : <Twinkle color={v.accent2} size={11} style={{ left: 34, top: 8 }} />}
       <Card pad={0} tape={v.tapes[0]}>{children}</Card>
       <View style={{ position: 'absolute', right: 12, top: 4 }}><HomeMochi /></View>
     </View>
@@ -139,8 +138,6 @@ function Now() {
   const v = useV();
   const ss = useSession();
   const pick = useNext();
-  const pulse = usePulse(ss.running && !ss.paused);
-  const dot = useAnimatedStyle(() => ({ opacity: pulse.value }));
   const row = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 10, paddingHorizontal: 16, paddingVertical: 12 };
   if (ss.running) {
     return (
@@ -148,7 +145,7 @@ function Now() {
         <Dashed color={alpha(v.accent, 0.45)} style={{ marginHorizontal: 14 }} />
         <View style={row}>
           <Press onPress={go.timer} scale={0.98} accessibilityLabel={`${ss.subject.name}を勉強中 ${clock(ss.elapsed)}。タイマーを開く`} style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Animated.View style={dot}><Shape kind="heart" size={18} fill={ss.subject.c} stroke={t.ink} sw={8} /></Animated.View>
+            <Shape kind="heart" size={18} fill={ss.subject.c} stroke={t.ink} sw={8} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <T size={11} lh={14} color={ss.paused ? v.deep : t.ink3}>{ss.paused ? 'ひとやすみ中' : 'いま勉強中'}</T>
               <T size={14} w="800" lh={19} numberOfLines={1}>{ss.subject.name}<T size={12} color={t.ink3}>{ss.task ? `  ${ss.task}` : ''}</T></T>
@@ -186,9 +183,8 @@ function Streak() {
   const v = useV();
   const { streak, tickets, days } = useWeekStreak();
   const { week, goal } = useCharts();
-  const [kick, setKick] = useState(0);
   return (
-    <Press onPress={() => { haptic.soft(); setKick((k) => k + 1); }} scale={0.98} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}>
+    <Press onPress={() => haptic.soft()} scale={0.98} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}>
       <Card tape={v.tapes[1]} tapeAt="right" style={{ gap: 14 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Shape kind="star" size={50} fill={streak ? v.sun : v.soft} stroke={t.ink} sw={5} />
@@ -209,22 +205,18 @@ function Streak() {
           </View>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          {days.map((d, i) => <Day key={d.date} d={d} i={i} kick={kick} reached={!d.future && week[i] ? week[i].min >= goal : false} />)}
+          {days.map((d, i) => <Day key={d.date} d={d} i={i} reached={!d.future && week[i] ? week[i].min >= goal : false} />)}
         </View>
       </Card>
     </Press>
   );
 }
 type DayInfo = ReturnType<typeof useWeekStreak>['days'][number];
-function Day({ d, i, kick, reached }: { d: DayInfo; i: number; kick: number; reached: boolean }) {
+function Day({ d, i, reached }: { d: DayInfo; i: number; reached: boolean }) {
   const t = useT();
   const v = useV();
-  const r = useSharedValue(0);
-  useEffect(() => {
-    if (!kick) return;
-    r.set(withDelay(i * 45, withSequence(withTiming(-14, { duration: 80 }), withTiming(12, { duration: 100 }), withSpring(0, { duration: 420, dampingRatio: 0.35 }))));
-  }, [kick, i, r]);
-  const a = useAnimatedStyle(() => ({ transform: [{ rotate: `${r.value + (d.studied ? (i % 2 ? 8 : -8) : 0)}deg` }] }));
+  // studied days' stamps sit a little crooked, as stuck on by hand
+  const tilt = { transform: [{ rotate: `${d.studied ? (i % 2 ? 8 : -8) : 0}deg` }] };
   const S = 34;
   let face: ReactNode;
   if (d.studied) face = <Shape kind={v.stamps[i % v.stamps.length]} size={S} fill={reached ? v.accent : pastel(v.accent, 0.55)} stroke={t.ink} sw={6} />;
@@ -232,7 +224,7 @@ function Day({ d, i, kick, reached }: { d: DayInfo; i: number; kick: number; rea
   else face = <View style={{ width: S - 6, height: S - 6, margin: 3, borderRadius: S, borderWidth: 2, borderColor: d.today ? alpha(v.deep, 0.6) : alpha(v.accent, 0.35), borderStyle: 'dashed' }} />;
   return (
     <View style={{ alignItems: 'center', gap: 4 }} accessible accessibilityLabel={`${d.label}曜日 ${d.studied ? `勉強した${reached ? '・目標クリア' : ''}` : d.rest ? '休み券を使った' : d.future ? 'これから' : '勉強しなかった'}`}>
-      <Animated.View style={a}>{face}</Animated.View>
+      <View style={tilt}>{face}</View>
       {reached ? <View style={{ position: 'absolute', top: -5, right: -4 }}><Shape kind="sparkle" size={12} fill={v.sun} stroke={t.ink} sw={6} /></View> : null}
       <T size={10.5} w={d.today ? '800' : '600'} lh={13} color={d.today ? v.deep : t.ink3}>{d.today ? 'きょう' : d.label}</T>
     </View>
@@ -317,36 +309,27 @@ function Chart() {
     </Card>
   );
 }
-/** One jelly bar: subjects stacked in a capsule with a shine, the session under way glowing on top; it wobbles when tapped. */
+/** One jelly bar: subjects stacked in a capsule with a shine, the session under way lighter on top. */
 function Jelly({ c, bw, h, liveColor, on, onPress }: { c: Col; bw: number; h: number; liveColor: string; on: boolean; onPress: () => void }) {
   const t = useT();
   const v = useV();
-  const s = useSharedValue(1);
-  const pulse = usePulse(c.live > 0);
-  const live = useAnimatedStyle(() => ({ opacity: 0.4 + 0.35 * pulse.value }));
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - s.value) * h * 0.5 }, { scaleY: s.value }, { scaleX: 2 - s.value }] }));
-  const press = () => {
-    haptic.tap();
-    s.set(withSequence(withTiming(0.8, { duration: 90 }), withSpring(1, { duration: 520, dampingRatio: 0.3 })));
-    onPress();
-  };
   const recorded = c.min - c.live;
   return (
-    <Pressable onPress={press} accessibilityRole="button" accessibilityLabel={`${c.label} ${c.min ? jpHm(c.min) : 'なし'}`} hitSlop={{ top: 8, bottom: 8 }}
+    <Press onPress={onPress} scale={0.96} accessibilityRole="button" accessibilityLabel={`${c.label} ${c.min ? jpHm(c.min) : 'なし'}`} hitSlop={{ top: 8, bottom: 8 }}
       style={{ width: bw, height: '100%', justifyContent: 'flex-end', alignItems: 'center' }}>
       {h ? (
-        <Animated.View style={[{ width: bw, height: h, borderRadius: bw / 2, overflow: 'hidden', backgroundColor: v.soft, flexDirection: 'column-reverse',
-          boxShadow: on ? `0px 0px 0px 2px ${t.ink}` : undefined }, a]}>
+        <View style={{ width: bw, height: h, borderRadius: bw / 2, overflow: 'hidden', backgroundColor: v.soft, flexDirection: 'column-reverse',
+          boxShadow: on ? `0px 0px 0px 2px ${t.ink}` : undefined }}>
           {c.parts.map((p) => <View key={p.id} style={{ height: (p.min / Math.max(1, c.min)) * h, backgroundColor: p.c }} />)}
-          {c.live > 0 ? <Animated.View style={[{ height: (c.live / Math.max(1, c.min)) * h, backgroundColor: liveColor }, live]} /> : null}
+          {c.live > 0 ? <View style={{ height: (c.live / Math.max(1, c.min)) * h, backgroundColor: liveColor, opacity: 0.6 }} /> : null}
           {recorded <= 0 && c.live <= 0 ? null : (
             <View pointerEvents="none" style={{ position: 'absolute', left: bw * 0.2, width: Math.max(2, bw * 0.22), top: Math.min(bw * 0.35, h * 0.2), bottom: Math.min(bw * 0.35, h * 0.2), borderRadius: bw, backgroundColor: 'rgba(255,255,255,0.45)' }} />
           )}
-        </Animated.View>
+        </View>
       ) : (
         <View style={{ width: Math.min(bw, 8), height: Math.min(bw, 8), borderRadius: 4, backgroundColor: c.future ? 'transparent' : alpha(v.accent, 0.22), marginBottom: 2 }} />
       )}
-    </Pressable>
+    </Press>
   );
 }
 
@@ -417,7 +400,7 @@ function Deadlines() {
       {list.length ? (
         <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
           {half ? list.map((d, i) => (
-            <Wiggle key={d.id} label={`${d.t} あと${d.days}日`} onPress={() => deadlineActions(d.id, d.t)} amount={5} style={{ width: half }}>
+            <Wiggle key={d.id} label={`${d.t} あと${d.days}日`} onPress={() => deadlineActions(d.id, d.t)} style={{ width: half }}>
               <View style={{ borderRadius: 18, backgroundColor: t.surface, overflow: 'hidden', transform: [{ rotate: `${i % 2 ? 1.5 : -1.5}deg` }],
                 boxShadow: `0px 0px 0px 2px ${alpha(v.accent, 0.3)}, 0px 4px 0px 0px ${alpha(v.accent, 0.2)}` }}>
                 <View style={{ height: 24, backgroundColor: d.days <= 7 ? v.deep : v.soft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 22 }}>

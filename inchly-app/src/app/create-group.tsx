@@ -1,16 +1,17 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Group } from '@/data';
 import { addGroup } from '@/store';
-import { ease, hair, radius, useT } from '@/theme';
+import { hair, radius, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Field, Label, RadioCards, Stepper } from '@/ui/Form';
 import { Icon, IconName } from '@/ui/Icon';
+import { micro } from '@/ui/motion';
 import { toast } from '@/ui/Toast';
 
 const THEMES: { v: string; icon: IconName }[] = [
@@ -32,15 +33,12 @@ export default function CreateGroup() {
   const [cap, setCap] = useState(10);
   const [touched, setTouched] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'saving' | 'done'>('idle');
-  const shake = useSharedValue(0);
-  const sa = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
   const err = touched ? nameError(name) : undefined;
 
   const create = () => {
     if (nameError(name)) {
       setTouched(true);
       haptic.warn();
-      shake.set(withSequence(withTiming(-6, { duration: 50 }), withTiming(6, { duration: 70 }), withTiming(-3, { duration: 60 }), withTiming(0, { duration: 60 })));
       return;
     }
     setPhase('saving');
@@ -95,9 +93,7 @@ export default function CreateGroup() {
             <Txt size={12} w="700" tone={name.trim() ? 'ink' : 'ink3'}>{name.trim() || '名前未入力'}</Txt>
             {`  · ${theme} · ${join} · 定員${cap}人`}
           </Txt>
-          <Animated.View style={sa}>
-            <Btn kind="primary" wide label={phase === 'done' ? '作成しました' : '作成する'} loading={phase === 'saving'} done={phase === 'done'} onPress={create} />
-          </Animated.View>
+          <Btn kind="primary" wide label={phase === 'done' ? '作成しました' : '作成する'} loading={phase === 'saving'} done={phase === 'done'} onPress={create} />
         </View>
       </KeyboardAvoidingView>
     </Screen>
@@ -109,8 +105,8 @@ function ThemeTile({ label, icon, on, dim, onPress }: { label: string; icon: Ico
   const s = useSharedValue(on ? 1.03 : 1);
   const o = useSharedValue(1);
   useEffect(() => {
-    s.value = withTiming(on ? 1.03 : 1, { duration: 240, easing: ease.spring });
-    o.value = withTiming(dim ? 0.62 : 1, { duration: 200 });
+    s.value = micro(on ? 1.03 : 1);
+    o.value = micro(dim ? 0.62 : 1);
   }, [on, dim, s, o]);
   const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ scale: s.value }] }));
   return (

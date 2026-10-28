@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
 import { subj } from '@/data';
@@ -8,6 +8,7 @@ import type { Moment } from '@/moments';
 import { T } from '@/themes/kit';
 import type { MomentKit } from '@/themes/types';
 import { useLevel } from '@/store';
+import { dismiss, present } from '@/ui/motion';
 import { GiltFrame, InkCheck, Placard } from './canvas';
 import { tierOf, TIERS, useOil } from './look';
 import { bristles, type Pt, strokePath } from './paint';
@@ -40,24 +41,28 @@ function Start({ moment, done }: Of<'start'>) {
   const o = useSharedValue(1);
   const lab = useSharedValue(0);
   useEffect(() => {
-    p.set(withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) }));
-    lab.set(withDelay(240, withSpring(1, { duration: 420, dampingRatio: 0.6 })));
-    o.set(withDelay(1100, withTiming(0, { duration: 340 })));
+    p.set(present(1));
+    lab.set(withDelay(240, present(1)));
+    o.set(withDelay(1100, dismiss(0)));
   }, [p, o, lab]);
   const art = useMemo(() => {
     const line: Pt[] = Array.from({ length: 9 }, (_, k) => [-10 + ((width + 20) * k) / 8, 46 + Math.sin(k * 0.9) * 6] as Pt);
     return { d: strokePath(line, 72, `start${moment.subject}`), hairs: bristles(line, 72, `start${moment.subject}`) };
   }, [width, moment.subject]);
-  const sweep = useAnimatedStyle(() => ({ width: p.value * width }));
+  // the stroke is uncovered from the left: a window slides right while what's in it slides back (only transforms, nothing laid out again)
+  const sweep = useAnimatedStyle(() => ({ transform: [{ translateX: (p.value - 1) * width }] }));
+  const sweepIn = useAnimatedStyle(() => ({ transform: [{ translateX: (1 - p.value) * width }] }));
   const fade = useAnimatedStyle(() => ({ opacity: o.value }));
   const label = useAnimatedStyle(() => ({ opacity: Math.min(1, lab.value * 1.4), transform: [{ translateY: (1 - lab.value) * 14 }, { rotate: '-2deg' }] }));
   return (
     <Animated.View style={[StyleSheet.absoluteFill, { justifyContent: 'center' }, fade]}>
-      <Animated.View style={[{ height: 92, overflow: 'hidden' }, sweep]}>
-        <Svg width={width} height={92}>
-          <Path d={art.d} fill={s.c} />
-          {art.hairs.map((b, j) => <Path key={j} d={b.d} stroke={b.light ? '#FFFFFF' : '#000000'} strokeWidth={b.w} fill="none" opacity={b.light ? 0.25 : 0.14} />)}
-        </Svg>
+      <Animated.View style={[{ width, height: 92, overflow: 'hidden' }, sweep]}>
+        <Animated.View style={sweepIn}>
+          <Svg width={width} height={92}>
+            <Path d={art.d} fill={s.c} />
+            {art.hairs.map((b, j) => <Path key={j} d={b.d} stroke={b.light ? '#FFFFFF' : '#000000'} strokeWidth={b.w} fill="none" opacity={b.light ? 0.25 : 0.14} />)}
+          </Svg>
+        </Animated.View>
       </Animated.View>
       <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center', top: '50%', marginTop: 26 }}>
         <Animated.View style={label}>
@@ -78,8 +83,8 @@ function TodoDone({ moment, done }: Of<'todo'>) {
   const [ink, setInk] = useState(false);
   useEffect(() => { const id = setTimeout(() => setInk(true), 140); return () => clearTimeout(id); }, []);
   const pop = useSharedValue(0);
-  useEffect(() => { pop.set(withSequence(withSpring(1, { duration: 420, dampingRatio: 0.55 }), withDelay(560, withTiming(0, { duration: 240 })))); }, [pop]);
-  const a = useAnimatedStyle(() => ({ opacity: Math.min(1, pop.value * 1.6), transform: [{ scale: 0.82 + 0.18 * pop.value }, { rotate: '-3deg' }] }));
+  useEffect(() => { pop.set(withSequence(present(1), withDelay(560, dismiss(0)))); }, [pop]);
+  const a = useAnimatedStyle(() => ({ opacity: pop.value, transform: [{ scale: 0.98 + 0.02 * pop.value }, { rotate: '-3deg' }] }));
   return (
     <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', paddingBottom: '16%' }]}>
       <Animated.View style={[{ width: 196, paddingVertical: 18, paddingHorizontal: 16, alignItems: 'center', gap: 8, backgroundColor: v.paper,
@@ -99,11 +104,12 @@ function Target({ moment, done }: Of<'target'>) {
   useOver(done, 1600);
   const z = useSharedValue(0);
   useEffect(() => {
-    z.set(withSequence(withTiming(1, { duration: 360, easing: Easing.out(Easing.back(1.5)) }), withDelay(900, withTiming(2, { duration: 300 }))));
+    z.set(withSequence(present(1), withDelay(900, dismiss(2))));
   }, [z]);
+  // in from just a touch small, out to just a touch small: never past its size
   const a = useAnimatedStyle(() => (z.value <= 1
-    ? { opacity: z.value, transform: [{ scale: 1.25 - 0.25 * z.value }] }
-    : { opacity: 2 - z.value, transform: [{ scale: 1 - (z.value - 1) * 0.04 }] }));
+    ? { opacity: z.value, transform: [{ scale: 0.98 + 0.02 * z.value }] }
+    : { opacity: 2 - z.value, transform: [{ scale: 1 - (z.value - 1) * 0.02 }] }));
   return (
     <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', paddingBottom: '20%' }]}>
       <Animated.View style={a}>
@@ -126,7 +132,7 @@ function Recorded({ moment, done }: Of<'record'>) {
   useOver(done, 1900);
   const y = useSharedValue(1);
   useEffect(() => {
-    y.set(withSequence(withTiming(0, { duration: 380, easing: Easing.out(Easing.cubic) }), withDelay(1150, withTiming(1, { duration: 300, easing: Easing.in(Easing.cubic) }))));
+    y.set(withSequence(present(0), withDelay(1150, dismiss(1))));
   }, [y]);
   const a = useAnimatedStyle(() => ({ opacity: 1 - y.value * 0.9, transform: [{ translateY: y.value * 150 }, { rotate: '-1.5deg' }] }));
   const tierNow = moment.level ? tierOf(moment.level) : null;

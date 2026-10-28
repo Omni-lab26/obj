@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { StyleProp, Text, View, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 import Svg, { G, Path } from 'react-native-svg';
 
 import { font } from '../theme';
+import { M, micro, timed } from './motion';
 
 // Pop stickers: one bold, flat colour per part, a thick white die-cut border
 // and a soft shadow under it — like a sticker sheet. Drawn on a 48×48 grid.
@@ -212,14 +213,15 @@ export const stamp = (id: string) => STAMPS.find((x) => x.id === id) ?? STAMPS[0
 
 export function Stamp({ id, size = 96, pop, delay = 0 }: { id: string; size?: number; pop?: boolean; delay?: number }) {
   const st = stamp(id);
-  const s = useSharedValue(pop ? 0.2 : 1);
-  const r = useSharedValue(pop ? -18 : 0);
+  // sent: it fades in from a touch smaller, and settles without going past (no pop, no spin)
+  const o = useSharedValue(pop ? 0 : 1);
+  const s = useSharedValue(pop ? 0.98 : 1);
   useEffect(() => {
     if (!pop) return;
-    s.set(withDelay(delay, withSequence(withTiming(1.12, { duration: 160 }), withSpring(1, { duration: 420, dampingRatio: 0.45 }))));
-    r.set(withDelay(delay, withSpring(0, { duration: 520, dampingRatio: 0.5 })));
-  }, [pop, delay, s, r]);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }, { rotate: `${r.value}deg` }] }));
+    o.set(withDelay(delay, timed(1, M.fadeIn)));
+    s.set(withDelay(delay, micro(1)));
+  }, [pop, delay, o, s]);
+  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ scale: s.value }] }));
   const fs = Math.max(11, Math.round(size * 0.15));
   return (
     <Animated.View style={[{ minWidth: size, alignItems: 'center' }, a]} accessible accessibilityLabel={`スタンプ「${st.label}」`}>

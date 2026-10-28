@@ -28,6 +28,7 @@ import { MomentHost } from '@/screens/MomentHost';
 import { getState, hydrate, startStudy, useDayRollover, useReminders, useStore } from '@/store';
 import { bundledFontsLoaded, useT } from '@/theme';
 import { BackdropEngine } from '@/ui/backdrop/Backdrop';
+import { holdBackdrop } from '@/ui/backdrop/shared';
 import { SheetHost } from '@/ui/Sheet';
 import { isRoomShape, StudyRoom } from '@/ui/StudyRoom';
 import { toast, ToastHost } from '@/ui/Toast';
@@ -58,6 +59,30 @@ function useFeed(on: boolean) {
   }, [on]);
 }
 
+// A finger on the screen: the 背景 stands still while it's there and a moment
+// after it lifts (a scroll's glide, a sheet settling), so every frame of what
+// the finger moves is the gesture's (ui/backdrop).
+const still = { onTouchStart: () => holdBackdrop(600), onTouchMove: () => holdBackdrop(600), onTouchEnd: () => holdBackdrop(900) };
+/** On the web, a mouse: the same, from the pointer and the wheel. */
+function useStillOnPointer() {
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const down = () => holdBackdrop(600);
+    const move = (e: PointerEvent) => { if (e.buttons) holdBackdrop(600); };
+    const up = () => holdBackdrop(900);
+    window.addEventListener('pointerdown', down, true);
+    window.addEventListener('pointermove', move, true);
+    window.addEventListener('pointerup', up, true);
+    window.addEventListener('wheel', up, { capture: true, passive: true });
+    return () => {
+      window.removeEventListener('pointerdown', down, true);
+      window.removeEventListener('pointermove', move, true);
+      window.removeEventListener('pointerup', up, true);
+      window.removeEventListener('wheel', up, true);
+    };
+  }, []);
+}
+
 export default function RootLayout() {
   const t = useT();
   // Nothing to wait for before showing the app: it uses the system face (SF Pro / Hiragino Sans), and the themes' bundled faces (below) swap in when ready.
@@ -77,6 +102,7 @@ export default function RootLayout() {
   useFeed(ready && signedIn && toured);
   useDayRollover();
   useReminders();
+  useStillOnPointer();
   // sideways, the whole app becomes the study room (see StudyRoom)
   const { width, height } = useWindowDimensions();
   const room = ready && signedIn && isRoomShape(width, height);
@@ -86,7 +112,7 @@ export default function RootLayout() {
     <ThemeProvider value={{ ...nav, colors: { ...nav.colors, background: t.canvas, card: t.surface, text: t.ink, border: t.line, primary: t.ink } }}>
       <StatusBar style={room ? 'light' : t.dark ? 'light' : 'dark'} hidden={room} />
       {/* userSelect: dragging sliders and charts with a mouse shouldn't select text on web */}
-      <GestureHandlerRootView style={[{ flex: 1, backgroundColor: t.canvas }, Platform.OS === 'web' && ({ userSelect: 'none' } as object)]}>
+      <GestureHandlerRootView {...still} style={[{ flex: 1, backgroundColor: t.canvas }, Platform.OS === 'web' && ({ userSelect: 'none' } as object)]}>
         {/* the 背景 runs here, once; every page shows it (ui/backdrop) */}
         <BackdropEngine />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>

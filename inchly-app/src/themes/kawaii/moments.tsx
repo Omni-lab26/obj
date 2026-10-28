@@ -1,32 +1,33 @@
 import { ReactNode, useEffect, useRef } from 'react';
 import { View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence } from 'react-native-reanimated';
 import Svg, { Path, Rect } from 'react-native-svg';
 
 import { subj } from '@/data';
 import { T } from '@/themes/kit';
 import type { MomentKit } from '@/themes/types';
 import { useT } from '@/theme';
+import { M, present, timed } from '@/ui/motion';
 import { alpha, Mood, pastel, Stamp } from './look';
 import { Chip, Mochi, R, Shape, Tape, useV } from './parts';
 
-// The sticker diary makes something of what you did: a sticker slaps onto the
-// page with the mochi on it, hearts or stars burst out, and it's gone in under
-// two seconds. The toast says the facts.
+// The sticker diary makes something of what you did: a sticker comes onto
+// the page with the mochi on it, hearts or stars scattered round it, and it's
+// gone in under two seconds — in and out with a fade, nothing slapping,
+// bursting or bouncing (MOTION.md). The toast says the facts.
 
+/** One of the hearts or stars scattered round the sticker, where it lies. */
 function Bit({ i, n, kind, color }: { i: number; n: number; kind: Stamp | 'sparkle'; color: string }) {
-  const p = useSharedValue(0);
-  useEffect(() => { p.set(withDelay((i % 4) * 30, withTiming(1, { duration: 950, easing: Easing.out(Easing.cubic) }))); }, [i, p]);
   const ang = (i / n) * Math.PI * 2 + (i % 3) * 0.3;
-  const dist = 110 + ((i * 29) % 80);
-  const spin = ((i * 47) % 120) - 60;
-  const a = useAnimatedStyle(() => ({
-    opacity: 1 - p.value * p.value,
-    transform: [{ translateX: Math.cos(ang) * dist * p.value }, { translateY: Math.sin(ang) * dist * p.value + 40 * p.value * p.value }, { rotate: `${spin * p.value}deg` }, { scale: 0.5 + 0.7 * p.value }],
-  }));
-  return <Animated.View style={[{ position: 'absolute', left: -11, top: -11 }, a]}><Shape kind={kind} size={22} fill={color} /></Animated.View>;
+  const dist = 0.6 * (110 + ((i * 29) % 80));
+  const spin = 0.6 * (((i * 47) % 120) - 60);
+  return (
+    <View style={{ position: 'absolute', left: -11, top: -11, transform: [{ translateX: Math.cos(ang) * dist }, { translateY: Math.sin(ang) * dist }, { rotate: `${spin}deg` }] }}>
+      <Shape kind={kind} size={22} fill={color} />
+    </View>
+  );
 }
-function Burst({ n = 16, kinds }: { n?: number; kinds: (Stamp | 'sparkle')[] }) {
+function Scatter({ n = 16, kinds }: { n?: number; kinds: (Stamp | 'sparkle')[] }) {
   const v = useV();
   const colors = [v.accent, v.sun, v.accent2, pastel(v.accent, 0.4), v.deep];
   return (
@@ -37,29 +38,28 @@ function Burst({ n = 16, kinds }: { n?: number; kinds: (Stamp | 'sparkle')[] }) 
 }
 
 /**
- * A sticker that slaps onto the page, holds, and fades; done() when it's gone.
+ * A sticker that comes onto the page, holds, and fades; done() when it's gone.
  * On top sits the mochi (`mood`) — or, where the screen has its own mochi
  * already (the timer), another sticker (`top`).
  */
 function Slap({ done, ms = 1600, mood, top, burst, bg, children }: { done: () => void; ms?: number; mood?: Mood; top?: ReactNode; burst?: (Stamp | 'sparkle')[]; bg?: string; children: ReactNode }) {
   const t = useT();
   const v = useV();
-  const s = useSharedValue(1.7);
-  const r = useSharedValue(-14);
+  const s = useSharedValue(0.98);
   const o = useSharedValue(0);
   const end = useRef(done);
   useEffect(() => { end.current = done; }, [done]);
   useEffect(() => {
-    s.set(withSpring(1, { duration: 420, dampingRatio: 0.45 }));
-    r.set(withSpring(-4, { duration: 420, dampingRatio: 0.45 }));
-    o.set(withSequence(withTiming(1, { duration: 90 }), withDelay(ms - 400, withTiming(0, { duration: 300 }))));
+    s.set(present(1));
+    o.set(withSequence(timed(1, M.fadeIn), withDelay(ms - 400, timed(0, M.leave.duration))));
     const id = setTimeout(() => end.current(), ms);
     return () => clearTimeout(id);
-  }, [ms, o, r, s]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ scale: s.value }, { rotate: `${r.value}deg` }] }));
+  }, [ms, o, s]);
+  const fade = useAnimatedStyle(() => ({ opacity: o.value }));
+  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ scale: s.value }, { rotate: '-4deg' }] }));
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 70 }}>
-      {burst ? <Burst kinds={burst} /> : null}
+      {burst ? <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }, fade]}><Scatter kinds={burst} /></Animated.View> : null}
       <Animated.View style={[{ alignItems: 'center' }, a]}>
         <View style={{ marginBottom: -14, zIndex: 2 }}>{mood ? <Mochi mood={mood} size={70} poke={false} /> : top}</View>
         <View style={{ minWidth: 220, maxWidth: 300, alignItems: 'center', gap: 4, paddingTop: 22, paddingBottom: 18, paddingHorizontal: 24, borderRadius: 28, backgroundColor: bg ?? t.surface,

@@ -1,7 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
-import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Zone } from '@/screens/layout';
@@ -14,7 +13,7 @@ import { focus, useT } from '@/theme';
 import { haptic, Press } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { L, say, useLook } from './look';
-import { Cap, Cursor, Fig, fill, Menu, PixelArt, Segs, SPRITES, STEP, useBlink, Win } from './ui';
+import { Cap, Cursor, Fig, fill, Menu, PixelArt, Segs, SPRITES, Win } from './ui';
 
 // 8bit's timer: an adventure screen. On the road at the top, you walk from
 // the start flag toward the target's flag as the session goes on; under it,
@@ -95,7 +94,7 @@ function Switcher() {
         return (
           <Press key={x.id} onPress={() => session.switchTo(x.id)} haptics={false} scale={0.94} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={x.name}
             hitSlop={{ top: 4, bottom: 4 }} style={{ height: 30, paddingHorizontal: 6, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <View style={{ width: 7, opacity: on ? 1 : 0 }}><Cursor color={L.cursor} px={1.2} still={!on} /></View>
+            <View style={{ width: 7, opacity: on ? 1 : 0 }}><Cursor color={L.cursor} px={1.2} /></View>
             <View style={{ width: 8, height: 8, backgroundColor: x.c }} />
             <T size={13} lh={18} color={on ? L.text : L.dim}>{x.name}</T>
           </Press>
@@ -105,36 +104,18 @@ function Switcher() {
   );
 }
 
-// the traveler: a small figure, two frames of walking
-const WALK = [
-  ['..XX..', '..XX..', '.XXXX.', 'X.XX.X', '..XX..', '.X..X.', '.X..X.'],
-  ['..XX..', '..XX..', '.XXXX.', 'X.XX.X', '..XX..', '..XX..', '.X..X.'],
-];
+// the traveler: a small figure, standing where the session has got to
+const WALKER = ['..XX..', '..XX..', '.XXXX.', 'X.XX.X', '..XX..', '.X..X.', '.X..X.'];
 /** The road: start flag, the target's flag, and you walking between them as the session goes on; the way behind you is in the subject's color. */
 function Road() {
   const L = useTimerLook();
   const ss = useSession();
   const [w, setW] = useState(0);
-  const [frame, setFrame] = useState(0);
-  const walking = ss.running && !ss.paused;
-  useEffect(() => {
-    if (!walking) return;
-    const id = setInterval(() => setFrame((f) => 1 - f), 380);
-    return () => clearInterval(id);
-  }, [walking]);
   const p = ss.target ? Math.min(1, ss.elapsed / ss.target) : 0;
   const PX = 3, FIG = 6 * PX, FLAG = 6 * PX, HOME = 6 * 2 + 6; // you set off just past the start flag
   const span = Math.max(0, w - HOME - FLAG - FIG - 2);
   const x = HOME + Math.round((span * p) / PX) * PX; // on the pixel grid
   const targetMin = Math.round(ss.target / 60);
-  const hop = useSharedValue(0);
-  useEffect(() => {
-    if (!ss.over) { hop.set(0); return; }
-    hop.set(withRepeat(withSequence(withTiming(-6, { duration: 180, easing: STEP }), withTiming(0, { duration: 180, easing: STEP })), -1));
-    return () => cancelAnimation(hop);
-  }, [ss.over, hop]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: hop.value }] }));
-  const spark = useBlink(ss.over, 260, 0);
   return (
     <View onLayout={(e) => setW(e.nativeEvent.layout.width)} accessible accessibilityLabel={`目安${targetMin}分のうち${Math.round(p * 100)}%`} style={{ height: 66, marginBottom: 6 }}>
       {/* the ground: a dotted path, tiles under it */}
@@ -146,14 +127,14 @@ function Road() {
       </View>
       {/* start and target */}
       <View style={{ position: 'absolute', left: 0, bottom: 16 }}><PixelArt rows={SPRITES.flag} px={2} colors={{ X: L.dim, F: L.dim }} /></View>
-      <Animated.View style={[{ position: 'absolute', right: 0, bottom: 16 }, a]}>
+      <View style={{ position: 'absolute', right: 0, bottom: 16 }}>
         <PixelArt rows={SPRITES.flag} px={PX} colors={{ X: L.edge, F: ss.over ? L.exp : L.hp }} />
-      </Animated.View>
-      {ss.over ? <Animated.View style={[{ position: 'absolute', right: FLAG + 4, bottom: 44 }, spark]}><PixelArt rows={SPRITES.spark} px={2} colors={{ X: L.exp }} /></Animated.View> : null}
+      </View>
+      {ss.over ? <View style={{ position: 'absolute', right: FLAG + 4, bottom: 44 }}><PixelArt rows={SPRITES.spark} px={2} colors={{ X: L.exp }} /></View> : null}
       {/* you */}
       {w ? (
         <View style={{ position: 'absolute', left: x, bottom: 16, opacity: ss.running ? 1 : 0.6 }}>
-          <PixelArt rows={WALK[walking ? frame : 0]} px={PX} colors={{ X: L.text }} />
+          <PixelArt rows={WALKER} px={PX} colors={{ X: L.text }} />
         </View>
       ) : null}
       <View style={{ position: 'absolute', left: 0, right: 0, top: 0, flexDirection: 'row' }}>
@@ -177,14 +158,14 @@ function Readout() {
   const text = fmt(sec);
   const narrow = useWindowDimensions().width < 360;
   const big = text.length > 5 ? (narrow ? 38 : 46) : (narrow ? 50 : 60);
-  const b = useBlink(ss.paused, 500, 0.25);
   return (
     <View style={{ alignItems: 'center', paddingVertical: 4 }} accessible accessibilityLabel={`${said} ${text}${ss.paused ? '。一時停止中' : ''}`}>
       <T size={13} lh={19} color={over ? L.hp : L.dim}>{said}</T>
-      <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }, b]}>
+      {/* paused: dimmed, still */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', opacity: ss.paused ? 0.45 : 1 }}>
         {over ? <Fig size={big * 0.7} color={L.hp}>+</Fig> : null}
         <Fig size={big} color={over ? L.hp : L.text}>{text}</Fig>
-      </Animated.View>
+      </View>
       {ss.paused ? <Cap size={10} color={L.exp}>PAUSE</Cap> : null}
     </View>
   );

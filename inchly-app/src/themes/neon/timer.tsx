@@ -13,6 +13,7 @@ import { startStudy, togglePause, useNow, useStore, useSubjects } from '@/store'
 import { focus, useT } from '@/theme';
 import { haptic, Press } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
+import { micro } from '@/ui/motion';
 import { Rolling } from '@/ui/Rolling';
 import { Blink, Cut, D, Glitch, glow, I, J, Label, Meter, N } from './ui';
 
@@ -218,7 +219,8 @@ function Main() {
 function Record() {
   const running = useStore((s) => s.running);
   const fill = useSharedValue(0);
-  const a = useAnimatedStyle(() => ({ width: `${fill.value * 100}%` }));
+  // the fill grows by scale from the left edge (a width change would lay the bar out again every frame)
+  const a = useAnimatedStyle(() => ({ transform: [{ scaleX: fill.value }] }));
   const HOLD = 650;
   const finish = () => {
     haptic.success();
@@ -229,14 +231,14 @@ function Record() {
     <View style={{ marginHorizontal: 22 }}>
       <Pressable disabled={!running} delayLongPress={HOLD}
         onPressIn={() => { haptic.soft(); fill.set(withTiming(1, { duration: HOLD, easing: Easing.linear })); }}
-        onPressOut={() => { if (fill.get() < 1) fill.set(withTiming(0, { duration: 180 })); }}
+        onPressOut={() => { if (fill.get() < 1) fill.set(micro(0)); }}
         onLongPress={finish}
         accessibilityRole="button" accessibilityLabel="長押しで記録する" accessibilityState={{ disabled: !running }}
         accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={() => { if (running) session.finish(); }}
         style={{ height: 58, justifyContent: 'center', opacity: running ? 1 : 0.35 }}>
         <Cut fill="#0C0C0C" stroke={N.cyanLine} cut={14} />
         <View pointerEvents="none" style={{ position: 'absolute', left: 6, right: 6, top: 6, bottom: 6, overflow: 'hidden' }}>
-          <Animated.View style={[{ height: '100%', backgroundColor: 'rgba(252,238,10,0.28)' }, a]} />
+          <Animated.View style={[{ height: '100%', width: '100%', transformOrigin: 'left', backgroundColor: 'rgba(252,238,10,0.28)' }, a]} />
         </View>
         <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           <D size={15} color={N.yellow} style={{ letterSpacing: 2.5 }}>HOLD TO RECORD</D>

@@ -1,12 +1,13 @@
 import { usePathname } from 'expo-router';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleProp, StyleSheet, useWindowDimensions, View, ViewStyle } from 'react-native';
-import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { setState, useStore } from '../store';
-import { ease, useT } from '../theme';
+import { useT } from '../theme';
 import { haptic, Press, Txt } from './base';
+import { fadeIn, fadeOut, move } from './motion';
 
 // The first-run tour: a few speech bubbles, each pointing at the thing it
 // explains (the study bar's 勉強を開始, the middle tab, マイページ, the gear),
@@ -85,10 +86,10 @@ function Bubble({ step, rect, n, i, next, skip }: { step: Step; rect: Rect | nul
   const r = rect ? { x: rect.x - PAD, y: rect.y - PAD, w: rect.w + PAD * 2, h: rect.h + PAD * 2 } : { x: W / 2, y: H / 2, w: 0, h: 0 };
   const x = useSharedValue(r.x), y = useSharedValue(r.y), w = useSharedValue(r.w), h = useSharedValue(r.h);
   useEffect(() => {
-    const o = { duration: 380, easing: ease.ios };
-    x.set(withTiming(r.x, o)); y.set(withTiming(r.y, o)); w.set(withTiming(r.w, o)); h.set(withTiming(r.h, o));
+    x.set(move(r.x)); y.set(move(r.y)); w.set(move(r.w)); h.set(move(r.h));
   }, [r.x, r.y, r.w, r.h, x, y, w, h]);
   // the dim: one view whose thick border is the dim and whose inside is the hole, so the hole has round corners
+  // (its size is laid out as it moves: a single view, shown once, and scaling it would bend the corners)
   const B = Math.max(W, H) * 2;
   const R = 14;
   const dim = useAnimatedStyle(() => ({ left: x.value - B, top: y.value - B, width: w.value + B * 2, height: h.value + B * 2 }));
@@ -105,13 +106,13 @@ function Bubble({ step, rect, n, i, next, skip }: { step: Step; rect: Rect | nul
     : below ? { left: bx, top: r.y + r.h + 14 } : { left: bx, bottom: H - r.y + 14 };
   const last = i === n - 1;
   return (
-    <Animated.View entering={FadeIn.duration(240).easing(ease.ios)} exiting={FadeOut.duration(160)} style={StyleSheet.absoluteFill} accessibilityViewIsModal>
+    <Animated.View entering={fadeIn()} exiting={fadeOut()} style={StyleSheet.absoluteFill} accessibilityViewIsModal>
       {/* the dim around the place (a tap anywhere goes on) */}
       <Pressable style={StyleSheet.absoluteFill} onPress={next} accessibilityLabel="次へ">
         <Animated.View style={[{ position: 'absolute', borderWidth: B, borderRadius: B + R, borderColor: 'rgba(10,14,20,0.55)' }, dim]} />
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', borderRadius: R, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.85)' }, ring]} />
       </Pressable>
-      <Animated.View key={step.title} entering={FadeIn.duration(260).easing(ease.ios)} style={[{ position: 'absolute', width: BW }, pos]} accessibilityLiveRegion="polite">
+      <Animated.View key={step.title} entering={fadeIn()} style={[{ position: 'absolute', width: BW }, pos]} accessibilityLiveRegion="polite">
         {rect && below ? <View style={{ position: 'absolute', top: -7, left: tail - 8, width: 16, height: 16, backgroundColor: t.dark ? '#24272B' : '#FFFFFF', transform: [{ rotate: '45deg' }], borderRadius: 3 }} /> : null}
         <View style={{ backgroundColor: t.dark ? '#24272B' : '#FFFFFF', borderRadius: 16, padding: 16, gap: 6, boxShadow: '0px 12px 32px rgba(0,0,0,0.22)' }}>
           <Txt size={16} w="700">{step.title}</Txt>

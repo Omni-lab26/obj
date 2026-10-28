@@ -2,19 +2,20 @@ import { router } from 'expo-router';
 import { ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { FREE, subj } from '@/data';
-import { clock, go, jpHm, session, useNext, useSession } from '@/screens/model';
-import { getState, startFree, startFrom, togglePause, useStore } from '@/store';
+import { clock, go, jpHm, session, useNext, useSession, useTicking } from '@/screens/model';
+import { elapsedOf, getState, startFree, startFrom, togglePause, useStore } from '@/store';
 import { useT } from '@/theme';
 import { Btn, haptic, Press, SubjTile, Txt } from '@/ui/base';
 import { STUDY_BAR_H, studyBarBottom } from '@/ui/Chrome';
 import { Dialog } from '@/ui/Dialog';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
+import { move } from '@/ui/motion';
 import { TourSpot } from '@/ui/Tour';
 
 // The study bar, like a music app's mini player, always on the tab bar on every
@@ -42,7 +43,7 @@ export function SwipeToRecord({ children }: { children: ReactNode }) {
     .onUpdate((e) => { y.value = e.translationY > 0 ? Math.min(60, e.translationY * 0.6) : e.translationY * 0.15; })
     .onEnd((e) => {
       if (e.translationY > 28 || e.velocityY > 600) scheduleOnRN(pulled);
-      y.value = withSpring(0, { duration: 340, dampingRatio: 0.7 });
+      y.value = move(0, e.velocityY);
     }));
   const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   const goOn = () => { setAsk(false); const c = getState(); if (was && c.running && c.paused) togglePause(); };
@@ -89,9 +90,27 @@ function AskBody({ save, saveAll, memo, goOn }: { save: () => void; saveAll: () 
   );
 }
 
-/** What the bar says on its second line: the time studied, and the timetable block's length when it came from one. (Paused, the words turn crimson instead of saying so.) */
-function line(ss: ReturnType<typeof useSession>) {
-  return ss.next ? `${clock(ss.elapsed)} · 次 ${ss.next.subject.name} ${ss.next.at}` : ss.plan ? `${clock(ss.elapsed)} · 予定 ${jpHm(ss.plan / 60)}` : clock(ss.elapsed);
+/** What the bar says on its second line, after the time studied: the next plan, or the timetable block's length when it came from one. (Paused, the words turn crimson instead of saying so.) */
+function after(plan: number | null, next: string | null) {
+  return next ? ` · ${next}` : plan ? ` · 予定 ${jpHm(plan / 60)}` : '';
+}
+/** The time studied and what follows it: the one part of the bar that redraws every second. */
+function BarTime({ color, rest }: { color: string; rest: string }) {
+  const time = useTicking((s, now) => clock(elapsedOf(s, now)));
+  return <Txt num size={11.5} lh={15} color={color} numberOfLines={1}>{`${time}${rest}`}</Txt>;
+}
+/** How far toward the block's length, green inside it, red past it: a bar slid under its window, not a width changing (MOTION.md). */
+function BarLine({ plan }: { plan: number }) {
+  const t = useT();
+  const done = useTicking((s, now) => Math.round(Math.min(1, elapsedOf(s, now) / plan) * 1000) / 1000);
+  const over = useTicking((s, now) => elapsedOf(s, now) > plan);
+  const [w, setW] = useState(0);
+  return (
+    <View pointerEvents="none" onLayout={(e) => setW(e.nativeEvent.layout.width)}
+      style={{ position: 'absolute', left: 16, right: 16, bottom: 0, height: 2.5, borderRadius: 2, backgroundColor: t.line, overflow: 'hidden', opacity: w ? 1 : 0 }}>
+      <View style={{ width: '100%', height: '100%', backgroundColor: over ? '#FF453A' : '#30D158', transform: [{ translateX: -(1 - done) * w }] }} />
+    </View>
+  );
 }
 /** Paused: the bar's words in crimson (紅). */
 export const CRIMSON = '#D7003A';
@@ -157,10 +176,15 @@ function PlanBar({ insets }: { insets: EdgeInsets }) {
   );
 }
 
+/** While studying. Only the time and its line redraw every second (BarTime, BarLine); the rest when you pause or the plan changes. */
 function RunningBar({ insets }: { insets: EdgeInsets }) {
   const t = useT();
-  const ss = useSession();
-  const playing = ss.running && !ss.paused;
+  const subject = subj(useStore((s) => s.subj));
+  const paused = useStore((s) => s.paused);
+  const plan = useStore((s) => (s.planMin ? Math.round(s.planMin * 60) : null));
+  const next = useStore((s) => (s.planMin && s.planNext ? `次 ${subj(s.planNext.s).name} ${s.planNext.at}` : null));
+  const ss = { subject, paused };
+  const playing = !paused;
   const press = () => { haptic.soft(); togglePause(); };
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: studyBarBottom(insets.bottom), paddingHorizontal: 20 }}>
@@ -169,7 +193,7 @@ function RunningBar({ insets }: { insets: EdgeInsets }) {
           <Glass radius={20} frost style={{ height: STUDY_BAR_H }}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 6, gap: 4 }}>
               <Press onPress={go.timer} scale={0.98} accessibilityRole="button"
-                accessibilityLabel={`${ss.subject.name}を${ss.paused ? '一時停止中' : '勉強中'}。${line(ss)}。タイマーを開く`}
+                accessibilityLabel={`${ss.subject.name}を${ss.paused ? '一時停止中' : '勉強中'}${after(plan, next)}。タイマーを開く`}
                 style={{ flex: 1, minWidth: 0, height: STUDY_BAR_H, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View>
                   <SubjTile name={ss.subject.name} color={ss.subject.c} size={40} />
@@ -177,7 +201,7 @@ function RunningBar({ insets }: { insets: EdgeInsets }) {
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Txt size={14} w="600" lh={18} color={ss.paused ? CRIMSON : undefined} numberOfLines={1}>{ss.subject.name}</Txt>
-                  <Txt num size={11.5} lh={15} color={ss.paused ? CRIMSON : t.ink3} numberOfLines={1}>{line(ss)}</Txt>
+                  <BarTime color={ss.paused ? CRIMSON : t.ink3} rest={after(plan, next)} />
                 </View>
               </Press>
               <Press onPress={press} haptics={false} scale={0.86} hitSlop={6}
@@ -187,11 +211,7 @@ function RunningBar({ insets }: { insets: EdgeInsets }) {
               </Press>
             </View>
             {/* from the timetable: how far toward the block's length, green inside it, red past it */}
-            {ss.plan ? (
-              <View pointerEvents="none" style={{ position: 'absolute', left: 16, right: 16, bottom: 0, height: 2.5, borderRadius: 2, backgroundColor: t.line, overflow: 'hidden' }}>
-                <View style={{ width: `${Math.min(100, (ss.elapsed / ss.plan) * 100)}%`, height: '100%', backgroundColor: ss.elapsed > ss.plan ? '#FF453A' : '#30D158' }} />
-              </View>
-            ) : null}
+            {plan ? <BarLine plan={plan} /> : null}
           </Glass>
         </SwipeToRecord>
       </TourSpot>

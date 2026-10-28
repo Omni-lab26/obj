@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, View, ViewStyle } from 'react-native';
-import Animated, { Easing, FadeIn, FadeOut, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { Easing, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 import { pad } from '../data';
 import { dayOf, grassOf } from '../lib/history';
@@ -8,6 +8,7 @@ import { useStore } from '../store';
 import { useT } from '../theme';
 import { useAppear } from './appear';
 import { haptic, Txt } from './base';
+import { fadeIn, fadeOut } from './motion';
 
 // GitHub-style grass. Columns are weeks, rows are days. Press (or press and
 // drag) on the grid to read the date and time of a day. When it appears (and
@@ -19,7 +20,7 @@ const MONTH_H = 16; // month labels
 
 export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { weeks: number; gap?: number; legend?: boolean; labels?: boolean }) {
   const t = useT();
-  const appear = useAppear(80, 1500, Easing.linear); // the squares flip over like cards, a wave from the top left
+  const appear = useAppear(80, 1000, Easing.linear); // the squares flip over like cards, a wave from the top left
   const sessions = useStore((s) => s.sessions);
   const lastDay = useStore((s) => s.lastDay); // a new day redraws the grass
   const cells = useMemo(() => grassOf(sessions, weeks), [sessions, weeks, lastDay]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -124,7 +125,7 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { week
       </View>
       </View>
       {tip ? (
-        <Animated.View entering={FadeIn.duration(120)} exiting={FadeOut.duration(150)} pointerEvents="none"
+        <Animated.View entering={fadeIn()} exiting={fadeOut()} pointerEvents="none"
           style={{ position: 'absolute', left: tip.x - 76, top: tip.y - 38, width: 152, alignItems: 'center' }}>
           <View style={{ backgroundColor: t.ink, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 }}>
             <Txt size={12} w="600" color={t.onInk} num>{tip.text}</Txt>
@@ -148,12 +149,12 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { week
 /** A square that flips over like a card when its turn comes (at, on the 0→1 timeline): blank on the front, its color on the back. */
 function Flip({ p, at, color, blank, style }: { p: SharedValue<number>; at: number; color: string; blank: string; style: ViewStyle }) {
   const a = useAnimatedStyle(() => {
-    const raw = Math.max(0, Math.min(1, (p.value - at) / 0.2));
-    const k = raw * raw * (3 - 2 * raw); // each flip starts and lands softly
+    const raw = Math.max(0, Math.min(1, (p.value - at) / 0.25));
+    const k = raw * raw * (3 - 2 * raw); // each flip starts and lands softly, never past flat
     const back = k >= 0.5;
     // the front turns away to its edge, then the back turns in from the other side
     const deg = back ? (k - 1) * 180 : k * 180;
-    return { backgroundColor: back ? color : blank, transform: [{ perspective: 220 }, { rotateY: `${deg}deg` }, { scale: back ? 1 + 0.12 * Math.sin(k * Math.PI) : 1 }] };
+    return { backgroundColor: back ? color : blank, transform: [{ perspective: 220 }, { rotateY: `${deg}deg` }] };
   });
   return <Animated.View style={[style, a]} />;
 }

@@ -1,11 +1,12 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { EasingFunction, EasingFunctionFactory, SharedValue, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { ease } from '../theme';
+import { IOS } from './motion';
 
 // Charts play an entrance — bars grow, lines draw, grass fills in — when they
 // first appear (the app opening) and again whenever their page comes back into
-// view (the tab bar says so with replayCharts).
+// view (the tab bar says so with replayCharts). Never past where they land, on
+// iOS's curve (ui/motion).
 
 let tick = 0;
 const subs = new Set<() => void>();
@@ -21,7 +22,7 @@ export function useReplay() {
 }
 
 /** 0 → 1, eased (or at an even pace, for a wave): on mount and each time the page comes back. */
-export function useAppear(delay = 120, duration = 720, easing: EasingFunction | EasingFunctionFactory = ease.out): SharedValue<number> {
+export function useAppear(delay = 120, duration = 500, easing: EasingFunction | EasingFunctionFactory = IOS): SharedValue<number> {
   const p = useSharedValue(0);
   const n = useReplay();
   useEffect(() => {

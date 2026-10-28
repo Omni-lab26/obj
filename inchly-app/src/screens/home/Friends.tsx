@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { SharedValue, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { SharedValue, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -15,6 +15,7 @@ import { personSheet } from '@/ui/Editors';
 import { RadioCards } from '@/ui/Form';
 import { LiveDot } from '@/ui/GroupParts';
 import { Icon } from '@/ui/Icon';
+import { dismiss, M, micro, move } from '@/ui/motion';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
 
@@ -22,14 +23,13 @@ import { Pane } from '@/ui/Glass';
 // today and against yesterday, and a line of their last seven days. Four at
 // most, longest today first unless you choose another order. Drag a row by
 // its grip (≡), or press and hold it, to put them in your own order: the row
-// lifts and follows the finger, the others slide out of its way on springs.
+// lifts and follows the finger, the others slide out of its way (ui/motion's move: no bounce).
 // Swipe a row left to take that person off the list; もっと見る shows
 // everyone, and the ones you took off, in a card in the middle of the screen
 // (the order is chosen in one too).
 
 const MAX = 4;
 const ROW = 60;
-const SPRING = { damping: 22, stiffness: 260, mass: 0.7 };
 const SORTS: { v: FriendSort; title: string; sub: string }[] = [
   { v: 'time', title: '勉強時間順', sub: '今日いちばん長く勉強している人から' },
   { v: 'name', title: '名前順', sub: 'あいうえお・ABC順' },
@@ -141,7 +141,7 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop }: Shared & { f: Frie
         if (dragging.get() !== h) return;
         const order = slots.get();
         // settle into the slot, then let go
-        dragY.set(withSpring((order[h] ?? 0) * ROW, SPRING, (done) => { if (done) dragging.set(''); }));
+        dragY.set(withTiming((order[h] ?? 0) * ROW, M.leave, (done) => { if (done) dragging.set(''); }));
         scheduleOnRN(onDrop, order);
       });
     return { grip: make(Gesture.Pan().minDistance(0)), hold: make(Gesture.Pan().activateAfterLongPress(280)) };
@@ -152,17 +152,17 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop }: Shared & { f: Frie
     .onUpdate((e) => { swipe.set(Math.min(0, e.translationX)); })
     .onEnd((e) => {
       if (swipe.get() < -96 || e.velocityX < -900) {
-        swipe.set(withTiming(-width.get(), { duration: 200 }, (done) => { if (done) scheduleOnRN(hide, f); }));
-      } else swipe.set(withSpring(0, SPRING));
+        swipe.set(dismiss(-width.get(), Math.min(-1, e.velocityX), (done) => { if (done) scheduleOnRN(hide, f); }));
+      } else swipe.set(move(0, e.velocityX));
     }), [f, swipe, width]);
   const rowGesture = useMemo(() => Gesture.Race(drag.hold, away), [drag, away]);
 
   const place = useAnimatedStyle(() => {
     const lifted = dragging.value === h;
-    const y = lifted ? dragY.value : withSpring((slots.value[h] ?? 0) * ROW, SPRING);
-    return { transform: [{ translateY: y }, { scale: withSpring(lifted ? 1.035 : 1, SPRING) }], zIndex: lifted ? 3 : 1 };
+    const y = lifted ? dragY.value : move((slots.value[h] ?? 0) * ROW);
+    return { transform: [{ translateY: y }, { scale: move(lifted ? 1.03 : 1) }], zIndex: lifted ? 3 : 1 };
   });
-  const shadow = useAnimatedStyle(() => ({ opacity: withTiming(dragging.value === h ? 1 : 0, { duration: 160 }) }));
+  const shadow = useAnimatedStyle(() => ({ opacity: micro(dragging.value === h ? 1 : 0) }));
   const slide = useAnimatedStyle(() => ({ transform: [{ translateX: swipe.value }] }));
   const behind = useAnimatedStyle(() => ({ opacity: Math.min(1, -swipe.value / 60) }));
   const up = f.diff >= 0;
@@ -220,19 +220,25 @@ function Grip() {
 function Spark({ week, color, still }: { week: number[]; color: string; still?: boolean }) {
   const W = 52, H = 26;
   const p = useAppear(260, 820);
-  const clip = useAnimatedStyle(() => ({ width: still ? W : W * p.value }));
+  // drawn in from the left by moving, not by changing a width (MOTION.md): the window slides right as the drawing slides back under it
+  const win = useAnimatedStyle(() => ({ transform: [{ translateX: still ? 0 : -W * (1 - p.value) }] }));
+  const back = useAnimatedStyle(() => ({ transform: [{ translateX: still ? 0 : W * (1 - p.value) }] }));
   const lo = Math.min(...week), hi = Math.max(...week), span = Math.max(1, hi - lo);
   const pts = week.map((m, i) => [(i / (week.length - 1)) * (W - 4) + 2, H - 3 - ((m - lo) / span) * (H - 6)] as const);
   const d = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
   const [ex, ey] = pts[pts.length - 1];
   return (
     <View style={{ width: W, height: H }} accessibilityElementsHidden>
-      <Animated.View style={[{ height: H, overflow: 'hidden' }, clip]}>
-        <Svg width={W} height={H}>
-          <Path d={d} fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
-          <Circle cx={ex} cy={ey} r={2.4} fill={color} />
-        </Svg>
-      </Animated.View>
+      <View style={{ width: W, height: H, overflow: 'hidden' }}>
+        <Animated.View style={[{ width: W, height: H, overflow: 'hidden' }, win]}>
+          <Animated.View style={back}>
+            <Svg width={W} height={H}>
+              <Path d={d} fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+              <Circle cx={ex} cy={ey} r={2.4} fill={color} />
+            </Svg>
+          </Animated.View>
+        </Animated.View>
+      </View>
     </View>
   );
 }

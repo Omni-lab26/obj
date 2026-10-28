@@ -1,15 +1,16 @@
 import * as Haptics from 'expo-haptics';
 import { ReactNode, useRef } from 'react';
 import { ActivityIndicator, GestureResponderEvent, Image, Platform, Pressable, PressableProps, StyleProp, StyleSheet, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
 import type { AreaId } from '../data';
 import type { Reaction } from '../design';
 import { AVATAR } from '../photos';
-import { ease, face, hair, lift, onColor, radius, Theme, useT } from '../theme';
+import { face, hair, lift, onColor, radius, Theme, useT } from '../theme';
 import { Pane } from './Glass';
 import { glyphOf, SubjectGlyph } from './SubjectGlyph';
 import { Icon, IconName } from './Icon';
+import { micro, press, release } from './motion';
 import { TextureFill } from './Texture';
 
 export const haptic = {
@@ -59,8 +60,9 @@ const STEPS = Easing.steps(3);
 /**
  * Something you tap. `scale` is how much it gives (0.86 for a small icon, 0.98
  * for a big card); the theme decides how it gives — shrinking, sinking,
- * flickering, wobbling … (bencho's press: .2s, cubic-bezier(.3,.9,.4,1)).
- * Only movement and opacity, so nothing around it shifts.
+ * flickering … Down quickly, back with a spring that never goes past (ui/motion:
+ * press / release — no wobble, whatever the theme). Only movement and
+ * opacity, so nothing around it shifts.
  */
 export function Press({ style, scale = 0.96, react, children, onPressIn, onPressOut, onPress, haptics = true, disabled, ...rest }: PressProps) {
   const t = useT();
@@ -88,23 +90,20 @@ export function Press({ style, scale = 0.96, react, children, onPressIn, onPress
     switch (kind) {
       case 'step': p.set(withTiming(1, { duration: 150, easing: STEPS })); break;
       case 'sink': case 'misprint': case 'select': p.set(withTiming(1, { duration: 60 })); break;
-      case 'soft': p.set(withTiming(1, { duration: 240, easing: ease.out })); break;
       case 'flicker':
-        p.set(withTiming(1, { duration: 90 }));
+        p.set(press(1));
         f.set(withSequence(withTiming(0.3, { duration: 40 }), withTiming(1, { duration: 40 }), withTiming(0.55, { duration: 50 }), withTiming(1, { duration: 70 })));
         break;
-      default: p.set(withTiming(1, { duration: 120, easing: ease.press }));
+      default: p.set(press(1));
     }
   };
   const up = () => {
     switch (kind) {
-      case 'squish': p.set(withSpring(0, { duration: 620, dampingRatio: 0.3 })); break;
-      case 'bounce': p.set(withSpring(0, { duration: 520, dampingRatio: 0.42 })); break;
       case 'step': p.set(withTiming(0, { duration: 180, easing: STEPS })); break;
       case 'sink': case 'misprint': p.set(withTiming(0, { duration: 90 })); break;
-      case 'select': p.set(withTiming(0, { duration: 160 })); break;
-      case 'soft': p.set(withTiming(0, { duration: 460, easing: ease.out })); break;
-      default: p.set(withTiming(0, { duration: 260, easing: ease.ios }));
+      case 'select': p.set(micro(0)); break;
+      // squish, bounce, soft and the rest: back without going past
+      default: p.set(release(0));
     }
   };
   // where the finger came down: a finger that travelled (a swipe that happens to start and end on a wide button) isn't a tap

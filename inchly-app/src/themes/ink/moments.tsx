@@ -1,12 +1,13 @@
 import { ReactNode, useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence } from 'react-native-reanimated';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 
 import { subj } from '@/data';
 import type { Moment } from '@/moments';
 import { T } from '@/themes/kit';
 import type { MomentKit } from '@/themes/types';
+import { M, present, timed } from '@/ui/motion';
 import { drops, INK, inky, splatPath } from './paint';
 import { Shout } from './parts';
 
@@ -17,15 +18,16 @@ import { Shout } from './parts';
 const S = 320;
 /** One splash that lands, holds, and dries away; calls done when gone. */
 function Burst({ colors, seed, children, done, hold = 900 }: { colors: string[]; seed: string; children: ReactNode; done: () => void; hold?: number }) {
-  const s = useSharedValue(0.2);
-  const o = useSharedValue(1);
-  const w = useSharedValue(0.6);
+  // in with a fade and the slightest grow (never past its size), out with a fade
+  const s = useSharedValue(0.98);
+  const o = useSharedValue(0);
+  const w = useSharedValue(0.98);
   const finished = useRef(done);
   useEffect(() => { finished.current = done; }, [done]);
   useEffect(() => {
-    s.set(withTiming(1, { duration: 300, easing: Easing.out(Easing.back(1.8)) }));
-    w.set(withDelay(80, withSpring(1, { duration: 520, dampingRatio: 0.45 })));
-    o.set(withDelay(300 + hold, withTiming(0, { duration: 380 })));
+    s.set(present(1));
+    w.set(present(1));
+    o.set(withSequence(timed(1, M.fadeIn), withDelay(100 + hold, timed(0, M.leave.duration))));
     const id = setTimeout(() => finished.current(), 300 + hold + 420);
     return () => clearTimeout(id);
   }, [s, o, w, hold]);

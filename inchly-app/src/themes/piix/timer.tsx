@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { subj } from '@/data';
@@ -14,6 +14,7 @@ import { elapsedOf, getState, setTarget, startStudy, togglePause, useStore, useS
 import { haptic } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
+import { M, micro } from '@/ui/motion';
 import { toast } from '@/ui/Toast';
 import { alpha, cells, P, ring } from './look';
 import { Box, DotGrid, J, Key, Label, Mood, Pal, STEPS } from './pixel';
@@ -211,20 +212,21 @@ function Record() {
   const running = useStore((s) => s.running);
   const fill = useSharedValue(0);
   const sink = useSharedValue(0);
-  const a = useAnimatedStyle(() => ({ width: `${fill.value * 100}%` }));
+  // the fill grows by scale from the left edge (a width change would lay the key out again every frame)
+  const a = useAnimatedStyle(() => ({ transform: [{ scaleX: fill.value }] }));
   const k = useAnimatedStyle(() => ({ transform: [{ translateY: 5 * sink.value }] }));
   const sj = subj(useStore((s) => s.subj));
   return (
     <Pressable disabled={!running} delayLongPress={650} accessibilityRole="button" accessibilityLabel="長押しで記録する" accessibilityHint={`${sj.name}の勉強を止めて記録します`}
       accessibilityState={{ disabled: !running }} accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={() => running && session.finish()}
-      onPressIn={() => { sink.set(withTiming(1, { duration: 40 })); fill.set(withTiming(1, { duration: 650 })); }}
-      onPressOut={() => { sink.set(withTiming(0, { duration: 140, easing: STEPS })); cancelAnimation(fill); fill.set(withTiming(0, { duration: 160 })); }}
+      onPressIn={() => { sink.set(withTiming(1, M.press)); fill.set(withTiming(1, { duration: 650, easing: Easing.linear })); }}
+      onPressOut={() => { sink.set(withTiming(0, { duration: M.micro.duration, easing: STEPS })); cancelAnimation(fill); fill.set(micro(0)); }}
       onLongPress={() => { haptic.success(); session.finish(); }}
       onPress={() => { haptic.tap(); toast('長押しで記録します', '押したまま、キーがいっぱいになるまで'); }}
       style={{ flexGrow: 1, flexBasis: '40%', paddingBottom: 5, opacity: running ? 1 : 0.4 }}>
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 5, bottom: 0, borderRadius: 16, backgroundColor: P.ink }} />
       <Animated.View style={[{ height: 58, borderRadius: 16, backgroundColor: P.card, borderWidth: 2, borderColor: P.ink, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }, k]}>
-        <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: P.coral }, a]} />
+        <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '100%', transformOrigin: 'left', backgroundColor: P.coral }, a]} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Icon name="stop" size={15} color={P.ink} />
           <T size={16} w="800" lh={20}>記録する</T>
@@ -235,20 +237,12 @@ function Record() {
   );
 }
 
-/** The day so far as a strip of 10-minute blocks, the session under way blinking at its end. */
+/** The day so far as a strip of 10-minute blocks, the session under way lit at its end. */
 function Today() {
   const today = useToday();
   const ss = useSession();
   const all = cells(today.parts, ss.running ? ss.elapsed / 60 : 0, ss.subject.c, 10);
   const slots = Math.min(30, Math.max(Math.ceil(today.goal / 10), all.length));
-  const blink = useSharedValue(1);
-  const live = ss.running && !ss.paused;
-  useEffect(() => {
-    if (!live) { blink.set(1); return; }
-    blink.set(withRepeat(withSequence(withTiming(0.35, { duration: 450, easing: Easing.steps(2) }), withTiming(1, { duration: 450, easing: Easing.steps(2) })), -1));
-    return () => cancelAnimation(blink);
-  }, [live, blink]);
-  const b = useAnimatedStyle(() => ({ opacity: blink.value }));
   const total = today.min + (ss.running ? Math.floor(ss.elapsed / 60) : 0);
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 2, gap: 8 }} accessible accessibilityLabel={`今日 ${total}分。目標 ${today.goal}分`}>
@@ -262,8 +256,7 @@ function Today() {
           const c = all[i];
           const st = { flex: 1, height: 12, borderRadius: 2.5 };
           if (!c) return <View key={i} style={[st, { borderWidth: 1.5, borderColor: alpha(P.ink, 0.25), borderStyle: 'dashed' }]} />;
-          return c.live ? <Animated.View key={i} style={[st, { backgroundColor: c.c, borderWidth: 1.5, borderColor: P.ink }, b]} />
-            : <View key={i} style={[st, { backgroundColor: c.c, borderWidth: 1.5, borderColor: P.ink }]} />;
+          return <View key={i} style={[st, { backgroundColor: c.c, borderWidth: 1.5, borderColor: P.ink }]} />;
         })}
       </View>
     </View>

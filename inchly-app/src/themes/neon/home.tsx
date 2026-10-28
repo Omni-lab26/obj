@@ -1,6 +1,5 @@
-import { Children, ReactNode, useEffect, useState } from 'react';
-import { ScrollView, useWindowDimensions, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import { Children, ReactNode, useState } from 'react';
+import { ScrollView, View } from 'react-native';
 
 import { subj } from '@/data';
 import type { Block, Kind } from '@/screens/layout';
@@ -26,27 +25,10 @@ const W = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 // ---------- page ----------
-/** A slow cyan band that sweeps down the screen, like a scanner. */
-function Sweep() {
-  const { height } = useWindowDimensions();
-  const y = useSharedValue(-160);
-  useEffect(() => {
-    y.set(withRepeat(withTiming(height + 40, { duration: 7000, easing: Easing.linear }), -1));
-  }, [height, y]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
-  return (
-    <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, top: 0, height: 140, zIndex: 0 }, a]}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(0,240,255,0.025)' }} />
-      <View style={{ height: 1, backgroundColor: 'rgba(0,240,255,0.18)' }} />
-    </Animated.View>
-  );
-}
-
 function Page({ header, children }: { header: ReactNode; children: ReactNode }) {
   const tabPad = useTabPad();
   return (
     <Screen>
-      <Sweep />
       {header}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 10, paddingBottom: tabPad, gap: 14 }}>
         {children}

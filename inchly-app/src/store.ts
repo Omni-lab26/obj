@@ -247,6 +247,8 @@ export function setState(patch: Partial<State> | ((s: State) => Partial<State>))
   listeners.forEach((l) => l());
   save();
 }
+/** Listen to every change (for hooks that mix the store with something else, like screens/model's clock). */
+export const onStore = subscribe;
 export function useStore<T>(sel: (s: State) => T): T {
   return useSyncExternalStore(subscribe, () => sel(state), () => sel(state));
 }

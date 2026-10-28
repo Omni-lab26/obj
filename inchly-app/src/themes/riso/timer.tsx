@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { ReactNode, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -14,6 +14,7 @@ import type { TimerKit } from '@/themes/types';
 import { elapsedOf, getState, setTarget, startStudy, togglePause, useStore, useSubjects } from '@/store';
 import { haptic, Press } from '@/ui/base';
 import { Icon } from '@/ui/Icon';
+import { micro, press as pressIn, release } from '@/ui/motion';
 import { Chip, Dots, Dotted, P, Patterns, Swatch, useInk, usePlates, useSvgId } from './print';
 
 // The timer as the press itself, printed the other way round: paper-colored
@@ -232,8 +233,8 @@ function Main() {
   return (
     <View style={{ alignItems: 'center', marginTop: short ? 12 : 20, gap: 8 }}>
       <Pressable onPress={press} accessibilityRole="button" accessibilityLabel={playing ? '一時停止' : running ? '再開' : '開始'} style={{ width: 76, height: 76 }}
-        onPressIn={() => { v.set(withTiming(1, { duration: 70 })); }}
-        onPressOut={() => { v.set(withSequence(withTiming(-0.3, { duration: 80 }), withSpring(0, { duration: 460, dampingRatio: 0.4 }))); }}>
+        onPressIn={() => { v.set(pressIn(1)); }}
+        onPressOut={() => { v.set(release(0)); }}>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 38, borderWidth: 1.5, borderColor: k.onDeep2 }, ghost]} />
         <Animated.View style={[{ width: 76, height: 76, borderRadius: 38, backgroundColor: k.onDeep, alignItems: 'center', justifyContent: 'center' }, disc]}>
           <Icon name={playing ? 'pause' : 'play'} size={25} color={k.deep} />
@@ -258,15 +259,18 @@ function Record() {
     haptic.success();
     session.finish();
     // put the ink back once the record page covers this one
-    setTimeout(() => { p.set(withTiming(0, { duration: 200 })); fired.current = false; }, 700);
+    setTimeout(() => { p.set(micro(0)); fired.current = false; }, 700);
   };
   const down = () => {
     if (!running) return;
     haptic.soft();
     p.set(withTiming(1, { duration: HOLD, easing: Easing.linear }, (done) => { if (done) scheduleOnRN(fire); }));
   };
-  const up = () => { if (p.get() < 1) p.set(withTiming(0, { duration: 160 })); };
-  const fill = useAnimatedStyle(() => ({ width: p.value * Math.max(0, w - 3) }));
+  const up = () => { if (p.get() < 1) p.set(micro(0)); };
+  // the ink spreads from the left: a window slides right while what's in it slides back (transforms only, nothing laid out each frame)
+  const W = Math.max(0, w - 3);
+  const fill = useAnimatedStyle(() => ({ transform: [{ translateX: (p.value - 1) * W }] }));
+  const fillIn = useAnimatedStyle(() => ({ transform: [{ translateX: (1 - p.value) * W }] }));
   const label = (color: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: '100%' }}>
       <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: color, alignItems: 'center', justifyContent: 'center' }}>
@@ -282,8 +286,8 @@ function Record() {
         accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={() => { if (running) session.finish(); }}
         style={{ height: 58, borderWidth: 1.5, borderColor: k.onDeep, opacity: running ? 1 : 0.35, overflow: 'hidden' }}>
         {label(k.onDeep)}
-        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: k.onDeep, overflow: 'hidden' }, fill]}>
-          <View style={{ width: Math.max(0, w - 3), height: '100%' }}>{label(k.deep)}</View>
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, width: W, backgroundColor: k.onDeep, overflow: 'hidden' }, fill]}>
+          <Animated.View style={[{ width: W, height: '100%' }, fillIn]}>{label(k.deep)}</Animated.View>
         </Animated.View>
       </Pressable>
     </View>

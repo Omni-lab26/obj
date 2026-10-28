@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Pressable, View } from 'react-native';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { rng } from '../data';
 import { lift, radius, type, useT } from '../theme';
 import { useReplay } from './appear';
 import { haptic, Txt } from './base';
+import { fadeIn, move } from './motion';
 import { Rolling } from './Rolling';
 import { Pane } from './Glass';
 
@@ -102,7 +103,7 @@ export function ScoreCard() {
   const [boxW, setBoxW] = useState(0);
   const pillX = useSharedValue(0);
   const wi = WINS.findIndex((x) => x.v === win);
-  useEffect(() => { if (boxW) pillX.set(withSpring((boxW / 3) * wi, { duration: 420, dampingRatio: 0.72 })); }, [wi, boxW, pillX]);
+  useEffect(() => { if (boxW) pillX.set(move((boxW / 3) * wi)); }, [wi, boxW, pillX]);
   const pill = useAnimatedStyle(() => ({ transform: [{ translateX: pillX.value }] }));
 
   const [whole, dec] = shown.toFixed(1).split('.');
@@ -127,7 +128,7 @@ export function ScoreCard() {
         <View style={{ height: PLOT_H, marginTop: 16, marginBottom: 4 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} {...scrub.panHandlers}
           accessible accessibilityLabel={`偏差値の推移。${W.label}で${delta >= 0 ? '+' : '−'}${Math.abs(delta).toFixed(1)}`}>
           {w ? (
-            <Animated.View key={`${win}${data.length}${data[data.length - 1]}-${replay}`} entering={FadeIn.duration(360)} pointerEvents="none" style={{ flex: 1 }}>
+            <Animated.View key={`${win}${data.length}${data[data.length - 1]}-${replay}`} entering={fadeIn()} pointerEvents="none" style={{ flex: 1 }}>
               <Svg width={w} height={PLOT_H}>
                 <Defs>
                   <LinearGradient id="pullArea" x1="0" y1="0" x2="0" y2="1">

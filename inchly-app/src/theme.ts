@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { Platform, StyleSheet, TextStyle } from 'react-native';
-import { Easing } from 'react-native-reanimated';
+import { IOS } from './ui/motion';
 
 import { type Backdrop, backdropOf, BGS, CARD_FILM, CORNERS, designVersion, FAMILIES, getDesign, INKS, onDesign, Reaction, refreshDesign, Texture, themeOf, ThemeFont, TIMERS } from './design';
 
@@ -185,14 +185,9 @@ export const type = {
 export const lift = (t: { shadow1: string; shadow2: string }, k: 1 | 2 = 1) => ({ boxShadow: k === 1 ? t.shadow1 : t.shadow2 });
 export const radius = { card: 16, inner: 12 }; // follows the 角 you pick (applyDesign)
 
-// Motion measured on bencho.dev: press = .2s (.3,.9,.4,1), springy round buttons = .24s (.28,1.3,.36,1).
-export const ease = {
-  press: Easing.bezier(0.3, 0.9, 0.4, 1),
-  spring: Easing.bezier(0.28, 1.3, 0.36, 1),
-  out: Easing.bezier(0.22, 1, 0.36, 1),
-  /** iOS's own: sheets, rows making room — fast at first, settling without a bounce */
-  ios: Easing.bezier(0.32, 0.72, 0, 1),
-};
+// Motion lives in ui/motion (MOTION.md): never a bounce. These names stay for
+// older call sites and all mean iOS's curve; new code takes ui/motion's moves.
+export const ease = { press: IOS, out: IOS, ios: IOS };
 
 // Separators: two device pixels on iOS, and the same on a retina browser.
 export const hair = Platform.OS === 'web' ? 0.75 : StyleSheet.hairlineWidth * 2;

@@ -17,6 +17,7 @@ import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon, IconName } from '@/ui/Icon';
 import { levelSheet } from '@/ui/Level';
+import { press as pressDown, release } from '@/ui/motion';
 import { toast } from '@/ui/Toast';
 import { Barcode, Blink, Dash, FRAME, Gradient, HatchDef, J, M, pad2, PINK, ScreenFrame, stamp, useScramble, useSvgId, Window, WarpGrid } from './parts';
 
@@ -229,7 +230,7 @@ function StartPill({ onPress, label, text = 'START' }: { onPress: () => void; la
   const fill = useAnimatedStyle(() => ({ opacity: p.value }));
   const arrow = useAnimatedStyle(() => ({ transform: [{ translateX: 2 * p.value }, { translateY: -2 * p.value }] }));
   return (
-    <Pressable onPressIn={() => p.set(withTiming(1, { duration: 90 }))} onPressOut={() => p.set(withTiming(0, { duration: 280 }))} onPress={onPress} hitSlop={8}
+    <Pressable onPressIn={() => p.set(pressDown(1))} onPressOut={() => p.set(release(0))} onPress={onPress} hitSlop={8}
       accessibilityRole="button" accessibilityLabel={label}
       style={{ height: 38, paddingHorizontal: 15, borderRadius: 19, backgroundColor: t.ink, overflow: 'hidden', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, fill]}><Gradient id={id} /></Animated.View>
@@ -550,7 +551,7 @@ function Footer() {
   const read = () => {
     haptic.soft();
     beam.set(0);
-    beam.set(withTiming(1, { duration: 620, easing: Easing.inOut(Easing.quad) }, (done) => { if (done) beam.set(-1); }));
+    beam.set(withTiming(1, { duration: 560, easing: Easing.linear }, (done) => { if (done) beam.set(-1); }));
   };
   return (
     <Press onPress={read} haptics={false} scale={1} accessibilityRole="button" accessibilityLabel={`今日の記録コード ${code}`} style={{ paddingTop: 4, paddingBottom: 6, paddingHorizontal: 2, gap: 6 }}>

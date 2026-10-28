@@ -1,8 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
-import { ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { ReactNode, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Pressable, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { Easing, interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -18,6 +18,7 @@ import { focus, onColor, useT } from '@/theme';
 import { haptic } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
+import { M, move } from '@/ui/motion';
 import { INK, inky, splatPath } from './paint';
 import { Shout, SplashPress, Splat } from './parts';
 
@@ -33,7 +34,7 @@ const setMid = (y: number) => { if (Math.abs(y - mid) < 1) return; mid = y; midS
 const useMid = () => useSyncExternalStore((f) => { midSubs.add(f); return () => { midSubs.delete(f); }; }, () => mid, () => mid);
 
 const BLOB = 360;
-/** The splat behind the clock: grows with the session, breathes while it runs. */
+/** The splat behind the clock: grows with the session (smoothly, never past its size). */
 function InkBlob() {
   const ss = useSession();
   const y = useMid();
@@ -41,13 +42,8 @@ function InkBlob() {
   const p = ss.target ? Math.min(1, ss.elapsed / ss.target) : 0;
   const size = ss.running ? 130 + 220 * Math.sqrt(p) : 120;
   const scale = useSharedValue(size / BLOB);
-  const breath = useSharedValue(1);
-  useEffect(() => { scale.set(withSpring(size / BLOB, { duration: 900, dampingRatio: 0.6 })); }, [size, scale]);
-  const live = ss.running && !ss.paused;
-  useEffect(() => {
-    breath.set(live ? withRepeat(withSequence(withTiming(1.035, { duration: 1100 }), withTiming(1, { duration: 1100 })), -1) : withTiming(1));
-  }, [live, breath]);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: scale.value * breath.value }] }));
+  useEffect(() => { scale.set(move(size / BLOB)); }, [size, scale]);
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const id = ss.subject.id;
   const d = useMemo(() => splatPath(BLOB / 2, BLOB / 2, BLOB * 0.3, `timer${id}`, { wobble: 0.12, bulges: 0.35 }), [id]);
   const ring = useMemo(() => splatPath(BLOB / 2, BLOB / 2, BLOB * 0.34, `ring${id}`, { wobble: 0.12, bulges: 0.35 }), [id]);
@@ -144,21 +140,10 @@ function Readout() {
   const shown = moving ? Math.min(300, (p.h ?? left.h) * 60 + (p.m ?? Math.floor(left.m))) * 60 : sec;
   const side = moving ? 'に設定' : up ? 'ぬった時間' : ss.over ? '超過' : ss.running ? 'のこり' : 'に集中';
   const text = `${over && !moving ? '+' : ''}${fmt(shown)}`;
-  // the digits thump a little each minute
-  const thump = useSharedValue(1);
-  const minute = Math.floor(shown / 60);
-  const first = useRef(true);
-  useEffect(() => {
-    if (first.current) { first.current = false; return; }
-    thump.set(withSequence(withTiming(1.08, { duration: 90 }), withSpring(1, { duration: 500, dampingRatio: 0.4 })));
-  }, [minute, thump]);
-  const a = useAnimatedStyle(() => ({ transform: [{ scaleX: thump.value }, { scaleY: 2 - thump.value }] }));
   return (
     <View onLayout={(e) => setMid(e.nativeEvent.layout.y + e.nativeEvent.layout.height / 2)} style={{ alignItems: 'center', opacity: ss.paused && !moving ? 0.6 : 1 }}
       accessible accessibilityLabel={`${side} ${fmt(shown)}`}>
-      <Animated.View style={a}>
-        <Shout size={text.length > 6 ? 54 : 64} lh={text.length > 6 ? 64 : 76} color={over && !moving ? INK.yellow : INK.white} num>{text}</Shout>
-      </Animated.View>
+      <Shout size={text.length > 6 ? 54 : 64} lh={text.length > 6 ? 64 : 76} color={over && !moving ? INK.yellow : INK.white} num>{text}</Shout>
       <View style={{ marginTop: 2, backgroundColor: 'rgba(14,14,14,0.7)', borderRadius: 10, paddingHorizontal: 9, paddingVertical: 2 }}>
         <T size={12.5} w="800" color={over && !moving ? INK.yellow : 'rgba(255,255,255,0.85)'}>{side}</T>
       </View>
@@ -203,7 +188,7 @@ function Today() {
   );
 }
 
-/** Start, pause, resume: a big splat that squishes. */
+/** Start, pause, resume: a big splat that gives under the finger. */
 function Main() {
   const running = useStore((s) => s.running);
   const paused = useStore((s) => s.paused);
@@ -245,7 +230,7 @@ function Record() {
     haptic.success();
     session.finish();
     // the roller goes back once the record page covers this one
-    setTimeout(() => x.set(withSpring(0, { damping: 18, stiffness: 180 })), 700);
+    setTimeout(() => x.set(move(0)), 700);
   };
   // one tick as the roller crosses the line, either way
   useAnimatedReaction(() => x.get() > max.get() * 0.7, (over, prev) => { if (prev !== null && over !== prev) scheduleOnRN(haptic.tap); });
@@ -261,14 +246,15 @@ function Record() {
       if (off.get()) return;
       const m = max.get(), v = x.get();
       if (v > m * 0.7 || (e.velocityX > 900 && v > m * 0.35)) {
-        x.set(withTiming(m, { duration: 180, easing: Easing.out(Easing.cubic) }, (done) => { if (done) scheduleOnRN(finish); }));
+        x.set(withTiming(m, M.micro, (done) => { if (done) scheduleOnRN(finish); }));
       } else {
-        x.set(withSpring(0, { damping: 16, stiffness: 220 }));
+        x.set(move(0, e.velocityX));
       }
     }));
   const knob = useAnimatedStyle(() => ({ transform: [{ rotate: `${interpolate(x.value, [0, max.value], [0, 720])}deg` }] }));
   const knobBody = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
-  const paint = useAnimatedStyle(() => ({ width: x.value + KNOB / 2 + PAD }));
+  // the stripe is the track's full width, slid in from the left (moved, not resized, every frame)
+  const paint = useAnimatedStyle(() => ({ transform: [{ translateX: x.value + KNOB / 2 + PAD - w }] }), [w]);
   const lbl = useAnimatedStyle(() => ({ opacity: interpolate(x.value, [0, max.value * 0.6], [1, 0], 'clamp') }));
   const label = '右へぬって記録する';
   return (
@@ -278,7 +264,7 @@ function Record() {
         accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={() => !disabled && session.finish()}
         style={{ height: KNOB + PAD * 2, borderRadius: (KNOB + PAD * 2) / 2, backgroundColor: '#242424', borderWidth: 2, borderColor: 'rgba(255,255,255,0.14)', overflow: 'hidden', opacity: disabled ? 0.35 : 1 }}>
         {/* the stripe the roller leaves */}
-        <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: c, opacity: 0.85 }, paint]} />
+        <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, width: w, backgroundColor: c, opacity: 0.85 }, paint]} />
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: KNOB + PAD, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }, lbl]}>
           <T size={14} w="800" color="rgba(255,255,255,0.75)">{label}</T>
         </Animated.View>

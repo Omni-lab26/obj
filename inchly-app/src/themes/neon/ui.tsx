@@ -1,6 +1,6 @@
 import { ComponentProps, ReactNode, useEffect, useState } from 'react';
 import { LayoutChangeEvent, StyleProp, StyleSheet, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import Svg, { Polygon } from 'react-native-svg';
 
 import { faceFor } from '@/theme';
@@ -102,19 +102,18 @@ export function Meter({ cells, h = 10, gap = 3, off = N.yellowDim }: { cells: (s
   );
 }
 
-/** Something that blinks while `on` (a live dot, PAUSED). */
-export function Blink({ on = true, children, period = 900 }: { on?: boolean; children: ReactNode; period?: number }) {
-  const o = useSharedValue(1);
-  useEffect(() => {
-    o.set(on ? withRepeat(withSequence(withTiming(0.25, { duration: period / 2 }), withTiming(1, { duration: period / 2 })), -1) : withTiming(1, { duration: 120 }));
-  }, [on, o, period]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value }));
-  return <Animated.View style={a}>{children}</Animated.View>;
+/**
+ * What used to blink while `on` (a live dot, PAUSED). Nothing in the app
+ * pulses any more (MOTION.md): it stays lit, and the glow says it's live.
+ */
+export function Blink({ children }: { on?: boolean; children: ReactNode; period?: number }) {
+  return <View>{children}</View>;
 }
 
 /**
- * The glitch: two offset copies, cyan and red, that jump out for a moment.
- * `kick` changes to set it off (a tap, a new number).
+ * The glitch: two copies, cyan and red, drawn a few points off, that flash in
+ * for a moment (only their opacity changes: nothing jumps). `kick` changes to
+ * set it off (a tap, a new number).
  */
 export function Glitch({ children, kick, copy }: { children: ReactNode; kick: number; copy: (color: string) => ReactNode }) {
   const g = useSharedValue(0);
@@ -122,12 +121,11 @@ export function Glitch({ children, kick, copy }: { children: ReactNode; kick: nu
     if (!kick) return;
     g.set(withSequence(withTiming(1, { duration: 40 }), withTiming(0.3, { duration: 50 }), withTiming(1, { duration: 40 }), withTiming(0, { duration: 140 })));
   }, [kick, g]);
-  const cyan = useAnimatedStyle(() => ({ opacity: g.value * 0.85, transform: [{ translateX: -3 * g.value }, { translateY: g.value }] }));
-  const red = useAnimatedStyle(() => ({ opacity: g.value * 0.85, transform: [{ translateX: 3 * g.value }, { translateY: -g.value }] }));
+  const flash = useAnimatedStyle(() => ({ opacity: g.value * 0.85 }));
   return (
     <View>
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, cyan]}>{copy(N.cyan)}</Animated.View>
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, red]}>{copy(N.red)}</Animated.View>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transform: [{ translateX: -3 }, { translateY: 1 }] }, flash]}>{copy(N.cyan)}</Animated.View>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transform: [{ translateX: 3 }, { translateY: -1 }] }, flash]}>{copy(N.red)}</Animated.View>
       {children}
     </View>
   );

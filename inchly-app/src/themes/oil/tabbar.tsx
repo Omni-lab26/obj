@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
 import { subj } from '@/data';
@@ -11,6 +11,7 @@ import { onColor } from '@/theme';
 import { haptic, Press } from '@/ui/base';
 import { TAB_BAR_H, tabBarBottom } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
+import { micro } from '@/ui/motion';
 import { Dab } from './canvas';
 import { shade, useOil } from './look';
 import { dabPath } from './paint';
@@ -35,9 +36,9 @@ export function TabBar({ items, running, paused, mins, insets }: TabBarProps) {
 function Tab({ it, labels }: { it: TabItem; labels: boolean }) {
   const { v } = useOil();
   const s = useSharedValue(it.focused ? 1 : 0);
-  useEffect(() => { s.set(withSpring(it.focused ? 1 : 0, { duration: 420, dampingRatio: 0.55 })); }, [it.focused, s]);
-  // the dab is put down with a twist of the brush
-  const a = useAnimatedStyle(() => ({ opacity: Math.min(1, s.value * 1.5), transform: [{ scale: 0.35 + 0.65 * s.value }, { rotate: `${(1 - s.value) * -30}deg` }] }));
+  useEffect(() => { s.set(micro(it.focused ? 1 : 0)); }, [it.focused, s]);
+  // the dab of the tab you're on fades in where it lies
+  const a = useAnimatedStyle(() => ({ opacity: s.value }));
   const ink = it.focused ? v.onAccent : v.trayInk2;
   return (
     <Press onPress={it.onPress} scale={0.9} accessibilityRole="tab" accessibilityState={{ selected: it.focused }} accessibilityLabel={it.label}

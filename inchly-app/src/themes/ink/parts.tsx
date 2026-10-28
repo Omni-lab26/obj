@@ -1,11 +1,12 @@
 import { ComponentProps, ReactNode, useEffect, useMemo, useState } from 'react';
 import { StyleProp, StyleSheet, TextStyle, View, ViewStyle } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { T } from '@/themes/kit';
 import { Press } from '@/ui/base';
 import { Icon, IconName } from '@/ui/Icon';
+import { M, timed } from '@/ui/motion';
 import { blobRect, drops, HARD, INK, splatPath } from './paint';
 
 // The pieces インク is made of: splats, hand-painted blobs, stickers with a
@@ -82,14 +83,13 @@ export function IconSticker({ name, label, onPress, dot, size = 36 }: { name: Ic
 let splashes = 0;
 /** A splat thrown where you tapped, that fades as it dries. */
 function TapSplat({ x, y, color, size }: { x: number; y: number; color: string; size: number }) {
-  const s = useSharedValue(0.25);
   const o = useSharedValue(0.95);
   const [seed] = useState(() => `tap${++splashes}`);
+  // there at once, then dries away (no splat growing or bouncing in: MOTION.md)
   useEffect(() => {
-    s.set(withTiming(1, { duration: 240, easing: Easing.out(Easing.back(2.2)) }));
-    o.set(withDelay(180, withTiming(0, { duration: 480 })));
-  }, [s, o]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ scale: s.value }] }));
+    o.set(withDelay(180, timed(0, M.leave.duration)));
+  }, [o]);
+  const a = useAnimatedStyle(() => ({ opacity: o.value }));
   return (
     <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: x - size / 2, top: y - size / 2, width: size, height: size }, a]}>
       <Splat size={size} color={color} seed={seed} drops={6} />
@@ -99,7 +99,7 @@ function TapSplat({ x, y, color, size }: { x: number; y: number; color: string; 
 
 /**
  * Something you tap that splashes: a splat of `color` lands where your finger
- * was and dries away, on top of the wobble every インク press has.
+ * was and dries away, on top of the squish every インク press has.
  */
 export function SplashPress({ color, splash = 64, children, onPressIn, style, ...rest }: ComponentProps<typeof Press> & { color: string; splash?: number }) {
   const [hit, setHit] = useState<{ x: number; y: number; k: number } | null>(null);

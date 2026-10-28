@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { LayoutChangeEvent, Pressable, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 import Svg, { Defs, Line, Pattern, Rect } from 'react-native-svg';
 
 import { subj } from '@/data';
 import { Todo } from '@/store';
-import { ease, hair, useT } from '@/theme';
+import { hair, useT } from '@/theme';
 import { haptic, Txt } from '@/ui/base';
 import { Icon } from '@/ui/Icon';
+import { M, micro, timed } from '@/ui/motion';
 
 // Checklist row: the box fills, the tick draws in, and a line strikes across
 // the text (bencho "checklist"), sized to the text rather than the row.
@@ -15,22 +16,23 @@ export function TodoRow({ todo, onToggle, onEdit, first }: { todo: Todo; onToggl
   const t = useT();
   const p = useSharedValue(todo.d ? 1 : 0);
   const [tw, setTw] = useState(0);
-  useEffect(() => { p.value = withTiming(todo.d ? 1 : 0, { duration: 320, easing: ease.out }); }, [todo.d, p]);
-  const box = useAnimatedStyle(() => ({ backgroundColor: p.value > 0.5 ? t.green : 'transparent', borderWidth: p.value > 0.5 ? 0 : 1.25, transform: [{ scale: 0.9 + 0.1 * Math.min(1, p.value * 1.4) }] }));
+  useEffect(() => { p.value = micro(todo.d ? 1 : 0); }, [todo.d, p]);
+  // colors, opacity and scale only (the border keeps its width; the strike grows by scaling from the left)
+  const box = useAnimatedStyle(() => ({ backgroundColor: p.value > 0.5 ? t.green : 'transparent', borderColor: p.value > 0.5 ? 'transparent' : t.ink3, transform: [{ scale: 0.9 + 0.1 * Math.min(1, p.value * 1.4) }] }));
   const tick = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ scale: 0.4 + 0.6 * p.value }] }));
-  const strike = useAnimatedStyle(() => ({ width: tw * p.value }));
+  const strike = useAnimatedStyle(() => ({ transform: [{ scaleX: p.value }] }));
   const sj = subj(todo.s);
   return (
     <Pressable onPress={() => { haptic.soft(); onToggle(); }} onLongPress={onEdit} accessibilityRole="checkbox" accessibilityState={{ checked: todo.d }} accessibilityLabel={todo.t}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, paddingHorizontal: 14 }}>
       {first ? null : <View style={{ position: 'absolute', top: 0, left: 42, right: 0, height: hair, backgroundColor: t.line }} />}
-      <Animated.View style={[{ width: 18, height: 18, borderRadius: 9, borderColor: t.ink3, alignItems: 'center', justifyContent: 'center' }, box]}>
+      <Animated.View style={[{ width: 18, height: 18, borderRadius: 9, borderWidth: 1.25, alignItems: 'center', justifyContent: 'center' }, box]}>
         <Animated.View style={tick}><Icon name="check" size={12} color="#fff" width={3} /></Animated.View>
       </Animated.View>
       <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-start' }}>
         <View onLayout={(e: LayoutChangeEvent) => setTw(e.nativeEvent.layout.width)}>
           <Txt size={13.5} tone={todo.d ? 'ink3' : 'ink'} numberOfLines={1}>{todo.t}</Txt>
-          <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: '52%', height: 1, backgroundColor: t.ink3 }, strike]} />
+          <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: '52%', width: tw, height: 1, backgroundColor: t.ink3, transformOrigin: 'left' }, strike]} />
         </View>
       </View>
       <View style={{ alignItems: 'flex-end' }}>
@@ -53,11 +55,12 @@ export function TodoRow({ todo, onToggle, onEdit, first }: { todo: Todo; onToggl
 // One day tile in the week strip. A rest-ticket day is hatched instead of filled.
 export function DayTile({ level, ticket, label, today, index }: { level: number; ticket?: boolean; label: string; today?: boolean; index: number }) {
   const t = useT();
-  const s = useSharedValue(0.6);
+  // in turn, fading in from a touch smaller and settling without going past
+  const s = useSharedValue(0.98);
   const o = useSharedValue(0);
   useEffect(() => {
-    s.value = withDelay(index * 40, withTiming(1, { duration: 420, easing: ease.spring }));
-    o.value = withDelay(index * 40, withTiming(1, { duration: 260 }));
+    s.value = withDelay(index * 40, micro(1));
+    o.value = withDelay(index * 40, timed(1, M.fadeIn));
   }, [index, s, o]);
   const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ scale: s.value }] }));
   return (

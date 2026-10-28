@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 
 import { PEOPLE, subj } from '../data';
 import { celebrate } from '../moments';
 import { dayOf, hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { daysUntil, dateKey } from '../lib/time';
 import { type Block, endOf, minutesUntil, nextOf, spanEnd, suggestion, toMin } from '../lib/timetable';
-import { commitAll, commitRecord, doneOn, planNow, elapsedOf, FriendSort, getState, setSubject, startFrom, startStudy, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
+import { commitAll, commitRecord, doneOn, planNow, elapsedOf, FriendSort, getState, onStore, setSubject, startFrom, startStudy, type State, togglePause, toggleTodo, useNow, useStore, useStreak } from '../store';
 import { haptic } from '../ui/base';
 import { toast } from '../ui/Toast';
 
@@ -15,6 +15,33 @@ import { toast } from '../ui/Toast';
 // what's next, the session under way and the actions, the same for all of them.
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
+
+// One clock for everything that shows the running time: a single interval
+// a second, running only while something listens. useTicking reads a value
+// off the store and the time now, every second and on every change, but its
+// part redraws only when that value changes — so only the few words that
+// show the time redraw each second, not the card or page around them.
+let tickAt = Date.now();
+const tickers = new Set<() => void>();
+let ticking: ReturnType<typeof setInterval> | null = null;
+function onTick(f: () => void) {
+  tickers.add(f);
+  if (!ticking) {
+    tickAt = Date.now();
+    ticking = setInterval(() => { tickAt = Date.now(); tickers.forEach((g) => g()); }, 1000);
+  }
+  return () => {
+    tickers.delete(f);
+    if (!tickers.size && ticking) { clearInterval(ticking); ticking = null; }
+  };
+}
+const onTickOrStore = (f: () => void) => { const a = onTick(f), b = onStore(f); return () => { a(); b(); }; };
+/** A value worked out from the store and the time now (keep it a string, number, boolean or null, so it compares). */
+export function useTicking<T extends string | number | boolean | null>(pick: (s: State, now: number) => T): T {
+  // before the clock runs (the first draw), the time to the second, so two reads in a row agree
+  const read = () => pick(getState(), ticking ? tickAt : Math.floor(Date.now() / 1000) * 1000);
+  return useSyncExternalStore(onTickOrStore, read, read);
+}
 
 /** A subject's share of some minutes, with its name and color. */
 export type Slice = { id: string; name: string; c: string; min: number };
@@ -40,7 +67,8 @@ export function useToday() {
 
 /** The session under way (or the subject that would start), and what to do with it. */
 export function useSession() {
-  const now = useNow();
+  // on the one shared clock (useTicking), so every time shown turns over together
+  const now = useTicking((_, at) => at);
   const s = useStore((x) => x);
   const sj = subj(s.subj);
   const elapsed = elapsedOf(s, now);
@@ -100,7 +128,7 @@ export const session = {
 
 /** One nudge when the next plan's start comes, while the timer is open (just measuring, there is none). The time keeps running. */
 export function useTargetNudge() {
-  const now = useNow();
+  const now = useTicking((_, at) => at);
   const running = useStore((s) => s.running);
   const target = useStore((s) => s.planMin ?? 0);
   const over = useStore((s) => s.running && !!s.planMin && elapsedOf(s, now) > s.planMin * 60);

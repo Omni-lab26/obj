@@ -1,6 +1,6 @@
 import { ComponentRef, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { ROOM } from '@/data';
 import { useStore } from '@/store';
@@ -8,6 +8,7 @@ import { useT } from '@/theme';
 import { Empty, Press } from '@/ui/base';
 import { Screen, SearchBtn, TopBar, useBarsTop, useTabPad } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
+import { fadeIn } from '@/ui/motion';
 import { composeSheet, PostRow } from '@/ui/PostParts';
 import { UnderTabs } from '@/ui/Tabs';
 import { Pane } from '@/ui/Glass';
@@ -35,7 +36,7 @@ export default function Timeline() {
       <View style={{ flex: 1, backgroundColor: t.surface }}>
       <Pane radius={0} />
       <ScrollView ref={scroll} style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: pad + 40 }}>
-        <Animated.View key={feed} entering={FadeIn.duration(200)}>
+        <Animated.View key={feed} entering={fadeIn()}>
           {list.length ? list.map((p, i) => <PostRow key={p.id} p={p} first={i === 0} />) : (
             <View style={{ paddingTop: 40 }}>
               <Empty title="まだ投稿がありません" sub="フォローした人の投稿がここに並びます" />

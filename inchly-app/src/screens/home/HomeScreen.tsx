@@ -1,7 +1,7 @@
 import { ComponentType, useCallback, useEffect, useMemo, useState } from 'react';
 import { BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { arrange, HOME, Kind, SectionKind } from '@/screens/layout';
@@ -10,6 +10,7 @@ import { MENU_SHARE, SideMenu } from '@/screens/SideMenu';
 import type { HomeKit, SectionProps } from '@/themes/types';
 import { useT } from '@/theme';
 import { haptic } from '@/ui/base';
+import { dismiss, present } from '@/ui/motion';
 import { STANDARD_SECTIONS, StandardFrame, StandardHeader, StandardPage } from './standard';
 
 // Home, for every theme: the base blocks (layout.ts) in the theme's order,
@@ -20,7 +21,11 @@ import { STANDARD_SECTIONS, StandardFrame, StandardHeader, StandardPage } from '
 // none (VoiceOver gets メニューを開く as an action). Slide home back to the
 // left, or tap it, and it returns.
 
-const SETTLE = { duration: 420, dampingRatio: 0.9 };
+/** Where the menu comes to rest (ui/motion: present / dismiss), keeping a fling's speed (in widths a second) and never going past its end (MOTION.md). */
+const settleTo = (open: boolean, done: (finished?: boolean) => void, v = 0) => {
+  'worklet';
+  return open ? present(1, v) : dismiss(0, v, done);
+};
 /** Past halfway, or flung, it goes the rest of the way; otherwise it goes back. */
 const decide = (at: number, v: number) => {
   'worklet';
@@ -43,7 +48,7 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
   const from = useSharedValue(0);
 
   const settle = useCallback((open: boolean) => {
-    designReveal.set(withSpring(open ? 1 : 0, SETTLE, (done) => { if (done && !open) scheduleOnRN(setShown, false); }));
+    designReveal.set(settleTo(open, (done) => { if (done) scheduleOnRN(setShown, false); }));
   }, []);
   const open = useCallback(() => { setShown(true); haptic.soft(); settle(true); }, [settle]);
   const close = useCallback(() => settle(false), [settle]);
@@ -57,14 +62,14 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
     .onFinalize((e) => {
       const go = decide(designReveal.get(), e.velocityX);
       if (go && from.get() < 0.5) scheduleOnRN(haptic.soft);
-      designReveal.set(withSpring(go ? 1 : 0, SETTLE, (done) => { if (done && !go) scheduleOnRN(setShown, false); }));
+      designReveal.set(settleTo(go, (done) => { if (done) scheduleOnRN(setShown, false); }, e.velocityX / w.get()));
     }));
   // menu → home: slide home back to the left (or tap it)
   const [takeOut] = useState(() => Gesture.Pan().activeOffsetX(-14).failOffsetY([-22, 22])
     .onUpdate((e) => { designReveal.set(Math.min(1, Math.max(0, 1 + e.translationX / w.get()))); })
     .onFinalize((e) => {
       const stay = decide(designReveal.get(), e.velocityX);
-      designReveal.set(withSpring(stay ? 1 : 0, SETTLE, (done) => { if (done && !stay) scheduleOnRN(setShown, false); }));
+      designReveal.set(settleTo(stay, (done) => { if (done) scheduleOnRN(setShown, false); }, e.velocityX / w.get()));
     }));
 
   // Android's back button closes it; leaving home puts it away

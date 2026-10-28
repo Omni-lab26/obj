@@ -1,11 +1,12 @@
 import { ReactNode, useEffect, useId, useMemo, useRef } from 'react';
 import { GestureResponderEvent, Pressable, StyleProp, StyleSheet, Text, TextProps, View, ViewStyle } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Line, Pattern, Rect } from 'react-native-svg';
 
 import { useStore } from '@/store';
 import { bundledFace, faceFor, focus, radius, useT } from '@/theme';
 import { haptic } from '@/ui/base';
+import { dismiss, press, release } from '@/ui/motion';
 
 // ガリ版 (riso): one purple ink on straw paper, as if the whole app were a
 // small zine run off a stencil duplicator. Everything is printed in the one
@@ -181,8 +182,8 @@ function useStill() {
 
 /**
  * Pressable print: while held, the inked layer slips out of register (a ghost
- * plate shows on the other side); let go and it snaps back with a small
- * judder, like a sheet settling on the drum.
+ * plate shows on the other side); let go and it settles back into register,
+ * never past it.
  */
 export function Plated({ children, onPress, a11y, role = 'button', checked, disabled, ghost, radius: r = 0, style, hitSlop }: {
   children: ReactNode; onPress: () => void; a11y: string; role?: 'button' | 'checkbox' | 'tab' | 'radio' | 'link'; checked?: boolean; disabled?: boolean;
@@ -195,8 +196,8 @@ export function Plated({ children, onPress, a11y, role = 'button', checked, disa
   const plate = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.abs(v.value) * 1.6), transform: [{ translateX: -2.6 * v.value }, { translateY: 2 * v.value }] }));
   return (
     <Pressable
-      onPressIn={(e) => { began(e); v.set(withTiming(1, { duration: 70 })); }}
-      onPressOut={() => { v.set(withSequence(withTiming(-0.3, { duration: 80 }), withSpring(0, { duration: 420, dampingRatio: 0.42 }))); }}
+      onPressIn={(e) => { began(e); v.set(press(1)); }}
+      onPressOut={() => { v.set(release(0)); }}
       onPress={(e) => { if (!still(e)) return; haptic.tap(); onPress(); }}
       disabled={disabled}
       hitSlop={hitSlop}
@@ -210,7 +211,7 @@ export function Plated({ children, onPress, a11y, role = 'button', checked, disa
   );
 }
 
-/** A rubber stamp: thump it and it presses down, turns a little, and leaves a fading impression. */
+/** A rubber stamp: held, it presses down and turns a little; let go, it comes straight back up (no bounce) and leaves a fading impression. */
 export function Thump({ children, onPress, a11y, size, tilt = -8 }: { children: ReactNode; onPress?: () => void; a11y: string; size: number; tilt?: number }) {
   const k = useInk();
   const s = useSharedValue(1);
@@ -220,13 +221,13 @@ export function Thump({ children, onPress, a11y, size, tilt = -8 }: { children: 
   const imp = useAnimatedStyle(() => ({ opacity: (1 - ring.value) * 0.5, transform: [{ scale: 1 + ring.value * 0.35 }, { rotate: `${tilt}deg` }] }));
   const thump = () => {
     haptic.firm();
-    s.set(withSequence(withTiming(0.84, { duration: 90, easing: Easing.in(Easing.quad) }), withSpring(1, { duration: 520, dampingRatio: 0.38 })));
-    r.set(withSequence(withTiming(tilt + 6, { duration: 90 }), withSpring(tilt, { duration: 600, dampingRatio: 0.4 })));
     ring.set(0);
-    ring.set(withTiming(1, { duration: 650, easing: Easing.out(Easing.quad) }));
+    ring.set(dismiss(1));
   };
   return (
-    <Pressable onPress={() => { thump(); onPress?.(); }} accessibilityRole="button" accessibilityLabel={a11y} style={{ width: size, height: size }}>
+    <Pressable onPress={() => { thump(); onPress?.(); }} accessibilityRole="button" accessibilityLabel={a11y} style={{ width: size, height: size }}
+      onPressIn={() => { s.set(press(0.94)); r.set(press(tilt + 3)); }}
+      onPressOut={() => { s.set(release(1)); r.set(release(tilt)); }}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: size / 2, borderWidth: 2, borderColor: k.ink }, imp]} />
       <Animated.View style={[{ width: size, height: size }, a]}>{children}</Animated.View>
     </Pressable>
@@ -269,8 +270,8 @@ export function Cover({ w, h, children, onPress, a11y, live }: { w: number; h: n
   if (!onPress) return body;
   return (
     <Pressable
-      onPressIn={(e) => { began(e); v.set(withTiming(1, { duration: 70 })); }}
-      onPressOut={() => { v.set(withSequence(withTiming(-0.3, { duration: 80 }), withSpring(0, { duration: 460, dampingRatio: 0.4 }))); }}
+      onPressIn={(e) => { began(e); v.set(press(1)); }}
+      onPressOut={() => { v.set(release(0)); }}
       onPress={(e) => { if (!still(e)) return; haptic.tap(); onPress(); }}
       accessibilityRole="button" accessibilityLabel={a11y}>
       {body}
@@ -278,19 +279,14 @@ export function Cover({ w, h, children, onPress, a11y, live }: { w: number; h: n
   );
 }
 
-/** While printing: a band of fresh ink runs down the sheet, over and over. */
+/** While printing: a band of fresh ink across the sheet, where the roller is (it stays put: nothing loops). */
 function Roller({ h }: { h: number }) {
   const k = useInk();
-  const y = useSharedValue(-12);
-  useEffect(() => {
-    y.set(withRepeat(withTiming(h + 12, { duration: 1900, easing: Easing.inOut(Easing.quad) }), -1, false));
-  }, [h, y]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   return (
-    <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, top: 0, height: 10 }, a]}>
+    <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 10, transform: [{ translateY: h * 0.62 }] }}>
       <View style={{ height: 2, backgroundColor: k.paper, opacity: 0.9 }} />
       <View style={{ height: 6, backgroundColor: k.ink, opacity: 0.18 }} />
-    </Animated.View>
+    </View>
   );
 }
 

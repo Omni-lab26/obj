@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 
 import { subj } from '@/data';
+import { dismiss, M, micro, timed } from '@/ui/motion';
 import type { Moment } from '@/moments';
 import type { MomentKit } from '@/themes/types';
 import { D, glow, J, Label, N } from './ui';
@@ -17,20 +18,20 @@ function useAutoDone(done: () => void, ms: number) {
   useEffect(() => { const id = setTimeout(first, ms); return () => clearTimeout(id); }, [first, ms]);
 }
 
-/** In fast, hold, out: 0 → 1 → 0 over the show. */
+/** In, hold, out: 0 → 1 → 0 over the show (iOS's curve, never past). */
 function useShow(hold: number) {
   const k = useSharedValue(0);
   useEffect(() => {
-    k.set(withSequence(withTiming(1, { duration: 160, easing: Easing.out(Easing.quad) }), withDelay(hold, withTiming(0, { duration: 240 }))));
+    k.set(withSequence(micro(1), withDelay(hold, dismiss(0))));
   }, [k, hold]);
   return k;
 }
 
-/** Thin bars that streak across, the glitch around a show. */
+/** Thin bars that streak across once, the glitch around a show. */
 function Streaks({ color, rows }: { color: string; rows: number[] }) {
   const { width } = useWindowDimensions();
   const x = useSharedValue(-1);
-  useEffect(() => { x.set(withRepeat(withTiming(1, { duration: 420, easing: Easing.linear }), 3)); }, [x]);
+  useEffect(() => { x.set(timed(1, 420)); }, [x]);
   const a = useAnimatedStyle(() => ({ transform: [{ translateX: x.value * width }] }));
   return (
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, a]}>
@@ -42,7 +43,7 @@ function Streaks({ color, rows }: { color: string; rows: number[] }) {
 function Start({ moment, done }: { moment: Extract<Moment, { kind: 'start' }>; done: () => void }) {
   useAutoDone(done, 1500);
   const k = useShow(950);
-  const band = useAnimatedStyle(() => ({ opacity: k.value, transform: [{ scaleY: 0.2 + 0.8 * k.value }] }));
+  const band = useAnimatedStyle(() => ({ opacity: k.value }));
   const sj = subj(moment.subject);
   const { width } = useWindowDimensions();
   return (
@@ -80,7 +81,8 @@ function Target({ moment, done }: { moment: Extract<Moment, { kind: 'target' }>;
   useAutoDone(done, 1700);
   const f = useSharedValue(0);
   useEffect(() => {
-    f.set(withSequence(withTiming(1, { duration: 90 }), withTiming(0.2, { duration: 120 }), withTiming(1, { duration: 90 }), withDelay(900, withTiming(0, { duration: 300 }))));
+    // the alarm frame flashes twice (opacity only), holds, and goes
+    f.set(withSequence(withTiming(1, { duration: 90 }), withTiming(0.2, { duration: 120 }), withTiming(1, { duration: 90 }), withDelay(900, withTiming(0, M.leave))));
   }, [f]);
   const a = useAnimatedStyle(() => ({ opacity: f.value }));
   return (
@@ -97,7 +99,7 @@ function Target({ moment, done }: { moment: Extract<Moment, { kind: 'target' }>;
 function Record({ moment, done }: { moment: Extract<Moment, { kind: 'record' }>; done: () => void }) {
   useAutoDone(done, moment.level ? 2000 : 1600);
   const k = useShow(moment.level ? 1300 : 950);
-  const box = useAnimatedStyle(() => ({ opacity: k.value, transform: [{ scale: 0.92 + 0.08 * k.value }] }));
+  const box = useAnimatedStyle(() => ({ opacity: k.value, transform: [{ scale: 0.98 + 0.02 * k.value }] }));
   const sj = subj(moment.subject);
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 }}>

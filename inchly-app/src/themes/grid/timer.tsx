@@ -1,8 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { cancelAnimation, Easing, interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, interpolate, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Line, Path, Rect } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -17,37 +17,36 @@ import { focus, useT } from '@/theme';
 import { haptic, Press } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
+import { M as MOTION, micro, press as pressDown } from '@/ui/motion';
 import { Blink, Gradient, J, M, NIGHT as N, pad2, PINK, ScreenFrame, useSvgId, Window } from './parts';
 
-// 方眼 timer: a session file open on a dark desk. The grid behind it sways
-// slowly while the clock runs and stands still when it stops; the time sits in
-// a window named after what you're doing, in big monospaced figures.
+// 方眼 timer: a session file open on a dark desk, over a grid that bows a
+// little like a sheet of graph paper (still: MOTION.md); the time sits in a
+// window named after what you're doing, in big monospaced figures.
 
-/** The grid behind the timer: it sways while the clock runs, and turns pink past the target. */
-function SwayGrid({ live, over }: { live: boolean; over: boolean }) {
+/** The grid behind the timer; it turns pink past the target. It reads the clock itself, so only it ticks, not the page. */
+function SheetGrid() {
+  const over = useOver();
   const { width, height } = useWindowDimensions();
-  const s = useSharedValue(0);
-  useEffect(() => {
-    if (live) s.set(withRepeat(withTiming(1, { duration: 5200, easing: Easing.inOut(Easing.sin) }), -1, true));
-    else cancelAnimation(s);
-  }, [live, s]);
-  const a = useAnimatedStyle(() => ({ transform: [{ skewX: `${(s.value - 0.5) * 3}deg` }, { scaleY: 1 + s.value * 0.025 }] }));
-  const step = 28;
-  const d: string[] = [];
-  for (let y = -step; y <= height + step; y += step) {
-    const bow = Math.sin((y / height) * Math.PI) * 6;
-    d.push(`M-40 ${y} Q ${width / 2} ${y + bow} ${width + 40} ${y}`);
-  }
-  for (let x = -step * 2; x <= width + step * 2; x += step) {
-    const lean = (x - width / 2) * 0.05;
-    d.push(`M${x} -40 Q ${x + lean} ${height / 2} ${x - lean} ${height + 40}`);
-  }
+  const d = useMemo(() => {
+    const step = 28;
+    const lines: string[] = [];
+    for (let y = -step; y <= height + step; y += step) {
+      const bow = Math.sin((y / height) * Math.PI) * 6;
+      lines.push(`M-40 ${y} Q ${width / 2} ${y + bow} ${width + 40} ${y}`);
+    }
+    for (let x = -step * 2; x <= width + step * 2; x += step) {
+      const lean = (x - width / 2) * 0.05;
+      lines.push(`M${x} -40 Q ${x + lean} ${height / 2} ${x - lean} ${height + 40}`);
+    }
+    return lines;
+  }, [width, height]);
   return (
-    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, a]}>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Svg width={width} height={height}>
         <Path d={d.join(' ')} stroke={over ? 'rgba(255,91,216,0.22)' : 'rgba(243,243,255,0.08)'} strokeWidth={1} fill="none" />
       </Svg>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -57,11 +56,10 @@ function Page({ zones }: { zones: Record<Zone, ReactNode> }) {
   const running = useStore((s) => s.running);
   const paused = useStore((s) => s.paused);
   const name = subj(useStore((s) => s.subj)).name;
-  const over = useOver();
   return (
     <Screen bg={focus.bg} style={{ paddingBottom: insets.bottom + 14 }}>
       <StatusBar style="light" />
-      <SwayGrid live={running && !paused} over={over} />
+      <SheetGrid />
       <ScreenFrame top={insets.top + 2} bottom={Math.max(6, insets.bottom - 4)} color={N.frame} />
       {zones.head}
       <View style={{ flex: 1, minHeight: 14 }} />
@@ -231,7 +229,7 @@ function Main() {
   };
   return (
     <View style={{ alignItems: 'center', marginBottom: 16 }}>
-      <Pressable onPressIn={() => p.set(withTiming(1, { duration: 70 }))} onPressOut={() => p.set(withTiming(0, { duration: 220 }))} onPress={press}
+      <Pressable onPressIn={() => p.set(pressDown(1))} onPressOut={() => p.set(micro(0))} onPress={press}
         accessibilityRole="button" accessibilityLabel={playing ? '一時停止' : running ? '再開' : '開始'}
         style={{ height: 56, minWidth: 210, paddingHorizontal: 28, borderRadius: 28, borderWidth: 1, borderColor: N.ink, overflow: 'hidden', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
         {running ? null : <Gradient id={id} />}
@@ -294,20 +292,21 @@ function Commit({ onDone, disabled }: { onDone: () => void; disabled: boolean })
       if (off.get()) return;
       const m = max.get(), v = x.get();
       if (v > m * 0.7 || (e.velocityX > 900 && v > m * 0.35)) {
-        x.set(withTiming(m, { duration: 160 }, (done) => { if (done) scheduleOnRN(finish); }));
+        x.set(withTiming(m, MOTION.micro, (done) => { if (done) scheduleOnRN(finish); }));
       } else {
         x.set(withTiming(0, { duration: 240, easing: Easing.steps(6) }));
       }
     }));
   const knob = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
-  const fill = useAnimatedStyle(() => ({ width: x.value + KNOB + GAP * 2 }));
+  // the fill is the track's full width, slid in from the left (moving, not resizing, every frame)
+  const fill = useAnimatedStyle(() => ({ transform: [{ translateX: x.value + KNOB + GAP * 2 - w }] }), [w]);
   const lbl = useAnimatedStyle(() => ({ opacity: interpolate(x.value, [0, max.value * 0.6], [1, 0], 'clamp') }));
   return (
     <View onLayout={(e) => { const lw = e.nativeEvent.layout.width; setW(lw); max.set(Math.max(1, lw - 2 - KNOB - GAP * 2)); }}
       accessibilityRole="button" accessibilityLabel={LABEL} accessibilityState={{ disabled }}
       accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={() => { if (!disabled) onDone(); }}
       style={{ height: KNOB + GAP * 2 + 2, borderRadius: (KNOB + GAP * 2 + 2) / 2, borderWidth: 1, borderColor: N.frame, backgroundColor: 'rgba(243,243,255,0.04)', overflow: 'hidden', opacity: disabled ? 0.35 : 1 }}>
-      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, overflow: 'hidden', borderRadius: (KNOB + GAP * 2) / 2 }, fill]}>
+      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, width: w, overflow: 'hidden', borderRadius: (KNOB + GAP * 2) / 2 }, fill]}>
         <Gradient id={id} />
       </Animated.View>
       <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: KNOB + GAP, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', gap: 1 }, lbl]}>

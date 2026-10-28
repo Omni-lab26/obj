@@ -1,11 +1,13 @@
 import { BlurView } from 'expo-blur';
 import { ReactNode, useEffect, useState } from 'react';
-import { Dimensions, KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Dimensions, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ease, useT } from '../theme';
+import { useT } from '../theme';
+import { dismiss, M, move, present, timed } from './motion';
 
 // Bottom sheet. openSheet(close => <Content/>) from anywhere; drag the grabber
 // (or the top of the sheet) down to dismiss, or tap the scrim. A screen shown
@@ -43,9 +45,15 @@ export function SheetHost() {
 
   const finish = () => setRender(null);
   const close = () => {
-    y.set(withTiming(height.get() + 40, { duration: 280, easing: ease.out }, (done) => { if (done) scheduleOnRN(finish); }));
-    pop.set(withTiming(0, { duration: 200 }));
-    scrim.set(withTiming(0, { duration: 240 }));
+    y.set(withTiming(height.get() + 40, M.leave, (done) => { if (done) scheduleOnRN(finish); }));
+    pop.set(dismiss(0));
+    scrim.set(dismiss(0));
+  };
+  // pulled down and let go fast: it goes on at the finger's speed, and the host clears once it's out of sight
+  const thrown = (vy: number) => {
+    y.set(dismiss(height.get() + 40, vy));
+    scrim.set(dismiss(0));
+    setTimeout(finish, M.dismiss.duration * 1.5);
   };
   useEffect(() => {
     // close only moves shared values and clears this host, so the first one stays right
@@ -57,28 +65,27 @@ export function SheetHost() {
   useEffect(() => {
     if (render) {
       y.set(H);
-      y.set(withTiming(0, { duration: 420, easing: ease.ios }));
+      y.set(present(0));
       pop.set(0);
-      pop.set(withTiming(1, { duration: 340, easing: ease.ios }));
-      scrim.set(withTiming(1, { duration: 300 }));
+      pop.set(present(1));
+      scrim.set(timed(1, 330));
     }
   }, [render, H, y, scrim, pop]);
 
-  const [pan] = useState(() =>
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
-      onPanResponderMove: (_, g) => { y.set(Math.max(0, g.dy)); },
-      onPanResponderRelease: (_, g) => {
-        if (g.dy > 110 || g.vy > 1.1) close();
-        else y.set(withTiming(0, { duration: 300, easing: ease.ios }));
-      },
-    }),
-  );
+  // the grabber: the sheet follows the finger down on the UI thread, then goes or comes back keeping its speed
+  const [pan] = useState(() => Gesture.Pan()
+    .activeOffsetY(6)
+    .failOffsetX([-12, 12])
+    .onUpdate((e) => { y.value = Math.max(0, e.translationY); })
+    .onEnd((e) => {
+      if (e.translationY > 110 || e.velocityY > 1100) scheduleOnRN(thrown, e.velocityY);
+      else y.value = move(0, e.velocityY);
+    }));
 
   const sa = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   const ka = useAnimatedStyle(() => ({ opacity: scrim.value }));
-  // the centered pane fades in from a hair larger, as an iOS alert does — no overshoot
-  const pa = useAnimatedStyle(() => ({ opacity: pop.value, transform: [{ scale: 1.04 - pop.value * 0.04 }] }));
+  // the centered pane fades in from a touch smaller, settling without going past
+  const pa = useAnimatedStyle(() => ({ opacity: pop.value, transform: [{ scale: 0.98 + pop.value * 0.02 }] }));
   if (!render) return null;
   if (center) {
     return (
@@ -119,9 +126,11 @@ export function SheetHost() {
               <BlurView intensity={Platform.OS === 'web' ? 40 : 70} tint={t.dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
             </View>
           ) : null}
-          <View {...pan.panHandlers} style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>
-            <View style={{ width: 38, height: 5, borderRadius: 3, backgroundColor: t.line2 }} />
-          </View>
+          <GestureDetector gesture={pan}>
+            <View style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>
+              <View style={{ width: 38, height: 5, borderRadius: 3, backgroundColor: t.line2 }} />
+            </View>
+          </GestureDetector>
           <ScrollView bounces={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 20 }}>
             {render(close)}
           </ScrollView>

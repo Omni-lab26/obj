@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { PEOPLE } from '../../data';
 import { MAX_WALKERS } from '../../lib/walkers';
 import { Txt } from '../base';
+import { M, timed } from '../motion';
 import { walkerTags } from './shared';
 
 // On the glass floor, in 眺める: each walker carries a small tag — who they
@@ -30,7 +31,7 @@ export function WalkerTags() {
 function Tag({ slot, id }: { slot: number; id: number }) {
   const p = PEOPLE[id % PEOPLE.length];
   const shown = useSharedValue(0);
-  useEffect(() => { shown.set(withTiming(1, { duration: 600 })); }, [shown]);
+  useEffect(() => { shown.set(timed(1, M.fadeIn)); }, [shown]);
   const a = useAnimatedStyle(() => {
     const t = walkerTags.value;
     const x = t[slot * 4] ?? 0, y = t[slot * 4 + 1] ?? 0, o = t[slot * 4 + 2] ?? 0;

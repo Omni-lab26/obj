@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PEOPLE, Uni, UNIS } from '@/data';
 import { minutesIn } from '@/lib/history';
 import { getState, toggleFollow, toggleIn, useStore } from '@/store';
-import { ease, font, hair, noOutline, radius, useT } from '@/theme';
+import { font, hair, noOutline, radius, useT } from '@/theme';
 import { Avatar, Btn, Empty, haptic, Press, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
+import { dismiss, fadeIn, present } from '@/ui/motion';
 import { Checkbox } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
 import { openSheet } from '@/ui/Sheet';
@@ -22,18 +23,16 @@ const COLS = [56, 64, 54, 30];
 
 function Skeleton() {
   const t = useT();
-  const o = useSharedValue(1);
-  useEffect(() => { o.value = withRepeat(withTiming(0.45, { duration: 650 }), -1, true); }, [o]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value }));
+  // still gray bars, not breathing (nothing loops: MOTION.md)
   return (
-    <Animated.View style={a} accessibilityLabel="読み込み中">
+    <View accessibilityLabel="読み込み中">
       {[0, 1, 2, 3].map((i) => (
         <View key={i} style={{ paddingHorizontal: 20, paddingVertical: 14, gap: 8, borderBottomWidth: hair, borderBottomColor: t.line }}>
           <View style={{ width: '60%', height: 12, borderRadius: 6, backgroundColor: t.sunken }} />
           <View style={{ width: '35%', height: 12, borderRadius: 6, backgroundColor: t.sunken }} />
         </View>
       ))}
-    </Animated.View>
+    </View>
   );
 }
 
@@ -93,7 +92,7 @@ function Tray({ picked, onGo }: { picked: string[]; onGo: () => void }) {
   const insets = useSafeAreaInsets();
   const show = picked.length >= 2;
   const y = useSharedValue(200);
-  useEffect(() => { y.value = withTiming(show ? 0 : 200, { duration: 360, easing: ease.out }); }, [show, y]);
+  useEffect(() => { y.value = show ? present(0) : dismiss(200); }, [show, y]);
   const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   return (
     <Animated.View pointerEvents={show ? 'auto' : 'none'}
@@ -156,7 +155,7 @@ export default function Search() {
   } else if (kind === 'uni') {
     const list = UNIS.filter((u) => !q || (u.n + u.f).includes(q));
     body = list.length ? (
-      <Animated.View entering={FadeIn.duration(180)}>
+      <Animated.View entering={fadeIn()}>
         {list.map((u) => (
           <View key={u.n} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: hair, borderBottomColor: t.line }}>
             <View style={{ flex: 1, minWidth: 0 }}>
@@ -177,7 +176,7 @@ export default function Search() {
   } else {
     const list = PEOPLE.filter((p) => !blocked.includes(p.n) && (!q || (p.n + p.h + p.g).includes(q)));
     body = list.length ? (
-      <Animated.View entering={FadeIn.duration(180)} style={{ paddingTop: 4 }}>
+      <Animated.View entering={fadeIn()} style={{ paddingTop: 4 }}>
         {list.map((p) => {
           const on = following.includes(p.h);
           return (

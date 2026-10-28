@@ -1,12 +1,11 @@
 import { View } from 'react-native';
-import Animated from 'react-native-reanimated';
 
 import { T } from '@/themes/kit';
 import type { TabBarProps, TabItem } from '@/themes/types';
 import { haptic, Press } from '@/ui/base';
 import { TAB_BAR_H, tabBarBottom } from '@/ui/Chrome';
 import { useLook } from './look';
-import { Cursor, useBlink } from './ui';
+import { Cursor } from './ui';
 
 // The tab bar as a command window: the tabs are words, the ▶ cursor sits on
 // the one you're on. The middle one (勉強) is a box of its own, and shows the
@@ -34,17 +33,16 @@ export function TabBar({ items, running, paused, mins, insets }: TabBarProps) {
 function Tab({ it, running, paused, mins }: { it: TabItem; running: boolean; paused: boolean; mins: number }) {
   const L = useLook();
   const live = it.center && running;
-  const dot = useBlink(live && !paused, 450, 0.2);
   const word = WORD[it.name] ?? it.label;
   const label = it.center ? (running ? `${it.label} · 勉強中 ${mins}分` : `${it.label}（時間割・ToDo・タイマー）`) : it.label;
   return (
     <Press onPress={() => { if (it.center) haptic.soft(); it.onPress(); }} haptics={!it.center} scale={0.92} accessibilityRole="tab" accessibilityState={{ selected: it.focused }} accessibilityLabel={label}
       style={{ flex: it.center ? 1.45 : 1, height: TAB_BAR_H - 14, alignItems: 'center', justifyContent: 'center' }}>
       <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 3 }, it.center ? { height: 34, paddingHorizontal: 7, borderWidth: 1.5, borderColor: live ? (paused ? L.exp : L.hp) : it.focused ? L.cursor : L.edge, backgroundColor: live ? L.faint : 'transparent' } : null]}>
-        <View style={{ width: 7, opacity: it.focused ? 1 : 0 }}><Cursor color={L.cursor} px={1.2} still={!it.focused} /></View>
+        <View style={{ width: 7, opacity: it.focused ? 1 : 0 }}><Cursor color={L.cursor} px={1.2} /></View>
         {live ? (
           <>
-            <Animated.View style={[{ width: 6, height: 6, backgroundColor: paused ? L.exp : L.hp }, dot]} />
+            <View style={{ width: 6, height: 6, backgroundColor: paused ? L.exp : L.hp }} />
             <T size={13} lh={18} color={L.text} numberOfLines={1}>{`${mins}分`}</T>
           </>
         ) : (

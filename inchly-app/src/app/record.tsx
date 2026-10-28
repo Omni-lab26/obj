@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { ReactNode, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -14,6 +14,7 @@ import { Empty, haptic, Press, SubjCoin, SubjTile, Txt } from '@/ui/base';
 import { ContentHints } from '@/ui/ContentHints';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
+import { fadeIn } from '@/ui/motion';
 import { Stamp } from '@/ui/Sticker';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
@@ -193,7 +194,7 @@ export default function Record() {
       </KeyboardAvoidingView>
 
       {phase === 'done' ? (
-        <Animated.View entering={FadeIn.duration(150)} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(244,245,248,0.6)' }}>
+        <Animated.View entering={fadeIn()} pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(244,245,248,0.6)' }}>
           <Stamp id="erai" size={150} pop />
         </Animated.View>
       ) : null}

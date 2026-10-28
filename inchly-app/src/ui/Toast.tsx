@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeOutUp, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { ease, hair, lift, useT } from '../theme';
+import { hair, lift, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
 import { Sticker } from './Sticker';
 import { Pane } from './Glass';
+import { dismiss as away, fadeOut, M, micro, move, present } from './motion';
 
 // Toast stack (bencho "notification stack"): newest in front, the two behind
 // peek out above it. Tapping the stack spreads it into a list; it collapses
@@ -41,6 +42,9 @@ export function toast(title: string, sub?: string, action?: Action) {
   if (action) haptic.soft();
 }
 
+/** Taken off once a flick has carried it out of sight. */
+const dismissAfter = (id: number) => { setTimeout(() => dismiss(id), M.dismiss.duration); };
+
 const PEEK = 8;
 const GAP = 66;
 
@@ -53,9 +57,10 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
     const ty = spread ? index * GAP : -index * PEEK;
     const ts = spread ? 1 : 1 - index * 0.05;
     const to = index > 2 ? 0 : spread || index === 0 ? 1 : 0.9 - index * 0.2;
-    y.value = withSpring(ty, { damping: 18, stiffness: 220, mass: 0.8 });
-    s.value = withTiming(ts, { duration: 260, easing: ease.out });
-    o.value = withTiming(to, { duration: 200 });
+    // it comes down and the stack makes room, settling without a bounce
+    y.value = present(ty);
+    s.value = micro(ts);
+    o.value = micro(to);
   }, [index, spread, y, s, o]);
   // flick it up to dismiss: it follows the finger up (and only a little down)
   const drag = useSharedValue(0);
@@ -63,8 +68,10 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
     .onUpdate((e) => { drag.set(e.translationY < 0 ? e.translationY : e.translationY * 0.25); })
     .onEnd((e) => {
       if (e.translationY < -22 || e.velocityY < -450) {
-        drag.set(withTiming(-140, { duration: 160 }, (done) => { if (done) scheduleOnRN(dismiss, item.id); }));
-      } else drag.set(withSpring(0, { damping: 18, stiffness: 260 }));
+        // away up at the finger's speed; it's taken off once it's out of sight
+        drag.set(away(-140, Math.min(e.velocityY, -600)));
+        scheduleOnRN(dismissAfter, item.id);
+      } else drag.set(move(0, e.velocityY));
     }), [drag, item.id]);
   const a = useAnimatedStyle(() => ({
     opacity: o.value * (1 - Math.min(0.8, Math.max(0, -drag.value) / 140)),
@@ -72,7 +79,7 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
   }));
   return (
     // the exit animation sits on its own layer, so it doesn't fight the stack's opacity and position
-    <Animated.View exiting={FadeOutUp.duration(220)} style={{ position: 'absolute', left: 0, right: 0, zIndex: 10 - index }}>
+    <Animated.View exiting={fadeOut()} style={{ position: 'absolute', left: 0, right: 0, zIndex: 10 - index }}>
       <GestureDetector gesture={flick}>
         <Animated.View style={a}>
           <Pressable onPress={onPress}

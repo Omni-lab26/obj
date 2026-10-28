@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { View, ViewStyle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { Easing, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { SharedValue, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Line, Rect } from 'react-native-svg';
 
@@ -10,6 +10,7 @@ import { useStore } from '../store';
 import { lift, radius, useT } from '../theme';
 import { cascade, useAppear } from './appear';
 import { haptic, Press, SubjTile, Txt } from './base';
+import { move } from './motion';
 import { breakdownSheet } from './Breakdown';
 import { useSeries } from './series';
 import { Pane } from './Glass';
@@ -25,7 +26,6 @@ const WD = ['日', '月', '火', '水', '木', '金', '土'];
 const PAGES = 2;
 /** Every card's height (padding included). */
 export const DECK_H = 312;
-const CLICK = { duration: 260, easing: Easing.bezier(0.2, 0.9, 0.25, 1) };
 
 export function GraphDeck({ last }: { last: ReactNode }) {
   const t = useT();
@@ -56,7 +56,7 @@ export function GraphDeck({ last }: { last: ReactNode }) {
       else if (e.translationX > step * 0.18 || e.velocityX > 500) p -= 1;
       p = Math.max(0, Math.min(PAGES - 1, p));
       if (p !== page.value) { page.value = p; scheduleOnRN(turned, p); }
-      x.value = withTiming(-p * step, CLICK);
+      x.value = move(-p * step, e.velocityX);
     }), [step]); // eslint-disable-line react-hooks/exhaustive-deps
   const row = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   // keep the current card in place if the width changes (rotation, split view)
@@ -65,7 +65,7 @@ export function GraphDeck({ last }: { last: ReactNode }) {
   const go = (d: number) => {
     const p = Math.max(0, Math.min(PAGES - 1, page.get() + d));
     page.set(p);
-    x.set(withTiming(-p * step, CLICK));
+    x.set(move(-p * step));
     setShown(p);
   };
 
@@ -143,7 +143,7 @@ function WeekPage({ w, h }: { w: number; h: number }) {
   const used = series.list.filter((x) => days.some((d) => (d.parts[x.key] ?? 0) > 0));
   const prev = useMemo(() => Array.from({ length: 7 }, (_, i) => dayOf(sessions, 7 + i).min).reduce((a, b) => a + b, 0), [sessions]);
   const [sel, setSel] = useState<number | null>(null);
-  const appear = useAppear(100, 760);
+  const appear = useAppear(100);
   const total = days.reduce((a, d) => a + d.min, 0);
   const d = (total - prev) / 60;
   const ch = Math.max(90, h - 28 - 62 - 12 - 18 - 40); // card minus padding, head, gaps, labels, legend or the day's detail

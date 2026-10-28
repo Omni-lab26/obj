@@ -1,27 +1,28 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { T } from '@/themes/kit';
 import type { TabBarProps, TabItem } from '@/themes/types';
 import { haptic, Press } from '@/ui/base';
 import { TAB_BAR_H, tabBarBottom } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
+import { micro } from '@/ui/motion';
 import { INK } from './paint';
 import { Splat } from './parts';
 
 // インク's tab bar: a black sticker strip with a white edge. The tab you're
-// on sits on a fresh pink splat that lands with a wobble; the middle is a
-// yellow splat that shows the minutes while you study.
+// on sits on a fresh pink splat that fades in (no wobble: MOTION.md); the
+// middle is a yellow splat that shows the minutes while you study.
 
 const H = TAB_BAR_H; // the room every screen leaves (Chrome.tsx)
 
 function Tab({ it }: { it: TabItem }) {
   const s = useSharedValue(it.focused ? 1 : 0);
   useEffect(() => {
-    s.set(it.focused ? withSequence(withTiming(1.25, { duration: 110 }), withSpring(1, { duration: 520, dampingRatio: 0.35 })) : withTiming(0, { duration: 140 }));
+    s.set(micro(it.focused ? 1 : 0));
   }, [it.focused, s]);
-  const a = useAnimatedStyle(() => ({ opacity: Math.min(1, s.value), transform: [{ scaleX: s.value }, { scaleY: s.value > 1 ? 2 - s.value : s.value }] }));
+  const a = useAnimatedStyle(() => ({ opacity: s.value, transform: [{ scale: 0.98 + 0.02 * s.value }] }));
   return (
     <Press onPress={it.onPress} scale={0.86} accessibilityRole="tab" accessibilityState={{ selected: it.focused }} accessibilityLabel={it.label}
       style={{ flex: 1, height: H - 8, alignItems: 'center', justifyContent: 'center' }}>
@@ -34,21 +35,15 @@ function Tab({ it }: { it: TabItem }) {
 }
 
 function Center({ it, running, paused, mins }: { it: TabItem; running: boolean; paused: boolean; mins: number }) {
-  const breath = useSharedValue(1);
-  const live = running && !paused;
-  useEffect(() => {
-    breath.set(live ? withRepeat(withSequence(withTiming(1.07, { duration: 900 }), withTiming(1, { duration: 900 })), -1) : withTiming(1));
-  }, [live, breath]);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: breath.value }, { rotate: '-6deg' }] }));
   return (
     <View style={{ flex: 1.15, alignItems: 'center' }}>
       <Press onPress={() => { haptic.soft(); it.onPress(); }} haptics={false} scale={0.86} hitSlop={{ top: 8, bottom: 8 }}
         accessibilityRole="tab" accessibilityState={{ selected: it.focused }}
         accessibilityLabel={running ? `${it.label} · 勉強中 ${mins}分` : `${it.label}（時間割・ToDo・タイマー）`}
         style={{ width: 64, height: H - 6, alignItems: 'center', justifyContent: 'center' }}>
-        <Animated.View pointerEvents="none" style={[{ position: 'absolute' }, a]}>
+        <View pointerEvents="none" style={{ position: 'absolute', transform: [{ rotate: '-6deg' }] }}>
           <Splat size={84} color={paused ? '#BDBDBD' : INK.yellow} seed="center" drops={4} />
-        </Animated.View>
+        </View>
         {running ? (
           <View style={{ alignItems: 'center' }}>
             <T f="heavy" size={mins >= 100 ? 15 : 18} lh={21} color={INK.black} num>{mins}</T>

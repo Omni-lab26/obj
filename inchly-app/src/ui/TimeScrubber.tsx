@@ -7,14 +7,14 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { font, useT } from '../theme';
 import { haptic } from './base';
+import { M, move } from './motion';
 
 // A ruler you drag to set a time; fling it and it coasts, then snaps to the
-// nearest step. Everything that moves runs on the UI thread: the ticks are one
+// nearest step without going past it. Everything that moves runs on the UI thread: the ticks are one
 // static strip slid by a single transform, and the edges fade under a gradient,
 // so a drag never waits on React. React only hears about whole steps (for the
 // readout and a haptic tick) and the final value when the ruler comes to rest.
 const NEEDLE = '#E5484D';
-const SNAP = Easing.bezier(0.24, 1.34, 0.38, 1);
 const H = 58;
 
 type Props = {
@@ -52,7 +52,8 @@ export const TimeScrubber = memo(function TimeScrubber({ value, onChange, onPrev
     if (touching.get()) return;
     const diff = Math.abs(cur.get() - value);
     if (diff < 0.001) return;
-    cur.set(diff <= 0.05 ? withTiming(value, { duration: 1000, easing: Easing.linear }) : withTiming(value, { duration: 420, easing: SNAP }));
+    // a countdown's second glides at an even pace, like a clock's hand; a jump slides there
+    cur.set(diff <= 0.05 ? withTiming(value, { duration: 1000, easing: Easing.linear }) : move(value));
   }, [value, cur, touching]);
 
   const stepTo = (v: number) => { haptic.tap(); cb.current.onPreview?.(v); };
@@ -78,7 +79,7 @@ export const TimeScrubber = memo(function TimeScrubber({ value, onChange, onPrev
         cur.value = withDecay({ velocity: -e.velocityX / px, deceleration: 0.995, clamp: [min, max] }, (finished) => {
           if (!finished) return; // a new touch took over
           const target = Math.max(min, Math.min(max, Math.round(cur.value / step) * step));
-          cur.value = withTiming(target, { duration: 260, easing: SNAP }, (done) => {
+          cur.value = withTiming(target, M.micro, (done) => {
             if (!done) return;
             touching.value = 0;
             scheduleOnRN(settle, target);
@@ -89,7 +90,7 @@ export const TimeScrubber = memo(function TimeScrubber({ value, onChange, onPrev
         if (ok) return;
         // a tap without a drag: snap where it is
         const target = Math.max(min, Math.min(max, Math.round(cur.value / step) * step));
-        cur.value = withTiming(target, { duration: 200, easing: SNAP }, (done) => { if (done) { touching.value = 0; } });
+        cur.value = withTiming(target, M.micro, (done) => { if (done) { touching.value = 0; } });
       });
     // gesture callbacks are worklets; settle/stepTo read the latest callbacks from a ref
   }, [min, max, step, px, cur, touching, start]);

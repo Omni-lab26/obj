@@ -1,11 +1,12 @@
 import { memo, ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AccessibilityRole, Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Defs, Pattern, Rect } from 'react-native-svg';
 
 import { T } from '@/themes/kit';
 import { font } from '@/theme';
 import { haptic } from '@/ui/base';
+import { M, micro } from '@/ui/motion';
 import { P, sit } from './look';
 
 // The pieces ピクセル箱 is built from: pixel art drawn from rows of letters,
@@ -97,13 +98,11 @@ const LINES: Record<Mood, string[]> = {
   cheer: ['やった！', 'すごい！'],
 };
 
-/** The pal: blinks, bobs as it works, dozes, cheers — and answers a tap with a hop and a word. */
+/** The pal: blinks now and then, dozes, cheers — and answers a tap with a happy face and a word (it stands still: nothing bobs or hops). */
 export function Pal({ mood, px = 4, talk = true, label = 'パル' }: { mood: Mood; px?: number; talk?: boolean; label?: string }) {
   const [blink, setBlink] = useState(false);
   const [poked, setPoked] = useState<string | null>(null);
   const line = useRef(0);
-  const y = useSharedValue(0);
-  const hop = useSharedValue(0);
   // blink now and then
   useEffect(() => {
     if (mood === 'sleep') return;
@@ -112,25 +111,13 @@ export function Pal({ mood, px = 4, talk = true, label = 'パル' }: { mood: Moo
     next();
     return () => clearTimeout(id);
   }, [mood]);
-  // bob: slow when idle or asleep, quick while working, hops when happy
-  useEffect(() => {
-    const u = px;
-    cancelAnimation(y);
-    if (mood === 'work') y.set(withRepeat(withSequence(withTiming(-u, { duration: 220, easing: STEPS }), withTiming(0, { duration: 220, easing: STEPS })), -1));
-    else if (mood === 'happy' || mood === 'cheer') y.set(withRepeat(withSequence(withTiming(-3 * u, { duration: 180, easing: STEPS }), withTiming(0, { duration: 180, easing: STEPS }), withDelay(900, withTiming(0, { duration: 1 }))), -1));
-    else if (mood === 'sleep') y.set(withRepeat(withSequence(withTiming(u * 0.5, { duration: 1400, easing: STEPS }), withTiming(0, { duration: 1400, easing: STEPS })), -1));
-    else y.set(withRepeat(withSequence(withTiming(-u * 0.5, { duration: 700, easing: STEPS }), withTiming(0, { duration: 700, easing: STEPS })), -1));
-    return () => cancelAnimation(y);
-  }, [mood, px, y]);
   useEffect(() => {
     if (!poked) return;
     const id = setTimeout(() => setPoked(null), 1700);
     return () => clearTimeout(id);
   }, [poked]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value + hop.value }] }));
   const poke = () => {
     haptic.soft();
-    hop.set(withSequence(withTiming(-4 * px, { duration: 120, easing: STEPS }), withTiming(0, { duration: 160, easing: STEPS })));
     const ls = LINES[mood];
     setPoked(ls[line.current++ % ls.length]);
   };
@@ -145,9 +132,7 @@ export function Pal({ mood, px = 4, talk = true, label = 'パル' }: { mood: Moo
       {talk && poked ? <Bubble text={poked} right={w - 2 * px} top={-2} /> : null}
       {mood === 'sleep' && !poked ? <Zzz px={px} /> : null}
       <Pressable onPress={poke} accessibilityRole="button" accessibilityLabel={`${label}をつつく`} hitSlop={8}>
-        <Animated.View style={a}>
-          <PixelArt rows={rows} px={px} colors={PAL_COLORS} />
-        </Animated.View>
+        <PixelArt rows={rows} px={px} colors={PAL_COLORS} />
       </Pressable>
     </View>
   );
@@ -155,9 +140,10 @@ export function Pal({ mood, px = 4, talk = true, label = 'パル' }: { mood: Moo
 
 /** A speech bubble to the left of whoever says it. */
 function Bubble({ text, right, top }: { text: string; right: number; top: number }) {
-  const s = useSharedValue(0.6);
-  useEffect(() => { s.set(withTiming(1, { duration: 120, easing: STEPS })); }, [s]);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
+  // it fades in where it is (no pop)
+  const s = useSharedValue(0);
+  useEffect(() => { s.set(micro(1)); }, [s]);
+  const a = useAnimatedStyle(() => ({ opacity: s.value }));
   return (
     <Animated.View pointerEvents="none" style={[{ position: 'absolute', right, top, zIndex: 3, maxWidth: 170, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 10, backgroundColor: P.card, boxShadow: sit(2) }, a]}>
       <T f="pixel" size={12} lh={16} numberOfLines={1}>{text}</T>
@@ -165,15 +151,12 @@ function Bubble({ text, right, top }: { text: string; right: number; top: number
   );
 }
 
-/** Zs rising off a dozing pal. */
+/** A z over a dozing pal (it doesn't drift up: nothing loops). */
 function Zzz({ px }: { px: number }) {
-  const t = useSharedValue(0);
-  useEffect(() => { t.set(withRepeat(withTiming(1, { duration: 1800, easing: STEPS }), -1)); return () => cancelAnimation(t); }, [t]);
-  const a = useAnimatedStyle(() => ({ opacity: 1 - t.value * 0.8, transform: [{ translateY: -t.value * 6 * px }, { translateX: t.value * 2 * px }] }));
   return (
-    <Animated.View pointerEvents="none" style={[{ position: 'absolute', right: -px, top: 0 }, a]}>
+    <View pointerEvents="none" style={{ position: 'absolute', right: -px, top: 0, opacity: 0.7, transform: [{ translateY: -3 * px }, { translateX: px }] }}>
       <T f="label" size={3 * px} color={P.ink3}>z</T>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -183,24 +166,12 @@ const FLAME = [
   ['....C...', '...CC...', '...CCC..', '..CCSC..', '..CSSCC.', '.CCSSSC.', '.CSSWSCC', 'CCSWWSSC', 'CSSWWSSC', '.CCSSCC.'],
 ];
 const FLAME_COLORS = { C: P.coral, S: P.sun, W: '#FFF6D6' };
-/** The streak's flame, flickering between two frames; pass `jump` to make it leap. */
-export function Flame({ px = 4, lit = true, jump = 0 }: { px?: number; lit?: boolean; jump?: number }) {
-  const [f, setF] = useState(0);
-  const y = useSharedValue(0);
-  useEffect(() => {
-    if (!lit) return;
-    const id = setInterval(() => setF((x) => 1 - x), 420);
-    return () => clearInterval(id);
-  }, [lit]);
-  useEffect(() => {
-    if (!jump) return;
-    y.set(withSequence(withTiming(-3 * px, { duration: 110, easing: STEPS }), withTiming(0, { duration: 160, easing: STEPS })));
-  }, [jump, px, y]);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+/** The streak's flame (one frame: it doesn't flicker or leap — nothing loops or hops, and nothing redraws it twice a second). */
+export function Flame({ px = 4, lit = true }: { px?: number; lit?: boolean }) {
   return (
-    <Animated.View style={[{ opacity: lit ? 1 : 0.35 }, a]}>
-      <PixelArt rows={FLAME[f]} px={px} colors={lit ? FLAME_COLORS : { C: P.ink3, S: P.sunk, W: P.card }} />
-    </Animated.View>
+    <View style={{ opacity: lit ? 1 : 0.35 }}>
+      <PixelArt rows={FLAME[0]} px={px} colors={lit ? FLAME_COLORS : { C: P.ink3, S: P.sunk, W: P.card }} />
+    </View>
   );
 }
 
@@ -244,8 +215,8 @@ export function Key({ onPress, label, children, color = P.card, depth = 3, radiu
   const a = useAnimatedStyle(() => ({ transform: [{ translateY: depth * p.value }] }));
   return (
     <Pressable accessibilityRole={role} accessibilityLabel={label} accessibilityState={{ disabled, selected, checked }} disabled={disabled} hitSlop={6}
-      onPressIn={() => p.set(withTiming(1, { duration: 40 }))}
-      onPressOut={() => p.set(withTiming(0, { duration: 140, easing: STEPS }))}
+      onPressIn={() => p.set(withTiming(1, M.press))}
+      onPressOut={() => p.set(withTiming(0, { duration: M.micro.duration, easing: STEPS }))}
       onPress={() => { if (feel !== 'none') haptic[feel](); onPress?.(); }}
       style={[{ paddingBottom: depth, opacity: disabled ? 0.4 : 1 }, style]}>
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: depth, bottom: 0, borderRadius: radius, backgroundColor: P.ink }} />

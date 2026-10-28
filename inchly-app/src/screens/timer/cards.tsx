@@ -3,15 +3,15 @@ import { ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore }
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  FadeIn, FadeOut, interpolateColor, LayoutAnimationConfig, LinearTransition, makeMutable, type SharedValue,
-  useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withDelay, withTiming, ZoomOut,
+  interpolateColor, LayoutAnimationConfig, makeMutable, type SharedValue,
+  useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withDelay, withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { subj } from '@/data';
 import type { Zone, Zones } from '@/screens/layout';
-import { jpHm, session, startBlock, useSession } from '@/screens/model';
+import { jpHm, session, startBlock, useTicking } from '@/screens/model';
 import { jpDate } from '@/lib/time';
 import { deckOf, endOf, suggestion, type Block } from '@/lib/timetable';
 import { type Backdrop, useDesign } from '@/design';
@@ -23,6 +23,7 @@ import { Icon } from '@/ui/Icon';
 import { orderSheet } from '@/ui/OrderSheet';
 import { PlanArt } from '@/ui/PlanArt';
 import { planSheet } from '@/ui/PlanSheets';
+import { fadeIn, fadeOut, layout, M, micro } from '@/ui/motion';
 import { glyphOf, SubjectGlyph } from '@/ui/SubjectGlyph';
 import { openSheet } from '@/ui/Sheet';
 import { TIME_FONTS, timeFontOf } from '@/ui/timeFonts';
@@ -96,8 +97,8 @@ export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
   useEffect(() => () => looking.set(false), []);
   // faded out, the page also steps aside (its layout kept), so nothing of it is in the way of the background
   const fade = useAnimatedStyle(() => ({
-    opacity: withTiming(look ? 0 : 1, { duration: 450 }),
-    transform: [{ translateX: look ? withDelay(460, withTiming(10000, { duration: 0 })) : 0 }],
+    opacity: micro(look ? 0 : 1),
+    transform: [{ translateX: look ? withDelay(M.micro.duration, withTiming(10000, { duration: 0 })) : 0 }],
   }), [look]);
   const wrap = (n: ReactNode, grow?: boolean) => (
     <Animated.View pointerEvents={look ? 'none' : 'box-none'} style={[grow ? { flex: 1, alignSelf: 'stretch' } : null, fade]}>{n}</Animated.View>
@@ -164,16 +165,17 @@ const HINTS: Record<Backdrop, string> = {
 };
 /** 眺める: the time, small and quiet at the top, a way back, and (for a while) what you can do. */
 function Looking({ bg }: { bg: Backdrop }) {
-  const ss = useSession();
+  const paused = useStore((s) => s.paused);
+  const time = useTicking((s, now) => fmt(s.running ? elapsedOf(s, now) : 0));
   const tone = isLight(bg) ? ON_LIGHT : ON_DARK;
   const [hint, setHint] = useState(true);
   useEffect(() => { const id = setTimeout(() => setHint(false), 6000); return () => clearTimeout(id); }, []);
   return (
-    <Animated.View entering={FadeIn.duration(600).delay(200)} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+    <Animated.View entering={fadeIn()} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
       {bg === 'walk' ? <WalkerTags /> : null}
       <View pointerEvents="box-none" style={{ position: 'absolute', top: 64, left: 0, right: 0, alignItems: 'center', gap: 8 }}>
-        <Txt num size={34} w="700" color={ss.paused ? (tone.light ? CRIMSON : CRIMSON_ON_DARK) : tone.ink} style={{ textShadowColor: tone.shade, textShadowRadius: 12 }}>
-          {fmt(ss.running ? ss.elapsed : 0)}
+        <Txt num size={34} w="700" color={paused ? (tone.light ? CRIMSON : CRIMSON_ON_DARK) : tone.ink} style={{ textShadowColor: tone.shade, textShadowRadius: 12 }}>
+          {time}
         </Txt>
         <Press onPress={() => { haptic.tap(); looking.set(false); }} scale={0.94} hitSlop={8} accessibilityLabel="眺めるのをやめる"
           style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, backgroundColor: tone.chip, justifyContent: 'center' }}>
@@ -181,7 +183,7 @@ function Looking({ bg }: { bg: Backdrop }) {
         </Press>
       </View>
       {hint ? (
-        <Animated.View exiting={FadeOut.duration(800)} pointerEvents="none" style={{ position: 'absolute', bottom: 46, left: 0, right: 0, alignItems: 'center' }}>
+        <Animated.View exiting={fadeOut()} pointerEvents="none" style={{ position: 'absolute', bottom: 46, left: 0, right: 0, alignItems: 'center' }}>
           <Txt size={12.5} color={tone.ink2}>{HINTS[bg]}</Txt>
         </Animated.View>
       ) : null}
@@ -406,7 +408,7 @@ function Slide({ i, x, step, w, h, k, tone, centered, onFocus, children }: {
   });
   const dim = useAnimatedStyle(() => ({ opacity: (tone.light ? 0.55 : DIM) * Math.min(1, Math.abs(x.value - i * step) / step) }));
   return (
-    <Animated.View layout={LinearTransition.springify().damping(20).stiffness(180)} entering={FadeIn.duration(260)} exiting={ZoomOut.duration(260)} style={{ width: w, height: h }}>
+    <Animated.View layout={layout()} entering={fadeIn()} exiting={fadeOut()} style={{ width: w, height: h }}>
       <Animated.View style={[{ flex: 1, borderRadius: CORNER * w, overflow: 'hidden' }, a]}>
         {children}
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tone.light ? FLOOR : '#000000' }, dim]} />
@@ -420,14 +422,16 @@ function Slide({ i, x, step, w, h, k, tone, centered, onFocus, children }: {
 type CardState = 'idle' | 'live' | 'paused' | 'held';
 type CardProps = { b: Block; w: number; h: number; live: boolean; held?: Held; begin: (b: Block) => void; record: (h: Held) => void; more: () => void };
 
-/** A plan's card. Only the one under way ticks (LiveCard); the others are still. */
+/** A plan's card. The others are still; the one under way (LiveCard) redraws only when it pauses or goes past its plan — its time and line tick on their own (CardClock). */
 function PlanCard(p: CardProps) {
   if (p.live) return <LiveCard {...p} />;
-  return <CardFace {...p} state={p.held ? 'held' : 'idle'} sec={p.held?.sec ?? 0} plan={(p.b.min ?? 0) * 60} />;
+  return <CardFace {...p} state={p.held ? 'held' : 'idle'} plan={(p.b.min ?? 0) * 60} over={false} />;
 }
 function LiveCard(p: CardProps) {
-  const ss = useSession();
-  return <CardFace {...p} state={ss.paused ? 'paused' : 'live'} sec={ss.running ? ss.elapsed : 0} plan={ss.plan ?? (p.b.min ?? 0) * 60} />;
+  const paused = useStore((s) => s.paused);
+  const plan = useStore((s) => (s.planMin ? Math.round(s.planMin * 60) : null)) ?? (p.b.min ?? 0) * 60;
+  const over = useTicking((s, now) => s.running && plan > 0 && elapsedOf(s, now) > plan);
+  return <CardFace {...p} state={paused ? 'paused' : 'live'} plan={plan} over={over} />;
 }
 
 /** The card's time: m:ss, h:mm:ss from an hour on. */
@@ -446,13 +450,13 @@ const clock = (sec: number) => {
  * plan +4:12 in orange, the line going on in orange too); and the buttons:
  * ✎ edits the plan, ▶ / ❚❚ big in the middle, ✓ ends and records (not started: ends the plan).
  */
-function CardFace({ b, w, state, sec, plan, held, begin, record, more, h }: CardProps & { state: CardState; sec: number; plan: number; h: number }) {
+function CardFace({ b, w, state, plan, over, held, begin, record, more, h }: CardProps & { state: CardState; plan: number; over: boolean }) {
   const sj = subj(b.s);
   const k = w / CARD_W;
   const fs = (v: number) => Math.max(v * 0.85, v * k);
   const pad = Math.round(18 * k);
   const running = state === 'live' || state === 'paused';
-  const over = running && plan > 0 && sec > plan;
+  const heldMin = Math.max(1, Math.round((held?.sec ?? 0) / 60));
   const face = timeFontOf(useDesign().timeFont);
   const fav = useStore((s) => s.favorites.some((f) => sameFav(f, b)));
   const span = b.start ? (b.min ? `${b.start}–${endOf(b)}` : `${b.start}から`) : '時刻なし';
@@ -460,13 +464,9 @@ function CardFace({ b, w, state, sec, plan, held, begin, record, more, h }: Card
   // the picture takes what the rest leaves, up to a square
   const rest = 2 * pad + 62 * k + 26 * k + face.size * w * 0.42 + 92 * k;
   const artH = Math.round(Math.max(110, Math.min(w - 2 * pad, h - rest)));
-  const badge = state === 'idle' ? span : state === 'held' ? `記録まち · ${Math.max(1, Math.round(sec / 60))}分`
+  const badge = state === 'idle' ? span : state === 'held' ? `記録まち · ${heldMin}分`
     : over ? `予定クリア · ${state === 'paused' ? '一時停止中' : '延長中'}` : state === 'paused' ? '一時停止中' : '勉強中';
   const dot = state === 'paused' ? '#FF453A' : state === 'live' ? (over ? EXTRA : '#34C759') : null;
-  const left = state === 'idle' ? '0:00' : clock(sec);
-  const right = state === 'idle' ? (plan ? `−${clock(plan)}` : '') : state === 'held' ? '記録まち' : over ? `+${clock(sec - plan)}` : plan ? `−${clock(plan - sec)}` : '';
-  const done = over ? plan / sec : plan && state !== 'idle' ? Math.min(1, sec / plan) : 0;
-  const size = face.size * w * 0.42;
   const glyph = glyphOf(sj.name, sj.area);
   const toggle = () => { haptic.soft(); togglePause(); };
   const heart = () => { const on = toggleFavorite(b); if (on) { haptic.success(); toast('よく使う予定に入れました', '「予定を追加」から1タップで入れられます'); } else haptic.tap(); };
@@ -518,21 +518,7 @@ function CardFace({ b, w, state, sec, plan, held, begin, record, more, h }: Card
       </View>
 
       {/* the line, and the time under it */}
-      <View style={{ gap: 6 * k }}>
-        <View style={{ height: 5 * k, borderRadius: 3, backgroundColor: CARD.track, flexDirection: 'row', gap: 2, overflow: 'hidden' }}>
-          <View style={{ width: `${done * 100}%`, borderRadius: 3, backgroundColor: CARD.ink }} />
-          {over ? <View style={{ flex: 1, borderRadius: 3, backgroundColor: EXTRA }} /> : null}
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-          <Press onLongPress={() => { haptic.firm(); timeFontSheet(); }} delayLongPress={450} haptics={false} scale={1.04}
-            accessibilityRole="button" accessibilityLabel={`勉強した時間 ${left}`} accessibilityHint="長押しで時間のフォントを変えられます" style={{ flexShrink: 1, minWidth: 0 }}>
-            {/* no set line height: the tall faces (縦長) would be cut at the top and bottom; a long time shrinks to fit rather than being cut at the side */}
-            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}
-              style={{ fontFamily: face.family, fontSize: size, paddingVertical: size * 0.06, includeFontPadding: false, letterSpacing: face.spacing * size, color: state === 'idle' || state === 'paused' ? CARD.ink2 : CARD.ink, fontVariant: ['tabular-nums'] }}>{left}</Text>
-          </Press>
-          <Text numberOfLines={1} style={{ flexShrink: 0, marginLeft: 10 * k, fontSize: fs(15), color: over ? EXTRA : CARD.ink2, fontWeight: over ? '700' : '400', fontVariant: ['tabular-nums'], paddingBottom: 4 * k }}>{right}</Text>
-        </View>
-      </View>
+      <CardClock state={state} plan={plan} over={over} held={held} w={w} family={face.family} size={face.size * w * 0.42} spacing={face.spacing} />
 
       {/* ✎ 編集 / ▶ ❚❚ / ✓ 記録 */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 34 * k }}>
@@ -542,7 +528,44 @@ function CardFace({ b, w, state, sec, plan, held, begin, record, more, h }: Card
           <Icon name={main.icon} size={26 * k} color="#fff" filled />
         </Press>
         {/* not started yet: ✓ offers ending the plan without studying (the menu), as recording needs a session */}
-        <Side k={k} icon="check" a11y={state === 'held' ? `${sj.name} ${Math.max(1, Math.round(sec / 60))}分を記録する` : running ? `${sj.name}を終わって記録する` : `${sj.name}の予定を終わりにする`} onPress={rec ?? more} />
+        <Side k={k} icon="check" a11y={state === 'held' ? `${sj.name} ${heldMin}分を記録する` : running ? `${sj.name}を終わって記録する` : `${sj.name}の予定を終わりにする`} onPress={rec ?? more} />
+      </View>
+    </View>
+  );
+}
+
+/**
+ * The line toward the plan's end and the time under it: the only part of the
+ * card that redraws every second (useTicking). The line moves by sliding a
+ * bar under its rounded window, not by changing a width (MOTION.md).
+ */
+function CardClock({ state, plan, over, held, w, family, size, spacing }: {
+  state: CardState; plan: number; over: boolean; held?: Held; w: number; family: string; size: number; spacing: number;
+}) {
+  const k = w / CARD_W;
+  const fs = (v: number) => Math.max(v * 0.85, v * k);
+  const running = state === 'live' || state === 'paused';
+  const ticked = useTicking((s, now) => (running && s.running ? elapsedOf(s, now) : -1));
+  const sec = running ? Math.max(0, ticked) : held?.sec ?? 0;
+  const left = state === 'idle' ? '0:00' : clock(sec);
+  const right = state === 'idle' ? (plan ? `−${clock(plan)}` : '') : state === 'held' ? '記録まち' : over ? `+${clock(sec - plan)}` : plan ? `−${clock(plan - sec)}` : '';
+  const done = over ? plan / sec : plan && state !== 'idle' ? Math.min(1, sec / plan) : 0;
+  const [track, setTrack] = useState(0);
+  const bar = { position: 'absolute' as const, left: 0, top: 0, bottom: 0, width: '100%' as const, borderRadius: 3 };
+  return (
+    <View style={{ gap: 6 * k }}>
+      <View onLayout={(e) => setTrack(e.nativeEvent.layout.width)} style={{ height: 5 * k, borderRadius: 3, backgroundColor: CARD.track, overflow: 'hidden', opacity: track ? 1 : 0 }}>
+        <View style={[bar, { backgroundColor: CARD.ink, transform: [{ translateX: -(1 - done) * track }] }]} />
+        {over ? <View style={[bar, { backgroundColor: EXTRA, transform: [{ translateX: done * track + 2 }] }]} /> : null}
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+        <Press onLongPress={() => { haptic.firm(); timeFontSheet(); }} delayLongPress={450} haptics={false} scale={1.04}
+          accessibilityRole="button" accessibilityLabel={`勉強した時間 ${left}`} accessibilityHint="長押しで時間のフォントを変えられます" style={{ flexShrink: 1, minWidth: 0 }}>
+          {/* no set line height: the tall faces (縦長) would be cut at the top and bottom; a long time shrinks to fit rather than being cut at the side */}
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}
+            style={{ fontFamily: family, fontSize: size, paddingVertical: size * 0.06, includeFontPadding: false, letterSpacing: spacing * size, color: state === 'idle' || state === 'paused' ? CARD.ink2 : CARD.ink, fontVariant: ['tabular-nums'] }}>{left}</Text>
+        </Press>
+        <Text numberOfLines={1} style={{ flexShrink: 0, marginLeft: 10 * k, fontSize: fs(15), color: over ? EXTRA : CARD.ink2, fontWeight: over ? '700' : '400', fontVariant: ['tabular-nums'], paddingBottom: 4 * k }}>{right}</Text>
       </View>
     </View>
   );

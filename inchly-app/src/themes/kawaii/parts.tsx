@@ -1,6 +1,5 @@
 import { memo, ReactNode, useEffect, useId, useRef, useState } from 'react';
-import { Pressable, StyleProp, View, ViewStyle } from 'react-native';
-import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import { StyleProp, View, ViewStyle } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, Line, Path, Pattern, Rect } from 'react-native-svg';
 
 import { themeId, useDesign } from '@/design';
@@ -12,7 +11,8 @@ import { alpha, CLOUD, flowerPetals, HEART, MOCHI, Mood, Piece, Stamp, STAR, Var
 // The pieces the sticker diary is made of: the colorway, rounded figures,
 // stickers (hearts, stars, flowers, clouds), washi tape, paper cards, speech
 // bubbles, heart checkboxes, soft pill buttons — and the mochi, who lives on
-// the page, breathes, hops while you study, and squishes when you poke it.
+// the page and talks when you poke it. The look is the play; nothing wiggles,
+// hops, breathes or boings (MOTION.md).
 
 /** The colorway you picked (ゆめかわ, ミルクティー or ソーダ). */
 export function useV(): Variant {
@@ -90,19 +90,12 @@ export function Bubble({ text, tail = 'right', style, size = 12.5 }: { text: str
   );
 }
 
-/** Wiggles when tapped, like a sticker you flick. */
-export function Wiggle({ children, onPress, label, style, amount = 8, role = 'button' }: { children: ReactNode; onPress?: () => void; label: string; style?: StyleProp<ViewStyle>; amount?: number; role?: 'button' | 'image' }) {
-  const r = useSharedValue(0);
-  const a = useAnimatedStyle(() => ({ transform: [{ rotate: `${r.value}deg` }] }));
-  const press = () => {
-    haptic.soft();
-    r.set(withSequence(withTiming(-amount, { duration: 70 }), withTiming(amount, { duration: 100 }), withTiming(-amount / 2, { duration: 90 }), withSpring(0, { duration: 420, dampingRatio: 0.4 })));
-    onPress?.();
-  };
+/** A sticker you tap: it gives a little under the finger like any button (it used to wiggle). */
+export function Wiggle({ children, onPress, label, style, role = 'button' }: { children: ReactNode; onPress?: () => void; label: string; style?: StyleProp<ViewStyle>; role?: 'button' | 'image' }) {
   return (
-    <Pressable onPress={press} accessibilityRole={role === 'image' ? 'image' : 'button'} accessibilityLabel={label} hitSlop={6} style={style}>
-      <Animated.View style={a}>{children}</Animated.View>
-    </Pressable>
+    <Press onPress={() => { haptic.soft(); onPress?.(); }} haptics={false} scale={0.96} accessibilityRole={role === 'image' ? 'image' : 'button'} accessibilityLabel={label} hitSlop={6} style={style}>
+      {children}
+    </Press>
   );
 }
 
@@ -139,34 +132,14 @@ export function Bubbly({ children, label, onPress, size = 36, dot }: { children:
 }
 
 // ---------- heart checkboxes ----------
-function Floater({ i, color }: { i: number; color: string }) {
-  const p = useSharedValue(0);
-  useEffect(() => { p.set(withTiming(1, { duration: 700, easing: Easing.out(Easing.quad) })); }, [p]);
-  const dx = (i - 1) * 12;
-  const a = useAnimatedStyle(() => ({ opacity: 1 - p.value, transform: [{ translateX: dx * p.value }, { translateY: -26 * p.value }, { scale: 0.6 + 0.5 * p.value }] }));
-  return <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 5, top: 2 }, a]}><Shape kind="heart" size={14} fill={color} /></Animated.View>;
-}
-/** A heart to tick: it fills, pops, and lets a few small hearts float up. */
+/** A heart to tick: it fills. */
 export function HeartCheck({ on, onPress, label, size = 28 }: { on: boolean; onPress: () => void; label: string; size?: number }) {
   const t = useT();
   const v = useV();
-  const s = useSharedValue(1);
-  const [burst, setBurst] = useState(0);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
-  const press = () => {
-    if (!on) {
-      s.set(withSequence(withTiming(1.35, { duration: 110 }), withSpring(1, { duration: 480, dampingRatio: 0.35 })));
-      setBurst((b) => b + 1);
-    }
-    onPress();
-  };
   return (
-    <Pressable onPress={press} accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={label} hitSlop={10}>
-      <Animated.View style={a}>
-        <Shape kind="heart" size={size} fill={on ? v.accent : t.surface} stroke={on ? v.deep : alpha(v.deep, 0.45)} sw={7} />
-      </Animated.View>
-      {burst ? [0, 1, 2].map((i) => <Floater key={`${burst}-${i}`} i={i} color={i === 1 ? v.accent2 : v.accent} />) : null}
-    </Pressable>
+    <Press onPress={onPress} haptics={false} scale={0.92} accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={label} hitSlop={10}>
+      <Shape kind="heart" size={size} fill={on ? v.accent : t.surface} stroke={on ? v.deep : alpha(v.deep, 0.45)} sw={7} />
+    </Press>
   );
 }
 
@@ -249,52 +222,29 @@ const MochiArt = memo(function MochiArt({ mood, v, ink, size }: { mood: Mood; v:
 });
 
 /**
- * The mochi. It breathes, hops while you study, and squishes when poked —
- * then says something for a moment. `line` is what it says the rest of the time.
+ * The mochi. Poked, it gives a little like a button and says something for a
+ * moment; `line` is what it says the rest of the time. Its face (the mood)
+ * says how things are: it doesn't breathe, hop or squish (MOTION.md).
  */
 export function Mochi({ mood, size = 72, line, poke = true, bubbleSide = 'left', lift = 0.55 }: { mood: Mood; size?: number; line?: string; poke?: boolean; bubbleSide?: 'left' | 'right'; lift?: number }) {
   const t = useT();
   const v = useV();
-  const breathe = useSharedValue(0);
-  const hop = useSharedValue(0);
-  const sq = useSharedValue(0);
   const [said, setSaid] = useState<string | null>(null);
   const n = useRef(0);
-  useEffect(() => {
-    breathe.set(withRepeat(withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.quad) }), -1, true));
-    return () => cancelAnimation(breathe);
-  }, [breathe]);
-  useEffect(() => {
-    if (mood === 'work' || mood === 'cheer') {
-      const up = mood === 'cheer' ? -11 : -7;
-      hop.set(withRepeat(withSequence(withTiming(up, { duration: 200, easing: Easing.out(Easing.quad) }), withTiming(0, { duration: 240, easing: Easing.in(Easing.quad) }), withTiming(0, { duration: mood === 'cheer' ? 260 : 900 })), -1));
-    } else {
-      cancelAnimation(hop);
-      hop.set(withTiming(0, { duration: 200 }));
-    }
-    return () => cancelAnimation(hop);
-  }, [mood, hop]);
   useEffect(() => {
     if (!said) return;
     const id = setTimeout(() => setSaid(null), 2200);
     return () => clearTimeout(id);
   }, [said]);
   const h = size * 0.9;
-  const a = useAnimatedStyle(() => {
-    const b = (breathe.value - 0.5) * 2; // -1..1
-    const sy = 1 + 0.025 * b - 0.2 * sq.value;
-    const sx = 1 - 0.015 * b + 0.17 * sq.value;
-    return { transform: [{ translateY: hop.value + ((1 - sy) * h) / 2 }, { scaleX: sx }, { scaleY: sy }] };
-  });
   const press = () => {
     haptic.soft();
-    sq.set(withSequence(withTiming(1, { duration: 90 }), withSpring(0, { duration: 650, dampingRatio: 0.3 })));
     const lines = v.lines[mood];
     setSaid(lines[n.current % lines.length]);
     n.current += 1;
   };
   const text = said ?? line;
-  const art = <Animated.View style={a}><MochiArt mood={mood} v={v} ink={t.ink} size={size} /></Animated.View>;
+  const art = <MochiArt mood={mood} v={v} ink={t.ink} size={size} />;
   return (
     <View style={{ width: size, height: h }}>
       {text ? (
@@ -303,21 +253,15 @@ export function Mochi({ mood, size = 72, line, poke = true, bubbleSide = 'left',
         </View>
       ) : null}
       {poke ? (
-        <Pressable onPress={press} accessibilityRole="button" accessibilityLabel={`${v.mochi.name}${text ? `「${text}」` : ''}。つつく`} hitSlop={6}>{art}</Pressable>
+        <Press onPress={press} haptics={false} scale={0.96} accessibilityRole="button" accessibilityLabel={`${v.mochi.name}${text ? `「${text}」` : ''}。つつく`} hitSlop={6}>{art}</Press>
       ) : art}
     </View>
   );
 }
 
-/** A few sparkles that twinkle in place, for decoration. */
-export function Twinkle({ color, size = 14, delay = 0, style }: { color: string; size?: number; delay?: number; style?: StyleProp<ViewStyle> }) {
-  const s = useSharedValue(1);
-  useEffect(() => {
-    s.set(withDelay(delay, withRepeat(withSequence(withTiming(0.55, { duration: 700 }), withTiming(1, { duration: 700 })), -1)));
-    return () => cancelAnimation(s);
-  }, [delay, s]);
-  const a = useAnimatedStyle(() => ({ opacity: 0.5 + 0.5 * s.value, transform: [{ scale: s.value }] }));
-  return <Animated.View pointerEvents="none" style={[{ position: 'absolute' }, style, a]}><Shape kind="sparkle" size={size} fill={color} /></Animated.View>;
+/** A sparkle, for decoration (still: it doesn't twinkle on and on). */
+export function Twinkle({ color, size = 14, style }: { color: string; size?: number; style?: StyleProp<ViewStyle> }) {
+  return <View pointerEvents="none" style={[{ position: 'absolute' }, style]}><Shape kind="sparkle" size={size} fill={color} /></View>;
 }
 
 // ---------- small things ----------
@@ -355,34 +299,19 @@ export function Title({ sticker, text, sub, action }: { sticker: Stamp | 'sparkl
   );
 }
 
-/** A slow pulse, for whatever is under way. */
-export function usePulse(on: boolean) {
-  const o = useSharedValue(1);
-  useEffect(() => {
-    if (!on) { o.set(1); return; }
-    o.set(withRepeat(withSequence(withTiming(0.45, { duration: 800 }), withTiming(1, { duration: 800 })), -1));
-    return () => cancelAnimation(o);
-  }, [on, o]);
-  return o;
-}
-
 /**
  * The candy bar: the day in each subject's color with candy stripes over it,
- * the session under way glowing at its end, and a heart where the goal is.
+ * the session under way lighter at its end, and a heart where the goal is.
  */
 export function Candy({ pieces, goalAt, h = 20 }: { pieces: Piece[]; goalAt: number; h?: number }) {
   const t = useT();
   const v = useV();
   const id = `cs${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
-  const pulse = usePulse(pieces.some((p) => p.live));
-  const live = useAnimatedStyle(() => ({ opacity: 0.35 + 0.4 * pulse.value }));
   const heart = h + 4;
   return (
     <View style={{ height: h + 8, justifyContent: 'center' }}>
       <View style={{ height: h, borderRadius: h / 2, backgroundColor: v.soft, overflow: 'hidden', flexDirection: 'row' }}>
-        {pieces.map((p, i) => (p.live
-          ? <Animated.View key={i} style={[{ width: `${p.f * 100}%`, backgroundColor: p.c }, live]} />
-          : <View key={i} style={{ width: `${p.f * 100}%`, backgroundColor: p.c }} />))}
+        {pieces.map((p, i) => <View key={i} style={{ width: `${p.f * 100}%`, backgroundColor: p.c, opacity: p.live ? 0.6 : 1 }} />)}
         <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}>
           <Svg width="100%" height={h}>
             <Defs>

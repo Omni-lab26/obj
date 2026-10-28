@@ -1,17 +1,17 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Pressable, TextInput, TextInputProps, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
-import { ease, font, hair, noOutline, radius, useT } from '../theme';
+import { font, hair, noOutline, radius, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
 import { Pane } from './Glass';
 import { Icon } from './Icon';
 import { Counter } from './Counter';
+import { micro } from './motion';
 
 // ---------- floating-label field ----------
 // The label sits inside the box and lifts into the top border on focus
-// (bencho "label input"). Errors turn the border and helper text red and shake once.
-export type FieldHandle = { shake: () => void };
+// (bencho "label input"). Errors turn the border and helper text red, with a tap you feel (no shake).
 export function Field({
   label, value, onChangeText, error, max, multiline, helper, onBlur, autoFocus, inputRef, bg, ...rest
 }: { label: string; value: string; onChangeText: (s: string) => void; error?: string; max?: number; multiline?: boolean; helper?: string; bg?: string; inputRef?: React.RefObject<React.ComponentRef<typeof TextInput> | null> } & Omit<TextInputProps, 'value' | 'onChangeText'>) {
@@ -19,25 +19,20 @@ export function Field({
   const [focus, setFocus] = useState(false);
   const up = focus || value.length > 0;
   const p = useSharedValue(up ? 1 : 0);
-  const sx = useSharedValue(0);
-  useEffect(() => { p.value = withTiming(up ? 1 : 0, { duration: 200, easing: ease.out }); }, [up, p]);
+  useEffect(() => { p.value = micro(up ? 1 : 0); }, [up, p]);
   const prevErr = useRef(error);
   useEffect(() => {
-    if (error && !prevErr.current) {
-      haptic.warn();
-      sx.value = withSequence(withTiming(-6, { duration: 50 }), withTiming(6, { duration: 70 }), withTiming(-3, { duration: 60 }), withTiming(0, { duration: 60 }));
-    }
+    if (error && !prevErr.current) haptic.warn();
     prevErr.current = error;
-  }, [error, sx]);
+  }, [error]);
   const h = multiline ? 88 : 48;
   const la = useAnimatedStyle(() => ({
     transform: [{ translateY: (1 - p.value) * (multiline ? 15 : 14) - p.value * 9 }, { scale: 1 - p.value * 0.16 }],
   }));
-  const sh = useAnimatedStyle(() => ({ transform: [{ translateX: sx.value }] }));
   const border = error ? t.red : focus ? t.ink : t.line2;
   const surface = bg ?? t.surface;
   return (
-    <Animated.View style={sh}>
+    <View>
       <View style={{ minHeight: h, borderRadius: radius.inner, borderWidth: focus || error ? 1.25 : hair, borderColor: border, backgroundColor: surface }}>
         <TextInput
           ref={inputRef}
@@ -61,7 +56,7 @@ export function Field({
           {max ? <Txt size={11} tone="ink3" num>{value.length} / {max}</Txt> : null}
         </View>
       ) : null}
-    </Animated.View>
+    </View>
   );
 }
 
@@ -96,7 +91,7 @@ export function RadioCards<K extends string>({ options, value, onChange }: { opt
 function Dot({ on }: { on: boolean }) {
   const t = useT();
   const s = useSharedValue(on ? 1 : 0);
-  useEffect(() => { s.value = withTiming(on ? 1 : 0, { duration: 260, easing: ease.ios }); }, [on, s]);
+  useEffect(() => { s.value = micro(on ? 1 : 0); }, [on, s]);
   const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   return (
     <View style={{ width: 18, height: 18, marginTop: 1, borderRadius: 9, borderWidth: 1.25, borderColor: on ? t.ink : t.ink3, alignItems: 'center', justifyContent: 'center' }}>

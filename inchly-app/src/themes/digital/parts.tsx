@@ -89,14 +89,13 @@ export function useFlicker(): [ReturnType<typeof useAnimatedStyle>, () => void] 
   return [style, kick];
 }
 
-/** Something that blinks while `on` (REC, PAUSE, an alarm). */
-export function Blink({ on = true, children, period = 1000, style }: { on?: boolean; children: ReactNode; period?: number; style?: StyleProp<ViewStyle> }) {
-  const o = useSharedValue(1);
-  useEffect(() => {
-    o.set(on ? withRepeat(withSequence(withTiming(1, { duration: period / 2 }), withTiming(0.12, { duration: 1 }), withTiming(0.12, { duration: period / 2 - 1 }), withTiming(1, { duration: 1 })), -1) : withTiming(1, { duration: 80 }));
-  }, [on, o, period]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value }));
-  return <Animated.View style={[a, style]}>{children}</Animated.View>;
+/**
+ * What used to blink while `on` (REC, PAUSE, an alarm). It holds still now
+ * (MOTION.md: nothing blinks on and on); `on` and `period` are kept so the
+ * places that mark these stay as they are.
+ */
+export function Blink({ children, style }: { on?: boolean; children: ReactNode; period?: number; style?: StyleProp<ViewStyle> }) {
+  return <View style={style}>{children}</View>;
 }
 
 // ---------- displays ----------

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { type SharedValue, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { type SharedValue, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { subj } from '../data';
@@ -10,6 +10,7 @@ import { doneOn, setDayOrder, useStore } from '../store';
 import { hair, useT } from '../theme';
 import { haptic, Press, Txt } from './base';
 import { Icon } from './Icon';
+import { micro, move } from './motion';
 import { openSheet } from './Sheet';
 
 // Today's plans in another order (the timer's cards follow it): hold a plan's
@@ -80,7 +81,7 @@ function Line({ b, locked, note }: { b: Block; locked?: boolean; note?: string }
   );
 }
 
-/** The plans that can move: each sits at its place in `pos` and springs there; the one held follows the finger. */
+/** The plans that can move: each sits at its place in `pos` and slides there (no bounce); the one held follows the finger. */
 function DragList({ items, onDrop }: { items: Block[]; onDrop: (ids: string[]) => void }) {
   const pos = useSharedValue<Record<string, number>>(Object.fromEntries(items.map((b, i) => [b.id, i])));
   useEffect(() => { pos.set(Object.fromEntries(items.map((b, i) => [b.id, i]))); }, [items, pos]);
@@ -119,7 +120,7 @@ function DragRow({ b, pos, n, onDrop }: { b: Block; pos: SharedValue<Record<stri
     const at = (pos.value[b.id] ?? 0) * ROW;
     return {
       zIndex: lifted.value ? 10 : 0,
-      transform: [{ translateY: lifted.value ? y.value : withSpring(at, { damping: 22, stiffness: 260 }) }, { scale: withSpring(lifted.value ? 1.03 : 1) }],
+      transform: [{ translateY: lifted.value ? y.value : move(at) }, { scale: micro(lifted.value ? 1.03 : 1) }],
       boxShadow: lifted.value ? '0px 10px 24px rgba(0,0,0,0.18)' : '0px 0px 0px rgba(0,0,0,0)',
     };
   });

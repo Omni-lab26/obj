@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Switch, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SUBJ } from '@/data';
@@ -14,6 +14,7 @@ import { Wordmark } from '@/ui/Brand';
 import { Opens, PickChip, SMOOTH, YearPick } from '@/ui/DateTime';
 import { Choice, Field, Label } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
+import { fadeIn } from '@/ui/motion';
 import { toast } from '@/ui/Toast';
 
 // First launch: sign in, who you are, what you aim for, which notices you want.
@@ -108,7 +109,7 @@ export default function Welcome() {
         <View style={{ width: 40 }} />
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 22 }}>
-        <Animated.View key={step} entering={FadeIn.duration(220)} style={{ gap: 22 }}>
+        <Animated.View key={step} entering={fadeIn()} style={{ gap: 22 }}>
           {step === 1 ? (
             <>
               <View>

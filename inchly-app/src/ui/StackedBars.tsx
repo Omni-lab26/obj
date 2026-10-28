@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 
 import { pad } from '../data';
 import { dayOf } from '../lib/history';
 import { Session, useStore } from '../store';
-import { ease, hair, lift, radius, type, useT } from '../theme';
+import { hair, lift, radius, type, useT } from '../theme';
 import { useReplay } from './appear';
 import { haptic, Txt } from './base';
+import { micro, timed } from './motion';
 import { Rolling } from './Rolling';
 import { SeriesSet, useSeries } from './series';
 import { Segmented } from './Tabs';
@@ -44,26 +45,27 @@ function build(mode: Mode, sessions: Session[], series: SeriesSet): Col[] {
 }
 const hmLabel = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ? pad(m % 60) + '分' : ''}` : `${m}分`);
 
-function Seg({ h, bottom, color, delay, dim }: { h: number; bottom: number; color: string; delay: number; dim: boolean }) {
-  const hh = useSharedValue(0);
-  const bb = useSharedValue(bottom);
+/**
+ * One piece of a stack, laid out once where it ends up; it grows out of the
+ * baseline by scaling (no layout each frame): pieces above it scale from the
+ * baseline up, the shortfall below it from the baseline down.
+ */
+function Seg({ h, bottom, color, delay, dim, below }: { h: number; bottom: number; color: string; delay: number; dim: boolean; below?: boolean }) {
+  const g = useSharedValue(0);
   const o = useSharedValue(1);
   const replay = useReplay();
+  // in its turn, and again when the bars change or their page comes back
   useEffect(() => {
-    hh.set(withDelay(delay, withTiming(h, { duration: 600, easing: ease.out })));
-    bb.set(withDelay(delay, withTiming(bottom, { duration: 600, easing: ease.out })));
-  }, [h, bottom, delay, hh, bb]);
-  // its page came back: grow again from the floor
-  useEffect(() => {
-    if (!replay) return;
-    hh.set(0);
-    bb.set(0);
-    hh.set(withDelay(delay, withTiming(h, { duration: 600, easing: ease.out })));
-    bb.set(withDelay(delay, withTiming(bottom, { duration: 600, easing: ease.out })));
-  }, [replay]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { o.set(withTiming(dim ? 0.36 : 1, { duration: 160 })); }, [dim, o]);
-  const a = useAnimatedStyle(() => ({ height: hh.value, bottom: bb.value, opacity: o.value }));
-  return <Animated.View style={[{ position: 'absolute', left: 0, right: 0, borderRadius: 2.5, backgroundColor: color }, a]} />;
+    g.set(0);
+    g.set(withDelay(delay, timed(1, 500)));
+  }, [h, bottom, delay, replay, g]);
+  useEffect(() => { o.set(micro(dim ? 0.36 : 1)); }, [dim, o]);
+  const rise = bottom - (PLOT - BASE); // how far its bottom sits above the baseline
+  const a = useAnimatedStyle(() => ({
+    opacity: o.value,
+    transform: below ? [{ scaleY: g.value }] : [{ translateY: rise * (1 - g.value) }, { scaleY: g.value }],
+  }));
+  return <Animated.View style={[{ position: 'absolute', left: 0, right: 0, height: h, bottom, borderRadius: 2.5, backgroundColor: color, transformOrigin: below ? 'top' : 'bottom' }, a]} />;
 }
 
 export function StackedBars() {
@@ -88,16 +90,16 @@ export function StackedBars() {
   const ringO = useSharedValue(0);
   useEffect(() => {
     if (hot === null || !colW) {
-      tipO.set(withTiming(0, { duration: 160 }));
-      ringO.set(withTiming(0, { duration: 160 }));
+      tipO.set(micro(0));
+      ringO.set(micro(0));
       return;
     }
     const left = hot * (colW + GAP);
     let x = left + colW + 10;
     if (x + TIP_W > w) x = left - TIP_W - 10;
-    tipX.set(tipO.get() < 0.05 ? x : withTiming(x, { duration: 140, easing: ease.out }));
-    tipO.set(withTiming(1, { duration: 160 }));
-    ringO.set(withTiming(1, { duration: 160 }));
+    tipX.set(tipO.get() < 0.05 ? x : micro(x));
+    tipO.set(micro(1));
+    ringO.set(micro(1));
   }, [hot, colW, w, tipX, tipO, ringO]);
   const tipA = useAnimatedStyle(() => ({ opacity: tipO.value, transform: [{ translateX: tipX.value }] }));
   const ringA = useAnimatedStyle(() => ({ opacity: ringO.value }));
@@ -162,7 +164,7 @@ export function StackedBars() {
                       acc += m;
                       return <Seg key={k} h={h} bottom={bottom} color={series.list[k].c} delay={i * 14} dim={dim} />;
                     })}
-                    <Seg h={col.short ? Math.max(3, down(col.short)) : 0} bottom={PLOT - BASE - 2 - (col.short ? Math.max(3, down(col.short)) : 0)} color={t.red} delay={i * 14} dim={dim} />
+                    <Seg below h={col.short ? Math.max(3, down(col.short)) : 0} bottom={PLOT - BASE - 2 - (col.short ? Math.max(3, down(col.short)) : 0)} color={t.red} delay={i * 14} dim={dim} />
                   </View>
                 );
               })

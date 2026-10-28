@@ -1,18 +1,19 @@
 import { router } from 'expo-router';
 import { ComponentRef, useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 
 import { hms, PERSON_COLOR, RANK, ROOM, subj } from '@/data';
 import { minutesIn } from '@/lib/history';
 import { elapsedOf, getState, setState, toggleFollow, useNow, useStore } from '@/store';
-import { ease, hair, lift, radius, type, useT } from '@/theme';
+import { hair, lift, radius, type, useT } from '@/theme';
 import { Avatar, Btn, Card, haptic, Press, Txt } from '@/ui/base';
 import { Screen, SearchBtn, TopBar, useTabPad } from '@/ui/Chrome';
 import { personSheet } from '@/ui/Editors';
 import { Field } from '@/ui/Form';
 import { GroupMark, LiveDot } from '@/ui/GroupParts';
 import { Icon } from '@/ui/Icon';
+import { fadeIn, move } from '@/ui/motion';
 import { Rolling } from '@/ui/Rolling';
 import { openSheet } from '@/ui/Sheet';
 import { Segmented, UnderTabs } from '@/ui/Tabs';
@@ -68,7 +69,7 @@ function Live() {
     </Press>
   );
   return (
-    <Animated.View entering={FadeIn.duration(200)}>
+    <Animated.View entering={fadeIn()}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingTop: 16 }}>
         <LiveDot size={7} />
         <Rolling value={count ? comma(count) : '0,000'} size={type.figure + 2} weight="700" />
@@ -188,7 +189,7 @@ function Rank() {
   const blocked = useStore((x) => x.blocked);
   const myName = useStore((x) => x.account?.name ?? 'はる');
   return (
-    <Animated.View entering={FadeIn.duration(200)}>
+    <Animated.View entering={fadeIn()}>
       <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
         <Segmented value={p} onChange={setP} options={[{ v: 'w', label: '今週' }, { v: 'm', label: '今月' }, { v: 't', label: '今日' }]} />
       </View>
@@ -232,9 +233,10 @@ function Dist({ pos }: { pos: number }) {
 }
 function DistBar({ h, color, delay, on }: { h: number; color: string; delay: number; on: boolean }) {
   const s = useSharedValue(0);
-  useEffect(() => { s.value = 0; s.value = withTiming(1, { duration: 500 + delay, easing: ease.out }); }, [s, delay, on]);
-  const a = useAnimatedStyle(() => ({ height: Math.max(2, h * s.value) }));
-  return <Animated.View style={[{ flex: 1, borderRadius: 1.5, backgroundColor: color }, a]} />;
+  // grows up from the bottom by scaling, not by changing its height (MOTION.md)
+  useEffect(() => { s.value = 0; s.value = withDelay(delay, move(1)); }, [s, delay, on]);
+  const a = useAnimatedStyle(() => ({ transform: [{ scaleY: s.value }] }));
+  return <Animated.View style={[{ flex: 1, height: Math.max(2, h), borderRadius: 1.5, backgroundColor: color, transformOrigin: 'bottom' }, a]} />;
 }
 
 // ---------- グループ ----------
@@ -242,7 +244,7 @@ function Groups() {
   const t = useT();
   const groups = useStore((s) => s.groups);
   return (
-    <Animated.View entering={FadeIn.duration(200)}>
+    <Animated.View entering={fadeIn()}>
       <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 }}>
         <Btn kind="primary" wide label="グループを作る" icon="plus" onPress={() => router.push('/create-group')} />
       </View>

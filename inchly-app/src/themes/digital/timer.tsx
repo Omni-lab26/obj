@@ -13,6 +13,7 @@ import { focus, useT } from '@/theme';
 import { haptic, Press } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
+import { micro, press as pressDown, release } from '@/ui/motion';
 import { toast } from '@/ui/Toast';
 import { useLook } from './look';
 import { Ann, Blink, Cells, J, Key, M, Seg, useFlicker } from './parts';
@@ -227,7 +228,8 @@ function Record() {
   const running = useStore((s) => s.running);
   const fill = useSharedValue(0);
   const down = useSharedValue(0);
-  const bar = useAnimatedStyle(() => ({ width: `${fill.value * 100}%` }));
+  // the hold's progress as a scale from the left (not a width: no layout every frame)
+  const bar = useAnimatedStyle(() => ({ transform: [{ scaleX: fill.value }] }));
   const face = useAnimatedStyle(() => ({ transform: [{ translateY: down.value * 3 }] }));
   const HOLD = 700;
   const finish = () => {
@@ -240,14 +242,14 @@ function Record() {
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 3, bottom: 0, borderRadius: 8, backgroundColor: L.key.base }} />
       {/* not `disabled`: the whole key fades instead, base and all; the handlers do nothing while nothing runs */}
       <Press delayLongPress={HOLD} haptics={false} react="scale" scale={1}
-        onPressIn={() => { if (!running) return; haptic.soft(); down.set(withTiming(1, { duration: 50 })); fill.set(withTiming(1, { duration: HOLD, easing: Easing.linear })); }}
-        onPressOut={() => { down.set(withTiming(0, { duration: 90 })); if (fill.get() < 1) fill.set(withTiming(0, { duration: 160 })); }}
+        onPressIn={() => { if (!running) return; haptic.soft(); down.set(pressDown(1)); fill.set(withTiming(1, { duration: HOLD, easing: Easing.linear })); }}
+        onPressOut={() => { down.set(release(0)); if (fill.get() < 1) fill.set(micro(0)); }}
         onLongPress={() => { if (running) finish(); }}
         onPress={() => { if (running) toast('長押しで記録します', 'キーを押したままにしてください'); }}
         accessibilityRole="button" accessibilityLabel="長押しで記録する" accessibilityState={{ disabled: !running }}
         accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={() => { if (running) session.finish(); }}>
         <Animated.View style={[{ height: 54, borderRadius: 8, backgroundColor: L.key.face, borderTopWidth: 1, borderTopColor: L.key.edge, overflow: 'hidden', justifyContent: 'center' }, face]}>
-          <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: L.accent, opacity: 0.5 }, bar]} />
+          <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: L.accent, opacity: 0.5, transformOrigin: 'left' }, bar]} />
           <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
             <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: L.accent }} />
             <M b size={14} color={L.key.ink} ls={2.5}>HOLD · RECORD</M>

@@ -1,6 +1,6 @@
 import { ComponentType, ReactNode, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Circle, G, Line, Path, Rect } from 'react-native-svg';
 
 import { subj } from '@/data';
@@ -16,6 +16,7 @@ import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon } from '@/ui/Icon';
 import { levelSheet } from '@/ui/Level';
+import { M, timed } from '@/ui/motion';
 import { toast } from '@/ui/Toast';
 import { edgeDrops, HARD, INK, inky, paintTurf, TurfPart } from './paint';
 import { BlobFill, Drop, IconSticker, Shout, SplashPress, Splat, Tape } from './parts';
@@ -123,12 +124,6 @@ function Turf() {
   const splashes = useMemo(() => edgeDrops(turf.cells, cols, ROWS), [turf, cols]);
   const painted = today.min + liveMin;
   const pct = Math.round((painted / Math.max(1, today.goal)) * 100);
-  const wet = useSharedValue(1);
-  const anyWet = turf.cells.some((c) => c.live) && !ss.paused;
-  useEffect(() => {
-    wet.set(anyWet ? withRepeat(withSequence(withTiming(0.55, { duration: 800 }), withTiming(1, { duration: 800 })), -1) : withTiming(1));
-  }, [anyWet, wet]);
-  const wetStyle = useAnimatedStyle(() => ({ opacity: wet.value }));
   const h = ROWS * cell;
   const r = cell * 0.7;
   // drawn once a minute at most (the clock ticks every second around it)
@@ -156,7 +151,7 @@ function Turf() {
           style={{ height: h || ROWS * CELL, borderRadius: 16, backgroundColor: INK.asphalt, overflow: 'hidden' }}>
           <View style={StyleSheet.absoluteFill} onLayout={(e) => setW(e.nativeEvent.layout.width)} />
           {dry}
-          {wetCells ? <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, wetStyle]}>{wetCells}</Animated.View> : null}
+          {wetCells ? <View pointerEvents="none" style={StyleSheet.absoluteFill}>{wetCells}</View> : null}
           {painted > 0 ? (
             <>
               <View style={{ position: 'absolute', top: 8, right: 8, transform: [{ rotate: '4deg' }], backgroundColor: INK.yellow, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, boxShadow: '2px 3px 0px rgba(0,0,0,0.55)' }}>
@@ -242,21 +237,16 @@ function Now() {
   );
 }
 
-/** Studying now: a wet splat that breathes, the clock, and pause. */
+/** Studying now: a wet splat, the clock, and pause. */
 function Live() {
   const ss = useSession();
   const c = inky(ss.subject.c);
-  const s = useSharedValue(1);
-  useEffect(() => {
-    s.set(ss.paused ? withTiming(1) : withRepeat(withSequence(withTiming(1.12, { duration: 700 }), withTiming(1, { duration: 700 })), -1));
-  }, [ss.paused, s]);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   const time = clock(ss.elapsed);
   const narrow = useWindowDimensions().width < 360;
   return (
     <Press onPress={go.timer} scale={0.98} accessibilityRole="button" accessibilityLabel={`${ss.subject.name}を勉強中 ${time}。タイマーを開く`}
       style={{ flexDirection: 'row', alignItems: 'center', gap: narrow ? 8 : 10, paddingVertical: 10, paddingLeft: 8, paddingRight: 10, borderRadius: 22, backgroundColor: SURFACE, borderWidth: 2.5, borderColor: c, boxShadow: HARD }}>
-      <Animated.View style={a}><Splat size={narrow ? 40 : 50} color={c} seed={`live${ss.subject.id}`} /></Animated.View>
+      <Splat size={narrow ? 40 : 50} color={c} seed={`live${ss.subject.id}`} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <T size={11.5} w="800" color={ss.paused ? INK.yellow : INK.pink} lh={15} numberOfLines={1}>{ss.paused ? '一時停止中' : 'ぬってる最中'}</T>
         <T size={15} w="800" lh={20} numberOfLines={1}>{ss.subject.name}</T>
@@ -274,15 +264,10 @@ function Live() {
 // ---------- the streak, taped on ----------
 function Streak() {
   const { streak, tickets, days } = useWeekStreak();
-  const wob = useSharedValue(0);
-  const a = useAnimatedStyle(() => ({ transform: [{ rotate: `${-1.6 + wob.value}deg` }] }));
-  const shake = () => {
-    haptic.soft();
-    wob.set(withSequence(withTiming(4, { duration: 90 }), withSpring(0, { duration: 700, dampingRatio: 0.28 })));
-  };
+  // taped on a little crooked; a tap splashes, it doesn't wobble
   return (
-    <Animated.View style={[{ marginTop: 6 }, a]}>
-      <SplashPress color={INK.yellow} onPress={shake} haptics={false} scale={0.97} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}
+    <View style={{ marginTop: 6, transform: [{ rotate: '-1.6deg' }] }}>
+      <SplashPress color={INK.yellow} onPress={() => haptic.soft()} haptics={false} scale={0.97} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}
         style={{ backgroundColor: SURFACE, borderRadius: 18, borderWidth: 2.5, borderColor: INK.white, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12, boxShadow: HARD, gap: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6 }}>
           <Shout size={36} color={INK.yellow} lh={40} num>{streak}</Shout>
@@ -306,7 +291,7 @@ function Streak() {
       </SplashPress>
       <Tape style={{ top: -8, left: 22, transform: [{ rotate: '-9deg' }] }} />
       <Tape style={{ top: -8, right: 22, transform: [{ rotate: '8deg' }] }} />
-    </Animated.View>
+    </View>
   );
 }
 
@@ -370,16 +355,14 @@ function TodoSticker({ todo, i }: { todo: Todo; i: number }) {
   );
 }
 
-/** "クリア!" stamped on a finished ToDo (it lands with a thump when you finish one). */
+/** "クリア!" stamped on a finished ToDo (it fades in when you finish one). */
 function ClearStamp({ animate }: { animate: boolean }) {
-  const s = useSharedValue(animate ? 2.2 : 1);
   const o = useSharedValue(animate ? 0 : 1);
   useEffect(() => {
     if (!animate) return;
-    s.set(withSpring(1, { duration: 420, dampingRatio: 0.5 }));
-    o.set(withTiming(1, { duration: 120 }));
-  }, [animate, s, o]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ rotate: '-10deg' }, { scale: s.value }] }));
+    o.set(timed(1, M.fadeIn));
+  }, [animate, o]);
+  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ rotate: '-10deg' }] }));
   return (
     <Animated.View pointerEvents="none" style={[{ borderWidth: 2.5, borderColor: INK.pink, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 1, backgroundColor: 'rgba(255,62,138,0.14)' }, a]}>
       <T f="heavy" size={13} lh={18} color={INK.pink}>クリア!</T>

@@ -6,11 +6,11 @@ import { subj } from '@/data';
 import { T } from '@/themes/kit';
 import type { MomentKit } from '@/themes/types';
 import { L, useLook } from './look';
-import { Fig, PixelArt, SPRITES, STEP, Typed, useBlink, useTyper, Win } from './ui';
+import { Fig, PixelArt, SPRITES, STEP, Typed, useTyper, Win } from './ui';
 
 // What you did, the way a game would say it: a window drops in with the line
-// typing itself out, sparks blink round it, and on starting the screen
-// flashes twice. Gone in under two seconds; the toast says the facts.
+// typing itself out, sparks round it, and on starting the screen flashes
+// twice. Gone in under two seconds; the toast says the facts.
 
 /** The screen flashes white twice, in steps. */
 function Flash({ color = '#FFFFFF' }: { color?: string }) {
@@ -22,16 +22,15 @@ function Flash({ color = '#FFFFFF' }: { color?: string }) {
   return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: color }, a]} />;
 }
 
-/** Sparks blinking round the window. */
+/** Sparks round the window. */
 function Sparks({ color }: { color: string }) {
-  const a = useBlink(true, 160, 0);
   const at = [{ left: -18, top: -14 }, { right: -16, top: 6 }, { left: 14, bottom: -18 }, { right: 26, bottom: -20 }, { right: -20, bottom: 30 }];
   return (
     <>
       {at.map((p, i) => (
-        <Animated.View key={i} pointerEvents="none" style={[{ position: 'absolute', ...p }, i % 2 ? a : null]}>
+        <View key={i} pointerEvents="none" style={{ position: 'absolute', ...p }}>
           <PixelArt rows={SPRITES.spark} px={2} colors={{ X: color }} />
-        </Animated.View>
+        </View>
       ))}
     </>
   );
