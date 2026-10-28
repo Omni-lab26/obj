@@ -10,18 +10,19 @@ import { timed } from './motion';
 // Inch-ly: "a little at a time". The brand's one motif is the measuring tape —
 // the same ticks as the timer's ruler — used for the wordmark and for today's progress.
 
-/** The brand's color: the charts' indigo (英語's), the one that catches the eye in them. The ticks and the app icon are drawn in it. */
-export const BRAND = '#5856D6';
+/** The brand's five colors (red, yellow, light blue, blue, purple), one per tick, low to high; the app icon is the same five ticks. */
+export const BRAND_TICKS = ['#E5484D', '#F2C46D', '#9AB8DB', '#5B8DEF', '#9D7BF5'];
+const TICK_H = [5.7, 8.3, 10.9, 13.4, 16];
 
-/** Wordmark: three ruler ticks of rising height (in the brand's indigo), then "inchly". */
+/** Wordmark: five ticks of rising height (in the brand's five colors, or all in `color`), then "inchly". */
 export function Wordmark({ size = 21, color }: { size?: number; color?: string }) {
   const t = useT();
   const u = size / 21;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 7 * u }} accessible accessibilityLabel="Inchly">
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 2.5 * u, marginBottom: 4 * u }}>
-        {[7, 11, 16].map((h, i) => (
-          <View key={i} style={{ width: 3 * u, height: h * u, borderRadius: 1.5 * u, backgroundColor: color ?? BRAND }} />
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 1.5 * u, marginBottom: 4 * u }}>
+        {TICK_H.map((h, i) => (
+          <View key={i} style={{ width: 2.7 * u, height: h * u, borderRadius: 1.35 * u, backgroundColor: color ?? BRAND_TICKS[i] }} />
         ))}
       </View>
       <Txt style={{ fontFamily: font.rounded, fontWeight: '800', fontSize: size, lineHeight: size * 1.15, letterSpacing: -0.03 * size, color: color ?? t.ink }}>inchly</Txt>
