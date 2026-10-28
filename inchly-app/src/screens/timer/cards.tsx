@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { ComponentRef, ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -319,7 +319,7 @@ function Deck({ height }: { height: number }) {
   }, [cards]);
 
   // where the centered card sits on the page, for the background to keep off it
-  const row = useRef<View>(null);
+  const row = useRef<ComponentRef<typeof View>>(null);
   const measure = () => {
     row.current?.measureInWindow((rx, ry) => {
       const sheet = backOrigin.get();
@@ -391,7 +391,7 @@ function Deck({ height }: { height: number }) {
 const backOrigin = shared({ x: 0, y: 0 });
 /** The background's layer reports where it is on the screen. */
 function BackProbe() {
-  const me = useRef<View>(null);
+  const me = useRef<ComponentRef<typeof View>>(null);
   return (
     <View ref={me} pointerEvents="none" style={StyleSheet.absoluteFill}
       onLayout={() => me.current?.measureInWindow((x, y) => backOrigin.set({ x, y }))} />

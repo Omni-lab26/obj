@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { AndroidImportance } from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import type { Reminder } from './reminders';
@@ -16,7 +17,7 @@ export function configureNotifications() {
     handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }),
   });
   if (Platform.OS === 'android') {
-    Notifications.setNotificationChannelAsync('default', { name: 'お知らせ', importance: Notifications.AndroidImportance.DEFAULT }).catch(() => {});
+    Notifications.setNotificationChannelAsync('default', { name: 'お知らせ', importance: AndroidImportance.DEFAULT }).catch(() => {});
   }
 }
 

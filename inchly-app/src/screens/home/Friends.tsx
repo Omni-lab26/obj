@@ -116,14 +116,17 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop }: Shared & { f: Frie
 
   // the drag: the same for the grip (at once) and for the row (after a hold)
   const drag = useMemo(() => {
+    // built off a passed-in gesture, so the callbacks aren't workletized for us: mark them
     const make = (g: ReturnType<typeof Gesture.Pan>) => g
       .onStart(() => {
+        'worklet';
         start.set((slots.get()[h] ?? 0) * ROW);
         dragY.set(start.get());
         dragging.set(h);
         scheduleOnRN(haptic.firm);
       })
       .onUpdate((e) => {
+        'worklet';
         const y = Math.max(0, Math.min((n - 1) * ROW, start.get() + e.translationY));
         dragY.set(y);
         const at = Math.round(y / ROW);
@@ -138,6 +141,7 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop }: Shared & { f: Frie
         }
       })
       .onFinalize(() => {
+        'worklet';
         if (dragging.get() !== h) return;
         const order = slots.get();
         // settle into the slot, then let go

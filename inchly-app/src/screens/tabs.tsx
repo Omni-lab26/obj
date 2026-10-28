@@ -20,7 +20,7 @@ import { fadeIn, fadeOut, move } from '@/ui/motion';
 import { TourSpot } from '@/ui/Tour';
 
 /** The tabs (layout.TABS) as the navigator has them, each with what a tap does. (The timer opens only from the study bar.) */
-export function useTabItems({ state, navigation }: BottomTabBarProps): TabItem[] {
+export function useTabItems({ state, emitter, navigateToTab }: BottomTabBarProps): TabItem[] {
   return TABS.flatMap((tab) => {
     const i = state.routes.findIndex((r) => r.name === tab.name);
     const r = state.routes[i];
@@ -28,8 +28,8 @@ export function useTabItems({ state, navigation }: BottomTabBarProps): TabItem[]
     const focused = state.index === i;
     const center = tab.name === 'study';
     const onPress = () => {
-      const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
-      if (!focused && !e.defaultPrevented) navigation.navigate(r.name, r.params);
+      const e = emitter.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
+      if (!focused && !e.defaultPrevented) navigateToTab(r.key);
     };
     return [{ key: r.key, name: tab.name, label: tab.label, icon: tab.icon, focused, center, onPress }];
   });

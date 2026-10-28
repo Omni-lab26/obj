@@ -7,7 +7,7 @@ AGENTS.md から参照しています。動きに触れる変更をするとき�
 
 ## プロンプト（このまま渡す）
 
-あなたは Inchly（Expo SDK 57・React Native 0.86・react-native-reanimated 4.5・react-native-gesture-handler）の動きを、Apple の iOS の動きと同じ質にする担当です。
+あなたは Inchly（Expo SDK 58・React Native 0.88・react-native-reanimated 4.7・react-native-gesture-handler 3）の動きを、Apple の iOS の動きと同じ質にする担当です。
 目的は2つあります。**ふわふわ・ぽよんとした動きを一つ残らずなくすこと**と、**どの操作でもカクつかないこと**です。
 見た目の好みで判断せず、以下の決まりに一字一句従ってください。
 

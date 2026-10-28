@@ -1,7 +1,7 @@
 # Inchly（Expo アプリ）
 
 時間を管理したい人のためのアプリのモック実装です。使った時間を草として積み上げ、仲間と一緒に続けられます（画面の言葉は、いまは「勉強」で統一しています）。
-Expo SDK 57 / Expo Router / React Native。App Store 版の Expo Go が対応している SDK に合わせています。
+Expo SDK 58 / Expo Router / React Native。App Store 版の Expo Go が対応している SDK に合わせています。
 記録・ToDo・締切・設定はこの端末に保存され、アプリを閉じても残ります。サーバーにはつながっていません（同期はモック）。
 ほかの人・投稿・ランキングはサンプルです。
 
@@ -45,7 +45,7 @@ npm run live              # 同じ Wi-Fi でないときは npm run live -- --tu
 
 ### 「Project is incompatible with this version of Expo Go」と出たら
 
-Expo Go が対応する SDK とプロジェクトの SDK（いまは 57）が合っていません。まず App Store / Google Play で Expo Go を最新にしてください。
+Expo Go が対応する SDK とプロジェクトの SDK（いまは 58）が合っていません。まず App Store / Google Play で Expo Go を最新にしてください。
 それでも出る場合は、Expo Go の対応 SDK が上がっています。このフォルダで `npx expo install expo@latest --fix` を実行すると、プロジェクトもその SDK に上がります。
 
 ## 画面

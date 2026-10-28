@@ -1,5 +1,5 @@
 import { usePathname } from 'expo-router';
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ComponentRef, ReactNode, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleProp, StyleSheet, useWindowDimensions, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,11 +17,11 @@ import { fadeIn, fadeOut, move } from './motion';
 // shows once (tourDone), and 設定 › 使い方をもう一度見る brings it back.
 
 type Rect = { x: number; y: number; w: number; h: number };
-const spots = new Map<string, View>();
+const spots = new Map<string, ComponentRef<typeof View>>();
 
 /** Marks a place the tour can point at. */
 export function TourSpot({ id, children, style }: { id: string; children: ReactNode; style?: StyleProp<ViewStyle> }) {
-  const ref = useRef<View>(null);
+  const ref = useRef<ComponentRef<typeof View>>(null);
   useEffect(() => {
     const v = ref.current;
     if (v) spots.set(id, v);
