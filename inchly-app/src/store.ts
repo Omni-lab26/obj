@@ -616,8 +616,11 @@ export function removeDeadline(id: string) {
 export function rollDay(now: Date = new Date()) {
   const s = state;
   const today = dateKey(now);
+  // 自習 left without a subject on an earlier day stays 自習 (kept): only today's wait to be sorted
+  const stale = (x: Session) => x.s === FREE && !x.kept && x.date < today;
+  const filed = s.sessions.some(stale) ? { sessions: s.sessions.map((x) => (stale(x) ? { ...x, kept: true } : x)) } : {};
   if (!s.lastDay || s.lastDay === today) {
-    if (!s.lastDay) setState({ lastDay: today });
+    if (!s.lastDay || filed.sessions) setState({ ...(s.lastDay ? {} : { lastDay: today }), ...filed });
     return;
   }
   const gap = Math.max(0, daysBetween(s.lastDay, today));
@@ -636,6 +639,7 @@ export function rollDay(now: Date = new Date()) {
     restDays,
     restTickets: tickets,
     todos: s.todos.filter((x) => !x.d).map((x) => ({ ...x, carried: (x.carried ?? 0) + gap })),
+    ...filed,
   });
 }
 /** Mount once: checks for a new day every half minute and when the app comes back. */

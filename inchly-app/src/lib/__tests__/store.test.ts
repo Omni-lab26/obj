@@ -391,3 +391,26 @@ describe('plans kept with ♡ (よく使う)', () => {
     expect(getState().favorites).toHaveLength(MAX_FAVS - 1);
   });
 });
+
+describe('自習 left unsorted on an earlier day', () => {
+  it('is filed as 自習 (kept) on the next day; today’s stays to be sorted', () => {
+    reset({
+      lastDay: '2026-10-27',
+      sessions: [
+        { id: 'y', s: FREE, min: 45, date: '2026-10-27', at: '23:20', what: '相対性理論' },
+        { id: 'n', s: FREE, min: 25, date: '2026-10-28', at: '12:35' },
+        { id: 'k', s: 'en', min: 30, date: '2026-10-27', at: '7:00' },
+      ],
+    });
+    rollDay(new Date(2026, 9, 28, 13));
+    const by = (id: string) => getState().sessions.find((x) => x.id === id);
+    expect(by('y')).toMatchObject({ s: FREE, kept: true, what: '相対性理論' });
+    expect(by('n')?.kept).toBeUndefined();
+    expect(by('k')?.kept).toBeUndefined();
+  });
+  it('is filed even when the day already turned over before (the app opened later the same day)', () => {
+    reset({ lastDay: '2026-10-28', sessions: [{ id: 'y', s: FREE, min: 45, date: '2026-10-27', at: '23:20' }] });
+    rollDay(new Date(2026, 9, 28, 13));
+    expect(getState().sessions[0].kept).toBe(true);
+  });
+});
