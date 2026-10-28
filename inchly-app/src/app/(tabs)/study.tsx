@@ -279,7 +279,6 @@ function AheadRow({ b, live, next, last }: { b: Block; live: boolean; next: bool
           <Txt size={14.5} w="700" numberOfLines={1} style={{ flexShrink: 1 }}>{sj.name}</Txt>
           {live ? <NowBadge /> : null}
           {next ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
-          {b.date ? <Txt size={11} w="600" tone="ink3">この日だけ</Txt> : null}
         </View>
         {b.note || b.t ? <Txt size={12} tone="ink2" numberOfLines={1}>{b.note || b.t}</Txt> : null}
       </View>
@@ -323,7 +322,6 @@ function PlanRow({ b, live, next, first }: { b: Block; live: boolean; next: bool
           <Txt size={14.5} w="700" numberOfLines={1} style={{ flexShrink: 1 }}>{sj.name}</Txt>
           {live ? <NowBadge /> : null}
           {next ? <Txt size={11} w="600" tone="ink3">つぎ</Txt> : null}
-          {b.date ? <Txt size={11} w="600" tone="ink3">この日だけ</Txt> : null}
         </View>
         {/* under it, the memo (no memo: what to do) */}
         {b.note || b.t ? <Txt size={12} tone="ink2" numberOfLines={1}>{b.note || b.t}</Txt> : null}

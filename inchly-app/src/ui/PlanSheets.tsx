@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Keyboard, ScrollView, Switch, TextInput, View } from 'react-native';
+import { Keyboard, ScrollView, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { AREAS, guessArea, OTHER_COLORS, shadeFor, subj } from '../data';
@@ -24,7 +24,7 @@ import { toast } from './Toast';
 // for the picture, and keeps it as your own icon — next time it's in the grid,
 // with the subject it was picked with (long press takes it off). The times are
 // optional: no start, the plan is just for its day; no end, it runs until the
-// next one. 毎週 makes it come back on its weekday every week. Things move
+// next one. A plan is for its day (no 毎週). Things move
 // with iOS's curve, never a bounce.
 // Drawn the way iOS draws a new event, and kept low in contrast: やめる and 追加
 // as blue text, small grey names over white groups, 日付 and 時刻 (start 〜 end)
@@ -68,8 +68,8 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const end = at + len;
   // the end picked on its wheel, after the start (past midnight: the next day)
   const setEnd = (m: number) => setLen(((m - at + DAY) % DAY) || DAY);
-  // 毎週: the plan comes back on its weekday every week (a weekly one keeps its days until its day is changed)
-  const [weekly, setWeekly] = useState(!!existing && !existing.date);
+  // a plan is for its day; one made weekly before (no date) stays weekly, on its days until its day is changed
+  const weekly = !!existing && !existing.date;
   const [moved, setMoved] = useState(false);
   const days = existing && !existing.date && !moved ? existing.days : [mondayIndex(d)];
   const daysLabel = `毎週${days.map((i) => DOW[i]).join('・')}曜`;
@@ -267,15 +267,6 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
                 <PickChip label={chipDate(d)} on={open === 'date'} onPress={() => toggle('date')} a11y="始める日を変える" />
               </View>
               {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => { setD(day0(x)); setMoved(true); }} onDone={() => setOpen(null)} /></Opens> : null}
-              {/* 毎週: the same plan on this weekday every week (school, a cram school …) */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 12, minHeight: 52, borderTopWidth: hair, borderTopColor: t.line }}>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Txt size={16}>毎週</Txt>
-                  <Txt size={12} tone="ink3" numberOfLines={1}>{weekly ? `${daysLabel}にくり返す` : 'この日だけ'}</Txt>
-                </View>
-                <Switch value={weekly} onValueChange={(v) => { haptic.tap(); setWeekly(v); }} accessibilityLabel={`毎週${DOW[mondayIndex(d)]}曜にくり返す`}
-                  trackColor={{ true: t.green, false: t.line2 }} thumbColor="#fff" ios_backgroundColor={t.line2} />
-              </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 16, paddingRight: 10, minHeight: 52, borderTopWidth: hair, borderTopColor: t.line }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Txt size={16}>時刻</Txt>
