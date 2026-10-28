@@ -522,7 +522,8 @@ function CardFace({ b, w, state, plan, over, held, begin, record, more, h }: Car
 
       {/* ✎ 編集 / ▶ ❚❚ / ✓ 記録 */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 34 * k }}>
-        <Side k={k} icon="edit" a11y={`${sj.name}の予定を編集`} onPress={() => { haptic.tap(); planSheet({ existing: b }); }} />
+        {/* the card being studied edits without its day (it's today's, under way); the others with day and time */}
+        <Side k={k} icon="edit" a11y={`${sj.name}の予定を編集`} onPress={() => { haptic.tap(); planSheet({ existing: b, noDay: running }); }} />
         <Press onPress={main.go} haptics={false} scale={0.9} accessibilityLabel={main.a11y}
           style={{ width: 70 * k, height: 70 * k, borderRadius: 35 * k, backgroundColor: CARD.ink, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name={main.icon} size={26 * k} color="#fff" filled />

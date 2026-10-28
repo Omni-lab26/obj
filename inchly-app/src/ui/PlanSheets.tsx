@@ -44,8 +44,9 @@ const chipDate = (d: Date) => `${d.getMonth() + 1}月${d.getDate()}日(${DOW[mon
 const DEADLINE_RED = '#FF3B30';
 
 type Kind = 'plan' | 'deadline';
-export function planSheet(o: { date?: Date; existing?: Block; kind?: Kind } = {}) {
-  openSheet((close) => <Editor close={close} date={o.date} existing={o.existing} kind={o.kind ?? 'plan'} />, { grouped: true, center: true, corner: 12 });
+/** noDay: no 曜日 row (the plan being studied, edited from its timer card: it stays on its day). */
+export function planSheet(o: { date?: Date; existing?: Block; kind?: Kind; noDay?: boolean } = {}) {
+  openSheet((close) => <Editor close={close} date={o.date} existing={o.existing} kind={o.kind ?? 'plan'} noDay={o.noDay} />, { grouped: true, center: true, corner: 12 });
 }
 /** The timetable's 追加: a new plan for today (the day can be changed in the sheet). */
 export const planCalendar = () => planSheet({ date: new Date() });
@@ -53,7 +54,7 @@ export const planCalendar = () => planSheet({ date: new Date() });
 type Open = 'date' | 'start' | 'end' | 'subject' | 'new' | null;
 const DAY = 24 * 60;
 
-function Editor({ close, date, existing, kind: kind0 }: { close: () => void; date?: Date; existing?: Block; kind: Kind }) {
+function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => void; date?: Date; existing?: Block; kind: Kind; noDay?: boolean }) {
   const t = useT();
   const subjects = useSubjects();
   const today = day0(new Date());
@@ -264,11 +265,11 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
               {open === 'new' ? <Opens><NewSubject onAdd={(x) => { setName(x.name); setColor(x.c); setOpen(null); }} /></Opens> : null}
           </Group>
 
-          {/* 曜日: the coming week in a row (one tap), the calendar for a later day */}
-          <Group>
+          {/* 曜日: the coming week in a row (one tap), the calendar for a later day (not for the plan being studied) */}
+          {noDay ? null : <Group>
             <WeekRow d={d} today={today} calendar={open === 'date'} onPick={(x) => { haptic.tap(); setD(x); setMoved(true); if (open === 'date') setOpen(null); }} onCalendar={() => toggle('date')} />
             {open === 'date' ? <Opens><DatePick value={d} min={today} onChange={(x) => { setD(day0(x)); setMoved(true); }} onDone={() => setOpen(null)} /></Opens> : null}
-          </Group>
+          </Group>}
 
           {/* 時刻: the start and the end side by side, as grey chips that open iOS's pickers under the row; the end can stay empty */}
           <Group>
