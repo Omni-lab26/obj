@@ -206,6 +206,8 @@ export type Design = {
   frost: Frost;
   /** how solid a card is over the 背景: 0 thin glass … 3 near white (theme.ts, the timer's cards) */
   cardFill: CardFill;
+  /** the timer card's big time: a face from ui/timeFonts (unset: the first, 縦長) */
+  timeFont?: string;
 };
 export type CardFill = 0 | 1 | 2 | 3;
 export const CARD_FILLS: { v: CardFill; label: string }[] = [{ v: 0, label: 'うすい' }, { v: 1, label: 'ふつう' }, { v: 2, label: 'こい' }, { v: 3, label: '白' }];

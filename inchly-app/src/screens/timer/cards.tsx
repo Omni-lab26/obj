@@ -1,29 +1,31 @@
 import { router } from 'expo-router';
 import { ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn, FadeOut, interpolateColor, LayoutAnimationConfig, LinearTransition, makeMutable, type SharedValue,
   useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withDelay, withTiming, ZoomOut,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
-import { hm, subj } from '@/data';
+import { subj } from '@/data';
 import type { Zone, Zones } from '@/screens/layout';
 import { jpHm, session, startBlock, useSession } from '@/screens/model';
 import { jpDate } from '@/lib/time';
 import { deckOf, endOf, suggestion, type Block } from '@/lib/timetable';
-import { type Backdrop, TIMER_FILM, useDesign } from '@/design';
-import { doneOn, elapsedOf, finishBlock, getState, type Held, togglePause, useStore } from '@/store';
-import { focus } from '@/theme';
+import { type Backdrop, useDesign } from '@/design';
+import { doneOn, elapsedOf, finishBlock, getState, type Held, setDesign, togglePause, useStore } from '@/store';
+import { focus, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { Dialog } from '@/ui/Dialog';
 import { Icon } from '@/ui/Icon';
 import { orderSheet } from '@/ui/OrderSheet';
 import { PlanArt } from '@/ui/PlanArt';
-import { glyphOf, SubjectGlyph } from '@/ui/SubjectGlyph';
 import { planSheet } from '@/ui/PlanSheets';
+import { openSheet } from '@/ui/Sheet';
+import { TIME_FONTS, timeFontOf } from '@/ui/timeFonts';
+import { toast } from '@/ui/Toast';
 import { BackdropView } from '@/ui/backdrop/Backdrop';
 import { backdropAvoid, feedAt, FLOOR, holdBackdrop, isDarkBackdrop, useBackdrop } from '@/ui/backdrop/shared';
 import { WalkerTags } from '@/ui/backdrop/Tags';
@@ -37,20 +39,24 @@ import { closeTimer, fmt, TimerFrame } from './standard';
 // end. Going on to the next plan is a slide and 始める on its card: the study
 // under way is set aside to record later (its card says ✓ 42分). Record each
 // one as you go, or all at the end (まとめて記録). A recorded plan's card
-// leaves; the card in front adds one. Under the cards, fixed, the time studied
-// and the line toward the plan's end: green inside it, red past it.
+// leaves; the card in front adds one. The card is pale green: a label, what to
+// do in big heavy type, the time, and a frosted bar at the bottom with the
+// line toward the plan's end and the one button. Hold the time to pick its
+// face. Under the cards, an ad.
 //
 // Behind it all, the theme you pick (テーマ): the koi pond (they swim around
 // the card, never under it), sharks in a pale sea (the cards frosted glass),
 // people walking over a glass floor, or the centered card's color. 眺める fades the words away and leaves the background.
 
-/** The measured card, in points, on a 393pt-wide screen; everything scales with it. */
-const BASE_W = 281, RATIO = 439 / 281, GAP = 10, SIDE = 0.95, DIM = 0.45;
-/** What sits around the cards: the heading, the pager, the time studied. */
-const AROUND = 220;
+/** The card as drawn (361pt wide, 400 tall); everything in it scales with its width. It grows taller to fill the page, up to TALLEST × its width. */
+const CARD_W = 361, CARD_RATIO = 400 / 361, TALLEST = 1.8, GAP = 12, SIDE = 0.95, DIM = 0.45;
+/** What sits around the cards: the heading, the pager, the ad, and 記録まち when there's some. */
+const HEAD_H = 62, PAGER_H = 34, AD_H = 100, WAIT_H = 46;
 const ADD_COLOR = '#4A5062';
-const WITHIN = '#30D158';
-const OVER = '#FF453A';
+/** The card's colors: pale green; past the plan's length, a pale coral (and the line's extra part orange). */
+const GREEN = { card: '#CFF6C0', deep: '#B9E6A8', ink: '#1E2C1A', glass: 'rgba(34,52,30,0.46)', done: '#22331E' };
+const CORAL = { card: '#FFDDD0', deep: '#F9C7B5', ink: '#3B1810', glass: 'rgba(84,30,18,0.48)', done: '#3B1810' };
+const EXTRA = '#FF9F0A';
 const CRIMSON_ON_DARK = '#FF4D6D';
 const CRIMSON = '#D7003A';
 
@@ -250,12 +256,13 @@ function Deck({ height }: { height: number }) {
   const held = useStore((s) => s.held);
   const [menu, setMenu] = useState<Menu>(null);
 
-  // the card: the measured one on a 393pt screen, smaller when the page is short
-  const W = Math.round(Math.max(190, Math.min(width - 112, 340, (height - AROUND) / RATIO)));
-  const k = W / BASE_W;
+  // the card: as wide as leaves the next ones peeking in, narrower when the page is short; taller to fill the room, so no gap is left under it
+  const room = height - HEAD_H - PAGER_H - AD_H - (held.length ? WAIT_H : 0);
+  const W = Math.round(Math.max(200, Math.min(width - 62, CARD_W, room / CARD_RATIO)));
+  const H = Math.round(Math.max(W * CARD_RATIO, Math.min(room, W * TALLEST)));
+  const k = W / CARD_W;
   const gap = Math.round(GAP * k);
   const step = W + gap;
-  const H = Math.round(W * RATIO);
 
   // the card to open on: the plan under way, else the one now or next, else the first (0 is the empty card)
   const [start] = useState(() => {
@@ -357,7 +364,7 @@ function Deck({ height }: { height: number }) {
             </Slide>
             {cards.map((b, i) => (
               <Slide key={b.id} i={i + 1} x={x} step={step} w={W} h={H} k={k} tone={tone} centered={shown === i + 1} onFocus={() => goTo(i + 1)}>
-                <PlanCard b={b} no={i + 1} i={i + 1} x={x} step={step} k={k} tone={tone} live={b.id === live} held={heldOf.get(b.id)}
+                <PlanCard b={b} w={W} live={b.id === live} held={heldOf.get(b.id)}
                   begin={begin} record={record} more={() => { haptic.tap(); setMenu({ kind: 'more', b }); }} />
               </Slide>
             ))}
@@ -366,8 +373,10 @@ function Deck({ height }: { height: number }) {
       </View>
 
       <Pager x={x} step={step} n={n} tone={tone} label={shown === 0 ? '追加' : `${shown} / ${cards.length}`} />
-      <Elapsed tone={tone} />
       {held.length ? <Waiting held={held} tone={tone} onPress={() => { haptic.tap(); setMenu({ kind: 'all' }); }} /> : null}
+      {/* what's left of the page goes above the ad, which keeps to the bottom */}
+      <View pointerEvents="none" style={{ flex: 1 }} />
+      <AdCard tone={tone} />
 
       <MenuDialog menu={menu} close={() => setMenu(null)} record={record} begin={begin} />
     </View>
@@ -396,7 +405,7 @@ function Slide({ i, x, step, w, h, k, tone, centered, onFocus, children }: {
   const dim = useAnimatedStyle(() => ({ opacity: (tone.light ? 0.55 : DIM) * Math.min(1, Math.abs(x.value - i * step) / step) }));
   return (
     <Animated.View layout={LinearTransition.springify().damping(20).stiffness(180)} entering={FadeIn.duration(260)} exiting={ZoomOut.duration(260)} style={{ width: w, height: h }}>
-      <Animated.View style={[{ flex: 1, borderRadius: 16 * k, overflow: 'hidden' }, a]}>
+      <Animated.View style={[{ flex: 1, borderRadius: 40 * k, overflow: 'hidden' }, a]}>
         {children}
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tone.light ? FLOOR : '#000000' }, dim]} />
         {centered ? null : <Press onPress={onFocus} haptics={false} scale={1} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} accessibilityLabel="この予定を真ん中に" />}
@@ -406,136 +415,177 @@ function Slide({ i, x, step, w, h, k, tone, centered, onFocus, children }: {
 }
 
 // ---------- the card ----------
-/** Two colors (#RRGGBB) mixed. */
-function mix(a: string, b: string, t: number) {
-  const x = parseInt(a.slice(1, 7), 16), y = parseInt(b.slice(1, 7), 16);
-  const ch = (s: number) => Math.round(((x >> s) & 255) + (((y >> s) & 255) - ((x >> s) & 255)) * t);
-  return `#${((ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).padStart(6, '0')}`;
+/** The time as the card shows it: m:ss, and h:mm from an hour on (so it keeps to five figures). */
+const clock = (sec: number) => (sec >= 3600 ? `${Math.floor(sec / 3600)}:${String(Math.floor(sec / 60) % 60).padStart(2, '0')}` : `${Math.floor(sec / 60)}:${String(Math.floor(sec) % 60).padStart(2, '0')}`);
+type CardState = 'idle' | 'live' | 'paused' | 'held';
+type CardProps = { b: Block; w: number; live: boolean; held?: Held; begin: (b: Block) => void; record: (h: Held) => void; more: () => void };
+
+/** A plan's card. Only the one under way ticks (LiveCard); the others are still. */
+function PlanCard(p: CardProps) {
+  if (p.live) return <LiveCard {...p} />;
+  return <CardFace {...p} state={p.held ? 'held' : 'idle'} sec={p.held?.sec ?? 0} plan={(p.b.min ?? 0) * 60} />;
 }
-/**
- * How a card is colored: quiet, and a little of the background in it. Over
- * a 背景 the card is white glass, a touch of Liquid Glass in it (ui/Glass
- * Pane liquid: a rim catching the light, kept quiet); with no 背景, the
- * subject's color taken down. The subject's own color shows only in its
- * cover, quieted too.
- */
-type Skin = {
-  paper: string; edge: string; ink: string; ink2: string; ink3: string; solid: string; onSolid: string; outline: string; cover: string; dim: string; live: string; stop: string;
-  /** glass: what's behind shows through, blurred */
-  frost?: boolean;
-};
-const COVER_BASE: Record<Exclude<Backdrop, 'none'>, string> = { pond: '#D3DDD9', sea: '#D3D9E0', walk: '#D9D7D0' };
-function skinOf(bg: Backdrop, c: string, film = 0.4): Skin {
-  if (bg !== 'none') {
-    return { paper: `rgba(250,250,248,${film})`, edge: 'transparent', ink: '#1A1A18', ink2: 'rgba(26,26,24,0.64)', ink3: 'rgba(26,26,24,0.44)', solid: '#1A1A18', onSolid: '#FBFBF9',
-      outline: 'rgba(26,26,24,0.22)', cover: mix(c, COVER_BASE[bg], 0.48), dim: FLOOR, live: '#1E7A46', stop: CRIMSON, frost: true };
-  }
-  const base = mix(c, '#12141A', 0.72);
-  return { paper: base, edge: 'rgba(255,255,255,0.09)', ink: '#E8ECEF', ink2: 'rgba(232,236,239,0.62)', ink3: 'rgba(232,236,239,0.4)', solid: '#E8ECEF', onSolid: base,
-    outline: 'rgba(232,236,239,0.22)', cover: mix(c, '#12141A', 0.38), dim: '#000000', live: '#5FD08E', stop: CRIMSON_ON_DARK };
+function LiveCard(p: CardProps) {
+  const ss = useSession();
+  return <CardFace {...p} state={ss.paused ? 'paused' : 'live'} sec={ss.running ? ss.elapsed : 0} plan={ss.plan ?? (p.b.min ?? 0) * 60} />;
 }
-const useSkin = (c: string) => skinOf(useBackdrop(), c, TIMER_FILM[useDesign().cardFill ?? 1]);
+
+/** The face of what to do: a Japanese gothic at its heaviest (bundled, app/_layout). */
+const HEAVY = 'ZenKakuGothicNew_900Black';
+/** The loop drawn big and faint behind the card's middle. */
+const LOOP = 'M30 250 C 10 170, 70 120, 140 130 C 215 140, 225 60, 170 30 C 115 0, 60 50, 95 100 C 130 150, 210 160, 220 230';
 
 /**
- * A plan's card, like a notebook: its picture at the top (the photo you
- * picked, or a plain cover in the subject's quieted color with its name), the
- * subject and time, what to do, the memo, and its buttons at the bottom —
- * only symbols as on a player: ▶ 始める; while it runs ■ 終わる, ❚❚ 一時停止 / ▶
- * 再開; ··· the rest. Set aside, 記録する and 続ける in words, and ··· again.
+ * The card: at the top a label (how it stands and when), what to do in big
+ * heavy type, the time in the middle (hold it to change its face), and a
+ * frosted bar at the bottom: the subject and what, how much is left, the line
+ * toward the plan's end, and the button — ▶ to start; while it runs ❚❚, and
+ * past the plan ■ beside it; paused ▶ and ■; set aside, ▶ to go on and 記録.
+ * Past the plan's length the card turns coral and the big number counts what's
+ * been added (+4:12). ··· at the top right: the rest.
  */
-function PlanCard({ b, no, i, x, step, k, tone, live, held, begin, record, more }: {
-  b: Block; no: number; i: number; x: SharedValue<number>; step: number; k: number; tone: Tone; live: boolean; held?: Held;
-  begin: (b: Block) => void; record: (h: Held) => void; more: () => void;
-}) {
-  const paused = useStore((s) => s.paused);
+function CardFace({ b, w, state, sec, plan, held, begin, record, more }: CardProps & { state: CardState; sec: number; plan: number }) {
   const sj = subj(b.s);
-  const sk = useSkin(sj.c);
-  const art = Math.round(251 * k);
-  const glyph = glyphOf(sj.name, sj.area);
-  const drift = useAnimatedStyle(() => ({ transform: [{ translateX: Math.max(-1, Math.min(1, (x.value - i * step) / step)) * 0.05 * step }, { scale: 1.14 }] }));
-  const time = b.start ? (b.min ? `${b.start}–${endOf(b)}` : `${b.start}から`) : '時刻なし';
-  const min = held ? Math.max(1, Math.round(held.sec / 60)) : 0;
-  const state = live ? (paused ? '一時停止中' : '勉強中') : held ? `記録まち · ${min}分` : time;
-  const fs = (v: number, lo: number) => Math.max(lo, v * k);
+  const u = w / 100, k = w / CARD_W;
+  const fs = (v: number) => Math.max(v * 0.85, v * k);
+  const running = state === 'live' || state === 'paused';
+  const over = running && plan > 0 && sec > plan;
+  const c = over ? CORAL : GREEN;
+  const face = timeFontOf(useDesign().timeFont);
+  const span = b.start ? (b.min ? `${b.start}–${endOf(b)}` : `${b.start}から`) : '時刻なし';
+  const min = Math.max(1, Math.round(sec / 60));
+  const label = state === 'idle' ? `時間割 · ${span}` : state === 'held' ? `記録まち · ${span}`
+    : over ? `予定クリア · ${state === 'paused' ? '一時停止中' : '延長中'} · ${span}` : `${state === 'paused' ? '一時停止中' : '勉強中'} · ${span}`;
+  const dot = state === 'paused' ? '#FF453A' : state === 'live' ? (over ? EXTRA : '#34C759') : 'rgba(30,44,26,0.35)';
+  const big: { n: string; unit?: string } = state === 'idle' ? (b.min ? { n: String(b.min), unit: '分' } : { n: b.start ?? '—' })
+    : state === 'held' ? { n: String(min), unit: '分' } : over ? { n: `+${clock(sec - plan)}` } : { n: clock(sec) };
+  const meta: [string, string] = state === 'idle' ? (b.min ? ['予定の長さ', `${b.min} 分`] : ['時間の決まりなし', ''])
+    : state === 'held' ? ['記録まち', `${min} 分`]
+    : over ? [`合計 ${clock(sec)}`, `${Math.floor((sec - plan) / 60)} 分プラス`]
+    : plan ? ['のこり', `${Math.max(0, Math.ceil((plan - sec) / 60))} 分`] : ['経過', clock(sec)];
+  const done = over ? plan / sec : plan && state !== 'idle' ? Math.min(1, sec / plan) : 0;
+  const what = b.t ?? sj.task;
+  const toggle = () => { haptic.soft(); togglePause(); };
+  const size = face.size * w;
   return (
-    <View style={{ flex: 1, backgroundColor: sk.paper, borderRadius: 16 * k, borderWidth: sk.frost ? 0 : StyleSheet.hairlineWidth, borderColor: sk.edge }}>
-      {sk.frost ? <Pane radius={16 * k} liquid /> : null}
-      {/* the picture */}
-      <View style={{ position: 'absolute', left: 14 * k, top: 14 * k, width: art + 2 * k, height: art, borderRadius: 10 * k, overflow: 'hidden', backgroundColor: sk.cover }}>
-        <Animated.View style={drift}>
-          {b.icon ? <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={art + 2 * k} radius={0} /> : <View style={{ width: art + 2 * k, height: art }} />}
-        </Animated.View>
-        {b.icon ? null : (
-          <View pointerEvents="none" style={[StyleSheet.absoluteFill, { padding: 14 * k, justifyContent: 'space-between' }]}>
-            {/* the subject's picture, big and quiet on its cover (化学 a flask …) */}
-            {glyph ? <View style={{ position: 'absolute', right: 16 * k, top: 40 * k }}><SubjectGlyph glyph={glyph} size={art * 0.42} color="rgba(255,255,255,0.5)" width={1.4} /></View> : null}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Txt num size={fs(11, 10)} w="600" color="rgba(255,255,255,0.78)">{String(no).padStart(2, '0')}</Txt>
-              <Txt num size={fs(11, 10)} w="600" color="rgba(255,255,255,0.78)">{b.start ?? ''}</Txt>
-            </View>
-            <View>
-              <Txt size={fs(34, 24)} w="800" lh={fs(38, 27)} color="rgba(255,255,255,0.96)" numberOfLines={1}>{sj.name}</Txt>
-              {b.t ? <Txt size={fs(12, 10.5)} w="500" color="rgba(255,255,255,0.75)" numberOfLines={1}>{b.t}</Txt> : null}
-            </View>
-          </View>
-        )}
-      </View>
+    <View style={{ flex: 1, borderRadius: 40 * k, backgroundColor: c.card, overflow: 'hidden' }}>
+      <Svg pointerEvents="none" width={64 * u} height={72 * u} viewBox="0 0 230 260" style={{ position: 'absolute', right: -11 * u, top: 33 * u }}>
+        <Path d={LOOP} fill="none" stroke={c.deep} strokeOpacity={0.7} strokeWidth={26} strokeLinecap="round" />
+      </Svg>
 
-      {/* what it is */}
-      <View style={{ position: 'absolute', left: 15 * k, right: 15 * k, top: 279 * k, gap: 3 * k }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={{ width: 7 * k, height: 7 * k, borderRadius: 2, backgroundColor: sj.c }} />
-          <Txt size={fs(12, 10.5)} w="600" color={sk.ink2} numberOfLines={1} style={{ flexShrink: 1 }}>{sj.name}</Txt>
-          <Txt num size={fs(12, 10.5)} color={live && !paused ? sk.live : live ? sk.stop : sk.ink3} numberOfLines={1}>{`· ${state}`}</Txt>
+      {/* the label, and ··· */}
+      <View pointerEvents="box-none" style={{ position: 'absolute', top: 5 * u, left: 0, right: 0, height: 28 * k, alignItems: 'center', justifyContent: 'center' }}>
+        <View pointerEvents="none" style={{ maxWidth: w - 2 * (4 * u + 34 * k), height: 28 * k, paddingHorizontal: 13 * k, borderRadius: 14 * k, backgroundColor: c.deep, flexDirection: 'row', alignItems: 'center', gap: 6 * k }}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dot }} />
+          <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: fs(11.5), fontWeight: '500', color: c.ink }}>{label}</Text>
         </View>
-        <Txt size={fs(16.5, 13.5)} lh={fs(21, 17)} w="700" color={sk.ink} numberOfLines={2}>{b.t ?? sj.task}</Txt>
-        {b.note ? <Txt size={fs(12.5, 11)} lh={fs(17, 15)} color={sk.ink2} numberOfLines={2}>{b.note}</Txt> : null}
-      </View>
-
-      {/* everything about it happens here */}
-      {live || !held ? (
-        // the symbols alone, as a player's — ▶ starts; while it runs ■ ends (and records), ❚❚ / ▶ pauses and resumes; ··· the rest
-        <View style={{ position: 'absolute', left: 14 * k, right: 14 * k, top: 378 * k, height: 52 * k, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly' }}>
-          {live ? <GlyphBtn k={k} icon="stop" size={24} color={sk.ink} a11y={`${sj.name}を終わる（記録する）`} onPress={session.finish} /> : <View style={{ width: 56 * k }} />}
-          {live ? (
-            <GlyphBtn k={k} icon={paused ? 'play' : 'pause'} size={36} color={sk.ink} a11y={paused ? `${sj.name}を再開` : `${sj.name}を一時停止`}
-              onPress={() => { haptic.soft(); togglePause(); }} />
-          ) : <GlyphBtn k={k} icon="play" size={36} color={sk.ink} a11y={`${sj.name}を始める（${time}）`} onPress={() => begin(b)} />}
-          <GlyphBtn k={k} icon="more" size={24} color={sk.ink2} a11y={`${sj.name}の予定のメニュー`} onPress={more} />
-        </View>
-      ) : (
-      <View style={{ position: 'absolute', left: 14 * k, right: 10 * k, top: 384 * k, height: 40 * k, flexDirection: 'row', alignItems: 'center', gap: 8 * k }}>
-        <CardBtn sk={sk} k={k} solid label={`記録する · ${min}分`} a11y={`${sj.name} ${min}分を記録する`} onPress={() => record(held)} />
-        <CardBtn sk={sk} k={k} label="続ける" a11y={`${sj.name}を続きから始める`} onPress={() => begin(b)} />
-        <Press onPress={more} scale={0.9} hitSlop={6} accessibilityLabel={`${sj.name}の予定のメニュー`}
-          style={{ width: 36 * k, height: 40 * k, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="more" size={20 * k} color={sk.ink2} />
+        <Press onPress={more} scale={0.9} hitSlop={8} accessibilityLabel={`${sj.name}の予定のメニュー`}
+          style={{ position: 'absolute', right: 4 * u, width: 30 * k, height: 30 * k, borderRadius: 15 * k, backgroundColor: c.deep, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="more" size={16 * k} color={c.ink} />
         </Press>
       </View>
-      )}
+
+      {/* what to do, big and heavy, and the time under it: the two together in the middle of the room the label and the bar leave */}
+      <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, top: 5 * u + 28 * k, bottom: 92 * k, alignItems: 'center', justifyContent: 'center', gap: 2 * u }}>
+        <Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}
+          style={{ alignSelf: 'stretch', marginHorizontal: 7 * u, textAlign: 'center', fontFamily: HEAVY, fontSize: 11.08 * u, lineHeight: 12.6 * u, letterSpacing: -0.3 * u, color: c.ink }}>
+          {what}
+        </Text>
+        {/* hold the time for its face */}
+        <Press onLongPress={() => { haptic.firm(); timeFontSheet(); }} delayLongPress={450} haptics={false} scale={1.04}
+          accessibilityRole="button" accessibilityLabel={`${big.n}${big.unit ?? ''}`} accessibilityHint="長押しで時間のフォントを変えられます"
+          style={{ paddingHorizontal: 4 * u, opacity: state === 'paused' ? 0.38 : 1 }}>
+          <Text numberOfLines={1} adjustsFontSizeToFit
+            style={{ fontFamily: face.family, fontSize: size, lineHeight: size * 1.12, letterSpacing: face.spacing * size, color: c.ink, fontVariant: ['tabular-nums'], textAlign: 'center' }}>
+            {big.n}
+            {big.unit ? <Text style={{ fontFamily: undefined, fontWeight: '900', fontSize: size * 0.42, letterSpacing: 0 }}>{` ${big.unit}`}</Text> : null}
+          </Text>
+        </Press>
+      </View>
+
+      {/* the bar */}
+      <View style={{ position: 'absolute', left: 8 * k, right: 8 * k, bottom: 8 * k, height: 84 * k, borderRadius: 42 * k, backgroundColor: c.glass,
+        flexDirection: 'row', alignItems: 'center', gap: 12 * k, paddingLeft: (b.icon ? 14 : 24) * k, paddingRight: 14 * k }}>
+        {b.icon ? <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={Math.round(42 * k)} radius={12 * k} /> : null}
+        <View style={{ flex: 1, minWidth: 0, gap: 5 * k }}>
+          <Text numberOfLines={1} style={{ fontSize: fs(14.5), fontWeight: '700', color: '#fff', letterSpacing: -0.2 }}>{`${sj.name} · ${what}`}</Text>
+          <Text numberOfLines={1} style={{ fontSize: fs(10), letterSpacing: 0.6, color: 'rgba(255,255,255,0.75)', fontVariant: ['tabular-nums'] }}>
+            {meta[0]}{meta[1] ? <Text style={{ fontWeight: '700', color: '#fff' }}>{`  • ${meta[1]}`}</Text> : null}
+          </Text>
+          <View style={{ height: 4 * k, marginTop: 3 * k, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.38)', flexDirection: 'row', gap: 2, overflow: 'hidden' }}>
+            <View style={{ width: `${done * 100}%`, borderRadius: 2, backgroundColor: c.done }} />
+            {over ? <View style={{ flex: 1, borderRadius: 2, backgroundColor: EXTRA }} /> : null}
+          </View>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 * k }}>
+          {state === 'paused' || over ? <Round k={k} sub icon="stop" a11y={`${sj.name}を終わる（記録する）`} onPress={session.finish} /> : null}
+          {state === 'live' ? <Round k={k} icon="pause" ink={c.ink} a11y={`${sj.name}を一時停止`} onPress={toggle} />
+            : state === 'paused' ? <Round k={k} icon="play" ink={c.ink} a11y={`${sj.name}を再開`} onPress={toggle} />
+            : state === 'held' && held ? (
+              <>
+                <Round k={k} sub icon="play" a11y={`${sj.name}を続きから始める`} onPress={() => begin(b)} />
+                <Press onPress={() => record(held)} haptics={false} scale={0.94} accessibilityLabel={`${sj.name} ${min}分を記録する`}
+                  style={{ height: 46 * k, paddingHorizontal: 16 * k, borderRadius: 23 * k, backgroundColor: '#fff', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: fs(14), fontWeight: '700', color: c.ink }}>記録</Text>
+                </Press>
+              </>
+            ) : <Round k={k} icon="play" ink={c.ink} a11y={`${sj.name}を始める（${span}）`} onPress={() => begin(b)} />}
+        </View>
+      </View>
     </View>
   );
 }
 
-/** A player's button: only its symbol, no frame or words (the name is for VoiceOver). */
-function GlyphBtn({ k, icon, size, color, a11y, onPress }: { k: number; icon: 'play' | 'pause' | 'stop' | 'more'; size: number; color: string; a11y: string; onPress: () => void }) {
+/** The bar's round buttons: white with the symbol in the card's ink, or (sub) smaller and see-through. */
+function Round({ k, sub, icon, ink, a11y, onPress }: { k: number; sub?: boolean; icon: 'play' | 'pause' | 'stop'; ink?: string; a11y: string; onPress: () => void }) {
+  const d = (sub ? 38 : 46) * k;
   return (
-    <Press onPress={onPress} haptics={false} scale={0.86} hitSlop={6} accessibilityLabel={a11y}
-      style={{ width: 56 * k, height: 52 * k, alignItems: 'center', justifyContent: 'center' }}>
-      <Icon name={icon} size={size * k} color={color} filled />
+    <Press onPress={onPress} haptics={false} scale={0.88} hitSlop={4} accessibilityLabel={a11y}
+      style={{ width: d, height: d, borderRadius: d / 2, backgroundColor: sub ? 'rgba(255,255,255,0.22)' : '#fff', alignItems: 'center', justifyContent: 'center' }}>
+      <Icon name={icon} size={(sub ? 13 : icon === 'pause' ? 17 : 18) * k} color={sub ? '#fff' : (ink ?? '#000')} filled />
     </Press>
   );
 }
 
-/** A button on a card: ink (the next thing to do) or a hairline outline (the other). */
-function CardBtn({ sk, k, solid, label, icon, a11y, onPress }: { sk: Skin; k: number; solid?: boolean; label: string; icon?: 'play' | 'pause'; a11y: string; onPress: () => void }) {
+// ---------- the time's face ----------
+/** Picked by holding the card's time: a tile per face, the card changes as you tap; ✓ keeps it, ✕ goes back. */
+export function timeFontSheet() {
+  openSheet((close) => <TimeFontChoice close={close} />, { grouped: true });
+}
+function TimeFontChoice({ close }: { close: () => void }) {
+  const t = useT();
+  const cur = timeFontOf(useDesign().timeFont).id;
+  const [first] = useState(cur);
+  const pick = (id: string) => { haptic.tap(); setDesign({ timeFont: id }); };
   return (
-    <Press onPress={onPress} haptics={false} scale={0.96} accessibilityLabel={a11y}
-      style={{ flex: 1, height: 40 * k, borderRadius: 10 * k, backgroundColor: solid ? sk.solid : 'transparent', borderWidth: solid ? 0 : 1, borderColor: sk.outline,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 * k }}>
-      {icon ? <Icon name={icon} size={11 * k} color={solid ? sk.onSolid : sk.ink} filled /> : null}
-      <Txt size={Math.max(12.5, 14 * k)} w="700" color={solid ? sk.onSolid : sk.ink} numberOfLines={1}>{label}</Txt>
-    </Press>
+    <View style={{ gap: 14, paddingTop: 2, paddingBottom: 6 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Press onPress={() => { setDesign({ timeFont: first }); close(); }} scale={0.92} hitSlop={8} accessibilityLabel="やめる（元のフォントに戻す）"
+          style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(120,120,128,0.16)', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="x" size={15} color={t.ink} />
+        </Press>
+        <Txt size={17} w="700" style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">時間のフォント</Txt>
+        <Press onPress={close} scale={0.92} hitSlop={8} accessibilityLabel="決定"
+          style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.blue, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="check" size={18} color="#fff" />
+        </Press>
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 12, columnGap: '2.66%' }} accessibilityRole="radiogroup">
+        {TIME_FONTS.map((f) => {
+          const on = f.id === cur;
+          return (
+            <Press key={f.id} onPress={() => pick(f.id)} scale={0.95} haptics={false} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={f.name}
+              style={{ width: '23%', alignItems: 'center', gap: 6 }}>
+              <View style={{ alignSelf: 'stretch', height: 66, borderRadius: 16, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, borderColor: on ? t.blue : 'transparent' }}>
+                <Text style={{ fontFamily: f.family, fontSize: 30, lineHeight: 36, color: '#1C1C1E', letterSpacing: f.spacing * 30 }}>39</Text>
+              </View>
+              <Txt size={11} w={on ? '700' : '400'} color={on ? t.blue : t.ink3}>{f.name}</Txt>
+            </Press>
+          );
+        })}
+      </View>
+      <Txt size={12} tone="ink3" style={{ textAlign: 'center' }}>選ぶとすぐカードに反映されます</Txt>
+    </View>
   );
 }
 
@@ -545,9 +595,9 @@ function AddCard({ w, h, k, tone, onPress }: { w: number; h: number; k: number; 
   const glass = useBackdrop() !== 'none';
   return (
     <Press onPress={onPress} haptics={false} scale={0.98} accessibilityLabel="今日の時間割に予定を追加"
-      style={{ width: w, height: h, borderRadius: 16 * k, borderWidth: glass ? 0 : 1, borderColor: tone.light ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.22)',
+      style={{ width: w, height: h, borderRadius: 40 * k, borderWidth: glass ? 0 : 1, borderColor: tone.light ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.22)',
         backgroundColor: glass ? 'rgba(255,255,255,0.22)' : tone.light ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', gap: 6 * k, paddingHorizontal: 24 * k }}>
-      {glass ? <Pane radius={16 * k} liquid /> : null}
+      {glass ? <Pane radius={40 * k} liquid /> : null}
       <Icon name="plus" size={22 * k} color={tone.ink} width={1.6} />
       <Txt size={Math.max(14, 16 * k)} w="700" color={tone.ink}>予定を追加</Txt>
       <Txt size={Math.max(11.5, 12.5 * k)} color={tone.ink2} style={{ textAlign: 'center' }}>今日の時間割に入れます</Txt>
@@ -570,39 +620,25 @@ function Pager({ x, step, n, tone, label }: { x: SharedValue<number>; step: numb
 }
 
 /**
- * The time studied, fixed under the cards so it stays in view whichever plan
- * you look at; the only thing that changes every second. Started from a plan,
- * a line under it fills green toward the plan's end and turns red past it.
+ * The ad, under the cards and still while they slide: quiet, in the page's
+ * colors, no movement or sound, always marked 広告. (For now a sample.)
  */
-function Elapsed({ tone }: { tone: Tone }) {
-  const ss = useSession();
-  const today = useStore((s) => s.todayMin);
-  const sec = ss.running ? ss.elapsed : 0;
-  const over = !!ss.plan && sec > ss.plan;
-  const top = ss.running ? `${ss.subject.name}${ss.plan ? ` · 予定${jpHm(ss.plan / 60)}` : ''}` : 'カードの「始める」で始まります';
-  const below = !ss.running ? `今日 ${hm(today)}`
-    : ss.next ? `次 ${ss.next.subject.name} ${ss.next.at}まで`
-    : ss.plan ? (over ? `予定を ${fmt(sec - ss.plan)} こえて` : `あと ${fmt(ss.plan - sec)}`)
-    : `今日 ${hm(today)}`;
-  // over a 背景, the time sits on a quiet pane of glass, so the koi passing under it never cover it
-  const glass = useBackdrop() !== 'none';
-  const fill = useDesign().cardFill ?? 1;
+function AdCard({ tone }: { tone: Tone }) {
   return (
-    <View pointerEvents="none" accessible accessibilityRole={ss.plan ? 'progressbar' : undefined}
-      style={glass ? { marginHorizontal: 10, marginTop: 14, paddingHorizontal: 10, paddingTop: 8, paddingBottom: 12, borderRadius: 18, backgroundColor: `rgba(255,255,255,${TIMER_FILM[fill] * 0.8})` } : { marginHorizontal: 20, marginTop: 22 }}
-      accessibilityLabel={ss.running ? `勉強した時間 ${fmt(sec)}${ss.paused ? '（一時停止中）' : ''}。${top}。${below}` : `${top}。${below}`}>
-      {glass ? <Pane radius={18} blur /> : null}
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>
-        <Txt num size={40} w="700" lh={46} color={!ss.running ? tone.ink3 : ss.paused ? (tone.light ? CRIMSON : CRIMSON_ON_DARK) : tone.ink}
-          style={{ textShadowColor: tone.shade, textShadowRadius: 10 }}>{fmt(sec)}</Txt>
-        <View style={{ flex: 1, minWidth: 0, alignItems: 'flex-end', paddingBottom: 4 }}>
-          <Txt size={12.5} lh={17} color={tone.ink2} numberOfLines={1} style={{ textShadowColor: tone.shade, textShadowRadius: 8 }}>{top}</Txt>
-          <Txt num size={12.5} lh={17} color={over ? OVER : tone.ink2} numberOfLines={1} style={{ textShadowColor: tone.shade, textShadowRadius: 8 }}>{below}</Txt>
-        </View>
+    <View accessibilityLabel="広告" style={{ marginHorizontal: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 24,
+      backgroundColor: tone.light ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.1)', borderWidth: StyleSheet.hairlineWidth, borderColor: tone.light ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.16)' }}>
+      <View style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: '#E2E8F6', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name="book" size={24} color="#3A4F86" />
       </View>
-      <View style={{ height: 3, borderRadius: 2, marginTop: 12, backgroundColor: tone.light ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)', overflow: 'hidden', opacity: ss.running && ss.plan ? 1 : 0 }}>
-        <View style={{ width: `${ss.plan ? Math.min(100, (sec / ss.plan) * 100) : 0}%`, height: '100%', borderRadius: 2, backgroundColor: over ? OVER : WITHIN }} />
+      <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
+        <Txt size={9.5} w="700" color={tone.ink3} style={{ letterSpacing: 0.8 }}>広告</Txt>
+        <Txt size={13.5} w="700" color={tone.ink} numberOfLines={1}>英単語3000をスキマ時間で</Txt>
+        <Txt size={11} color={tone.ink2} numberOfLines={1}>ことばラボ（例） · 7日間無料</Txt>
       </View>
+      <Press onPress={() => toast('広告の例です', 'まだ広告は配信していません')} scale={0.94} hitSlop={6} accessibilityLabel="広告を見る"
+        style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, backgroundColor: tone.ink, justifyContent: 'center' }}>
+        <Txt size={12.5} w="700" color={tone.light ? '#FFFFFF' : '#161616'}>見る</Txt>
+      </Press>
     </View>
   );
 }

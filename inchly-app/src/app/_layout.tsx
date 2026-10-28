@@ -8,6 +8,16 @@ import { IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono/600Sem
 import { Rajdhani_600SemiBold } from '@expo-google-fonts/rajdhani/600SemiBold';
 import { Rajdhani_700Bold } from '@expo-google-fonts/rajdhani/700Bold';
 import { Silkscreen_400Regular } from '@expo-google-fonts/silkscreen/400Regular';
+// the timer card: its heading (Zen Kaku Gothic) and the faces for its time (ui/timeFonts)
+import { Anton_400Regular } from '@expo-google-fonts/anton/400Regular';
+import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display/400Regular';
+import { InstrumentSerif_400Regular } from '@expo-google-fonts/instrument-serif/400Regular';
+import { InterTight_200ExtraLight } from '@expo-google-fonts/inter-tight/200ExtraLight';
+import { InterTight_800ExtraBold } from '@expo-google-fonts/inter-tight/800ExtraBold';
+import { JetBrainsMono_600SemiBold } from '@expo-google-fonts/jetbrains-mono/600SemiBold';
+import { Nunito_800ExtraBold } from '@expo-google-fonts/nunito/800ExtraBold';
+import { Oswald_300Light } from '@expo-google-fonts/oswald/300Light';
+import { ZenKakuGothicNew_900Black } from '@expo-google-fonts/zen-kaku-gothic-new/900Black';
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -59,6 +69,8 @@ export default function RootLayout() {
   const [fonts] = useFonts({
     DotGothic16_400Regular, BricolageGrotesque_500Medium, BricolageGrotesque_800ExtraBold, Silkscreen_400Regular,
     Rajdhani_600SemiBold, Rajdhani_700Bold, DelaGothicOne_400Regular, IBMPlexMono_400Regular, IBMPlexMono_600SemiBold,
+    Anton_400Regular, Oswald_300Light, InterTight_200ExtraLight, InterTight_800ExtraBold, Nunito_800ExtraBold, InstrumentSerif_400Regular, DMSerifDisplay_400Regular, JetBrainsMono_600SemiBold,
+    ZenKakuGothicNew_900Black,
   });
   useEffect(() => { if (fonts) bundledFontsLoaded(); }, [fonts]);
   const signedIn = useStore((s) => !!s.account);
