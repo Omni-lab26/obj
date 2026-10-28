@@ -9,6 +9,7 @@ import { addSession, addTodo, block, getState, moveTodo, removeDeadline, removeS
 import { hair, useT } from '../theme';
 import { Avatar, Btn, haptic, Txt } from './base';
 import { DatePick, DurationPick, Opens, PickChip, SMOOTH } from './DateTime';
+import { openDm } from './DmParts';
 import { Choice, Field, Label, RadioCards } from './Form';
 import { planCalendar, planSheet } from './PlanSheets';
 import { openSheet } from './Sheet';
@@ -175,6 +176,7 @@ function Person({ name, color, close }: { name: string; color: string; close: ()
       {p ? <Txt size={12.5} tone="ink3">{`@${p.h} · ${p.g} 志望`}</Txt> : null}
       <View style={{ alignSelf: 'stretch', gap: 8, marginTop: 16 }}>
         {p ? <Btn kind={following ? 'quiet' : 'primary'} wide label={following ? 'フォロー中' : 'フォローする'} onPress={() => { toggleFollow(p.h); haptic.soft(); }} /> : null}
+        <Btn kind="line" wide label="メッセージを送る" onPress={() => { close(); openDm(name); }} />
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Btn kind="line" label="ブロック" style={{ flex: 1 }} onPress={() => { block(name); haptic.warn(); close(); toast(`${name} をブロックしました`, '勉強中・投稿・チャットに表示されません'); }} />
           <Btn kind="line" label="通報" style={{ flex: 1 }} onPress={() => setReporting(true)} />

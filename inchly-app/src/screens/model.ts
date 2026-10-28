@@ -345,6 +345,7 @@ export const go = {
   notifications: () => router.push('/notifications'),
   search: () => router.push('/search'),
   community: () => router.navigate('/community'),
+  messages: () => router.push('/messages'),
 };
 
 /** '3時間24分' / '45分' */

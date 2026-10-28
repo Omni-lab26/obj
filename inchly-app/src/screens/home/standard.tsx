@@ -8,9 +8,9 @@ import { Friends } from '@/screens/home/Friends';
 import { SectionKind } from '@/screens/layout';
 import { go, pickLabel, session, startPick, useDeadlines, useNext, usePeers, useSession, useToday, useTodos, useWeekStreak } from '@/screens/model';
 import type { SectionProps } from '@/themes/types';
-import { useStore } from '@/store';
+import { useDmUnread, useStore } from '@/store';
 import { hair, lift, onColor, radius, type, useT } from '@/theme';
-import { Avatar, AvatarStack, Btn, Card, haptic, IconBtn, Press, SubjCoin, Txt } from '@/ui/base';
+import { AvatarStack, Btn, Card, haptic, IconBtn, Press, SubjCoin, Txt } from '@/ui/base';
 import { InchTape, Wordmark } from '@/ui/Brand';
 import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
@@ -48,7 +48,7 @@ export function StandardPage({ header, children }: { header: ReactNode; children
 
 export function StandardHeader() {
   const unread = useUnread();
-  const me = useStore((s) => s.account?.name ?? 'はる');
+  const dmUnread = useDmUnread();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 18, paddingRight: 16, paddingTop: 6, height: 52 }}>
       <Wordmark size={19} />
@@ -56,9 +56,8 @@ export function StandardHeader() {
       <View style={{ flex: 1 }} />
       <IconBtn outline name="search" label="さがす" onPress={go.search} />
       <IconBtn outline name="bell" label="お知らせ" dot={unread > 0} onPress={go.notifications} />
-      <Press onPress={go.me} scale={0.9} accessibilityLabel="マイページ" style={{ marginLeft: 2 }}>
-        <Avatar name={me} color="#6E56CF" size={34} />
-      </Press>
+      {/* one-to-one messages (マイページ is the tab bar's) */}
+      <IconBtn outline name="chat" label={dmUnread ? `メッセージ 未読${dmUnread}件` : 'メッセージ'} dot={dmUnread > 0} onPress={go.messages} />
       {/* everything about the app, one place: the gear at the top right */}
       <TourSpot id="settings"><IconBtn outline name="gear" label="設定" onPress={go.settings} /></TourSpot>
     </View>

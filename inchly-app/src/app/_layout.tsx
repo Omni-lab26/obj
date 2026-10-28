@@ -124,6 +124,8 @@ export default function RootLayout() {
           <Stack.Screen name="create-group" />
           <Stack.Screen name="plan-event" />
           <Stack.Screen name="group/[id]" />
+          <Stack.Screen name="messages" />
+          <Stack.Screen name="dm/[n]" />
           <Stack.Screen name="settings" />
           <Stack.Screen name="subjects" />
           <Stack.Screen name="design" options={{ animation: 'slide_from_left' }} />

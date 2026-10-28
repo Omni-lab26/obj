@@ -32,6 +32,10 @@ export type Deadline = { id: string; t: string; mo: number; day: number; urgent?
 export type Account = { name: string; handle: string; grade: string; birthYear: number; aim: string; via: 'apple' | 'mail' | 'demo' };
 export type LiveScope = 'all' | 'followers' | 'none';
 export type DmFrom = 'following' | 'groups' | 'all';
+/** One message between you and one person: text or a stamp, from you (me) or from them. */
+export type DmMsg = { id: string; me: boolean; t?: string; stamp?: string; at: number };
+/** A one-to-one conversation, by the other person's name (as blocking goes by name); newest first in the list. */
+export type Dm = { n: string; c: string; msgs: DmMsg[]; readAt: number };
 /** How home lists the friends studying now: by today's time, by name, or in your own order (handles). */
 export type FriendSort = 'time' | 'name' | 'mine';
 export type ExtraTab = 'events' | 'exams' | 'me';
@@ -76,6 +80,7 @@ export type State = {
   notifRead: number[];
   notifGone: number[];
   groups: Group[];
+  dms: Dm[]; // one-to-one messages, the latest conversation first
   joinedFeed: string[];
   liveScope: LiveScope;
   showLive: boolean; // derived: liveScope !== 'none'
@@ -160,6 +165,7 @@ export const INITIAL: State = {
   notifRead: [],
   notifGone: [],
   groups: GROUPS,
+  dms: [],
   joinedFeed: [],
   liveScope: 'all',
   showLive: true,
@@ -182,6 +188,28 @@ export const INITIAL: State = {
   todoLog: [],
   tourDone: false,
 };
+
+/** The sample account's conversations: mio's last message not read yet. */
+function demoDms(now: number): Dm[] {
+  const m = 60_000, h = 60 * m, d = 24 * h;
+  const msg = (i: string, me: boolean, ago: number, t: string): DmMsg => ({ id: i, me, t, at: now - ago });
+  return [
+    { n: 'mio', c: '#C47A55', readAt: now - 2 * h, msgs: [
+      msg('m1', false, 2 * h + 20 * m, '長文読解の第3講、時間測ってやったら18分オーバーした…'),
+      msg('m2', true, 2 * h + 5 * m, 'わかる、設問先に読むと少し速くなったよ'),
+      msg('m3', false, 12 * m, 'やってみる！今日21時から一緒にやらない？'),
+    ] },
+    { n: 'そら', c: '#5D6DB8', readAt: now, msgs: [
+      msg('s1', false, d + 3 * h, '青チャートの例題40、別解ある？'),
+      msg('s2', true, d + 2 * h, 'ベクトルで置くと2行で終わる。あとで写真送る'),
+      { id: 's3', me: false, stamp: 'arigato', at: now - d - 2 * h + 4 * m },
+    ] },
+    { n: 'kaito', c: '#3E8C78', readAt: now, msgs: [
+      msg('k1', true, 3 * d, '名問の森、どこまで進んだ？'),
+      msg('k2', false, 3 * d - 40 * m, '力学おわって熱に入ったとこ'),
+    ] },
+  ];
+}
 
 /** The sample account: a year of history, a plan, people it follows, a session under way. */
 export function demoState(now: Date = new Date()): Partial<State> {
@@ -221,6 +249,7 @@ export function demoState(now: Date = new Date()): Partial<State> {
     ],
     todoLog: [{ id: 't3', date: today }, { id: 't4', date: today }],
     following: ['mio.k', 'sora_06', 'kaito'],
+    dms: demoDms(now.getTime()),
     posts: POSTS,
     restTickets: 2,
     lastDay: today,
@@ -814,6 +843,28 @@ export function toggleBookmark(id: string): boolean {
 export function addPost(p: Omit<Post, 'id'>) {
   setState((s) => ({ posts: [{ ...p, id: newId('m') }, ...s.posts] }));
 }
+// ---------- one-to-one messages ----------
+/** Sends to one person (starting the conversation if it's new); their conversation goes to the top of the list. */
+export function sendDm(n: string, c: string, body: { t?: string; stamp?: string }) {
+  const at = Date.now();
+  const m: DmMsg = { id: newId('dm'), me: true, at, ...body };
+  setState((s) => {
+    const was = s.dms.find((x) => x.n === n);
+    const next: Dm = was ? { ...was, msgs: [...was.msgs, m], readAt: at } : { n, c, msgs: [m], readAt: at };
+    return { dms: [next, ...s.dms.filter((x) => x.n !== n)] };
+  });
+}
+/** You've seen everything in this conversation. */
+export function readDm(n: string) {
+  if (!state.dms.some((x) => x.n === n && unreadIn(x) > 0)) return;
+  // up to now, or their latest if its time is ahead of this phone's clock
+  setState((s) => ({ dms: s.dms.map((x) => (x.n === n ? { ...x, readAt: Math.max(Date.now(), ...x.msgs.map((m) => m.at)) } : x)) }));
+}
+/** Their messages since you last looked. */
+export const unreadIn = (d: Dm) => d.msgs.filter((m) => !m.me && m.at > d.readAt).length;
+/** Conversations with something unread (blocked people left out). */
+export const useDmUnread = () => useStore((s) => s.dms.filter((d) => !s.blocked.includes(d.n) && unreadIn(d) > 0).length);
+
 export function updateGroup(id: string, fn: (g: Group) => Group) {
   setState((s) => ({ groups: s.groups.map((g) => (g.id === id ? fn(g) : g)) }));
 }

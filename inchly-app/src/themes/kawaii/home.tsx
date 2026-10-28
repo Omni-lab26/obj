@@ -6,7 +6,7 @@ import type { Block } from '@/screens/layout';
 import { clock, go, hmColon, jpHm, pickLabel, session, startPick, tickTodo, useCharts, useDeadlines, useNext, usePeers, useSession, useToday, useTodos, useWeekStreak } from '@/screens/model';
 import { T } from '@/themes/kit';
 import type { HomeKit } from '@/themes/types';
-import { setChart, Todo, useLevel, useStore } from '@/store';
+import { setChart, useDmUnread, Todo, useLevel, useStore } from '@/store';
 import { useT } from '@/theme';
 import { Avatar, haptic, Press } from '@/ui/base';
 import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
@@ -42,7 +42,7 @@ function Header() {
   const t = useT();
   const v = useV();
   const unread = useUnread();
-  const me = useStore((s) => s.account?.name ?? 'はる');
+  const dmUnread = useDmUnread();
   const l = useLevel();
   const narrow = useWindowDimensions().width < 360;
   const k = narrow ? 32 : 36;
@@ -62,9 +62,7 @@ function Header() {
       <View style={{ flex: 1 }} />
       <Bubbly label="さがす" onPress={go.search} size={k}><Icon name="search" size={16} color={t.ink} width={2} /></Bubbly>
       <Bubbly label="お知らせ" onPress={go.notifications} size={k} dot={unread > 0}><Icon name="bell" size={16} color={t.ink} width={2} /></Bubbly>
-      <Press onPress={go.me} scale={0.9} accessibilityLabel="マイページ" style={{ borderRadius: k / 2, boxShadow: `0px 0px 0px 2px ${alpha(v.accent, 0.45)}` }}>
-        <Avatar name={me} color="#6E56CF" size={k} />
-      </Press>
+      <Bubbly label="メッセージ" onPress={go.messages} size={k} dot={dmUnread > 0}><Icon name="chat" size={16} color={t.ink} width={2} /></Bubbly>
       <Bubbly label="設定" onPress={go.settings} size={k}><Icon name="gear" size={16} color={t.ink} width={2} /></Bubbly>
     </View>
   );

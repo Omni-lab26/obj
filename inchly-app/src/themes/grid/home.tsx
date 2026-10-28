@@ -9,10 +9,10 @@ import { Block, Kind } from '@/screens/layout';
 import {
   clock, go, hmColon, jpHm, pickLabel, session, startPick, tickTodo, useCharts, useDeadlines, useNext, usePeers, useSession, useToday, useTodos, useWeekStreak,
 } from '@/screens/model';
-import { setChart, useLevel, useNow, useStore } from '@/store';
+import { setChart, useDmUnread, useLevel, useNow, useStore } from '@/store';
 import type { HomeKit, SectionProps } from '@/themes/types';
 import { useT } from '@/theme';
-import { Avatar, haptic, Press } from '@/ui/base';
+import { haptic, Press } from '@/ui/base';
 import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon, IconName } from '@/ui/Icon';
@@ -78,7 +78,7 @@ function LevelTag() {
 function Header() {
   const t = useT();
   const unread = useUnread();
-  const me = useStore((s) => s.account?.name ?? 'はる');
+  const dmUnread = useDmUnread();
   return (
     <View style={{ paddingLeft: 18, paddingRight: 16, paddingTop: 10, paddingBottom: 2, gap: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -92,7 +92,7 @@ function Header() {
         <View style={{ flex: 1 }} />
         <Square icon="search" label="さがす" onPress={go.search} />
         <Square icon="bell" label="お知らせ" dot={unread > 0} onPress={go.notifications} />
-        <Square label="マイページ" onPress={go.me}><Avatar name={me} color="#6E56CF" size={24} /></Square>
+        <Square icon="chat" label="メッセージ" dot={dmUnread > 0} onPress={go.messages} />
         <Square icon="gear" label="設定" onPress={go.settings} />
       </View>
     </View>

@@ -6,8 +6,8 @@ import type { Block } from '@/screens/layout';
 import { clock, go, hmColon, pickLabel, session, Slice, startPick, tickTodo, useCharts, useDeadlines, useNext, usePeers, useSession, useToday, useTodos, useWeekStreak } from '@/screens/model';
 import { T } from '@/themes/kit';
 import type { HomeKit } from '@/themes/types';
-import { setChart, Todo, useLevel, useStore } from '@/store';
-import { Avatar, haptic, Press } from '@/ui/base';
+import { setChart, useDmUnread, Todo, useLevel, useStore } from '@/store';
+import { haptic, Press } from '@/ui/base';
 import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { Icon, IconName } from '@/ui/Icon';
@@ -49,7 +49,7 @@ function IconKey({ name, label, onPress, dot, size }: { name: IconName; label: s
 
 function Header() {
   const unread = useUnread();
-  const me = useStore((s) => s.account?.name ?? 'はる');
+  const dmUnread = useDmUnread();
   const l = useLevel();
   const narrow = useWindowDimensions().width < 360;
   const k = narrow ? 32 : 35;
@@ -63,9 +63,7 @@ function Header() {
       <View style={{ flex: 1 }} />
       <IconKey name="search" label="さがす" onPress={go.search} size={k} />
       <IconKey name="bell" label="お知らせ" onPress={go.notifications} dot={unread > 0} size={k} />
-      <Press onPress={go.me} scale={0.9} accessibilityLabel="マイページ" style={{ borderRadius: k / 2, boxShadow: ring() }}>
-        <Avatar name={me} color="#6E56CF" size={k - 3} />
-      </Press>
+      <IconKey name="chat" label="メッセージ" onPress={go.messages} dot={dmUnread > 0} size={k} />
       <IconKey name="gear" label="設定" onPress={go.settings} size={k} />
     </View>
   );
