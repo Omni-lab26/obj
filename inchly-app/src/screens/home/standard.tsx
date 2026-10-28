@@ -1,5 +1,6 @@
 import { ComponentType, ReactNode, useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
+import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { hms, pad, subj } from '@/data';
 import { STREAK_PEACH, useDesign } from '@/design';
@@ -22,6 +23,7 @@ import { MiniSeg } from '@/ui/HomeParts';
 import { Icon } from '@/ui/Icon';
 import { LevelChip } from '@/ui/Level';
 import { Rolling } from '@/ui/Rolling';
+import { flicker } from '@/ui/motion';
 import { Sticker } from '@/ui/Sticker';
 import { StudyChart } from '@/ui/StudyChart';
 import { toast } from '@/ui/Toast';
@@ -204,8 +206,7 @@ function Streak() {
     <Press onPress={jump} haptics={false} scale={0.98} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}
       style={{ height: 58, borderRadius: 29, backgroundColor: look === 'ink' ? t.ink : light ? t.surface : STREAK_PEACH.bg, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 18,
         borderWidth: light || peach ? hair : 0, borderColor: peach ? STREAK_PEACH.edge : t.line2, ...(light ? lift(t) : null) }}>
-      {/* no run yet: the flame isn't lit */}
-      <View style={{ opacity: streak > 0 ? 1 : 0.25 }}><Sticker name="fire" size={42} /></View>
+      <StreakFlame lit={streak > 0} />
       <View style={{ marginLeft: 4 }}>
         <Rolling value={pad(streak)} size={17} weight="700" color={fg} />
         <Txt size={11} color={dim} lh={14}>{`日連続 · 休み券 ${tickets}`}</Txt>
@@ -222,6 +223,25 @@ function Streak() {
         ))}
       </View>
     </Press>
+  );
+}
+
+/**
+ * The 連続記録 flame: unlit (faint) with no run, else it sways slowly — the one
+ * repeating motion the app allows (MOTION.md: flicker), pivoting at its foot.
+ */
+function StreakFlame({ lit }: { lit: boolean }) {
+  const sway = useSharedValue(0);
+  useEffect(() => {
+    if (lit) sway.set(flicker());
+    else { cancelAnimation(sway); sway.set(0); }
+    return () => cancelAnimation(sway);
+  }, [lit, sway]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scaleX: 1 + sway.value * 0.03 }, { scaleY: 1 - sway.value * 0.03 }] }));
+  return (
+    <Animated.View style={[{ transformOrigin: '50% 90%', opacity: lit ? 1 : 0.25 }, style]}>
+      <Sticker name="fire" size={42} />
+    </Animated.View>
   );
 }
 

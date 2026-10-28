@@ -1,4 +1,4 @@
-import { Easing, FadeIn, FadeOut, LinearTransition, ReduceMotion, withSpring, withTiming } from 'react-native-reanimated';
+import { Easing, FadeIn, FadeOut, LinearTransition, ReduceMotion, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 
 // How things move, everywhere (MOTION.md): the way iOS moves them, and never
 // a bounce. Springs only critically damped (dampingRatio 1: they never go
@@ -56,4 +56,10 @@ export const timed = (to: number, duration: number, done?: Done) => { 'worklet';
 // For entering / exiting / layout: opacity only coming and going; rows making room without a bounce.
 export const fadeIn = () => FadeIn.duration(M.fadeIn).easing(IOS).reduceMotion(reduceMotion);
 export const fadeOut = () => FadeOut.duration(M.fadeOut).easing(IOS).reduceMotion(reduceMotion);
+/**
+ * The one motion allowed to repeat (MOTION.md, 例外): the 連続記録 flame's slow
+ * sway, 0 → 1 → 0 on a sine, 2.4s each way, for as long as it's lit. Only the
+ * flame uses it; with Reduce Motion it stands still.
+ */
+export const flicker = () => { 'worklet'; return withRepeat(withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sin), reduceMotion }), -1, true, undefined, reduceMotion); };
 export const layout = () => LinearTransition.springify().duration(M.move.duration).dampingRatio(1).reduceMotion(reduceMotion);
