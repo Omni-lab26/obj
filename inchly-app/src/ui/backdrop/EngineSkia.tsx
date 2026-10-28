@@ -54,15 +54,21 @@ export default function EngineSkia({ kind, width, height, blur }: EngineProps) {
     ring.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, Math.max(1, sigma * 0.5), true));
     return { fill, ring };
   }, [blur]);
-  // until the first frame: the bare ground
+  // until the first frame: the bare ground. A picture drawn by another engine (the 背景 before this one)
+  // holds that engine's atlas and paints, which go when it does — so it's never shown again (on the phone,
+  // drawing it after would crash); and when this engine goes, its pictures and its world go with it.
   useEffect(() => {
     const bare = createPicture((c) => c.drawColor(fixed.ground), fixed.bounds);
-    if (!backdropPicture.value) backdropPicture.value = bare;
-    if (!backdropSoft.value) backdropSoft.value = bare;
+    backdropPicture.value = bare;
+    backdropSoft.value = bare;
+    return () => { backdropPicture.value = null; backdropSoft.value = null; backdropWorld.value = null; };
   }, [fixed]);
 
   const acc = useSharedValue(1);
-  const ticks = useSharedValue(0);
+  // -1: the mosaic is drawn on the very first tick too
+  const ticks = useSharedValue(-1);
+  // nothing drawn yet: the first pictures are drawn even while the 背景 is held (a tap just picked it)
+  const fresh = useSharedValue(true);
   // colors made once and reused (a color with its strength taken to 1/32): no new objects each frame
   const tints = useSharedValue<Record<number, SkColor> | null>(null);
   const made = useSharedValue(0);
@@ -74,12 +80,13 @@ export default function EngineSkia({ kind, width, height, blur }: EngineProps) {
     'worklet';
     backdropClock.value = f.timestamp;
     // a finger on the screen, or something moving (holdBackdrop): the world stands still, so the thread is all the gesture's
-    if (f.timestamp < backdropHeld.value) { acc.value = 0; return; }
+    if (!fresh.value && f.timestamp < backdropHeld.value) { acc.value = 0; return; }
     // 30 times a second, however fast the screen refreshes
     acc.value += (f.timeSincePreviousFrame ?? 16) / 1000;
     if (acc.value < 1 / 30) return;
     const dt = acc.value;
     acc.value = 0;
+    fresh.value = false;
     let w = backdropWorld.value;
     if (!w || w.kind !== kind || w.w !== width || w.h !== height) {
       w = { kind, w: width, h: height, pond: null, crowd: null };
