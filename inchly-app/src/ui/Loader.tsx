@@ -6,6 +6,7 @@ import Svg, { Circle, Ellipse, Path, Text as SvgText } from 'react-native-svg';
 import { type LoaderKind, nextLoader } from '../lib/loaders';
 import { font, useT } from '../theme';
 import { BRAND_TICKS } from './Brand';
+import { glyphOf } from './SubjectGlyph';
 import { fadeIn, fadeOut, micro, spin } from './motion';
 
 export type { LoaderKind };
@@ -19,10 +20,10 @@ export type { LoaderKind };
 // (MOTION.md: spin), on the UI thread.
 //
 // Where: pulling a tab down to refresh (RefreshScroll), and the timer's cards
-// while they're being made (shown only if that takes more than 0.3s).
+// while they're being made (shown only if that takes more than 0.3s). The
+// same marks are the subjects' pictures in the timetable (SubjectMark): white
+// on the subject's tile, still — and turning on the plan being studied now.
 
-
-const [RED, YELLOW, LIGHT, BLUE, PURPLE] = BRAND_TICKS;
 
 const DURATION: Record<LoaderKind, number> = { math: 1000, physics: 1400, chem: 1800, bio: 1600, earth: 1600, english: 1200, japanese: 1300, social: 1600, info: 1600 };
 
@@ -52,6 +53,41 @@ export function Loader({ kind, size = 32, delay = 0 }: { kind?: LoaderKind; size
   );
 }
 
+/** A subject's mark, from its picture (SubjectGlyph); null when it has none (then the tile keeps its letter). */
+export function subjectKind(name: string): LoaderKind | null {
+  switch (glyphOf(name)) {
+    case 'pi': return 'math';
+    case 'atom': return 'physics';
+    case 'flask': return 'chem';
+    case 'leaf': return 'bio';
+    case 'mountain': return 'earth';
+    case 'bubble': case 'headphones': case 'pen': return 'english';
+    case 'book': case 'scroll': case 'brush': return 'japanese';
+    case 'temple': case 'torii': case 'map': case 'scales': return 'social';
+    case 'laptop': return 'info';
+    default: return null;
+  }
+}
+/** Where each mark rests when still (a turn that shows what it is). */
+const REST: Record<LoaderKind, number> = { math: 0.1, physics: 0.12, chem: 0, bio: 0.1, earth: 0.12, english: 0, japanese: 0.08, social: 0, info: 0.25 };
+
+/** A subject's mark on its tile (the timetable): white, still — or turning while that plan is being studied. */
+export function SubjectMark({ kind, size, moving }: { kind: LoaderKind; size: number; moving?: boolean }) {
+  const p = useSharedValue(REST[kind]);
+  useEffect(() => {
+    if (moving) p.set(spin(DURATION[kind]));
+    else { cancelAnimation(p); p.set(REST[kind]); }
+    return () => cancelAnimation(p);
+  }, [kind, moving, p]);
+  return (
+    <View style={{ width: size, height: size }} pointerEvents="none">
+      <View style={{ width: 44, height: 44, transform: [{ scale: size / 44 }], transformOrigin: '0% 0%' }}>
+        <Mark kind={kind} p={p} tint="#FFFFFF" still={!moving} />
+      </View>
+    </View>
+  );
+}
+
 /** A view the size of the mark (44), turned by `deg(p)`. */
 function Turn({ p, deg, children, style }: { p: SharedValue<number>; deg: (p: number) => number; children: ReactNode; style?: object }) {
   const s = useAnimatedStyle(() => ({ transform: [{ rotate: `${deg(p.value)}deg` }] }));
@@ -59,14 +95,18 @@ function Turn({ p, deg, children, style }: { p: SharedValue<number>; deg: (p: nu
 }
 const full = { position: 'absolute' as const, left: 0, top: 0 };
 
-function Mark({ kind, p }: { kind: LoaderKind; p: SharedValue<number> }) {
+/** `tint`: everything in that one color (on a subject's tile); `still`: drawn at rest (letters all lit). */
+function Mark({ kind, p, tint, still }: { kind: LoaderKind; p: SharedValue<number>; tint?: string; still?: boolean }) {
   const t = useT();
-  const ink = t.ink;
+  const ink = tint ?? t.ink;
+  const [RED, YELLOW, LIGHT, BLUE, PURPLE] = tint ? [tint, tint, tint, tint, tint] : BRAND_TICKS;
+  const track = tint ?? t.line2;
+  const trackOpacity = tint ? 0.4 : 1;
   switch (kind) {
     case 'math':
       return (
         <>
-          <Svg width={44} height={44} style={full}><Circle cx={22} cy={22} r={17} fill="none" stroke={t.line2} strokeWidth={3.5} /></Svg>
+          <Svg width={44} height={44} style={full}><Circle cx={22} cy={22} r={17} fill="none" stroke={track} strokeOpacity={trackOpacity} strokeWidth={3.5} /></Svg>
           <Turn p={p} deg={(v) => { 'worklet'; return v * 360; }}>
             <Svg width={44} height={44}><Circle cx={22} cy={22} r={17} fill="none" stroke={BLUE} strokeWidth={3.5} strokeDasharray="70 107" strokeLinecap="round" /></Svg>
           </Turn>
@@ -106,9 +146,9 @@ function Mark({ kind, p }: { kind: LoaderKind; p: SharedValue<number> }) {
       return (
         <>
           <Svg width={44} height={44} style={full}>
-            <Circle cx={22} cy={22} r={17} fill="none" stroke={t.line2} strokeWidth={1.5} strokeDasharray="2 3" />
+            <Circle cx={22} cy={22} r={17} fill="none" stroke={track} strokeOpacity={trackOpacity} strokeWidth={1.5} strokeDasharray="2 3" />
             <Circle cx={22} cy={22} r={9} fill={BLUE} />
-            <Path d="M15 19 q4 -3 7 0 q3 3 6 1" stroke="#fff" strokeWidth={2} fill="none" opacity={0.8} />
+            <Path d="M15 19 q4 -3 7 0 q3 3 6 1" stroke={tint ? 'rgba(0,0,0,0.22)' : '#fff'} strokeWidth={2} fill="none" opacity={0.8} />
           </Svg>
           <Turn p={p} deg={(v) => { 'worklet'; return v * 360; }}>
             <View style={{ position: 'absolute', left: 35.4, top: 18.4, width: 7.2, height: 7.2, borderRadius: 3.6, backgroundColor: YELLOW }} />
@@ -116,7 +156,7 @@ function Mark({ kind, p }: { kind: LoaderKind; p: SharedValue<number> }) {
         </>
       );
     case 'english':
-      return <View style={[StyleSheet.absoluteFill, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2 }]}>{['A', 'B', 'C'].map((c, i) => <Letter key={c} c={c} i={i} n={3} p={p} color={ink} />)}</View>;
+      return <View style={[StyleSheet.absoluteFill, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2 }]}>{['A', 'B', 'C'].map((c, i) => <Letter key={c} c={c} i={i} n={3} p={p} color={ink} still={still} />)}</View>;
     case 'japanese':
       return (
         <Turn p={p} deg={(v) => { 'worklet'; return v * 360; }}>
@@ -148,8 +188,8 @@ function Rung({ i, p, color }: { i: number; p: SharedValue<number>; color: strin
   return <Animated.View style={[{ position: 'absolute', left: 9, top: 5 + i * 6.4, width: 26, height: 3, borderRadius: 1.5, backgroundColor: color }, s]} />;
 }
 /** A letter that lights in its turn. */
-function Letter({ c, i, n, p, color }: { c: string; i: number; n: number; p: SharedValue<number>; color: string }) {
-  const s = useAnimatedStyle(() => ({ opacity: 0.25 + 0.75 * Math.max(0, Math.sin(Math.PI * 2 * (p.value - i / (n * 2))) ) }));
+function Letter({ c, i, n, p, color, still }: { c: string; i: number; n: number; p: SharedValue<number>; color: string; still?: boolean }) {
+  const s = useAnimatedStyle(() => ({ opacity: still ? 1 : 0.25 + 0.75 * Math.max(0, Math.sin(Math.PI * 2 * (p.value - i / (n * 2)))) }));
   return <Animated.Text style={[{ fontSize: 14, fontWeight: '800', color, fontFamily: font.rounded }, s]}>{c}</Animated.Text>;
 }
 /** A bit: 0 or 1 by turns (each a step behind the last). */

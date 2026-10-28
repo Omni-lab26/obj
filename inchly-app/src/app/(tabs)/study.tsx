@@ -16,6 +16,7 @@ import { openSheet } from '@/ui/Sheet';
 import { toast } from '@/ui/Toast';
 import { Icon } from '@/ui/Icon';
 import { PlanArt } from '@/ui/PlanArt';
+import { SubjectMark, subjectKind } from '@/ui/Loader';
 
 // The middle tab: the plan — the timetable and the deadlines. Each row is the
 // time, the plan's icon, and its subject with the memo under it; a tap edits it.
@@ -126,6 +127,11 @@ const clockOf = (m: number) => `${Math.floor(m / 60)}:${String(m % 60).padStart(
 const TIME_W = 50, RAIL_W = 38, PAD = 12;
 const rowStyle = { flexDirection: 'row' as const, alignItems: 'center' as const, paddingHorizontal: PAD };
 const OVER = '#FF9F0A';
+/** A subject's tile mark (the loading marks, ui/Loader): still, or turning on the plan being studied. */
+const markOf = (name: string, size: number, moving = false) => {
+  const k = subjectKind(name);
+  return k ? <SubjectMark kind={k} size={Math.round(size * 0.68)} moving={moving} /> : undefined;
+};
 const NOW_RED = '#FF3B30';
 function TodayLine({ stops, rows, now }: { stops: Stop[]; rows: (Slot | { block: Block; state: 'plain' })[]; now: string }) {
   const n = stops.length + 1 + rows.length;
@@ -187,7 +193,7 @@ function StopArt({ b, done }: { b: Block; done: boolean }) {
   const sj = subj(b.s);
   return (
     <View style={{ padding: 2, borderRadius: 8, backgroundColor: blank }}>
-      <View style={{ opacity: done ? 1 : 0.32 }}><PlanArt icon={b.icon} name={sj.name} color={sj.c} size={22} radius={6} /></View>
+      <View style={{ opacity: done ? 1 : 0.32 }}><PlanArt icon={b.icon} name={sj.name} color={sj.c} size={22} radius={6} mark={markOf(sj.name, 22)} /></View>
       <View style={{ position: 'absolute', right: -4, bottom: -4, width: 15, height: 15, borderRadius: 7.5, borderWidth: 2, borderColor: blank,
         backgroundColor: done ? t.ink : t.ink3, alignItems: 'center', justifyContent: 'center' }}>
         <Icon name={done ? 'check' : 'x'} size={8} color={done ? t.onInk : blank} width={3} />
@@ -264,6 +270,8 @@ function AheadRow({ b, live, next, last }: { b: Block; live: boolean; next: bool
   const t = useT();
   const blank = useBlank();
   const sj = subj(b.s);
+  // the plan under way turns its mark while you're studying it (not while paused)
+  const studying = useStore((s) => live && s.running && !s.paused && (s.planBlock === b.id || s.subj === b.s));
   return (
     <Press onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}${live ? '。いまの予定' : next ? '。つぎの予定' : ''}。編集`}
       // the live row's gray ground is inset, and its padding takes up the inset, so its columns stay on the grid
@@ -271,7 +279,7 @@ function AheadRow({ b, live, next, last }: { b: Block; live: boolean; next: bool
       <TimeCol><Times b={b} /></TimeCol>
       <Rail ahead={!live} last={last}>
         {live ? (
-          <View style={{ padding: 3, borderRadius: 10, backgroundColor: blank }}><PlanArt icon={b.icon} name={sj.name} color={sj.c} size={30} radius={8} /></View>
+          <View style={{ padding: 3, borderRadius: 10, backgroundColor: blank }}><PlanArt icon={b.icon} name={sj.name} color={sj.c} size={30} radius={8} mark={markOf(sj.name, 30, studying)} /></View>
         ) : <Node kind="later" />}
       </Rail>
       <View style={{ flex: 1, minWidth: 0, paddingLeft: 6, paddingRight: 8 }}>
@@ -282,7 +290,7 @@ function AheadRow({ b, live, next, last }: { b: Block; live: boolean; next: bool
         </View>
         {b.note || b.t ? <Txt size={12} tone="ink2" numberOfLines={1}>{b.note || b.t}</Txt> : null}
       </View>
-      {live ? null : <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={46} radius={11} />}
+      {live ? null : <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={46} radius={11} mark={markOf(sj.name, 46)} />}
     </Press>
   );
 }
@@ -316,7 +324,7 @@ function PlanRow({ b, live, next, first }: { b: Block; live: boolean; next: bool
       style={[rowStyle, { gap: 10, paddingVertical: 10, borderTopWidth: first ? 0 : hair, borderTopColor: t.line, backgroundColor: live ? t.sunken : 'transparent' }]}>
       <TimeCol><Times b={b} /></TimeCol>
       {/* the plan's icon: its photo, or its subject's picture */}
-      <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={38} radius={9} />
+      <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={38} radius={9} mark={markOf(sj.name, 38)} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Txt size={14.5} w="700" numberOfLines={1} style={{ flexShrink: 1 }}>{sj.name}</Txt>

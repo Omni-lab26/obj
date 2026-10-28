@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
@@ -17,7 +18,8 @@ export function tint(hex: string, t: number) {
   return `rgb(${ch((n >> 16) & 255)},${ch((n >> 8) & 255)},${ch(n & 255)})`;
 }
 
-export function PlanArt({ icon, name, color, size, radius }: { icon?: string; name: string; color: string; size: number; radius: number }) {
+/** `mark`: drawn in place of the picture on the subject's tile (the timetable's turning marks, ui/Loader). */
+export function PlanArt({ icon, name, color, size, radius, mark }: { icon?: string; name: string; color: string; size: number; radius: number; mark?: ReactNode }) {
   if (icon) {
     return <Image source={{ uri: iconUri(icon) }} style={{ width: size, height: size, borderRadius: radius }} contentFit="cover" transition={150} accessibilityIgnoresInvertColors />;
   }
@@ -36,7 +38,7 @@ export function PlanArt({ icon, name, color, size, radius }: { icon?: string; na
         <Circle cx={size * 0.72} cy={size * 0.76} r={size * 0.3} fill="rgba(255,255,255,0.14)" />
       </Svg>
       {/* in a view of its own, so it's drawn over the gradient on the web too */}
-      {glyph ? <View><SubjectGlyph glyph={glyph} size={size * 0.56} color="rgba(255,255,255,0.94)" width={1.7} /></View>
+      {mark ? <View>{mark}</View> : glyph ? <View><SubjectGlyph glyph={glyph} size={size * 0.56} color="rgba(255,255,255,0.94)" width={1.7} /></View>
         : <Txt size={size * 0.46} w="800" lh={size * 0.56} color="rgba(255,255,255,0.94)">{[...name][0] ?? ''}</Txt>}
     </View>
   );
