@@ -11,15 +11,17 @@
 ## iPhone / Android で見る（Expo Go）
 
 1. スマホに **Expo Go** を入れる（App Store / Google Play）
-2. PC でこのフォルダを開いて実行
+2. PC に Node.js 22 以上を入れる（`node -v` で確認）
+3. PC でリポジトリを取ってきて実行
 
    ```bash
-   cd ambient
+   git clone -b claude/clever-goldberg-bsnbxb https://github.com/Omni-lab26/obj.git
+   cd obj/ambient
    npm install
    npx expo start
    ```
 
-3. 出てきた QR コードを iPhone はカメラ、Android は Expo Go で読み取る
+4. 出てきた QR コードを iPhone はカメラ、Android は Expo Go で読み取る
 
 PC とスマホが別の Wi-Fi のときは `npx expo start --tunnel` を使ってください。
 
