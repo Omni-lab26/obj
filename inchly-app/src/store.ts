@@ -479,6 +479,35 @@ export function removeSubject(id: string): 'removed' | 'hidden' | 'last' {
   });
   return used ? 'hidden' : 'removed';
 }
+/**
+ * Deletes a subject for good. One with records (sessions, plans, ToDos) is
+ * deleted only with them (withRecords); otherwise it answers 'used' and nothing
+ * changes. The last one left can't go.
+ */
+export function deleteSubject(id: string, withRecords = false): 'removed' | 'used' | 'last' {
+  const s = state;
+  if (s.subjects.filter((x) => !x.hidden && x.id !== id).length === 0) return 'last';
+  const blocks = s.timetable.filter((b) => b.s === id).map((b) => b.id);
+  const used = s.sessions.some((r) => r.s === id) || blocks.length > 0 || s.todos.some((t) => t.s === id) || s.held.some((h) => h.s === id);
+  if (used && !withRecords) return 'used';
+  const fallback = s.subjects.find((x) => !x.hidden && x.id !== id)!.id;
+  setState({
+    subjects: s.subjects.filter((x) => x.id !== id),
+    sessions: s.sessions.filter((r) => r.s !== id),
+    timetable: s.timetable.filter((b) => b.s !== id),
+    todos: s.todos.filter((t) => t.s !== id),
+    held: s.held.filter((h) => h.s !== id),
+    favorites: s.favorites.filter((f) => f.s !== id),
+    planBlock: s.planBlock && blocks.includes(s.planBlock) ? null : s.planBlock,
+    subj: s.subj === id ? fallback : s.subj,
+  });
+  return 'removed';
+}
+/** How many records use a subject (sessions, plans, ToDos), to say what deleting it takes with it. */
+export const recordsOf = (id: string) => {
+  const s = state;
+  return { sessions: s.sessions.filter((r) => r.s === id).length, plans: s.timetable.filter((b) => b.s === id).length, todos: s.todos.filter((t) => t.s === id).length };
+};
 export function moveSubject(id: string, by: -1 | 1) {
   setState((s) => {
     const i = s.subjects.findIndex((x) => x.id === id);

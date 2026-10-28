@@ -41,3 +41,19 @@ describe('accounts saved with a grade name', () => {
     expect(out.account).not.toHaveProperty('grade');
   });
 });
+
+describe('deleting a subject', () => {
+  const { deleteSubject, getState: get, INITIAL: init, setState: set } = jest.requireActual('../../store') as typeof import('../../store');
+  it('goes at once when nothing uses it', () => {
+    set({ ...init, subjects: [...init.subjects, { id: 'x1', name: '漢文', area: 'ja', c: '#000' }] });
+    expect(deleteSubject('x1')).toBe('removed');
+    expect(get().subjects.some((x) => x.id === 'x1')).toBe(false);
+  });
+  it('with records, only together with them', () => {
+    set({ ...init, subjects: [...init.subjects, { id: 'x2', name: '漢文', area: 'ja', c: '#000' }], sessions: [{ id: 's', s: 'x2', min: 10, date: '2026-10-28', at: '9:00' }] });
+    expect(deleteSubject('x2')).toBe('used');
+    expect(get().subjects.some((x) => x.id === 'x2')).toBe(true);
+    expect(deleteSubject('x2', true)).toBe('removed');
+    expect(get().sessions).toHaveLength(0);
+  });
+});

@@ -130,11 +130,12 @@ export default function RootLayout() {
           <Stack.Screen name="group/[id]" />
           <Stack.Screen name="messages" />
           <Stack.Screen name="dm/[n]" />
-          <Stack.Screen name="settings" />
-          <Stack.Screen name="subjects" />
-          <Stack.Screen name="design" options={{ animation: 'slide_from_left' }} />
+          {/* the side menu's places come up at once (no slide from the right, with the menu on the left) */}
+          <Stack.Screen name="settings" options={{ animation: 'none' }} />
+          <Stack.Screen name="subjects" options={{ animation: 'none' }} />
+          <Stack.Screen name="design" options={{ animation: 'none' }} />
           <Stack.Screen name="follows" />
-          <Stack.Screen name="bookmarks" />
+          <Stack.Screen name="bookmarks" options={{ animation: 'none' }} />
           <Stack.Screen name="record" />
           <Stack.Screen name="welcome" options={{ animation: 'fade', gestureEnabled: false }} />
         </Stack>

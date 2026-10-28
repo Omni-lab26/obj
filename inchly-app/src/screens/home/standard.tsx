@@ -204,7 +204,8 @@ function Streak() {
     <Press onPress={jump} haptics={false} scale={0.98} accessibilityLabel={`${streak}日連続で勉強中。休み券${tickets}枚`}
       style={{ height: 58, borderRadius: 29, backgroundColor: look === 'ink' ? t.ink : light ? t.surface : STREAK_PEACH.bg, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 18,
         borderWidth: light || peach ? hair : 0, borderColor: peach ? STREAK_PEACH.edge : t.line2, ...(light ? lift(t) : null) }}>
-      <Sticker name="fire" size={42} />
+      {/* no run yet: the flame isn't lit */}
+      <View style={{ opacity: streak > 0 ? 1 : 0.25 }}><Sticker name="fire" size={42} /></View>
       <View style={{ marginLeft: 4 }}>
         <Rolling value={pad(streak)} size={17} weight="700" color={fg} />
         <Txt size={11} color={dim} lh={14}>{`日連続 · 休み券 ${tickets}`}</Txt>

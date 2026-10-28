@@ -10,7 +10,10 @@ import { timed } from './motion';
 // Inch-ly: "a little at a time". The brand's one motif is the measuring tape —
 // the same ticks as the timer's ruler — used for the wordmark and for today's progress.
 
-/** Wordmark: three ruler ticks of rising height, then "inchly". */
+/** The brand's color: the charts' indigo (英語's), the one that catches the eye in them. The ticks and the app icon are drawn in it. */
+export const BRAND = '#5856D6';
+
+/** Wordmark: three ruler ticks of rising height (in the brand's indigo), then "inchly". */
 export function Wordmark({ size = 21, color }: { size?: number; color?: string }) {
   const t = useT();
   const u = size / 21;
@@ -18,7 +21,7 @@ export function Wordmark({ size = 21, color }: { size?: number; color?: string }
     <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 7 * u }} accessible accessibilityLabel="Inchly">
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 2.5 * u, marginBottom: 4 * u }}>
         {[7, 11, 16].map((h, i) => (
-          <View key={i} style={{ width: 3 * u, height: h * u, borderRadius: 1.5 * u, backgroundColor: i === 2 ? t.green : color ?? t.ink }} />
+          <View key={i} style={{ width: 3 * u, height: h * u, borderRadius: 1.5 * u, backgroundColor: color ?? BRAND }} />
         ))}
       </View>
       <Txt style={{ fontFamily: font.rounded, fontWeight: '800', fontSize: size, lineHeight: size * 1.15, letterSpacing: -0.03 * size, color: color ?? t.ink }}>inchly</Txt>
