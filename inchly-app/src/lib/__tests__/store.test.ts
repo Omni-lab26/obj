@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 // AsyncStorage is mapped to its in-memory mock in package.json (jest.moduleNameMapper).
 import { TODO_CAP, TODO_EXP } from '../exp';
-import { addSubject, dropIcon, keepIcon, MAX_ICONS, startFree, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, keepFree, sortFree, updateSubject } from '../../store';
+import { addSubject, dropFavorite, dropIcon, keepIcon, MAX_FAVS, toggleFavorite, MAX_ICONS, startFree, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, keepFree, sortFree, updateSubject } from '../../store';
 import { AREA_SHADES, FREE, OTHER_COLORS, subj } from '../../data';
 import { backdropOf, DEFAULT_DESIGN } from '../../design';
 import { addDays, dateKey } from '../time';
@@ -369,5 +369,25 @@ describe('studying something not in the timetable', () => {
     const b = planNow('ch', new Date(2026, 9, 26, 11, 13));
     expect(b).toEqual(expect.objectContaining({ s: 'ch', start: '11:10', min: 0, days: [], date: '2026-10-26' }));
     expect(getState().timetable).toContainEqual(b);
+  });
+});
+
+describe('plans kept with ♡ (よく使う)', () => {
+  it('keeps a plan with what it was, newest first, and a second ♡ lets it go', () => {
+    reset();
+    expect(toggleFavorite({ s: 'en', t: '長文読解', note: '第3講', start: '17:00', min: 60 })).toBe(true);
+    expect(toggleFavorite({ s: 'ma', t: '青チャート' })).toBe(true);
+    expect(getState().favorites.map((f) => f.t)).toEqual(['青チャート', '長文読解']);
+    expect(getState().favorites[1]).toMatchObject({ s: 'en', t: '長文読解', note: '第3講', start: '17:00', min: 60 });
+    // the same subject, what and memo is the same plan
+    expect(toggleFavorite({ s: 'en', t: '長文読解', note: '第3講', start: '18:00' })).toBe(false);
+    expect(getState().favorites.map((f) => f.t)).toEqual(['青チャート']);
+  });
+  it('lets one go by its id, and keeps at most MAX_FAVS', () => {
+    reset();
+    for (let i = 0; i < MAX_FAVS + 3; i++) toggleFavorite({ s: 'en', t: `第${i}講` });
+    expect(getState().favorites).toHaveLength(MAX_FAVS);
+    dropFavorite(getState().favorites[0].id);
+    expect(getState().favorites).toHaveLength(MAX_FAVS - 1);
   });
 });

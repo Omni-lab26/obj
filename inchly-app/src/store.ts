@@ -26,6 +26,8 @@ export type Todo = { id: string; s: string; t: string; d: boolean; carried?: num
 export type Held = { id: string; s: string; sec: number; end: number; blockId?: string; planMin?: number };
 /** A photo made into an icon (lib/planIcon), kept to use again; s: the subject it was picked with, which picking it brings along. */
 export type MyIcon = { id: string; icon: string; s?: string };
+/** A plan kept with ♡ on its timer card, to add again from 予定を追加: what it was, without its day. */
+export type Fav = { id: string; s: string; t: string; note?: string; icon?: string; start?: string; min?: number };
 export type Deadline = { id: string; t: string; mo: number; day: number; urgent?: boolean; note?: string };
 export type Account = { name: string; handle: string; grade: string; birthYear: number; aim: string; via: 'apple' | 'mail' | 'demo' };
 export type LiveScope = 'all' | 'followers' | 'none';
@@ -58,6 +60,7 @@ export type State = {
   planBlock: string | null; // the timetable block this session was started from (ending it finishes the plan)
   doneBlocks: { id: string; date: string }[]; // plans finished on a day: their cards leave that day's timer
   myIcons: MyIcon[]; // photos made into icons on the plan form, kept to pick again (newest first)
+  favorites: Fav[]; // plans kept with ♡ on their timer card (newest first), shown on 予定を追加
   held: Held[]; // sessions stopped to go on to the next plan, waiting to be recorded (one by one, or all at the end)
   dayOrder: { date: string; ids: string[] } | null; // the order you put the day's plans in (the timer's cards)
   todos: Todo[];
@@ -141,6 +144,7 @@ export const INITIAL: State = {
   planBlock: null,
   doneBlocks: [],
   myIcons: [],
+  favorites: [],
   held: [],
   dayOrder: null,
   todos: [],
@@ -329,6 +333,21 @@ export function planNow(s: string, now: Date = new Date()): Block {
 export const MAX_ICONS = 12;
 export function keepIcon(icon: string, s?: string) {
   setState((st) => ({ myIcons: [{ id: newId('i'), icon, ...(s ? { s } : {}) }, ...st.myIcons.filter((x) => x.icon !== icon)].slice(0, MAX_ICONS) }));
+}
+export const MAX_FAVS = 20;
+/** The same plan as a kept one: the same subject, what to do and memo. */
+export const sameFav = (f: Pick<Fav, 's' | 't' | 'note'>, b: Pick<Block, 's' | 't' | 'note'>) => f.s === b.s && f.t === (b.t ?? '') && (f.note ?? '') === (b.note ?? '');
+/** ♡ on a card: keeps the plan to add again, or lets it go if it was kept. */
+export function toggleFavorite(b: Pick<Block, 's' | 't' | 'note' | 'icon' | 'start'> & { min?: number }): boolean {
+  const kept = state.favorites.some((f) => sameFav(f, b));
+  setState((st) => ({
+    favorites: kept ? st.favorites.filter((f) => !sameFav(f, b))
+      : [{ id: newId('f'), s: b.s, t: b.t ?? '', ...(b.note ? { note: b.note } : {}), ...(b.icon ? { icon: b.icon } : {}), ...(b.start ? { start: b.start } : {}), ...(b.min ? { min: b.min } : {}) }, ...st.favorites].slice(0, MAX_FAVS),
+  }));
+  return !kept;
+}
+export function dropFavorite(id: string) {
+  setState((st) => ({ favorites: st.favorites.filter((f) => f.id !== id) }));
 }
 export function dropIcon(id: string) {
   setState((st) => ({ myIcons: st.myIcons.filter((x) => x.id !== id) }));

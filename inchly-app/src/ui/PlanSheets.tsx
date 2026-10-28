@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Keyboard, Switch, TextInput, View } from 'react-native';
+import { Keyboard, ScrollView, Switch, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { AREAS, guessArea, OTHER_COLORS, shadeFor, subj } from '../data';
 import { dateKey, mondayIndex, parseKey } from '../lib/time';
 import { pickPlanIcon } from '../lib/planIcon';
 import { Block, toClock, toMin } from '../lib/timetable';
-import { addDeadline, addSubject, dropIcon, keepIcon, removeBlock, saveBlock, useStore, useSubjects } from '../store';
+import { addDeadline, addSubject, dropFavorite, dropIcon, type Fav, keepIcon, removeBlock, saveBlock, useStore, useSubjects } from '../store';
 import { font, hair, noOutline, useT } from '../theme';
 import { haptic, Press, SubjTile, Txt } from './base';
 import { ContentHints } from './ContentHints';
@@ -29,6 +29,8 @@ import { toast } from './Toast';
 // Drawn the way iOS draws a new event, and kept low in contrast: やめる and 追加
 // as blue text, small grey names over white groups, 日付 and 時刻 (start 〜 end)
 // as Calendar's rows, in grey chips that open iOS's pickers.
+// A new plan starts with よく使う: the plans kept with ♡ on their timer card,
+// in a row; a tap fills the form in with one (long press lets it go).
 // The keyboard waits for a tap.
 
 const DOW = ['月', '火', '水', '木', '金', '土', '日'];
@@ -78,6 +80,15 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
   const [icon, setIcon] = useState(existing?.icon);
   const [open, setOpen] = useState<Open>(null);
   const mine = useStore((x) => x.myIcons);
+  const favs = useStore((x) => x.favorites);
+  // a kept plan: everything it was, on the day this sheet is for
+  const takeFav = (f: Fav) => {
+    haptic.tap();
+    const sj = subj(f.s);
+    setName(sj.name); setColor(sj.c); setTitle(f.t); setNote(f.note ?? ''); setIcon(f.icon);
+    setStartAt(f.start ? toMin(f.start) : null); setLen(f.start ? f.min ?? 0 : 0);
+    setOpen(null);
+  };
 
   const plan = kind === 'plan';
   const match = subjects.find((x) => x.name === name.trim());
@@ -134,6 +145,29 @@ function Editor({ close, date, existing, kind: kind0 }: { close: () => void; dat
           <Txt size={16} w="600" color={accent}>{existing ? '保存' : '追加'}</Txt>
         </Press>
       </View>
+
+      {/* よく使う: the plans kept with ♡, a tap fills the form in */}
+      {plan && !existing && favs.length ? (
+        <Field label="よく使う">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} keyboardShouldPersistTaps="handled">
+            {favs.map((f) => {
+              const sj = subj(f.s);
+              return (
+                <Press key={f.id} onPress={() => takeFav(f)} onLongPress={() => { haptic.firm(); dropFavorite(f.id); toast('よく使う予定から外しました', `${sj.name} · ${f.t}`); }} scale={0.96}
+                  accessibilityLabel={`よく使う予定：${sj.name} ${f.t}${f.start ? ` ${f.start}から` : ''}。押すと入ります`} accessibilityHint="長押しで外せます"
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 6, paddingRight: 14, height: 52, borderRadius: 12, backgroundColor: t.surface, maxWidth: 240 }}>
+                  <PlanArt icon={f.icon} name={sj.name} color={sj.c} size={40} radius={8} />
+                  <View style={{ minWidth: 0, flexShrink: 1 }}>
+                    <Txt size={14} w="600" numberOfLines={1}>{f.t || sj.name}</Txt>
+                    <Txt size={11.5} tone="ink3" numberOfLines={1}>{`${sj.name}${f.start ? ` · ${f.start}${f.min ? ` · ${f.min}分` : ''}` : ''}`}</Txt>
+                  </View>
+                  <Icon name="heart" size={13} color="#FF2D55" filled />
+                </Press>
+              );
+            })}
+          </ScrollView>
+        </Field>
+      ) : null}
 
       {plan ? (
         <>
