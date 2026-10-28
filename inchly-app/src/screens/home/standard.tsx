@@ -1,5 +1,5 @@
 import { ComponentType, ReactNode, useEffect, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { hms, pad, subj } from '@/data';
@@ -16,7 +16,7 @@ import { InchTape, Wordmark } from '@/ui/Brand';
 import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
 import { deadlineActions, deadlineSheet, todoSheet } from '@/ui/Editors';
 import { LiveDot } from '@/ui/GroupParts';
-import { useReplay } from '@/ui/appear';
+import { replayCharts, useReplay } from '@/ui/appear';
 import { Badges, useGrowth } from '@/ui/Growth';
 import { Heatmap } from '@/ui/Heatmap';
 import { MiniSeg } from '@/ui/HomeParts';
@@ -29,6 +29,7 @@ import { StudyChart } from '@/ui/StudyChart';
 import { toast } from '@/ui/Toast';
 import { TourSpot } from '@/ui/Tour';
 import { Pane } from '@/ui/Glass';
+import { RefreshScroll } from '@/ui/Loader';
 
 // The standard home, as sections. It is the base layout's own drawing — and
 // what any theme falls back to for a section it doesn't draw itself (in that
@@ -41,9 +42,10 @@ export function StandardPage({ header, children }: { header: ReactNode; children
   return (
     <Screen>
       {header}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: tabPad, gap: 12 }}>
+      {/* pull down to refresh: the loading mark, and the charts draw in again */}
+      <RefreshScroll onRefresh={replayCharts} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: tabPad, gap: 12 }}>
         {children}
-      </ScrollView>
+      </RefreshScroll>
     </Screen>
   );
 }

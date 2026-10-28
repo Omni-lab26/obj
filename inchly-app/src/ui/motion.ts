@@ -62,4 +62,10 @@ export const fadeOut = () => FadeOut.duration(M.fadeOut).easing(IOS).reduceMotio
  * flame uses it; with Reduce Motion it stands still.
  */
 export const flicker = () => { 'worklet'; return withRepeat(withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sin), reduceMotion }), -1, true, undefined, reduceMotion); };
+/**
+ * The loading marks' clock (MOTION.md, 例外): 0 → 1 over `duration`, again and
+ * again at an even pace, only while something is loading (ui/Loader). With
+ * Reduce Motion it stands still.
+ */
+export const spin = (duration: number) => { 'worklet'; return withRepeat(withTiming(1, { duration, easing: Easing.linear, reduceMotion }), -1, false, undefined, reduceMotion); };
 export const layout = () => LinearTransition.springify().duration(M.move.duration).dampingRatio(1).reduceMotion(reduceMotion);

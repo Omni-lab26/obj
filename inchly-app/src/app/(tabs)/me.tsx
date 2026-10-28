@@ -13,6 +13,8 @@ import { ChartsPage, LogPage } from '@/ui/RecordsPanel';
 import { UnderTabs } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
+import { RefreshScroll } from '@/ui/Loader';
+import { replayCharts } from '@/ui/appear';
 
 type Tab = 'growth' | 'log' | 'charts' | 'posts';
 
@@ -55,7 +57,7 @@ export default function Me() {
   return (
     <Screen>
       <TopBar title="マイページ" right={<IconBtn filled name="gear" label="設定" onPress={() => router.push('/settings')} />} />
-      <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: pad }} stickyHeaderIndices={[3]}
+      <RefreshScroll ref={scroll} onRefresh={replayCharts} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: pad }} stickyHeaderIndices={[3]}
         onScroll={(e) => { offset.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={32}>
         <HoloCard lv={level.lv} name={a?.name ?? 'はる'} handle={a?.handle ?? 'haru_study'} goal={a?.aim ? `${a.aim} 志望` : gradeOf(a ?? null)} since="04/26"
           stats={[{ v: shown ? String(Math.floor(g.total)) : '000', from: '000', label: '時間 / 1年' }, { v: shown ? String(streak) : '00', from: '00', label: '日連続' }, { v: shown ? '57' : '00', from: '00', label: '位 / 今週' }]} />
@@ -85,7 +87,7 @@ export default function Me() {
             </View>
           </View>
         )}
-      </ScrollView>
+      </RefreshScroll>
     </Screen>
   );
 }

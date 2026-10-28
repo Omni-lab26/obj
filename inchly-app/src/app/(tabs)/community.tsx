@@ -19,6 +19,7 @@ import { openSheet } from '@/ui/Sheet';
 import { Segmented, UnderTabs } from '@/ui/Tabs';
 import { Sticker } from '@/ui/Sticker';
 import { Pane } from '@/ui/Glass';
+import { RefreshScroll } from '@/ui/Loader';
 
 type Tab = 'live' | 'rank' | 'groups';
 
@@ -32,9 +33,9 @@ export default function Community() {
     <Screen>
       <TopBar title="みんな" right={<SearchBtn />} />
       <UnderTabs value={tab} onChange={go} options={[{ v: 'live', label: 'いま勉強中' }, { v: 'rank', label: 'ランキング' }, { v: 'groups', label: 'グループ' }]} />
-      <ScrollView ref={scroll} style={{ flex: 1, backgroundColor: t.canvas }} contentContainerStyle={{ paddingBottom: pad }}>
+      <RefreshScroll ref={scroll} style={{ flex: 1, backgroundColor: t.canvas }} contentContainerStyle={{ paddingBottom: pad }}>
         {tab === 'live' ? <Live /> : tab === 'rank' ? <Rank /> : <Groups />}
-      </ScrollView>
+      </RefreshScroll>
     </Screen>
   );
 }
