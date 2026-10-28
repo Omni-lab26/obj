@@ -87,6 +87,35 @@ export function YearPick({ value, onChange, min, max }: { value: number; onChang
   );
 }
 
+/** One iOS wheel over a list (Android: its picker; the web: a select). */
+export function WheelPick<V extends string | number>({ value, options, onChange, a11y, width = '100%' }: { value: V; options: { v: V; label: string }[]; onChange: (v: V) => void; a11y: string; width?: number | `${number}%` }) {
+  const t = useT();
+  return (
+    // (a web select hands back text: numbers are made numbers again)
+    <Picker selectedValue={value} onValueChange={(v) => onChange((typeof value === 'number' ? Number(v) : v) as V)} mode="dialog" accessibilityLabel={a11y}
+      itemStyle={{ fontSize: 21, color: t.ink, height: 190 }} style={IOS ? { width, height: 190 } : { margin: 10, fontSize: 17 }}>
+      {options.map((o) => <Picker.Item key={String(o.v)} label={o.label} value={o.v} />)}
+    </Picker>
+  );
+}
+/** A year and a month side by side, as Apple asks for a birthday (newest year first). */
+export function YearMonthPick({ year, month, onChange, min, max }: { year: number; month: number; onChange: (y: number, m: number) => void; min: number; max: number }) {
+  const years = Array.from({ length: max - min + 1 }, (_, i) => max - i).map((y) => ({ v: y, label: `${y}年` }));
+  const months = Array.from({ length: 12 }, (_, i) => ({ v: i + 1, label: `${i + 1}月` }));
+  return (
+    <View style={{ flexDirection: 'row', alignSelf: 'stretch' }}>
+      <View style={{ flex: 3 }}><WheelPick value={year} options={years} onChange={(y) => onChange(y, month)} a11y="生まれた年" /></View>
+      <View style={{ flex: 2 }}><WheelPick value={month} options={months} onChange={(m) => onChange(year, m)} a11y="生まれた月" /></View>
+    </View>
+  );
+}
+/** A day's goal: half an hour to twelve hours, on a wheel. */
+export const GOAL_STEPS = Array.from({ length: 24 }, (_, i) => (i + 1) * 30);
+export const goalLabel = (m: number) => (m % 60 ? `${Math.floor(m / 60) ? `${Math.floor(m / 60)}時間` : ''}${m % 60}分` : `${m / 60}時間`);
+export function GoalPick({ value, onChange }: { value: number; onChange: (min: number) => void }) {
+  return <WheelPick value={value} options={GOAL_STEPS.map((m) => ({ v: m, label: goalLabel(m) }))} onChange={onChange} a11y="1日の目標" />;
+}
+
 /** The chip on the right of a row that opens a picker; blue while open, as on iOS. The keyboard goes away as it opens, so the wheels aren't hidden behind it. */
 export function PickChip({ label, on, onPress, a11y }: { label: string; on?: boolean; onPress?: () => void; a11y: string }) {
   const t = useT();

@@ -56,10 +56,8 @@ export function StandardHeader() {
       <View style={{ flex: 1 }} />
       <IconBtn outline name="search" label="さがす" onPress={go.search} />
       <IconBtn outline name="bell" label="お知らせ" dot={unread > 0} onPress={go.notifications} />
-      {/* one-to-one messages (マイページ is the tab bar's) */}
-      <IconBtn outline name="chat" label={dmUnread ? `メッセージ 未読${dmUnread}件` : 'メッセージ'} dot={dmUnread > 0} onPress={go.messages} />
-      {/* everything about the app, one place: the gear at the top right */}
-      <TourSpot id="settings"><IconBtn outline name="gear" label="設定" onPress={go.settings} /></TourSpot>
+      {/* one-to-one messages (マイページ is the tab bar's; 設定 is in the menu home slides aside for) */}
+      <TourSpot id="messages"><IconBtn outline name="chat" label={dmUnread ? `メッセージ 未読${dmUnread}件` : 'メッセージ'} dot={dmUnread > 0} onPress={go.messages} /></TourSpot>
     </View>
   );
 }

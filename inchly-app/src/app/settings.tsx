@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { backdropOf, BACKDROPS, THEMES_OPEN } from '@/design';
 import { subj } from '@/data';
 import { recordsCsv } from '@/lib/csv';
-import { DmFrom, getState, isMinor, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
+import { gradeNow, OTHER_GRADES, SCHOOL } from '@/lib/grade';
+import { DmFrom, gradeOf, getState, setGrade, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { backdropSheet, CardFillControl, FrostControl } from '@/ui/BackdropSheet';
@@ -28,6 +29,27 @@ function Section({ title, foot, children }: { title: string; foot?: string; chil
     </View>
   );
 }
+/** 学年: pick one (a school grade still moves up each April), or go back to the one the birthday gives. */
+function gradeSheet() {
+  openSheet((close) => <GradeForm close={close} />);
+}
+function GradeForm({ close }: { close: () => void }) {
+  const t = useT();
+  const a = useStore((s) => s.account);
+  if (!a) return null;
+  const auto = gradeNow({ birthYear: a.birthYear, birthMonth: a.birthMonth });
+  return (
+    <View style={{ gap: 14 }}>
+      <Txt size={17} w="700">学年</Txt>
+      <Choice value={gradeOf(a)} onChange={(g) => { haptic.tap(); setGrade(g); }} options={[...SCHOOL, ...OTHER_GRADES].map((g) => ({ v: g, label: g }))} />
+      <Press onPress={() => { haptic.tap(); setGrade(auto); close(); }} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
+        <Txt size={13} w="600" color={t.blue}>{`生まれた年月に合わせる（${auto}）`}</Txt>
+      </Press>
+      <Btn kind="primary" wide label="完了" onPress={close} />
+    </View>
+  );
+}
+
 function Row({ label, sub, right, first }: { label: string; sub?: string; right?: ReactNode; first?: boolean }) {
   const t = useT();
   return (
@@ -53,7 +75,6 @@ export default function Settings() {
   const now = useNow(30_000);
   const s = useStore((x) => x);
   const a = s.account;
-  const minor = isMinor(a);
 
   // the share sheet: save to Files, mail it, or paste it into a spreadsheet
   const exportCsv = async () => {
@@ -87,13 +108,17 @@ export default function Settings() {
       <NavBar title="設定" />
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <Section title="アカウント">
-          <Row first label={a?.name ?? '—'} sub={`@${a?.handle ?? ''} · ${a?.grade ?? ''}${a?.aim ? ` · ${a.aim} 志望` : ''}`} />
-          <Row label="ログイン" sub={a?.via === 'apple' ? 'Appleでサインイン' : a?.via === 'mail' ? 'メールアドレス' : 'サンプルのアカウント'} />
+          <Row first label={a?.name ?? '—'} sub={`@${a?.handle ?? ''} · ${gradeOf(a ?? null)}${a?.aim ? ` · ${a.aim} 志望` : ''}`} />
+          {a ? (
+            <Row label="学年" sub={`${a.gradeFixed || a.gradeShift ? '自分で選んだ学年' : '生まれた年月から自動'}・毎年4月に上がります`}
+              right={<Btn kind="line" small label={gradeOf(a)} onPress={gradeSheet} />} />
+          ) : null}
+          <Row label="ログイン" sub={a?.via === 'apple' ? 'Appleでサインイン' : a?.via === 'google' ? 'Googleでサインイン' : a?.via === 'mail' ? 'メールアドレス' : 'サンプルのアカウント'} />
         </Section>
 
-        <Section title="勉強中を見せる相手" foot={minor ? '18歳未満のため「全員」は選べません。' : '見せない場合も、自分の記録とグループのチャットは使えます。'}>
+        <Section title="勉強中を見せる相手" foot="見せない場合も、自分の記録とグループのチャットは使えます。">
           <View style={{ paddingVertical: 12 }}>
-            <RadioCards<LiveScope> value={s.liveScope} onChange={(v) => { if (v === 'all' && minor) { haptic.warn(); toast('18歳未満は「全員」にできません'); return; } setState({ liveScope: v }); }}
+            <RadioCards<LiveScope> value={s.liveScope} onChange={(v) => setState({ liveScope: v })}
               options={[
                 { v: 'all', title: '全員', sub: '「みんな」の自習室に並びます' },
                 { v: 'followers', title: 'フォロワーだけ', sub: 'フォローしてくれている人にだけ見えます' },
@@ -103,9 +128,9 @@ export default function Settings() {
           <Row label="順位を公開する" sub="オフでも自分の順位は見られます" right={<Toggle on={s.showRank} onChange={(v) => setState({ showRank: v })} label="順位を公開する" />} />
         </Section>
 
-        <Section title="メッセージを受け取る相手" foot={minor ? '18歳未満のため「全員」は選べません。' : undefined}>
+        <Section title="メッセージを受け取る相手">
           <View style={{ paddingVertical: 12 }}>
-            <Choice<DmFrom> value={s.dmFrom} onChange={(v) => { if (v === 'all' && minor) { haptic.warn(); toast('18歳未満は「全員」にできません'); return; } setState({ dmFrom: v }); }}
+            <Choice<DmFrom> value={s.dmFrom} onChange={(v) => setState({ dmFrom: v })}
               options={[{ v: 'following', label: 'フォロー中の人' }, { v: 'groups', label: 'グループのメンバーまで' }, { v: 'all', label: '全員' }]} />
           </View>
         </Section>

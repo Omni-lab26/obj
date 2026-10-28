@@ -93,7 +93,6 @@ function Header() {
         <Square icon="search" label="さがす" onPress={go.search} />
         <Square icon="bell" label="お知らせ" dot={unread > 0} onPress={go.notifications} />
         <Square icon="chat" label="メッセージ" dot={dmUnread > 0} onPress={go.messages} />
-        <Square icon="gear" label="設定" onPress={go.settings} />
       </View>
     </View>
   );

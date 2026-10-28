@@ -60,7 +60,6 @@ function Header() {
       <Square name="search" label="さがす" onPress={go.search} size={k} />
       <Square name="bell" label="お知らせ" onPress={go.notifications} dot={unread > 0} size={k} />
       <Square name="chat" label="メッセージ" onPress={go.messages} dot={dmUnread > 0} size={k} />
-      <Square name="gear" label="設定" onPress={go.settings} size={k} />
     </View>
   );
 }

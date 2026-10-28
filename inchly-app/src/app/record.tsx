@@ -7,7 +7,7 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { FREE, hm, pad, PERSON_COLOR, subj } from '@/data';
 import { celebrate } from '@/moments';
-import { addPost, commitHeld, commitRecord, elapsedOf, getState, splitAtMidnight, togglePause, useStore, useSubjects } from '@/store';
+import { addPost, gradeOf, commitHeld, commitRecord, elapsedOf, getState, splitAtMidnight, togglePause, useStore, useSubjects } from '@/store';
 import { dateKey } from '@/lib/time';
 import { hair, useT } from '@/theme';
 import { Empty, haptic, Press, SubjCoin, SubjTile, Txt } from '@/ui/base';
@@ -87,7 +87,7 @@ export default function Record() {
     const { min: m, ticket, exp, levelUp } = done;
     if (share) {
       const a = getState().account;
-      addPost({ n: a?.name ?? 'はる', h: a?.handle ?? 'haru_study', c: PERSON_COLOR['はる'], m: a?.grade ?? '高3', mine: true, w: 'たった今',
+      addPost({ n: a?.name ?? 'はる', h: a?.handle ?? 'haru_study', c: PERSON_COLOR['はる'], m: gradeOf(a ?? null) || '高3', mine: true, w: 'たった今',
         t: text || `${sj.name}${free && what.trim() ? `（${what.trim()}）` : ''}を${m}分`, tags: [], u: 0, r: 0, rec: { s: sid, min: m, note: text || undefined } });
     }
     haptic.success();

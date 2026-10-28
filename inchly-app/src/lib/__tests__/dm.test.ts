@@ -32,3 +32,12 @@ describe('one-to-one messages', () => {
     expect(INITIAL.dms).toEqual([]);
   });
 });
+
+describe('accounts saved with a grade name', () => {
+  it('keep their grade, now moving up each April', () => {
+    const { migrate } = jest.requireActual('../../store') as typeof import('../../store');
+    const out = migrate({ v: 3, account: { name: 'a', handle: 'a', grade: '高2', birthYear: 2008, aim: '', via: 'mail' } }, new Date(2026, 9, 28));
+    expect(out.account).toMatchObject({ birthMonth: 4, gradeShift: -1 });
+    expect(out.account).not.toHaveProperty('grade');
+  });
+});

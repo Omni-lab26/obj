@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { ComponentRef, useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
-import { useLevel, useStore, useStreak } from '@/store';
+import { gradeOf, useLevel, useStore, useStreak } from '@/store';
 import { useT } from '@/theme';
 import { Btn, Empty, IconBtn, Press, Txt } from '@/ui/base';
 import { Screen, TopBar, useTabPad } from '@/ui/Chrome';
@@ -57,10 +57,10 @@ export default function Me() {
       <TopBar title="マイページ" right={<IconBtn filled name="gear" label="設定" onPress={() => router.push('/settings')} />} />
       <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: pad }} stickyHeaderIndices={[3]}
         onScroll={(e) => { offset.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={32}>
-        <HoloCard lv={level.lv} name={a?.name ?? 'はる'} handle={a?.handle ?? 'haru_study'} goal={a?.aim ? `${a.aim} 志望` : a?.grade ?? ''} since="04/26"
+        <HoloCard lv={level.lv} name={a?.name ?? 'はる'} handle={a?.handle ?? 'haru_study'} goal={a?.aim ? `${a.aim} 志望` : gradeOf(a ?? null)} since="04/26"
           stats={[{ v: shown ? String(Math.floor(g.total)) : '000', from: '000', label: '時間 / 1年' }, { v: shown ? String(streak) : '00', from: '00', label: '日連続' }, { v: shown ? '57' : '00', from: '00', label: '位 / 今週' }]} />
         <View style={{ paddingHorizontal: 20, paddingTop: 14 }}>
-          <Txt size={13} tone="ink2" lh={20}>{a?.via === 'demo' || !a ? '高3。数学は青チャート2周目。朝型にしたい（今は夜型）。' : `${a.grade}。`}</Txt>
+          <Txt size={13} tone="ink2" lh={20}>{a?.via === 'demo' || !a ? '高3。数学は青チャート2周目。朝型にしたい（今は夜型）。' : `${gradeOf(a)}。`}</Txt>
           <View style={{ flexDirection: 'row', gap: 18, paddingTop: 8 }}>
             <Count n={String(mine.length)} label="投稿" onPress={() => go('posts')} />
             <Count n={String(following.length + 125)} label="フォロー" onPress={() => router.push('/follows?tab=following')} />

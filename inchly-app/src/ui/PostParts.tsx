@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { PERSON_COLOR, Post, subj } from '../data';
-import { addPost, getState, toggleBookmark, toggleHelpful, useStore } from '../store';
+import { addPost, gradeOf, getState, toggleBookmark, toggleHelpful, useStore } from '../store';
 import { hair, useT } from '../theme';
 import { Avatar, Btn, haptic, Press, Txt } from './base';
 import { personSheet } from './Editors';
@@ -135,7 +135,7 @@ function Compose({ close }: { close: () => void }) {
     setBusy(true);
     setTimeout(() => {
       const a = getState().account;
-      addPost({ n: a?.name ?? 'はる', h: a?.handle ?? 'haru_study', c: PERSON_COLOR['はる'], m: a?.grade ?? '高3', mine: true, w: 'たった今', t: text.trim(),
+      addPost({ n: a?.name ?? 'はる', h: a?.handle ?? 'haru_study', c: PERSON_COLOR['はる'], m: gradeOf(a ?? null) || '高3', mine: true, w: 'たった今', t: text.trim(),
         tags: tag ? [tag] : [], u: 0, r: 0, rec: attach === 'last' && last ? { s: last.s, min: last.min, note: last.note } : undefined });
       haptic.success();
       close();

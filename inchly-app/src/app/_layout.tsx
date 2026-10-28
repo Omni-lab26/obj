@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { ROOM } from '@/data';
 import { MomentHost } from '@/screens/MomentHost';
 import { getState, hydrate, startStudy, useDayRollover, useReminders, useStore } from '@/store';
 import { bundledFontsLoaded, useT } from '@/theme';
@@ -44,7 +45,8 @@ function useFeed(on: boolean) {
     const next = () => {
       if (i >= FEED.length) return;
       const [n, s] = FEED[i++];
-      toast(`${n} が ${s} を始めました`, '東大 理一 2027 · いま5人が勉強中', {
+      const who = ROOM.find((p) => p.n === n);
+      toast(`${n} が ${s} を始めました`, who ? `${who.g} 志望` : '一緒に始めよう', {
         label: '一緒に始める',
         run: () => {
           if (getState().running) { toast('もう勉強中です'); return; }
@@ -99,7 +101,9 @@ export default function RootLayout() {
   const signedIn = useStore((s) => !!s.account);
   // not while the first-run 使い方 is up (a push would cover what it points at)
   const toured = useStore((s) => s.tourDone);
-  useFeed(ready && signedIn && toured);
+  // 仲間が勉強を始めた: only if you left it on (the first run's お知らせ, or 設定)
+  const peers = useStore((s) => s.notify.peers);
+  useFeed(ready && signedIn && toured && peers);
   useDayRollover();
   useReminders();
   useStillOnPointer();

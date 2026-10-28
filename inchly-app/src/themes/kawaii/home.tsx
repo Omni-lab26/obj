@@ -63,7 +63,6 @@ function Header() {
       <Bubbly label="さがす" onPress={go.search} size={k}><Icon name="search" size={16} color={t.ink} width={2} /></Bubbly>
       <Bubbly label="お知らせ" onPress={go.notifications} size={k} dot={unread > 0}><Icon name="bell" size={16} color={t.ink} width={2} /></Bubbly>
       <Bubbly label="メッセージ" onPress={go.messages} size={k} dot={dmUnread > 0}><Icon name="chat" size={16} color={t.ink} width={2} /></Bubbly>
-      <Bubbly label="設定" onPress={go.settings} size={k}><Icon name="gear" size={16} color={t.ink} width={2} /></Bubbly>
     </View>
   );
 }

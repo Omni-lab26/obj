@@ -11,7 +11,8 @@ import { Block } from './lib/timetable';
 import { applyDesign, BACKDROPS, DEFAULT_DESIGN, Design, STREAKS, themeId } from './design';
 import { Done, expOf, levelOf, TODO_CAP, TODO_EXP } from './lib/exp';
 import { celebrate } from './moments';
-import { addDays, ageThisYear, dateKey, daysBetween } from './lib/time';
+import { addDays, dateKey, daysBetween } from './lib/time';
+import { gradeNow, type GradeSetting, pickGrade } from './lib/grade';
 
 // One small global store, saved on the device (see persist below). Updates
 // are immutable so selectors can return existing references without loops.
@@ -29,7 +30,12 @@ export type MyIcon = { id: string; icon: string; s?: string };
 /** A plan kept with ♡ on its timer card, to add again from 予定を追加: what it was, without its day. */
 export type Fav = { id: string; s: string; t: string; note?: string; icon?: string; start?: string; min?: number };
 export type Deadline = { id: string; t: string; mo: number; day: number; urgent?: boolean; note?: string };
-export type Account = { name: string; handle: string; grade: string; birthYear: number; aim: string; via: 'apple' | 'mail' | 'demo' };
+/**
+ * You. The grade isn't kept as a name: it comes from the birth year and month
+ * (and moves up every April, lib/grade), shifted or fixed if you picked one.
+ * parentConsent: under 13, you said a parent agreed.
+ */
+export type Account = { name: string; handle: string; birthYear: number; birthMonth: number; aim: string; via: 'apple' | 'google' | 'mail' | 'demo'; parentConsent?: boolean } & GradeSetting;
 export type LiveScope = 'all' | 'followers' | 'none';
 export type DmFrom = 'following' | 'groups' | 'all';
 /** One message between you and one person: text or a stamp, from you (me) or from them. */
@@ -735,14 +741,18 @@ export const currentSubject = () => subj(state.subj);
 export const toggleIn = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
 // ---------- account ----------
-/** Under 18: studying is shown to followers only, messages come from people you follow. */
-export const isMinor = (a: Account | null) => !!a && ageThisYear(a.birthYear) < 18;
+/** Your grade now (it moves up by itself every April). */
+export const gradeOf = (a: Account | null) => (a ? gradeNow(a) : '');
+/** Everyone starts the same: studying shown to all (seeing each other study is the point), messages from your groups' members. */
 export function signIn(a: Account) {
-  const minor = ageThisYear(a.birthYear) < 18;
   setState({
     ...(a.via === 'demo' ? demoState() : {}),
-    account: a, liveScope: minor ? 'followers' : 'all', dmFrom: minor ? 'following' : 'groups',
+    account: a, liveScope: 'all', dmFrom: 'groups',
   });
+}
+/** Changes your grade (a school grade keeps moving up each April; 浪人 and the like stay). */
+export function setGrade(choice: string) {
+  setState((s) => (s.account ? { account: { ...s.account, gradeShift: undefined, gradeFixed: undefined, ...pickGrade(choice, s.account.birthYear, s.account.birthMonth) } } : {}));
 }
 /** Deletes the account and everything on this device. */
 export function wipe() {
@@ -799,6 +809,12 @@ export function migrate(saved: Record<string, unknown>, now: Date = new Date()):
     out.design = { ...d, theme: themeId(d.theme), streak: d.streak in STREAKS ? d.streak : 'peach' };
   }
   delete out.studyBg;
+  // accounts kept a grade's name; now it comes from the birthday (the month unknown: April)
+  if (out.account && typeof out.account === 'object' && !('birthMonth' in (out.account as object))) {
+    const { grade, ...a } = out.account as Account & { grade?: string };
+    const month = 4;
+    out.account = { ...a, birthMonth: month, ...(grade ? pickGrade(grade === '既卒' ? '浪人' : grade, a.birthYear, month, now) : {}) };
+  }
   // coins, the store and missions are gone; drop what older saves kept for them
   for (const k of ['coins', 'boost', 'owned', 'claimed', 'eventsClaimed']) delete out[k];
   delete out.v;
