@@ -47,9 +47,9 @@
     thigh: 1.6,
     hipZ: 3.1,
     torsoZ: 6.2,
-    rAnkle: 0.21,
-    rKnee: 0.26,
-    rHip: 0.36,
+    rAnkle: 0.28,
+    rKnee: 0.31,
+    rHip: 0.31,
     rTorso0: 0.5,
     rTorso1: 0.65,
     stepT: 0.758,
@@ -62,12 +62,12 @@
     toeSwing: 0.3,
     toeUp: 0.2,
     clearance: 0.05,
-    blur0: 0.03,
-    blurK: 0.3,
-    ink0: 1,
-    inkK: 0.15,
+    blur0: 0.18,
+    blurK: 0.24,
+    ink0: 0.96,
+    inkK: 0.17,
     inkMin: 0.08,
-    torsoInk: 0.1,
+    torsoInk: 0.02,
     torsoBase: 0, // the body's haze starts this far (L) above the hips
     torsoLean: 2, // how far (L) the top of the body is ahead of the pelvis
     sway: 0.07, // the pelvis shifts this far (L) toward the foot carrying the weight
@@ -179,7 +179,7 @@ attribute vec4 a1; // P0.xy, P1.xy   a chain of three segments P0-P1-P2-P3
 attribute vec4 a2; // P2.xy, P3.xy
 attribute vec4 a3; // radii r0..r3 (px)
 attribute vec4 a4; // heights z0..z3 (sole lengths)
-attribute vec4 a5; // soles: 1, style, tread amount, -
+attribute vec4 a5; // soles: 1, style, tread amount, off the glass (0..1)
 attribute vec4 a6; // soles: heel end and toe tip of the sole's long axis (px)
 attribute vec4 a7; // soles: side (+1 right), inner arch lift, heel lift, heel strike
 uniform vec2 uView;
@@ -324,10 +324,11 @@ void main() {
   vec2 uv;
   float d = shape(p, z, uv);
   float blur = blurAt(z);
-  // Where a sole presses on the glass the ink is solid, with a rim of dots.
-  float contact = 1.0 - smoothstep(0.0, 0.12, z);
-  float ink = max(inkAt(z), contact);
-  blur = max(blur, contact * 0.06 * uL);
+  // Where a sole presses on the glass the ink is solid, with a rim of dots; a foot
+  // in the air is softer and a little paler.
+  float contact = (1.0 - smoothstep(0.0, 0.12, z)) * (1.0 - v5.w);
+  float ink = max(inkAt(z), contact) * (1.0 - 0.08 * v5.w);
+  blur = max(blur, max(contact * 0.06, v5.w * 0.08) * uL);
   float c = 1.0 - smoothstep(-blur, blur, d);
   gl_FragColor = vec4(vec3(1.0 - ink * c), 1.0);
 }`;
@@ -351,14 +352,16 @@ float tread(float style, float u, float v, float d) {
   if (style < 2.5) {
     // Runner: flex grooves along the ball line, a split crash pad at the heel.
     if (u > 0.55) return groove((u - 0.26 * v) / 0.07, 0.14);
-    if (u < 0.3) return 1.0 - smoothstep(0.008, 0.016, abs(v + 0.03));
+    if (u < 0.3) return 1.0 - smoothstep(0.012, 0.02, abs(v + 0.03));
     return 0.0;
   }
   // Boot: chunky staggered lugs, wider at the edge.
   float row = floor(u / 0.1);
   float fu = fract(u / 0.1);
   float fv = fract(v / (0.11 * (1.0 + 0.3 * smoothstep(0.1, 0.16, abs(v)))) + 0.5 * mod(row, 2.0));
-  float lug = max(abs(fu - 0.5), abs(fv - 0.5)) * 2.0;
+  vec2 e = abs(vec2(fu, fv) - 0.5);
+  e *= e;
+  float lug = sqrt(sqrt(dot(e, e))) * 2.0;  // a rounded square
   return smoothstep(0.6, 0.76, lug);
 }
 
@@ -368,7 +371,7 @@ void main() {
   vec2 uv;
   float d = shape(p, z, uv);
   float s = (0.045 + 0.3 * z) * uL;
-  float mask = (1.0 - smoothstep(-s, s, d)) * (1.0 - smoothstep(0.02, 0.1, z));
+  float mask = (1.0 - smoothstep(-s, s, d)) * (1.0 - smoothstep(0.02, 0.1, z)) * (1.0 - v5.w);
   if (mask < 0.002) discard;
   // Only what is pressed flat shows tread; grooves only a few device pixels apart
   // would shimmer or read as a pattern, so they fade.
@@ -482,8 +485,8 @@ void main() {
   }
 
   function ensureField() {
-    // The field is soft everywhere except the sole edges; 1.5x CSS px is plenty.
-    const scale = Math.min(glEntry.dpr, 1.5);
+    // The field is all soft (the sharp prints are drawn in pass 3), so CSS px will do.
+    const scale = Math.min(glEntry.dpr, 1);
     const w = Math.max(1, Math.round(Host.w * scale));
     const h = Math.max(1, Math.round(Host.h * scale));
     if (w === fieldW && h === fieldH && fbo) return;
@@ -507,8 +510,8 @@ void main() {
 
   // One body part: a chain of up to three segments through 3D points [x, y, z]
   // (CSS px), each with a radius in CSS px before projection, and an ink multiplier.
-  // A sole also passes { style, amount, axis: [heel end, toe tip], side, arch, heel,
-  // strike } (see shape() in the shaders) and is drawn again for its print.
+  // A sole also passes { style, amount, air, axis: [heel end, toe tip], side, arch,
+  // heel, strike } (see shape() in the shaders) and is drawn again for its print.
   function chain(pts, radii, ink, blurScale = 1, sole = null) {
     const pp = [];
     const rr = [];
@@ -531,7 +534,7 @@ void main() {
     if (sole) {
       const o = proj(...sole.axis[0]);
       const t = proj(...sole.axis[1]);
-      extra = [1, sole.style, sole.amount, 0, o[0], o[1], t[0], t[1], sole.side, sole.arch, sole.heel, sole.strike];
+      extra = [1, sole.style, sole.amount, sole.air, o[0], o[1], t[0], t[1], sole.side, sole.arch, sole.heel, sole.strike];
     }
     const corners = [[x0, y0], [x1, y0], [x0, y1], [x0, y1], [x1, y0], [x1, y1]];
     const write = (arr, n) => {
@@ -757,6 +760,9 @@ void main() {
     const live = new Set(w.feet[0].concat(w.feet[1]).map((s) => s.key));
     w.keys = w.keys.filter((key) => (key.step ? live.has(key) : key.t <= w.t));
     w.start = null;
+    // It was only setting off: set off again from where it stands, rather than
+    // carrying on from a stride that ended while it stood.
+    if (w.mode === 'walk' && lastStep(w).land < w.t - P.stepT / w.cad) startWalking(w, w.t + 0.05, false);
   }
 
   // Pelvis velocity a walker is heading off with (from its path a moment ahead).
@@ -766,20 +772,42 @@ void main() {
     return dt > 0.25 ? [(k.x - o.x) / dt, (k.y - o.y) / dt] : [0, 0];
   }
 
+  // Where walker o's pelvis will be over the next few seconds, from `ahead` seconds
+  // from now (each walker keeps its own clock), every 0.1 s: its plan, including a
+  // stop, then straight on at its last pace if it is still walking.
+  const LOOK = 3.2;
+  function trackOf(o, ahead) {
+    const K = o.keys;
+    const last = K[K.length - 1];
+    const prev = K[Math.max(0, K.length - 2)];
+    const on = !last.rest && last.t > prev.t;
+    const vx = on ? (last.x - prev.x) / (last.t - prev.t) : 0;
+    const vy = on ? (last.y - prev.y) / (last.t - prev.t) : 0;
+    const track = [];
+    for (let s = 0; s <= LOOK + 1e-6; s += 0.1) {
+      const t = o.t + ahead + s;
+      if (t <= last.t) track.push(pelvisAt(o, t));
+      else track.push([last.x + vx * (t - last.t), last.y + vy * (t - last.t)]);
+    }
+    return track;
+  }
+
   // Closest distance over the next few seconds between a walker leaving K with
-  // velocity v and walker o carrying on as it is.
-  function closest(w, K, v, o) {
-    const vo = velocityOf(o);
-    // K is a planned point, K.t - w.t from now (each walker keeps its own clock);
-    // carry o forward to the same moment.
+  // velocity v and another walker following its track (from trackOf, for the moment
+  // K is planned for).
+  function closest(K, v, track) {
+    let best = Infinity;
+    for (let i = 0; i < track.length; i++) {
+      const s = i * 0.1;
+      best = Math.min(best, Math.hypot(K.x + v[0] * s - track[i][0], K.y + v[1] * s - track[i][1]));
+    }
+    return best;
+  }
+
+  // The tracks of everybody but w, from K's moment.
+  function othersFrom(w, K) {
     const ahead = Math.max(0, K.t - w.t);
-    const px = K.x - (o.x + vo[0] * ahead);
-    const py = K.y - (o.y + vo[1] * ahead);
-    const vx = v[0] - vo[0];
-    const vy = v[1] - vo[1];
-    const vv = vx * vx + vy * vy;
-    const t = vv > 1e-6 ? clamp(-(px * vx + py * vy) / vv, 0, 3.2) : 0;
-    return Math.hypot(px + vx * t, py + vy * t);
+    return walkers.filter((o) => o !== w && o.keys).map((o) => ({ o, track: trackOf(o, ahead) }));
   }
 
   // Heading for the next stride: toward the goal, clear of other walkers, with a
@@ -788,22 +816,26 @@ void main() {
     const goal = Math.atan2(w.goal.y - K.y, w.goal.x - K.x);
     if (SOLO) return { dir: w.dir + clamp(angleDiff(goal, w.dir), -maxTurn, maxTurn), yieldTo: false };
     const reach = Math.max(maxTurn * 3, 0.45);
+    const others = othersFrom(w, K);
     let best = null;
     for (let c = -reach; c <= reach + 1e-6; c += reach / 6) {
-      const dir = w.dir + c;
-      const v = [Math.cos(dir) * speed, Math.sin(dir) * speed];
-      let cost = Math.abs(angleDiff(goal, dir)) * 0.6 + Math.abs(c) * 1.2 + Math.max(0, Math.abs(c) - maxTurn) * 2.5;
-      let near = Infinity;
-      for (const o of walkers) {
-        if (o === w || !o.keys) continue;
-        const d = closest(w, K, v, o);
-        near = Math.min(near, d);
-        if (d < 2.8 * L) cost += ((2.8 * L - d) / L) ** 2 * 3;
+      // Each heading at full pace, or holding back to let someone cross first.
+      for (const pace of [1, 0.5]) {
+        const dir = w.dir + c;
+        const v = [Math.cos(dir) * speed * pace, Math.sin(dir) * speed * pace];
+        let cost = Math.abs(angleDiff(goal, dir)) * 0.6 + Math.abs(c) * 1.2 + Math.max(0, Math.abs(c) - maxTurn) * 2.5 + (pace < 1 ? 1 : 0);
+        let near = Infinity;
+        for (const { track } of others) {
+          const d = closest(K, v, track);
+          near = Math.min(near, d);
+          // Passing closer than about two soles (shoulders brushing) is out of the question.
+          if (d < 3 * L) cost += ((3 * L - d) / L) ** 2 * 3 + (d < 2.2 * L ? ((2.2 * L - d) / L) ** 2 * 12 : 0);
+        }
+        if (!best || cost < best.cost) best = { cost, dir, near, pace };
       }
-      if (!best || cost < best.cost) best = { cost, dir, near };
     }
     best.dir += (Math.random() - 0.5) * 0.05;
-    return { dir: best.dir, yieldTo: best.near < 1.6 * L };
+    return { dir: best.dir, yieldTo: best.pace < 1 || best.near < 2.2 * L };
   }
 
   // The next footprint while walking (or slowing down to stop).
@@ -895,7 +927,11 @@ void main() {
       const nn = [-Math.sin(f), Math.cos(f)];
       const g = w.gap * L * 0.95 * sideOf(k);
       const land = t + gap;
-      const s = addStep(w, k, C[0] + nn[0] * g + Math.cos(f) * 0.05 * L, C[1] + nn[1] * g + Math.sin(f) * 0.05 * L, f + sideOf(k) * w.toeOut * 1.4, land, gap * 0.8, 0.35);
+      const x = C[0] + nn[0] * g + Math.cos(f) * 0.05 * L;
+      const y = C[1] + nn[1] * g + Math.sin(f) * 0.05 * L;
+      const was = w.feet[k][w.feet[k].length - 1];
+      const size = clamp(Math.hypot(x - was.x, y - was.y) / (2 * P.stepLen * L) + 0.12, 0.2, 0.45);
+      const s = addStep(w, k, x, y, f + sideOf(k) * w.toeOut * 1.4, land, gap * 0.8, size);
       s.key = addKey(w, { t: land + 0.15, x: C[0], y: C[1], rest: true, step: true });
       t = land;
       k = 1 - k;
@@ -943,6 +979,8 @@ void main() {
     w.start = { key: lean ? w.keys[w.keys.length - 1] : key, foot, t: after + lean };
     w.mode = 'walk';
     w.load = 0;
+    // No second thoughts until the first steps are down.
+    w.watch = Math.max(w.watch, after + lean - w.t + 1);
   }
 
   // A walker mid-stride: the last two footprints already down, the rest planned.
@@ -1059,6 +1097,7 @@ void main() {
       nextGlitch: rand(0.5, 2.5),
       box: null,
       ink: null,
+      feetAt: null,
       labelY: null,
       labelBelow: false,
       labelWait: 0,
@@ -1085,7 +1124,7 @@ void main() {
       // Somewhere on screen, not on top of anybody already there.
       let x = 0;
       let y = 0;
-      for (let tries = 0; tries < 20; tries++) {
+      for (let tries = 0; tries < 40; tries++) {
         x = rand(L * 1.5, Host.w - L * 1.5);
         y = rand(L * 1.5, Host.h - L * 1.5);
         if (walkers.every((o) => Math.hypot(o.x - x, o.y - y) > 4 * L)) break;
@@ -1110,11 +1149,16 @@ void main() {
     return w;
   }
 
-  // The middle of the screen, where a stop is in full view.
+  // The middle of the screen, where a stop (a step or two further on) is in full view.
   function central(w) {
     const mx = Math.max(2.2 * L, 0.15 * Host.w);
     const my = Math.max(2.2 * L, 0.15 * Host.h);
-    return w.x > mx && w.y > my && w.x < Host.w - mx && w.y < Host.h - my;
+    const v = velocityOf(w);
+    return [0, 0.9].every((dt) => {
+      const x = w.x + v[0] * dt;
+      const y = w.y + v[1] * dt;
+      return x > mx && y > my && x < Host.w - mx && y < Host.h - my;
+    });
   }
 
   function update(w, dt) {
@@ -1129,14 +1173,19 @@ void main() {
       w.watch = 0.3;
       const v = velocityOf(w);
       const here = { x: w.x, y: w.y, t: w.t };
-      if (walkers.some((o) => o !== w && o.keys && closest(w, here, v, o) < 1.5 * L)) {
+      if (othersFrom(w, here).some(({ track }) => closest(here, v, track) < 2.2 * L)) {
         replan(w);
         w.watch = 1.2;
       }
     }
     if (w.mode === 'walk' && w.willStop && w.flee <= 0 && !SOLO && central(w)) {
       w.stopIn -= dt;
-      if (w.stopIn <= 0) {
+      // Strangers don't stop right next to each other, or in someone's way (the stop
+      // comes a step or so further on).
+      const v = velocityOf(w);
+      const spot = { x: w.x + v[0] * 0.9, y: w.y + v[1] * 0.9, t: w.t };
+      const crowded = othersFrom(w, spot).some(({ track }) => closest(spot, [0, 0], track) < 2.5 * L);
+      if (w.stopIn <= 0 && !crowded) {
         replan(w);
         w.mode = 'stopping';
         w.willStop = Math.random() < 0.3;
@@ -1148,13 +1197,20 @@ void main() {
       w.standLeft -= dt;
       w.idleIn -= dt;
       if (!busy && w.standLeft <= 0) {
-        // Off again: the same way, or somewhere new after turning on the spot.
+        // Off again: the same way, or somewhere new after turning on the spot; but
+        // not into somebody about to pass close by. Then wait a moment.
         if (Math.random() < 0.55) w.goal = goalFrom(w, -1);
         const to = Math.atan2(w.goal.y - w.y, w.goal.x - w.x);
-        const turn = Math.abs(angleDiff(to, w.facing)) > 0.9;
-        const after = turn ? planTurn(w, to, false) + 0.1 : w.t + 0.05;
-        w.dir = to;
-        startWalking(w, after, turn);
+        const v = [Math.cos(to) * 1.5 * L, Math.sin(to) * 1.5 * L];
+        const here = { x: w.x, y: w.y, t: w.t };
+        if (othersFrom(w, here).some(({ o, track }) => o.mode !== 'stand' && closest(here, v, track) < 2.5 * L)) {
+          w.standLeft = rand(0.4, 1);
+        } else {
+          const turn = Math.abs(angleDiff(to, w.facing)) > 0.9;
+          const after = turn ? planTurn(w, to, false) + 0.1 : w.t + 0.05;
+          w.dir = to;
+          startWalking(w, after, turn);
+        }
       } else if (!busy && w.idleIn <= 0) {
         w.idleIn = rand(2.5, 6);
         if (Math.random() < 0.6) planShuffle(w);
@@ -1164,7 +1220,7 @@ void main() {
       w.loadIn -= dt;
       if (!busy && w.loadIn <= 0) {
         w.load = w.load === 0 ? (Math.random() < 0.5 ? 1 : -1) : Math.random() < 0.75 ? -w.load : 0;
-        w.loadIn = rand(3, 8);
+        w.loadIn = rand(2.5, 6);
       }
     }
     if (w.mode !== 'stand') {
@@ -1276,23 +1332,28 @@ void main() {
           ball = 0.08 * nxt.size * smooth(clamp((w.t - (nxt.lift - 0.1)) / 0.1, 0, 1));
         }
       } else if (w.mode === 'stand' && w.load === -sideOf(k)) {
-        // The resting leg: heel eased up off the glass.
-        heel = 0.06 * w.relax;
+        // The resting leg: heel eased up off the glass, so its print draws back to
+        // the ball of the foot.
+        heel = 0.15 * w.relax;
       }
-      return { x: cur.x, y: cur.y, a: cur.a, heel, ball, toe };
+      return { x: cur.x, y: cur.y, a: cur.a, heel, ball, toe, air: 0 };
     }
     const u = clamp((w.t - nxt.lift) / (nxt.land - nxt.lift), 0, 1);
     const e = smooth(u);
-    const sz = nxt.size;
     // The swinging foot cuts in toward the other foot on its way past it.
-    const tuck = P.swingIn * w.gap * L * Math.sin(Math.PI * u) * sideOf(k) * sz;
+    const tuck = P.swingIn * w.gap * L * Math.sin(Math.PI * u) * sideOf(k) * nxt.size;
     const ang = cur.a + angleDiff(nxt.a, cur.a) * e;
     // Early swing: knee bends, heel kicks up high behind; mid swing: foot skims low;
-    // late swing: leg reaches forward, toe up for the heel strike.
+    // late swing: leg reaches forward, toe up for the heel strike. Even a short step
+    // clears the glass.
+    const sz = Math.max(nxt.size, 0.6);
     const heel = keys(u, [0, P.heelPeak], [0.25, P.heelSwing], [1, 0]) * sz;
     const toe = keys(u, [0, 0], [0.22, P.toeSwing], [0.55, P.clearance], [0.85, 0.12], [1, P.toeUp]) * sz;
     // Leaving the ground the toes bend at the ball and stay down a moment longer.
     const ball = u < 0.15 ? lerp(0, lerp(heel, toe, 0.75), smooth(u / 0.15)) : lerp(heel, toe, 0.75);
+    // Off the glass, however low, a foot leaves no print: it is a shoe seen through
+    // the frosting, a little softer and paler.
+    const air = smooth(clamp((w.t - nxt.lift) / 0.06, 0, 1)) * (1 - smooth(clamp((w.t - nxt.land + 0.04) / 0.04, 0, 1)));
     return {
       x: lerp(cur.x, nxt.x, e) + Math.sin(w.facing) * tuck,
       y: lerp(cur.y, nxt.y, e) - Math.cos(w.facing) * tuck,
@@ -1300,6 +1361,7 @@ void main() {
       heel,
       ball,
       toe,
+      air,
     };
   }
 
@@ -1356,6 +1418,7 @@ void main() {
     hipZ -= P.hipZ * L * 0.03 * walking * (0.5 + 0.5 * Math.cos(2 * Math.PI * clamp(phase, 0, 1)));
     w.hipZ = w.hipZ == null ? hipZ : lerp(w.hipZ, hipZ, ease(w.dtLast || 1 / 60, 0.08));
     // Where the dark ink is on screen (soles and lower legs), for placing the tag.
+    w.feetAt = [(poses[0].x + poses[1].x) / 2, (poses[0].y + poses[1].y) / 2];
     w.ink = [];
     for (let k = 0; k < 2; k++) {
       const fp = poses[k];
@@ -1405,9 +1468,10 @@ void main() {
     ]);
     const radii = shoe.joints.map((j) => j[2] * len * w.shoeWide);
     // Soles blur a little less than legs as they lift, so a raised shoe still reads.
-    chain(pts, radii, P.soleInk / P.ink0, 0.7, {
+    chain(pts, radii, P.soleInk / P.ink0, 0.7 + 0.3 * fp.air, {
       style: shoe.style,
       amount: shoe.amount,
+      air: fp.air,
       axis: [
         [fp.x - f[0] * 0.5 * len, fp.y - f[1] * 0.5 * len, fp.heel * L],
         [fp.x + f[0] * 0.5 * len, fp.y + f[1] * 0.5 * len, fp.toe * L],
@@ -1436,9 +1500,9 @@ void main() {
   }
 
   function trackBox(w, dt) {
-    // Centred on the walker's ground position, a little below, following with a short lag.
-    const tx = w.x + Math.cos(w.facing) * P.plantLead * L;
-    const ty = w.y + Math.sin(w.facing) * P.plantLead * L + 0.15 * L;
+    // Centred between the feet, a little below, following with a short lag.
+    const tx = w.feetAt[0];
+    const ty = w.feetAt[1] + 0.1 * L;
     if (!w.box) w.box = { x: tx, y: ty };
     const k = 1 - Math.exp(-dt * 9);
     w.box.x = lerp(w.box.x, tx, k);
