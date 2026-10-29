@@ -1,0 +1,62 @@
+[
+  {
+    "id": "aurora",
+    "title": "Aurora",
+    "caption": "オーロラ・ネオン",
+    "hint": "タップで光の輪が広がる",
+    "image": "https://picsum.photos/id/901/1170/2532",
+    "focus": [0.5, 0.5],
+    "recipe": { "effect": "neon", "params": {}, "animate": "shimmer", "palette": ["#05060a", "#3df4bc", "#46e0f5", "#ffffff"], "accent": "#51cfe0" },
+    "background": "#06100f",
+    "tone": "dark",
+    "credit": "Photo: Marcelo Quinan / Unsplash"
+  },
+  {
+    "id": "pink-clouds",
+    "title": "Pink Clouds",
+    "caption": "桃色の雲・ドット絵",
+    "hint": "タップで光の輪が広がる",
+    "image": "https://picsum.photos/id/888/1170/2532",
+    "focus": [0.5, 0.5],
+    "recipe": { "effect": "dither", "params": { "pixel": 3, "levels": 4, "contrast": 1.15 }, "animate": "shimmer", "palette": ["#040017", "#1f0a3d", "#48355b", "#dd8d9c"], "accent": "#9851e0" },
+    "background": "#1f0a3d",
+    "tone": "dark",
+    "credit": "Photo: Cristian Baron / Unsplash"
+  },
+  {
+    "id": "horizon",
+    "title": "Horizon",
+    "caption": "夕焼けの地平線・ブラウン管",
+    "hint": "タップで光の輪が広がる",
+    "image": "https://picsum.photos/id/765/1170/2532",
+    "focus": [0.5, 0.5],
+    "recipe": { "effect": "crt", "params": {}, "animate": "scan", "accent": "#5177e0" },
+    "background": "#07080d",
+    "tone": "dark",
+    "credit": "Photo: Grant McIver / Unsplash"
+  },
+  {
+    "id": "starlight",
+    "title": "Starlight",
+    "caption": "星空と木立・LED",
+    "hint": "タップで光の輪が広がる",
+    "image": "https://picsum.photos/id/681/1170/2532",
+    "focus": [0.5, 0.5],
+    "recipe": { "effect": "led", "params": {}, "animate": "shimmer", "accent": "#5195e0" },
+    "background": "#0c1522",
+    "tone": "dark",
+    "credit": "Photo: Axel Antas-Bergkvist / Unsplash"
+  },
+  {
+    "id": "wisp",
+    "title": "Wisp",
+    "caption": "ひとすじの雲・網点",
+    "hint": "タップで光の輪が広がる",
+    "image": "https://picsum.photos/id/53/592/1280",
+    "focus": [0.5, 0.5],
+    "recipe": { "effect": "halftone", "params": { "pitch": 5, "mode": 1 }, "animate": "shimmer", "accent": "#519ce0" },
+    "background": "#1d4f9e",
+    "tone": "dark",
+    "credit": "Photo: J Duclos / Unsplash"
+  }
+]

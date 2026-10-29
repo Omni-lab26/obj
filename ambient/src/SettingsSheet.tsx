@@ -17,7 +17,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { clockFonts } from './fonts';
 import { CheckIcon } from './icons';
+import { scenes } from './scenes';
 import { useSettings } from './settings';
+
+// The digital layer only acts on photo backgrounds; without any, its setting is hidden.
+const hasPhotos = scenes.some((s) => s.kind === 'photo');
 
 type Props = {
   open: boolean;
@@ -171,29 +175,33 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
           </ScrollView>
           <Footnote color={c.secondary}>画面のどこかを長押しすると、いつでも時計を出したり隠したりできます。</Footnote>
 
-          <View style={styles.sectionRow}>
-            <SectionTitle color={c.secondary}>デジタルレイヤー</SectionTitle>
-            <Text style={[styles.value, { color: c.secondary }]}>{Math.round(settings.digital * 100)}%</Text>
-          </View>
-          <Group color={c.group}>
-            <View style={styles.sliderRow}>
-              <Text style={[styles.sliderEnd, { color: c.label }]}>素</Text>
-              <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={1}
-                value={initialDigital}
-                onValueChange={(v) => update((s) => ({ ...s, digital: v }))}
-                minimumTrackTintColor={c.accent}
-                maximumTrackTintColor={c.track}
-                accessibilityLabel="デジタルレイヤーの強さ"
-              />
-              <Text style={[styles.sliderEnd, { color: c.label }]}>デジタル</Text>
-            </View>
-          </Group>
-          <Footnote color={c.secondary}>
-            写真の背景にかける加工の強さです。左端は元の写真そのまま、右に行くほど文字・網点・ドットなどのデジタル表現が強くなります。
-          </Footnote>
+          {hasPhotos ? (
+            <>
+              <View style={styles.sectionRow}>
+                <SectionTitle color={c.secondary}>デジタルレイヤー</SectionTitle>
+                <Text style={[styles.value, { color: c.secondary }]}>{Math.round(settings.digital * 100)}%</Text>
+              </View>
+              <Group color={c.group}>
+                <View style={styles.sliderRow}>
+                  <Text style={[styles.sliderEnd, { color: c.label }]}>素</Text>
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={0}
+                    maximumValue={1}
+                    value={initialDigital}
+                    onValueChange={(v) => update((s) => ({ ...s, digital: v }))}
+                    minimumTrackTintColor={c.accent}
+                    maximumTrackTintColor={c.track}
+                    accessibilityLabel="デジタルレイヤーの強さ"
+                  />
+                  <Text style={[styles.sliderEnd, { color: c.label }]}>デジタル</Text>
+                </View>
+              </Group>
+              <Footnote color={c.secondary}>
+                写真の背景にかける加工の強さです。左端は元の写真そのまま、右に行くほど文字・網点・ドットなどのデジタル表現が強くなります。
+              </Footnote>
+            </>
+          ) : null}
           {credit ? <Footnote color={c.secondary}>いまの背景の写真: {credit}</Footnote> : null}
         </ScrollView>
       </Animated.View>
