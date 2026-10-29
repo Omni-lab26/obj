@@ -248,8 +248,13 @@ export const TIMER_FILM = [0.22, 0.4, 0.62, 0.86];
 export type Frost = 0 | 1 | 2 | 3;
 export const FROSTS: { v: Frost; label: string }[] = [{ v: 0, label: 'なし' }, { v: 1, label: '弱め' }, { v: 2, label: 'ふつう' }, { v: 3, label: '強め' }];
 export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'black', corners: 'm', card: 'pearl', streak: 'peach', timer: 'night', backdrop: 'pond', frost: 2, cardFill: 1 };
-/** The backdrop in use: the one picked, with the standard theme; none with the others. */
-export const backdropOf = (d: Design): Backdrop => (themeId(d.theme) === 'standard' && d.backdrop in BACKDROPS ? d.backdrop : 'none');
+/**
+ * 背景 is closed for now (false): nothing moves behind the pages, there's no
+ * way to choose one, and the choice saved before is kept for when it opens again.
+ */
+export const BACKDROPS_OPEN = false;
+/** The backdrop in use: the one picked, with the standard theme (while 背景 is open); none otherwise. */
+export const backdropOf = (d: Design): Backdrop => (BACKDROPS_OPEN && themeId(d.theme) === 'standard' && d.backdrop in BACKDROPS ? d.backdrop : 'none');
 
 let design: Design = DEFAULT_DESIGN;
 let version = 0;
@@ -260,12 +265,21 @@ export const designVersion = () => version;
 
 /** Theme switching is open (false hides it: everyone gets the standard look, and the saved choice is kept for later). */
 export const THEMES_OPEN = true;
+/**
+ * The themes that can be picked for now: the standard look and サイバー. The
+ * others come back once they're properly built; one picked before shows as
+ * the standard look meanwhile, and the choice is kept for then.
+ */
+export const THEMES_SHOWN: ThemeId[] = ['standard', 'cyber'];
+export const themeShown = (id: string) => THEMES_SHOWN.includes(themeId(id));
 
-/** Called by the store whenever the saved design changes. */
+/** Called by the store whenever its state changes: the design as saved, applied as it can be shown now. */
+let saved: Design | null = null;
 export function applyDesign(d: Design) {
-  if (!THEMES_OPEN) d = { ...DEFAULT_DESIGN, backdrop: d.backdrop, frost: d.frost, cardFill: d.cardFill };
-  if (d === design) return;
-  design = d;
+  if (d === saved) return;
+  saved = d;
+  design = !THEMES_OPEN ? { ...DEFAULT_DESIGN, backdrop: d.backdrop, frost: d.frost, cardFill: d.cardFill }
+    : themeShown(d.theme) ? d : { ...d, theme: 'standard' };
   version += 1;
   listeners.forEach((l) => l());
 }

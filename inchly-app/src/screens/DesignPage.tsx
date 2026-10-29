@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { type Backdrop, BACKDROPS, BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_PEACH, STREAKS, THEMES, themeOf, ThemeId, TIMERS, useDesign } from '@/design';
+import { type Backdrop, backdropOf, BACKDROPS, BACKDROPS_OPEN, BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_PEACH, STREAKS, THEMES, themeOf, ThemeId, themeShown, TIMERS, useDesign } from '@/design';
 import { setDesign } from '@/store';
 import { faceFor, focus, hair, lift, radius, useT } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
@@ -32,6 +32,9 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
   const insets = useSafeAreaInsets();
   const set = (patch: Partial<Design>) => { haptic.tap(); setDesign(patch); };
   const standard = d.theme === 'standard';
+  // only the themes that are ready (design.ts THEMES_SHOWN); a few sit in one row, more go by family
+  const shown = keys(THEMES).filter((k) => themeShown(k));
+  const byFamily = shown.length > 3;
   const [family, setFamily] = useState<(typeof FAMILIES)[number]['id']>(themeOf(d.theme).family);
   // swipe left to go back (as a page of its own)
   const [back] = useState(() => Gesture.Pan().activeOffsetX(-24).failOffsetY([-14, 14])
@@ -41,22 +44,24 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
       <Preview />
 
       <Section title="テーマ" sub="フォント・色・角・質感までまとめて変わります">
-        <Segmented fit value={family} onChange={setFamily} options={FAMILIES.map((f) => ({ v: f.id, label: f.label }))} />
+        {byFamily ? <Segmented fit value={family} onChange={setFamily} options={FAMILIES.filter((f) => shown.some((k) => THEMES[k].family === f.id)).map((f) => ({ v: f.id, label: f.label }))} /> : null}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
-          {keys(THEMES).filter((k) => THEMES[k].family === family).map((k) => <ThemeTile key={k} id={k} on={d.theme === k} onPress={() => set({ theme: k })} />)}
+          {shown.filter((k) => !byFamily || THEMES[k].family === family).map((k) => <ThemeTile key={k} id={k} on={d.theme === k} onPress={() => set({ theme: k })} />)}
         </View>
       </Section>
 
       {standard ? (
       <>
+      {BACKDROPS_OPEN ? (
       <Section title="背景" sub="すべてのページとタイマーのうしろで動きます。カードはすりガラスに">
         <Options value={d.backdrop} onChange={(backdrop) => set({ backdrop })} cols={4} items={BACKDROP_ORDER.map((k) => ({ k, label: BACKDROPS[k].label, swatch: (
           <View style={{ alignItems: 'center' }}><BackdropSwatch id={k} /></View>
         ) }))} />
         {d.backdrop !== 'none' ? <><FrostControl /><CardFillControl /></> : null}
       </Section>
+      ) : null}
 
-      {d.backdrop === 'none' ? (
+      {backdropOf(d) === 'none' ? (
       <Section title="地の色">
         <Options value={d.bg} onChange={(bg) => set({ bg })} cols={5} items={keys(BGS).map((k) => ({ k, label: BGS[k].label, swatch: (
           <View style={{ width: '100%', aspectRatio: 1, borderRadius: 12, backgroundColor: BGS[k].canvas, borderWidth: hair, borderColor: t.line2, padding: 7, justifyContent: 'flex-end' }}>
@@ -80,7 +85,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
         ) }))} />
       </Section>
       </>
-      ) : <Txt size={11.5} tone="ink3" style={{ paddingHorizontal: 20, paddingTop: 12 }}>背景（鯉の池など）・地の色・メインの色・角・タイマーの色は、テーマで決まります（スタンダードを選ぶと自分で選べます）</Txt>}
+      ) : <Txt size={11.5} tone="ink3" style={{ paddingHorizontal: 20, paddingTop: 12 }}>{`${BACKDROPS_OPEN ? '背景（鯉の池など）・' : ''}地の色・メインの色・角・タイマーの色は、テーマで決まります（スタンダードを選ぶと自分で選べます）`}</Txt>}
 
       <Section title="マイページのカード">
         <Options value={d.card} onChange={(card) => set({ card })} cols={3} items={keys(CARDS).map((k) => ({ k, label: CARDS[k].label, swatch: <MiniCard look={k} /> }))} />

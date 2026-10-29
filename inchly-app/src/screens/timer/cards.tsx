@@ -14,7 +14,7 @@ import type { Zone, Zones } from '@/screens/layout';
 import { jpHm, session, startBlock, useTicking } from '@/screens/model';
 import { jpDate } from '@/lib/time';
 import { deckOf, endOf, suggestion, type Block } from '@/lib/timetable';
-import { type Backdrop, useDesign } from '@/design';
+import { type Backdrop, BACKDROPS_OPEN, useDesign } from '@/design';
 import { doneOn, elapsedOf, finishBlock, getState, type Held, sameFav, setDesign, toggleFavorite, togglePause, useStore } from '@/store';
 import { focus, useT } from '@/theme';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
@@ -227,7 +227,7 @@ export function CardTop() {
     <View pointerEvents="box-none" style={{ alignItems: 'center' }}>
       <Press onPress={() => closeTimer()} hitSlop={14} accessibilityLabel="小さくする（下にスライドでも）" style={{ marginTop: 6, width: 40, height: 5, borderRadius: 3, backgroundColor: tone.light ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.45)' }} />
       <View pointerEvents="box-none" style={{ height: 44, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
-        <TopChip tone={tone} label="背景" a11y="背景を選ぶ" onPress={backdropSheet} />
+        {BACKDROPS_OPEN ? <TopChip tone={tone} label="背景" a11y="背景を選ぶ" onPress={backdropSheet} /> : <View style={{ width: 64 }} />}
         <View pointerEvents="none" style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           {ss.running && !ss.paused ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#39FF14' }} /> : null}
           <Txt size={12} w="700" color={ss.paused ? (tone.light ? CRIMSON : CRIMSON_ON_DARK) : tone.ink2} numberOfLines={1}>{state}</Txt>

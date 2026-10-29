@@ -1,6 +1,6 @@
 import { ScrollView, View } from 'react-native';
 
-import { THEMES, themeOf, ThemeId, useDesign } from '@/design';
+import { THEMES, themeOf, ThemeId, themeShown, useDesign } from '@/design';
 import { ThemeTile } from '@/screens/DesignPage';
 import { go } from '@/screens/model';
 import { setDesign } from '@/store';
@@ -11,7 +11,8 @@ import { Icon } from '@/ui/Icon';
 // In 設定 · 見た目: the themes in a row to try one on the spot, and the way to
 // the デザイン page for the rest (colors, corners, the cards).
 
-const IDS = Object.keys(THEMES) as ThemeId[];
+/** the themes that are ready (design.ts THEMES_SHOWN) */
+const IDS = (Object.keys(THEMES) as ThemeId[]).filter((id) => themeShown(id));
 
 /** bare: without its own card (inside a settings group). */
 export function ThemeCard({ bare }: { bare?: boolean }) {

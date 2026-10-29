@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import { Linking, ScrollView, Share, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { backdropOf, BACKDROPS, THEMES_OPEN } from '@/design';
+import { backdropOf, BACKDROPS, BACKDROPS_OPEN, THEMES_OPEN } from '@/design';
 import { subj } from '@/data';
 import { recordsCsv } from '@/lib/csv';
 import { gradeNow, OTHER_GRADES, SCHOOL } from '@/lib/grade';
@@ -149,10 +149,11 @@ export default function Settings() {
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
             <View style={{ flex: 1 }}>
               <Txt size={14} w="500">デザイン</Txt>
-              <Txt size={12} tone="ink3">テーマ・背景・メインの色・角・カード・タイマー</Txt>
+              <Txt size={12} tone="ink3">{BACKDROPS_OPEN ? 'テーマ・背景・メインの色・角・カード・タイマー' : 'テーマ・メインの色・角・カード・タイマー'}</Txt>
             </View>
             <Txt size={16} tone="ink3">›</Txt>
           </Press>
+          {BACKDROPS_OPEN ? <>
           <Press onPress={backdropSheet} scale={0.99} accessibilityRole="button" accessibilityLabel={`背景を変える（いまは ${BACKDROPS[backdropOf(s.design)].label}）`}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
             <View style={{ flex: 1 }}>
@@ -163,6 +164,7 @@ export default function Settings() {
             <Txt size={16} tone="ink3">›</Txt>
           </Press>
           <View style={{ paddingTop: 10, paddingBottom: 14, gap: 16, borderTopWidth: hair, borderTopColor: t.line }}><FrostControl /><CardFillControl /></View>
+          </> : null}
         </Section> : null}
 
         <Section title="科目">

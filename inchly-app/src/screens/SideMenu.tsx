@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BACKDROPS, themeId, themeOf, useDesign } from '@/design';
+import { BACKDROPS, BACKDROPS_OPEN, themeId, themeOf, useDesign } from '@/design';
 import { useStore } from '@/store';
 import { useT } from '@/theme';
 import { Press, Txt } from '@/ui/base';
@@ -38,9 +38,9 @@ export function SideMenu({ close, leave }: { close: () => void; leave: () => voi
     { icon: 'gear', label: '設定', go: open('/settings') },
     { icon: 'book', label: '科目と色', go: open('/subjects') },
     { icon: 'bookmark', label: 'ブックマーク', sub: saved ? String(saved) : undefined, go: open('/bookmarks') },
-    // the look (the デザイン page), and what moves behind the pages (with the standard theme)
+    // the look (the デザイン page), and what moves behind the pages (with the standard theme; closed for now: design.ts BACKDROPS_OPEN)
     { icon: 'sun', label: 'テーマ', sub: themeOf(d.theme).label, go: open('/design') },
-    { icon: 'waves', label: '背景', sub: standard ? BACKDROPS[d.backdrop].label : 'スタンダードのみ', go: () => { leave(); backdropSheet(); } },
+    ...(BACKDROPS_OPEN ? [{ icon: 'waves' as const, label: '背景', sub: standard ? BACKDROPS[d.backdrop].label : 'スタンダードのみ', go: () => { leave(); backdropSheet(); } }] : []),
   ];
   return (
     <View style={{ flex: 1, backgroundColor: t.canvas, paddingTop: insets.top + 14, paddingBottom: insets.bottom + 14, overflow: 'hidden' }}>
