@@ -26,13 +26,25 @@ type Props = {
   clock: Settings['clock'];
   /** Light text over dark scenes, dark text over light ones. */
   tone: 'dark' | 'light';
+  /** How long the colours take to follow a tone change (the scene crossfade). */
+  fadeMs?: number;
+};
+
+const FACES = {
+  // A soft halo of the background colour keeps digits legible over busy scenes.
+  dark: { ink: '#ffffff', inkSoft: 'rgba(255,255,255,0.72)', halo: 'rgba(0,0,0,0.45)' },
+  light: { ink: '#111114', inkSoft: 'rgba(17,17,20,0.62)', halo: 'rgba(255,255,255,0.75)' },
 };
 
 /** The centre clock. It never takes touches; long-press anywhere toggles it. */
-export function Clock({ clock, tone }: Props) {
+export function Clock({ clock, tone, fadeMs = 520 }: Props) {
   const now = useNow();
   const { width } = useWindowDimensions();
   const [shown] = useState(() => new Animated.Value(clock.visible ? 1 : 0));
+  // 0 = colours for a dark scene, 1 = for a light one. Both faces are drawn and
+  // crossfaded with the scene, so neither the digits nor their halo flash in the
+  // wrong colour over the outgoing background.
+  const [toneMix] = useState(() => new Animated.Value(tone === 'light' ? 1 : 0));
 
   useEffect(() => {
     Animated.spring(shown, {
@@ -42,6 +54,15 @@ export function Clock({ clock, tone }: Props) {
       bounciness: clock.visible ? 6 : 0,
     }).start();
   }, [clock.visible, shown]);
+
+  useEffect(() => {
+    Animated.timing(toneMix, {
+      toValue: tone === 'light' ? 1 : 0,
+      duration: fadeMs,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, [tone, toneMix, fadeMs]);
 
   const font = clockFont(clock.font);
   // Scale with the screen, but stop growing on tablets.
@@ -53,10 +74,46 @@ export function Clock({ clock, tone }: Props) {
   const seconds = String(now.getSeconds()).padStart(2, '0');
   const date = `${now.getMonth() + 1}月${now.getDate()}日 ${WEEKDAYS[now.getDay()]}曜日`;
 
-  const ink = tone === 'dark' ? '#ffffff' : '#111114';
-  const inkSoft = tone === 'dark' ? 'rgba(255,255,255,0.72)' : 'rgba(17,17,20,0.62)';
-  // A soft halo of the background colour keeps digits legible over busy scenes.
-  const halo = tone === 'dark' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.75)';
+  const face = (f: (typeof FACES)['dark']) => (
+    <>
+      {clock.date && (
+        <Text style={[styles.date, { color: f.inkSoft, textShadowColor: f.halo }]} numberOfLines={1}>
+          {date}
+        </Text>
+      )}
+      <View style={styles.row}>
+        <Text
+          style={[
+            font.time,
+            styles.time,
+            { fontSize: size, lineHeight: size * 1.08, color: f.ink, textShadowColor: f.halo, letterSpacing: (font.time.letterSpacing ?? 0) * scale },
+          ]}
+          numberOfLines={1}
+        >
+          {hours}:{minutes}
+        </Text>
+        {clock.seconds && (
+          <Text
+            style={[
+              font.time,
+              styles.time,
+              {
+                fontSize: size * font.secondsScale,
+                lineHeight: size * font.secondsScale * 1.1,
+                color: f.inkSoft,
+                textShadowColor: f.halo,
+                letterSpacing: 0,
+                marginLeft: size * 0.06,
+                marginBottom: size * 0.16,
+              },
+            ]}
+          >
+            {seconds}
+          </Text>
+        )}
+      </View>
+    </>
+  );
 
   return (
     <View pointerEvents="none" style={styles.layer}>
@@ -69,42 +126,10 @@ export function Clock({ clock, tone }: Props) {
           },
         ]}
       >
-        {clock.date && (
-          <Text style={[styles.date, { color: inkSoft, textShadowColor: halo }]} numberOfLines={1}>
-            {date}
-          </Text>
-        )}
-        <View style={styles.row}>
-          <Text
-            style={[
-              font.time,
-              styles.time,
-              { fontSize: size, lineHeight: size * 1.08, color: ink, textShadowColor: halo, letterSpacing: (font.time.letterSpacing ?? 0) * scale },
-            ]}
-            numberOfLines={1}
-          >
-            {hours}:{minutes}
-          </Text>
-          {clock.seconds && (
-            <Text
-              style={[
-                font.time,
-                styles.time,
-                {
-                  fontSize: size * font.secondsScale,
-                  lineHeight: size * font.secondsScale * 1.1,
-                  color: inkSoft,
-                  textShadowColor: halo,
-                  letterSpacing: 0,
-                  marginLeft: size * 0.06,
-                  marginBottom: size * 0.16,
-                },
-              ]}
-            >
-              {seconds}
-            </Text>
-          )}
-        </View>
+        <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
+          {face(FACES.dark)}
+        </Animated.View>
+        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(FACES.light)}</Animated.View>
       </Animated.View>
     </View>
   );
@@ -148,6 +173,15 @@ const styles = StyleSheet.create({
   },
   block: {
     alignItems: 'center',
+  },
+  face: {
+    alignItems: 'center',
+  },
+  faceOver: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
   row: {
     flexDirection: 'row',

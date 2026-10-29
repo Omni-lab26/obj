@@ -46,6 +46,9 @@ function Player() {
   const [layers, setLayers] = useState<Layer[]>(() => [
     { key: 0, scene: scenes[startIndex], opacity: new Animated.Value(1) },
   ]);
+  // The scene on screen: it changes when the new one starts fading in, so the
+  // clock and controls change colour together with the picture.
+  const [shownId, setShownId] = useState(scenes[startIndex].id);
   const [paused, setPaused] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
@@ -106,6 +109,7 @@ function Player() {
   );
 
   const reveal = useCallback((layer: Layer) => {
+    setShownId(layer.scene.id);
     Animated.timing(layer.opacity, {
       toValue: 1,
       duration: FADE_MS,
@@ -133,7 +137,8 @@ function Player() {
     setToast({ text: visible ? '時計を表示しました' : '時計を隠しました・長押しで戻せます', id: Date.now() });
   }, [clockVisible, update]);
 
-  const tone = measuredTone[scene.id] ?? scene.tone;
+  const shown = scenes.find((s) => s.id === shownId) ?? scene;
+  const tone = measuredTone[shown.id] ?? shown.tone;
   const dark = tone === 'dark';
   const ink = dark ? '#ffffff' : '#111114';
   const inkSoft = dark ? 'rgba(255,255,255,0.6)' : 'rgba(17,17,20,0.5)';
@@ -158,7 +163,7 @@ function Player() {
         </Animated.View>
       ))}
 
-      <Clock clock={clock} tone={tone} />
+      <Clock clock={clock} tone={tone} fadeMs={FADE_MS} />
       <Toast toast={toast} tone={tone} />
 
       <Animated.View
