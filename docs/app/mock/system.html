@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly 部品の一覧</title>
+<meta name="description" content="Inchly の新しいスタンダード（サイトの見た目のアプリ）で、どの画面も使う部品と、その状態の一覧。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="shared/app.css">
+<style>
+  /* この一覧ページだけの並べ方（アプリの部品ではない） */
+  body.sys{background:var(--dots),var(--paper)}
+  .sys-wrap{width:min(1280px,100% - 32px);margin-inline:auto}
+  .sys-top{padding:28px 0 8px}
+  .sys-top .logo{font-size:26px}
+  .sys-top .logo svg{width:30px;height:30px}
+  .sys-top h1{margin:18px 0 10px;font:800 clamp(26px,4vw,40px)/1.2 var(--f-body);letter-spacing:-.02em;word-break:auto-phrase}
+  .sys-top p{max-width:46em;color:var(--ink-2);font-size:15px;line-height:1.75}
+  .sys-nav{display:flex;flex-wrap:wrap;gap:0 14px;margin-top:12px}
+  .sys-nav a{display:inline-flex;align-items:center;min-height:44px;font-size:13px;font-weight:600;color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:4px}
+  .rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:22px 0 4px}
+  .rule{display:flex;align-items:center;gap:14px;padding:14px;border-radius:16px;background:var(--paper-2);box-shadow:inset 0 0 0 1.5px var(--line-2)}
+  .rule p{font-size:13px;line-height:1.6;color:var(--ink-2)}
+  .rule b{display:block;font-size:14px;color:var(--ink)}
+  .rule .demo{flex:none;width:58px;height:44px;border-radius:12px;background:var(--card)}
+  .demo.r{box-shadow:var(--ring)}
+  .demo.f{box-shadow:var(--ring),0 4px 0 2px var(--ink)}
+  .demo.l{box-shadow:var(--ring),var(--lift)}
+  .demo.s{display:grid;place-items:center;background:none}
+
+  .sys-sec{padding:44px 0 6px;scroll-margin-top:12px}
+  .sys-sec > h2{display:flex;align-items:center;gap:12px;margin-bottom:6px;font:400 22px/1.3 var(--f-pixj);letter-spacing:.02em}
+  .sys-sec > h2::before{content:"";width:10px;height:10px;background:var(--accent,var(--sun));box-shadow:0 0 0 2px var(--ink)}
+  .sys-sec > p{max-width:52em;margin-bottom:16px;color:var(--ink-2);font-size:14px;line-height:1.7}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:18px;align-items:start}
+  .grid.wide{grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr))}
+  .spec{margin:0;min-width:0;border-radius:18px;background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--line-2);overflow:hidden}
+  .spec-stage{padding:18px 16px 16px;min-width:0}
+  .spec-stage.tight{padding:14px 12px}
+  .spec figcaption{padding:10px 16px 14px;border-top:1.5px solid var(--line);font-size:13px;line-height:1.65;color:var(--ink-2);background:color-mix(in oklab,var(--paper-2) 60%,var(--paper))}
+  .spec figcaption b{display:block;font-size:14px;color:var(--ink);margin-bottom:1px}
+  .spec figcaption code{font:500 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2);background:var(--paper-2);padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}
+  .stack-sm{display:flex;flex-direction:column;gap:14px}
+  .row-flex{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+  .cap{font:400 11px/1.3 var(--f-pix);letter-spacing:.06em;color:var(--ink-3);text-transform:uppercase}
+  .capj{font-size:12px;color:var(--ink-3)}
+
+  .sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .sw div{display:flex;align-items:center;gap:10px;min-width:0}
+  .sw i{flex:none;width:34px;height:34px;border-radius:9px;background:var(--c);box-shadow:var(--ring)}
+  .sw span{min-width:0;font-size:12px;line-height:1.35;color:var(--ink-2)}
+  .sw span b{display:block;font-size:13px;color:var(--ink)}
+  .sw span code{font:500 11px/1.2 ui-monospace,Menlo,monospace;color:var(--ink-3)}
+
+  .type{display:grid;gap:12px}
+  .type div{display:grid;grid-template-columns:62px minmax(0,1fr);align-items:baseline;gap:12px}
+  .type .cap{white-space:nowrap}
+
+  .phone-demo{display:grid;place-items:center;padding:20px 12px;background:var(--paper-2)}
+  .phone-demo iframe{display:block;width:min(390px,100%);height:760px;border:0;border-radius:32px;background:var(--paper);box-shadow:0 0 0 8px var(--ink)}
+
+  .crit{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 8px;align-items:end}
+  .crit button{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;min-height:72px;padding:6px 2px 4px;border:0;border-radius:12px;background:none;cursor:pointer}
+  .crit button span{font:400 11px/1.2 var(--f-pixj);color:var(--ink-3)}
+  .crit button.is-down{background:var(--paper-2)}
+  .crit-name{grid-column:1 / -1;display:flex;align-items:baseline;gap:10px;margin-top:10px;font:400 16px/1.3 var(--f-pixj)}
+  .crit-name:first-child{margin-top:0}
+  .crit-name small{font:400 12px/1.4 var(--f-body);color:var(--ink-3)}
+
+  .icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:12px 6px}
+  .icons div{display:flex;flex-direction:column;align-items:center;gap:6px;font:500 10.5px/1.2 ui-monospace,Menlo,monospace;color:var(--ink-3)}
+  .icons .pi{height:24px}
+
+  .mt{width:100%;border-collapse:collapse;font-size:13px}
+  .mt th,.mt td{padding:9px 6px;text-align:left;vertical-align:top;border-bottom:1.5px solid var(--line)}
+  .mt th{font:400 11px/1.2 var(--f-pix);letter-spacing:.06em;color:var(--ink-3);text-transform:uppercase}
+  .mt td:nth-child(2){font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
+  .mt tr:last-child td{border-bottom:0}
+
+  .bar-demo{display:flex;flex-direction:column;gap:10px;padding:14px 12px 18px;border-radius:14px;background:var(--dots),var(--paper)}
+  .bar-demo.glass{background:linear-gradient(135deg,rgba(88,86,214,.35),rgba(255,149,0,.30) 50%,rgba(31,163,91,.30)),var(--paper)}
+  .today-num{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 0}
+  .sys .sheet-panel{width:min(430px,100%);margin-inline:auto}
+  .sys .toasts{left:50%;right:auto;width:min(406px,calc(100% - 24px));transform:translateX(-50%)}
+  .sys-foot{padding:48px 0 56px;color:var(--ink-3);font-size:12px}
+  @media (max-width:430px){
+    .sys-wrap{width:calc(100% - 32px)}
+    .phone-demo iframe{height:700px;border-radius:24px;box-shadow:0 0 0 6px var(--ink)}
+  }
+</style>
+</head>
+<body class="sys">
+<div class="sys-wrap">
+
+<header class="sys-top">
+  <a class="logo" href="index.html" aria-label="Inchly モックの一覧へ"><span id="sys-logo"></span><span class="logo-word" aria-hidden="true">inchly</span></a>
+  <h1>新しいスタンダードの部品</h1>
+  <p>サイトの「紙・インク・ライム」を、毎日使う iPhone のアプリに入れるための部品です。どの画面も、ここの部品と <code>shared/app.css</code>・<code>shared/app.js</code> で作ります。押せる物は押して、動きを確かめられます。</p>
+  <div class="rules" aria-label="影と輪郭のきまり">
+    <div class="rule"><span class="demo r" aria-hidden="true"></span><p><b>輪郭だけ ＝ 置いてある</b>カード・行の入れ物。押しても何も起きない。</p></div>
+    <div class="rule"><span class="demo f" aria-hidden="true"></span><p><b>真下の床 ＝ 押せる</b>ボタン・チップ・下の2本のバーだけ。面だけが沈む。</p></div>
+    <div class="rule"><span class="demo l" aria-hidden="true"></span><p><b>ライムの影 ＝ 浮いている</b>トースト・シート、主役のカード（1画面に1枚）。</p></div>
+    <div class="rule"><span class="demo s" aria-hidden="true"><span data-stk="star"></span></span><p><b>薄い斜めの影 ＝ シール</b>バッジとスタンプ。紙に貼った物。</p></div>
+  </div>
+  <nav class="sys-nav" aria-label="この一覧の中">
+    <a href="#colors">色</a><a href="#type">字</a><a href="#frame">画面の枠</a><a href="#header">ヘッダー</a><a href="#cards">カード</a><a href="#keys">ボタン</a><a href="#chips">チップ</a><a href="#rows">一覧の行</a><a href="#bar">勉強バー</a><a href="#tabbar">タブバー</a><a href="#toast">トースト・シート</a><a href="#grass">草・定規</a><a href="#badges">バッジ・炎</a><a href="#pals">住人</a><a href="#motion">動き</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ============ 色 ============ -->
+<section class="sys-sec" id="colors" style="--accent:var(--lime)">
+  <h2>色</h2>
+  <p>地は紙、字と輪郭はインク。ライムは「始める」と「選んでいる」だけに使います。勉強中は勉強の緑、止めたらアプリの紅。グラフと科目は教科の色だけで、緑は使いません（緑は草と計測の線のもの）。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage"><div class="sw">
+      <div><i style="--c:var(--paper)"></i><span><b>紙</b><code>#F3EEE3</code> 画面の地（点つき）</span></div>
+      <div><i style="--c:var(--paper-2)"></i><span><b>紙 2</b><code>#EBE4D4</code> くぼみ・押した行</span></div>
+      <div><i style="--c:var(--card)"></i><span><b>カード</b><code>#FBF8F1</code> カード・バーの面</span></div>
+      <div><i style="--c:var(--ink)"></i><span><b>インク</b><code>#17121F</code> 字・輪郭・床</span></div>
+      <div><i style="--c:var(--ink-2)"></i><span><b>インク 2</b><code>#2B2436</code> 本文の2番目</span></div>
+      <div><i style="--c:var(--ink-3)"></i><span><b>インク 3</b><code>#6C6477</code> 補足・選んでいないタブ</span></div>
+      <div><i style="--c:var(--line)"></i><span><b>線</b><code>#D8CFBD</code> 行の区切り</span></div>
+    </div></div><figcaption><b>紙とインク</b>サイトと同じ値。文字はインクとインク 3 の2つでほぼ足ります。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage"><div class="sw">
+      <div><i style="--c:var(--lime)"></i><span><b>ライム</b><code>#C6F432</code> 始める・選んでいる</span></div>
+      <div><i style="--c:var(--lime-2)"></i><span><b>ライム 深</b><code>#A8D81C</code> 浮いている物の影</span></div>
+      <div><i style="--c:var(--run)"></i><span><b>計測中</b><code>#1FA35B</code> 点・進みの線（字は #148246）</span></div>
+      <div><i style="--c:var(--pause)"></i><span><b>一時停止</b><code>#D7003A</code> 止めたときの字</span></div>
+      <div><i style="--c:var(--due)"></i><span><b>締切</b><code>#E58A00</code> 締切の点（字は #A65F00）</span></div>
+      <div><i style="--c:var(--over)"></i><span><b>延長</b><code>#FF9F0A</code> 予定をこえた線</span></div>
+      <div><i style="--c:var(--up)"></i><span><b>増えた</b><code>#148246</code> ▲ 1:17</span></div>
+      <div><i style="--c:var(--down)"></i><span><b>減った</b><code>#C8302A</code> ▼ 0:08</span></div>
+      <div><i style="--c:var(--unread)"></i><span><b>未読</b><code>#FF6B4A</code> お知らせの点</span></div>
+      <div><i style="--c:var(--focus)"></i><span><b>フォーカス</b><code>#6B4CFF</code> キーボードの輪</span></div>
+    </div></div><figcaption><b>状態の色</b>色だけで伝えず、いつも字（「勉強中」「一時停止中」「あと10日」）か形（▲▼・点）を添えます。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="sw">
+        <div><i style="--c:var(--s-en)"></i><span><b>英語</b><code>#5856D6</code></span></div>
+        <div><i style="--c:var(--s-ma)"></i><span><b>数学</b><code>#FF9500</code></span></div>
+        <div><i style="--c:var(--s-ja)"></i><span><b>国語</b><code>#D9A300</code></span></div>
+        <div><i style="--c:var(--s-ph)"></i><span><b>物理</b><code>#30B0C7</code></span></div>
+        <div><i style="--c:var(--s-ch)"></i><span><b>化学</b><code>#1F7FB0</code></span></div>
+        <div><i style="--c:var(--s-free)"></i><span><b>自習</b><code>#8C93A0</code></span></div>
+      </div>
+      <div class="sw">
+        <div><i style="--c:var(--g0)"></i><span><b>草 0</b><code>#E6E0D2</code> 空き（紙に合わせた）</span></div>
+        <div><i style="--c:var(--g1)"></i><span><b>草 1</b><code>#B5EBC8</code></span></div>
+        <div><i style="--c:var(--g2)"></i><span><b>草 2</b><code>#5ED18A</code></span></div>
+        <div><i style="--c:var(--g3)"></i><span><b>草 3</b><code>#1FA35B</code></span></div>
+        <div><i style="--c:var(--g4)"></i><span><b>草 4</b><code>#0F7F3C</code></span></div>
+      </div>
+    </div><figcaption><b>科目と草</b>アプリの <code>data.ts</code> と <code>theme.ts</code> の値。サイトの12科目の色は使いません。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ 字 ============ -->
+<section class="sys-sec" id="type" style="--accent:var(--sky)">
+  <h2>字</h2>
+  <p>日本語はヒラギノ（ない所では Noto Sans JP）。英数字は SF Pro（ない所では Inter）。20pt 以上の数字だけ Bricolage Grotesque。小さなラベルだけドットの字（日本語は DotGothic16、英数字は Silkscreen）。1画面に大きな数字は1つ。</p>
+  <div class="grid wide">
+    <figure class="spec"><div class="spec-stage type">
+      <div><span class="cap">32 · 数字</span><span class="today-num"><span class="big">2</span><span class="unit">時間</span><span class="big">45</span><span class="unit">分</span></span></div>
+      <div><span class="cap">24 · カード</span><span><span class="mid">23</span><span class="unit">日連続</span></span></div>
+      <div><span class="cap">16 · ドット</span><span class="sec-t">勉強した日</span></div>
+      <div><span class="cap">15 · 見出し</span><b style="font-size:15px">いま勉強中の友達</b></div>
+      <div><span class="cap">14 · 本文</span><span>勉強した時間を記録して、積み上がりを目で見る。</span></div>
+      <div><span class="cap">12 · 補足</span><span style="font-size:12px;color:var(--ink-3)" class="tnum">39:24 · 予定 1時間</span></div>
+      <div><span class="cap">11 · 凡例</span><span style="font-size:11px;color:var(--ink-3)">少 · 多 · 目標まで 0:15</span></div>
+      <div><span class="cap">ラベル</span><span class="row-flex" style="gap:12px"><span class="label sq">LV 25 · NO.04</span><span class="label-j sq" style="--accent:var(--sky)">いっしょに</span></span></div>
+    </div><figcaption><b>大きさの役</b>数字32（1画面に1つ）・カードの数字24・見出し15・本文14・補足12/11。ページの題は書きません。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ 画面の枠 ============ -->
+<section class="sys-sec" id="frame" style="--accent:var(--coral)">
+  <h2>画面の枠</h2>
+  <p>幅 430 以下では、ページそのものがアプリの画面です（上下は safe-area を空ける）。それより広いと、まん中に 390×844 の iPhone の枠と、横に短い説明が出ます。<code>&lt;body data-tab="home" data-bar="live"&gt;</code> と書くだけで、下の勉強バーとタブバーが付きます。</p>
+  <div class="grid wide">
+    <figure class="spec"><div class="phone-demo"><iframe id="shell-demo" title="画面の見本（ホームの形）" loading="lazy"></iframe></div>
+      <figcaption><b>見本：ヘッダー・カード・2本のバー</b>中はスクロールします。上で線が出るのはスクロールしたときだけ。勉強バーの ❚❚ を押すと一時停止中（紅）に変わります。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ ヘッダー・見出し ============ -->
+<section class="sys-sec" id="header" style="--accent:var(--sun)">
+  <h2>ヘッダーと見出し</h2>
+  <p>ヘッダーは上に貼りつき、スクロールすると下に 2pt のインクの線が出ます。右のアイコンは1枚の板にまとめて、床を1つにしました（うるさくしない）。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage tight stack-sm">
+      <header class="hdr" data-hdr="home" style="position:relative;margin:0;padding:0;height:56px;--safe-top:0px;background:none"></header>
+      <header class="hdr" data-hdr="gear" style="position:relative;margin:0;padding:0;height:56px;--safe-top:0px;background:none"></header>
+      <header class="hdr" data-hdr="search" data-title="10月29日（木）" style="position:relative;margin:0;padding:0;height:56px;--safe-top:0px;background:none"></header>
+    </div><figcaption><b>ヘッダー</b><code>data-hdr="home"</code> ロゴ・Lv・さがす/お知らせ/メッセージ（未読はコーラルの点）。<code>gear</code>（マイページ）、<code>search</code>（みんな・タイムライン）。Lv を押すとレベルのシート。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <h3 class="sec-h"><span class="sec-t" style="--accent:var(--g3)">勉強した日</span><span class="sec-a">今年 <b>253</b>日</span></h3>
+      <h3 class="sec-h"><span class="sec-t" style="--accent:var(--run)">いま勉強中の友達</span><a class="sec-a link" href="#rows" style="margin-left:auto;font-size:13px;min-height:28px">もっと見る</a></h3>
+      <h3 class="sec-h"><span class="sec-t" style="--accent:var(--due)">締切</span><span class="sec-a">ToDoの進み具合</span></h3>
+      <div class="row-flex"><span class="label sq">TODAY · 10.29</span><span class="label-j sq" style="--accent:var(--sky)">休み券 2枚</span></div>
+    </div><figcaption><b>見出し（ドット）とラベル</b>カードの上の見出しは <code>.sec-h</code>：■＋DotGothic16 の 16px（元の大きさでにじまない）。右は補足 12。小さな札は <code>.label</code>（英数字）と <code>.label-j</code>（日本語）。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ カード ============ -->
+<section class="sys-sec" id="cards" style="--accent:var(--lime)">
+  <h2>カード</h2>
+  <p>カードは「置いてある物」。2pt のインクの輪郭だけで、床の影はつけません（押せる物と見分けるため）。主役の1枚（ホームなら「今日の勉強」）だけ、右下にライムの影を置けます。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage">
+      <section class="card"><h3 class="sec-h" style="margin-bottom:10px"><span class="sec-t" style="--accent:var(--due)">締切</span><span class="sec-a">3件</span></h3>
+        <p style="color:var(--ink-2)">ふつうのカード。角 22、内側 16、輪郭 2pt。中の行は線で区切ります。</p></section>
+    </div><figcaption><b>カード <code>.card</code></b>草・友達・締切・記録など、ほとんどの入れ物。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage" style="padding-right:22px;padding-bottom:22px">
+      <section class="card hero">
+        <div class="card-h"><span style="font-size:12px;color:var(--ink-2)">今日の勉強 · 10月29日（木）</span></div>
+        <div class="today-num"><span class="big">2</span><span class="unit">時間</span><span class="big">45</span><span class="unit">分</span><span class="delta up" style="margin-left:auto">1:17</span></div>
+      </section>
+    </div><figcaption><b>主役のカード <code>.card.hero</code></b>1画面に1枚だけ。ライムの影は「押せる」ではなく「いちばん見てほしい」。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="well" style="--accent:var(--sky)"><span class="label-j sq" style="--accent:var(--sky)">くぼみ</span><p style="margin-top:6px;font-size:13px;color:var(--ink-2)">色の地に点。カードの上半分や、絵を置く所に。</p></div>
+      <div class="empty"><span data-pix="mebu" data-face="sleep" data-scale="3"></span><b>今日の時間割はまだありません</b><span style="font-size:13px">「追加」で日と時刻と科目を決めておくと、1タップで始められます</span></div>
+    </div><figcaption><b>くぼみ <code>.well</code> と 空の箱 <code>.empty</code></b>空のときは点線の箱に住人（止まった絵）を1匹。さみしくしない。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ ボタン ============ -->
+<section class="sys-sec" id="keys" style="--accent:var(--coral)">
+  <h2>押せるボタン</h2>
+  <p>黒い台（床）は動かず、面だけが 3pt 沈みます。下りは 0.09 秒、戻りは約 0.3 秒で、行きすぎません。押してみてください。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage keys">
+      <button class="key key-lime" type="button"><i data-pi="play"></i>勉強を開始</button>
+      <button class="key" type="button">続ける</button>
+      <button class="key key-ink" type="button">記録する</button>
+    </div><figcaption><b>ボタン <code>.key</code></b>ライム＝始める（勉強を開始・はじめる）。ふつうはカード色。インクの面（床はライム深）はシートの決める操作（記録する・保存）に1つだけ。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage keys">
+      <button class="key key-sm" type="button"><i data-pi="plus"></i>追加</button>
+      <button class="key key-sm" type="button"><i data-pi="sort"></i>並べ替え</button>
+      <button class="key key-icon" type="button" aria-label="予定を編集"><i data-pi="edit"></i></button>
+      <button class="key key-round key-lime" type="button" aria-label="はじめる" style="min-height:64px"><i data-pi="play" data-scale="2.5"></i></button>
+    </div><figcaption><b>小さいボタン・アイコン・丸</b><code>.key-sm</code> は面 32、指の届く所は 44（見えないはみ出し）。<code>.key-icon</code> は 44 の四角。<code>.key-round</code> はタイマーの ▶ / ❚❚。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage keys">
+      <span class="stack-sm" style="align-items:flex-start;gap:8px"><span class="cap">ふだん</span><button class="key" type="button" tabindex="-1">保存</button></span>
+      <span class="stack-sm" style="align-items:flex-start;gap:8px"><span class="cap">押している</span><button class="key is-down" type="button" tabindex="-1" style="pointer-events:none">保存</button></span>
+      <span class="stack-sm" style="align-items:flex-start;gap:8px"><span class="cap">押せない</span><button class="key" type="button" disabled>保存</button></span>
+    </div><figcaption><b>状態</b>押せないときは床を消し、面を紙 2 に（輪郭は薄く）。床がない＝押せない、がいつも同じ意味になる。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage keys">
+      <button class="key key-block key-lg key-lime" type="button"><i data-pi="play"></i>この予定を始める</button>
+      <a class="link" href="#keys">文字のリンク</a>
+      <button class="ibtn" type="button" aria-label="一時停止する"><i data-pi="pause" data-scale="2"></i></button>
+      <button class="tbtn" type="button">やめる</button>
+    </div><figcaption><b>横いっぱい・地なし</b><code>.key-block .key-lg</code> はシートの下の大きなボタン。<code>.ibtn</code>（バーの中の ❚❚）と <code>.tbtn</code>（シートの「やめる」）は床なし：板の中の操作だから。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ チップ・切りかえ ============ -->
+<section class="sys-sec" id="chips" style="--accent:var(--sky)">
+  <h2>チップ・切りかえ・下線のタブ</h2>
+  <p>選んだ物はライムになり、押しこまれたまま（床が消える＝もう選んでいる）。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="chips" data-single role="group" aria-label="絞り込み">
+        <button class="chip" type="button" aria-pressed="true">みんな</button>
+        <button class="chip" type="button" aria-pressed="false">フォロー中</button>
+        <button class="chip" type="button" aria-pressed="false">東大志望</button>
+        <button class="chip chip-add" type="button" aria-label="絞り込みを追加"><i data-pi="plus"></i></button>
+      </div>
+      <div class="chips">
+        <button class="chip" type="button" aria-pressed="false"><i class="dot" style="--c:var(--s-ja)"></i>国語</button>
+        <button class="chip" type="button">−&nbsp;<b class="num">39</b>分&nbsp;＋</button>
+        <button class="chip" type="button"><span class="num">6:52〜7:31</span></button>
+      </div>
+    </div><figcaption><b>チップ <code>.chip</code></b>床 2pt。<code>.chips[data-single]</code> で1つだけ選ぶ。記録シートの「● 国語」「− 39分 ＋」もこの形。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="seg" role="group" aria-label="期間"><button type="button" aria-pressed="true">今週</button><button type="button" aria-pressed="false">今月</button><button type="button" aria-pressed="false">今日</button></div>
+      <div class="seg" role="group" aria-label="まとめ方"><button type="button" aria-pressed="true">日</button><button type="button" aria-pressed="false">週</button><button type="button" aria-pressed="false">月</button></div>
+    </div><figcaption><b>切りかえ <code>.seg</code></b>1枚の板（床 3pt）。ランキングの「今週/今月/今日」、グラフの「日/週」。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="utabs" role="tablist" aria-label="マイページ">
+        <button type="button" role="tab" aria-selected="true">成長</button><button type="button" role="tab" aria-selected="false" tabindex="-1">記録</button><button type="button" role="tab" aria-selected="false" tabindex="-1">グラフ</button><button type="button" role="tab" aria-selected="false" tabindex="-1">投稿</button>
+      </div>
+      <div class="utabs" role="tablist" aria-label="みんな">
+        <button type="button" role="tab" aria-selected="true">いま勉強中</button><button type="button" role="tab" aria-selected="false" tabindex="-1">ランキング</button><button type="button" role="tab" aria-selected="false" tabindex="-1">グループ</button>
+      </div>
+    </div><figcaption><b>下線のタブ <code>.utabs</code></b>ページの中の切りかえ（マイページ・みんな・タイムライン）。床なし、選んだ所に 3pt のインクの線。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ 一覧の行 ============ -->
+<section class="sys-sec" id="rows" style="--accent:var(--g3)">
+  <h2>一覧の行</h2>
+  <p>行はカードの中に並べ、1.5pt の線で区切ります。床はつけません。押すと地が紙 2 に変わります（0.2 秒）。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage">
+      <section class="card" style="padding-block:6px">
+        <div class="rows">
+          <a class="row" href="#rows"><span class="av" data-n="mio"></span><span class="row-main"><span class="row-t">mio</span><span class="row-s"><i class="dot sm run"></i>英語を勉強中</span></span><span class="row-end"><span class="row-v">4:11</span><span class="delta up">1:04</span></span></a>
+          <a class="row" href="#rows"><span class="av" data-n="kaito"></span><span class="row-main"><span class="row-t">kaito</span><span class="row-s"><i class="dot sm run"></i>物理を勉強中</span></span><span class="row-end"><span class="row-v">3:12</span><span class="delta down">0:08</span></span></a>
+          <a class="row" href="#rows"><span class="av" data-n="ゆなっぴ"></span><span class="row-main"><span class="row-t">ゆなっぴ</span><span class="row-s"><i class="dot sm run"></i>化学を勉強中</span></span><span class="row-end"><span class="row-v">2:36</span><span class="delta up">1:10</span></span></a>
+        </div>
+      </section>
+    </div><figcaption><b>人の行</b>アイコン 36（写真の代わりに色と頭文字）・名前 15・補足 12・右に数字。昨日より ▲ は緑、▼ は赤。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage">
+      <section class="card" style="padding-block:6px">
+        <div class="rows">
+          <a class="row" href="#rows"><span data-stk="flame" style="width:36px;display:grid;place-items:center"></span><span class="row-main"><span class="row-t">第4回 記述模試</span><span class="row-s">11月8日 · ToDo 1/3</span></span><span class="row-end"><span class="row-v" style="color:var(--due-ink)">10 <small style="font-size:12px">日</small></span></span><span class="chev" data-pi="right"></span></a>
+          <a class="row" href="#rows"><span class="subj md" data-s="ja"></span><span class="row-main"><span class="row-t">国語 <span style="font-weight:500;color:var(--ink-3)">古文単語 61〜80</span></span><span class="row-s num">6:30 · 30分</span></span><span class="chev" data-pi="right"></span></a>
+          <div class="row row-sm"><span class="row-main"><span class="row-t" style="font-weight:500;font-size:14px">勉強 1分</span></span><span class="row-v num">+1 EXP</span></div>
+        </div>
+      </section>
+    </div><figcaption><b>締切・記録・ただの行</b>押せる行は <code>a.row</code> か <code>button.row</code>（右に ›）。押せない行は <code>div.row</code>。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ 数字・点・札・科目 ============ -->
+<section class="sys-sec" id="bits" style="--accent:var(--sun)">
+  <h2>数字・点・札・科目の絵</h2>
+  <p>点はドットの四角にインクの輪。状態は色と字の両方で書きます。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="row-flex"><span class="state run"><i class="dot run"></i>国語を勉強中</span><span class="state pause"><i class="dot pause"></i>一時停止中</span></div>
+      <div class="row-flex"><span class="tag"><i class="dot due"></i>第4回 記述模試まで <b>10</b>日</span><span class="tag now">NOW</span><span class="tag next">つぎ</span></div>
+      <div class="row-flex"><span class="delta up">1:17</span><span class="delta down">0:08</span><span class="state due">あと 2日</span><span class="row-flex" style="gap:6px"><i class="dot unread"></i><span class="capj">未読</span></span></div>
+    </div><figcaption><b>状態・札 <code>.state</code> <code>.tag</code> <code>.delta</code> <code>.dot</code></b>札は押せない知らせ（輪郭はうすい）。「Now」「つぎ」は時間割の小さな札。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="row-flex">
+        <span class="subj" data-s="en"></span><span class="subj" data-s="ma"></span><span class="subj" data-s="ja"></span><span class="subj" data-s="ph"></span><span class="subj" data-s="ch"></span><span class="subj" data-s="free"></span><span class="subj" data-s="none"></span>
+      </div>
+      <div class="row-flex">
+        <span class="subj sm" data-s="ja"></span><span class="subj md" data-s="en"></span><span class="subj lg" data-s="ma"></span><span class="subj is-next" data-s="en" aria-label="次の予定 英語"></span><span class="subj" data-s="ja" aria-label="国語 勉強中"><i class="dot run"></i></span>
+      </div>
+    </div><figcaption><b>科目の絵 <code>.subj[data-s]</code></b>科目の色の四角に、アプリの線の絵をインクで（英語=A の吹き出し・数学=π・国語=本・物理=原子・化学=フラスコ）。大きさ 22/30/40/46。次の予定は半分の濃さ。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="row-flex"><span class="av lg" data-n="mio"></span><span class="av" data-n="そら"></span><span class="av sm" data-n="kaito"></span><span class="av is-live" data-n="はる"></span><span class="coin" style="--c:var(--s-ja)"></span><span class="coin" style="--c:var(--s-en);--size:20px"></span></div>
+    </div><figcaption><b>アイコンの人 <code>.av</code>・色のコイン <code>.coin</code></b>見本では写真の代わりに色と頭文字。勉強中の人は右下に緑の点。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ 勉強バー ============ -->
+<section class="sys-sec" id="bar" style="--accent:var(--lime)">
+  <h2>勉強バー</h2>
+  <p>タブバーの上に、どのタブでも出ます。全体が1つの押せる板（床あり）。押すとタイマーを開きます。</p>
+  <div class="grid">
+    <figure class="spec"><div class="bar-demo" id="bar-idle"></div>
+      <figcaption><b>勉強していない（<code>data-bar="idle"</code>）</b>次の予定（半分の濃さの科目）と「▶ 勉強を開始」（ライム）。どちらもタイマーへ。</figcaption></figure>
+    <figure class="spec"><div class="bar-demo" id="bar-free"></div>
+      <figcaption><b>予定がない</b><code>data-bar-subj="none"</code>。点線の四角にカレンダー。「勉強を開始」は自習で始める。</figcaption></figure>
+    <figure class="spec"><div class="bar-demo" id="bar-live"></div>
+      <figcaption><b>勉強中（<code>live</code>）</b>科目・時間（毎秒）・予定。左上に緑の点、下に緑の進みの線。❚❚ で一時停止。</figcaption></figure>
+    <figure class="spec"><div class="bar-demo" id="bar-paused"></div>
+      <figcaption><b>一時停止中（<code>paused</code>）</b>2行とも紅、点は消え、線は灰に。▶ で再開。</figcaption></figure>
+    <figure class="spec"><div class="bar-demo" id="bar-over"></div>
+      <figcaption><b>予定をこえた</b>線がオレンジ（延長）に。字はそのまま。</figcaption></figure>
+    <figure class="spec"><div class="bar-demo glass" data-chrome="glass" id="bar-glass"></div>
+      <figcaption><b>比べる用：すりガラス（今のアプリ）</b><code>&lt;body data-chrome="glass"&gt;</code> で全画面がこちらに。既定は紙＋輪郭＋床。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ タブバー ============ -->
+<section class="sys-sec" id="tabbar" style="--accent:var(--sky)">
+  <h2>タブバー</h2>
+  <p>5つ：ホーム・タイムライン・勉強（まん中）・みんな・マイページ。文字はなし。選んだタブはライムの板。勉強中に別のタブにいると、まん中の時計に点が付きます。</p>
+  <div class="grid">
+    <figure class="spec"><div class="bar-demo" id="tab-home"></div><figcaption><b>ホームを選んでいる</b><code>data-tab="home"</code>。押すとアイコンが 2pt 沈む。</figcaption></figure>
+    <figure class="spec"><div class="bar-demo" id="tab-live"></div><figcaption><b>勉強中・ほかのタブ</b>時計の右上に緑の点（一時停止中は紅の点）。</figcaption></figure>
+    <figure class="spec"><div class="bar-demo" id="tab-study"></div><figcaption><b>勉強タブを選んでいる</b>まん中も同じ形。特別に大きくしない（始める場所ではないから）。</figcaption></figure>
+    <figure class="spec"><div class="bar-demo glass" data-chrome="glass" id="tab-glass"></div><figcaption><b>比べる用：すりガラス</b>選んだタブは灰色のレンズ。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ トースト・シート ============ -->
+<section class="sys-sec" id="toast" style="--accent:var(--coral)">
+  <h2>トーストとシート</h2>
+  <p>浮いている物は、輪郭＋右下のライムの影。押せる床とは別の影です。トーストは上から 0.5 秒で出て、0.28 秒で消えます。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="toast" style="animation:none"><span data-pix="tsuru" data-face="happy" data-scale="2"></span><div class="toast-txt"><b>国語 39分を記録しました</b><span class="exp">+39 EXP</span></div></div>
+      <div class="toast" style="animation:none"><div class="toast-txt"><b>mio を非表示にしました</b><small>もっと見る から戻せます</small></div><button class="key key-sm" type="button">元に戻す</button></div>
+      <div class="keys" style="margin-top:4px">
+        <button class="key key-sm" type="button" id="t-record">記録したとき</button>
+        <button class="key key-sm" type="button" id="t-todo">ToDo を完了</button>
+        <button class="key key-sm" type="button" id="t-next">次の予定の時間</button>
+      </div>
+    </div><figcaption><b>トースト <code>App.toast({…})</code></b>住人は止まった絵。出てから顔だけが「うれしい」に fade で変わる（出来事のときだけ）。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="sheet is-static">
+        <div class="sheet-panel" role="group" aria-label="シートの見本" style="border-radius:22px;padding-bottom:16px">
+          <span class="sheet-grab" aria-hidden="true"></span>
+          <div class="sheet-h"><h2>記録しますか？</h2></div>
+          <p style="color:var(--ink-2)">国語 39分。バーを消すと時間は止まります。記録すると今日の合計に入ります</p>
+          <div class="sheet-acts">
+            <button class="key key-ink key-block" type="button">39分を記録する</button>
+            <button class="key key-block" type="button">メモを書いて記録する</button>
+            <button class="key key-block" type="button">続ける</button>
+          </div>
+        </div>
+      </div>
+      <div class="keys"><button class="key key-sm" type="button" data-open-sheet="sheet-level">レベルのシートを開く</button></div>
+    </div><figcaption><b>シート <code>.sheet</code></b>下から 0.5 秒で出る。うしろは暗くするだけ（ぼかさない）。決める操作はインクの面に1つ。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ 草・定規 ============ -->
+<section class="sys-sec" id="grass" style="--accent:var(--g3)">
+  <h2>草とインチテープ</h2>
+  <p>草はアプリの緑の5段。マスは角のない四角（サイトの形）。今日はインクの枠。インチテープは今日の時間を科目の色で並べ、下に 15 分ごとの目盛り、目標に ▼。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage">
+      <section class="card"><h3 class="sec-h" style="margin-bottom:10px"><span class="sec-t" style="--accent:var(--g3)">勉強した日</span><span class="sec-a">今年 <b>253</b>日</span></h3><div class="grass"></div></section>
+    </div><figcaption><b>草 <code>.grass</code></b>18 週 × 7 日。中身は <code>data-levels</code>（0〜4）で渡せる。はじめての人は <code>data-empty</code>。</figcaption></figure>
+    <figure class="spec"><div class="spec-stage">
+      <section class="card"><h3 class="sec-h" style="margin-bottom:10px"><span class="sec-t" style="--accent:var(--g3)">勉強した日</span><span class="sec-a">今年 <b>0</b>日</span></h3><div class="grass" data-empty></div></section>
+    </div><figcaption><b>はじめての人</b>空きマスは紙に合わせた色。今日の枠だけが見える。</figcaption></figure>
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="tape" data-goal="180" data-parts="en:95,ma:40,ja:30" data-reveal></div>
+      <div class="tape" data-goal="180" data-parts="en:95,ma:60,ja:39" data-nokey></div>
+    </div><figcaption><b>インチテープ <code>.tape</code></b><code>data-goal="180" data-parts="en:95,ma:40,ja:30"</code>。科目のあいだはインクの線。目標に届くと「目標」の字が緑に。伸びるのは scaleX だけ。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ バッジ・炎 ============ -->
+<section class="sys-sec" id="badges" style="--accent:var(--coral)">
+  <h2>シール・バッジ・連続の炎</h2>
+  <p>シールはドット絵に、白いフチ・インクの輪郭・薄い斜めの影。炎はサイトのボッ。揺れは連続記録の炎だけに許されたゆっくりの揺れ（片道 2.4 秒）。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage">
+      <section class="card"><h3 class="sec-h" style="margin-bottom:10px"><span class="sec-t" style="--accent:var(--sun)">バッジ</span><span class="sec-a"><b>7</b> / 11</span></h3>
+        <div class="badges">
+          <div class="badge"><span data-stk="trophy"></span><b>100時間</b><small>達成</small></div>
+          <div class="badge"><span data-stk="trophy"></span><b>500時間</b><small>達成</small></div>
+          <div class="badge"><span data-stk="flame"></span><b>21日連続</b><small>達成</small></div>
+          <div class="badge is-locked"><span data-stk="trophy"></span><b>700時間</b><small>あと35時間</small></div>
+          <div class="badge is-locked"><span data-stk="flame"></span><b>30日連続</b><small>あと7日</small></div>
+          <div class="badge is-locked"><span data-stk="sun"></span><b>朝勉10回</b><small>あと4回</small></div>
+        </div>
+      </section>
+    </div><figcaption><b>バッジ <code>.badge</code></b>取ったものが先。まだのものは灰色で「あと◯」。横にスクロール。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <div class="row-flex" style="gap:18px;align-items:flex-end">
+        <span data-stk="trophy" data-scale="3"></span><span data-stk="flame" data-scale="3"></span><span data-stk="star" data-scale="3"></span><span data-stk="sun" data-scale="3"></span>
+      </div>
+    </div><figcaption><b>シール <code>[data-stk]</code></b>trophy（時間）・flame（連続）・star（1日の目標）・sun（朝勉）。押せないので床ではなく薄い斜めの影。</figcaption></figure>
+
+    <figure class="spec"><div class="spec-stage stack-sm">
+      <section class="card" style="display:flex;align-items:center;gap:14px">
+        <span class="flame" data-days="23"></span>
+        <div style="min-width:0"><span class="mid">23</span><span class="unit">日連続</span><p style="font-size:12px;color:var(--ink-3);margin-top:2px">休み券 2枚</p></div>
+        <div class="wk" style="margin-left:auto" aria-label="今週：月・火・水・木に勉強した">
+          <span class="wk-d is-done"><i></i>月</span><span class="wk-d is-done"><i></i>火</span><span class="wk-d is-done"><i></i>水</span><span class="wk-d is-today"><i></i>木</span>
+        </div>
+      </section>
+      <section class="card" style="display:flex;align-items:center;gap:14px">
+        <span class="flame" data-days="0"></span>
+        <div><span class="mid">0</span><span class="unit">日連続</span><p style="font-size:12px;color:var(--ink-3);margin-top:2px">今日 勉強すると 1日目</p></div>
+      </section>
+      <div class="wk" aria-label="7日の形の見本">
+        <span class="wk-d is-done"><i></i>月</span><span class="wk-d is-rest"><i>休</i>火</span><span class="wk-d"><i></i>水</span><span class="wk-d is-today is-wait"><i></i>木</span><span class="wk-d is-future"><i></i>金</span><span class="wk-d is-future"><i></i>土</span><span class="wk-d is-future"><i></i>日</span>
+      </div>
+    </div><figcaption><b>炎 <code>.flame[data-days]</code> と7日 <code>.wk</code></b>0日は灰色で止まる。7日：勉強した＝黄、今日＝コーラル（まだなら太い輪）、休み券＝水色、これから＝点線。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ 住人 ============ -->
+<section class="sys-sec" id="pals" style="--accent:var(--lime)">
+  <h2>住人（止まった絵）</h2>
+  <p>サイトの6匹をそのまま描き直しました。歩かない・はねない。出来事のときだけ、顔が 0.2 秒の fade で変わります。絵を押すと顔が変わります。</p>
+  <div class="grid wide">
+    <figure class="spec"><div class="spec-stage"><div class="crit" id="crit"></div></div>
+      <figcaption><b>住人 <code>&lt;span data-pix="penta" data-face="happy"&gt;</code></b>顔は どの住人も idle（ふだん）・happy（うれしい）・surprised（びっくり）・sleep（ねむい）。<code>App.face(el, 'happy')</code> で変える。</figcaption></figure>
+    <figure class="spec"><div class="spec-stage">
+      <table class="mt">
+        <thead><tr><th>住人</th><th>出る所</th></tr></thead>
+        <tbody>
+          <tr><td>ペンタ（えんぴつ）</td><td style="font-weight:400;white-space:normal">記録したとき・記録シート</td></tr>
+          <tr><td>ボッ（炎）</td><td style="font-weight:400;white-space:normal">連続記録の炎</td></tr>
+          <tr><td>めぶ（芽）</td><td style="font-weight:400;white-space:normal">空のとき・はじめての人・草</td></tr>
+          <tr><td>ジリ（目ざまし）</td><td style="font-weight:400;white-space:normal">次の予定の時間・締切</td></tr>
+          <tr><td>ふせん</td><td style="font-weight:400;white-space:normal">ToDo を完了したとき</td></tr>
+          <tr><td>つる（折り鶴）</td><td style="font-weight:400;white-space:normal">お知らせ・メッセージ・友達</td></tr>
+        </tbody>
+      </table>
+    </div><figcaption><b>だれがどこに出るか（案）</b>1画面に1〜2匹まで。字の代わりにはしない（説明は字で書く）。</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ アイコン・動き ============ -->
+<section class="sys-sec" id="motion" style="--accent:var(--sky)">
+  <h2>ドットのアイコンと動き</h2>
+  <p>アイコンは 12 マスのドット絵（1マス 2pt、線の太さが輪郭と同じ 2pt）。動きは MOTION.md のトークンだけで、transform と opacity しか動かしません。「視差効果を減らす」では全部止まります。</p>
+  <div class="grid">
+    <figure class="spec"><div class="spec-stage"><div class="icons" id="icons"></div></div>
+      <figcaption><b>アイコン <code>&lt;i data-pi="home"&gt;</code></b>色は文字の色。小さな ▶ ❚❚ ＋ ✓ は 1.5pt のマス。</figcaption></figure>
+    <figure class="spec"><div class="spec-stage">
+      <table class="mt">
+        <thead><tr><th>名前</th><th>長さ</th><th>使う所</th></tr></thead>
+        <tbody>
+          <tr><td>press</td><td>0.09秒</td><td>押した瞬間、面が沈む</td></tr>
+          <tr><td>release</td><td>約0.3秒</td><td>離して戻る（行きすぎない）</td></tr>
+          <tr><td>micro</td><td>0.2秒</td><td>チップ・タブの色、ヘッダーの線</td></tr>
+          <tr><td>move</td><td>約0.38秒</td><td>行が場所を空ける</td></tr>
+          <tr><td>present</td><td>約0.5秒</td><td>シート・トーストが出る、テープが伸びる</td></tr>
+          <tr><td>dismiss</td><td>0.28秒</td><td>閉じる・消える</td></tr>
+          <tr><td>fade</td><td>0.2 / 0.16秒</td><td>住人の顔が変わる</td></tr>
+          <tr><td>flicker</td><td>片道2.4秒</td><td>連続記録の炎だけ（例外）</td></tr>
+        </tbody>
+      </table>
+    </div><figcaption><b>動きのトークン</b>曲線は iOS の <code>cubic-bezier(.32,.72,0,1)</code> 1本（押すときだけ ease-out）。跳ねる・ずっと動く飾りはなし。</figcaption></figure>
+  </div>
+</section>
+
+</main>
+
+<footer class="sys-foot">
+  <p>Inchly 新しいスタンダードの HTML モック · 部品の一覧 · 見本のデータはアプリと同じ（はる @haru_study）</p>
+</footer>
+</div>
+
+<template id="shell-src">
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>画面の見本</title><link rel="stylesheet" href="shared/app.css"></head>
+<body data-tab="home" data-bar="live">
+<div class="stage"><div class="app"><main class="screen">
+  <header class="hdr" data-hdr="home"></header>
+  <div class="stack">
+    <section class="card"><h2 class="sec-h" style="margin-bottom:10px"><span class="sec-t" style="--accent:var(--g3)">勉強した日</span><span class="sec-a">今年 <b>253</b>日</span></h2><div class="grass"></div></section>
+    <section class="card" style="display:flex;align-items:center;gap:14px">
+      <span class="flame" data-days="23"></span>
+      <div style="min-width:0"><span class="mid">23</span><span class="unit">日連続</span><p style="font-size:12px;color:var(--ink-3);margin-top:2px">休み券 2枚</p></div>
+      <div class="wk" style="margin-left:auto"><span class="wk-d is-done"><i></i>月</span><span class="wk-d is-done"><i></i>火</span><span class="wk-d is-done"><i></i>水</span><span class="wk-d is-today"><i></i>木</span></div>
+    </section>
+    <section class="card hero" style="margin-right:6px">
+      <div class="card-h"><span style="font-size:12px;color:var(--ink-2)">今日の勉強 · 10月29日（木）</span></div>
+      <div style="display:flex;align-items:baseline;flex-wrap:wrap"><span class="big">2</span><span class="unit">時間</span><span class="big">45</span><span class="unit">分</span><span class="delta up" style="margin-left:auto">1:17</span></div>
+      <div class="tape" data-goal="180" data-parts="en:95,ma:40,ja:30" style="margin-top:14px"></div>
+    </section>
+    <section class="card" style="padding-block:6px"><div class="rows">
+      <a class="row" href="#"><span class="av" data-n="mio"></span><span class="row-main"><span class="row-t">mio</span><span class="row-s"><i class="dot sm run"></i>英語を勉強中</span></span><span class="row-end"><span class="row-v">4:11</span><span class="delta up">1:04</span></span></a>
+      <a class="row" href="#"><span class="av" data-n="そら"></span><span class="row-main"><span class="row-t">そら</span><span class="row-s"><i class="dot sm run"></i>数学を勉強中</span></span><span class="row-end"><span class="row-v">2:00</span><span class="delta up">0:17</span></span></a>
+    </div></section>
+  </div>
+</main></div></div>
+<script src="shared/app.js"></script>
+</body></html>
+</template>
+
+<script src="shared/app.js"></script>
+<script>
+(() => {
+  const A = window.App;
+  document.getElementById('sys-logo').outerHTML = A.LOGO;
+
+  /* 勉強バー・タブバーの見本 */
+  const put = (id, el) => { const box = document.getElementById(id); if (box) box.appendChild(el); };
+  put('bar-idle', A.renderStudyBar({ state: 'idle' }));
+  put('bar-free', A.renderStudyBar({ state: 'idle', subj: 'none', title: '今日の時間割', sub: 'このあとの予定はありません' }));
+  put('bar-live', A.renderStudyBar({ state: 'live' }));
+  put('bar-paused', A.renderStudyBar({ state: 'paused' }));
+  put('bar-over', A.renderStudyBar({ state: 'live', subj: 'en', title: '英語', elapsed: 64 * 60 + 12, plan: 60, tail: '次 数学 19:00' }));
+  put('bar-glass', A.renderStudyBar({ state: 'live' }));
+  put('tab-home', A.renderTabBar('home'));
+  put('tab-live', A.renderTabBar('me', { study: 'live' }));
+  put('tab-study', A.renderTabBar('study', { study: 'live' }));
+  put('tab-glass', A.renderTabBar('home', { study: 'paused' }));
+  /* 一覧の中では、勉強中のバーの時間も進める */
+  setInterval(() => document.querySelectorAll('.bar-demo .sbar[data-state="live"]').forEach(b => { b.dataset.elapsed = +b.dataset.elapsed + 1; const t = b.querySelector('.sbar-time'); if (t) t.textContent = A.clock(+b.dataset.elapsed); const l = b.querySelector('.pline'); if (l) { const p = Math.min(1, b.dataset.elapsed / (b.dataset.plan * 60)); l.firstElementChild.style.setProperty('--p', p.toFixed(4)); l.classList.toggle('is-over', +b.dataset.elapsed > b.dataset.plan * 60); } }), 1000);
+  /* 一覧の中のリンクは、ページを移らない */
+  document.querySelectorAll('.bar-demo a, .hdr .logo').forEach(a => a.addEventListener('click', e => { e.preventDefault(); A.toast({ title: a.getAttribute('href') + ' へ', sub: 'アプリではこの画面に移ります', ms: 1600 }); }));
+
+  /* 住人 × 顔 */
+  const crit = document.getElementById('crit');
+  const FACES = ['idle', 'happy', 'surprised', 'sleep'];
+  const FACE_JA = { idle: 'ふだん', happy: 'うれしい', surprised: 'びっくり', sleep: 'ねむい', read: '読む', ring: '鳴る', look: '見る' };
+  Object.entries(A.CREATURES).forEach(([k, c]) => {
+    const extra = Object.keys(c.faces).find(f => !FACES.includes(f));
+    crit.insertAdjacentHTML('beforeend', `<p class="crit-name">${c.label}<small>${{ penta: 'えんぴつ', bo: '炎', mebu: '芽', jiri: '目ざまし', fusen: '付せん', tsuru: '折り鶴' }[k]}${extra ? ' · ほかに ' + FACE_JA[extra] : ''}</small></p>`);
+    FACES.forEach(f => {
+      const scale = c.w >= 18 ? 2 : 3;
+      crit.insertAdjacentHTML('beforeend', `<button type="button" aria-label="${c.label}・${FACE_JA[f]}。押すと顔が変わる"><span data-pix="${k}" data-face="${f}" data-scale="${scale}"></span><span>${FACE_JA[f]}</span></button>`);
+    });
+  });
+  A.upgrade(crit);
+  crit.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const px = b.querySelector('[data-pix]'); const c = A.CREATURES[px.dataset.pix];
+    const list = Object.keys(c.faces); const next = list[(list.indexOf(px.dataset.face) + 1) % list.length];
+    A.face(px, next); b.lastElementChild.textContent = FACE_JA[next] || next;
+  });
+
+  /* アイコン */
+  const icons = document.getElementById('icons');
+  icons.innerHTML = A.ICONS.map(n => `<div><i class="pi">${A.icon(n)}</i>${n}</div>`).join('');
+
+  /* トーストの見本 */
+  document.getElementById('t-record').addEventListener('click', () => A.toast({ title: '国語 39分を記録しました', exp: '+39 EXP', pix: 'penta', from: 'idle', face: 'happy' }));
+  document.getElementById('t-todo').addEventListener('click', () => A.toast({ title: 'ToDoを完了しました', exp: '+10 EXP', pix: 'fusen', from: 'idle', face: 'happy' }));
+  document.getElementById('t-next').addEventListener('click', () => A.toast({ title: '次の予定の時間です', sub: 'このまま続けても、記録して次へ行ってもOK', pix: 'jiri', from: 'idle', face: 'ring' }));
+
+  /* 画面の見本（同じ部品で組んだ1枚） */
+  const fr = document.getElementById('shell-demo');
+  fr.srcdoc = document.getElementById('shell-src').innerHTML.trim();
+})();
+</script>
+</body>
+</html>

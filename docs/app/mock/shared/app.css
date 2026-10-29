@@ -1,0 +1,477 @@
+/* =====================================================================
+   Inchly 新しい「スタンダード」— 共通の部品（System 担当だけが書く）
+   紙の地・インクの黒・ライム・2pt のインクの輪郭・ぼかしのない影・点の地・
+   ドットの小さなラベル・ドット絵の住人・草・インチの定規 を、iPhone のアプリの
+   約束（数字32/24、見出し15、本文14、補足11〜12、押せる所44以上）に入れる。
+
+   影のきまり（いちばん大事）
+     輪郭（2pt のインク）……… 置いてある物。カード・行の入れ物・札。影はない。
+     真下のインクの床 ……… 押せる物だけ。ボタン・チップ・2本のバー。押すと面だけ下がり、床は動かない。
+     右下のライムの影 ……… 浮いている物（トースト・シート）と、1画面に1枚の主役のカード。押せない。
+     シールの薄い斜めの影 … バッジとスタンプ。紙に貼ったシール。押せない。
+   ===================================================================== */
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&family=DotGothic16&family=Inter:wght@400..700&family=Noto+Sans+JP:wght@400;500;700&family=Silkscreen&display=swap");
+
+/* ---------- 1. トークン ---------- */
+:root{
+  /* 紙とインク（サイトと同じ値） */
+  --paper:#F3EEE3; --paper-2:#EBE4D4; --paper-3:#E2D9C6; --card:#FBF8F1;
+  --ink:#17121F; --ink-2:#2B2436; --ink-3:#6C6477; --line:#D8CFBD; --line-2:#C9BFAB;
+  --on-ink:#FBF8F1;
+  /* ライム＝「始める」と「選んでいる」だけ */
+  --lime:#C6F432; --lime-2:#A8D81C;
+  /* 飾りの色（サイト）。グラフ・科目・草には使わない */
+  --sun:#FFD23F; --sky:#58C8FF; --coral:#FF6B4A;
+  /* 状態の色 */
+  --run:#1FA35B;  --run-ink:#148246;   /* 動いている（計測中）＝勉強の緑。草と同じ意味 */
+  --pause:#D7003A;                       /* 止めた（一時停止）＝アプリの紅 */
+  --due:#E58A00;  --due-ink:#A65F00;   /* 締切が近い・予定の時間を過ぎた */
+  --over:#FF9F0A;                        /* 予定をこえた分の線 */
+  --up:#148246;   --down:#C8302A;      /* 増えた ▲ / 減った ▼ */
+  --unread:var(--coral);                 /* 未読の点 */
+  --focus:#6B4CFF;                       /* キーボードのフォーカスの輪 */
+  /* 科目（アプリの data.ts の教科の色。緑はない） */
+  --s-en:#5856D6; --s-ma:#FF9500; --s-ph:#30B0C7; --s-ch:#1F7FB0; --s-ja:#D9A300;
+  --s-soc:#A0522D; --s-info:#64748B; --s-free:#8C93A0;
+  /* 草（アプリの theme.ts の緑。空きマスだけ紙に合わせた） */
+  --g0:#E6E0D2; --g1:#B5EBC8; --g2:#5ED18A; --g3:#1FA35B; --g4:#0F7F3C;
+  /* ロゴの5本の目盛り */
+  --b1:#E5484D; --b2:#F2C46D; --b3:#9AB8DB; --b4:#5B8DEF; --b5:#9D7BF5;
+
+  /* 字 */
+  --f-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Hiragino Kaku Gothic ProN","Inter","Noto Sans JP",system-ui,sans-serif;
+  --f-num:"Bricolage Grotesque",var(--f-body);      /* 20pt 以上の数字と英字だけ */
+  --f-logo:"Bricolage Grotesque",var(--f-body);
+  --f-pix:"Silkscreen","DotGothic16",ui-monospace,monospace;  /* 英数字の小さなドットのラベル */
+  --f-pixj:"DotGothic16",var(--f-body);                       /* 日本語のドットのラベル */
+  --fs-hero:32px;   /* 1画面に1つの大きな数字 */
+  --fs-num:24px;    /* カードの数字 */
+  --fs-title:22px;  /* （ページの題は書かない。シートの題だけ） */
+  --fs-pixh:16px;   /* ドットの見出し（DotGothic16 の元の大きさ） */
+  --fs-h:15px;      /* 見出し・行の名前 */
+  --fs-body:14px;   /* 本文 */
+  --fs-unit:13px;   /* 数字の単位 */
+  --fs-sub:12px;    /* 補足 */
+  --fs-tiny:11px;   /* いちばん小さい補足・凡例 */
+
+  /* 形 */
+  --r-lg:22px; --r:14px; --r-key:12px; --r-chip:9px; --r-sm:6px; --r-bar:20px; --r-tile:10px;
+  --ring:0 0 0 2px var(--ink);
+  --ring-thin:0 0 0 1.5px var(--ink);
+  --ring-soft:0 0 0 1.5px rgba(23,18,31,.16);
+  --kd:4px;                                   /* 押せる物の床の高さ */
+  --floor:0 var(--kd) 0 2px var(--ink);       /* 床（輪郭の幅ぶん広い） */
+  --lift:6px 6px 0 0 var(--lime-2);           /* 浮いている物・主役の1枚 */
+  --sticker:2px 3px 0 0 rgba(23,18,31,.22);   /* シール */
+  --dots:radial-gradient(rgba(23,18,31,.10) 1px,transparent 1.3px) 0 0/18px 18px;
+
+  /* 余白 */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px;
+  --gutter:16px;   /* 画面の左右 */
+  --gap:12px;      /* ブロックのあいだ */
+  --pad:16px;      /* カードの内側 */
+
+  /* 動き（MOTION.md のトークンだけ） */
+  --ios:cubic-bezier(.32,.72,0,1);
+  --press-ease:cubic-bezier(.25,.46,.45,.94);   /* ease-out quad */
+  --sine:cubic-bezier(.37,0,.63,1);             /* 炎の揺れだけ */
+  --t-press:.09s; --t-release:.3s; --t-micro:.2s; --t-move:.38s; --t-present:.5s; --t-dismiss:.28s; --t-fade:.2s; --t-fade-out:.16s;
+
+  /* 下の2本のバー */
+  --tab-h:62px; --bar-h:56px; --chrome-gap:10px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --chrome-bottom:max(10px,calc(var(--safe-bottom) - 8px));
+  --hdr-h:56px;
+  color-scheme:light;
+}
+@media (min-width:431px){ :root{ --safe-top:47px; --safe-bottom:34px; } }
+
+/* ---------- 2. 土台 ---------- */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:clip;background:var(--paper)}
+body{margin:0;min-height:100vh;color:var(--ink);background:var(--paper);
+  font:400 var(--fs-body)/1.55 var(--f-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  line-break:strict;overflow-wrap:break-word;overflow-x:clip}
+h1,h2,h3,h4,p,ul,ol,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+a{color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+img,svg,canvas{display:block}
+input,textarea,select{font:inherit;color:inherit}
+::selection{background:var(--lime);color:var(--ink)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:8px}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.tnum{font-variant-numeric:tabular-nums}
+.wb{word-break:auto-phrase}
+.nb{display:inline-block}
+.muted{color:var(--ink-3)}
+.link{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;
+  display:inline-flex;align-items:center;min-height:44px}
+
+/* ---------- 3. 画面の枠 ---------- */
+/* 幅 430 以下：ページそのものがアプリ。広い画面：まん中に 390×844 の iPhone と、横に説明。 */
+.stage{position:relative}
+.app{position:relative;min-height:100vh;min-height:100dvh;background:var(--dots),var(--paper)}
+.screen{position:relative;padding:var(--safe-top) var(--gutter) calc(var(--tab-h) + var(--bar-h) + var(--chrome-gap) + var(--kd) + var(--chrome-bottom) + 24px)}
+body[data-bar="none"] .screen{padding-bottom:calc(var(--tab-h) + var(--kd) + var(--chrome-bottom) + 24px)}
+body[data-bar="none"][data-tab="none"] .screen,body:not([data-tab]):not([data-bar]) .screen{padding-bottom:calc(var(--safe-bottom) + 24px)}
+.stack{display:flex;flex-direction:column;gap:var(--gap)}
+.os,.os-home,.note{display:none}
+
+@media (min-width:431px){
+  body{background:var(--dots),var(--paper-2)}
+  .stage{display:flex;align-items:center;justify-content:center;gap:64px;min-height:100vh;padding:16px 40px}
+  .app{flex:none;width:390px;height:844px;min-height:0;border-radius:54px;overflow:hidden;contain:layout paint;
+    box-shadow:0 0 0 10px var(--ink),12px 12px 0 10px var(--lime-2)}
+  .screen{height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+  .screen::-webkit-scrollbar{display:none}
+  /* iPhone の上の帯（時刻・ノッチ）と下のホームバー：枠の中だけの絵 */
+  .os{position:absolute;z-index:80;left:0;right:0;top:0;height:var(--safe-top);display:flex;align-items:center;justify-content:space-between;
+    padding:6px 30px 0 40px;pointer-events:none;font:600 15px/1 "Inter",var(--f-body);font-variant-numeric:tabular-nums;color:var(--ink)}
+  .os::after{content:"";position:absolute;left:50%;top:10px;width:120px;height:33px;margin-left:-60px;border-radius:20px;background:var(--ink)}
+  .os-r{display:flex;align-items:center;gap:6px}
+  .os-home{display:block;position:absolute;z-index:80;left:50%;bottom:8px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);pointer-events:none}
+  .note{display:block;flex:0 1 340px;min-width:260px;max-width:360px;padding:22px 22px 24px;border-radius:var(--r-lg);background:var(--card);box-shadow:var(--ring)}
+}
+/* 横の説明（広い画面だけ） */
+.note .label{margin-bottom:10px}
+.note h1{font:800 22px/1.3 var(--f-body);letter-spacing:-.01em;margin-bottom:12px}
+.note p{color:var(--ink-2);font-size:14px;line-height:1.7}
+.note ul{display:grid;gap:8px;margin-top:14px}
+.note li{position:relative;padding-left:16px;color:var(--ink-2);font-size:14px;line-height:1.65}
+.note li::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:7px;background:var(--sun);box-shadow:var(--ring-thin)}
+.note .note-links{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:16px}
+
+/* ---------- 4. ヘッダー ---------- */
+.hdr{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;height:calc(var(--hdr-h) + var(--safe-top));
+  margin:calc(-1 * var(--safe-top)) calc(-1 * var(--gutter)) 4px;padding:var(--safe-top) var(--gutter) 0;background:var(--dots),var(--paper)}
+.hdr::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--ink);opacity:0;transition:opacity var(--t-micro) var(--ios)}
+.hdr.is-scrolled::after{opacity:1}
+.hdr-sp{flex:1}
+.hdr-t{font:700 var(--fs-h)/1.2 var(--f-body)}
+.logo{display:inline-flex;align-items:center;gap:7px;min-height:44px;flex:none;color:var(--ink);font:800 22px/1 var(--f-logo);letter-spacing:-.045em}
+.logo svg{width:26px;height:26px;flex:none}
+.logo-word{transform:translateY(-1px)}
+/* レベルのチップ */
+.lv > .face{gap:7px;font:700 13px/1 var(--f-body);padding:0 10px}
+.lv-n{font-variant-numeric:tabular-nums}
+.lv-bar{position:relative;width:28px;height:6px;background:var(--paper-2);box-shadow:var(--ring-thin);overflow:hidden}
+.lv-bar i{position:absolute;inset:0;background:var(--ink);transform-origin:0 50%;transform:scaleX(var(--p,.4))}
+
+/* アイコンの板：押せるアイコンをまとめた1枚（床あり） */
+.kgroup{display:inline-flex;align-items:stretch;flex:none;height:40px;border-radius:12px;background:var(--card);box-shadow:var(--ring),0 3px 0 2px var(--ink)}
+.kgroup > *{position:relative;display:grid;place-items:center;width:44px;padding:0;border:0;background:none;color:var(--ink);cursor:pointer}
+.kgroup > * + *::before{content:"";position:absolute;left:-1px;top:9px;bottom:9px;width:2px;background:var(--line)}
+.kgroup > *::after{content:"";position:absolute;inset:-2px 0}
+.kgroup .pi{transition:transform var(--t-release) var(--ios)}
+.kgroup > .is-down .pi{transform:translateY(2px);transition:transform var(--t-press) var(--press-ease)}
+.kgroup > :focus-visible{outline-offset:-3px}
+.kgroup > :first-child{border-radius:12px 0 0 12px}.kgroup > :last-child{border-radius:0 12px 12px 0}
+/* 未読の点 */
+.udot{position:absolute;top:7px;right:8px;width:8px;height:8px;background:var(--unread);box-shadow:var(--ring-thin)}
+
+/* ---------- 5. 見出し・ラベル ---------- */
+/* ドットの見出し：■ + DotGothic16 16px（元の大きさで、にじまない） */
+.sec-h{display:flex;align-items:center;gap:10px;min-height:28px}
+.sec-t{display:inline-flex;align-items:center;gap:9px;min-width:0;font:400 var(--fs-pixh)/1.25 var(--f-pixj);letter-spacing:.02em;color:var(--ink)}
+.sec-t::before{content:"";flex:none;width:8px;height:8px;background:var(--accent,var(--sun));box-shadow:0 0 0 2px var(--ink)}
+.sec-a{margin-left:auto;font-size:var(--fs-sub);color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sec-a b{color:var(--ink);font-weight:700}
+/* 小さなドットのラベル（英数字は Silkscreen、日本語は DotGothic16） */
+.label{display:inline-flex;align-items:center;gap:7px;font:400 11px/1.2 var(--f-pix);letter-spacing:.06em;color:var(--ink-2);text-transform:uppercase}
+.label-j{display:inline-flex;align-items:center;gap:7px;font:400 13px/1.2 var(--f-pixj);letter-spacing:.02em;color:var(--ink-2)}
+.label.sq::before,.label-j.sq::before{content:"";flex:none;width:7px;height:7px;background:var(--accent,var(--coral));box-shadow:var(--ring-thin)}
+
+/* ---------- 6. カード ---------- */
+.card{position:relative;background:var(--card);border-radius:var(--r-lg);box-shadow:var(--ring);padding:var(--pad)}
+.card.hero{box-shadow:var(--ring),var(--lift)}       /* 1画面に1枚の主役。押せない */
+.card.flush{padding:0;overflow:hidden}
+.card > .sec-h{margin-bottom:12px}
+.card-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.hr{height:2px;margin:14px calc(-1 * var(--pad));background:var(--ink)}
+.hr-soft{height:1.5px;margin:12px 0;background:var(--line)}
+/* 中のくぼみ：色の地に点（サイトの habitat） */
+.well{--accent:var(--sun);position:relative;border-radius:var(--r);padding:14px;
+  background:var(--dots),color-mix(in oklab,var(--accent) 20%,var(--card));box-shadow:inset 0 0 0 1.5px rgba(23,18,31,.16)}
+/* 空のときの点線の箱 */
+.empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 16px;border-radius:var(--r);text-align:center;
+  outline:2px dashed rgba(23,18,31,.32);outline-offset:-2px;color:var(--ink-2);font-size:var(--fs-body)}
+.empty b{color:var(--ink);font-size:var(--fs-h)}
+
+/* ---------- 7. 押せるボタン（床は動かず、面だけが下がる） ---------- */
+/* <button class="key key-lime"><span class="face">▶ 勉強を開始</span></button>
+   .face がなければ app.js が中身を包む。押す 0.09 秒で 3pt 下がり、離すと約 0.3 秒で戻る（行きすぎない）。 */
+.key{--fc:var(--card);--fg:var(--ink);--rk:var(--r-key);--sh:var(--ink);
+  position:relative;display:inline-flex;align-items:stretch;vertical-align:top;flex:none;min-height:44px;margin:0;padding:0;border:0;border-radius:var(--rk);
+  background:none;color:var(--fg);font:700 15px/1.2 var(--f-body);text-decoration:none;cursor:pointer;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+  box-shadow:0 var(--kd) 0 2px var(--sh)}
+.key > .face{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:0;padding:0 18px;border-radius:inherit;
+  background:var(--fc);color:var(--fg);box-shadow:var(--ring);white-space:nowrap;
+  transition:transform var(--t-release) var(--ios),background-color var(--t-micro) var(--ios)}
+.key.is-down > .face{transform:translateY(calc(var(--kd) - 1px));transition:transform var(--t-press) var(--press-ease),background-color var(--t-micro) var(--ios)}
+.key .pi{flex:none}
+.key-lime{--fc:var(--lime)}                                      /* 始める（勉強を開始） */
+.key-ink{--fc:var(--ink);--fg:var(--on-ink);--sh:var(--lime-2)}  /* シートの決める操作（記録する・保存） */
+.key-ink > .face{box-shadow:0 0 0 2px var(--ink)}
+.key-lg{min-height:52px;font-size:16px}
+.key-block{display:flex;width:100%}
+.key-sm{--kd:3px;min-height:32px;font-size:13px}
+.key-sm > .face{padding:0 12px;gap:6px}
+.key-sm::after,.chip::after{content:"";position:absolute;inset:-6px -2px}   /* 指の届く範囲を 44 に */
+.key-icon > .face{width:44px;padding:0}
+.key-sm.key-icon > .face{width:36px}
+.key-round{--rk:999px}
+.key-round > .face{padding:0;aspect-ratio:1}
+.key:disabled,.key[aria-disabled="true"]{box-shadow:none;cursor:default}
+.key:disabled > .face,.key[aria-disabled="true"] > .face{background:var(--paper-2);color:var(--ink-3);box-shadow:0 0 0 2px var(--line-2);transform:none}
+.keys{display:flex;flex-wrap:wrap;gap:14px 12px;align-items:flex-start}
+
+/* 地のないボタン（バーの中の ❚❚・▶、シートの「やめる」など） */
+.ibtn{position:relative;display:inline-grid;place-items:center;flex:none;min-width:44px;min-height:44px;padding:0 6px;border:0;border-radius:12px;
+  background:none;color:var(--ink);cursor:pointer;font:700 15px/1 var(--f-body);transition:background-color var(--t-micro) var(--ios)}
+.ibtn.is-down{background:rgba(23,18,31,.08)}
+.tbtn{display:inline-flex;align-items:center;min-height:44px;padding:0 4px;border:0;background:none;color:var(--ink);font:700 15px/1 var(--f-body);cursor:pointer}
+
+/* ---------- 8. チップ・切りかえ・下線のタブ ---------- */
+/* チップ：床2pt。選ぶとライムになり、押しこまれたまま（床が消える＝もう選んでいる） */
+.chips{display:flex;flex-wrap:wrap;gap:10px 8px}
+.chip{--kd:2px;--fc:var(--card);position:relative;display:inline-flex;align-items:stretch;flex:none;min-height:32px;padding:0;border:0;border-radius:var(--r-chip);
+  background:none;color:var(--ink);font:600 13px/1 var(--f-body);cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation;
+  box-shadow:0 var(--kd) 0 2px var(--ink)}
+.chip > .face{display:inline-flex;align-items:center;gap:6px;padding:0 12px;border-radius:inherit;background:var(--fc);box-shadow:var(--ring);white-space:nowrap;
+  transition:transform var(--t-release) var(--ios),background-color var(--t-micro) var(--ios)}
+.chip.is-down > .face{transform:translateY(calc(var(--kd) - .5px));transition:transform var(--t-press) var(--press-ease)}
+.chip[aria-pressed="true"] > .face{background:var(--lime);transform:translateY(var(--kd))}
+.chip .pi svg{width:12px;height:12px}
+.chip-add > .face{padding:0 10px}
+
+/* 切りかえ（今週/今月/今日）：1枚の板（床3pt）。選んだ所がライム */
+.seg{display:inline-flex;align-items:stretch;max-width:100%;border-radius:var(--r-key);background:var(--card);box-shadow:var(--ring),0 3px 0 2px var(--ink);overflow:hidden}
+.seg > button{position:relative;flex:1 1 0;min-width:0;min-height:44px;padding:0 14px;border:0;background:none;color:var(--ink-2);
+  font:600 14px/1 var(--f-body);white-space:nowrap;cursor:pointer;transition:background-color var(--t-micro) var(--ios),color var(--t-micro) var(--ios)}
+.seg > button + button{box-shadow:-2px 0 0 0 var(--ink)}
+.seg > button[aria-pressed="true"]{background:var(--lime);color:var(--ink);font-weight:700}
+.seg > button.is-down:not([aria-pressed="true"]){background:var(--paper-2)}
+.seg > button:focus-visible{outline-offset:-4px}
+.seg-block{display:flex;width:100%}
+
+/* 下線のタブ（成長/記録/グラフ/投稿 など）：床なし。選んだ所に 3pt のインクの線 */
+.utabs{display:flex;gap:4px;border-bottom:1.5px solid var(--line)}
+.utabs > *{position:relative;flex:1 1 0;min-width:0;min-height:44px;padding:0 4px;border:0;background:none;color:var(--ink-3);font:600 14px/1 var(--f-body);cursor:pointer;white-space:nowrap}
+.utabs > *::after{content:"";position:absolute;left:18%;right:18%;bottom:-1.5px;height:3px;background:var(--ink);transform:scaleX(0);transition:transform var(--t-micro) var(--ios)}
+.utabs > [aria-selected="true"]{color:var(--ink);font-weight:700}
+.utabs > [aria-selected="true"]::after{transform:scaleX(1)}
+.utabs > :focus-visible{outline-offset:-4px}
+
+/* ---------- 9. 一覧の行 ---------- */
+/* カードの中に入れる。床はない。押すと地が少し濃くなる */
+.rows{display:flex;flex-direction:column}
+.row{position:relative;display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 0;color:inherit;text-align:left;
+  border:0;background:none;width:100%;font:inherit;cursor:default}
+.row + .row{border-top:1.5px solid var(--line)}
+a.row,button.row,.row[role="button"]{cursor:pointer}
+a.row::before,button.row::before{content:"";position:absolute;inset:2px -8px;border-radius:12px;background:var(--paper-2);opacity:0;transition:opacity var(--t-micro) var(--ios);z-index:-1}
+.row{isolation:isolate}
+a.row.is-down::before,button.row.is-down::before{opacity:1}
+a.row:focus-visible,button.row:focus-visible{outline-offset:-1px}
+.row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.row-t{font:700 var(--fs-h)/1.3 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-s{display:flex;align-items:center;gap:6px;font-size:var(--fs-sub);line-height:1.35;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-end{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+.row-v{font:700 var(--fs-h)/1.2 var(--f-body);font-variant-numeric:tabular-nums}
+.row .chev{flex:none;color:var(--ink-3)}
+.row-sm{min-height:48px}
+
+/* ---------- 10. 数字・増減・点・札 ---------- */
+.big{font:800 var(--fs-hero)/1 var(--f-num);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mid{font:800 var(--fs-num)/1.05 var(--f-num);letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+.unit{font:700 var(--fs-unit)/1 var(--f-body);color:var(--ink-3);margin:0 3px 0 2px}
+.num{font-variant-numeric:tabular-nums}
+.delta{display:inline-flex;align-items:center;gap:3px;font:700 var(--fs-sub)/1.2 var(--f-body);font-variant-numeric:tabular-nums;white-space:nowrap}
+.delta.up{color:var(--up)} .delta.down{color:var(--down)}
+.delta.up::before{content:"▲";font-size:.85em} .delta.down::before{content:"▼";font-size:.85em}
+/* 点はドットの四角＋インクの輪 */
+.dot{display:inline-block;flex:none;width:8px;height:8px;background:var(--c,var(--ink-3));box-shadow:var(--ring-thin);vertical-align:middle}
+.dot.run{--c:var(--run)} .dot.pause{--c:var(--pause)} .dot.due{--c:var(--due)} .dot.unread{--c:var(--unread)} .dot.lime{--c:var(--lime)}
+.dot.hollow{background:none;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.dot.sm{width:6px;height:6px}
+/* 札：押せない小さな知らせ（「第4回 記述模試まで 10日」） */
+.tag{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:24px;padding:3px 9px;border-radius:7px;background:var(--paper-2);
+  box-shadow:var(--ring-soft);font:600 var(--fs-sub)/1.3 var(--f-body);color:var(--ink-2);white-space:nowrap}
+.tag b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+.tag.now{background:var(--pause);color:#fff;box-shadow:var(--ring-thin);font:400 10px/1 var(--f-pix);letter-spacing:.06em;min-height:18px;padding:3px 6px}
+.tag.next{background:var(--card);box-shadow:var(--ring-thin);color:var(--ink);font:400 11px/1 var(--f-pixj);min-height:20px;padding:3px 6px}
+.state{display:inline-flex;align-items:center;gap:6px;font:700 var(--fs-sub)/1.2 var(--f-body)}
+.state.run{color:var(--run-ink)} .state.pause{color:var(--pause)} .state.due{color:var(--due-ink)}
+
+/* ---------- 11. 科目の絵・アイコンの人 ---------- */
+/* <span class="subj" data-s="en"></span>  科目の色の四角 + インクの輪 + アプリの線の絵（インク） */
+.subj{--size:40px;position:relative;display:inline-grid;place-items:center;flex:none;width:var(--size);height:var(--size);border-radius:calc(var(--size) * .25);
+  background:var(--c,var(--s-free));box-shadow:var(--ring);color:var(--ink)}
+.subj svg{width:62%;height:62%}
+.subj-l{font:800 calc(var(--size) * .42)/1 var(--f-body);color:var(--ink)}
+.subj.is-next{opacity:.5}
+.subj.is-none{background:var(--card);box-shadow:none;outline:2px dashed rgba(23,18,31,.4);outline-offset:-2px}
+.subj .dot{position:absolute;top:-3px;left:-3px}
+.subj.sm{--size:22px} .subj.md{--size:30px} .subj.lg{--size:46px}
+.coin{--size:28px;display:inline-block;flex:none;width:var(--size);height:var(--size);border-radius:50%;background:var(--c);box-shadow:var(--ring-thin)}
+/* アイコンの人（写真の代わり。外の画像は使わない） */
+.av{--size:36px;position:relative;display:inline-grid;place-items:center;flex:none;width:var(--size);height:var(--size);border-radius:calc(var(--size) * .3);
+  background:var(--c,var(--ink-3));box-shadow:var(--ring);color:#fff;font:800 calc(var(--size) * .42)/1 var(--f-body)}
+.av.sm{--size:28px} .av.lg{--size:44px}
+.av.is-live::after{content:"";position:absolute;right:-3px;bottom:-3px;width:9px;height:9px;background:var(--run);box-shadow:var(--ring-thin)}
+
+/* ---------- 12. ドットのアイコン・住人・シール ---------- */
+.pi{display:inline-grid;place-items:center;line-height:0;color:inherit}
+.pi svg{width:auto;height:auto}
+.pix{position:relative;display:inline-block;flex:none;line-height:0;vertical-align:bottom}
+.pix svg{display:block}
+.pix > .pix-in{position:absolute;inset:0;animation:pix-in var(--t-fade) var(--ios) both}
+@keyframes pix-in{from{opacity:0}to{opacity:1}}
+.stk{display:inline-block;line-height:0;flex:none}
+.stk svg{display:block}
+
+/* ---------- 13. 勉強バー（全タブ共通、タブバーの上） ---------- */
+.chrome{position:fixed;z-index:40;left:0;right:0;bottom:0;display:flex;flex-direction:column;gap:var(--chrome-gap);
+  padding:0 var(--gutter) calc(var(--chrome-bottom) + var(--kd));pointer-events:none}
+.chrome > *{pointer-events:auto}
+.sbar{position:relative;flex:none;height:var(--bar-h);border-radius:var(--r-bar);box-shadow:var(--floor)}
+.sbar-face{position:absolute;inset:0;display:flex;align-items:center;gap:8px;padding:0 8px 0 8px;border-radius:inherit;background:var(--card);box-shadow:var(--ring);
+  overflow:hidden;transition:transform var(--t-release) var(--ios)}
+.sbar.is-down .sbar-face{transform:translateY(calc(var(--kd) - 1px));transition:transform var(--t-press) var(--press-ease)}
+.sbar-main{flex:1;min-width:0;display:flex;align-items:center;gap:11px;align-self:stretch;padding-left:0;color:inherit;border-radius:14px}
+.sbar-main:focus-visible{outline-offset:-3px}
+.sbar-main .subj{--size:40px}
+.sbar-txt{min-width:0;display:flex;flex-direction:column;gap:2px}
+.sbar-t{font:700 var(--fs-h)/1.25 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbar-s{font:500 var(--fs-sub)/1.3 var(--f-body);color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbar[data-state="paused"] .sbar-t,.sbar[data-state="paused"] .sbar-s{color:var(--pause)}
+.sbar-go{margin-right:2px}
+.sbar-go > .face{padding:0 12px 0 11px}
+.sbar .ibtn{margin-right:2px}
+/* 進みの線：予定の長さまで緑、こえたらオレンジ（scaleX で伸びる） */
+.pline{position:absolute;left:14px;right:14px;bottom:5px;height:3px;border-radius:2px;background:rgba(23,18,31,.10);overflow:hidden}
+.pline i{position:absolute;inset:0;background:var(--run);transform-origin:0 50%;transform:scaleX(var(--p,0))}
+.pline.is-over i{background:var(--over)}
+.sbar[data-state="paused"] .pline i{background:var(--ink-3)}
+
+/* ---------- 14. タブバー（5つ。まん中が勉強） ---------- */
+.tabbar{position:relative;flex:none;display:flex;align-items:stretch;height:var(--tab-h);padding:0 4px;border-radius:var(--r-bar);background:var(--card);box-shadow:var(--ring),var(--floor)}
+.tab{position:relative;flex:1 1 0;min-width:44px;display:grid;place-items:center;color:var(--ink-3);border-radius:14px}
+.tab-plate{position:relative;display:grid;place-items:center;width:54px;height:40px;border-radius:12px;transition:transform var(--t-release) var(--ios),background-color var(--t-micro) var(--ios)}
+.tab[aria-current="page"]{color:var(--ink)}
+.tab[aria-current="page"] .tab-plate{background:var(--lime);box-shadow:var(--ring)}
+.tab.is-down .tab-plate{transform:translateY(2px);transition:transform var(--t-press) var(--press-ease)}
+.tab:focus-visible{outline-offset:-4px}
+.tab .dot{position:absolute;top:5px;right:10px}
+
+/* すりガラスのバー（今のアプリ。比べるため）：<body data-chrome="glass"> か、外側に [data-chrome="glass"] */
+[data-chrome="glass"] .sbar,[data-chrome="glass"] .tabbar{box-shadow:0 0 0 .5px rgba(23,18,31,.10),0 10px 28px rgba(23,18,31,.14)}
+[data-chrome="glass"] .sbar-face,[data-chrome="glass"] .tabbar{background:rgba(251,248,241,.66);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+[data-chrome="glass"] .sbar-face{box-shadow:inset 0 0 0 .5px rgba(255,255,255,.7)}
+[data-chrome="glass"] .sbar.is-down .sbar-face{transform:scale(.98)}
+[data-chrome="glass"] .tab[aria-current="page"] .tab-plate{background:rgba(118,118,128,.16);box-shadow:none;border-radius:20px}
+
+/* ---------- 15. トースト（上から） ---------- */
+.toasts{position:fixed;z-index:60;left:12px;right:12px;top:calc(var(--safe-top) + 6px);display:grid;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 12px 10px 12px;border-radius:16px;background:var(--card);
+  box-shadow:var(--ring),var(--lift);animation:toast-in var(--t-present) var(--ios) both}
+.toast.is-out{animation:toast-out var(--t-dismiss) var(--ios) both}
+.toast-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.toast-txt b{font:700 var(--fs-h)/1.3 var(--f-body)}
+.toast-txt small{font-size:var(--fs-sub);line-height:1.35;color:var(--ink-2)}
+.toast-txt .exp{font:400 12px/1.2 var(--f-pix);letter-spacing:.04em;color:var(--run-ink)}
+@keyframes toast-in{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes toast-out{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-12px)}}
+
+/* ---------- 16. シート（下から） ---------- */
+.sheet{position:fixed;z-index:70;inset:0;display:flex;flex-direction:column;justify-content:flex-end}
+.sheet-scrim{position:absolute;inset:0;background:rgba(23,18,31,.38);animation:fade-in var(--t-fade) linear both}
+.sheet-panel{position:relative;max-height:88%;overflow:auto;padding:8px var(--gutter) calc(var(--safe-bottom) + 16px);border-radius:var(--r-lg) var(--r-lg) 0 0;
+  background:var(--card);box-shadow:0 0 0 2px var(--ink);animation:sheet-in var(--t-present) var(--ios) both}
+.sheet.is-out .sheet-panel{animation:sheet-out var(--t-dismiss) var(--ios) both}
+.sheet.is-out .sheet-scrim{animation:fade-out var(--t-fade-out) linear both}
+.sheet-grab{display:block;width:40px;height:5px;margin:2px auto 10px;border-radius:3px;background:rgba(23,18,31,.25)}
+.sheet-h{display:flex;align-items:center;gap:8px;min-height:44px;margin-bottom:8px}
+.sheet-h h2{flex:1;font:800 18px/1.3 var(--f-body)}
+.sheet-acts{display:grid;gap:14px;margin-top:18px}
+.sheet.is-static{position:relative;inset:auto;z-index:auto}
+.sheet.is-static .sheet-panel,.sheet.is-static .sheet-scrim{animation:none}
+@keyframes sheet-in{from{transform:translateY(100%)}to{transform:none}}
+@keyframes sheet-out{from{transform:none}to{transform:translateY(100%)}}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+@keyframes fade-out{from{opacity:1}to{opacity:0}}
+
+/* ---------- 17. 草（勉強した日） ---------- */
+.grass{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto;column-gap:6px;row-gap:4px}
+.grass-m{grid-column:2;position:relative;height:14px;font-size:var(--fs-tiny);line-height:14px;color:var(--ink-3)}
+.grass-m span{position:absolute;top:0;white-space:nowrap}
+.grass-d{grid-column:1;display:grid;grid-template-rows:repeat(7,1fr);gap:3px;font-size:10px;line-height:1;color:var(--ink-3);align-items:center}
+.grass-c{grid-column:2;display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,auto);gap:3px}
+.gc{aspect-ratio:1;background:var(--g0);box-shadow:inset 0 0 0 1px rgba(23,18,31,.07)}
+.gc[data-l="1"]{background:var(--g1)} .gc[data-l="2"]{background:var(--g2)} .gc[data-l="3"]{background:var(--g3)} .gc[data-l="4"]{background:var(--g4)}
+.gc[data-l="1"],.gc[data-l="2"],.gc[data-l="3"],.gc[data-l="4"]{box-shadow:inset 0 0 0 1px rgba(23,18,31,.12)}
+.gc.today{box-shadow:inset 0 0 0 2px var(--ink)}
+.gc.future{visibility:hidden}
+.grass-k{grid-column:2;display:flex;align-items:center;justify-content:flex-end;gap:3px;margin-top:4px;font-size:var(--fs-tiny);color:var(--ink-3)}
+.grass-k i{width:11px;height:11px;box-shadow:inset 0 0 0 1px rgba(23,18,31,.12)}
+.grass-k span{margin:0 3px}
+
+/* ---------- 18. インチテープ（今日の定規） ---------- */
+.tape{position:relative;padding-top:2px}
+.tape-bar{position:relative;height:16px;border-radius:3px;background:var(--paper-2);box-shadow:var(--ring);overflow:hidden}
+.tape-fill{position:absolute;inset:0;display:flex;transform-origin:0 50%}
+.tape-fill.is-reveal{animation:tape-in var(--t-present) var(--ios) .15s both}
+@keyframes tape-in{from{transform:scaleX(0)}to{transform:none}}
+.tape-seg{flex:none;height:100%;background:var(--c);box-shadow:2px 0 0 0 var(--ink)}
+.tape-rule{position:relative;height:30px;margin-top:2px}
+.tape-rule i{position:absolute;top:0;width:1.5px;height:4px;margin-left:-.75px;background:var(--ink);opacity:.45}
+.tape-rule i.h{height:8px;opacity:.85;width:2px;margin-left:-1px}
+.tape-rule span{position:absolute;top:11px;transform:translateX(-50%);font:400 10px/1 var(--f-pix);letter-spacing:.04em;color:var(--ink-3);white-space:nowrap}
+.tape-rule span.first{transform:none}
+.tape-rule span.last{transform:translateX(-100%)}
+.tape-goal{position:absolute;top:-4px;height:30px;width:2px;margin-left:-1px;background:var(--ink)}
+.tape-goal::before{content:"";position:absolute;top:-4px;left:-4px;width:10px;height:5px;background:var(--ink);clip-path:polygon(0 0,100% 0,50% 100%)}
+.tape-rule span.goal{font:800 11px/1 var(--f-body);color:var(--ink);letter-spacing:0}
+.tape-rule span.goal.is-done{color:var(--run-ink)}
+.tape-key{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:2px}
+.tape-key span{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-tiny);color:var(--ink-2);white-space:nowrap}
+.tape-key span i{width:8px;height:8px;background:var(--c);box-shadow:var(--ring-thin)}
+.tape-key span i.rest{background:none;box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.tape-key b{font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* ---------- 19. シールとバッジ ---------- */
+.badges{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * var(--pad));padding:4px var(--pad) 6px;scroll-snap-type:x proximity}
+.badges::-webkit-scrollbar{display:none}
+.badge{flex:none;width:76px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;scroll-snap-align:start}
+.badge .stk{height:48px;display:grid;place-items:center}
+.badge b{font:700 var(--fs-sub)/1.25 var(--f-body)}
+.badge small{font:700 var(--fs-tiny)/1.2 var(--f-body);color:var(--run-ink)}
+.badge.is-locked .stk{filter:grayscale(1);opacity:.38}
+.badge.is-locked small{color:var(--ink-3);font-weight:500}
+
+/* ---------- 20. 連続の炎（ボッ）と7日 ---------- */
+/* 揺れは MOTION.md の例外（片道2.4秒・sin・下を軸に横3%ふくらみ縦3%縮む）。この炎だけ。 */
+.flame{display:inline-block;line-height:0;flex:none}
+.flame svg{transform-origin:50% 100%;animation:flicker 2.4s var(--sine) infinite alternate}
+.flame.is-out svg{animation:none;filter:grayscale(1);opacity:.35}
+@keyframes flicker{from{transform:none}to{transform:scale(1.03,.97)}}
+.wk{display:flex;gap:6px}
+.wk-d{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:24px;font:400 11px/1 var(--f-pixj);color:var(--ink-3)}
+.wk-d i{position:relative;display:grid;place-items:center;width:22px;height:22px;border-radius:5px;background:var(--card);box-shadow:var(--ring-thin);color:var(--ink)}
+.wk-d.is-done i{background:var(--sun)}
+.wk-d.is-today{color:var(--ink)}
+.wk-d.is-today i{background:var(--coral)}
+.wk-d.is-today.is-wait i{background:var(--card);box-shadow:var(--ring)}
+.wk-d.is-rest i{background:var(--sky)}
+.wk-d.is-future i{background:none;box-shadow:none;outline:1.5px dashed rgba(23,18,31,.38);outline-offset:-1.5px}
+.wk-d i .pi svg{width:10px;height:auto}
+
+/* ---------- 21. 動きを減らす設定：全部止める（押した印は残る） ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important;scroll-behavior:auto!important}
+  .flame svg{animation:none!important}
+}

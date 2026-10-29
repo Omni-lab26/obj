@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly ノート案</title>
+<meta name="description" content="Inchly（インチリー）は、勉強した時間をはかって、記録して、友だちと見せ合える iPhone のアプリです。ページ全体を方眼ノートの1ページにした見本。">
+<meta name="theme-color" content="#ece6d8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* 設計メモ ------------------------------------------------------------
+     芯：ページ全体が「10月29日（木）の方眼ノートの1ページ」。
+     層は2つ。印刷（インクの線、ライムのボタン、ドットの住人、方眼）と、
+     手の跡（えんぴつ＝自分の字、赤ペン＝丸つけ）。
+     赤ペンは「できた所」にだけ：見出しの花丸、記録した時間の丸、合計の花丸。
+     1マス＝方眼の1マス＝ピクセルの1マス＝草（勉強した日）の1マス。
+     区画の名前は、ページの右のふちから出る付箋。おうちの方へだけ青い付箋。
+     締めは、ノートの裏表紙（クラフトの厚紙）と名前ラベル。
+     レイアウト：机（地）の上に、左右に 2px のインクのふちをもつ方眼の紙を1枚。
+     ------------------------------------------------------------------- */
+
+  /* 色：印刷 */
+  --desk:#ece6d8;            /* 机。ノートのまわり */
+  --sheet:#fcfaf4;           /* ノートの紙 */
+  --grid:rgba(52,94,158,.075);/* 方眼の細い線 */
+  --grid-2:rgba(52,94,158,.15);/* 5マスごとの線 */
+  --ink:#17121f; --ink-2:#38323f; --muted:#5f5868; --rule:#d3cabb;
+  --lime:#c6f432; --lime-2:#a8d81c;   /* 押せる物だけ */
+  /* 色：手の跡 */
+  --pencil:#46424d;          /* えんぴつ：自分で書いた字 */
+  --red:#d42d24;             /* 赤ペン：丸つけと花丸だけ */
+  /* 色：文房具 */
+  --fusen:#ffd84d;           /* 付箋（勉強する人に向けた区画） */
+  --fusen-blue:#a3d2ff;      /* 付箋（おうちの方へ） */
+  --tape:rgba(229,218,182,.9);
+  --kraft:#c9a676; --kraft-2:#b58f5e; --label:#fffdf7;
+  /* 色：アプリの意味（科目、草、炎、締切） */
+  --s-en:#5856D6; --s-ma:#FF9500; --s-ja:#D9A300; --s-ph:#3B82F6; --s-ch:#10B981;
+  --g0:#e6e2d8; --g1:#b4e9c6; --g2:#5fd28c; --g3:#21a35a; --g4:#127a43;
+  --flame:#f0641c; --due:#b4410a;
+  --focus:#2f5fb3;
+
+  /* 文字の役 */
+  --f-print:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif; /* 印刷：見出しと本文 */
+  --f-hand:"Klee One","Zen Kaku Gothic New",serif;                                 /* 手書き：えんぴつの字だけ */
+  /* 大きさは7段：84 / 46 / 32 / 24 / 21 / 17 / 14 */
+
+  /* 方眼 */
+  --cell:24px;
+  --pad-l:calc(var(--cell) * 2); --pad-r:calc(var(--cell) * 2);
+  --sheet-w:min(1252px, 100% - 160px);
+  --edge:2px;                /* ノートの左右のふち */
+  --ease:cubic-bezier(.2,.8,.2,1);      /* 行きすぎない */
+  color-scheme:light;
+}
+@media (max-width:999px){
+  :root{--sheet-w:calc(100% - 32px)}
+}
+@media (max-width:719px){
+  :root{
+    --cell:20px; --sheet-w:100%; --edge:0px;
+    --pad-l:max(16px, env(safe-area-inset-left, 0px));
+    --pad-r:max(16px, env(safe-area-inset-right, 0px));
+  }
+}
+
+/* ---------- 土台 ---------- */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{overflow-x:clip;scroll-behavior:smooth;scroll-padding-top:84px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--desk);color:var(--ink);font:400 17px/1.85 var(--f-print);
+  -webkit-font-smoothing:antialiased;line-break:strict;font-feature-settings:"palt" 0}
+h1,h2,h3,p{margin:0}
+h1,h2,h3,p,li,dd,dt,td,th,figcaption{word-break:auto-phrase}
+a{color:inherit}
+img{display:block;max-width:100%;height:auto}
+button{font-family:inherit}
+::selection{background:var(--lime);color:var(--ink)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:6px}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.hand{font-family:var(--f-hand);font-weight:600;color:var(--pencil)}
+.num{font-variant-numeric:tabular-nums}
+inch-pal{display:none}
+.skip{position:fixed;left:12px;top:-80px;z-index:100;display:inline-flex;align-items:center;min-height:44px;padding:0 16px;
+  border:2px solid var(--ink);border-radius:12px;background:var(--lime);color:var(--ink);font:700 15px/1 var(--f-print);text-decoration:none}
+.skip:focus{top:12px}
+
+/* ---------- ボタン：床は動かない ---------- */
+.btn{
+  --bg:#fffdf8; --fg:var(--ink); --sh:var(--ink);
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  height:52px;padding:0 24px;border:2px solid var(--ink);border-radius:12px;
+  background:var(--bg);color:var(--fg);font:700 16px/1 var(--f-print);
+  text-decoration:none;cursor:pointer;white-space:nowrap;user-select:none;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 4px 0 0 var(--sh);transform:translateY(0);
+  transition:transform .18s var(--ease),box-shadow .18s var(--ease),background-color .2s,color .2s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--sh);transition-duration:.05s}
+.btn-lime{--bg:var(--lime)}
+.btn-ink{--bg:var(--ink);--fg:#fcfaf4;--sh:var(--lime-2)}
+.btn-ghost{--bg:transparent;box-shadow:none}
+.btn-ghost:active{transform:none;box-shadow:none;background:rgba(23,18,31,.07)}
+.btn-sm{height:40px;padding:0 16px;font-size:14px;border-radius:10px;box-shadow:0 3px 0 0 var(--sh)}
+.btn-sm:active{box-shadow:0 0 0 0 var(--sh)}
+.btn-sm::after{content:"";position:absolute;inset:-4px -2px}
+@media (hover:hover){
+  .btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 0 var(--sh)}
+  .btn-sm:hover{box-shadow:0 5px 0 0 var(--sh)}
+  .btn-ghost:hover{transform:none;box-shadow:none;background:rgba(23,18,31,.06)}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--sh)}
+  .btn-sm:active{box-shadow:0 0 0 0 var(--sh)}
+  .btn-ghost:active{transform:none;box-shadow:none}
+}
+
+/* ---------- ナビ ---------- */
+.nav{position:sticky;top:0;z-index:60;background:var(--desk);border-bottom:2px solid transparent;transition:border-color .2s}
+.nav.scrolled{border-bottom-color:var(--ink)}
+.nav-in{position:relative;width:var(--sheet-w);margin:0 auto;height:64px;display:flex;align-items:center;gap:20px}
+.logo{display:inline-flex;align-items:center;gap:9px;min-height:44px;text-decoration:none;color:var(--ink);font:900 23px/1 var(--f-print);letter-spacing:-.01em}
+.logo svg{width:28px;height:28px;display:block}
+.links{display:flex;gap:2px;margin-left:auto}
+.links a{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;border-radius:8px;font:700 15px/1 var(--f-print);color:var(--ink-2);text-decoration:none}
+@media (hover:hover){.links a:hover{background:rgba(23,18,31,.06);color:var(--ink)}}
+.nav .btn-sm{flex:none}
+.toc{display:none;position:relative;margin-left:auto}
+.toc-list{position:absolute;right:0;top:calc(100% + 10px);z-index:2;min-width:200px;margin:0;padding:6px;list-style:none;
+  background:var(--fusen);border:2px solid var(--ink);border-radius:10px}
+.toc-list a{display:flex;align-items:center;min-height:44px;padding:0 14px;border-radius:7px;font:700 16px/1 var(--f-print);text-decoration:none}
+.toc-list a:active{background:rgba(23,18,31,.08)}
+
+/* ---------- ノート（方眼の紙） ---------- */
+.sheet{
+  position:relative;width:var(--sheet-w);margin:6px auto 0;
+  padding:0 var(--pad-r) 0 var(--pad-l);
+  background-color:var(--sheet);
+  background-image:
+    linear-gradient(to right, var(--grid-2) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-2) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size:
+    calc(var(--cell) * 5) calc(var(--cell) * 5),
+    calc(var(--cell) * 5) calc(var(--cell) * 5),
+    var(--cell) var(--cell),
+    var(--cell) var(--cell);
+  background-position:var(--pad-l) 0;
+  border:2px solid var(--ink);border-bottom:0;border-radius:12px 12px 0 0;
+}
+
+/* ページの頭：日付の欄 */
+.pagehead{display:flex;justify-content:flex-end;align-items:flex-end;gap:10px;height:calc(var(--cell) * 2);padding-bottom:4px}
+.pagehead .k{font:700 14px/1 var(--f-print);color:var(--muted);padding-bottom:6px}
+.pagehead .v{display:inline-block;min-width:calc(var(--cell) * 7);padding:0 6px 2px;border-bottom:1.5px solid var(--ink-2);font-size:21px;line-height:1.2;text-align:center}
+
+/* ---------- 最初の画面 ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:calc(var(--cell) * 2);align-items:center;
+  padding:calc(var(--cell) * 1) 0 calc(var(--cell) * 2)}
+.hero h1{font:900 clamp(44px, calc((100vw - 768px) / 7.6), 84px)/1.55 var(--f-print);letter-spacing:.01em}
+.hm{position:relative;display:inline-block;margin:0 1em 0 .9em}
+.hm svg{position:absolute;left:50%;top:50%;width:3.86em;height:2.08em;transform:translate(-50%,-50%);overflow:visible;pointer-events:none;
+  fill:none;stroke:var(--red);stroke-linecap:round;stroke-linejoin:round}
+.hm path{stroke-width:3.6px;vector-effect:non-scaling-stroke}
+.hero-sub{margin-top:calc(var(--cell) * 1.25);max-width:31em;font-size:17px;line-height:1.95;color:var(--ink-2)}
+.ctas{display:flex;flex-wrap:wrap;gap:14px 16px;margin-top:calc(var(--cell) * 1.5)}
+.hero-status{margin-top:calc(var(--cell) * 1);font-size:14px;color:var(--muted)}
+.hero-status a{margin-left:.6em;font-weight:700;color:var(--ink);text-underline-offset:3px}
+
+/* 今日の勉強：えんぴつで書いた枠 */
+.hero-side{position:relative}
+.today{position:relative;padding:18px 24px 22px;border:2px solid var(--pencil);
+  border-radius:16px 26px 14px 30px / 26px 14px 28px 16px}
+.today::before{content:"";position:absolute;inset:-5px 3px -2px -4px;border:1.5px solid var(--pencil);opacity:.35;pointer-events:none;
+  border-radius:24px 12px 30px 14px / 14px 28px 12px 26px}
+.t-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:6px;border-bottom:2px solid var(--pencil)}
+.t-title{font-size:24px;line-height:1.4}
+.t-goal{font-size:17px;color:var(--muted)}
+.t-rows{list-style:none;margin:0;padding:0}
+.t-rows li{display:grid;grid-template-columns:3.1em 14px minmax(0,1fr) auto;align-items:center;column-gap:12px;
+  min-height:calc(var(--cell) * 2);border-bottom:1.5px dashed rgba(70,66,77,.32);font-family:var(--f-hand);font-weight:600;color:var(--pencil);font-size:21px;line-height:1.2}
+.t-time{font-variant-numeric:tabular-nums;text-align:right}
+.sq{display:block;width:14px;height:14px;background:var(--c);box-shadow:0 0 0 2px var(--ink)}
+.t-sub small{margin-left:.45em;font-size:17px;color:var(--muted)}
+.t-min{justify-self:end;padding-right:.35em}
+.ring{position:relative;display:inline-block;padding:0 .1em}
+.ring svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);overflow:visible;pointer-events:none;
+  fill:none;stroke:var(--red);stroke-linecap:round;stroke-linejoin:round}
+.ring.s svg{width:3.2em;height:1.71em}
+.ring.l svg{width:7em;height:1.85em}
+.ring svg path{stroke-width:2.6px;vector-effect:non-scaling-stroke}
+.t-total{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:14px;min-height:calc(var(--cell) * 4.5);padding-top:4px}
+.t-label{font-size:21px}
+.t-sum{position:relative;justify-self:center;font-family:var(--f-hand);font-weight:600;color:var(--ink);font-size:32px;line-height:1.2;font-variant-numeric:tabular-nums}
+.t-sum svg{position:absolute;left:50%;top:50%;width:8.2em;height:3.16em;transform:translate(-50%,-50%);overflow:visible;pointer-events:none;
+  fill:none;stroke:var(--red);stroke-linecap:round;stroke-linejoin:round;stroke-width:4.6}
+.t-diff{font-size:17px;line-height:1.35;text-align:right;color:var(--pencil);opacity:0;transition:opacity .15s}
+.t-diff b{display:block;font-weight:600;font-variant-numeric:tabular-nums}
+.today.is-done .t-diff{opacity:1;transition:opacity .3s var(--ease) 1.1s}
+/* 引かれる線 */
+.draw svg{stroke-dasharray:1;stroke-dashoffset:1}
+.draw svg path{stroke-dasharray:inherit;stroke-dashoffset:inherit}
+.today.is-done .t-now .draw svg{stroke-dashoffset:0;transition:stroke-dashoffset .38s cubic-bezier(.5,0,.3,1)}
+.today.is-done .t-sum.draw svg{stroke-dashoffset:0;transition:stroke-dashoffset 1.25s cubic-bezier(.45,.05,.35,1) .4s}
+.t-act{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:4px}
+.t-hint{font-size:14px;line-height:1.6;color:var(--muted);flex:1 1 12em}
+#rec{min-width:9.5em}
+#rec.is-erase{--bg:#fffdf8;--fg:var(--ink);--sh:var(--ink)}
+.t-week{display:flex;align-items:flex-end;gap:12px;margin-top:18px}
+.t-week .k{font:700 14px/1 var(--f-print);color:var(--muted);padding-bottom:25px}
+.t-week ol{display:flex;gap:0;list-style:none;margin:0;padding:0}
+.t-week li{display:flex;flex-direction:column;align-items:center;width:var(--cell)}
+.t-week i{display:block;width:var(--cell);height:var(--cell);padding:3px}
+.t-week i::before{content:"";display:block;width:100%;height:100%;border-radius:2px;background:var(--lv,transparent)}
+.t-week li[data-l="0"] i::before{background:transparent;box-shadow:inset 0 0 0 1.5px var(--rule)}
+.t-week li[data-l="1"]{--lv:var(--g1)} .t-week li[data-l="2"]{--lv:var(--g2)} .t-week li[data-l="3"]{--lv:var(--g3)} .t-week li[data-l="4"]{--lv:var(--g4)}
+.t-week li.is-today i{box-shadow:inset 0 0 0 2px var(--ink);border-radius:3px}
+.t-week span{font:400 13px/1.4 var(--f-print);color:var(--muted)}
+.t-week li.is-today span{color:var(--ink);font-weight:700}
+.note{margin-top:12px;font-size:14px;color:var(--muted)}
+
+/* ---------- 区画 ---------- */
+.sec{position:relative;padding:calc(var(--cell) * 4) 0 calc(var(--cell) * 2)}
+.sec h2{font:900 clamp(30px, 3.4vw, 46px)/1.45 var(--f-print);letter-spacing:.01em}
+.sec-lead{margin-top:calc(var(--cell) * 1);max-width:34em;color:var(--ink-2)}
+.sec h3{font:700 21px/1.5 var(--f-print)}
+
+/* 付箋：ページの右のふちから出る */
+.tab{position:absolute;z-index:3;top:calc(var(--cell) * 4);right:calc(-1 * var(--pad-r) - var(--edge) - 44px);
+  writing-mode:vertical-rl;margin:0;padding:16px 10px 16px 14px;
+  font:700 17px/1 var(--f-print);letter-spacing:.16em;color:var(--ink);
+  background:var(--fusen);border:2px solid var(--ink);border-left-width:0;border-radius:0 9px 9px 0}
+.tab::before{content:"";position:absolute;top:-2px;bottom:-2px;left:-16px;width:16px;background:inherit;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);opacity:.92}
+.tab-blue{background:var(--fusen-blue)}
+@media (max-width:999px){
+  .tab{position:relative;top:auto;right:auto;display:block;width:fit-content;writing-mode:horizontal-tb;
+    margin:0 calc(-1 * var(--pad-r) - var(--edge)) calc(var(--cell) * 1) auto;padding:9px 20px 9px 16px;font-size:15px;letter-spacing:.08em;
+    border-width:2px;border-right-width:0;border-radius:9px 0 0 9px}
+  .tab::before{display:none}
+  .sec{padding-top:calc(var(--cell) * 3)}
+}
+
+/* できること */
+.feats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:calc(var(--cell) * 1.5);row-gap:calc(var(--cell) * 3);margin-top:calc(var(--cell) * 3)}
+.feat h3{margin-top:calc(var(--cell) * 1)}
+.feat > p{margin-top:6px;font-size:16px;line-height:1.85;color:var(--ink-2)}
+.fig{position:relative;height:calc(var(--cell) * 7)}
+/* 時間割 */
+.route{list-style:none;margin:0;padding:0}
+.route li{position:relative;display:grid;grid-template-columns:calc(var(--cell) * 2.5) var(--cell) minmax(0,1fr);align-items:center;height:calc(var(--cell) * 1.5);font-size:16px}
+.route b{font-weight:700;font-variant-numeric:tabular-nums}
+.route i{justify-self:center;width:14px;height:14px;background:var(--c);box-shadow:0 0 0 2px var(--ink);position:relative;z-index:1}
+.route li:not(:last-child)::after{content:"";position:absolute;left:calc(var(--cell) * 3 - 1px);top:50%;height:calc(var(--cell) * 1.5);width:2px;background:var(--ink)}
+.route span{padding-left:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.route small{color:var(--muted);font-size:14px;margin-left:.4em}
+.deadline{display:flex;align-items:baseline;gap:10px;margin-top:calc(var(--cell) * 1);padding-top:8px;border-top:2px solid var(--ink);font-size:15px}
+.deadline .k{font-weight:700;color:var(--due)}
+.deadline b{margin-left:auto;font-weight:900;font-size:21px;color:var(--due);font-variant-numeric:tabular-nums}
+/* タイマー */
+.tm-sub{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700}
+.tm-time{margin-top:6px;font:900 46px/1.2 var(--f-print);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.tm-bar{margin-top:12px;height:12px;border:2px solid var(--ink);border-radius:6px;overflow:hidden;background:#fffdf8}
+.tm-bar i{display:block;height:100%;width:66%;background:var(--s-ja)}
+.tm-plan{display:flex;justify-content:space-between;margin-top:8px;font-size:14px;color:var(--muted)}
+/* 記録：草は方眼のマスそのもの */
+.grass{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,var(--cell));grid-auto-columns:var(--cell);width:max-content}
+.grass i{display:block;padding:3px}
+.grass i::before{content:"";display:block;width:100%;height:100%;border-radius:2px;background:var(--lv,transparent)}
+.grass i[data-l="0"]{--lv:var(--g0)} .grass i[data-l="1"]{--lv:var(--g1)} .grass i[data-l="2"]{--lv:var(--g2)} .grass i[data-l="3"]{--lv:var(--g3)} .grass i[data-l="4"]{--lv:var(--g4)}
+.grass i.is-today::before{box-shadow:0 0 0 2px var(--ink)}
+/* 連続記録 */
+.streak{display:grid;grid-template-columns:auto 1fr;column-gap:calc(var(--cell) * 1);height:100%;align-items:end}
+.st-days{display:flex;padding-bottom:4px}
+.st-days span{display:flex;flex-direction:column;align-items:center;width:var(--cell);font-size:13px;line-height:1.5;color:var(--muted)}
+.st-days span i{display:block;width:var(--cell);height:var(--cell);padding:5px}
+.st-days span i::before{content:"";display:block;width:100%;height:100%;border-radius:50%;box-shadow:inset 0 0 0 2px var(--rule)}
+.st-days span.on i::before{background:var(--flame);box-shadow:none}
+.st-days span.is-today{color:var(--ink);font-weight:700}
+.st-days span.is-today i::before{box-shadow:0 0 0 2px var(--ink)}
+.st-count{align-self:start;padding-top:calc(var(--cell) * .5)}
+.st-count b{display:block;font:900 46px/1.1 var(--f-print);font-variant-numeric:tabular-nums}
+.st-count span{display:block;font-weight:700;font-size:16px}
+.st-ticket{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:14px;color:var(--ink-2)}
+.st-ticket i{display:block;width:22px;height:14px;border:2px dashed var(--ink);border-radius:3px;background:#fffdf8}
+/* バッジ：テープで貼る */
+.taped{position:relative;margin:0;padding-top:calc(var(--cell) * 1)}
+.taped img{width:100%;max-width:calc(var(--cell) * 14);border:2px solid var(--ink);border-radius:16px;background:#fff;transform:rotate(-1deg)}
+.tape{position:absolute;z-index:2;left:50%;top:-12px;width:86px;height:26px;transform:translateX(-50%) rotate(-4deg);background:var(--tape);
+  clip-path:polygon(0 0,100% 0,96% 18%,100% 36%,96% 54%,100% 72%,96% 88%,100% 100%,0 100%,4% 84%,0 66%,4% 48%,0 30%,4% 14%);pointer-events:none}
+.taped .tape{top:calc(var(--cell) * 1 - 12px);left:calc(min(100%, var(--cell) * 14) / 2)}
+/* 友だち */
+.fr-h{display:flex;align-items:center;gap:8px;height:var(--cell);font-size:14px;font-weight:700;color:var(--ink-2)}
+.fr-h i{width:8px;height:8px;border-radius:50%;background:var(--g3)}
+.friends ul{list-style:none;margin:0;padding:0}
+.friends li{display:grid;grid-template-columns:var(--cell) minmax(0,1fr) auto auto;align-items:center;column-gap:10px;height:calc(var(--cell) * 1.5);border-bottom:1.5px solid var(--rule);font-size:16px}
+.friends li .sq{justify-self:center}
+.friends li b{font-weight:700}
+.friends li span{font-size:14px;color:var(--muted)}
+.friends li em{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;min-width:2.6em;text-align:right}
+
+/* 画面：テープで貼った写真 */
+.shots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:calc(var(--cell) * 2);margin-top:calc(var(--cell) * 3);padding-top:14px}
+.shot{position:relative;margin:0;transform:rotate(var(--r,0deg))}
+.shot img{width:100%;border:2px solid var(--ink);border-radius:18px;background:#fff}
+.shot figcaption{margin-top:12px;text-align:center;font-family:var(--f-hand);font-weight:600;font-size:21px;line-height:1.3;color:var(--pencil)}
+@media (max-width:999px){
+  .shots{display:flex;gap:calc(var(--cell) * 1.5);overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;
+    margin-inline:calc(-1 * var(--pad-l)) calc(-1 * var(--pad-r));padding:18px var(--pad-r) 14px var(--pad-l);scroll-padding-inline:var(--pad-l);scrollbar-width:thin}
+  .shot{flex:0 0 min(56%, 240px);scroll-snap-align:start}
+}
+
+/* 使い方 */
+.steps{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(var(--cell) * 2);margin:calc(var(--cell) * 3) 0 0;padding:0}
+.step-top{display:flex;align-items:center;gap:calc(var(--cell) * 1);height:calc(var(--cell) * 3)}
+.step-n{flex:none;display:grid;place-items:center;width:calc(var(--cell) * 2);height:calc(var(--cell) * 2);background:var(--ink);color:var(--sheet);font:900 24px/1 var(--f-print)}
+.step h3{margin-top:calc(var(--cell) * .5)}
+.step p{margin-top:6px;font-size:16px;color:var(--ink-2)}
+.mini{display:flex;align-items:center;gap:10px;min-width:0;flex:0 1 auto;overflow:hidden;height:calc(var(--cell) * 2);padding:0 12px;border:2px solid var(--ink);border-radius:12px;background:#fffdf8;font-size:15px;white-space:nowrap}
+.mini b{font-weight:700;font-variant-numeric:tabular-nums}
+.mini small{font-size:13px;color:var(--muted)}
+.mini-bar{position:relative;border-radius:16px;overflow:hidden}
+.mini-bar::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:62%;background:var(--s-ja)}
+.mini-bar .pz{margin-left:auto;font-weight:900;letter-spacing:-.1em}
+.mini-rec .memo{min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.mini-rec .ok{display:grid;place-items:center;flex:none;width:30px;height:30px;margin-left:auto;border-radius:50%;background:var(--ink);color:#fffdf8;font-size:15px;font-weight:900}
+
+/* おうちの方へ：連絡帳 */
+.parents{display:grid;grid-template-columns:minmax(0,30fr) minmax(0,16fr);gap:calc(var(--cell) * 2);margin-top:calc(var(--cell) * 3);align-items:start}
+.renraku{background:#fffefb;border:2px solid var(--ink);border-radius:10px;overflow:hidden}
+.rk-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 20px;background:var(--fusen-blue);border-bottom:2px solid var(--ink)}
+.rk-head b{font:900 17px/1.4 var(--f-print);letter-spacing:.2em}
+.rk-head .hand{font-size:17px;color:var(--ink-2)}
+.renraku table{width:100%;border-collapse:collapse;font-size:15px;line-height:1.7}
+.renraku th,.renraku td{padding:12px 16px;text-align:left;vertical-align:top;border-bottom:1.5px solid var(--rule)}
+.renraku tr:last-child th,.renraku tr:last-child td{border-bottom:0}
+.renraku thead th{padding-top:10px;padding-bottom:10px;font-size:13px;font-weight:700;color:var(--muted);background:#f7f3ea}
+.renraku tbody th{font-weight:700;width:30%}
+.renraku td.init{font-weight:700;white-space:nowrap}
+.pnotes{display:grid;gap:calc(var(--cell) * 1.5)}
+.pnotes p{margin-top:6px;font-size:16px;color:var(--ink-2)}
+
+/* ---------- 締め：ノートの裏表紙 ---------- */
+.cover{position:relative;background:var(--kraft);border-top:2px solid var(--ink);color:var(--ink)}
+.cover-in{width:var(--sheet-w);margin:0 auto;padding:calc(var(--cell) * 4) var(--pad-r) 40px var(--pad-l)}
+.cv-top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px 40px;flex-wrap:wrap}
+.cv-top h2{font:900 clamp(36px, 5.2vw, 72px)/1.35 var(--f-print);letter-spacing:.01em}
+.cv-mid{display:grid;grid-template-columns:minmax(0,18fr) minmax(0,28fr);gap:calc(var(--cell) * 2);margin-top:calc(var(--cell) * 3);align-items:start}
+.namelabel{position:relative;background:var(--label);border:2px solid var(--ink);border-radius:12px;padding:16px 24px 18px;transform:rotate(-1.2deg);max-width:440px}
+.nl-k{display:block;font:700 13px/1 var(--f-print);color:var(--muted);letter-spacing:.2em}
+.nl-name{display:flex;align-items:baseline;gap:16px;margin-top:8px;padding-bottom:6px;border-bottom:1.5px solid var(--ink-2)}
+.nl-name b{font:900 46px/1.1 var(--f-print);letter-spacing:-.01em}
+.nl-name .hand{font-size:21px}
+.nl-from{margin-top:10px;font-size:14px;color:var(--ink-2)}
+.spec h3{font:700 21px/1.5 var(--f-print)}
+.spec dl{margin:10px 0 0}
+.spec dl div{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:12px;padding:10px 0;border-top:1.5px solid rgba(23,18,31,.35)}
+.spec dt{font-weight:700}
+.spec dd{margin:0}
+.cv-bottom{margin-top:calc(var(--cell) * 3);padding-top:20px;border-top:2px solid var(--ink)}
+.cv-bottom nav{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.cv-bottom nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;font-weight:700;font-size:15px;text-underline-offset:4px}
+.calm{margin-left:auto;display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:2px solid var(--ink);border-radius:10px;background:transparent;color:var(--ink);font:700 14px/1 var(--f-print);cursor:pointer}
+.calm[aria-pressed="true"]{background:var(--ink);color:var(--kraft)}
+.legal{margin-top:16px;font-size:14px;line-height:1.8;color:#3a2e1e}
+
+/* ---------- 広さごと ---------- */
+@media (max-width:1179px){
+  .hero{grid-template-columns:minmax(0,1fr);gap:calc(var(--cell) * 2)}
+  .hero-side{max-width:520px}
+  .hero h1{font-size:clamp(44px, 5.9vw, 72px)}
+}
+@media (max-width:999px){
+  .feats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:minmax(0,1fr);gap:calc(var(--cell) * 1.5)}
+  .parents{grid-template-columns:1fr}
+  .cv-mid{grid-template-columns:1fr}
+}
+@media (max-width:719px){
+  body{font-size:16px;line-height:1.8}
+  .sheet{border-left:0;border-right:0;border-radius:0;margin-top:0}
+  .nav-in{width:100%;height:58px;padding:0 var(--pad-r) 0 var(--pad-l);gap:10px}
+  .links{display:none}
+  .toc{display:block}
+  .logo{font-size:21px}
+  .pagehead{height:calc(var(--cell) * 2.5)}
+  .pagehead .v{font-size:18px;min-width:0}
+  .hero{padding-top:calc(var(--cell) * .5)}
+  .hero h1{font-size:44px;line-height:1.55}
+  .hm{margin-left:.9em}
+  .hm path{stroke-width:2.8px}
+  .hero-sub{font-size:16px;line-height:1.85;margin-top:calc(var(--cell) * .75)}
+  .ctas{margin-top:calc(var(--cell) * 1.25);gap:12px}
+  .ctas .btn{padding:0 18px}
+  .hero-status{margin-top:calc(var(--cell) * .75)}
+  .hero-side{margin-top:calc(var(--cell) * 1)}
+  .today{padding:14px 16px 18px}
+  .t-rows li{grid-template-columns:2.7em 12px minmax(0,1fr) auto;column-gap:9px;font-size:19px}
+  .t-rows .sq{width:12px;height:12px}
+  .t-sub small{font-size:15px}
+  .t-sum{font-size:28px}
+  .t-diff{font-size:15px}
+  .t-label{font-size:19px}
+  .feats{grid-template-columns:minmax(0,1fr);row-gap:calc(var(--cell) * 2.5)}
+  .fig{height:auto;min-height:calc(var(--cell) * 7)}
+  .fig-grass,.fig-streak{height:calc(var(--cell) * 7)}
+  .tm-time,.st-count b{font-size:42px}
+  .renraku thead{display:none}
+  .renraku table,.renraku tbody,.renraku tr,.renraku th,.renraku td{display:block;width:auto}
+  .renraku tr{padding:12px 16px;border-bottom:1.5px solid var(--rule)}
+  .renraku tr:last-child{border-bottom:0}
+  .renraku th,.renraku td,.renraku tbody th{padding:0;border:0;width:auto}
+  .renraku td.init{margin-top:2px;font-weight:400;color:var(--muted)}
+  .renraku td.init::before{content:"はじめは：";}
+  .renraku td.init.none{display:none}
+  .rk-head{padding:10px 16px}
+  .cover-in{padding-top:calc(var(--cell) * 3)}
+  .cv-top .btn{width:100%}
+  .nl-name b{font-size:40px}
+  .calm{margin-left:0}
+  .spec dl div{grid-template-columns:1fr;gap:2px}
+  .t-total{grid-template-columns:auto 1fr;grid-template-areas:"label diff" "sum sum";row-gap:0;min-height:0;padding-top:8px}
+  .t-label{grid-area:label}
+  .t-diff{grid-area:diff}
+  .t-diff b{display:inline;margin-left:.4em}
+  .t-sum{grid-area:sum;margin:22px 0 26px}
+}
+
+/* ---------- 動きを止める ---------- */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+html.calm{scroll-behavior:auto}
+html.calm *,html.calm *::before,html.calm *::after{transition:none!important;animation:none!important}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">本文へ</a>
+
+<header class="nav" id="nav">
+  <div class="nav-in">
+    <a class="logo" href="#top" aria-label="inchly（いちばん上へ）">
+      <svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#17121f"/><rect x="1" y="10" width="2" height="3" fill="#E5484D"/><rect x="4" y="8" width="2" height="5" fill="#F2C46D"/><rect x="7" y="6" width="2" height="7" fill="#9AB8DB"/><rect x="10" y="4" width="2" height="9" fill="#5B8DEF"/><rect x="13" y="2" width="2" height="11" fill="#9D7BF5"/><rect x="13" y="0" width="2" height="1" fill="#c6f432"/></svg>
+      <span>inchly</span>
+    </a>
+    <nav class="links" aria-label="サイト">
+      <a href="#features">できること</a>
+      <a href="#screens">画面</a>
+      <a href="#how">使い方</a>
+      <a href="#parents">おうちの方へ</a>
+    </nav>
+    <div class="toc">
+      <button type="button" class="btn btn-sm" id="toc-btn" aria-expanded="false" aria-controls="toc-list">もくじ</button>
+      <ul class="toc-list" id="toc-list" hidden>
+        <li><a href="#features">できること</a></li>
+        <li><a href="#screens">画面</a></li>
+        <li><a href="#how">使い方</a></li>
+        <li><a href="#parents">おうちの方へ</a></li>
+      </ul>
+    </div>
+    <a class="btn btn-ink btn-sm" href="#soon">近日公開</a>
+  </div>
+</header>
+
+<main id="main">
+<div class="sheet" id="top">
+
+  <p class="pagehead"><span class="k">日付</span><span class="v hand">10月29日（木）</span></p>
+
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="hero-copy">
+      <h1 id="hero-h">今日の勉強に、<br><span class="hm">花丸<svg viewBox="0 0 386 208" aria-hidden="true" focusable="false"><path d="M107.4 60.4Q120.4 55.8 127.4 53.8Q134.4 51.9 141.8 50.2Q149.2 48.5 156.9 47.3Q164.7 46.1 172.6 45.1Q180.5 44.1 188.5 43.6Q196.5 43.1 204.5 42.9Q212.5 42.7 220.5 42.9Q228.4 43.1 236.2 43.7Q243.9 44.3 251.3 45.3Q258.7 46.4 265.7 47.8Q272.7 49.2 279.3 50.9Q285.8 52.6 291.8 54.7Q297.8 56.7 303.2 59.1Q308.5 61.4 313.0 64.1Q317.4 66.8 321.2 69.7Q325.0 72.6 328.0 75.7Q331.0 78.8 333.1 82.1Q335.3 85.4 336.4 88.8Q337.5 92.2 337.8 95.7Q338.1 99.2 337.6 102.7Q337.0 106.3 335.3 109.8Q333.5 113.3 331.1 116.8Q328.8 120.3 325.4 123.7Q322.0 127.1 317.7 130.3Q313.4 133.5 308.5 136.6Q303.6 139.7 297.9 142.6Q292.3 145.5 285.9 148.1Q279.6 150.7 272.6 153.0Q265.7 155.3 258.3 157.3Q250.9 159.3 243.0 160.9Q235.2 162.6 227.1 163.8Q218.9 165.0 210.7 166.0Q202.4 166.9 194.0 167.4Q185.6 167.8 177.3 167.9Q168.9 167.9 160.7 167.5Q152.5 167.2 144.5 166.5Q136.4 165.8 128.8 164.7Q121.1 163.6 114.0 162.0Q106.8 160.4 100.1 158.5Q93.4 156.7 87.3 154.5Q81.1 152.3 75.7 149.8Q70.2 147.2 65.8 144.3Q61.4 141.4 57.5 138.4Q53.6 135.4 50.8 132.1Q48.0 128.8 45.9 125.3Q43.8 121.9 42.8 118.3Q41.9 114.7 41.8 111.0Q41.7 107.4 42.5 103.7Q43.3 100.0 45.1 96.3Q47.0 92.6 49.9 89.0Q52.8 85.4 56.6 81.9Q60.5 78.4 64.9 75.1Q69.4 71.7 74.8 68.5Q80.3 65.4 86.4 62.5Q92.5 59.6 99.2 56.9Q106.0 54.3 113.3 51.9Q120.6 49.5 128.5 47.6Q136.4 45.6 144.6 44.0Q152.8 42.5 161.3 41.1Q169.7 39.8 168.4 38.8Q167.1 37.8 166.5 37.1Q165.9 36.5 165.4 35.4Q165.0 34.4 164.9 32.9Q164.8 31.4 165.0 29.7Q165.3 27.9 166.0 26.0Q166.7 24.0 167.9 22.0Q169.1 20.0 170.8 18.0Q172.4 16.0 174.6 14.3Q176.7 12.5 179.3 11.0Q181.8 9.5 184.7 8.4Q187.6 7.3 190.7 6.6Q193.8 5.9 196.9 5.8Q200.1 5.6 203.3 5.9Q206.4 6.3 209.5 7.1Q212.5 7.9 215.2 9.1Q217.9 10.4 220.3 12.0Q222.7 13.6 224.6 15.4Q226.5 17.2 228.0 19.2Q229.4 21.1 230.4 23.1Q231.3 25.0 231.8 26.8Q232.3 28.6 232.3 30.2Q232.4 31.8 232.1 33.0Q231.8 34.2 231.2 35.0Q230.6 35.8 230.0 36.2Q229.3 36.5 228.6 36.3Q227.9 36.1 227.3 35.5Q226.8 34.8 226.5 33.8Q226.1 32.7 226.2 31.3Q226.2 29.8 226.7 28.2Q227.1 26.5 228.1 24.7Q229.0 22.9 230.5 21.1Q231.9 19.3 233.8 17.6Q235.8 15.9 238.1 14.5Q240.5 13.1 243.2 12.0Q246.0 10.9 249.0 10.2Q252.0 9.6 255.1 9.4Q258.3 9.2 261.5 9.6Q264.7 9.9 267.7 10.8Q270.8 11.6 273.7 12.9Q276.5 14.2 279.0 15.9Q281.6 17.6 283.7 19.6Q285.8 21.6 287.4 23.7Q289.0 25.9 290.2 28.1Q291.3 30.3 291.9 32.4Q292.5 34.6 292.7 36.5Q292.9 38.4 292.7 40.1Q292.5 41.7 291.9 42.9Q291.4 44.1 290.7 44.9Q290.1 45.6 289.3 45.9Q288.6 46.2 287.9 46.0Q287.2 45.8 286.7 45.2Q286.2 44.6 286.0 43.6Q285.8 42.6 286.0 41.3Q286.2 39.9 286.8 38.4Q287.5 36.9 288.6 35.2Q289.8 33.6 291.5 32.1Q293.2 30.5 295.4 29.2Q297.6 27.9 300.3 26.9Q303.0 25.8 306.0 25.3Q309.0 24.7 312.2 24.7Q315.4 24.7 318.7 25.2Q322.0 25.8 325.3 27.0Q328.5 28.1 331.5 29.8Q334.5 31.6 337.2 33.8Q339.8 36.0 342.0 38.6Q344.2 41.2 345.7 44.1Q347.3 47.0 348.3 50.0Q349.2 52.9 349.6 55.8Q349.9 58.8 349.6 61.4Q349.3 64.1 348.5 66.4Q347.7 68.7 346.5 70.5Q345.3 72.2 343.8 73.4Q342.4 74.6 340.9 75.1Q339.3 75.6 337.9 75.4Q336.6 75.3 335.5 74.5Q334.4 73.8 333.9 72.5Q333.3 71.3 333.4 69.7Q333.4 68.1 334.2 66.5Q335.0 64.8 336.5 63.2Q338.0 61.7 340.1 60.4Q342.3 59.2 345.0 58.5Q347.8 57.8 350.9 57.7Q354.0 57.7 357.3 58.5Q360.7 59.3 363.9 61.0Q367.2 62.6 370.1 65.1Q373.0 67.6 375.4 70.8Q377.8 74.1 379.4 77.8Q381.0 81.6 381.7 85.7Q382.4 89.7 382.1 93.8Q381.8 97.9 380.6 101.8Q379.4 105.6 377.4 108.9Q375.3 112.3 372.7 114.9Q370.1 117.5 367.1 119.2Q364.1 121.0 361.0 121.8Q358.0 122.7 355.1 122.7Q352.2 122.7 349.7 121.9Q347.3 121.2 345.5 120.0Q343.6 118.7 342.5 117.1Q341.4 115.5 341.1 113.9Q340.7 112.3 341.1 110.8Q341.5 109.3 342.6 108.3Q343.7 107.3 345.3 106.8Q346.8 106.4 348.6 106.6Q350.4 106.8 352.3 107.8Q354.2 108.7 355.9 110.4Q357.6 112.0 358.9 114.3Q360.3 116.5 361.1 119.3Q362.0 122.0 362.2 125.2Q362.5 128.3 362.0 131.5Q361.6 134.8 360.5 138.1Q359.4 141.3 357.6 144.4Q355.8 147.4 353.5 150.2Q351.2 152.9 348.4 155.1Q345.6 157.3 342.5 159.0Q339.3 160.7 336.1 161.7Q332.8 162.8 329.6 163.2Q326.3 163.6 323.2 163.4Q320.2 163.3 317.4 162.6Q314.6 161.9 312.3 160.8Q309.9 159.8 308.1 158.4Q306.2 157.0 304.9 155.6Q303.6 154.1 302.9 152.6Q302.1 151.2 301.9 149.9Q301.6 148.6 301.8 147.6Q302.0 146.6 302.6 145.9Q303.1 145.3 303.9 145.1Q304.6 144.8 305.5 145.1Q306.4 145.3 307.3 146.1Q308.2 146.8 309.0 148.1Q309.8 149.3 310.3 151.1Q310.8 152.8 311.0 154.9Q311.1 157.0 310.8 159.4Q310.5 161.8 309.7 164.3Q308.9 166.9 307.5 169.4Q306.1 172.0 304.2 174.4Q302.2 176.9 299.8 179.0Q297.4 181.2 294.6 183.0Q291.7 184.8 288.6 186.1Q285.4 187.4 282.1 188.2Q278.8 189.0 275.4 189.2Q272.0 189.4 268.8 189.0Q265.5 188.6 262.5 187.8Q259.4 186.9 256.8 185.5Q254.1 184.2 251.9 182.6Q249.8 180.9 248.1 179.0Q246.4 177.2 245.4 175.2Q244.3 173.3 243.8 171.5Q243.3 169.6 243.3 168.0Q243.3 166.4 243.8 165.1Q244.2 163.9 245.0 163.1Q245.9 162.3 246.9 162.1Q247.9 161.9 249.0 162.3Q250.0 162.7 251.0 163.7Q251.9 164.7 252.6 166.2Q253.3 167.7 253.5 169.6Q253.8 171.5 253.6 173.7Q253.4 176.0 252.7 178.4Q251.9 180.8 250.6 183.2Q249.3 185.6 247.4 188.0Q245.5 190.3 243.1 192.4Q240.7 194.4 237.9 196.2Q235.0 197.9 231.9 199.1Q228.7 200.3 225.3 201.0Q222.0 201.7 218.6 201.9Q215.1 202.0 211.8 201.6Q208.4 201.2 205.3 200.2Q202.2 199.3 199.4 197.9Q196.6 196.5 194.3 194.8Q191.9 193.1 190.1 191.2Q188.2 189.2 186.9 187.2Q185.6 185.2 184.8 183.2Q184.0 181.2 183.7 179.4Q183.5 177.7 183.6 176.2Q183.8 174.7 184.3 173.6Q184.8 172.5 185.5 171.9Q186.2 171.3 187.0 171.2Q187.8 171.1 188.6 171.5Q189.4 171.8 190.0 172.6Q190.7 173.5 191.1 174.8Q191.5 176.1 191.5 177.8Q191.5 179.5 191.1 181.4Q190.6 183.4 189.7 185.5Q188.7 187.6 187.2 189.7Q185.7 191.8 183.7 193.8Q181.6 195.7 179.1 197.4Q176.6 199.1 173.6 200.5Q170.7 201.8 167.4 202.7Q164.2 203.5 160.7 203.8Q157.3 204.1 153.9 203.8Q150.4 203.6 147.0 202.7Q143.7 201.9 140.6 200.5Q137.5 199.2 134.8 197.4Q132.0 195.6 129.8 193.4Q127.5 191.3 125.8 188.9Q124.1 186.5 123.0 184.1Q121.9 181.7 121.3 179.3Q120.8 177.0 120.8 174.9Q120.8 172.8 121.3 171.0Q121.8 169.3 122.6 168.0Q123.4 166.7 124.5 166.0Q125.5 165.3 126.7 165.2Q127.8 165.1 128.8 165.6Q129.8 166.1 130.6 167.2Q131.3 168.3 131.7 169.8Q132.0 171.3 131.9 173.2Q131.7 175.0 131.0 177.0Q130.3 179.1 129.0 181.2Q127.6 183.2 125.7 185.2Q123.8 187.1 121.4 188.8Q118.9 190.5 116.0 191.8Q113.1 193.1 109.8 193.8Q106.6 194.6 103.1 194.8Q99.6 195.0 96.1 194.6Q92.6 194.2 89.2 193.2Q85.8 192.2 82.6 190.6Q79.5 189.1 76.7 187.0Q73.9 185.0 71.7 182.6Q69.4 180.2 67.7 177.5Q65.9 174.9 64.8 172.2Q63.7 169.5 63.1 166.9Q62.6 164.2 62.6 161.8Q62.6 159.4 63.1 157.4Q63.6 155.4 64.4 153.8Q65.3 152.2 66.3 151.2Q67.4 150.2 68.5 149.7Q69.6 149.3 70.6 149.4Q71.6 149.5 72.5 150.1Q73.3 150.7 73.7 151.7Q74.2 152.7 74.2 154.1Q74.2 155.5 73.7 157.1Q73.1 158.7 72.0 160.4Q70.8 162.1 69.1 163.6Q67.3 165.2 65.0 166.4Q62.6 167.7 59.8 168.6Q57.0 169.4 53.8 169.7Q50.6 170.0 47.2 169.6Q43.8 169.2 40.4 168.2Q37.0 167.1 33.8 165.3Q30.5 163.5 27.7 161.1Q24.8 158.7 22.4 155.7Q20.1 152.7 18.4 149.4Q16.7 146.0 15.7 142.4Q14.8 138.9 14.6 135.3Q14.5 131.8 15.1 128.4Q15.8 125.1 17.1 122.2Q18.4 119.3 20.2 117.0Q22.1 114.7 24.2 113.2Q26.4 111.7 28.7 111.0Q31.0 110.3 33.1 110.3Q35.2 110.4 36.9 111.2Q38.6 112.0 39.7 113.4Q40.8 114.7 41.1 116.4Q41.3 118.1 40.8 119.7Q40.2 121.4 38.8 122.8Q37.4 124.2 35.4 125.1Q33.3 126.0 30.8 126.1Q28.3 126.2 25.6 125.5Q22.9 124.8 20.3 123.2Q17.6 121.7 15.3 119.3Q13.0 116.8 11.2 113.7Q9.5 110.6 8.5 107.0Q7.4 103.5 7.3 99.6Q7.1 95.7 7.8 91.9Q8.5 88.0 10.0 84.3Q11.6 80.7 13.8 77.4Q16.1 74.2 18.9 71.6Q21.7 68.9 24.9 67.0Q28.1 65.1 31.5 63.9Q34.8 62.8 38.1 62.3Q41.4 61.9 44.5 62.2Q47.6 62.5 50.2 63.4Q52.9 64.2 55.0 65.5Q57.1 66.8 58.6 68.4Q60.0 69.9 60.9 71.6Q61.7 73.2 61.9 74.7Q62.0 76.2 61.6 77.5Q61.2 78.7 60.4 79.5Q59.5 80.4 58.3 80.7Q57.1 81.0 55.8 80.7Q54.4 80.4 53.0 79.5Q51.6 78.6 50.3 77.1Q49.1 75.5 48.1 73.5Q47.2 71.4 46.7 68.8Q46.2 66.3 46.3 63.4Q46.3 60.6 47.0 57.5Q47.7 54.5 49.0 51.5Q50.3 48.4 52.3 45.5Q54.3 42.7 56.8 40.1Q59.3 37.5 62.3 35.4Q65.3 33.3 68.7 31.8Q72.0 30.2 75.6 29.3Q79.1 28.3 82.7 28.1Q86.2 27.8 89.7 28.1Q93.1 28.5 96.2 29.4Q99.4 30.3 102.1 31.7Q104.8 33.2 106.9 34.9Q109.1 36.7 110.7 38.6Q112.2 40.6 113.2 42.6Q114.1 44.6 114.4 46.4Q114.8 48.3 114.5 49.9Q114.3 51.5 113.6 52.6Q112.9 53.8 111.8 54.5Q110.8 55.1 109.5 55.1Q108.3 55.1 107.0 54.5Q105.8 53.8 104.7 52.6Q103.6 51.4 102.8 49.6Q102.1 47.8 101.7 45.6Q101.4 43.4 101.6 40.9Q101.7 38.4 102.5 35.7Q103.3 33.0 104.7 30.3Q106.1 27.6 108.1 25.1Q110.1 22.5 112.6 20.2Q115.2 18.0 118.2 16.1Q121.2 14.3 124.5 13.0Q127.8 11.7 131.3 10.9Q134.8 10.2 138.3 10.0Q141.9 9.9 145.3 10.3Q148.7 10.8 151.9 11.7Q155.1 12.7 157.9 14.2Q160.7 15.6 163.0 17.4Q165.3 19.2 167.0 21.2Q168.8 23.1 170.0 25.2Q171.2 27.2 171.8 29.2Q172.5 31.2 172.6 32.9Q172.7 34.6 172.4 36.0Q172.0 37.4 171.4 38.3Q170.7 39.3 169.8 39.7Q169.0 40.1 168.0 40.0Q167.1 39.9 166.2 39.3Q165.4 38.6 164.7 37.5Q164.0 36.3 163.7 34.7Q163.4 33.1 163.5 31.2Q163.6 29.3 164.2 27.1Q164.8 25.0 165.9 22.7Q167.0 20.5 168.7 18.3Q170.4 16.2 172.6 14.2Q174.8 12.2 177.4 10.5L180.1 8.9"/></svg></span>を。</h1>
+      <p class="hero-sub">時間をはかって、✓ で記録して、友だちと見せ合える。やった日はマスが緑に、続けた日数は炎で数える。iPhone の勉強アプリです。</p>
+      <div class="ctas">
+        <a class="btn btn-lime" href="#screens">画面を見てみる <span aria-hidden="true">↓</span></a>
+        <a class="btn btn-ghost" href="#how">使い方 <span aria-hidden="true">↓</span></a>
+      </div>
+      <p class="hero-status">iPhone 向けに、近日公開。<a href="#parents">おうちの方へ <span aria-hidden="true">→</span></a></p>
+    </div>
+
+    <div class="hero-side">
+      <div class="today" id="today" role="group" aria-labelledby="today-h">
+        <div class="t-head">
+          <p class="t-title hand" id="today-h">今日の勉強</p>
+          <p class="t-goal hand">目標 3時間</p>
+        </div>
+        <ol class="t-rows">
+          <li><span class="t-time">6:30</span><i class="sq" style="--c:var(--s-ja)" aria-hidden="true"></i><span class="t-sub">国語<small>古文単語</small></span><span class="t-min"><span class="ring s">30分<svg viewBox="0 0 120 64" aria-hidden="true" focusable="false"><path d="M70.1 8.6Q75.5 8.8 78.1 9.1Q80.8 9.3 83.2 9.7Q85.7 10.1 88.1 10.7Q90.4 11.2 92.6 11.8Q94.7 12.5 96.6 13.3Q98.5 14.1 100.2 15.0Q102.0 15.9 103.3 16.9Q104.7 17.9 105.9 19.0Q107.0 20.1 108.0 21.3Q108.9 22.4 109.4 23.7Q109.9 24.9 110.2 26.2Q110.4 27.5 110.3 28.8Q110.3 30.1 109.9 31.4Q109.5 32.8 108.9 34.1Q108.2 35.4 107.2 36.7Q106.1 38.0 104.9 39.3Q103.6 40.6 102.0 41.8Q100.5 43.0 98.6 44.2Q96.8 45.3 94.7 46.4Q92.7 47.5 90.4 48.5Q88.2 49.5 85.8 50.3Q83.3 51.2 80.7 51.9Q78.1 52.7 75.4 53.3Q72.7 53.9 69.8 54.4Q67.0 54.9 64.2 55.3Q61.4 55.6 58.5 55.8Q55.6 56.0 52.8 56.1Q49.9 56.1 47.1 56.0Q44.3 56.0 41.6 55.7Q38.9 55.5 36.4 55.0Q33.8 54.6 31.4 54.1Q29.0 53.6 26.8 52.9Q24.6 52.2 22.6 51.4Q20.6 50.6 18.8 49.7Q17.0 48.7 15.6 47.7Q14.1 46.6 12.9 45.5Q11.7 44.4 10.7 43.2Q9.7 42.0 9.2 40.7Q8.7 39.5 8.4 38.1Q8.1 36.8 8.1 35.5Q8.1 34.1 8.4 32.8Q8.8 31.4 9.5 30.0Q10.2 28.7 11.2 27.3Q12.2 26.0 13.6 24.6Q15.0 23.3 16.5 22.1Q18.1 20.8 19.9 19.6Q21.8 18.4 23.9 17.3Q26.0 16.2 28.3 15.2Q30.6 14.2 33.2 13.3Q35.7 12.4 38.3 11.6Q41.0 10.8 43.8 10.1Q46.6 9.5 49.4 9.0Q52.3 8.5 55.3 8.1Q58.2 7.7 61.1 7.5Q64.1 7.3 67.0 7.2Q69.9 7.2 72.8 7.3Q75.7 7.3 78.5 7.6Q81.3 7.8 83.9 8.2Q86.6 8.6 89.1 9.2Q91.5 9.7 93.9 10.4Q96.2 11.1 98.3 11.9Q100.3 12.8 102.1 13.7Q103.9 14.7 105.5 15.7L107.0 16.8"/></svg></span><span class="sr">（記録ずみ）</span></span></li>
+          <li><span class="t-time">17:00</span><i class="sq" style="--c:var(--s-en)" aria-hidden="true"></i><span class="t-sub">英語<small>長文読解</small></span><span class="t-min"><span class="ring l">1時間35分<svg viewBox="0 0 200 64" aria-hidden="true" focusable="false"><path d="M121.2 7.7Q130.8 8.0 135.4 8.3Q140.0 8.6 144.4 9.1Q148.8 9.5 153.0 10.1Q157.1 10.7 160.9 11.4Q164.6 12.1 168.0 12.9Q171.3 13.8 174.3 14.8Q177.2 15.7 179.7 16.8Q182.1 17.9 184.0 19.0Q185.9 20.2 187.3 21.4Q188.7 22.7 189.7 24.0Q190.7 25.3 190.8 26.6Q191.0 28.0 190.8 29.3Q190.5 30.7 189.7 32.1Q189.0 33.5 187.5 34.8Q185.9 36.2 184.1 37.6Q182.2 38.9 179.8 40.2Q177.3 41.5 174.4 42.8Q171.6 44.1 168.1 45.2Q164.6 46.4 160.8 47.5Q157.1 48.6 152.9 49.6Q148.7 50.6 144.2 51.5Q139.7 52.4 135.0 53.1Q130.2 53.8 125.3 54.5Q120.4 55.1 115.3 55.6Q110.2 56.1 105.1 56.4Q99.9 56.7 94.8 56.9Q89.6 57.1 84.5 57.1Q79.4 57.1 74.4 57.0Q69.4 56.8 64.6 56.5Q59.8 56.2 55.2 55.8Q50.6 55.4 46.3 54.8Q42.0 54.2 38.1 53.5Q34.3 52.7 30.7 51.9Q27.2 51.0 24.1 50.0Q21.1 49.0 18.4 48.0Q15.8 46.9 13.9 45.7Q12.0 44.5 10.3 43.2Q8.7 42.0 7.8 40.6Q6.9 39.3 6.6 37.9Q6.3 36.5 6.4 35.1Q6.4 33.7 7.3 32.3Q8.2 30.9 9.5 29.4Q10.9 28.0 12.8 26.6Q14.8 25.2 17.3 23.9Q19.7 22.5 22.6 21.2Q25.5 19.9 29.0 18.7Q32.5 17.4 36.3 16.3Q40.1 15.1 44.4 14.1Q48.6 13.1 53.3 12.1Q57.9 11.2 62.7 10.4Q67.6 9.6 72.6 9.0Q77.7 8.3 82.9 7.8Q88.1 7.3 93.4 6.9Q98.7 6.6 104.0 6.4Q109.4 6.2 114.6 6.2Q119.9 6.2 125.0 6.3Q130.2 6.4 135.2 6.6Q140.2 6.9 144.9 7.4Q149.6 7.8 154.1 8.4Q158.6 8.9 162.7 9.7Q166.7 10.5 170.4 11.3Q174.0 12.2 177.2 13.2L180.5 14.2"/></svg></span><span class="sr">（記録ずみ）</span></span></li>
+          <li class="t-now"><span class="t-time">19:00</span><i class="sq" style="--c:var(--s-ma)" aria-hidden="true"></i><span class="t-sub">数学<small>青チャート</small></span><span class="t-min"><span class="ring s draw">40分<svg viewBox="0 0 120 64" aria-hidden="true" focusable="false"><path pathLength="1" d="M70.1 8.6Q75.5 8.8 78.1 9.1Q80.8 9.3 83.2 9.7Q85.7 10.1 88.1 10.7Q90.4 11.2 92.6 11.8Q94.7 12.5 96.6 13.3Q98.5 14.1 100.2 15.0Q102.0 15.9 103.3 16.9Q104.7 17.9 105.9 19.0Q107.0 20.1 108.0 21.3Q108.9 22.4 109.4 23.7Q109.9 24.9 110.2 26.2Q110.4 27.5 110.3 28.8Q110.3 30.1 109.9 31.4Q109.5 32.8 108.9 34.1Q108.2 35.4 107.2 36.7Q106.1 38.0 104.9 39.3Q103.6 40.6 102.0 41.8Q100.5 43.0 98.6 44.2Q96.8 45.3 94.7 46.4Q92.7 47.5 90.4 48.5Q88.2 49.5 85.8 50.3Q83.3 51.2 80.7 51.9Q78.1 52.7 75.4 53.3Q72.7 53.9 69.8 54.4Q67.0 54.9 64.2 55.3Q61.4 55.6 58.5 55.8Q55.6 56.0 52.8 56.1Q49.9 56.1 47.1 56.0Q44.3 56.0 41.6 55.7Q38.9 55.5 36.4 55.0Q33.8 54.6 31.4 54.1Q29.0 53.6 26.8 52.9Q24.6 52.2 22.6 51.4Q20.6 50.6 18.8 49.7Q17.0 48.7 15.6 47.7Q14.1 46.6 12.9 45.5Q11.7 44.4 10.7 43.2Q9.7 42.0 9.2 40.7Q8.7 39.5 8.4 38.1Q8.1 36.8 8.1 35.5Q8.1 34.1 8.4 32.8Q8.8 31.4 9.5 30.0Q10.2 28.7 11.2 27.3Q12.2 26.0 13.6 24.6Q15.0 23.3 16.5 22.1Q18.1 20.8 19.9 19.6Q21.8 18.4 23.9 17.3Q26.0 16.2 28.3 15.2Q30.6 14.2 33.2 13.3Q35.7 12.4 38.3 11.6Q41.0 10.8 43.8 10.1Q46.6 9.5 49.4 9.0Q52.3 8.5 55.3 8.1Q58.2 7.7 61.1 7.5Q64.1 7.3 67.0 7.2Q69.9 7.2 72.8 7.3Q75.7 7.3 78.5 7.6Q81.3 7.8 83.9 8.2Q86.6 8.6 89.1 9.2Q91.5 9.7 93.9 10.4Q96.2 11.1 98.3 11.9Q100.3 12.8 102.1 13.7Q103.9 14.7 105.5 15.7L107.0 16.8"/></svg></span></span></li>
+        </ol>
+        <div class="t-total">
+          <span class="t-label hand">合計</span>
+          <span class="t-sum draw"><span id="sum">2時間05分</span><svg viewBox="0 0 410 158" aria-hidden="true" focusable="false"><path pathLength="1" d="M115.1 55.5Q129.0 52.3 136.6 51.0Q144.1 49.7 152.0 48.4Q159.9 47.2 168.1 46.2Q176.4 45.2 184.9 44.5Q193.4 43.7 201.9 43.2Q210.5 42.6 219.0 42.3Q227.5 42.0 235.9 41.9Q244.3 41.8 252.6 41.9Q260.9 42.0 268.7 42.5Q276.4 42.9 283.9 43.5Q291.3 44.1 298.3 45.0Q305.3 45.8 311.6 46.8Q317.9 47.9 323.4 49.2Q328.8 50.5 333.8 51.9Q338.8 53.3 342.7 54.9Q346.6 56.6 349.6 58.3Q352.7 60.1 355.0 62.0Q357.3 63.9 358.2 65.9Q359.1 67.9 359.6 70.0Q360.1 72.0 359.1 74.1Q358.1 76.3 356.4 78.4Q354.7 80.6 351.9 82.7Q349.2 84.9 345.5 87.0Q341.8 89.1 337.2 91.2Q332.6 93.2 327.3 95.2Q322.1 97.2 315.8 99.0Q309.5 100.9 302.6 102.6Q295.8 104.3 288.3 105.9Q280.8 107.4 272.9 108.8Q264.9 110.2 256.6 111.5Q248.3 112.7 239.6 113.6Q230.9 114.6 222.1 115.4Q213.2 116.1 204.3 116.7Q195.3 117.3 186.4 117.5Q177.5 117.7 168.7 117.8Q159.9 117.9 151.5 117.6Q143.1 117.4 134.9 116.9Q126.8 116.5 119.2 115.8Q111.6 115.1 104.4 114.2Q97.2 113.3 90.8 112.1Q84.5 110.9 78.9 109.5Q73.3 108.2 68.4 106.6Q63.5 105.1 59.7 103.3Q55.9 101.6 52.9 99.7Q49.9 97.8 47.9 95.8Q46.0 93.8 45.0 91.7Q43.9 89.6 43.8 87.5Q43.6 85.3 44.8 83.1Q46.1 80.8 48.2 78.6Q50.4 76.4 53.3 74.1Q56.3 71.9 60.4 69.7Q64.6 67.5 69.5 65.4Q74.4 63.3 80.3 61.2Q86.2 59.2 92.6 57.3Q99.0 55.4 106.4 53.6Q113.8 51.9 121.7 50.3Q129.5 48.7 137.9 47.2Q146.3 45.8 155.0 44.6Q163.8 43.4 173.0 42.4Q182.1 41.5 180.1 41.7Q178.2 42.0 177.1 41.2Q176.0 40.4 175.1 39.0Q174.3 37.7 173.8 35.9Q173.3 34.2 173.3 32.1Q173.4 30.0 173.9 27.7Q174.5 25.4 175.6 23.0Q176.7 20.6 178.4 18.3Q180.1 16.1 182.3 14.0Q184.5 12.0 187.2 10.3Q189.9 8.6 192.9 7.3Q195.9 6.0 199.2 5.3Q202.4 4.6 205.8 4.4Q209.1 4.2 212.4 4.6Q215.7 4.9 218.8 5.8Q221.9 6.7 224.7 8.1Q227.5 9.4 229.9 11.1Q232.3 12.9 234.2 14.8Q236.1 16.8 237.5 18.9Q238.8 21.0 239.7 23.0Q240.5 25.1 240.8 27.0Q241.2 28.9 241.1 30.6Q240.9 32.2 240.4 33.5Q239.9 34.8 239.2 35.6Q238.5 36.5 237.6 36.8Q236.7 37.1 235.8 37.0Q234.9 36.9 234.1 36.2Q233.3 35.6 232.7 34.5Q232.1 33.4 231.8 31.9Q231.6 30.4 231.7 28.7Q231.9 26.9 232.5 24.9Q233.2 22.9 234.3 20.9Q235.5 18.9 237.2 16.9Q238.8 14.9 241.0 13.2Q243.2 11.4 245.7 10.0Q248.3 8.6 251.2 7.5Q254.1 6.5 257.3 5.9Q260.4 5.4 263.6 5.4Q266.8 5.3 270.0 5.9Q273.1 6.4 276.1 7.4Q279.1 8.4 281.9 9.8Q284.6 11.3 286.9 13.1Q289.2 14.9 291.0 16.9Q292.9 19.0 294.2 21.2Q295.5 23.4 296.3 25.5Q297.1 27.7 297.4 29.7Q297.7 31.7 297.5 33.5Q297.3 35.2 296.8 36.6Q296.2 38.0 295.4 38.9Q294.6 39.9 293.6 40.3Q292.7 40.7 291.7 40.6Q290.8 40.4 289.9 39.8Q289.1 39.1 288.5 38.0Q288.0 36.9 287.8 35.4Q287.6 33.9 287.9 32.2Q288.1 30.4 288.9 28.5Q289.7 26.6 291.0 24.7Q292.3 22.8 294.2 21.0Q296.0 19.2 298.3 17.7Q300.6 16.1 303.3 15.0Q306.0 13.8 309.0 13.1Q312.0 12.4 315.2 12.2Q318.4 12.0 321.6 12.3Q324.8 12.7 327.9 13.6Q331.0 14.4 333.9 15.8Q336.7 17.2 339.3 19.0Q341.8 20.8 343.9 22.9Q345.9 25.0 347.5 27.3Q349.1 29.6 350.1 32.0Q351.2 34.3 351.7 36.6Q352.2 38.9 352.2 41.0Q352.2 43.1 351.8 44.9Q351.3 46.6 350.6 48.0Q349.9 49.3 348.9 50.1Q348.0 51.0 347.0 51.3Q345.9 51.6 345.0 51.4Q344.1 51.2 343.3 50.5Q342.6 49.9 342.1 48.8Q341.7 47.7 341.7 46.2Q341.7 44.8 342.2 43.1Q342.7 41.5 343.8 39.7Q344.9 38.0 346.5 36.4Q348.2 34.7 350.4 33.3Q352.6 31.9 355.3 30.9Q358.0 29.9 361.1 29.5Q364.2 29.0 367.5 29.2Q370.8 29.4 374.1 30.2Q377.4 31.1 380.6 32.7Q383.8 34.3 386.7 36.6Q389.5 38.8 391.8 41.7Q394.1 44.6 395.7 47.9Q397.3 51.2 398.0 54.8Q398.8 58.3 398.5 61.9Q398.3 65.4 397.2 68.7Q396.0 71.9 394.0 74.5Q392.0 77.1 389.3 78.9Q386.7 80.6 383.8 81.2Q380.9 81.8 378.2 81.2Q375.5 80.7 373.4 79.2Q371.3 77.7 370.3 75.6Q369.2 73.5 369.2 71.3Q369.2 69.1 370.2 67.3Q371.2 65.4 372.9 64.2Q374.7 63.0 376.9 62.7Q379.1 62.4 381.4 62.9Q383.7 63.5 385.9 65.0Q388.0 66.4 389.8 68.6Q391.6 70.8 392.7 73.7Q393.9 76.5 394.3 79.7Q394.8 82.9 394.5 86.4Q394.1 89.8 393.0 93.2Q391.9 96.6 390.0 99.8Q388.1 102.9 385.6 105.7Q383.1 108.5 380.1 110.7Q377.0 112.9 373.6 114.5Q370.2 116.1 366.7 116.9Q363.1 117.8 359.6 117.9Q356.0 118.1 352.7 117.5Q349.3 117.0 346.3 115.9Q343.4 114.7 340.9 113.1Q338.4 111.5 336.6 109.6Q334.7 107.6 333.5 105.6Q332.3 103.5 331.7 101.4Q331.2 99.4 331.3 97.5Q331.4 95.6 332.1 94.1Q332.7 92.6 333.8 91.6Q334.9 90.6 336.4 90.2Q337.8 89.8 339.3 90.1Q340.8 90.3 342.3 91.3Q343.8 92.2 345.1 93.7Q346.3 95.3 347.2 97.4Q348.1 99.4 348.5 102.0Q348.9 104.5 348.7 107.3Q348.5 110.1 347.6 113.0Q346.7 116.0 345.2 118.9Q343.7 121.8 341.5 124.5Q339.4 127.2 336.7 129.5Q333.9 131.9 330.8 133.7Q327.6 135.5 324.1 136.8Q320.6 138.1 317.0 138.7Q313.3 139.3 309.7 139.3Q306.0 139.2 302.5 138.6Q299.1 137.9 295.9 136.6Q292.8 135.4 290.1 133.6Q287.4 131.9 285.2 129.8Q283.1 127.7 281.6 125.5Q280.1 123.2 279.2 120.9Q278.4 118.7 278.1 116.5Q277.9 114.4 278.3 112.5Q278.6 110.7 279.5 109.2Q280.3 107.8 281.5 106.9Q282.7 106.0 284.1 105.8Q285.5 105.6 286.9 106.0Q288.3 106.5 289.6 107.6Q290.8 108.6 291.8 110.3Q292.7 111.9 293.2 114.0Q293.8 116.0 293.7 118.4Q293.7 120.9 293.1 123.4Q292.5 126.0 291.3 128.6Q290.1 131.2 288.3 133.7Q286.4 136.2 284.1 138.4Q281.7 140.6 278.9 142.4Q276.1 144.2 273.0 145.6Q269.8 146.9 266.5 147.7Q263.1 148.4 259.7 148.6Q256.3 148.8 253.0 148.4Q249.7 148.0 246.6 147.1Q243.5 146.2 240.7 144.9Q238.0 143.5 235.7 141.8Q233.4 140.1 231.6 138.2Q229.8 136.3 228.5 134.3Q227.3 132.3 226.6 130.3Q225.8 128.4 225.6 126.6Q225.4 124.9 225.6 123.4Q225.8 121.9 226.4 120.9Q226.9 119.8 227.7 119.2Q228.5 118.6 229.3 118.5Q230.2 118.3 231.1 118.6Q232.0 118.9 232.7 119.7Q233.5 120.4 234.1 121.7Q234.6 122.9 234.9 124.5Q235.1 126.1 234.9 128.1Q234.7 130.0 234.0 132.1Q233.3 134.2 232.1 136.4Q230.9 138.5 229.2 140.6Q227.5 142.7 225.3 144.6Q223.1 146.4 220.4 148.0Q217.8 149.5 214.8 150.7Q211.9 151.8 208.7 152.5Q205.5 153.1 202.2 153.2Q198.9 153.3 195.7 152.9Q192.5 152.4 189.4 151.5Q186.4 150.5 183.6 149.1Q180.9 147.7 178.5 145.9Q176.2 144.1 174.4 142.1Q172.5 140.1 171.2 137.9Q169.9 135.7 169.1 133.6Q168.4 131.4 168.2 129.4Q168.0 127.4 168.2 125.7Q168.5 124.0 169.1 122.7Q169.8 121.4 170.8 120.6Q171.7 119.7 172.8 119.4Q173.9 119.2 175.0 119.5Q176.1 119.8 177.0 120.7Q177.9 121.6 178.6 123.0Q179.2 124.4 179.4 126.1Q179.6 127.9 179.4 129.9Q179.1 131.9 178.3 134.1Q177.5 136.3 176.1 138.4Q174.7 140.6 172.8 142.6Q170.9 144.6 168.5 146.4Q166.1 148.1 163.3 149.5Q160.5 150.9 157.4 151.8Q154.3 152.7 151.0 153.1Q147.8 153.4 144.5 153.3Q141.2 153.1 138.0 152.4Q134.8 151.6 131.8 150.4Q128.9 149.2 126.3 147.6Q123.7 145.9 121.5 144.0Q119.3 142.0 117.7 139.9Q116.0 137.7 114.9 135.5Q113.8 133.3 113.2 131.2Q112.6 129.0 112.5 127.1Q112.4 125.2 112.7 123.5Q113.0 121.9 113.7 120.7Q114.3 119.5 115.2 118.8Q116.0 118.1 116.9 117.9Q117.9 117.6 118.8 117.9Q119.7 118.2 120.4 118.9Q121.2 119.6 121.6 120.8Q122.1 122.0 122.2 123.6Q122.3 125.1 121.9 126.9Q121.5 128.7 120.6 130.6Q119.7 132.5 118.3 134.5Q116.9 136.4 114.9 138.1Q112.9 139.9 110.5 141.4Q108.1 142.9 105.3 144.0Q102.4 145.1 99.3 145.8Q96.2 146.4 93.0 146.5Q89.7 146.6 86.4 146.1Q83.1 145.6 80.0 144.6Q76.8 143.5 73.9 142.0Q71.0 140.5 68.5 138.5Q66.0 136.5 64.0 134.2Q62.0 132.0 60.5 129.5Q59.0 127.0 58.1 124.5Q57.2 122.0 56.9 119.5Q56.5 117.1 56.8 115.0Q57.0 112.8 57.6 111.0Q58.2 109.2 59.2 107.9Q60.2 106.6 61.4 105.8Q62.6 105.0 63.8 104.9Q65.0 104.7 66.1 105.1Q67.2 105.6 68.0 106.6Q68.8 107.6 69.2 109.0Q69.6 110.4 69.5 112.1Q69.3 113.8 68.6 115.7Q67.8 117.6 66.5 119.4Q65.1 121.2 63.2 122.9Q61.2 124.5 58.7 125.8Q56.2 127.2 53.3 128.0Q50.4 128.8 47.1 129.0Q43.9 129.2 40.6 128.8Q37.2 128.3 33.9 127.1Q30.6 126.0 27.6 124.1Q24.6 122.2 22.0 119.7Q19.3 117.3 17.4 114.3Q15.4 111.3 14.1 108.0Q12.9 104.7 12.5 101.2Q12.1 97.8 12.6 94.5Q13.1 91.2 14.5 88.3Q15.8 85.4 17.9 83.2Q19.9 81.0 22.4 79.8Q24.9 78.5 27.4 78.2Q30.0 77.9 32.2 78.7Q34.5 79.4 36.0 80.8Q37.5 82.2 38.1 84.0Q38.7 85.8 38.4 87.5Q38.2 89.2 37.1 90.5Q36.1 91.9 34.5 92.6Q32.9 93.3 31.0 93.3Q29.1 93.2 27.2 92.4Q25.2 91.5 23.5 90.0Q21.8 88.4 20.4 86.2Q19.1 84.0 18.3 81.3Q17.5 78.6 17.4 75.5Q17.3 72.5 17.9 69.4Q18.5 66.3 19.7 63.2Q21.0 60.1 23.0 57.3Q24.9 54.4 27.4 52.0Q29.9 49.6 32.8 47.7Q35.7 45.7 39.0 44.4Q42.2 43.1 45.5 42.5Q48.8 41.8 52.1 41.8Q55.4 41.8 58.4 42.4Q61.5 43.0 64.1 44.1Q66.8 45.2 69.0 46.7Q71.2 48.2 72.9 50.0Q74.5 51.8 75.6 53.7Q76.6 55.5 77.0 57.4Q77.4 59.2 77.3 60.8Q77.1 62.4 76.5 63.6Q75.8 64.9 74.8 65.6Q73.7 66.4 72.4 66.6Q71.2 66.7 69.8 66.3Q68.4 65.9 67.2 64.8Q65.9 63.7 64.9 62.1Q63.9 60.5 63.2 58.4Q62.6 56.3 62.5 53.8Q62.3 51.4 62.7 48.7Q63.2 46.0 64.2 43.2Q65.3 40.4 66.9 37.7Q68.6 35.0 70.9 32.5Q73.1 30.0 75.9 27.9Q78.6 25.8 81.8 24.2Q84.9 22.6 88.3 21.5Q91.8 20.5 95.3 20.1Q98.8 19.6 102.3 19.8Q105.8 20.0 109.1 20.8Q112.3 21.6 115.3 22.9Q118.2 24.3 120.7 26.0Q123.2 27.7 125.1 29.8Q127.0 31.8 128.3 33.9Q129.7 36.1 130.4 38.3Q131.0 40.4 131.2 42.4Q131.3 44.4 130.8 46.0Q130.4 47.7 129.5 48.9Q128.7 50.1 127.5 50.8Q126.3 51.5 125.0 51.6Q123.7 51.6 122.3 51.1Q121.0 50.5 119.8 49.4Q118.7 48.2 117.8 46.5Q117.0 44.8 116.5 42.7Q116.1 40.6 116.2 38.1Q116.3 35.7 117.0 33.0Q117.7 30.4 119.1 27.8Q120.4 25.1 122.3 22.6Q124.3 20.1 126.8 17.9Q129.3 15.7 132.2 13.8Q135.2 12.0 138.5 10.7Q141.8 9.4 145.3 8.7Q148.8 8.0 152.4 7.9Q156.0 7.8 159.4 8.4Q162.9 8.9 166.1 10.0Q169.4 11.1 172.2 12.7Q175.1 14.3 177.4 16.2Q179.8 18.2 181.6 20.4Q183.3 22.6 184.5 24.9Q185.7 27.2 186.3 29.4Q186.8 31.7 186.8 33.7Q186.8 35.7 186.3 37.4Q185.8 39.0 184.9 40.2Q184.0 41.5 182.8 42.1Q181.7 42.8 180.4 42.8Q179.1 42.8 177.9 42.3Q176.6 41.7 175.6 40.5Q174.6 39.4 173.9 37.7Q173.2 36.1 173.0 34.0Q172.7 32.0 173.0 29.7Q173.3 27.4 174.2 24.9Q175.1 22.5 176.6 20.1Q178.1 17.7 180.1 15.5Q182.1 13.2 184.7 11.3Q187.2 9.4 190.2 7.9L193.1 6.4"/></svg></span>
+          <span class="t-diff hand" id="t-diff" aria-hidden="true">昨日より<b>▲1:17</b></span>
+        </div>
+        <div class="t-act">
+          <button type="button" class="btn btn-ink" id="rec" aria-describedby="rec-hint">✓ 記録する</button>
+          <p class="t-hint" id="rec-hint">押すと、数学の40分に丸がつく。</p>
+        </div>
+        <div class="t-week">
+          <span class="k">今週</span>
+          <ol aria-label="今週の勉強した日">
+            <li data-l="3"><i></i><span>月</span></li>
+            <li data-l="2"><i></i><span>火</span></li>
+            <li data-l="4"><i></i><span>水</span></li>
+            <li data-l="2" class="is-today" id="wk-today"><i></i><span>木</span></li>
+            <li data-l="0"><i></i><span>金</span></li>
+            <li data-l="0"><i></i><span>土</span></li>
+            <li data-l="0"><i></i><span>日</span></li>
+          </ol>
+        </div>
+        <p class="sr" role="status" id="rec-status"></p>
+      </div>
+      <p class="note">ノートの中身は見本です。</p>
+      <inch-pal kind="penta" do="sit" on="#today" edge="box" at=".1"></inch-pal>
+    </div>
+  </section>
+
+  <section class="sec" id="features" aria-labelledby="features-h">
+    <p class="tab">できること</p>
+    <h2 id="features-h">予定から、<br>続けた日数まで。</h2>
+    <p class="sec-lead">時間割、タイマー、記録、連続記録、バッジ、友だち。勉強の前と、とちゅうと、終わったあとで使う。</p>
+
+    <div class="feats">
+      <article class="feat" aria-labelledby="f-plan-h">
+        <div class="fig" data-snap>
+          <ol class="route" aria-label="時間割の見本">
+            <li style="--c:var(--s-ja)"><b>6:30</b><i aria-hidden="true"></i><span>国語<small>古文単語</small></span></li>
+            <li style="--c:var(--s-en)"><b>17:00</b><i aria-hidden="true"></i><span>英語<small>長文読解</small></span></li>
+            <li style="--c:var(--s-ma)"><b>19:00</b><i aria-hidden="true"></i><span>数学<small>青チャート</small></span></li>
+          </ol>
+          <p class="deadline"><span class="k">締切</span><span>第4回 記述模試</span><b>あと10日</b></p>
+        </div>
+        <h3 id="f-plan-h">時間割</h3>
+        <p>1日の予定を、1本の線にならべる。時間が来たら、お知らせが届く。締切まで、あと何日かも分かる。</p>
+      </article>
+
+      <article class="feat" aria-labelledby="f-timer-h">
+        <div class="fig" data-snap>
+          <p class="tm-sub"><i class="sq" style="--c:var(--s-ja)" aria-hidden="true"></i>国語　古文単語</p>
+          <p class="tm-time" aria-label="39分59秒">39:59</p>
+          <div class="tm-bar" aria-hidden="true"><i></i></div>
+          <p class="tm-plan"><span>勉強中</span><span>予定 1時間</span></p>
+        </div>
+        <h3 id="f-timer-h">タイマー</h3>
+        <p>押したら、もう始まっている。予定の時間をすぎても、止めるまではかる。</p>
+      </article>
+
+      <article class="feat" aria-labelledby="f-record-h">
+        <div class="fig fig-grass" data-snap>
+          <div class="grass" id="grass" role="img" aria-label="勉強した日のマスの見本。勉強した日は緑で、多い日ほど濃い。いちばん右の列が今週。"></div>
+          <inch-pal kind="mebu" do="sit" on="#grass" edge="box" at=".86"></inch-pal>
+        </div>
+        <h3 id="f-record-h">記録</h3>
+        <p>✓ を押すと、今日の記録になる。勉強した日はマスが緑に、たくさんやった日ほど濃くなる。</p>
+      </article>
+
+      <article class="feat" aria-labelledby="f-streak-h">
+        <div class="fig fig-streak" data-snap>
+          <div class="streak">
+            <div class="st-days" id="st-days" aria-label="今週の連続記録。月曜から木曜まで達成。">
+              <span class="on"><i></i>月</span><span class="on"><i></i>火</span><span class="on"><i></i>水</span><span class="on is-today"><i></i>木</span><span><i></i>金</span><span><i></i>土</span><span><i></i>日</span>
+            </div>
+            <div class="st-count">
+              <b>23</b><span>日連続</span>
+              <p class="st-ticket"><i aria-hidden="true"></i><i aria-hidden="true"></i>休み券 2枚</p>
+            </div>
+          </div>
+          <inch-pal kind="bo" do="sit" on="#st-days" edge="box" at=".5"></inch-pal>
+        </div>
+        <h3 id="f-streak-h">連続記録</h3>
+        <p>続けた日数を、炎といっしょに数える。7日続けると休み券がもらえて、1日休んでも切れない。</p>
+      </article>
+
+      <article class="feat" aria-labelledby="f-badge-h">
+        <div class="fig" data-snap>
+          <figure class="taped">
+            <span class="tape" aria-hidden="true"></span>
+            <img src="img/part-badges.webp" alt="アプリのバッジ：100時間、300時間、500時間、7日連続、21日連続。7 / 11 達成。" width="726" height="252" loading="lazy" decoding="async">
+          </figure>
+        </div>
+        <h3 id="f-badge-h">バッジ</h3>
+        <p>100時間、7日連続。目標に届くと、バッジがもらえる。勉強するほど、レベルも上がる。</p>
+      </article>
+
+      <article class="feat" aria-labelledby="f-friends-h">
+        <div class="fig friends" data-snap>
+          <p class="fr-h"><i aria-hidden="true"></i>いま勉強中</p>
+          <ul>
+            <li><i class="sq" style="--c:var(--s-en)" aria-hidden="true"></i><b>mio</b><span>英語</span><em>4:11</em></li>
+            <li><i class="sq" style="--c:var(--s-ph)" aria-hidden="true"></i><b>kaito</b><span>物理</span><em>3:12</em></li>
+            <li><i class="sq" style="--c:var(--s-ch)" aria-hidden="true"></i><b>ゆなっぴ</b><span>化学</span><em>2:36</em></li>
+            <li><i class="sq" style="--c:var(--s-ma)" aria-hidden="true"></i><b>そら</b><span>数学</span><em>2:00</em></li>
+          </ul>
+        </div>
+        <h3 id="f-friends-h">友だち</h3>
+        <p>いま勉強中の友だちが、科目と時間といっしょに並ぶ。「一緒に始める」で、同じ時間に机に向かえる。</p>
+      </article>
+    </div>
+    <p class="note">名前と数字は見本です。</p>
+  </section>
+
+  <section class="sec" id="screens" aria-labelledby="screens-h">
+    <p class="tab">画面</p>
+    <h2 id="screens-h">開発中の画面を、<br>ノートに貼っておく。</h2>
+    <p class="sec-lead">ホーム、タイマー、時間割、友だち、マイページ。見た目は、スタンダードのほかにサイバーも選べる。名前と数字は見本です。</p>
+    <div class="shots" tabindex="0" role="region" aria-label="アプリの画面">
+      <figure class="shot" style="--r:-1.2deg"><span class="tape" aria-hidden="true"></span><img src="img/home.webp" alt="ホーム画面。勉強した日の草のマス、23日連続の炎、いま勉強中の友だち。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>ホーム</figcaption></figure>
+      <figure class="shot" style="--r:.8deg"><span class="tape" aria-hidden="true"></span><img src="img/timer-live.webp" alt="タイマー画面。国語 古文単語を勉強中で、39:59 をはかっているところ。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>タイマー</figcaption></figure>
+      <figure class="shot" style="--r:-.6deg"><span class="tape" aria-hidden="true"></span><img src="img/study.webp" alt="時間割の画面。木曜日の予定が1本の線にならび、下に締切までの日数。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>時間割</figcaption></figure>
+      <figure class="shot" style="--r:1.1deg"><span class="tape" aria-hidden="true"></span><img src="img/community.webp" alt="友だちの画面。いま勉強中の人が、科目と時間といっしょに並ぶ。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>友だち</figcaption></figure>
+      <figure class="shot" style="--r:-.9deg"><span class="tape" aria-hidden="true"></span><img src="img/me.webp" alt="マイページ。合計の時間、連続日数と、この7日の科目ごとの勉強時間。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>マイページ</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="sec" id="how" aria-labelledby="how-h">
+    <p class="tab">使い方</p>
+    <h2 id="how-h">入れるのは予定だけ。<br>あとは押すだけ。</h2>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-top"><span class="step-n" aria-hidden="true">1</span><div class="mini" aria-hidden="true"><b>17:00</b><i class="sq" style="--c:var(--s-en)"></i>英語<small>長文読解</small></div></div>
+        <h3>時間割に入れる。</h3>
+        <p>日にちと時間と科目を入れておく。次の予定は、画面の下のバーにいつも出る。</p>
+      </li>
+      <li class="step">
+        <div class="step-top"><span class="step-n" aria-hidden="true">2</span><div class="mini mini-bar" aria-hidden="true"><i class="sq" style="--c:var(--s-ja)"></i><b>国語</b><span class="num">39:24</span><small>予定 1時間</small><span class="pz">❚❚</span></div></div>
+        <h3>「勉強を開始」を押す。</h3>
+        <p>押したら、もう始まっている。止めるまで、ちゃんとはかる。</p>
+      </li>
+      <li class="step">
+        <div class="step-top"><span class="step-n" aria-hidden="true">3</span><div class="mini mini-rec" aria-hidden="true"><b>英語 40分</b><span class="memo">ひとこと（140字まで）</span><span class="ok">✓</span></div></div>
+        <h3>✓ で記録。</h3>
+        <p>どこまでやったかを一言。書かなくても、時間はそのまま今日の記録に。</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="sec" id="parents" aria-labelledby="parents-h">
+    <p class="tab tab-blue">おうちの方へ</p>
+    <h2 id="parents-h">見せる相手は、<br>自分で決める。</h2>
+    <p class="sec-lead">はじめは、勉強中の表示（ニックネーム・科目・時間）は全員に、メッセージはグループのメンバーまで。どちらも設定で、いつでも変えられます。</p>
+    <div class="parents">
+      <div class="renraku">
+        <p class="rk-head"><b>連絡帳</b><span class="hand">設定と、はじめの状態</span></p>
+        <table>
+          <thead><tr><th scope="col">設定</th><th scope="col">できること</th><th scope="col">はじめは</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">勉強中を見せる相手</th><td>全員／フォロワーだけ／見せない</td><td class="init">全員</td></tr>
+            <tr><th scope="row">順位を見せる</th><td>ランキングに出す／出さない（出さなくても、自分の順位は見られる）</td><td class="init">出す</td></tr>
+            <tr><th scope="row">メッセージを受け取る相手</th><td>フォロー中の人／グループのメンバーまで／全員</td><td class="init">グループのメンバーまで</td></tr>
+            <tr><th scope="row">ブロック・通報</th><td>名前を押すと、どこからでもできる。ブロックした人は出てこない</td><td class="init none">—</td></tr>
+            <tr><th scope="row">13歳未満</th><td>保護者の同意を得ているか、はじめにたずねる</td><td class="init none">—</td></tr>
+            <tr><th scope="row">記録の保存</th><td>この iPhone の中に保存。圏外でも記録できる</td><td class="init none">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pnotes">
+        <div>
+          <h3>13歳未満の人へ</h3>
+          <p>はじめに、保護者の同意を得ているかをたずねます。「保護者の同意を得ています」にチェックしないと、先へ進めません。</p>
+        </div>
+        <div>
+          <h3>記録のゆくえ</h3>
+          <p>記録は、この iPhone の中に保存されます。勉強中の表示（ニックネーム・科目・時間）と順位は、設定で決めた範囲の人に見えます。設定から、書き出しや、アカウントとデータの削除ができます。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<footer class="cover" aria-labelledby="foot-h">
+  <div class="cover-in">
+    <div class="cv-top">
+      <h2 id="foot-h">今夜も、<br>少しずつ前へ。</h2>
+      <a class="btn btn-lime" href="#screens">画面を見てみる <span aria-hidden="true">↑</span></a>
+    </div>
+    <div class="cv-mid">
+      <div class="namelabel">
+        <span class="nl-k">なまえ</span>
+        <p class="nl-name"><b>inchly</b><span class="hand">インチリー</span></p>
+        <p class="nl-from">inch by inch（少しずつ）から。</p>
+      </div>
+      <div class="spec" id="soon">
+        <h3>公開について</h3>
+        <dl>
+          <div><dt>公開</dt><dd>iPhone 向けに、[公開日]ごろ公開する予定です。</dd></div>
+          <div><dt>ねだん</dt><dd>値段と、広告を出すかどうかは、決まったらこのページで知らせます。</dd></div>
+          <div><dt>使える人</dt><dd>日本語で使えます。小学生から大人まで。13歳未満の人は、保護者の同意を得てから。</dd></div>
+          <div><dt>Android</dt><dd>[Android版の予定]</dd></div>
+        </dl>
+      </div>
+    </div>
+    <div class="cv-bottom">
+      <nav aria-label="フッター">
+        <a href="#features">できること</a>
+        <a href="#screens">画面</a>
+        <a href="#how">使い方</a>
+        <a href="#parents">おうちの方へ</a>
+        <button type="button" class="calm" data-calm aria-pressed="false">動きを止める</button>
+      </nav>
+      <p class="legal">お問い合わせ：[連絡先]<br>プライバシーポリシーと利用規約は、公開までに用意します。<br>画面は開発中のものです。出てくる名前や記録は見本です。<br>iPhone は、米国および他の国々で登録された Apple Inc. の商標です。iPhone 商標は、アイホン株式会社のライセンスにもとづき使用されています。<br>© [年] [運営者名]</p>
+    </div>
+  </div>
+</footer>
+
+<script src="shared/pix.js" defer></script>
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const root = document.documentElement;
+  const RMQ = matchMedia('(prefers-reduced-motion: reduce)');
+  const still = () => RMQ.matches || root.classList.contains('calm');
+
+  /* 動きを止める（このブラウザだけに覚える） */
+  try { if (localStorage.getItem('inchly-calm') === '1') root.classList.add('calm'); } catch (e) {}
+  const syncCalm = () => $$('[data-calm]').forEach(b => b.setAttribute('aria-pressed', String(root.classList.contains('calm'))));
+  $$('[data-calm]').forEach(b => b.addEventListener('click', () => {
+    const on = root.classList.toggle('calm');
+    try { localStorage.setItem('inchly-calm', on ? '1' : '0'); } catch (e) {}
+    syncCalm();
+  }));
+  syncCalm();
+
+  /* ナビの下の線 */
+  const nav = $('#nav');
+  const onScroll = () => nav.classList.toggle('scrolled', scrollY > 8);
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  /* もくじ（スマホ） */
+  const tb = $('#toc-btn'), tl = $('#toc-list');
+  const setToc = open => { tb.setAttribute('aria-expanded', String(open)); tl.hidden = !open; };
+  tb.addEventListener('click', () => setToc(tl.hidden));
+  tl.addEventListener('click', e => { if (e.target.closest('a')) setToc(false); });
+  document.addEventListener('click', e => { if (!tl.hidden && !e.target.closest('.toc')) setToc(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !tl.hidden) { setToc(false); tb.focus(); } });
+
+  /* 草：方眼のマスにそのまま塗る。幅に入るだけの週を出す（右の列が今週） */
+  const grass = $('#grass');
+  let seed = 29;
+  const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  const LV = Array.from({ length: 40 * 7 }, () => { const r = rnd(); return r < .1 ? 0 : r < .22 ? 1 : r < .5 ? 2 : r < .8 ? 3 : 4; });
+  const THIS_WEEK = [3, 2, 4, 3];   // 月〜木（木が今日）
+  function drawGrass(cols) {
+    if (grass.dataset.cols === String(cols)) return;
+    grass.dataset.cols = cols;
+    let html = '';
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < 7; r++) {
+        if (c === cols - 1) {
+          if (r < 4) html += `<i data-l="${THIS_WEEK[r]}"${r === 3 ? ' class="is-today"' : ''}></i>`;
+          else html += '<i></i>';
+        } else html += `<i data-l="${LV[(c + 40 - cols) * 7 + r]}"></i>`;
+      }
+    }
+    grass.innerHTML = html;
+  }
+
+  /* 図を方眼の線にそろえる */
+  const sheet = $('.sheet');
+  function snap() {
+    const cs = getComputedStyle(sheet);
+    const cell = parseFloat(cs.getPropertyValue('--cell')) || 24;
+    const sr = sheet.getBoundingClientRect();
+    const x0 = sr.left + parseFloat(cs.borderLeftWidth) + parseFloat(cs.paddingLeft);
+    const y0 = sr.top + parseFloat(cs.borderTopWidth);
+    const mod = v => ((v % cell) + cell) % cell;
+    const figs = $$('[data-snap]');
+    figs.forEach(f => { f.style.marginTop = ''; });
+    figs.forEach(f => {
+      const d = mod(cell - mod(f.getBoundingClientRect().top - y0));
+      if (d > .5 && d < cell - .5) f.style.marginTop = d + 'px';
+    });
+    const box = grass.parentElement.getBoundingClientRect();
+    const dx = mod(cell - mod(box.left - x0));
+    grass.style.marginLeft = (dx > .5 && dx < cell - .5 ? dx : 0) + 'px';
+    drawGrass(Math.max(8, Math.min(40, Math.floor((box.width - (dx > .5 && dx < cell - .5 ? dx : 0)) / cell))));
+  }
+  snap();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(snap);
+  addEventListener('load', snap);
+  let rt = 0; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(snap, 120); });
+
+  /* さわる仕掛け：✓ 記録する → 赤ペンで丸、合計に花丸 */
+  const today = $('#today'), rec = $('#rec'), sum = $('#sum'), hint = $('#rec-hint'), status = $('#rec-status'), wk = $('#wk-today');
+  const fmt = m => `${Math.floor(m / 60)}時間${String(m % 60).padStart(2, '0')}分`;
+  const BEFORE = 125, AFTER = 165;
+  let done = false, tick = 0;
+  function count(from, to) {
+    clearInterval(tick);
+    if (still()) { sum.textContent = fmt(to); return; }
+    let m = from;
+    setTimeout(() => {
+      tick = setInterval(() => { m += 5; sum.textContent = fmt(Math.min(m, to)); if (m >= to) clearInterval(tick); }, 70);
+    }, 380);
+  }
+  rec.addEventListener('click', () => {
+    done = !done;
+    if (done) {
+      today.classList.add('is-done');
+      count(BEFORE, AFTER);
+      wk.dataset.l = '3';
+      rec.textContent = 'けしごむで消す';
+      rec.classList.remove('btn-ink'); rec.classList.add('is-erase');
+      hint.textContent = '丸がついた。';
+      status.textContent = '数学の40分を記録した。今日の合計は2時間45分。';
+      const pen = document.querySelector('inch-pal[kind="penta"]');
+      if (pen && typeof pen.poke === 'function') pen.poke('heart');
+    } else {
+      clearInterval(tick);
+      today.classList.remove('is-done');
+      sum.textContent = fmt(BEFORE);
+      wk.dataset.l = '2';
+      rec.textContent = '✓ 記録する';
+      rec.classList.add('btn-ink'); rec.classList.remove('is-erase');
+      hint.textContent = '押すと、数学の40分に丸がつく。';
+      status.textContent = '消した。今日の合計は2時間05分。';
+    }
+  });
+})();
+</script>
+</body>
+</html>
