@@ -12,20 +12,31 @@ const WebView = RNWebView as unknown as ComponentType<WebViewProps & { ref?: Ref
 export type SceneViewProps = {
   scene: Scene;
   paused: boolean;
+  /** Digital layer amount from settings, 0..1. */
+  digital: number;
   onReady: () => void;
   onTouch: () => void;
+  onLongPress: () => void;
+  /** Photo scenes report whether the area behind the clock is light or dark. */
+  onTone?: (tone: 'dark' | 'light') => void;
 };
 
-/** Runs one scene page full-screen. The page reports 'ready' and 'touch' back. */
-export function SceneView({ scene, paused, onReady, onTouch }: SceneViewProps) {
+/** Runs one scene page full-screen. The page reports 'ready', 'touch' and 'longpress' back. */
+export function SceneView({ scene, paused, digital, onReady, onTouch, onLongPress, onTone }: SceneViewProps) {
   const ref = useRef<WebViewHandle>(null);
+  // Read once: settings at load time; later changes go through injectJavaScript.
+  const initScript = useRef(`window.__ambientInit = ${JSON.stringify({ digital })}; true;`).current;
 
   useEffect(() => {
     ref.current?.injectJavaScript(`window.__ambient && window.__ambient.${paused ? 'pause' : 'resume'}(); true;`);
   }, [paused]);
 
+  useEffect(() => {
+    ref.current?.injectJavaScript(`window.__ambient && window.__ambient.setDigital(${digital}); true;`);
+  }, [digital]);
+
   const onMessage = (e: WebViewMessageEvent) => {
-    let msg: { type?: string };
+    let msg: { type?: string; tone?: 'dark' | 'light' };
     try {
       msg = JSON.parse(e.nativeEvent.data);
     } catch {
@@ -33,6 +44,8 @@ export function SceneView({ scene, paused, onReady, onTouch }: SceneViewProps) {
     }
     if (msg.type === 'ready') onReady();
     else if (msg.type === 'touch') onTouch();
+    else if (msg.type === 'longpress') onLongPress();
+    else if (msg.type === 'tone' && msg.tone) onTone?.(msg.tone);
   };
 
   return (
@@ -40,6 +53,7 @@ export function SceneView({ scene, paused, onReady, onTouch }: SceneViewProps) {
       ref={ref}
       source={{ html: scene.html }}
       originWhitelist={['*']}
+      injectedJavaScriptBeforeContentLoaded={initScript}
       onMessage={onMessage}
       style={{ backgroundColor: scene.background }}
       containerStyle={[StyleSheet.absoluteFill, { backgroundColor: scene.background }]}

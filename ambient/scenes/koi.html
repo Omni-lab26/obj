@@ -21,7 +21,7 @@
   const { lerp, noise2 } = Host;
 
   // Palette indices used by paint() below.
-  const WHITE = 0, RED = 1, DEEP = 2, GOLD = 3, SUMI = 4, BLUE = 5, GRAY = 6, ORANGE = 7;
+  const WHITE = 0, RED = 1, DEEP = 2, GOLD = 3, SUMI = 4, BLUE = 5, GRAY = 6, ORANGE = 7, EYE = 8;
   const palette = [
     { fill: '#d8d2ca', glyph: '#1d1a17' }, // white
     { fill: '#c4483a', glyph: '#f6e4dc' }, // red
@@ -31,6 +31,7 @@
     { fill: '#8c93c8', glyph: '#181a2c' }, // asagi blue
     { fill: '#7b7672', glyph: '#ece8e4' }, // gray
     { fill: '#cc743e', glyph: '#2a1409' }, // orange
+    { fill: '#0d0c0b', glyph: '#e9e3dc' }, // eye: dark with a glint
   ];
 
   const KOHAKU = 0, SANKE = 1, SHOWA = 2, OGON = 3, ASAGI = 4, TANCHO = 5, CHAGOI = 6;
@@ -57,6 +58,8 @@
     fork: 0.22,
     tailSolid: 0.6,
     hammer: 0,
+    eyes: { at: 0.075, side: 0.6, r: 0.02 },
+    eye: EYE,
     shimmer: 2.2,
     patterns: 7,
     patternScale: [5.5, 1.6],
@@ -113,6 +116,25 @@
       { species: 'koi', depth: 0.8, pattern: CHAGOI, scales: false },
     ],
     particles: 'specks',
+    cellsAcross: 40,
+    pads: {
+      count: 4,
+      flowers: 2,
+      size: [2.3, 3.9],
+      colors: {
+        leaf: ['#1d3a23', '#26492b', '#305a33'],
+        rim: '#3e6d3c',
+        vein: '#7da35e',
+        texture: '#4d7645',
+        hub: '#4f6f2f',
+        hubGlyph: '#c6d27a',
+        dew: '#d7ecec',
+        petal: ['#c9708f', '#e7a6bb'],
+        petalGlyph: '#fbe3ea',
+        flowerCenter: '#d9a93e',
+        flowerCenterGlyph: '#fff3c4',
+      },
+    },
     ambientGlyph: '#4c4a48',
     rippleGlyph: '#b9b2a8',
     pellet: { fill: '#d9a441', glyph: '#2a1e08' },

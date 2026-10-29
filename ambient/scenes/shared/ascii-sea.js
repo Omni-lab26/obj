@@ -8,6 +8,8 @@
 //   school: [{ species, depth }],          // which fish to spawn
 //   particles: 'dashes' | 'specks',
 //   pellet: { fill, glyph },
+//   cellsAcross: 40,                       // grid fineness across the short side
+//   pads: { count, flowers, size:[min,max], colors } | undefined   // lotus leaves on the surface
 // }
 (function () {
   const H = window.Host;
@@ -18,6 +20,11 @@
   const LINEUP = location.hash === '#lineup';
 
   const RAMP = ['.', "'", ',', '`', ':', ';', 't', 'o', '%', 'X', 'S', '8', '#', '@'];
+  // Extra glyphs for things that are not fish (leaf veins, flowers). Indices follow RAMP.
+  const EXTRA = ['/', '\\', '|', '-', '*', '"', '+', '~'];
+  const GLYPHS = RAMP.concat(EXTRA);
+  const G = {};
+  GLYPHS.forEach((g, i) => (G[g] = i));
   const FONT = '600 {px}px ui-monospace, "SF Mono", Menlo, "Roboto Mono", monospace';
 
   function hexToRgb(hex) {
@@ -51,9 +58,26 @@
     const pelletIds = { fill: colorId(config.pellet.fill), glyph: colorId(config.pellet.glyph) };
     const ambientId = colorId(config.ambientGlyph);
     const rippleId = colorId(config.rippleGlyph);
+    if (config.pads) {
+      const pc = config.pads.colors;
+      config.pads.colorIds = {
+        leaf: pc.leaf.map(colorId),
+        rim: colorId(pc.rim),
+        vein: colorId(pc.vein),
+        texture: colorId(pc.texture),
+        hub: colorId(pc.hub),
+        hubGlyph: colorId(pc.hubGlyph),
+        dew: colorId(pc.dew),
+        petal: pc.petal.map(colorId),
+        petalGlyph: colorId(pc.petalGlyph),
+        flowerCenter: colorId(pc.flowerCenter),
+        flowerCenterGlyph: colorId(pc.flowerCenterGlyph),
+      };
+    }
 
     // ── grid state ─────────────────────────────────────────────────────
-    let C = 14; // cell size, CSS px
+    let C = 10; // grid cell size, CSS px
+    let U = 14; // layout unit for creature sizes and speeds, CSS px
     let cols = 0;
     let rows = 0;
     let cellDens; // strongest coverage written this frame
@@ -76,7 +100,9 @@
 
     function resize() {
       const short = Math.min(H.w, H.h);
-      C = clamp(Math.round(short / 27), 12, 20);
+      // Creatures are sized in U; the grid is finer than that, so they carry more detail.
+      U = clamp(Math.round(short / 27), 12, 20);
+      C = clamp(Math.round(short / (config.cellsAcross || 40)), 7, 14);
       cols = Math.ceil(H.w / C) + 1;
       rows = Math.ceil(H.h / C) + 1;
       const n = cols * rows;
@@ -95,6 +121,7 @@
       shadowData = shadowCtx.createImageData(cols, rows);
       if (!fish.length) spawnSchool();
       if (!particles.length) spawnParticles();
+      if (config.pads && !pads.length) spawnPads();
     }
 
     // Every glyph in every glyph colour, pre-rendered once so a frame is just blits.
@@ -102,7 +129,7 @@
       const dpr = fxEntry.dpr;
       atlasTile = Math.ceil(C * dpr);
       atlas = document.createElement('canvas');
-      atlas.width = atlasTile * RAMP.length;
+      atlas.width = atlasTile * GLYPHS.length;
       atlas.height = atlasTile * colors.length;
       const a = atlas.getContext('2d');
       a.font = FONT.replace('{px}', String(Math.round(C * 0.74 * dpr)));
@@ -110,7 +137,7 @@
       a.textBaseline = 'middle';
       colors.forEach((rgb, ci) => {
         a.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
-        RAMP.forEach((g, gi) => {
+        GLYPHS.forEach((g, gi) => {
           a.fillText(g, gi * atlasTile + atlasTile / 2, ci * atlasTile + atlasTile * 0.54);
         });
       });
@@ -148,7 +175,7 @@
     const SEGMENTS = 12;
 
     function makeFish(sp, depth, i, pattern) {
-      const L = sp.length * C * rand(0.85, 1.15) * lerp(1, 0.82, depth);
+      const L = sp.length * U * rand(0.85, 1.15) * lerp(1, 0.82, depth);
       const edge = Math.floor(rand(0, 4));
       const m = L * 0.6;
       // Start just off-screen so fish glide in rather than pop.
@@ -170,7 +197,7 @@
         x,
         y,
         heading,
-        speed: sp.speed * C,
+        speed: sp.speed * U,
         boost: 0,
         phase: rand(0, 10),
         seed: Math.floor(rand(1, 1e6)),
@@ -243,12 +270,12 @@
         (Math.sin(t * 0.37 + f.seed) * 0.6 + Math.sin(t * 0.83 + f.seed * 1.7) * 0.4) * 0.35 * f.sp.agility;
       f.heading += clamp(angleDiff(want, f.heading) * 1.4, -turnRate, turnRate) * dt + wobble * dt;
 
-      const cruise = f.sp.speed * C * (0.85 + 0.25 * Math.sin(t * 0.21 + f.seed));
+      const cruise = f.sp.speed * U * (0.85 + 0.25 * Math.sin(t * 0.21 + f.seed));
       const goalSpeed = cruise * (hungry ? 1.9 : 1) * (1 + f.boost);
       f.speed = lerp(f.speed, goalSpeed, 1 - Math.exp(-dt * 1.6));
       f.boost = Math.max(0, f.boost - dt * 0.8);
 
-      if (hungry && best < C * 0.9) {
+      if (hungry && best < U * 0.9) {
         goal.eaten = true;
         f.boost = 0.9;
         burst(goal.x, goal.y);
@@ -262,7 +289,7 @@
         f.y += Math.sin(f.heading) * f.speed * dt;
       }
       // Tail beat speeds up with swimming speed.
-      f.phase += dt * (f.sp.beat + (f.speed / (C * f.sp.speed)) * f.sp.beat * 0.6);
+      f.phase += dt * (f.sp.beat + (f.speed / (U * f.sp.speed)) * f.sp.beat * 0.6);
 
       // Spine follows the head like a chain — turns ripple down the body.
       const pts = f.pts;
@@ -319,7 +346,7 @@
     }
 
     // Parts of the fish this frame: [ax, ay, bx, by, ra, rb, u0, u1, kind, solid,
-    // minX, minY, maxX, maxY]. kind: 0 body, 1 fin, 3 head feature.
+    // minX, minY, maxX, maxY]. kind: 0 body, 1 fin, 3 head feature, 4 eye.
     const PART = 14;
     const parts = new Float32Array(PART * 40);
     let partCount = 0;
@@ -365,6 +392,30 @@
         const span = sp.hammer * f.L;
         const r = 0.045 * f.L;
         addPart(cx + h.nx * span, cy + h.ny * span, cx - h.nx * span, cy - h.ny * span, r, r, -1, 1, 3, 1);
+        // Eyes sit at the two tips of the hammer.
+        const er = 0.02 * f.L;
+        for (let side = -1; side <= 1; side += 2) {
+          const ex = cx + h.nx * side * span * 0.96;
+          const ey = cy + h.ny * side * span * 0.96;
+          addPart(ex, ey, ex, ey, er, er, 0, 0, 4, 1.6);
+        }
+      } else if (sp.eyes) {
+        // Eyes on either side of the head; solid > 1 so they win over the skin.
+        const e = sp.eyes;
+        const k = e.at * (SEGMENTS - 1);
+        const k0 = Math.floor(k);
+        const t0 = k - k0;
+        const a = q[k0];
+        const b = q[k0 + 1];
+        const hx = a.x + (b.x - a.x) * t0;
+        const hy = a.y + (b.y - a.y) * t0;
+        const off = W * sp.profile(e.at) * e.side;
+        const er = e.r * f.L;
+        for (let side = -1; side <= 1; side += 2) {
+          const ex = hx + a.nx * side * off;
+          const ey = hy + a.ny * side * off;
+          addPart(ex, ey, ex, ey, er, er, e.at, e.at, 4, 1.6);
+        }
       }
 
       // Paired fins, swept back from the body and flapping gently.
@@ -478,8 +529,9 @@
           const n = noise2(bt * sp.patternScale[0] + f.pattern * 7.3, bs * sp.patternScale[1], f.seed & 1023);
           // Each cell re-rolls its glyph on its own beat, so the type shimmers.
           const hsh = hash3(c, r, Math.floor(tq + hash3(c, r, 99) * 4));
-          const pal = sp.paletteIds[sp.paint(bt, bs, n, part, f.pattern, hsh)];
-          const solid = part === 0 || part === 3 ? best : best * 0.8;
+          const pi = part === 4 && sp.eye != null ? sp.eye : sp.paint(bt, bs, n, part, f.pattern, hsh);
+          const pal = sp.paletteIds[pi];
+          const solid = part === 0 || part === 3 || part === 4 ? Math.min(best, 1) : best * 0.8;
 
           if (solid > sp.fillFrom) {
             cellFill[i] = pal.fill;
@@ -489,7 +541,8 @@
             cellFillA[i] = 0;
           }
           // Glyph: density picks from the ramp with a little per-cell jitter.
-          cellGlyph[i] = clamp(Math.floor(best * (RAMP.length - 1) * 1.15 + (hsh - 0.5) * 4), 0, RAMP.length - 1);
+          cellGlyph[i] =
+            part === 4 ? G['@'] : clamp(Math.floor(best * (RAMP.length - 1) * 1.15 + (hsh - 0.5) * 4), 0, RAMP.length - 1);
           const accent = sp.accentIds.length && hsh > 0.985 ? sp.accentIds[Math.floor(hsh * 1e5) % sp.accentIds.length] : -1;
           cellGlyphC[i] = accent >= 0 ? accent : cellFill[i] >= 0 ? pal.glyph : pal.fill;
           cellGlyphA[i] = clamp(0.35 + best, 0.3, 1) * f.alpha;
@@ -497,20 +550,249 @@
       }
     }
 
+    // ── lotus leaves ───────────────────────────────────────────────────
+    // Round leaves float on the surface: fish pass underneath, taps push them.
+    const pads = [];
+
+    function spawnPads() {
+      const cfg = config.pads;
+      const area = (H.w * H.h) / (390 * 844);
+      const n = Math.max(1, Math.round(cfg.count * clamp(Math.sqrt(area), 0.8, 2)));
+      for (let k = 0; k < n; k++) {
+        // Spread them out: try a few spots and keep one clear of the others.
+        for (let tries = 0; tries < 40; tries++) {
+          const r = rand(cfg.size[0], cfg.size[1]) * U * (k === 0 ? 1.15 : 1);
+          const x = rand(r * 0.2, H.w - r * 0.2);
+          const y = rand(r * 0.2, H.h - r * 0.2);
+          if (pads.every((p) => Math.hypot(p.x - x, p.y - y) > (p.r + r) * 1.15)) {
+            pads.push({
+              x,
+              y,
+              r,
+              rot: rand(0, Math.PI * 2),
+              // Some leaves have the water-lily notch, most are round lotus leaves.
+              notch: Math.random() < 0.35 ? rand(0.3, 0.45) : 0,
+              veins: 11 + Math.floor(rand(0, 4)),
+              vx: rand(-1, 1) * 0.06 * U,
+              vy: rand(-1, 1) * 0.06 * U,
+              vr: rand(-1, 1) * 0.02,
+              seed: Math.floor(rand(1, 1000)),
+              flower: k < (cfg.flowers || 0) ? { ang: rand(0, Math.PI * 2), size: rand(1.4, 1.8) * U } : null,
+              dew: [rand(0.25, 0.7), rand(0, Math.PI * 2), rand(0.3, 0.75), rand(0, Math.PI * 2)],
+            });
+            break;
+          }
+        }
+      }
+    }
+
+    function updatePads(dt, t) {
+      for (const p of pads) {
+        // A faint current keeps them drifting; drag keeps pushes from lasting.
+        p.vx += Math.sin(t * 0.07 + p.seed) * 0.01 * U * dt;
+        p.vy += Math.cos(t * 0.05 + p.seed * 0.7) * 0.01 * U * dt;
+        p.vx *= 1 - dt * 0.35;
+        p.vy *= 1 - dt * 0.35;
+        p.vr *= 1 - dt * 0.2;
+        // Stay mostly on screen.
+        if (p.x < p.r * 0.1) p.vx += (p.r * 0.1 - p.x) * 0.15 * dt;
+        if (p.x > H.w - p.r * 0.1) p.vx -= (p.x - (H.w - p.r * 0.1)) * 0.15 * dt;
+        if (p.y < p.r * 0.1) p.vy += (p.r * 0.1 - p.y) * 0.15 * dt;
+        if (p.y > H.h - p.r * 0.1) p.vy -= (p.y - (H.h - p.r * 0.1)) * 0.15 * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.rot += p.vr * dt;
+      }
+      // Leaves nudge each other apart instead of overlapping.
+      for (let a = 0; a < pads.length; a++) {
+        for (let b = a + 1; b < pads.length; b++) {
+          const pa = pads[a];
+          const pb = pads[b];
+          const dx = pb.x - pa.x;
+          const dy = pb.y - pa.y;
+          const d = Math.hypot(dx, dy) || 1;
+          const overlap = pa.r + pb.r + U * 0.3 - d;
+          if (overlap > 0) {
+            const push = overlap * 0.6 * dt;
+            pa.vx -= (dx / d) * push;
+            pa.vy -= (dy / d) * push;
+            pb.vx += (dx / d) * push;
+            pb.vy += (dy / d) * push;
+          }
+        }
+      }
+    }
+
+    // Vein glyph for a direction (screen y points down).
+    function veinGlyph(a) {
+      let k = ((a % Math.PI) + Math.PI) % Math.PI; // 0..PI
+      if (k < Math.PI / 8 || k > (Math.PI * 7) / 8) return G['-'];
+      if (k < (Math.PI * 3) / 8) return G['\\'];
+      if (k < (Math.PI * 5) / 8) return G['|'];
+      return G['/'];
+    }
+
+    function stampPads(t) {
+      const pc = config.pads.colorIds;
+      for (const p of pads) {
+        const R = p.r * (1 + 0.012 * Math.sin(t * 0.7 + p.seed));
+        const c0 = Math.max(0, Math.floor((p.x - R - C) / C));
+        const c1 = Math.min(cols - 1, Math.floor((p.x + R + C) / C));
+        const r0 = Math.max(0, Math.floor((p.y - R - C) / C));
+        const r1 = Math.min(rows - 1, Math.floor((p.y + R + C) / C));
+        const cr = Math.cos(-p.rot);
+        const sr = Math.sin(-p.rot);
+        const step = (Math.PI * 2) / p.veins;
+        for (let r = r0; r <= r1; r++) {
+          const py = (r + 0.5) * C;
+          for (let c = c0; c <= c1; c++) {
+            const px = (c + 0.5) * C;
+            const dx = px - p.x;
+            const dy = py - p.y;
+            const d = Math.hypot(dx, dy);
+            if (d > R + C) continue;
+            const lx = dx * cr - dy * sr;
+            const ly = dx * sr + dy * cr;
+            const ang = Math.atan2(ly, lx);
+            // Slightly wavy rim.
+            const edge = R * (1 + 0.035 * Math.sin(ang * 6 + p.seed) + 0.02 * Math.sin(ang * 13 + p.seed * 2));
+            let cov = clamp((edge - d) / C + 0.5, 0, 1);
+            if (p.notch && d > R * 0.1) cov *= clamp(((Math.abs(ang) - p.notch * 0.5) * d) / C + 0.5, 0, 1);
+            if (cov <= 0.04) continue;
+
+            const i = r * cols + c;
+            const rel = d / R;
+            // Light from the upper left, a little cupped toward the middle.
+            const lit = clamp(0.55 - (dx + dy) / (R * 2.6) + 0.15 * (1 - rel), 0, 1);
+            const hsh = hash3(c, r, p.seed);
+            // Nearest vein, as an arc distance in px.
+            const va = Math.round(ang / step) * step;
+            const arc = Math.abs(ang - va) * d;
+            let fill;
+            let glyph;
+            let gcol;
+            let ga;
+            if (rel < 0.13) {
+              fill = pc.hub;
+              glyph = rel < 0.07 ? G['@'] : G['o'];
+              gcol = pc.hubGlyph;
+              ga = 0.95;
+            } else if (arc < C * 0.42 && rel < 0.93) {
+              fill = lit > 0.5 ? pc.leaf[2] : pc.leaf[1];
+              glyph = veinGlyph(va + p.rot);
+              gcol = pc.vein;
+              ga = 0.55 + 0.4 * (1 - rel);
+            } else if (edge - d < C * 0.95) {
+              fill = pc.rim;
+              glyph = hsh > 0.5 ? G[':'] : G["'"];
+              gcol = pc.vein;
+              ga = 0.75;
+            } else {
+              fill = pc.leaf[lit > 0.66 ? 2 : lit > 0.33 ? 1 : 0];
+              glyph = hsh > 0.82 ? G['.'] : hsh > 0.64 ? G[','] : hsh > 0.5 ? G["'"] : -1;
+              gcol = pc.texture;
+              ga = 0.6;
+            }
+            // A couple of dew drops per leaf.
+            for (let k = 0; k < 4; k += 2) {
+              const da = p.dew[k + 1];
+              const ddx = Math.cos(da) * p.dew[k] * R;
+              const ddy = Math.sin(da) * p.dew[k] * R;
+              if (Math.abs(lx - ddx) < C * 0.5 && Math.abs(ly - ddy) < C * 0.5) {
+                glyph = G['o'];
+                gcol = pc.dew;
+                ga = 1;
+              }
+            }
+            cellDens[i] = 1;
+            cellFill[i] = fill;
+            cellFillA[i] = 0.92 * cov;
+            cellGlyph[i] = glyph;
+            cellGlyphC[i] = gcol;
+            cellGlyphA[i] = ga * cov;
+          }
+        }
+        if (p.flower) stampFlower(p, t);
+      }
+    }
+
+    // A lotus flower resting on the leaf's rim: a rosette of pink petals.
+    function stampFlower(p, t) {
+      const pc = config.pads.colorIds;
+      const F = p.flower.size;
+      const a = p.flower.ang + p.rot * 0.3;
+      const fx0 = p.x + Math.cos(a) * p.r * 0.62;
+      const fy0 = p.y + Math.sin(a) * p.r * 0.62;
+      const spin = p.rot + p.seed;
+      const c0 = Math.max(0, Math.floor((fx0 - F - C) / C));
+      const c1 = Math.min(cols - 1, Math.floor((fx0 + F + C) / C));
+      const r0 = Math.max(0, Math.floor((fy0 - F - C) / C));
+      const r1 = Math.min(rows - 1, Math.floor((fy0 + F + C) / C));
+      for (let r = r0; r <= r1; r++) {
+        for (let c = c0; c <= c1; c++) {
+          const dx = (c + 0.5) * C - fx0;
+          const dy = (r + 0.5) * C - fy0;
+          const d = Math.hypot(dx, dy);
+          const ang = Math.atan2(dy, dx) - spin;
+          // Eight petals: the outline swells toward each petal tip.
+          const shape = F * (0.58 + 0.42 * Math.pow(Math.abs(Math.cos(ang * 4)), 0.7));
+          const cov = clamp((shape - d) / C + 0.5, 0, 1);
+          if (cov <= 0.05) continue;
+          const i = r * cols + c;
+          const rel = d / F;
+          let fill;
+          let glyph;
+          let gcol;
+          if (rel < 0.24) {
+            fill = pc.flowerCenter;
+            glyph = G['*'];
+            gcol = pc.flowerCenterGlyph;
+          } else if (rel < 0.6) {
+            fill = pc.petal[1];
+            glyph = G['o'];
+            gcol = pc.petalGlyph;
+          } else {
+            fill = pc.petal[0];
+            glyph = (Math.abs(Math.cos(ang * 4)) > 0.8) ? G["'"] : G['.'];
+            gcol = pc.petalGlyph;
+          }
+          cellDens[i] = 1;
+          cellFill[i] = fill;
+          cellFillA[i] = 0.95 * cov;
+          cellGlyph[i] = glyph;
+          cellGlyphC[i] = gcol;
+          cellGlyphA[i] = 0.9 * cov;
+        }
+      }
+    }
+
     // ── pellets, ripples, ambient particles ───────────────────────────
     function burst(x, y) {
-      ripples.push({ x, y, age: 0, life: 0.9, speed: C * 5, small: true });
+      ripples.push({ x, y, age: 0, life: 0.9, speed: U * 5, small: true });
     }
 
     function tap(x, y) {
-      ripples.push({ x, y, age: 0, life: 1.6, speed: C * 7 });
+      ripples.push({ x, y, age: 0, life: 1.6, speed: U * 7 });
+      // The wave pushes nearby leaves away.
+      for (const p of pads) {
+        const dx = p.x - x;
+        const dy = p.y - y;
+        const d = Math.hypot(dx, dy) || 1;
+        const reach = p.r + U * 6;
+        if (d < reach) {
+          const k = (1 - d / reach) * U * 1.6;
+          p.vx += (dx / d) * k;
+          p.vy += (dy / d) * k;
+          p.vr += rand(-0.15, 0.15);
+        }
+      }
       const n = 3 + Math.floor(Math.random() * 3);
       for (let k = 0; k < n; k++) {
         pellets.push({
-          x: x + rand(-1.6, 1.6) * C,
-          y: y + rand(-1.6, 1.6) * C,
-          vx: rand(-0.25, 0.25) * C,
-          vy: rand(-0.25, 0.25) * C,
+          x: x + rand(-1.6, 1.6) * U,
+          y: y + rand(-1.6, 1.6) * U,
+          vx: rand(-0.25, 0.25) * U,
+          vy: rand(-0.25, 0.25) * U,
           age: 0,
           life: rand(9, 13),
           eaten: false,
@@ -523,16 +805,18 @@
     }
 
     function spawnParticles() {
-      const count = Math.round((cols * rows) / (config.particles === 'dashes' ? 26 : 40));
+      // Same density per area and same drift speed in px whatever the cell size.
+      const k = (C / U) * (C / U);
+      const count = Math.round(((cols * rows) / (config.particles === 'dashes' ? 26 : 40)) * k);
       for (let k = 0; k < count; k++) {
         // Dashes come in little horizontal runs, like the surface catching light.
         const run = config.particles === 'dashes' ? 1 + Math.floor(Math.random() * 4) : 1;
         const x = rand(0, cols);
         const y = rand(0, rows);
-        const vx = rand(-0.12, 0.12);
-        const vy = rand(-0.04, 0.04);
+        const vx = rand(-0.12, 0.12) * (U / C);
+        const vy = rand(-0.04, 0.04) * (U / C);
         const seed = Math.random() * 100;
-        for (let j = 0; j < run; j++) particles.push({ x: x + j * 2, y, vx, vy, seed, a: rand(0.25, 0.7) });
+        for (let j = 0; j < run; j++) particles.push({ x: x + j * 2 * (U / C), y, vx, vy, seed, a: rand(0.25, 0.7) });
       }
     }
 
@@ -544,6 +828,10 @@
 
       for (const f of fish) advance(f, dt, t);
       for (const f of fish) stamp(f, t);
+      if (pads.length) {
+        updatePads(dt, t);
+        stampPads(t);
+      }
 
       // Pellets drift, then fade.
       for (let k = pellets.length - 1; k >= 0; k--) {
@@ -587,7 +875,7 @@
         for (let r = Math.max(0, cr - reach); r <= Math.min(rows - 1, cr + reach); r++) {
           for (let c = Math.max(0, cc - reach); c <= Math.min(cols - 1, cc + reach); c++) {
             const d = Math.hypot((c + 0.5) * C - rp.x, (r + 0.5) * C - rp.y);
-            const band = 1 - Math.abs(d - radius) / (C * 0.9);
+            const band = 1 - Math.abs(d - radius) / (C * 1.2);
             if (band <= 0) continue;
             const i = r * cols + c;
             if (cellDens[i] > 0.25) continue;

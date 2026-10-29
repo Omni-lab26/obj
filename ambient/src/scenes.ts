@@ -1,4 +1,4 @@
-import { sceneHtml } from './scenes.generated';
+import { photoMeta, sceneHtml } from './scenes.generated';
 
 export type Scene = {
   id: string;
@@ -7,12 +7,15 @@ export type Scene = {
   hint: string;
   /** Matches the page background so there is no flash while the WebView loads. */
   background: string;
-  /** Whether the scene is dark (light chrome) or light (dark chrome). */
+  /** Whether the scene is dark (light chrome) or light (dark chrome). Photos refine this once loaded. */
   tone: 'dark' | 'light';
+  kind: 'scene' | 'photo';
+  /** Photo credit and licence, shown in settings. */
+  credit?: string;
   html: string;
 };
 
-const meta: Omit<Scene, 'html'>[] = [
+const meta: Omit<Scene, 'html' | 'kind'>[] = [
   {
     id: 'koi',
     title: 'Koi',
@@ -39,4 +42,7 @@ const meta: Omit<Scene, 'html'>[] = [
   },
 ];
 
-export const scenes: Scene[] = meta.map((m) => ({ ...m, html: sceneHtml[m.id] }));
+export const scenes: Scene[] = [
+  ...meta.map((m) => ({ ...m, kind: 'scene' as const, html: sceneHtml[m.id] })),
+  ...photoMeta.map((m) => ({ ...m, kind: 'photo' as const, html: sceneHtml[m.id] })),
+];

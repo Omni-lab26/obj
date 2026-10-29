@@ -88,20 +88,77 @@
     } catch (e) {}
   }
 
-  // React Native calls these through injectJavaScript.
-  window.__ambient = { pause: () => setPaused(true), resume: () => setPaused(false) };
+  // The app passes settings before the page loads (window.__ambientInit) and
+  // later through these calls (injectJavaScript in the app, direct calls on web).
+  const init = window.__ambientInit || {};
+  /** Digital layer amount from the app's settings: 0 = raw picture, 1 = fully digital. */
+  Host.digital = typeof init.digital === 'number' ? init.digital : 0.65;
+  // Test hooks: #seed=N makes Math.random repeatable; step(dt) advances one frame by hand
+  // (call pause() first) so a test can capture exact frame sequences.
+  const seedMatch = /seed=(\d+)/.exec(location.hash);
+  if (seedMatch) {
+    let a = Number(seedMatch[1]) >>> 0;
+    Math.random = () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  window.__ambient = {
+    step: (dt = 1 / 30) => {
+      if (!scene) return;
+      Host.time += dt;
+      scene.frame(dt, Host.time);
+    },
+    pause: () => setPaused(true),
+    resume: () => setPaused(false),
+    setDigital: (v) => {
+      Host.digital = v;
+      if (scene && scene.digital) scene.digital(v);
+    },
+  };
   document.addEventListener('visibilitychange', () => setPaused(document.hidden));
   addEventListener('resize', onResize);
 
+  // A press held still for LONG_PRESS_MS is a long-press: the app toggles its clock.
+  const LONG_PRESS_MS = 520;
+  let press = null;
+  function endPress() {
+    if (press) clearTimeout(press.timer);
+    press = null;
+  }
   addEventListener('pointerdown', (e) => {
     post({ type: 'touch' });
-    if (scene && scene.tap) scene.tap(e.clientX, e.clientY);
+    endPress();
+    const x = e.clientX;
+    const y = e.clientY;
+    press = {
+      x,
+      y,
+      timer: setTimeout(() => {
+        press = null;
+        post({ type: 'longpress', x, y });
+        if (scene && scene.longpress) scene.longpress(x, y);
+      }, LONG_PRESS_MS),
+    };
+    if (scene && scene.tap) scene.tap(x, y);
   });
   addEventListener('pointermove', (e) => {
+    if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 12) endPress();
     if (e.buttons && scene && scene.move) scene.move(e.clientX, e.clientY);
   });
-  addEventListener('pointerup', () => scene && scene.up && scene.up());
-  addEventListener('pointercancel', () => scene && scene.up && scene.up());
+  addEventListener('pointerup', () => {
+    endPress();
+    if (scene && scene.up) scene.up();
+  });
+  addEventListener('pointercancel', () => {
+    endPress();
+    if (scene && scene.up) scene.up();
+  });
+  // iOS fires contextmenu on long-press in some webviews; never show a menu.
+  addEventListener('contextmenu', (e) => e.preventDefault());
   // Keep iOS from scrolling, zooming or showing the callout menu.
   addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
   addEventListener('gesturestart', (e) => e.preventDefault());
