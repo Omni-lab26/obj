@@ -87,6 +87,14 @@ export type CardLook = {
   Wash?: ComponentType<{ color: SharedValue<string> }>;
   /** the ad under the cards */
   Ad?: ComponentType;
+  /** the top of the page: the grabber, what's running, 背景 and 眺める (each only when there is one to open) */
+  Top?: ComponentType<{ state: 'idle' | 'live' | 'paused'; name: string; close: () => void; onBackdrop?: () => void; onLook?: () => void }>;
+  /** the heading over the cards (opens the timetable), the day, and 並べ替え when there's more than one plan left */
+  Head?: ComponentType<{ date: Date; shown: number; count: number; canSort: boolean; onOpen: () => void; onSort: () => void }>;
+  /** where you are in the row: n places (0 is the card that adds a plan) */
+  Pager?: ComponentType<{ n: number; shown: number }>;
+  /** the sessions waiting to be recorded, and まとめて記録 */
+  Waiting?: ComponentType<{ held: Held[]; onPress: () => void }>;
 };
 export const CardLookContext = createContext<CardLook | null>(null);
 const useLook = () => useContext(CardLookContext);
@@ -222,6 +230,11 @@ export function CardTop() {
   const name = subj(useStore((s) => s.subj)).name;
   const tone = useTone();
   const bg = useBackdrop();
+  const Top = useLook()?.Top;
+  if (Top) {
+    return <Top state={ss.running ? (ss.paused ? 'paused' : 'live') : 'idle'} name={name} close={() => closeTimer()}
+      onBackdrop={BACKDROPS_OPEN ? backdropSheet : undefined} onLook={bg !== 'none' ? () => looking.set(true) : undefined} />;
+  }
   const state = ss.running ? `${name}を勉強中` : 'これから';
   return (
     <View pointerEvents="box-none" style={{ alignItems: 'center' }}>
@@ -363,6 +376,7 @@ function Deck({ height }: { height: number }) {
   return (
     <View pointerEvents="box-none" style={{ flex: 1 }}>
       {/* today's timetable, and putting it in another order */}
+      {look?.Head ? <look.Head date={d} shown={shown} count={cards.length} canSort={rest > 1} onOpen={() => closeTimer(() => router.navigate('/study'))} onSort={() => { haptic.tap(); orderSheet(); }} /> : (
       <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 2, paddingBottom: 14 }}>
         <Press onPress={() => closeTimer(() => router.navigate('/study'))} scale={0.98} accessibilityRole="link" accessibilityLabel="今日の時間割を開く" style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -382,6 +396,7 @@ function Deck({ height }: { height: number }) {
           </Press>
         ) : null}
       </View>
+      )}
 
       {/* the cards */}
       <View ref={row} onLayout={measure} style={{ height: H }}>
@@ -402,8 +417,8 @@ function Deck({ height }: { height: number }) {
         </LayoutAnimationConfig>
       </View>
 
-      <Pager x={x} step={step} n={n} tone={tone} label={shown === 0 ? '追加' : `${shown} / ${cards.length}`} />
-      {held.length ? <Waiting held={held} tone={tone} onPress={() => { haptic.tap(); setMenu({ kind: 'all' }); }} /> : null}
+      {look?.Pager ? <look.Pager n={n} shown={shown} /> : <Pager x={x} step={step} n={n} tone={tone} label={shown === 0 ? '追加' : `${shown} / ${cards.length}`} />}
+      {held.length ? (look?.Waiting ? <look.Waiting held={held} onPress={() => { haptic.tap(); setMenu({ kind: 'all' }); }} /> : <Waiting held={held} tone={tone} onPress={() => { haptic.tap(); setMenu({ kind: 'all' }); }} />) : null}
       {/* what's left of the page goes above the ad, which keeps to the bottom */}
       <View pointerEvents="none" style={{ flex: 1 }} />
       {Ad ? <Ad /> : <AdCard tone={tone} />}

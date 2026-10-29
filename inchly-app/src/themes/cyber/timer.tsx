@@ -4,13 +4,13 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { type SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import Svg, { Defs, Line, LinearGradient, Pattern, Polygon, Rect, Stop } from 'react-native-svg';
 
-import { subj } from '@/data';
+import { pad, subj } from '@/data';
 import { useDesign } from '@/design';
 import { iconUri } from '@/lib/planIcon';
 import { endOf } from '@/lib/timetable';
-import { session, useTicking } from '@/screens/model';
+import { jpHm, session, useTicking } from '@/screens/model';
 import { type CardFaceProps, type CardLook, clock } from '@/screens/timer/cards';
-import { elapsedOf, sameFav, setDesign, toggleFavorite, togglePause, useStore } from '@/store';
+import { elapsedOf, type Held, sameFav, setDesign, toggleFavorite, togglePause, useStore } from '@/store';
 import { T } from '@/themes/kit';
 import { haptic, Press } from '@/ui/base';
 import { planSheet } from '@/ui/PlanSheets';
@@ -19,7 +19,7 @@ import { toast } from '@/ui/Toast';
 import { AlleyArt } from './art';
 import { CIcon } from './icons';
 import { C, glow } from './look';
-import { Btn, cellW, Cut, Ib, J, Mono } from './parts';
+import { Btn, cellW, Cut, Ib, J, Mono, Rec } from './parts';
 import { plateOf } from './sign';
 
 // サイバー's timer card (TimerKit.card), after the parts bible: a panel cut at
@@ -351,4 +351,79 @@ function CyberAd() {
   );
 }
 
-export const card: CardLook = { Face: CyberCard, Add: CyberAdd, corner: 0, Shade, Wash, Ad: CyberAd };
+// ---------- the page around the cards ----------
+const DOW = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+/** The top: the grabber, what's running as a recorder's light, and 背景 / 眺める as small cyan-edged keys (each only when there's one to open). */
+function CyberTop({ state, name, close, onBackdrop, onLook }: { state: 'idle' | 'live' | 'paused'; name: string; close: () => void; onBackdrop?: () => void; onLook?: () => void }) {
+  return (
+    <View pointerEvents="box-none" style={{ alignItems: 'center' }}>
+      <Press onPress={close} hitSlop={14} accessibilityLabel="小さくする（下にスライドでも）" style={{ marginTop: 8, width: 44, height: 4, backgroundColor: C.t3 }} />
+      <View pointerEvents="box-none" style={{ height: 44, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 }}>
+        {onBackdrop ? <Btn label="背景" kind="sec" small onPress={onBackdrop} a11y="背景を選ぶ" /> : null}
+        <View pointerEvents="none" style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          {state === 'idle' ? (
+            <>
+              <Mono size={10} color={C.t3} ls={0.14}>STANDBY</Mono>
+              <J size={12} w="700" color={C.t2} lh={16}>これから</J>
+            </>
+          ) : <Rec label={`${name}を${state === 'paused' ? '一時停止' : '計測中'}`} on={state === 'live'} />}
+        </View>
+        {onLook ? <Btn label="眺める" kind="sec" small onPress={onLook} a11y="背景を眺める（文字とボタンを消す）" /> : null}
+      </View>
+    </View>
+  );
+}
+
+/** The heading: 今日の時間割 in the heavy face with the day as a cyan readout, and 並べ替え as a ghost key with a yellow underline. */
+function CyberHead({ date, shown, count, canSort, onOpen, onSort }: { date: Date; shown: number; count: number; canSort: boolean; onOpen: () => void; onSort: () => void }) {
+  const at = shown ? `${pad(shown)} / ${pad(count)}` : `NEW / ${pad(count)}`;
+  return (
+    <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 2, paddingBottom: 14 }}>
+      <Press onPress={onOpen} scale={0.98} accessibilityRole="link" accessibilityLabel="今日の時間割を開く" style={{ flex: 1, minWidth: 0, gap: 2 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <J size={24} w="900" lh={30}>今日の時間割</J>
+          <J size={18} color={C.t3} lh={24}>›</J>
+        </View>
+        <Mono size={11} color={C.c} ls={0.14}>{`${date.getMonth() + 1}.${pad(date.getDate())} ${DOW[date.getDay()]} · ${at}`}</Mono>
+      </Press>
+      {canSort ? (
+        <Press onPress={onSort} scale={0.94} hitSlop={6} accessibilityLabel="今日の予定の順番を入れ替える"
+          style={{ height: 36, paddingHorizontal: 4, flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
+          <CIcon name="sort" size={16} color={C.t1} />
+          <J size={13} w="700" lh={16}>並べ替え</J>
+          <View pointerEvents="none" style={{ position: 'absolute', left: 4, right: 4, bottom: 4, height: 2, backgroundColor: C.y }} />
+        </Press>
+      ) : null}
+    </View>
+  );
+}
+
+/** Where you are in the row: a dash per place, the one you're on yellow and longer, and the count. */
+function CyberPager({ n, shown }: { n: number; shown: number }) {
+  return (
+    <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 16 }} accessible accessibilityLabel={shown ? `${shown} / ${n - 1}` : '追加'}>
+      <View style={{ flexDirection: 'row', gap: 3 }}>
+        {Array.from({ length: n }, (_, i) => (
+          <View key={i} style={{ width: i === shown ? 24 : 12, height: 3, backgroundColor: i === shown ? C.y : C.steel, boxShadow: i === shown ? `0px 0px 6px ${C.y}` : undefined }} />
+        ))}
+      </View>
+      {shown ? <Mono size={11} ls={0.1}>{`${pad(shown)} / ${pad(n - 1)}`}</Mono> : <J size={11} w="700" color={C.t3} lh={14}>追加</J>}
+    </View>
+  );
+}
+
+/** What's waiting to be recorded (a square in each subject's color), and まとめて記録 as a yellow-edged key. */
+function CyberWaiting({ held, onPress }: { held: Held[]; onPress: () => void }) {
+  const min = held.reduce((n, h) => n + Math.max(1, Math.round(h.sec / 60)), 0);
+  return (
+    <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginTop: 16 }}>
+      <View pointerEvents="none" style={{ flexDirection: 'row', gap: 3 }}>
+        {held.slice(0, 4).map((h) => <View key={h.id} style={{ width: 10, height: 10, backgroundColor: subj(h.s).c, borderWidth: 1.5, borderColor: '#000' }} />)}
+      </View>
+      <J size={13} color={C.t2} style={{ flex: 1 }} numberOfLines={1}>{`記録まち ${held.length}つ · ${jpHm(min)}`}</J>
+      <Btn label="まとめて記録" kind="ysec" small onPress={onPress} a11y={`まとめて記録（${held.length}つ）`} />
+    </View>
+  );
+}
+
+export const card: CardLook = { Face: CyberCard, Add: CyberAdd, corner: 0, Shade, Wash, Ad: CyberAd, Top: CyberTop, Head: CyberHead, Pager: CyberPager, Waiting: CyberWaiting };
