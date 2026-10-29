@@ -587,7 +587,7 @@ kkkkkkkkkkkk`) }
       const d = Object.assign({}, BAR_DEFAULT.live, o);
       const s = SUBJ[d.subj] || SUBJ.free;
       const title = d.title || s.name;
-      el.dataset.elapsed = d.elapsed; el.dataset.plan = d.plan; el.dataset.tail = d.tail;
+      el.dataset.elapsed = d.elapsed; el.dataset.plan = d.plan; el.dataset.tail = d.tail; el.dataset.subj = d.subj;
       el.innerHTML = `<div class="sbar-face">
         <a class="sbar-main" href="${href}"><span class="subj" data-s="${d.subj}" aria-hidden="true"><i class="dot run"></i></span><span class="sbar-txt"><span class="sbar-t">${esc(title)}</span><span class="sbar-s"><span class="sbar-time">${clock(d.elapsed)}</span> · ${esc(d.tail)}</span></span></a>
         <button class="ibtn sbar-pp" type="button"><i class="pi"></i></button>
@@ -646,6 +646,26 @@ kkkkkkkkkkkk`) }
     barEl.dataset.elapsed = +barEl.dataset.elapsed + 1;
     paintLive(barEl);
   }
+  /* 勉強バーとタイマーの時間をそろえる（見本だけの便利。sessionStorage がなくても動く）
+     国語のバーを押すと、いまの時間を to:'timer' で残す（timer.html が続きから始める）。
+     タイマーから戻ると、timer.html が to:'bar' で残した時間から、どのタブのバーも続きから進む。
+     タイマーの見本が知っているのは国語（b1）だけなので、ほかの科目のバー（home-live の英語など）には渡さない。 */
+  const BAR_KEY = 'inchly-mock-bar';
+  const handsOff = sb => !sb || (sb.dataset.state !== 'live' && sb.dataset.state !== 'paused') || sb.dataset.subj !== 'ja';
+  doc.addEventListener('click', e => {
+    const m = e.target.closest && e.target.closest('.chrome > .sbar .sbar-main'); if (!m) return;
+    const sb = m.closest('.sbar'); if (handsOff(sb)) return;
+    try { sessionStorage.setItem(BAR_KEY, JSON.stringify({ to: 'timer', elapsed: +sb.dataset.elapsed, state: sb.dataset.state, at: Date.now() })); } catch (_) { /* なくてもよい */ }
+  });
+  function barFromTimer() {
+    if (handsOff(barEl)) return;
+    let o = null;
+    try { o = JSON.parse(sessionStorage.getItem(BAR_KEY) || 'null'); if (o && o.to === 'bar') sessionStorage.removeItem(BAR_KEY); } catch (_) { return; }
+    if (!o || o.to !== 'bar' || !(o.elapsed >= 0) || Date.now() - o.at > 30 * 60e3) return;
+    barEl.dataset.elapsed = Math.round(o.elapsed + (o.state === 'live' ? (Date.now() - o.at) / 1000 : 0));
+    bar.set(o.state === 'paused' ? 'paused' : 'live');
+  }
+
   const bar = {
     state: () => (barEl ? barEl.dataset.state : 'none'),
     set(state) {
@@ -796,6 +816,7 @@ kkkkkkkkkkkk`) }
     frame();
     upgrade(doc);
     chrome();
+    barFromTimer();
     watchScroll();
     if (WIDE.addEventListener) WIDE.addEventListener('change', watchScroll);
   }

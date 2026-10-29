@@ -314,29 +314,11 @@
     history.replaceState(null, '', HASH[b.dataset.scene] || location.pathname);
   });
 
-  /* ---------- 勉強バーとタイマーの時間をそろえる（見本だけの便利。sessionStorage がなくても動く） ----------
-     バーを押すと、いまの時間を to:'timer' で残す（timer.html が続きから始める）。
-     タイマーから戻ると、timer.html が to:'bar' で残した時間からバーが進む。 */
-  const BAR_KEY = 'inchly-mock-bar';
-  document.addEventListener('click', e => {
-    const m = e.target.closest('.chrome > .sbar .sbar-main'); if (!m) return;
-    const sb = m.closest('.sbar');
-    if (sb.dataset.state !== 'live' && sb.dataset.state !== 'paused') return;
-    try { sessionStorage.setItem(BAR_KEY, JSON.stringify({ to: 'timer', elapsed: +sb.dataset.elapsed, state: sb.dataset.state, at: Date.now() })); } catch (_) { /* なくてもよい */ }
-  });
-  function barFromTimer() {
-    let o = null;
-    try { o = JSON.parse(sessionStorage.getItem(BAR_KEY) || 'null'); if (o && o.to === 'bar') sessionStorage.removeItem(BAR_KEY); } catch (_) { return; }
-    if (!o || o.to !== 'bar' || !(o.elapsed >= 0) || Date.now() - o.at > 30 * 60e3) return;
-    const sb = document.querySelector('.chrome > .sbar');
-    if (!sb || sb.dataset.state === 'idle') return;
-    sb.dataset.elapsed = Math.round(o.elapsed + (o.state === 'live' ? (Date.now() - o.at) / 1000 : 0));
-    A.bar.set(o.state === 'paused' ? 'paused' : 'live');
-  }
+  /* 勉強バーとタイマーの時間をそろえる仕組みは shared/app.js に移した（どのタブのバーでも続きから進む） */
 
   paint();
   deadlines();
-  const start = () => { barFromTimer(); if (scene !== 'a') setScene(scene); else document.querySelectorAll('#scene > [data-scene]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.scene === 'a'))); };
+  const start = () => { if (scene !== 'a') setScene(scene); else document.querySelectorAll('#scene > [data-scene]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.scene === 'a'))); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(start, 0)); else setTimeout(start, 0);
 })();
 </script>

@@ -17,7 +17,8 @@
 body.is-dragging{user-select:none;-webkit-user-select:none}
 
 /* ---------- 草 ---------- */
-.blk-grass .grass-c{touch-action:none;cursor:pointer}
+/* 縦の指はスクロールに返す（アプリの PanResponder と同じ：横の動きのときだけ指を取る） */
+.blk-grass .grass-c{touch-action:pan-y;cursor:pointer}
 
 /* ---------- 連続（炎・数・7日） ---------- */
 .streak{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:12px 16px}
@@ -32,15 +33,21 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
 
 /* ---------- いま勉強中の友達 ---------- */
 .fr{padding:14px 16px 4px}
-.fr > .sec-h{flex-wrap:wrap;column-gap:8px;row-gap:6px;margin-bottom:2px}
-.fr-tools{margin-left:auto;display:flex;align-items:center;gap:8px}
-.fr-tools .link{margin:-8px 0;font-size:13px}
-.chip.sort > .face{gap:4px;padding:0 7px 0 9px;font-size:12px;color:var(--ink-2)}
+.fr{container-type:inline-size}
+.fr > .sec-h{flex-wrap:wrap;column-gap:6px;row-gap:6px;margin-bottom:2px}
+.fr-tools{margin-left:auto;display:flex;align-items:center;gap:6px}
+.fr-tools .link{margin:-8px 0;font-size:12.5px}
+.chip.sort > .face{gap:3px;padding:0 6px 0 8px;font-size:11.5px;color:var(--ink-2)}
+/* それでも1行に入らない幅（320 など）：見出しだけ1行目、札ともっと見るは左に寄せて2行目 */
+@container (max-width:305px){ .chip.sort .pi{display:none} .chip.sort > .face{padding:0 8px} }   /* 360 幅：⌄ を外して1行に収める */
+@container (max-width:290px){ .fr-tools{margin-left:0} }
 .chip.sort .pi{color:var(--ink-3)}
 .fr-row{gap:10px}
 .fr-row .row-end{min-width:42px}
 .spark{flex:none;display:block;overflow:visible}
-.grip{flex:none;display:grid;place-items:center;width:30px;height:44px;margin-right:-6px;color:var(--ink-3);touch-action:none;cursor:grab}
+.grip{flex:none;display:grid;place-items:center;width:44px;height:44px;margin:0 -12px 0 -4px;color:var(--line-2);touch-action:none;cursor:grab}
+.fr-row.is-lift .grip,.fr-row:focus-visible .grip{color:var(--ink-3)}
+#fr-rows .fr-row{-webkit-touch-callout:none}
 .fr-empty{padding:12px 0 14px;font-size:13px;color:var(--ink-3)}
 .row-s-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* 左にスワイプ：下から赤い「非表示」 */
@@ -63,7 +70,6 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
 .fr-row.is-off .av,.fr-row.is-off .row-main{opacity:.55}
 
 /* ---------- 今日の勉強（主役の1枚） ---------- */
-.blk-today{margin-right:6px}
 .blk-today > .sec-h{flex-wrap:wrap;row-gap:6px}
 .blk-today > .sec-h .tag{margin-left:auto}
 .today-d{margin-top:-6px;font-size:var(--fs-sub);color:var(--ink-3);font-variant-numeric:tabular-nums}
@@ -72,7 +78,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
 .today-diff{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding-bottom:1px}
 .today-diff small{font-size:var(--fs-tiny);line-height:1.2;color:var(--ink-3)}
 .blk-today .tape{margin-top:18px}
-.blk-today .tape-bar{touch-action:none;cursor:pointer}
+.blk-today .tape-bar{touch-action:pan-y;cursor:pointer}
 /* 開くたびに 0 から転がる数字（transform だけ。行きすぎない） */
 .roll{display:inline-flex}
 .rd{display:inline-block;height:1em;overflow:hidden}
@@ -93,6 +99,9 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
 .tape .tape-seg{transition:opacity var(--t-micro) var(--ios)}
 .tape.is-hot .tape-seg{opacity:.4}
 .tape.is-hot .tape-seg.is-hot{opacity:1}
+.tape-key span{transition:opacity var(--t-micro) var(--ios)}
+.tape.is-hot .tape-key span{opacity:.4}
+.tape.is-hot .tape-key span.is-hot{opacity:1}
 
 /* ---------- シートの中（並び順・もっと見る・記録しますか？） ---------- */
 .sheet-h .sec-a{margin-left:0}
@@ -155,7 +164,8 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
 .tour-tail{position:absolute;width:20px;height:11px}
 .tour-tail.up{top:-10px}
 .tour-tail.down{bottom:-10px}
-.tour-pix{position:absolute;right:18px;top:-46px}
+.tour-h{display:flex;align-items:center;gap:12px}
+.tour-h .tour-pix{flex:none}
 
 /* ---------- 横の説明（広い画面）の中のボタン ---------- */
 .note .keys{margin-top:16px}
@@ -170,10 +180,10 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
         <p class="side-who">はる · @haru_study</p>
       </div>
       <div class="card side-list"><div class="rows">
-        <a class="row mrow" href="#" data-soon aria-label="設定"><span class="mi"><i data-pi="gear"></i></span><span class="row-main"><span class="row-t">設定</span></span><i class="chev" data-pi="right"></i></a>
-        <a class="row mrow" href="#" data-soon aria-label="科目と色"><span class="mi"><span class="pi" data-rows="book" aria-hidden="true"></span></span><span class="row-main"><span class="row-t">科目と色</span></span><i class="chev" data-pi="right"></i></a>
-        <a class="row mrow" href="#" data-soon aria-label="ブックマーク"><span class="mi"><span class="pi" data-rows="bookmark" aria-hidden="true"></span></span><span class="row-main"><span class="row-t">ブックマーク</span></span><i class="chev" data-pi="right"></i></a>
-        <a class="row mrow" href="#" data-soon aria-label="テーマ（スタンダード）"><span class="mi"><span class="pi" data-rows="sun" aria-hidden="true"></span></span><span class="row-main"><span class="row-t">テーマ</span></span><span class="side-sub">スタンダード</span><i class="chev" data-pi="right"></i></a>
+        <a class="row mrow" href="#" data-soon aria-label="設定"><span class="mi"><i data-pi="gear"></i></span><span class="row-main"><span class="row-t">設定</span></span></a>
+        <a class="row mrow" href="#" data-soon aria-label="科目と色"><span class="mi"><span class="pi" data-rows="book" aria-hidden="true"></span></span><span class="row-main"><span class="row-t">科目と色</span></span></a>
+        <a class="row mrow" href="#" data-soon aria-label="ブックマーク"><span class="mi"><span class="pi" data-rows="bookmark" aria-hidden="true"></span></span><span class="row-main"><span class="row-t">ブックマーク</span></span></a>
+        <a class="row mrow" href="#" data-soon aria-label="テーマ（スタンダード）"><span class="mi"><span class="pi" data-rows="sun" aria-hidden="true"></span></span><span class="row-main"><span class="row-t">テーマ</span></span><span class="side-sub">スタンダード</span></a>
       </div></div>
       <div class="side-foot"><button class="key" type="button" data-soon aria-label="時間割に予定を追加"><i data-pi="plus"></i>時間割に追加</button></div>
     </nav>
@@ -193,7 +203,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
       <section class="card streak" aria-label="連続 0日。休み券 1">
         <span class="flame" data-days="0"></span>
         <div class="streak-n" aria-hidden="true">
-          <p><span class="mid">00</span><span class="unit">日連続</span></p>
+          <p><span class="mid roll" data-v="0"></span><span class="unit">日連続</span></p>
           <p class="streak-s">休み券 1</p>
         </div>
         <div class="wk" role="img" aria-label="今週：まだ勉強した日はありません。今日は木曜日"><span class="wk-d"><i></i>月</span><span class="wk-d"><i></i>火</span><span class="wk-d"><i></i>水</span><span class="wk-d is-today is-wait"><i></i>木</span><span class="wk-d is-future"><i></i>金</span><span class="wk-d is-future"><i></i>土</span><span class="wk-d is-future"><i></i>日</span></div>
@@ -210,7 +220,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
       </section>
 
       <section class="card hero blk-today" aria-labelledby="h-today">
-        <div class="sec-h"><h2 class="sec-t" id="h-today" style="--accent:var(--coral)">今日の勉強</h2></div>
+        <div class="sec-h"><h2 class="sec-t" id="h-today" style="--accent:var(--ink)">今日の勉強</h2></div>
         <p class="today-d">10月29日（木）</p>
         <div class="today-num">
           <span class="sr" id="today-sr">今日 0時間00分。昨日と同じ</span>
@@ -288,7 +298,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
     <p class="label-j sq">この画面で見てほしい点</p>
     <h1>ホーム（はじめての人）</h1>
     <p>登録した直後のホーム。記録がまだないので、草・連続・今日・バッジが「まだ」の形になります。名前は見本と同じ「はる」にしました。</p>
-    <ul><li>まず「ようこそ」のトーストと、使い方の案内（アプリと同じ文）。暗い所か「次へ」で進みます。</li><li>草は空きマスと今日の枠だけ。炎のボッは灰色で眠っていて、揺れません。</li><li>今日は 0時間00分。締切の札はなく、テープは「目標まで 3:00」だけ。</li><li>バッジは 0 / 11。今のアプリは「1日5時間」「朝勉10回」が最初から達成になる不具合があるので、ここでは正しく「まだ」にしました。</li><li>時間割がないので、バーは「今日の時間割 / このあとの予定はありません」。勉強を開始は自習で始まります。</li></ul>
+    <ul><li>まず「ようこそ」のトースト。それが消えてから、使い方の案内（アプリと同じ文）。暗い所か「次へ」で進みます。</li><li>草は空きマスと今日の枠だけ。炎のボッは灰色で眠っていて、揺れません。</li><li>今日は 0時間00分。締切の札はなく、テープは「目標まで 3:00」だけ。</li><li>バッジは 0 / 11。今のアプリは「1日5時間」「朝勉10回」が最初から達成になる不具合があるので、ここでは正しく「まだ」にしました。</li><li>時間割がないので、バーは「今日の時間割 / このあとの予定はありません」。勉強を開始は自習で始まります。</li></ul>
     <div class="keys"><button class="key key-sm" type="button" data-tour>使い方をもう一度見る</button></div>
     <p class="note-links"><a class="link" href="home.html">ホーム</a><a class="link" href="home-live.html">勉強中</a><a class="link" href="menu.html">メニュー</a><a class="link" href="img/home.webp">今のアプリ（写真）</a><a class="link" href="index.html">一覧へ</a><a class="link" href="system.html">部品</a></p>
   </aside>
@@ -424,24 +434,36 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
       g = { row, grip: !!grip, x0: e.clientX, y0: e.clientY, id: e.pointerId, mode: grip ? 'drag' : null, dx: 0, dy: 0, vx: 0, lx: e.clientX, lt: performance.now(),
         rows, i: rows.indexOf(row), w: row.getBoundingClientRect().width,
         step: rows.length > 1 ? rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().top : 62, t: rows.indexOf(row) };
-      if (grip) {
-        e.stopPropagation();                       // メニューのスワイプは始めない
+      const lift = () => {
         try { row.setPointerCapture(e.pointerId); } catch (_) { /* なし */ }
         row.classList.add('is-lift'); body.classList.add('is-dragging');
         rows.forEach(r => { if (r !== row) r.style.transition = 'transform var(--t-move) var(--ios)'; });
+      };
+      if (grip) {
+        e.stopPropagation();                       // メニューのスワイプは始めない
+        lift();
+      } else {
+        /* 行を長押し（約0.5秒、指が動かない）でも持ち上げる（アプリの Friends と同じ） */
+        const gg = g;
+        gg.hold = setTimeout(() => { if (g === gg && !gg.mode) { gg.mode = 'drag'; gg.dx = gg.dy = 0; lift(); } }, 500);
       }
     });
+    /* 持ち上げたあとの指の縦の動きで、画面がスクロールしないように */
+    box.addEventListener('touchmove', e => { if (g && g.mode === 'drag') e.preventDefault(); }, { passive: false });
+    box.addEventListener('contextmenu', e => { if (e.target.closest('.fr-row')) e.preventDefault(); });
     box.addEventListener('pointermove', e => {
       if (!g || e.pointerId !== g.id) return;
       g.dx = e.clientX - g.x0; g.dy = e.clientY - g.y0;
       const now = performance.now(); g.vx = (e.clientX - g.lx) / Math.max(1, now - g.lt); g.lx = e.clientX; g.lt = now;
+      if (g.mode === 'drag') e.stopPropagation();  // 持ち上げた行を動かす間は、メニューのスワイプを始めない
       if (!g.mode) {
         if (Math.abs(g.dx) < 10 && Math.abs(g.dy) < 10) return;
+        clearTimeout(g.hold);
         if (g.dx < 0 && Math.abs(g.dx) > Math.abs(g.dy) * 1.2) {
           g.mode = 'swipe';
           try { g.row.setPointerCapture(g.id); } catch (_) { /* なし */ }
           g.row.classList.add('is-swiping'); body.classList.add('is-dragging');
-        } else { g = null; return; }
+        } else { clearTimeout(g.hold); g = null; return; }
       }
       if (g.mode === 'swipe') {
         const x = clamp(g.dx, -g.w, 0);
@@ -462,6 +484,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
     const end = e => {
       if (!g || e.pointerId !== g.id) return;
       const s = g; g = null;
+      clearTimeout(s.hold);
       body.classList.remove('is-dragging');
       if (!s.mode) return;
       s.row.dataset.moved = '1'; setTimeout(() => { delete s.row.dataset.moved; }, 60);
@@ -533,11 +556,11 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
     if (!t) { t = doc.createElement('div'); t.className = 'tip'; t.setAttribute('aria-hidden', 'true'); host.appendChild(t); }
     return t;
   }
-  function placeTip(t, host, x, y) {
+  function placeTip(t, host, x, y, under) {
     const hr = host.getBoundingClientRect();
     const w = t.offsetWidth, h = t.offsetHeight;
     t.style.left = clamp(x - hr.left - w / 2, 6, hr.width - w - 6) + 'px';
-    t.style.top = (y - hr.top - h - 7) + 'px';
+    t.style.top = (under ? y - hr.top + 5 : y - hr.top - h - 7) + 'px';
   }
   function pressRead(el, onAt, onEnd, holdMs) {
     let down = false, hide = 0;
@@ -545,7 +568,8 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
     el.addEventListener('pointermove', e => { if (down) onAt(e); });
     const up = () => { if (!down) return; down = false; hide = setTimeout(onEnd, holdMs); };
     el.addEventListener('pointerup', up);
-    el.addEventListener('pointercancel', up);
+    /* 縦に動いて画面のスクロールになったら（pointercancel）、札をすぐ消すだけ */
+    el.addEventListener('pointercancel', () => { if (!down) return; down = false; clearTimeout(hide); onEnd(); });
   }
   /* 草：今日は 10月29日（木）。最後の列の月曜は 10月26日 */
   const END = new Date(2026, 9, 26);
@@ -587,13 +611,15 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
       let hit = -1;
       segs.forEach((s, i) => { const r = s.getBoundingClientRect(); if (e.clientX >= r.left - 2 && e.clientX <= r.right + 4) hit = i; });
       segs.forEach((s, i) => s.classList.toggle('is-hot', i === hit));
+      $$('.tape-key span', tp).forEach((s, i) => s.classList.toggle('is-hot', i === hit));
       tp.classList.toggle('is-hot', hit >= 0);
       if (hit < 0) { tip.classList.remove('is-on'); return; }
       const p = parts[hit], r = segs[hit].getBoundingClientRect();
       tip.innerHTML = `<i style="--c:${p.s.c}"></i>${p.s.name} <span>${hm(p.min)}</span>`;
-      placeTip(tip, card, r.left + r.width / 2, bar.getBoundingClientRect().top);
+      /* 札はテープの下（目盛りの所）に出す。上に出すと 32 の数字にかぶる */
+      placeTip(tip, card, r.left + r.width / 2, bar.getBoundingClientRect().bottom, true);
       tip.classList.add('is-on');
-    }, () => { tip.classList.remove('is-on'); tp.classList.remove('is-hot'); $$('.tape-seg', tp).forEach(s => s.classList.remove('is-hot')); }, 1200);
+    }, () => { tip.classList.remove('is-on'); tp.classList.remove('is-hot'); $$('.tape-seg, .tape-key span', tp).forEach(s => s.classList.remove('is-hot')); }, 1200);
   }
 
   /* =========================================================
@@ -773,7 +799,9 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
     const nt = doc.createElement('div');
     nt.className = 'tape'; nt.dataset.goal = '180'; nt.dataset.parts = `en:${95 + min},ma:40,ja:30`; nt.setAttribute('data-reveal', '');
     tp.replaceWith(nt); A.upgrade(nt.parentElement); wireTape(nt);
-    later(() => A.toast({ title: `${name} ${min}分を記録しました`, exp: `+${min} EXP`, pix: 'penta', from: 'idle', face: 'happy' }), 300);
+    /* EXP は アプリと同じく「記録のあと − 前」：1日の目標（3時間）をこえたら +30 */
+    const GOAL = 180, bonus = 165 < GOAL && total >= GOAL ? 30 : 0;
+    later(() => A.toast({ title: `${name} ${min}分を記録しました`, exp: `+${min + bonus} EXP`, pix: 'penta', from: 'idle', face: 'happy' }), 300);
   }
   if (PAGE === 'live') {
     const sheet = $('#sheet-ask');
@@ -842,12 +870,13 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
       const nb = doc.createElement('div');
       nb.className = 'tour-bub'; nb.tabIndex = -1;
       nb.setAttribute('role', 'dialog'); nb.setAttribute('aria-modal', 'true'); nb.setAttribute('aria-labelledby', 'tour-t'); nb.setAttribute('aria-describedby', 'tour-b');
-      nb.innerHTML = (s.pix ? `<span class="tour-pix" data-pix="mebu" data-face="${s.pix}" data-scale="3"></span>` : '') +
-        (s.at ? '<svg class="tour-tail" viewBox="0 0 20 11" width="20" height="11" aria-hidden="true" focusable="false"></svg>' : '') +
-        `<h2 id="tour-t">${s.title}</h2><p id="tour-b">${s.body}</p>` +
+      const h2 = `<h2 id="tour-t">${s.title}</h2>`;
+      nb.innerHTML = (s.at ? '<svg class="tour-tail" viewBox="0 0 20 11" width="20" height="11" aria-hidden="true" focusable="false"></svg>' : '') +
+        (s.pix ? `<div class="tour-h"><span class="tour-pix" data-pix="mebu" data-face="${s.pix}" data-scale="3"></span>${h2}</div>` : h2) +
+        `<p id="tour-b">${s.body}</p>` +
         `<div class="tour-foot"><span class="tour-dots" role="img" aria-label="${i + 1} / ${list.length}">${list.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</span>` +
         (last ? '' : '<button class="tbtn tour-skip" type="button" aria-label="使い方をスキップ">スキップ</button>') +
-        `<button class="key key-ink key-sm tour-next" type="button" aria-label="${last ? '使い方を終わる' : '次へ'}">${last ? 'はじめる' : '次へ'}</button></div>`;
+        `<button class="key key-sm tour-next" type="button" aria-label="${last ? '使い方を終わる' : '次へ'}">${last ? 'はじめる' : '次へ'}</button></div>`;
       if (bub) bub.remove();
       bub = nb; root.appendChild(nb);
       A.upgrade(nb);
@@ -890,8 +919,9 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
     later(() => $$('.roll').forEach(el => rollTo(el, el.dataset.v)), 120);
     if (PAGE === 'live') { const sb = $('.chrome .sbar'); if (sb) { sb.style.touchAction = 'none'; wirePull(sb); } }
     if (NEW) {
-      A.toast({ title: 'ようこそ、はるさん', sub: '最初の記録は、下の「勉強を開始」から', ms: 3200 });
-      later(tour, 700);
+      /* まず「ようこそ」のトーストだけ。消えてから使い方の案内（重ねない） */
+      A.toast({ title: 'ようこそ、はるさん', sub: '最初の記録は、下の「勉強を開始」から', ms: 2600 });
+      setTimeout(tour, reduced() ? 2700 : 3000);
     }
     if (PAGE === 'menu') later(() => setMenu(true), 350);
     /* 比べる用：下の2本のバーを今のアプリのすりガラスに */

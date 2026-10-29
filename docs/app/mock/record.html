@@ -20,8 +20,8 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
 .rec-navt{position:absolute;left:64px;right:64px;bottom:0;height:var(--hdr-h);display:flex;align-items:center;justify-content:center;pointer-events:none}
 
 /* 書く所：主役のカード1枚（ライムの影）。右に 6px はみ出すぶん空ける */
-/* 紙1枚が下の帯まで続く（今のアプリの白い全画面と同じ）。中身は上から。空いた所を押すとメモに書ける */
-.rec-card{flex:1 0 auto;margin:6px 6px 0 0}
+/* カードは中身の高さ（メモが伸びるぶんだけ伸びる）。その下は紙の地 */
+.rec-card{flex:none;margin:6px 6px 0 0}
 .rec-main{display:flex;gap:12px}
 .rec-coin{--size:42px;border-radius:50%}
 .rec-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
@@ -29,16 +29,19 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
 .rec-name b{flex:none;font:800 var(--fs-h)/1.3 var(--f-body)}
 .rec-name span{flex:1;min-width:0;font-size:12.5px;line-height:1.3;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* メモ：18pt。枠は描かない（紙に直接書く）。入力中だけフォーカスの輪 */
-.rec-memo{display:block;width:100%;min-height:124px;margin:-4px 0 0;padding:0;border:0;background:none;resize:none;
-  font:400 18px/26px var(--f-body);color:var(--ink);outline:none}
+/* メモ：18pt。枠は描かない（紙に直接書く）。書いた量に合わせて伸びる。触れてもカーソルだけ（左に細い線で「いまここ」） */
+.rec-memo{display:block;width:100%;min-height:78px;margin:-4px 0 0;padding:0;border:0;background:none;resize:none;overflow:hidden;field-sizing:content;
+  font:400 18px/26px var(--f-body);color:var(--ink);outline:none;caret-color:var(--ink)}
 .rec-memo::placeholder{color:var(--ink-3)}
-.rec-memo:focus-visible{outline:3px solid var(--focus);outline-offset:6px;border-radius:6px}
+.rec-memo:focus-visible{outline:none;box-shadow:-8px 0 0 -6px var(--focus)}
+.rec-memo[readonly]{color:var(--ink-2)}
 
-/* ついているもの：科目・時間（直せる）・何時から何時・予定とくらべて */
-.rec-chips{display:flex;flex-wrap:wrap;align-items:center;gap:10px 8px}
-.rec-chips .tag{min-height:32px;padding:0 11px;border-radius:var(--r-chip);font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
-.rec-chips .tag .dot{width:8px;height:8px}
+/* ついているもの：科目・何時から何時・予定とくらべて は塗りのない字の並び（押せない）。押せるのは「− 39分 ＋」の板だけ */
+.rec-meta{display:flex;flex-wrap:wrap;align-items:center;gap:2px 0;font:600 12.5px/1.5 var(--f-body);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.rec-meta > span{display:inline-flex;align-items:center;white-space:nowrap}
+.rec-meta > span + span::before{content:"·";margin:0 6px;color:var(--ink-3)}
+.rec-meta .dot{width:8px;height:8px;margin-right:5px}
+.rec-time{display:flex;align-items:center}
 /* − 39分 ＋：押せるのはこの板だけ（床あり）。ヘッダーのアイコンの板と同じ作り */
 .step.kgroup{height:36px;border-radius:var(--r-chip)}
 .step.kgroup > button{width:44px}
@@ -61,23 +64,17 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
 .rec-share[aria-checked="true"] .sw{background:var(--lime)}
 .rec-share[aria-checked="true"] .sw i{transform:translateX(20px);background:var(--ink)}
 
-/* 自習のとき：何の科目だったか（えらばなければ、あとで仕分け）と内容 */
+/* 自習のとき：何の科目だったか（えらばなければ、あとで仕分け）と内容。科目は床のあるチップ（押せる）。折り返してカードの中に収める */
 .rec-free{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1.5px solid var(--line)}
-.rec-q{display:flex;align-items:baseline;gap:8px;min-width:0}
+.rec-q{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0}
 .rec-q b{flex:none;font:700 13px/1.3 var(--f-body);color:var(--ink-2)}
-.rec-q span{flex:1;min-width:0;font-size:11.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rec-picks{display:flex;gap:4px;margin:0 calc(-1 * var(--pad));padding:2px var(--pad) 4px;overflow-x:auto;scrollbar-width:none}
-.rec-picks::-webkit-scrollbar{display:none}
-.pick{flex:none;display:flex;flex-direction:column;align-items:center;gap:5px;width:66px;min-height:72px;padding:6px 0 5px;border:0;border-radius:12px;background:none;color:var(--ink-2);
-  font:500 11px/1.2 var(--f-body);cursor:pointer;transition:background-color var(--t-micro) var(--ios)}
-.pick .subj{--size:40px}
-.pick[aria-checked="true"]{background:var(--lime);box-shadow:var(--ring);color:var(--ink);font-weight:700}
-.pick:focus-visible{outline-offset:-2px}
+.rec-q span{font-size:11.5px;color:var(--ink-3)}
+.rec-picks{gap:10px 8px}
+.rec-picks .chip .dot{width:8px;height:8px}
 .rec-in{display:block;width:100%;height:44px;padding:0 12px;border:0;border-radius:10px;background:var(--paper-2);box-shadow:var(--ring-soft);
   font:400 16px/1.2 var(--f-body);color:var(--ink)}
 .rec-in::placeholder{color:var(--ink-3)}
-.rec-hints{flex-wrap:nowrap;margin:-4px calc(-1 * var(--pad)) 0;padding:6px var(--pad) 8px;overflow-x:auto;scrollbar-width:none}
-.rec-hints::-webkit-scrollbar{display:none}
+.rec-hints{gap:10px 8px;padding-bottom:4px}
 .rec-hints .chip > .face{font-weight:500;color:var(--ink-2)}
 
 /* 下の帯：今日の合計がどう変わるか ＋ メモの残り（140字の輪） */
@@ -101,13 +98,18 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
 .stamp-w{margin-top:-26px;padding:7px 14px 8px;border-radius:12px;background:var(--sun);transform:rotate(-5deg);
   box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink),3px 4px 0 5px rgba(23,18,31,.22);font:400 32px/1 var(--f-pixj);letter-spacing:.02em;color:var(--ink);white-space:nowrap}
 
-/* トースト：アプリでは記録のあとタイマーに戻ってから出る。見本はこの画面に残るので、上の「続ける」「記録しました」を隠さないよう帯の下に出す */
-.app > .toasts{top:calc(var(--safe-top) + var(--hdr-h) + 4px)}
+/* トーストはほかの画面と同じ位置（共通の .toasts のまま）。アプリでは記録のあとタイマーに戻ってから出る */
 
 /* 記録する勉強がないとき */
 .rec-empty{margin-top:28px}
 .rec-empty .empty{padding:32px 20px 28px;gap:10px}
 .rec-empty .empty span:last-child{font-size:var(--fs-sub);color:var(--ink-3)}
+
+/* 見本の切りかえ（スマホの画面の中。アプリにはない物なので、点線の下に小さく） */
+.mock-sw{margin-top:auto;padding:22px 0 4px}
+.mock-sw .seg-cap{display:block;margin:0 0 8px;padding-top:10px;border-top:1.5px dashed var(--line);font-size:11px;color:var(--ink-3)}
+.mock-sw .seg > button{padding:0 6px;font-size:12.5px}
+@media (min-width:431px){ .mock-sw{display:none} }
 
 /* 横の説明の切りかえ */
 .note .seg{margin-top:8px}
@@ -116,8 +118,10 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
 .note .note-again{margin-top:14px}
 .note-links .link{min-width:44px;justify-content:center}
 
+/* せまい画面：左のコインの列をやめて、メモと札を全幅に */
 @media (max-width:359px){
   .rec-share{font-size:12.5px}
+  .rec-coin{display:none}
 }
 </style>
 </head>
@@ -136,14 +140,9 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
       <section class="card hero rec-card" id="composer" aria-label="この勉強を記録">
         <div class="rec-free" id="free" hidden>
           <p class="rec-q"><b id="free-q">何の科目を勉強した？</b><span id="free-hint">選ばなければ、あとで仕分けに</span></p>
-          <div class="rec-picks" id="picks" role="radiogroup" aria-label="勉強した科目"></div>
+          <div class="chips rec-picks" id="picks" data-single role="group" aria-label="勉強した科目"></div>
           <input class="rec-in" id="what" type="text" maxlength="30" placeholder="内容（例：相対性理論、例題41〜50）" aria-label="勉強した内容" autocomplete="off">
-          <div class="chips rec-hints" id="hints" role="group" aria-label="前に書いた内容">
-            <button class="chip" type="button" data-w="相対性理論">相対性理論</button>
-            <button class="chip" type="button" data-w="ベクトル">ベクトル</button>
-            <button class="chip" type="button" data-w="長文読解 第3講">長文読解 第3講</button>
-            <button class="chip" type="button" data-w="古文単語 61〜80">古文単語 61〜80</button>
-          </div>
+          <div class="chips rec-hints" id="hints" role="group" aria-label="前に書いた内容"></div>
         </div>
 
         <div class="rec-main">
@@ -151,15 +150,13 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
           <div class="rec-col">
             <p class="rec-name"><b id="name">国語</b><span id="task">古文単語 315 · 61〜80</span></p>
             <textarea class="rec-memo" id="memo" rows="4" placeholder="どこまでやった？ どうだった？" aria-label="メモ（どこまでやった？ どうだった？）"></textarea>
-            <div class="rec-chips">
-              <span class="tag"><i class="dot" id="chip-dot" style="--c:var(--s-ja)"></i><span id="chip-name">国語</span></span>
+            <p class="rec-meta"><span><i class="dot" id="chip-dot" style="--c:var(--s-ja)"></i><span id="chip-name">国語</span></span><span id="span">6:52〜7:31</span><span id="vsplan">予定の60分の中で</span></p>
+            <div class="rec-time">
               <span class="kgroup step" role="group" aria-label="勉強した時間">
                 <button type="button" id="minus" aria-label="5分へらす"><i class="pi" id="minus-ic"></i></button>
                 <span class="step-v" id="min" aria-live="polite">39分</span>
                 <button type="button" id="plus" aria-label="5分ふやす"><i class="pi" data-pi="plus"></i></button>
               </span>
-              <span class="tag" id="span">6:52〜7:31</span>
-              <span class="tag" id="vsplan">予定の60分の中で</span>
             </div>
             <button class="rec-share" type="button" role="switch" aria-checked="false" id="share">
               <i class="pi" id="share-ic"></i><span id="share-t">自分だけのメモ</span><span class="sw" aria-hidden="true"><i></i></span>
@@ -178,6 +175,16 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
           <span data-pix="mebu" data-face="sleep" data-scale="4"></span>
           <b>記録する勉強がありません</b>
           <span>タイマーで勉強を始めると、ここで記録できます</span>
+        </div>
+      </div>
+
+      <!-- 見本の切りかえ（アプリにはない。スマホの幅だけ。広い画面は横の説明に同じ物） -->
+      <div class="mock-sw">
+        <span class="seg-cap">見本の切りかえ（アプリにはありません）</span>
+        <div class="seg seg-block" role="group" aria-label="見本の状態（画面の中）" id="modes2">
+          <button type="button" aria-pressed="true" data-mode="normal">ふつう</button>
+          <button type="button" aria-pressed="false" data-mode="free">自習のとき</button>
+          <button type="button" aria-pressed="false" data-mode="empty">記録がない</button>
         </div>
       </div>
     </main>
@@ -199,11 +206,12 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
     <p>タイマーの ✓ や「メモを書いて記録する」で開く、投稿を書くような画面です。並びは今のアプリと同じ。</p>
     <ul>
       <li>左上の「続ける」でタイマーに戻り、右上の「記録する」で保存。決める操作はインクの面（床はライム）の1つだけ。</li>
-      <li>書く所は主役のカード1枚（ライムの影）。メモは枠を描かず、紙にそのまま書く。</li>
-      <li>押せるのは「− 39分 ＋」の板（5分ずつ）だけなので、床があるのもここだけ。ほかの札は押せない。</li>
+      <li>書く所は主役のカード1枚（ライムの影）で、中身の高さだけ。メモは枠を描かず、紙にそのまま書き、書いた分だけ伸びる。</li>
+      <li>押せるのは「− 39分 ＋」の板（5分ずつ）だけなので、床があるのもここだけ。科目・時刻・予定とのくらべは塗りのない字の並び。</li>
       <li>「自分だけのメモ」⇄「タイムラインにも投稿する」は1行の切りかえ。オンでライム。</li>
       <li>下の帯で今日の合計がどう変わるか。メモの残りは輪（140字。残り20字で黄、こえると赤）。</li>
-      <li>記録すると「えらい！」のシールが fade で出て約1.1秒で消え、トースト。アプリはこのあとタイマーに戻る（見本はこの画面のまま）。</li>
+      <li>記録すると「えらい！」のシールが fade で出て約1.1秒で消え、トースト（今のアプリの record.tsx と同じ順）。まん中の出来事のカードは出さない。カードは記録シートを通らない記録のときだけ（出来事の見本）。</li>
+      <li>アプリはこのあとタイマーに戻る（見本はこの画面のまま。メモはもう書けない）。</li>
     </ul>
     <span class="seg-cap">見本の状態</span>
     <div class="seg seg-block" role="group" aria-label="見本の状態" id="modes">
@@ -237,6 +245,17 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
     empty: null
   };
   const FREE_LIST = ['free', 'en', 'ma', 'ph', 'ch', 'ja'];
+  /* 前に書いた内容（科目ごと。見本のデータの ToDo・記録から） */
+  const HINTS = {
+    none: ['相対性理論', 'ベクトル', '長文読解 第3講'],
+    free: ['相対性理論', '過去問の見直し'],
+    en: ['長文読解 第3講', '英単語 1200'],
+    ma: ['青チャート 数III 例題41〜50', 'ベクトル'],
+    ph: ['名問の森 電磁気 15', '相対性理論'],
+    ch: ['有機 構造決定 演習'],
+    ja: ['古文単語 61〜80']
+  };
+  const narrow = matchMedia('(max-width:359px)');
   let mode = 'normal', st = null, phase = 'idle', timer = 0;
 
   function start() {
@@ -248,9 +267,17 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
   $('#picks').innerHTML = FREE_LIST.map(id => {
     const s = A.SUBJ[id];
     const label = id === 'free' ? '自習のまま' : s.name;
-    return `<button class="pick" type="button" role="radio" aria-checked="false" data-pick="${id}" aria-label="${id === 'free' ? '自習のまま（仕分けない）' : s.name}"><span class="subj" data-s="${id}" aria-hidden="true"></span><span>${label}</span></button>`;
+    return `<button class="chip" type="button" aria-pressed="false" data-pick="${id}"${id === 'free' ? ' aria-label="自習のまま（仕分けない）"' : ''}><i class="dot" style="--c:${s.c}" aria-hidden="true"></i>${label}</button>`;
   }).join('');
   A.upgrade($('#picks'));
+
+  /* メモは書いた分だけ伸びる（field-sizing の効かない所のため JS でも合わせる） */
+  const grow = () => { const m = $('#memo'); m.style.height = 'auto'; m.style.height = m.scrollHeight + 'px'; };
+  /* せまい画面では、メモの見本の字を「どこまでやった？」「どうだった？」の2行に */
+  const placeholder = () => { $('#memo').placeholder = narrow.matches ? 'どこまでやった？\nどうだった？' : 'どこまでやった？ どうだった？'; grow(); };
+  try { narrow.addEventListener('change', placeholder); } catch (e) { /* 古いブラウザ */ }
+  placeholder();
+  let hintKey = '';
 
   const subjOf = () => {
     if (!st.free) return st.s;
@@ -286,7 +313,14 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
     if (st.free) {
       $('#free-q').textContent = st.pick ? '科目' : '何の科目を勉強した？';
       $('#free-hint').hidden = !!st.pick;
-      document.querySelectorAll('.pick').forEach(b => b.setAttribute('aria-checked', String(b.dataset.pick === st.pick)));
+      document.querySelectorAll('#picks .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pick === st.pick)));
+      // 前に書いた内容は、選んだ科目のものに変わる
+      const hk = st.pick || 'none';
+      if (hk !== hintKey) {
+        hintKey = hk;
+        $('#hints').innerHTML = HINTS[hk].map(w => `<button class="chip" type="button" data-w="${esc(w)}">${esc(w)}</button>`).join('');
+        A.upgrade($('#hints'));
+      }
     }
     // 切りかえ
     const sh = $('#share');
@@ -322,11 +356,12 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
     $('#top').hidden = empty; $('#composer').hidden = empty; $('#band').hidden = empty;
     $('#top-empty').hidden = !empty; $('#empty').hidden = !empty;
     $('#done').hidden = true; $('#done').classList.remove('is-out');
+    document.querySelectorAll('.toast').forEach(t => t.remove());   // 見本の切りかえで前の知らせを残さない
     const save = $('#save');
     save.disabled = false; save.querySelector('.face').textContent = '記録する';
-    $('#memo').value = ''; $('#what').value = '';
+    $('#memo').value = ''; $('#what').value = ''; $('#memo').readOnly = false; $('#what').readOnly = false; hintKey = ''; grow();
     if (st) { $('#free').hidden = !st.free; paint(); }
-    document.querySelectorAll('#modes > button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    document.querySelectorAll('#modes > button, #modes2 > button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
     try { history.replaceState(null, '', mode === 'normal' ? location.pathname : '#' + mode); } catch (e) { /* 見本なので無視 */ }
   }
 
@@ -335,13 +370,15 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
   $('#minus').addEventListener('click', () => adjust(-5));
   $('#plus').addEventListener('click', () => adjust(5));
 
-  $('#memo').addEventListener('input', paintCount);
+  $('#memo').addEventListener('input', () => { grow(); paintCount(); });
   $('#composer').addEventListener('click', e => { if (e.target === e.currentTarget || e.target.matches('.rec-main, .rec-col')) $('#memo').focus(); });
   $('#what').addEventListener('input', e => { st.what = e.target.value; paint(); });
-  $('#hints').addEventListener('click', e => { const c = e.target.closest('[data-w]'); if (!c) return; st.what = c.dataset.w; $('#what').value = st.what; paint(); });
-  $('#picks').addEventListener('click', e => {
-    const b = e.target.closest('.pick'); if (!b || phase !== 'idle') return;
-    const id = b.dataset.pick;
+  $('#hints').addEventListener('click', e => { const c = e.target.closest('[data-w]'); if (!c || phase !== 'idle') return; st.what = c.dataset.w; $('#what').value = st.what; paint(); });
+  // チップの選びは app.js が切りかえて change を出す。そのあとで状態に写す
+  $('#picks').addEventListener('change', () => {
+    if (!st || phase !== 'idle') { paint(); return; }
+    const b = $('#picks [aria-pressed="true"]');
+    const id = b ? b.dataset.pick : null;
     // 「自習のまま」をもう一度押すと、えらんでいない（あとで仕分け）に戻る
     st.pick = id === 'free' && st.pick === 'free' ? null : id;
     paint();
@@ -355,6 +392,7 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
     phase = 'done';
     const save = $('#save');
     save.querySelector('.face').textContent = '記録しました';
+    $('#memo').readOnly = true; $('#what').readOnly = true; $('#memo').blur();
     save.disabled = true; save.removeAttribute('aria-disabled'); save.setAttribute('aria-label', '記録しました');
     const name = A.SUBJ[subjOf()].name, min = st.min, share = st.share;
     const done = $('#done');
@@ -362,11 +400,11 @@ body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-dire
     timer = setTimeout(() => {
       done.classList.add('is-out');
       timer = setTimeout(() => { done.hidden = true; done.classList.remove('is-out'); }, A.reduced() ? 0 : 170);
-      A.toast({ title: `${name} ${min}分を記録しました`, exp: `+${min} EXP`, sub: share ? 'タイムラインにも投稿しました' : '', pix: 'penta', from: 'idle', face: 'happy', ms: 3200 });
+      A.toast({ title: `${name} ${min}分を記録しました`, exp: `+${min} EXP`, sub: share ? 'タイムラインにも投稿しました' : '', pix: 'penta', from: 'idle', face: 'happy', scale: 3, ms: 3200 });
     }, 1100);
   });
 
-  $('#modes').addEventListener('change', () => { const b = $('#modes > [aria-pressed="true"]'); if (b) setMode(b.dataset.mode); });
+  ['#modes', '#modes2'].forEach(id => $(id).addEventListener('change', () => { const b = $(id + ' > [aria-pressed="true"]'); if (b) setMode(b.dataset.mode); }));
   $('#again').addEventListener('click', () => setMode(mode));
   window.addEventListener('hashchange', () => setMode(location.hash.slice(1)));
 

@@ -40,14 +40,15 @@
 .post-n{flex:0 1 auto;min-width:0;font:700 14.5px/1.3 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .post-m{flex:0 2 auto;min-width:0;font-size:13px;line-height:1.3;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .post-more{margin:-11px -10px -11px auto;color:var(--ink-3)}
-.post-t{margin-top:2px;font-size:14.5px;line-height:1.6;color:var(--ink)}
+.post-t{margin-top:2px;font-size:14.5px;line-height:1.6;color:var(--ink);word-break:auto-phrase}
 .post-tags{font-size:14px;line-height:1.6;font-weight:700;color:var(--ink-2)}
 /* 勉強の記録：くぼみの箱に、科目の絵・ドットの札・時間 */
 .rec{display:flex;align-items:center;gap:11px;margin-top:9px;padding:10px 12px;border-radius:var(--r);background:var(--paper-2);box-shadow:var(--ring-thin)}
 .rec .subj{--size:32px}
 .rec-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.rec-main .label-j{font-size:12px;color:var(--ink-3)}
-.rec-t{font-size:13px;line-height:1.4;color:var(--ink-2);word-break:keep-all;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.rec-main .label-j{font-size:13px;line-height:1.1;color:var(--ink-2)}
+/* アプリと同じ1行（numberOfLines=1）。入らない分は … */
+.rec-t{font-size:13px;line-height:1.4;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rec-t b{font-size:14px;color:var(--ink);margin-right:6px}
 .rec-v{flex:none;font:800 15px/1.2 var(--f-body);font-variant-numeric:tabular-nums}
 /* 操作の行：返信・役に立った・しおり・共有（字と同じ 2pt の線のドットのアイコン） */
@@ -84,9 +85,12 @@
 }
 
 /* ===== タイムラインだけ ===== */
-.screen{padding-bottom:calc(var(--tab-h) + var(--bar-h) + var(--chrome-gap) + var(--kd) + var(--chrome-bottom) + 96px)}
+/* 投稿の紙（カード色）を画面の下まで伸ばす：アプリの地は白。最後の投稿のあとに点の紙を出さない */
+.screen{display:flex;flex-direction:column;padding-bottom:0}
+.screen > *{flex-shrink:0}   /* ヘッダーとタブは縮めない */
+@media (max-width:430px){ .screen{min-height:100dvh} }
 .hdr{margin-bottom:0}
-.feed{min-height:200px}
+.feed{flex:1 0 auto;min-height:200px;box-shadow:none;padding-bottom:calc(var(--tab-h) + var(--bar-h) + var(--chrome-gap) + var(--kd) + var(--chrome-bottom) + 96px)}
 .feed-empty{padding:40px var(--gutter)}
 </style>
 </head>
@@ -230,13 +234,13 @@ const S = (() => {
       ${p.mine ? `<span class="post-av" aria-hidden="true"><span class="av" data-n="${esc(p.n)}" style="--c:${p.c}"></span></span>`
         : `<button class="post-av" type="button" data-soon aria-label="${esc(who)}"><span class="av" data-n="${esc(p.n)}" style="--c:${p.c}"></span></button>`}
       <div class="post-main">
-        <div class="post-h"><b class="post-n">${esc(p.n)}</b><span class="post-m">@${esc(p.h)} · ${esc(p.w)}</span>${p.mine ? '' : `<button class="ibtn post-more" type="button" data-soon aria-label="${esc(who)}"><i data-pi="more"></i></button>`}</div>
+        <div class="post-h"><b class="post-n">${esc(p.n)}</b><span class="post-m">@${esc(p.h)} · ${esc(p.w)}</span>${p.mine ? '' : `<button class="ibtn post-more" type="button" data-soon aria-label="${esc(p.n)}への操作"><i data-pi="more"></i></button>`}</div>
         <p class="post-t">${esc(p.t)}</p>
         ${p.tags.length ? `<p class="post-tags">${p.tags.map(esc).join(' ')}</p>` : ''}
         ${p.rec ? `<div class="rec"><span class="subj" data-s="${p.rec.s}" aria-hidden="true"></span><span class="rec-main"><span class="label-j">勉強の記録</span><span class="rec-t"><b>${sj.name}</b>${esc(p.rec.note || '')}</span></span><b class="rec-v">${hm(p.rec.min)}</b></div>` : ''}
         <div class="post-acts">
           <button class="ibtn pa" type="button" data-act="reply" aria-label="返信 ${p.r}件"><span class="pa-ic">${ico('chat')}</span><span>${p.r}</span></button>
-          <button class="ibtn pa pa-help" type="button" data-act="help" aria-pressed="${state.helpful.has(p.id)}" aria-label="役に立った ${p.u}"><span class="pa-ic"><span>${ico(state.helpful.has(p.id) ? 'bulbOn' : 'bulb', 2, state.helpful.has(p.id) ? { k: '#17121F', y: '#FFD23F' } : null)}</span></span><span class="roll" data-base="${p.u}"></span></button>
+          <button class="ibtn pa pa-help" type="button" data-act="help" aria-pressed="${state.helpful.has(p.id)}" aria-label="役に立った ${p.u + (state.helpful.has(p.id) ? 1 : 0)}"><span class="pa-ic"><span>${ico(state.helpful.has(p.id) ? 'bulbOn' : 'bulb', 2, state.helpful.has(p.id) ? { k: '#17121F', y: '#FFD23F' } : null)}</span></span><span class="roll" data-base="${p.u}"></span></button>
           <button class="ibtn pa" type="button" data-act="mark" aria-pressed="${state.marks.has(p.id)}" aria-label="ブックマーク"><span class="pa-ic"><span>${ico(state.marks.has(p.id) ? 'markOn' : 'mark')}</span></span></button>
           <button class="ibtn pa" type="button" data-act="share" aria-label="共有"><span class="pa-ic">${ico('share')}</span></button>
         </div>
@@ -270,6 +274,7 @@ const S = (() => {
       // 同じ投稿がページに2つあっても、両方そろえる
       $$(`.post[data-id="${id}"] .pa-help`).forEach(x => {
         x.setAttribute('aria-pressed', String(on));
+        x.setAttribute('aria-label', `役に立った ${p.u + (on ? 1 : 0)}`);
         swapIcon(x, ico(on ? 'bulbOn' : 'bulb', 2, on ? { k: '#17121F', y: '#FFD23F' } : null));
         roll($('.roll', x), String(p.u + (on ? 1 : 0)));
       });

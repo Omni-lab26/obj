@@ -40,14 +40,15 @@
 .post-n{flex:0 1 auto;min-width:0;font:700 14.5px/1.3 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .post-m{flex:0 2 auto;min-width:0;font-size:13px;line-height:1.3;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .post-more{margin:-11px -10px -11px auto;color:var(--ink-3)}
-.post-t{margin-top:2px;font-size:14.5px;line-height:1.6;color:var(--ink)}
+.post-t{margin-top:2px;font-size:14.5px;line-height:1.6;color:var(--ink);word-break:auto-phrase}
 .post-tags{font-size:14px;line-height:1.6;font-weight:700;color:var(--ink-2)}
 /* 勉強の記録：くぼみの箱に、科目の絵・ドットの札・時間 */
 .rec{display:flex;align-items:center;gap:11px;margin-top:9px;padding:10px 12px;border-radius:var(--r);background:var(--paper-2);box-shadow:var(--ring-thin)}
 .rec .subj{--size:32px}
 .rec-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.rec-main .label-j{font-size:12px;color:var(--ink-3)}
-.rec-t{font-size:13px;line-height:1.4;color:var(--ink-2);word-break:keep-all;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.rec-main .label-j{font-size:13px;line-height:1.1;color:var(--ink-2)}
+/* アプリと同じ1行（numberOfLines=1）。入らない分は … */
+.rec-t{font-size:13px;line-height:1.4;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rec-t b{font-size:14px;color:var(--ink);margin-right:6px}
 .rec-v{flex:none;font:800 15px/1.2 var(--f-body);font-variant-numeric:tabular-nums}
 /* 操作の行：返信・役に立った・しおり・共有（字と同じ 2pt の線のドットのアイコン） */
@@ -92,7 +93,8 @@
 .mecard.is-follow{transition:none}
 /* 光の帯：止まっているときは左の端。指でなぞると指についてくる（1:1）。離すと行きすぎずに戻る */
 .mc-sheen{position:absolute;top:0;bottom:0;left:-25%;width:150%;pointer-events:none;
-  background:linear-gradient(110deg,transparent 33%,rgba(198,244,50,.28) 33% 39%,rgba(88,200,255,.22) 39% 45%,rgba(255,210,63,.26) 45% 51%,transparent 51%);
+  /* ライムは使わない（ライム＝始める・選んでいる）。白→空→日の3段を、境目をぼかしてやわらかく（アプリの look.sheen と同じ考え） */
+  background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 36%,rgba(88,200,255,.14) 42%,rgba(255,210,63,.16) 47%,transparent 53%);
   transform:translateX(-50%);transition:transform var(--t-move) var(--ios)}
 .mecard.is-follow .mc-sheen{transition:none}
 .mc-top,.mc-mid,.mc-bot{position:relative;display:flex;align-items:center}
@@ -122,13 +124,14 @@
 .who{display:flex;flex-direction:column;gap:2px;padding:2px 2px 0}
 .bio{font-size:14px;line-height:1.6;color:var(--ink-2);text-spacing-trim:trim-start}
 .bio .keep{white-space:nowrap}
+.bio .halt{font-feature-settings:"halt"}
 .counts{display:flex;flex-wrap:wrap;gap:0 18px;margin:-4px 0 -6px}
 .cnt{display:inline-flex;align-items:baseline;gap:5px;min-height:44px;min-width:44px;padding:12px 0 0;border:0;background:none;color:var(--ink);cursor:pointer}
 .cnt b{font:700 15px/1 var(--f-body);font-variant-numeric:tabular-nums}
 .cnt span{font-size:12px;color:var(--ink-3)}
 .cnt:focus-visible{outline-offset:2px}
-.me-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
-.me-btns .key{font-size:14px}
+.me-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 6px}
+.me-btns .key{font-size:13px}
 .me-btns .key > .face{padding:0 10px}
 .me .tabs-stick{margin-top:2px}
 
@@ -169,10 +172,13 @@
 .wk-x{display:flex;gap:10px;margin-top:6px}
 .wk-x span{flex:1 1 0;text-align:center;font-size:11px;line-height:1.2;color:var(--ink-3)}
 .wk-x span.on{color:var(--ink);font-weight:700}
-.wk-foot{min-height:46px;margin-top:auto;padding-top:10px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px}
+.wk-foot{min-height:46px;padding-top:12px;display:flex;flex-direction:column;justify-content:flex-start;gap:4px}
 .key-row{display:flex;flex-wrap:wrap;gap:4px 12px}
 .key-row span{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
 .key-row span i{width:8px;height:8px;background:var(--c);box-shadow:var(--ring-thin)}
+/* 凡例は色と一緒に科目の絵も（アプリの GraphDeck の SubjTile 13pt と同じ役） */
+.key-row .subj{--size:15px;box-shadow:var(--ring-thin);border-radius:4px}
+.key-row .subj svg{width:74%;height:74%}
 .key-row span i.goal{width:12px;height:0;background:none;box-shadow:none;border-top:1.5px dashed var(--ink)}
 .wday{display:flex;align-items:center;gap:8px;min-height:24px}
 .wday b{flex:1;min-width:0;font:700 12.5px/1.3 var(--f-body);font-variant-numeric:tabular-nums}
@@ -182,7 +188,11 @@
 /* 2枚目：これまでの勉強時間（インクの線。緑は使わない） */
 .dk-h{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .dk-h .sec-h{flex:1 1 auto}
-.seg-sm > button{flex:none;min-width:44px;padding:0 8px;font-size:13px}
+.seg-sm{overflow:visible;box-shadow:var(--ring),0 2px 0 2px var(--ink)}
+.seg-sm > button{flex:none;min-width:44px;min-height:32px;padding:0 8px;font-size:13px}
+.seg-sm > button::after{content:"";position:absolute;inset:-6px 0}   /* 面は 32、指の届く範囲は 44 */
+.seg-sm > button:first-child{border-radius:var(--r-key) 0 0 var(--r-key)}
+.seg-sm > button:last-child{border-radius:0 var(--r-key) var(--r-key) 0}
 .climb{position:relative;flex:1 1 auto;min-height:130px;margin:14px 0 16px}
 .climb svg{position:absolute;inset:0;overflow:visible}
 .climb .clip{position:absolute;inset:0;overflow:hidden}
@@ -191,9 +201,9 @@
 .climb.reveal .clip > div{animation:clip-counter var(--t-present) var(--ios) .15s both}
 @keyframes clip-in{from{transform:translateX(-100%)}to{transform:none}}
 @keyframes clip-counter{from{transform:translateX(100%)}to{transform:none}}
-.climb .ml{position:absolute;left:0;font:600 10.5px/1.2 var(--f-body);color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;background:var(--card);padding-right:4px}
+.climb .ml{position:absolute;left:0;font:600 11px/1.2 var(--f-body);color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .climb .ml.done{font-weight:500;color:var(--ink-3)}
-.climb .ax{position:absolute;bottom:-16px;font-size:10.5px;line-height:1.2;color:var(--ink-3)}
+.climb .ax{position:absolute;bottom:-16px;font-size:11px;line-height:1.2;color:var(--ink-3)}
 
 /* 次のバッジ */
 .nb{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:14px;row-gap:8px;align-items:center;padding:14px 16px}
@@ -210,9 +220,9 @@
 .nb-s b{color:var(--ink);font-weight:700}
 
 /* 過去の自分と3枚 */
-.vs{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px}
+.vs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .vs .card{padding:10px 10px 11px;border-radius:16px}
-.vs small{display:block;font-size:11px;line-height:1.3;color:var(--ink-3);white-space:nowrap}
+.vs small{display:block;font-size:11px;line-height:1.3;color:var(--ink-3);word-break:auto-phrase}
 .vs b{display:block;margin-top:3px;font:800 16px/1.3 var(--f-body);color:var(--up);font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* ---------- 記録 ---------- */
@@ -246,7 +256,7 @@
 .sb-up i{flex:none;background:var(--c)}
 .sb-up i + i{box-shadow:0 1px 0 var(--ink)}
 .sb-dn{position:absolute;left:0;right:0;top:107px;background:var(--down);box-shadow:0 0 0 1px var(--ink);transform-origin:50% 0}
-.sb-plot.grow .sb-up,.sb-plot.grow .sb-dn{animation:grow var(--t-move) var(--ios) calc(var(--i) * 12ms) both}
+.sb-plot.grow .sb-up,.sb-plot.grow .sb-dn{animation:grow var(--t-move) var(--ios) calc(var(--i) * 10ms) both}
 .sb-plot.has-hot .sb-col{opacity:.3}
 .sb-plot.has-hot .sb-col.hot{opacity:1}
 .sb-tip{position:absolute;z-index:2;top:0;left:0;width:172px;padding:8px 10px;border-radius:12px;background:var(--card);box-shadow:var(--ring),4px 4px 0 0 var(--lime-2);
@@ -256,7 +266,7 @@
 .sb-tip p span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sb-tip p i{flex:none;width:8px;height:8px;background:var(--c);box-shadow:var(--ring-thin)}
 .sb-tip p.t{color:var(--ink-3)} .sb-tip p.t b{color:var(--ink)}
-.sb-x{display:flex;justify-content:space-between;margin-top:2px;font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.sb-x{display:flex;justify-content:space-between;margin-top:2px;font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .sb-key{margin-top:10px;padding-top:10px;border-top:1.5px solid var(--line)}
 /* この7日間の科目 */
 .subrow{gap:12px}
@@ -275,24 +285,23 @@
 .sc-h span:first-child{flex:1}
 .sc-h .when{color:var(--ink-3);font-variant-numeric:tabular-nums}
 .sc-num{display:flex;align-items:flex-end;gap:8px;margin-top:6px}
-.sc-num .dec{font:800 18px/1 var(--f-num);color:var(--ink-3);margin-left:-6px;padding-bottom:1px}
+.sc-num .dec{font:800 20px/1 var(--f-num);color:var(--ink-3);margin-left:-6px;padding-bottom:1px}
 .sc-num .delta{padding-bottom:3px}
 .sc-num small{font-size:11px;color:var(--ink-3);padding-bottom:4px}
 .sc-plot{position:relative;height:112px;margin:16px 0 12px;touch-action:pan-y;cursor:crosshair}
 .sc-plot svg{position:absolute;inset:0;overflow:visible}
-.sc-plot .gl{position:absolute;right:0;font-size:10.5px;line-height:1;color:var(--ink-3);font-variant-numeric:tabular-nums;transform:translateY(-50%)}
+.sc-plot .gl{position:absolute;right:0;font-size:11px;line-height:1;color:var(--ink-3);font-variant-numeric:tabular-nums;transform:translateY(-50%)}
 .sc-plot.fade svg{animation:fade-in var(--t-fade) linear both}
 
 /* ---------- 投稿 ---------- */
-.me-feed{box-shadow:0 -2px 0 var(--ink),0 2px 0 var(--ink)}
+.me-feed{box-shadow:0 2px 0 var(--ink)}
 .posts-go{padding-top:8px}
 
 @media (max-width:359px){
   .mc-mid{gap:10px}
   .mc-stats{gap:10px}
   .mecard{padding:13px 14px 12px}
-  .vs{grid-template-columns:1fr 1fr}
-  .vs .card:last-child{grid-column:1 / -1}
+  .mc-who span{font-size:11px}
 }
 </style>
 </head>
@@ -326,7 +335,7 @@
         </section>
 
         <div class="who">
-          <p class="bio wb">高3。数学は青チャート2周目。朝型にしたい<span class="keep">（今は夜型）。</span></p>
+          <p class="bio wb">高3。数学は青チャート2周目。朝型にしたい<span class="keep"><span class="halt">（</span>今は夜型）。</span></p>
           <div class="counts">
             <button class="cnt" type="button" id="cnt-posts" aria-label="2投稿。投稿のページへ"><b>2</b><span>投稿</span></button>
             <button class="cnt" type="button" data-soon aria-label="フォロー一覧"><b>128</b><span>フォロー</span></button>
@@ -334,8 +343,8 @@
           </div>
         </div>
         <div class="me-btns">
-          <button class="key" type="button" id="b-edit">プロフィールを編集</button>
-          <button class="key" type="button" id="b-share">カードを共有</button>
+          <button class="key key-sm" type="button" id="b-edit">プロフィールを編集</button>
+          <button class="key key-sm" type="button" id="b-share">カードを共有</button>
         </div>
 
         <div class="tabs-stick">
@@ -363,7 +372,7 @@
                   <h2 class="sec-h"><span class="sec-t">これまでの勉強時間</span></h2>
                   <div class="seg seg-sm" role="group" aria-label="グラフの足（日・週・月）" id="frame"><button type="button" aria-pressed="false" data-f="day" aria-label="日ごと">日</button><button type="button" aria-pressed="true" data-f="week" aria-label="週ごと">週</button><button type="button" aria-pressed="false" data-f="month" aria-label="月ごと">月</button></div>
                 </div>
-                <div class="dk-num"><span class="big"><span class="roll" id="total-roll" data-v="664.7" data-from="000.0"></span><span class="sr">664.7時間</span></span><span class="unit">時間</span><span class="delta up">2.2</span><small>&nbsp;先週より</small></div>
+                <div class="dk-num"><span class="mid"><span class="roll" id="total-roll" data-v="664.7" data-from="000.0"></span><span class="sr">664.7時間</span></span><span class="unit">時間</span><span class="delta up">2.2</span><small>&nbsp;先週より</small></div>
                 <div class="climb" id="climb" role="img"></div>
               </section>
             </div>
@@ -443,6 +452,8 @@
       <li>主役は勉強カードの1枚だけ（ライムの影）。左上のロゴ、右上の Lv.25、草のチップと 664・23・57。指で横になぞると光の帯がついてきて、離すと戻ります。</li>
       <li>成長のグラフは横にすべらせて2枚。1枚目は科目の色の積み上げ棒、2枚目はインクの線。どちらも緑は使いません（緑は草と計測中だけ）。</li>
       <li>次のバッジは灰色のシール（まだ取っていない）と、インクの進み棒。</li>
+      <li>アプリの成長にもレベル・バッジの一覧はありません。レベルはカードの Lv.25、バッジは「次のバッジ」で見せました（バッジの一覧はホーム）。</li>
+      <li>記録の行は科目の色の縦線、タイムラインの記録の箱は科目の絵。どちらもアプリ（記録の一覧／投稿の部品）と同じ形です。</li>
       <li>タブは上に貼りつきます。記録・グラフ・投稿も押して見られます。</li>
     </ul>
     <p class="note-links"><a class="link" href="img/me.webp">今のアプリ（写真）</a><a class="link" href="index.html">一覧へ</a><a class="link" href="system.html">部品</a></p>
@@ -560,13 +571,13 @@ const S = (() => {
       ${p.mine ? `<span class="post-av" aria-hidden="true"><span class="av" data-n="${esc(p.n)}" style="--c:${p.c}"></span></span>`
         : `<button class="post-av" type="button" data-soon aria-label="${esc(who)}"><span class="av" data-n="${esc(p.n)}" style="--c:${p.c}"></span></button>`}
       <div class="post-main">
-        <div class="post-h"><b class="post-n">${esc(p.n)}</b><span class="post-m">@${esc(p.h)} · ${esc(p.w)}</span>${p.mine ? '' : `<button class="ibtn post-more" type="button" data-soon aria-label="${esc(who)}"><i data-pi="more"></i></button>`}</div>
+        <div class="post-h"><b class="post-n">${esc(p.n)}</b><span class="post-m">@${esc(p.h)} · ${esc(p.w)}</span>${p.mine ? '' : `<button class="ibtn post-more" type="button" data-soon aria-label="${esc(p.n)}への操作"><i data-pi="more"></i></button>`}</div>
         <p class="post-t">${esc(p.t)}</p>
         ${p.tags.length ? `<p class="post-tags">${p.tags.map(esc).join(' ')}</p>` : ''}
         ${p.rec ? `<div class="rec"><span class="subj" data-s="${p.rec.s}" aria-hidden="true"></span><span class="rec-main"><span class="label-j">勉強の記録</span><span class="rec-t"><b>${sj.name}</b>${esc(p.rec.note || '')}</span></span><b class="rec-v">${hm(p.rec.min)}</b></div>` : ''}
         <div class="post-acts">
           <button class="ibtn pa" type="button" data-act="reply" aria-label="返信 ${p.r}件"><span class="pa-ic">${ico('chat')}</span><span>${p.r}</span></button>
-          <button class="ibtn pa pa-help" type="button" data-act="help" aria-pressed="${state.helpful.has(p.id)}" aria-label="役に立った ${p.u}"><span class="pa-ic"><span>${ico(state.helpful.has(p.id) ? 'bulbOn' : 'bulb', 2, state.helpful.has(p.id) ? { k: '#17121F', y: '#FFD23F' } : null)}</span></span><span class="roll" data-base="${p.u}"></span></button>
+          <button class="ibtn pa pa-help" type="button" data-act="help" aria-pressed="${state.helpful.has(p.id)}" aria-label="役に立った ${p.u + (state.helpful.has(p.id) ? 1 : 0)}"><span class="pa-ic"><span>${ico(state.helpful.has(p.id) ? 'bulbOn' : 'bulb', 2, state.helpful.has(p.id) ? { k: '#17121F', y: '#FFD23F' } : null)}</span></span><span class="roll" data-base="${p.u}"></span></button>
           <button class="ibtn pa" type="button" data-act="mark" aria-pressed="${state.marks.has(p.id)}" aria-label="ブックマーク"><span class="pa-ic"><span>${ico(state.marks.has(p.id) ? 'markOn' : 'mark')}</span></span></button>
           <button class="ibtn pa" type="button" data-act="share" aria-label="共有"><span class="pa-ic">${ico('share')}</span></button>
         </div>
@@ -600,6 +611,7 @@ const S = (() => {
       // 同じ投稿がページに2つあっても、両方そろえる
       $$(`.post[data-id="${id}"] .pa-help`).forEach(x => {
         x.setAttribute('aria-pressed', String(on));
+        x.setAttribute('aria-label', `役に立った ${p.u + (on ? 1 : 0)}`);
         swapIcon(x, ico(on ? 'bulbOn' : 'bulb', 2, on ? { k: '#17121F', y: '#FFD23F' } : null));
         roll($('.roll', x), String(p.u + (on ? 1 : 0)));
       });
@@ -744,23 +756,25 @@ const S = (() => {
     <span class="wstack" style="height:${(d.min / TOP * 100).toFixed(2)}%;--i:${i}">${used.filter(s => d.p[s]).map(s => `<i class="wseg" style="--c:${SJ[s].c};height:${(d.p[s] / d.min * 100).toFixed(2)}%"></i>`).join('')}</span></button>`).join('');
   $('#wk-goal').style.bottom = (GOAL / TOP * 100).toFixed(2) + '%';
   $('#wk-x').innerHTML = WEEK.map((d, i) => `<span class="${i === 6 ? 'on' : ''}">${d.x}</span>`).join('');
-  const legend = () => `<div class="key-row">${used.map(s => `<span><i style="--c:${SJ[s].c}"></i>${SJ[s].name}</span>`).join('')}<span><i class="goal"></i>目標</span></div>`;
-  $('#wk-foot').innerHTML = legend();
+  const tile = s => `<span class="subj" data-s="${s}" aria-hidden="true"></span>`;
+  const setFoot = html => { const f = $('#wk-foot'); f.innerHTML = html; A.upgrade(f); };
+  const legend = () => `<div class="key-row">${used.map(s => `<span>${tile(s)}${SJ[s].name}</span>`).join('')}<span><i class="goal"></i>目標</span></div>`;
+  setFoot(legend());
   let sel = null;
   function pick(i) {
     sel = sel === i ? null : i;
     $$('.wcol', wkCols).forEach((c, k) => c.setAttribute('aria-pressed', String(k === sel)));
     wkPlot.classList.toggle('has-sel', sel !== null);
     $$('#wk-x span').forEach((s, k) => s.classList.toggle('on', sel === null ? k === 6 : k === sel));
-    if (sel === null) { tip.classList.remove('is-on'); $('#wk-foot').innerHTML = legend(); return; }
+    if (sel === null) { tip.classList.remove('is-on'); setFoot(legend()); return; }
     const d = WEEK[sel], col = $$('.wcol', wkCols)[sel];
     tip.textContent = `${d.x} ${hmc(d.min)}`;
     const pw = wkPlot.clientWidth, cw = col.offsetWidth, tw = tip.offsetWidth;
     const x = clamp(col.offsetLeft + cw / 2 - tw / 2, 0, pw - tw), y = Math.max(0, wkPlot.clientHeight * (1 - d.min / TOP) - 28);
     tip.style.transform = `translate(${x}px,${y}px)`;
     tip.classList.add('is-on');
-    $('#wk-foot').innerHTML = `<div class="wday"><b>${d.d} · ${jpHm(d.min)}</b><a class="link" href="#" data-soon aria-label="${esc(d.d)}の内訳">内訳 ›</a></div>
-      <div class="key-row">${used.filter(s => d.p[s]).map(s => `<span><i style="--c:${SJ[s].c}"></i>${SJ[s].name} ${hmc(d.p[s])}</span>`).join('')}</div>`;
+    setFoot(`<div class="wday"><b>${d.d} · ${jpHm(d.min)}</b><a class="link" href="#" data-soon aria-label="${esc(d.d)}の内訳">内訳 ›</a></div>
+      <div class="key-row">${used.filter(s => d.p[s]).map(s => `<span>${tile(s)}${SJ[s].name} ${hmc(d.p[s])}</span>`).join('')}</div>`);
   }
   wkCols.addEventListener('click', e => { const c = e.target.closest('.wcol'); if (c) pick(+c.dataset.i); });
   function growWeek() {
@@ -873,7 +887,8 @@ const S = (() => {
       ${c.short ? `<span class="sb-dn" style="height:${Math.max(3, dn(c.short)).toFixed(1)}px"></span>` : ''}</div>`).join('');
     $('#sb-x').innerHTML = `<span>${cols[0].label}</span><span>${cols[19].label}</span>`;
     const usedK = ORDER.filter((s, k) => cols.some(c => c.parts[k] > 0));
-    $('#sb-key').innerHTML = usedK.map(s => `<span><i style="--c:${SJ[s].c}"></i>${SJ[s].name}</span>`).join('') + '<span><i style="--c:var(--down)"></i>目標に足りない分</span>';
+    $('#sb-key').innerHTML = usedK.map(s => `<span><span class="subj" data-s="${s}"></span>${SJ[s].name}</span>`).join('') + '<span><i style="--c:var(--down)"></i>目標に足りない分</span>';
+    A.upgrade($('#sb-key'));
     sbPlot.setAttribute('aria-label', `${sbMode === 'day' ? '直近20日' : '直近20週'}の勉強時間。合計${total.toFixed(1)}時間`);
     if (grow && !A.reduced()) { sbPlot.classList.remove('grow'); void sbPlot.offsetWidth; sbPlot.classList.add('grow'); }
     setHot(null);

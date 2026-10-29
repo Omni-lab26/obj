@@ -187,7 +187,7 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
       <li>うしろは真ん中のカードの科目の色を紙に混ぜた地。隣のカードは透かさず、紙の幕で薄くする。</li>
       <li>▶ はライム＝始める。✎ と ✓ は床なしにして、真ん中の丸を主役にした。</li>
       <li>一時停止中は線が灰、札が紅の「一時停止中」。上の字はアプリと同じ「国語を勉強中」のまま紅。</li>
-      <li>直接開くと今の画面写真と同じ 39:59 から。勉強タブのバーから来ると、バーの続きから。</li>
+      <li>直接開くと今の画面写真と同じ 39:59 から。国語のバー（勉強・みんな・タイムライン・マイページ）から来ると、バーの続きから。</li>
       <li>広告は灰色の空き枠だけ。</li>
     </ul>
     <span class="seg-cap">見本の状態（カードの ▶ ❚❚ でも変わる）</span>
@@ -226,8 +226,8 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
     held: { cards: [['b1', 'held', 2400], ['b2', 'live', 12], ['b3', 'idle', 0]], center: 1 },
     new: { cards: [], center: 0 }
   };
-  /* 勉強バーから来たとき：バーの時間の続きから（study.html がバーを押したときに to:'timer' で書く。ほかのページからは 39:59）。
-     戻るときは国語の時間を to:'bar' で書き、study.html のバーが続きから進む。sessionStorage は見本の便利だけ（なくても動く） */
+  /* 勉強バーから来たとき：バーの時間の続きから（国語のバーを押したときに shared/app.js が to:'timer' で書く。直接開くと 39:59）。
+     戻るときは国語の時間を to:'bar' で書き、どのタブのバーも続きから進む（shared/app.js）。sessionStorage は見本の便利だけ（なくても動く） */
   const BAR_KEY = 'inchly-mock-bar';
   function fromBar() {
     try {
