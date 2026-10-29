@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ComponentType, ReactNode, useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { SharedValue, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -6,6 +6,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { Friend, useFriends } from '@/screens/model';
+import type { SectionProps } from '@/themes/types';
 import { FriendSort, setFriendHidden, setFriendOrder, setFriendSort } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
 import { useAppear } from '@/ui/appear';
@@ -51,13 +52,27 @@ function SortChoice({ open, current, close }: { open: boolean; current: FriendSo
   );
 }
 
+/**
+ * A theme's drawing of the list (サイバー's crew panel): the panel around it,
+ * its head, and what a row shows. Dragging, swiping and the cards stay the same.
+ */
+export type FriendsLook = {
+  Panel: ComponentType<{ children: ReactNode }>;
+  /** sort: the order's name; onSort / onAll: the order card and もっと見る */
+  Head: ComponentType<{ sort: string; onSort: () => void; onAll: () => void }>;
+  /** what a row shows (the grip comes after it) */
+  Row: ComponentType<{ f: Friend }>;
+  /** a row's ground (it covers what a swipe shows under it) and the line between rows */
+  ground: string; line: string;
+};
+
 const hide = (f: Friend) => {
   setFriendHidden(f.h, true);
   haptic.soft();
   toast(`${f.n} を非表示にしました`, 'もっと見る から戻せます', { label: '元に戻す', run: () => setFriendHidden(f.h, false) });
 };
 
-export function Friends() {
+export function Friends({ look }: Partial<SectionProps> & { look?: FriendsLook }) {
   const t = useT();
   const { list, sort } = useFriends();
   const [all, setAll] = useState(false);
@@ -74,26 +89,28 @@ export function Friends() {
     if (hs.join(',') === keys) return;
     setFriendOrder([...hs, ...list.slice(MAX).map((f) => f.h)]);
   };
-  return (
-    <View style={[{ borderRadius: radius.card, backgroundColor: t.surface, paddingTop: 12, paddingBottom: 6 }, lift(t)]}>
-      <Pane radius={radius.card} />
+  const sortName = SORTS.find((x) => x.v === sort)!.title;
+  const body = (
+    <>
+      {look ? <look.Head sort={sortName} onSort={() => setSorting(true)} onAll={() => setAll(true)} /> : (
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingBottom: 4 }}>
         <Txt size={15} w="700">いま勉強中の友達</Txt>
         <LiveDot size={5} />
         <View style={{ flex: 1 }} />
-        <Press onPress={() => setSorting(true)} hitSlop={8} scale={0.94} accessibilityRole="button" accessibilityLabel={`並び順 ${SORTS.find((x) => x.v === sort)!.title}`}
+        <Press onPress={() => setSorting(true)} hitSlop={8} scale={0.94} accessibilityRole="button" accessibilityLabel={`並び順 ${sortName}`}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 3, height: 26, paddingHorizontal: 9, borderRadius: 13, backgroundColor: t.sunken }}>
-          <Txt size={11.5} w="600" tone="ink2">{SORTS.find((x) => x.v === sort)!.title}</Txt>
+          <Txt size={11.5} w="600" tone="ink2">{sortName}</Txt>
           <View style={{ transform: [{ rotate: '90deg' }] }}><Icon name="chev" size={10} color={t.ink3} /></View>
         </Press>
         <Press onPress={() => setAll(true)} hitSlop={8} scale={0.94} accessibilityRole="button" accessibilityLabel="もっと見る">
           <Txt size={12.5} w="600" color={t.blue}>もっと見る</Txt>
         </Press>
       </View>
+      )}
       {shown.length ? (
         <View style={{ height: shown.length * ROW }}>
           {shown.map((f, i) => (
-            <Row key={f.h} f={f} n={shown.length} first={i === 0} slots={slots} dragging={dragging} dragY={dragY} onDrop={commit} />
+            <Row key={f.h} f={f} n={shown.length} first={i === 0} slots={slots} dragging={dragging} dragY={dragY} onDrop={commit} look={look} />
           ))}
         </View>
       ) : (
@@ -101,13 +118,20 @@ export function Friends() {
       )}
       <Everyone open={all} close={() => setAll(false)} />
       <SortChoice open={sorting} current={sort} close={() => setSorting(false)} />
+    </>
+  );
+  if (look) return <look.Panel>{body}</look.Panel>;
+  return (
+    <View style={[{ borderRadius: radius.card, backgroundColor: t.surface, paddingTop: 12, paddingBottom: 6 }, lift(t)]}>
+      <Pane radius={radius.card} />
+      {body}
     </View>
   );
 }
 
 type Shared = { slots: SharedValue<Record<string, number>>; dragging: SharedValue<string>; dragY: SharedValue<number> };
 
-function Row({ f, n, first, slots, dragging, dragY, onDrop }: Shared & { f: Friend; n: number; first: boolean; onDrop: (order: Record<string, number>) => void }) {
+function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f: Friend; n: number; first: boolean; onDrop: (order: Record<string, number>) => void; look?: FriendsLook }) {
   const t = useT();
   const h = f.h;
   const start = useSharedValue(0);
@@ -173,16 +197,17 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop }: Shared & { f: Frie
   return (
     <Animated.View style={[{ position: 'absolute', left: 0, right: 0, top: 0, height: ROW }, place]}
       onLayout={(e) => width.set(e.nativeEvent.layout.width)}>
-      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 6, right: 6, top: 2, bottom: 2, borderRadius: 14, backgroundColor: t.surface,
+      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 6, right: 6, top: 2, bottom: 2, borderRadius: look ? 0 : 14, backgroundColor: look?.ground ?? t.surface,
         boxShadow: '0px 10px 24px rgba(15,23,42,0.16), 0px 2px 6px rgba(15,23,42,0.08)' }, shadow]} />
       {/* under the row: what a left swipe does */}
       <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: t.red, alignItems: 'flex-end', justifyContent: 'center', paddingRight: 18 }, behind]}>
         <Txt size={13} w="700" color="#fff">非表示</Txt>
       </Animated.View>
       <GestureDetector gesture={rowGesture}>
-        <Animated.View style={[{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: t.surface }, slide]}>
+        <Animated.View style={[{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: look?.ground ?? t.surface }, slide]}>
           <Press onPress={() => personSheet(f.n, f.c)} scale={0.99} accessibilityLabel={`${f.n} ${f.s}を勉強中。今日${hm(f.today)}。左にスワイプで非表示`}
             style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 11, paddingLeft: 14, height: ROW }}>
+            {look ? <look.Row f={f} /> : <>
             <Avatar name={f.n} color={f.c} size={36} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <Txt size={14} w="600" lh={18} numberOfLines={1}>{f.n}</Txt>
@@ -196,6 +221,7 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop }: Shared & { f: Frie
               <Txt num size={11} w="600" lh={14} color={up ? t.greenInk : t.red}>{`${up ? '▲' : '▼'} ${hm(Math.abs(f.diff))}`}</Txt>
             </View>
             <Spark week={f.week} color={up ? t.blue : t.red} />
+            </>}
           </Press>
           {/* the grip: drag from here at once */}
           <GestureDetector gesture={drag.grip}>
@@ -205,7 +231,7 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop }: Shared & { f: Frie
           </GestureDetector>
         </Animated.View>
       </GestureDetector>
-      {first ? null : <View pointerEvents="none" style={{ position: 'absolute', left: 61, right: 14, top: 0, height: hair, backgroundColor: t.line }} />}
+      {first ? null : <View pointerEvents="none" style={{ position: 'absolute', left: 61, right: 14, top: 0, height: hair, backgroundColor: look?.line ?? t.line }} />}
     </Animated.View>
   );
 }

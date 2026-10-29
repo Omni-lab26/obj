@@ -70,7 +70,9 @@ export function guessArea(name: string): AreaId {
 }
 
 /** A subject you study. task: what you're on in it (sample text); week/goal: sample hours for the weekly view. */
-export type Subject = { id: string; name: string; c: string; area: AreaId; task?: string; week?: number; goal?: number; hidden?: boolean };
+export type Subject = { id: string; name: string; c: string; area: AreaId; task?: string; week?: number; goal?: number; hidden?: boolean;
+  /** 略称: up to 4 characters, for where a long name doesn't fit (サイバー's signs) */
+  short?: string };
 /** The starting five. Their ids are what older records point to, so they never change. */
 export const SUBJ: Subject[] = [
   { id: 'en', name: '英語', c: '#5856D6', area: 'en', task: '長文読解 第3講', week: 6.5, goal: 7 },
@@ -89,12 +91,31 @@ export const PRESETS: { name: string; area: AreaId }[] = [
   { name: '情報I', area: 'info' },
 ];
 
+/**
+ * How the theme in use shows a subject's color. Most themes show it as it is;
+ * サイバー keeps every subject off its four signal colors, giving each the
+ * same place in its own shades (design.ts ThemeDef.subjects). The saved color
+ * never changes; theme.ts sets this when the theme changes.
+ */
+type Tone = (x: { c: string; area: AreaId }) => string;
+let tone: Tone | null = null;
+export const setSubjectTone = (f: Tone | null) => { tone = f; toned = null; };
+/** A subject's (or a 教科's) color as the theme in use shows it. */
+export const toneOf = (x: { c: string; area: AreaId }) => (tone ? tone(x) : x.c);
+/** A 教科's color as the theme shows it (its first shade). */
+export const areaTone = (id: AreaId) => toneOf({ c: area(id).c, area: id });
+
 // The live list. The store keeps it in step (setSubjects) so subj() can be
 // called anywhere, even outside React.
 let current: Subject[] = SUBJ;
-export const setSubjects = (list: Subject[]) => { current = list; };
-/** Every subject, hidden ones included (charts still need their names and colors). */
-export const allSubjects = () => current;
+let toned: Subject[] | null = null;
+export const setSubjects = (list: Subject[]) => { current = list; toned = null; };
+/** Every subject, hidden ones included (charts still need their names and colors), in the theme's colors. */
+export const allSubjects = () => {
+  if (!tone) return current;
+  if (!toned) toned = current.map((x) => ({ ...x, c: toneOf(x) }));
+  return toned;
+};
 const GONE: Subject = { id: '?', name: '削除した科目', c: '#8C93A0', area: 'other' };
 /**
  * 自習: studying started with no plan to hand (勉強を開始 when none's time
@@ -106,7 +127,7 @@ const FREE_SUBJECT: Subject = { id: FREE, name: '自習', c: '#8C93A0', area: 'o
 /** A subject by id, with task always a string (subjects you add have none). */
 export const subj = (id: string): Subject & { task: string } => {
   const x = current.find((s) => s.id === id) ?? (id === FREE ? FREE_SUBJECT : id === '?' ? GONE : { ...GONE, id });
-  return { ...x, task: x.task ?? '' };
+  return { ...x, c: toneOf(x), task: x.task ?? '' };
 };
 
 export type Person = { n: string; h: string; c: string; s: string; t: number; g: string };

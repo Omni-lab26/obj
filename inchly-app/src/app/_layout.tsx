@@ -1,12 +1,15 @@
 // one weight per import path, so only these files are bundled (not every weight of each family)
 import { BricolageGrotesque_500Medium } from '@expo-google-fonts/bricolage-grotesque/500Medium';
 import { BricolageGrotesque_800ExtraBold } from '@expo-google-fonts/bricolage-grotesque/800ExtraBold';
+import { ChakraPetch_500Medium } from '@expo-google-fonts/chakra-petch/500Medium';
+import { ChakraPetch_700Bold } from '@expo-google-fonts/chakra-petch/700Bold';
 import { DelaGothicOne_400Regular } from '@expo-google-fonts/dela-gothic-one/400Regular';
 import { DotGothic16_400Regular } from '@expo-google-fonts/dotgothic16/400Regular';
 import { IBMPlexMono_400Regular } from '@expo-google-fonts/ibm-plex-mono/400Regular';
 import { IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono/600SemiBold';
 import { Rajdhani_600SemiBold } from '@expo-google-fonts/rajdhani/600SemiBold';
 import { Rajdhani_700Bold } from '@expo-google-fonts/rajdhani/700Bold';
+import { ShareTechMono_400Regular } from '@expo-google-fonts/share-tech-mono/400Regular';
 import { Silkscreen_400Regular } from '@expo-google-fonts/silkscreen/400Regular';
 // the timer card's time (ui/timeFonts)
 import { Anton_400Regular } from '@expo-google-fonts/anton/400Regular';
@@ -95,6 +98,7 @@ export default function RootLayout() {
   const [fonts] = useFonts({
     DotGothic16_400Regular, BricolageGrotesque_500Medium, BricolageGrotesque_800ExtraBold, Silkscreen_400Regular,
     Rajdhani_600SemiBold, Rajdhani_700Bold, DelaGothicOne_400Regular, IBMPlexMono_400Regular, IBMPlexMono_600SemiBold,
+    ChakraPetch_500Medium, ChakraPetch_700Bold, ShareTechMono_400Regular,
     Anton_400Regular, Oswald_300Light, InterTight_200ExtraLight, InterTight_800ExtraBold, Nunito_800ExtraBold, InstrumentSerif_400Regular, DMSerifDisplay_400Regular, JetBrainsMono_600SemiBold,
   });
   useEffect(() => { if (fonts) bundledFontsLoaded(); }, [fonts]);

@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
+import type { AreaId } from './data';
+
 // The look you pick on the デザイン page. Still light only: you choose the
 // canvas, the main color (text and primary buttons), how round cards are, the
 // My Page card, the streak capsule and the timer's color. The store holds the
@@ -51,7 +53,7 @@ export const TIMERS = {
  * textures sit behind the content, and text keeps its size and line height.
  * 'standard' uses the 背景 / メインの色 / 角 picks below instead.
  */
-export type ThemeFont = 'system' | 'mono' | 'pixel' | 'rounded' | 'serif' | 'grotesk' | 'condensed' | 'heavy';
+export type ThemeFont = 'system' | 'mono' | 'pixel' | 'rounded' | 'serif' | 'grotesk' | 'condensed' | 'heavy' | 'cyber';
 /**
  * How things answer a tap (ui/base Press): shrink a little (scale), sink into
  * their shadow (sink), flicker like a bad neon tube (flicker), wobble like
@@ -73,6 +75,13 @@ export type ThemeDef = {
   timer?: string;
   /** how things answer a tap; otherwise the family's (FAMILIES) */
   press?: Reaction;
+  /** the colors that mean something (study and gains, actions, shortfalls, the grass), when the theme speaks in its own */
+  accents?: Partial<Record<'tint' | 'tintSoft' | 'green' | 'greenInk' | 'greenSoft' | 'amber' | 'amberSoft' | 'red' | 'redSoft' | 'blue' | 'blueSoft', string>> & { grass?: string[] };
+  /**
+   * How subjects show in this theme: each 教科's shades (data.ts AREA_SHADES, same order) and その他's picks,
+   * replaced by the theme's own (data.ts toneOf). The saved colors stay as they are.
+   */
+  subjects?: { shades: Partial<Record<AreaId, string[]>>; other?: Record<string, string> };
 };
 export const FAMILIES = [
   { id: 'standard', label: '基本', press: 'scale' },
@@ -95,11 +104,6 @@ export const THEMES = {
     label: 'ターミナル', family: 'digital', dark: true, font: 'mono', texture: 'scan-dark', timer: '#000000',
     colors: { canvas: '#07090A', surface: '#0E1412', sunken: '#16201C', line: 'rgba(140,255,210,0.12)', line2: 'rgba(140,255,210,0.26)', ink: '#8CFFD2', ink2: '#62C9A4', ink3: '#3F8A70', onInk: '#07090A' },
     corners: { card: 3, inner: 2 }, shadow: [`${ring(1, 'rgba(140,255,210,0.28)')}, 0px 0px 18px rgba(140,255,210,0.08)`, `${ring(1, 'rgba(140,255,210,0.4)')}, 0px 0px 26px rgba(140,255,210,0.14)`],
-  },
-  cyber: {
-    label: 'サイバー', family: 'digital', dark: true, font: 'mono', texture: 'scan-dark', timer: '#0B0A1F',
-    colors: { canvas: '#0B0A1F', surface: '#15132F', sunken: '#1E1B42', line: 'rgba(45,226,230,0.15)', line2: 'rgba(45,226,230,0.32)', ink: '#ECEAFF', ink2: '#ABA5DC', ink3: '#716BA6', onInk: '#0B0A1F' },
-    corners: { card: 8, inner: 6 }, shadow: [`${ring(1, 'rgba(255,56,200,0.4)')}, 0px 0px 22px rgba(45,226,230,0.12)`, `${ring(1, 'rgba(45,226,230,0.55)')}, 0px 0px 30px rgba(255,56,200,0.18)`],
   },
   // 8bit: the pixel font, no rounding, hard offset shadows
   retro: {
@@ -162,6 +166,31 @@ export const THEMES = {
     colors: { canvas: '#0A0A0A', surface: '#121212', sunken: '#1B1B1B', line: 'rgba(0,240,255,0.16)', line2: 'rgba(0,240,255,0.34)', ink: '#F2F2F2', ink2: '#BDBDBD', ink3: '#7E7E7E', onInk: '#0A0A0A' },
     corners: { card: 0, inner: 0 }, shadow: [`${ring(1, 'rgba(0,240,255,0.55)')}`, `${ring(1, '#00F0FF')}, 4px 4px 0px #FCEE0A`],
   },
+  // サイバー (the parts bible: a study terminal in a night city): four signals that speak only of state
+  // (yellow pressable/selected/goal, cyan information and progress, red now/stopped, orange streak and
+  // overtime), subjects in six colors of their own with a texture each, chamfered panels with cyan edges
+  cyber: {
+    label: 'サイバー', family: 'app', dark: true, font: 'cyber', texture: 'scan-dark', timer: '#03060A', press: 'flicker',
+    colors: { canvas: '#03060A', surface: '#08101A', sunken: '#12202B', line: 'rgba(0,240,255,0.15)', line2: 'rgba(0,240,255,0.4)', ink: '#E6F4F5', ink2: '#93A9AE', ink3: '#6B8087', onInk: '#000000' },
+    corners: { card: 2, inner: 2 }, shadow: [ring(1, 'rgba(0,240,255,0.4)'), `${ring(1, 'rgba(0,240,255,0.55)')}, 0px 0px 18px rgba(0,240,255,0.1)`],
+    accents: {
+      tint: '#00F0FF', tintSoft: 'rgba(0,240,255,0.12)', green: '#00F0FF', greenInk: '#00F0FF', greenSoft: 'rgba(0,240,255,0.12)',
+      amber: '#FF7A00', amberSoft: 'rgba(255,122,0,0.14)', red: '#FF2D55', redSoft: 'rgba(255,45,85,0.14)', blue: '#FCEE0A', blueSoft: 'rgba(252,238,10,0.12)',
+      grass: ['#0D1620', 'rgba(0,240,255,0.15)', 'rgba(0,240,255,0.3)', 'rgba(0,240,255,0.5)', 'rgba(0,240,255,0.78)'],
+    },
+    subjects: {
+      // 英語 blue, 数学 lilac, 国語 pink, 理科 pale blue then silver (物理, 化学), 社会 bronze (世界史), 情報 steel: never a signal, never city light
+      shades: {
+        en: ['#4E7BFF', '#7FA0FF', '#3557D6', '#A8BDFF', '#2B44A8'],
+        ma: ['#C49BFF', '#A77BF0', '#DBC2FF', '#8C5FE0', '#E8D9FF'],
+        ja: ['#FF6FC8', '#FF9AD9', '#E04FAE', '#FFC2E8'],
+        sci: ['#9FB9FF', '#C9CEDB', '#7FA8E8', '#E3E7F0'],
+        soc: ['#C8A27A', '#E0C09A', '#A8825C', '#D9B58C', '#8F6A48'],
+        info: ['#9AA6B8', '#B8C2D0', '#7C889A'],
+      },
+      other: { '#EC4899': '#FF8FD0', '#D946EF': '#E07BFF', '#FF2D55': '#FF8FA8', '#E5484D': '#E58C8C', '#A855F7': '#B98CFF', '#7E22CE': '#8C6BFF', '#C8A27A': '#C8A27A', '#3F3F46': '#8F9AA8', '#8C93A0': '#7D8A96' },
+    },
+  },
   ink: {
     label: 'インク', family: 'app', dark: true, font: 'heavy', texture: 'splat', timer: '#161616', press: 'squish',
     colors: { canvas: '#1E1E1E', surface: '#2A2A2A', sunken: '#343434', line: 'rgba(255,255,255,0.08)', line2: 'rgba(255,255,255,0.18)', ink: '#FFFFFF', ink2: '#D2D2D2', ink3: '#9A9A9A', onInk: '#1E1E1E' },
@@ -208,6 +237,8 @@ export type Design = {
   cardFill: CardFill;
   /** the timer card's big time: a face from ui/timeFonts (unset: the first, 縦長) */
   timeFont?: string;
+  /** サイバー's own three for that time (held, like the others): Chakra Petch, the departure board's dots, or a neon tube (unset: chakra) */
+  cyberClock?: 'chakra' | 'led' | 'tube';
 };
 export type CardFill = 0 | 1 | 2 | 3;
 export const CARD_FILLS: { v: CardFill; label: string }[] = [{ v: 0, label: 'うすい' }, { v: 1, label: 'ふつう' }, { v: 2, label: 'こい' }, { v: 3, label: '白' }];

@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from 'react';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import type { Moment, MomentKind } from '../moments';
+import type { CardLook } from '../screens/timer/cards';
 import type { Block, ExtraKind, Kind, TimerPart, Zone, Zones } from '../screens/layout';
 import type { IconName } from '../ui/Icon';
 
@@ -35,6 +36,8 @@ export type TimerKit = {
   parts?: Partial<Record<TimerPart | ExtraKind, ComponentType>>;
   /** Move parts between zones, or add the theme's own ('x:…'). */
   arrange?: (base: Zones) => Zones;
+  /** The standard deck of plan cards, with the theme's own cards (left alone, the theme keeps the deck and draws only these). */
+  card?: CardLook;
 };
 
 /** One tab, ready to draw. */

@@ -131,6 +131,18 @@ describe('subjects', () => {
     reset({ subjects: [{ id: 'en', name: '英語', c: '#5856D6', area: 'en' }] });
     expect(removeSubject('en')).toBe('last');
   });
+  it('keeps a 略称 of up to 4 characters, and drops an empty one', () => {
+    reset();
+    const id = addSubject({ name: 'プログラミング演習', area: 'info', short: ' プロ演習Ⅱ ' });
+    expect(subj(id).short).toBe('プロ演習');
+    updateSubject(id, { short: '  ' });
+    expect(subj(id).short).toBeUndefined();
+    updateSubject(id, { short: 'プロ演' });
+    expect(subj(id).short).toBe('プロ演');
+    // left out of a change, it stays
+    updateSubject(id, { name: 'プログラミング演習Ⅰ' });
+    expect(subj(id).short).toBe('プロ演');
+  });
   it('fills in chart settings added later', () => {
     const chart = migrate({ v: 3, chart: { range: 'week', kind: 'bar', palette: 'blue' } }).chart!;
     expect(chart).toMatchObject({ range: 'week', detail: 'subject' });

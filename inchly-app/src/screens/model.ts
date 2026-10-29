@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 
-import { PEOPLE, subj } from '../data';
+import { type AreaId, PEOPLE, subj, toneOf } from '../data';
+import { useDesign } from '../design';
 import { celebrate } from '../moments';
 import { dayOf, hourlyOf, Parts, weekOf, withLive } from '../lib/history';
 import { daysUntil, dateKey } from '../lib/time';
@@ -45,8 +46,9 @@ export function useTicking<T extends string | number | boolean | null>(pick: (s:
 
 /** A subject's share of some minutes, with its name and color. */
 export type Slice = { id: string; name: string; c: string; min: number };
-const slices = (parts: Parts, subjects: { id: string; name: string; c: string }[]): Slice[] => {
-  const known = subjects.map((x) => ({ id: x.id, name: x.name, c: x.c, min: parts[x.id] ?? 0 }));
+const slices = (parts: Parts, subjects: { id: string; name: string; c: string; area: AreaId }[]): Slice[] => {
+  // in the theme's colors (data.ts toneOf)
+  const known = subjects.map((x) => ({ id: x.id, name: x.name, c: toneOf(x), min: parts[x.id] ?? 0 }));
   const gone = Object.entries(parts).filter(([id]) => !subjects.some((x) => x.id === id)).reduce((a, [, m]) => a + m, 0);
   return [...known, ...(gone ? [{ id: '?', name: '削除した科目', c: '#8C93A0', min: gone }] : [])].filter((x) => x.min > 0);
 };
@@ -57,12 +59,13 @@ export function useToday() {
   const goal = useStore((s) => s.goalMin);
   const lastDay = useStore((s) => s.lastDay); // a new day starts a new today
   const subjects = useStore((s) => s.subjects);
+  const theme = useDesign().theme; // the theme decides how subject colors show
   return useMemo(() => {
     const today = dayOf(sessions, 0);
     const yesterday = dayOf(sessions, 1).min;
     return { min: today.min, yesterday, diff: today.min - yesterday, goal, reached: today.min >= goal, parts: slices(today.parts, subjects) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessions, goal, lastDay, subjects]);
+  }, [sessions, goal, lastDay, subjects, theme]);
 }
 
 /** The session under way (or the subject that would start), and what to do with it. */
@@ -245,6 +248,7 @@ export function useCharts() {
   const subjects = useStore((s) => s.subjects);
   const elapsed = useStore((s) => elapsedOf(s, now));
   const goal = useStore((s) => s.goalMin);
+  const theme = useDesign().theme;
   return useMemo(() => {
     const d = new Date(now);
     const today = dateKey(d);
@@ -257,7 +261,9 @@ export function useCharts() {
       return { label: DOW[i], date: x.date, min: x.min + live, live, parts: slices(x.parts, subjects), today: isToday, future: x.date > today };
     });
     return { hours, week, goal, weekTotal: week.reduce((a, x) => a + x.min - x.live, 0) };
-  }, [now, sessions, running, subjId, subjects, elapsed, goal]);
+    // the theme decides how subject colors show (slices reads it)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [now, sessions, running, subjId, subjects, elapsed, goal, theme]);
 }
 
 /** Today's ToDos, and ticking one off (with its EXP, said in a toast). */

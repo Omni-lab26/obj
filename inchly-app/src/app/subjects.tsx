@@ -9,7 +9,7 @@ import { Btn, haptic, Press, SubjCoin, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Choice, Field, Label } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
-import { AREA_COLORS } from '@/ui/series';
+import { areaColors } from '@/ui/series';
 import { openSheet } from '@/ui/Sheet';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
@@ -27,7 +27,7 @@ export default function Subjects() {
   const insets = useSafeAreaInsets();
   const subjects = useStore((s) => s.subjects);
   const shown = subjects.filter((x) => !x.hidden);
-  const areaC = AREA_COLORS;
+  const areaC = areaColors();
   const hidden = subjects.filter((x) => x.hidden);
   const names = new Set(subjects.map((x) => x.name));
   const presets = PRESETS.filter((p) => !names.has(p.name));
@@ -146,6 +146,7 @@ function SubjectForm({ close, existing }: { close: () => void; existing?: Subjec
   const t = useT();
   const subjects = useStore((s) => s.subjects);
   const [name, setName] = useState(existing?.name ?? '');
+  const [short, setShort] = useState(existing?.short ?? '');
   // the 教科: what you pick, else what the name points to (数IA → 数学)
   const [picked, setPicked] = useState<AreaId | null>(existing?.area ?? null);
   const area = picked ?? guessArea(name);
@@ -159,8 +160,8 @@ function SubjectForm({ close, existing }: { close: () => void; existing?: Subjec
   const err = touched && !name.trim() ? '科目の名前を入れてください' : dup ? '同じ名前の科目があります' : undefined;
   const save = () => {
     if (!name.trim() || dup) { setTouched(true); return; }
-    if (existing) updateSubject(existing.id, { name: name.trim(), area, c });
-    else addSubject({ name, area, c });
+    if (existing) updateSubject(existing.id, { name: name.trim(), area, c, short });
+    else addSubject({ name, area, c, short });
     haptic.success();
     close();
     toast(existing ? '科目を保存しました' : `「${name.trim()}」を追加しました`);
@@ -177,6 +178,9 @@ function SubjectForm({ close, existing }: { close: () => void; existing?: Subjec
         <Txt size={18} w="700">{existing ? '科目を編集' : '科目を追加'}</Txt>
       </View>
       <Field label="名前（例：数IA、古文、日本史）" value={name} onChangeText={setName} max={12} error={err} onBlur={() => setTouched(true)} />
+      {/* for where a long name doesn't fit (サイバーの看板など) */}
+      <Field label="略称（4文字まで・なくてもよい）" value={short} onChangeText={(v) => setShort([...v].slice(0, 4).join(''))} max={4}
+        helper="看板などで、長い名前の代わりに使います" />
       <View>
         <Label sub="「教科ごと」のグラフでまとめる先。色もこれで決まります">教科</Label>
         <Choice value={area} onChange={setPicked} options={AREAS.map((a) => ({ v: a.id, label: a.name }))} />

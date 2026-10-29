@@ -2,7 +2,8 @@ import { useSyncExternalStore } from 'react';
 import { Platform, StyleSheet, TextStyle } from 'react-native';
 import { IOS } from './ui/motion';
 
-import { type Backdrop, backdropOf, BGS, CARD_FILM, CORNERS, designVersion, FAMILIES, getDesign, INKS, onDesign, Reaction, refreshDesign, Texture, themeOf, ThemeFont, TIMERS } from './design';
+import { AREA_SHADES, setSubjectTone } from './data';
+import { type Backdrop, backdropOf, BGS, CARD_FILM, CORNERS, designVersion, FAMILIES, getDesign, INKS, onDesign, Reaction, refreshDesign, Texture, type ThemeDef, themeOf, ThemeFont, TIMERS } from './design';
 
 // Light only. A soft gray canvas with light falling on it from the top (a
 // little see-through, like frosted glass), white cards on a faint edge and a
@@ -67,6 +68,13 @@ const OVER: Record<Exclude<Backdrop, 'none'>, (film: number) => Partial<Theme>> 
 };
 
 // ---------- following the design you pick (design.ts) ----------
+/** A theme's subject colors: the shade at the same place in its 教科's list, or its pick for その他's color. */
+const toneFrom = (sub: NonNullable<ThemeDef['subjects']>) => (x: { c: string; area: keyof typeof AREA_SHADES }) => {
+  const mine = sub.shades[x.area];
+  const at = AREA_SHADES[x.area]?.indexOf(x.c) ?? -1;
+  if (mine?.length && at >= 0) return mine[at % mine.length];
+  return sub.other?.[x.c] ?? (mine?.length ? mine[0] : x.c);
+};
 let palette: Theme = light;
 function follow() {
   const d = getDesign();
@@ -74,7 +82,7 @@ function follow() {
   const press = th.press ?? FAMILIES.find((f) => f.id === th.family)?.press ?? 'scale';
   if (th.colors) {
     palette = { ...light, ...th.colors, dark: th.dark, shadow1: th.shadow?.[0] ?? light.shadow1, shadow2: th.shadow?.[1] ?? light.shadow2,
-      texture: th.texture ?? null, cardTexture: th.family === 'oil', scrim: th.dark ? 'rgba(0,0,0,0.5)' : light.scrim, press };
+      texture: th.texture ?? null, cardTexture: th.family === 'oil', scrim: th.dark ? 'rgba(0,0,0,0.5)' : light.scrim, press, ...th.accents };
   } else {
     palette = { ...light, canvas: BGS[d.bg].canvas, sunken: BGS[d.bg].sunken, ink: INKS[d.ink].ink, press };
     const b = backdropOf(d);
@@ -85,6 +93,7 @@ function follow() {
   Object.assign(radius, th.corners ?? { card: CORNERS[d.corners].card, inner: CORNERS[d.corners].inner });
   focus.bg = th.timer ?? TIMERS[d.timer].bg;
   current = th.font;
+  setSubjectTone(th.subjects ? toneFrom(th.subjects) : null);
 }
 onDesign(follow);
 
@@ -130,6 +139,8 @@ export const BUNDLED = {
   condensed: 'Rajdhani_600SemiBold', condensedBold: 'Rajdhani_700Bold', // Latin only
   heavy: 'DelaGothicOne_400Regular', // Japanese
   plex: 'IBMPlexMono_400Regular', plexBold: 'IBMPlexMono_600SemiBold', // Latin only
+  // サイバー: figures and Latin with corners cut like its panels, and a narrow mono for labels (Latin only)
+  chakra: 'ChakraPetch_700Bold', chakraMed: 'ChakraPetch_500Medium', techMono: 'ShareTechMono_400Regular',
 };
 export type BundledFace = keyof typeof BUNDLED;
 // On the web a face is a stack, so Japanese falls back to the same face as everywhere else (and keeps its width).
@@ -160,6 +171,8 @@ export const faceFor = (f: ThemeFont, size: number) => {
     // likewise Latin-only, or too heavy for small text: headlines and figures only
     case 'condensed': if (ready && size >= 20) return bundled(BUNDLED.condensedBold); break;
     case 'heavy': if (ready && size >= 20) return bundled(BUNDLED.heavy); break;
+    // Latin and figures only: headlines and big figures in it, Japanese falls back to the system face
+    case 'cyber': if (ready && size >= 20) return bundled(BUNDLED.chakra); break;
   }
   return size >= 20 ? font.display : font.text;
 };

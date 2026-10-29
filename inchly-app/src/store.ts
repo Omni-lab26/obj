@@ -444,19 +444,26 @@ export const useSubjects = () => {
  * Adds a subject. Its color is fixed (data.ts AREA_SHADES): its 教科's next
  * shade; only one in その他 takes the color given (else the first free one). Returns its id.
  */
-export function addSubject(x: { name: string; area: AreaId; c?: string }): string {
+export function addSubject(x: { name: string; area: AreaId; c?: string; short?: string }): string {
   const s = state;
   const id = newId('sj');
   const c = x.area === 'other' && x.c && OTHER_COLORS.includes(x.c) ? x.c : shadeFor(x.area, s.subjects);
-  setState({ subjects: [...s.subjects, { id, name: x.name.trim(), area: x.area, c }] });
+  const short = shortName(x.short);
+  setState({ subjects: [...s.subjects, { id, name: x.name.trim(), area: x.area, c, ...(short ? { short } : {}) }] });
   return id;
 }
+/** A 略称 as kept: trimmed, at most 4 characters; none when empty. */
+export const shortName = (v?: string) => {
+  const t = [...(v ?? '').trim()].slice(0, 4).join('');
+  return t || undefined;
+};
 /** Renames, moves to another 教科, hides …; a subject's color changes only with its 教科 (its new 教科's next shade), or by choice in その他. */
 export function updateSubject(id: string, patch: Partial<Omit<Subject, 'id'>>) {
   setState((s) => ({
     subjects: s.subjects.map((x) => {
       if (x.id !== id) return x;
       const next = { ...x, ...patch };
+      if ('short' in patch) { const short = shortName(patch.short); if (short) next.short = short; else delete next.short; }
       const others = s.subjects.filter((y) => y.id !== id);
       if (next.area === 'other') next.c = patch.c && OTHER_COLORS.includes(patch.c) ? patch.c : x.area === 'other' ? x.c : shadeFor('other', others);
       else next.c = next.area === x.area ? x.c : shadeFor(next.area, others);

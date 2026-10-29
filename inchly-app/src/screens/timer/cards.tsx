@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ComponentRef, ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { ComponentRef, ComponentType, createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -68,6 +68,29 @@ const washColor = makeMutable(ADD_COLOR);
 
 export const CARD_ZONES = (): Zones => ({ head: ['top'], center: ['switcher'], foot: [] });
 
+// ---------- a theme's own cards ----------
+/** A card's props as a theme's face gets them (centered: it's the one in the middle). */
+export type CardFaceProps = CardProps & { state: CardState; plan: number; over: boolean };
+/**
+ * How a theme draws the deck's cards (TimerKit.card): the plan's card, the
+ * card that adds one, their shape, the page behind them and the ad. What the
+ * cards do — sliding, starting, pausing, recording — stays the deck's.
+ */
+export type CardLook = {
+  Face: ComponentType<CardFaceProps>;
+  Add?: ComponentType<{ w: number; h: number; k: number; onPress: () => void }>;
+  /** the card's corner, as a share of its width (0: the face draws its own shape) */
+  corner?: number;
+  /** the dimming over a card off to the side, in the face's shape (black; its strength is the deck's) */
+  Shade?: ComponentType<{ w: number; h: number }>;
+  /** behind the cards when there's no 背景 (color: the centered card's, mixed as you slide) */
+  Wash?: ComponentType<{ color: SharedValue<string> }>;
+  /** the ad under the cards */
+  Ad?: ComponentType;
+};
+export const CardLookContext = createContext<CardLook | null>(null);
+const useLook = () => useContext(CardLookContext);
+
 // ---------- little shared states ----------
 function shared<T>(first: T) {
   let v = first;
@@ -111,6 +134,7 @@ export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
 
 /** What's behind the page: the 背景 (the same koi as on every page; here they keep off the card), or the card's color. */
 function Back({ bg, look }: { bg: Backdrop; look: boolean }) {
+  const Wash = useLook()?.Wash;
   const box = cardBox.use();
   // while you look, nothing to keep off
   const avoid = look ? null : box;
@@ -119,7 +143,7 @@ function Back({ bg, look }: { bg: Backdrop; look: boolean }) {
   return (
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
       <BackProbe />
-      {bg === 'none' ? <DeckWash /> : <Water feedable={bg !== 'walk'} look={look} />}
+      {bg !== 'none' ? <Water feedable={bg !== 'walk'} look={look} /> : Wash ? <Wash color={washColor} /> : <DeckWash />}
     </View>
   );
 }
@@ -256,6 +280,8 @@ export function PlanDeck() {
 function Deck({ height }: { height: number }) {
   const { width } = useWindowDimensions();
   const tone = useTone();
+  const look = useLook();
+  const Add = look?.Add, Ad = look?.Ad;
   const { cards, heldOf, live } = useDeck();
   const held = useStore((s) => s.held);
   const [menu, setMenu] = useState<Menu>(null);
@@ -364,11 +390,11 @@ function Deck({ height }: { height: number }) {
             snapToInterval={step} decelerationRate="fast" disableIntervalMomentum contentOffset={{ x: start * step, y: 0 }}
             contentContainerStyle={{ paddingHorizontal: (width - W) / 2, gap }} accessibilityRole="adjustable" accessibilityLabel="今日の予定">
             <Slide key="add" i={0} x={x} step={step} w={W} h={H} k={k} tone={tone} centered={shown === 0} onFocus={() => goTo(0)}>
-              <AddCard w={W} h={H} k={k} tone={tone} onPress={add} />
+              {Add ? <Add w={W} h={H} k={k} onPress={add} /> : <AddCard w={W} h={H} k={k} tone={tone} onPress={add} />}
             </Slide>
             {cards.map((b, i) => (
               <Slide key={b.id} i={i + 1} x={x} step={step} w={W} h={H} k={k} tone={tone} centered={shown === i + 1} onFocus={() => goTo(i + 1)}>
-                <PlanCard b={b} w={W} h={H} live={b.id === live} held={heldOf.get(b.id)}
+                <PlanCard b={b} w={W} h={H} live={b.id === live} held={heldOf.get(b.id)} centered={shown === i + 1}
                   begin={begin} record={record} more={() => { haptic.tap(); setMenu({ kind: 'more', b }); }} />
               </Slide>
             ))}
@@ -380,7 +406,7 @@ function Deck({ height }: { height: number }) {
       {held.length ? <Waiting held={held} tone={tone} onPress={() => { haptic.tap(); setMenu({ kind: 'all' }); }} /> : null}
       {/* what's left of the page goes above the ad, which keeps to the bottom */}
       <View pointerEvents="none" style={{ flex: 1 }} />
-      <AdCard tone={tone} />
+      {Ad ? <Ad /> : <AdCard tone={tone} />}
 
       <MenuDialog menu={menu} close={() => setMenu(null)} record={record} begin={begin} />
     </View>
@@ -407,11 +433,16 @@ function Slide({ i, x, step, w, h, k, tone, centered, onFocus, children }: {
     return { transform: [{ scale: 1 - (1 - SIDE) * d }] };
   });
   const dim = useAnimatedStyle(() => ({ opacity: (tone.light ? 0.55 : DIM) * Math.min(1, Math.abs(x.value - i * step) / step) }));
+  // a theme's own cards bring their shape: the corner it gives, and the dimming in that shape
+  const look = useLook();
+  const Shade = look?.Shade;
   return (
     <Animated.View layout={layout()} entering={fadeIn()} exiting={fadeOut()} style={{ width: w, height: h }}>
-      <Animated.View style={[{ flex: 1, borderRadius: CORNER * w, overflow: 'hidden' }, a]}>
+      <Animated.View style={[{ flex: 1, borderRadius: (look?.corner ?? CORNER) * w, overflow: 'hidden' }, a]}>
         {children}
-        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tone.light ? FLOOR : '#000000' }, dim]} />
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, Shade ? null : { backgroundColor: tone.light ? FLOOR : '#000000' }, dim]}>
+          {Shade ? <Shade w={w} h={h} /> : null}
+        </Animated.View>
         {centered ? null : <Press onPress={onFocus} haptics={false} scale={1} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} accessibilityLabel="この予定を真ん中に" />}
       </Animated.View>
     </Animated.View>
@@ -419,23 +450,24 @@ function Slide({ i, x, step, w, h, k, tone, centered, onFocus, children }: {
 }
 
 // ---------- the card ----------
-type CardState = 'idle' | 'live' | 'paused' | 'held';
-type CardProps = { b: Block; w: number; h: number; live: boolean; held?: Held; begin: (b: Block) => void; record: (h: Held) => void; more: () => void };
+export type CardState = 'idle' | 'live' | 'paused' | 'held';
+type CardProps = { b: Block; w: number; h: number; live: boolean; held?: Held; centered?: boolean; begin: (b: Block) => void; record: (h: Held) => void; more: () => void };
 
 /** A plan's card. The others are still; the one under way (LiveCard) redraws only when it pauses or goes past its plan — its time and line tick on their own (CardClock). */
 function PlanCard(p: CardProps) {
-  if (p.live) return <LiveCard {...p} />;
-  return <CardFace {...p} state={p.held ? 'held' : 'idle'} plan={(p.b.min ?? 0) * 60} over={false} />;
+  const Face = useLook()?.Face ?? CardFace;
+  if (p.live) return <LiveCard {...p} Face={Face} />;
+  return <Face {...p} state={p.held ? 'held' : 'idle'} plan={(p.b.min ?? 0) * 60} over={false} />;
 }
-function LiveCard(p: CardProps) {
+function LiveCard({ Face, ...p }: CardProps & { Face: ComponentType<CardFaceProps> }) {
   const paused = useStore((s) => s.paused);
   const plan = useStore((s) => (s.planMin ? Math.round(s.planMin * 60) : null)) ?? (p.b.min ?? 0) * 60;
   const over = useTicking((s, now) => s.running && plan > 0 && elapsedOf(s, now) > plan);
-  return <CardFace {...p} state={paused ? 'paused' : 'live'} plan={plan} over={over} />;
+  return <Face {...p} state={paused ? 'paused' : 'live'} plan={plan} over={over} />;
 }
 
 /** The card's time: m:ss, h:mm:ss from an hour on. */
-const clock = (sec: number) => {
+export const clock = (sec: number) => {
   const s = Math.max(0, Math.floor(sec)), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = String(s % 60).padStart(2, '0');
   return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
 };

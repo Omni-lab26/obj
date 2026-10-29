@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
-import { ScrollView, Share, Switch, View } from 'react-native';
+import { Linking, ScrollView, Share, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { backdropOf, BACKDROPS, THEMES_OPEN } from '@/design';
@@ -208,6 +208,11 @@ export default function Settings() {
               <Txt size={14} w="600" color={t.red}>アカウントとデータを削除</Txt>
             </Press>
           </View>
+        </Section>
+        <Section title="ライセンス">
+          <Row first label="ネオンの漢字の線：KanjiVG" sub="© Ulrich Apel · CC BY-SA 3.0。サイバーの看板に、線の形を使っています（管の太さ・切れ目・光はアプリで足したもので、同じライセンスです）"
+            right={<Btn small kind="line" label="見る" onPress={() => Linking.openURL('https://kanjivg.tagaini.net')} />} />
+          <Row label="字" sub="Chakra Petch・Share Tech Mono・DotGothic16 ほか、アプリの字はすべて SIL Open Font License 1.1。サイバーの「済」のはんこは Noto Serif CJK JP（© Adobe · SIL OFL 1.1）の字の形です" />
         </Section>
         <Txt size={11.5} tone="ink3" style={{ textAlign: 'center', marginTop: 18 }}>Inchly 2.0（モック）</Txt>
       </ScrollView>

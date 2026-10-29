@@ -8,7 +8,7 @@ import { showStudyBar } from '@/ui/Chrome';
 import { Loader } from '@/ui/Loader';
 import { SheetHost } from '@/ui/Sheet';
 import { ToastHost } from '@/ui/Toast';
-import { CARD_PARTS, CARD_ZONES, CardTimerPage } from './cards';
+import { CARD_PARTS, CARD_ZONES, CardLookContext, CardTimerPage } from './cards';
 import { STANDARD_PARTS, StandardTimerPage } from './standard';
 
 // The timer, for every theme: the base parts (layout.ts) in three zones, each
@@ -16,7 +16,9 @@ import { STANDARD_PARTS, StandardTimerPage } from './standard';
 // With no theme timer at all, the standard drawing places the parts its own way.
 // the standard drawing is today's plans as cards (cards.tsx), with the time studied fixed under them
 const STANDARD: TimerKit = { arrange: CARD_ZONES, Page: CardTimerPage, parts: CARD_PARTS };
-export function TimerScreen({ kit = STANDARD }: { kit?: TimerKit }) {
+export function TimerScreen({ kit: given }: { kit?: TimerKit }) {
+  // a theme that draws only its own cards keeps the standard deck around them
+  const kit = given && (given.Page || given.parts || given.arrange) ? given : given?.card ? { ...STANDARD, card: given.card } : STANDARD;
   const zones = useMemo(() => arrangeZones(TIMER, kit.arrange), [kit.arrange]);
   // a study bar swiped away comes back once you've looked at the timer
   useEffect(() => { showStudyBar(); }, []);
@@ -29,13 +31,13 @@ export function TimerScreen({ kit = STANDARD }: { kit?: TimerKit }) {
   // if making it takes more than 0.3s, the loading mark shows meanwhile
   const drawn = { head: draw(zones.head), center: <Later>{draw(zones.center)}</Later>, foot: draw(zones.foot) } satisfies Record<Zone, ReactNode>;
   return (
-    <>
+    <CardLookContext.Provider value={kit.card ?? null}>
       <Page zones={drawn} />
       <TargetNudge />
       {/* the timer covers the app, so sheets opened from it (a new plan) and what it says come up over it */}
       <SheetHost />
       <ToastHost />
-    </>
+    </CardLookContext.Provider>
   );
 }
 
