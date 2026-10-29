@@ -138,6 +138,22 @@ body[data-bar="none"][data-tab="none"] .screen,body:not([data-tab]):not([data-ba
   .os-home{display:block;position:absolute;z-index:80;left:50%;bottom:8px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);pointer-events:none}
   .note{display:block;flex:0 1 340px;min-width:260px;max-width:360px;padding:22px 22px 24px;border-radius:var(--r-lg);background:var(--card);box-shadow:var(--ring)}
 }
+/* スマホの幅では、横の説明を画面の下に置く（iPhone で見る持ち主にも説明と見本の切りかえが届くように）。
+   アプリの画面とは点線で分け、「アプリにはありません」と書く。下の2本のバーにかくれないぶん、下を空ける */
+@media (max-width:430px){
+  .note{display:block;position:relative;z-index:1;margin:8px var(--gutter) calc(var(--tab-h) + var(--bar-h) + var(--chrome-gap) + 2 * var(--kd) + var(--chrome-bottom) + 24px);
+    padding:0 18px 22px;border-radius:var(--r-lg);background:var(--card);box-shadow:var(--ring)}
+  body[data-bar="none"] .note{margin-bottom:calc(var(--tab-h) + var(--kd) + var(--chrome-bottom) + 24px)}
+  body[data-bar="none"][data-tab="none"] .note{margin-bottom:calc(var(--safe-bottom) + 88px)}
+  .note::before{content:"ここから下は見本の説明（アプリにはありません）";display:block;margin:0 -18px 16px;padding:12px 18px;
+    border-bottom:2px dashed var(--line);font-size:12px;line-height:1.5;color:var(--ink-3)}
+  .note h1{font:800 20px/1.3 var(--f-body);margin-bottom:10px}
+  .note p,.note li{font-size:14px;line-height:1.7;color:var(--ink-2)}
+  .note ul{display:grid;gap:8px;margin-top:12px}
+  .note li{position:relative;padding-left:16px}
+  .note li::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:7px;background:var(--sun);box-shadow:var(--ring-thin)}
+  .note .note-links{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:14px}
+}
 /* 横の説明（広い画面だけ） */
 .note .label{margin-bottom:10px}
 .note h1{font:800 22px/1.3 var(--f-body);letter-spacing:-.01em;margin-bottom:12px}
