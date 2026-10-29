@@ -29,6 +29,7 @@
   --lime:#c6f432; --lime-2:#a8d81c;
   /* 時間の色 */
   --now:#e3342e;            /* いま：赤い点 */
+  --now-ink:#c42019;        /* いま：小さな赤い字（紙の上で 4.5:1 以上） */
   --lamp:#ffd166;           /* 灯り：勉強中 */
   --lamp-2:#ffe7a3;
   --live:#2fc463;           /* 勉強中の小さな点（アプリと同じ役） */
@@ -46,6 +47,7 @@
   --g0:#e4e5ea; --g1:#b4e9c6; --g2:#5fd28c; --g3:#21a35a; --g4:#127a43;
   /* type roles */
   --f-jp:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-app:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Noto Sans CJK JP",system-ui,sans-serif; /* アプリの画面の字（見本の中だけ） */
   --fs-h1:clamp(34px, 4.3vw, 60px);
   --fs-h2:clamp(26px, 2.9vw, 40px);
   --fs-h3:19px;
@@ -59,6 +61,7 @@
   --bar-h:64px;
   --ease:cubic-bezier(.2,.8,.2,1);   /* 行きすぎない */
   --focus:#3d47d6;
+  --inchpix-top-z:46;       /* the crane that carries notes flies under the nav and its menu */
   color-scheme:light;
 }
 
@@ -121,7 +124,9 @@ inch-pal{display:none}
 .links{display:flex;gap:2px;margin-left:auto}
 .links a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:9px;font-size:15.5px;font-weight:700;text-decoration:none;white-space:nowrap}
 @media (hover:hover){.links a:hover{background:color-mix(in oklab,currentColor 9%,transparent)}}
-.soon-chip{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 13px;border-radius:999px;background:var(--navfg,var(--ink));color:var(--navbg,var(--sky-0));
+.logo svg{border-radius:7px}
+.nav[data-sky="4"] .logo svg,.nav[data-sky="5"] .logo svg{box-shadow:0 0 0 1.5px #8d93c4}
+.soon-chip{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 15px;border-radius:999px;background:var(--navfg,var(--ink));color:var(--navbg,var(--sky-0));
   font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap}
 .menu{display:none;position:relative}
 .menu summary{list-style:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:2px solid currentColor;border-radius:10px;
@@ -149,14 +154,15 @@ inch-pal{display:none}
 
 /* a station: time | stop | body */
 .station{display:grid;grid-template-columns:calc(var(--line-x) - 20px) 40px 1fr;align-items:start}
-.st-time{grid-column:1;justify-self:end;padding-top:6px;color:var(--fg,var(--ink))}
+.st-time{grid-column:1;justify-self:end;display:grid;justify-items:end;gap:10px;padding-top:6px;color:var(--fg,var(--ink))}
 .st-time .pix{--cell:5px}
+/* the station's name, under its time (like a stop on a line map) */
+.st-name{font-size:15px;font-weight:700;line-height:1.35;color:var(--muted);text-align:right;max-width:7.5em}
 .stop{grid-column:2;justify-self:center;position:relative;z-index:2;width:18px;height:18px;margin-top:14px;border-radius:50%;
   background:var(--stopbg,var(--bg));border:3px solid var(--fg,var(--ink))}
 .stop.past{background:var(--fg,var(--ink))}
 .st-body{grid-column:3;min-width:0}
-.chip{display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:0 12px;border-radius:999px;border:2px solid currentColor;font-size:14px;font-weight:700;line-height:1;margin-bottom:16px}
-.chip i{width:10px;height:10px;border-radius:3px;background:var(--c,currentColor)}
+.station.next{margin-top:clamp(72px,9vw,120px)}
 
 /* the moving "now" (one dot for the whole page) */
 #now{position:absolute;left:0;top:0;z-index:3;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--now);
@@ -167,6 +173,11 @@ html:not(.js) #now{display:none}
 
 /* two columns inside a station body */
 .st-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(32px,5vw,72px);align-items:start}
+/* one stretch turns the other way, so the stations don't all read the same */
+@media (min-width:901px){
+  .st-cols.flip{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+  .st-cols.flip > .st-visual{order:-1}
+}
 .st-copy h2{font-size:var(--fs-h2);line-height:1.32;margin-bottom:22px}
 .st-copy p{max-width:34em;color:var(--fg,var(--ink))}
 .st-copy p + p{margin-top:14px}
@@ -190,41 +201,49 @@ html:not(.js) #now{display:none}
 .hero h1{font-size:var(--fs-h1);line-height:1.26;letter-spacing:.005em;margin-bottom:22px}
 .hero .sub{font-size:var(--fs-lead);line-height:1.85;max-width:30em;margin-bottom:30px}
 .ctas{display:flex;flex-wrap:wrap;gap:14px 12px;margin-bottom:22px}
-.status{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:var(--fs-small);color:var(--muted);font-weight:700}
-.status a{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+.status{display:flex;flex-wrap:wrap;align-items:center;gap:0 18px;font-size:var(--fs-small);color:var(--muted);font-weight:700}
+.status a{display:inline-flex;align-items:center;min-height:44px;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
 
-/* the school timetable, and what comes after 6限 */
+/* the school timetable (printed paper), and what comes after 6限 (the app) */
 .tt{margin:0;position:relative}
-.tt-card{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:14px 16px 18px}
-.tt-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:2px 2px 10px;font-weight:900;font-size:17px}
-.tt-head small{font-size:13px;font-weight:700;color:var(--muted)}
-.tt-grid{display:grid;grid-template-columns:30px repeat(3,40px) minmax(0,1fr) 40px;font-size:15px;font-weight:700}
-.tt-grid > *{display:flex;align-items:center;justify-content:center;height:36px;border-bottom:1.5px solid var(--line)}
-.tt-grid .d{font-weight:900;color:var(--muted)}
-.tt-grid .p{color:var(--muted);font-size:13px}
-.tt-grid .today{justify-content:flex-start;padding-left:16px;background:color-mix(in oklab,var(--sky-1) 55%,var(--card));color:var(--ink)}
-.tt-grid .d.today{justify-content:flex-start;color:var(--card);background:var(--ink);border-radius:10px 10px 0 0;border-bottom-color:var(--ink)}
+/* 1. the school's sheet: grey print, hairlines, square corners */
+.tt-paper{--pi:#6e6773;--pl:#cdc3b2;background:#fbf9f3;color:var(--pi);border:1px solid #b9ae9b;border-radius:0;padding:12px 16px 10px}
+.tt-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 2px 8px;font-weight:700;font-size:15px;letter-spacing:.06em}
+.tt-head small{font-size:13px;font-weight:700;letter-spacing:0}
+.tt-grid{display:grid;grid-template-columns:30px repeat(3,40px) minmax(0,1fr) 40px;font-size:15px;font-weight:500}
+.tt-grid > *{display:flex;align-items:center;justify-content:center;height:34px;border-bottom:1px solid var(--pl)}
+.tt-grid .d{font-weight:700;border-bottom-color:var(--pi)}
+.tt-grid .p{font-size:13px}
+.tt-grid .today{justify-content:flex-start;padding-left:14px;background:color-mix(in oklab,var(--sky-1) 50%,#fbf9f3)}
+.tt-grid .d.today{color:var(--ink);font-weight:900}
 .tt-grid .last{border-bottom:0}
-/* the red now line between 6限 and 放課後 (the app's own "now") */
-.tt-now{position:relative;display:flex;align-items:center;gap:8px;height:30px;margin:4px 0 0;color:var(--now);font-size:13px;font-weight:900}
-.tt-now::before{content:"";position:absolute;left:4px;right:0;top:50%;height:2.5px;margin-top:-1px;background:var(--now)}
-.tt-now i{position:relative;width:13px;height:13px;border-radius:50%;background:var(--now);flex:none}
-.tt-now-l{position:relative;display:inline-flex;align-items:center;gap:6px;background:var(--card);padding:0 8px 0 4px}
-.tt-now .pix{--cell:2px}
-.tt-now b{font-weight:900}
-.tt-after{display:grid;grid-template-columns:30px repeat(3,40px) minmax(0,1fr) 40px;margin-top:4px}
-.tt-after .p{grid-column:1;writing-mode:vertical-rl;justify-self:center;align-self:center;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.12em}
-.tt-after .empty{margin:6px 4px;border:2px dashed var(--line);border-radius:8px}
-.tt-plan{list-style:none;margin:0;padding:10px 4px 6px 16px;position:relative}
-.tt-plan::before{content:"";position:absolute;left:23px;top:0;bottom:22px;width:3px;margin-left:-1.5px;
-  background:repeating-linear-gradient(to bottom,var(--ink) 0 4px,transparent 4px 9px);opacity:.45}
-.tt-plan li{position:relative;display:grid;grid-template-columns:16px 1fr;column-gap:10px;padding:4px 0 10px;line-height:1.35}
-.tt-plan li::before{content:"";grid-row:1 / span 2;width:14px;height:14px;margin-top:3px;border-radius:50%;background:var(--card);border:2.5px solid var(--ink);position:relative;z-index:1}
-.tt-plan .t{font-size:13px;font-weight:900;font-variant-numeric:tabular-nums}
-.tt-plan .t .pix{--cell:2px}
-.tt-plan .s{font-size:15px;font-weight:900;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.tt-plan .s i{width:12px;height:12px;border-radius:4px;background:var(--c)}
-.tt-plan .s span{font-weight:500;font-size:14px}
+.tt-grid .fold{display:none}
+/* 2. from the red "now" line down: the app (white card, the app's line and dots) */
+.tt-app{position:relative;margin-top:12px;background:#fff;color:#16151b;border:2px solid var(--ink);border-radius:16px;padding:10px 14px 6px;font-family:var(--f-app)}
+.tt-app-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 0 4px;font:900 14px/1.3 var(--f-jp);color:var(--ink)}
+.tt-app-head span{display:inline-flex;align-items:center;gap:7px}
+.tt-app-head svg{width:18px;height:18px;flex:none;border-radius:4px}
+.tt-app-head small{font-size:13px;font-weight:700;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:0;position:relative}
+.tl li{position:relative;display:grid;grid-template-columns:50px 22px minmax(0,1fr) auto;column-gap:8px;align-items:center;min-height:52px}
+.tl .tm{justify-self:end;text-align:right;font-size:15px;font-weight:700;line-height:1.25;font-variant-numeric:tabular-nums}
+.tl .tm small{display:block;font-size:13px;font-weight:500;color:#77737f}
+.tl .rail{position:relative;align-self:stretch;display:grid;place-items:center}
+.tl .rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:repeating-linear-gradient(to bottom,#b8b6bf 0 3px,transparent 3px 7px)}
+.tl li:last-child .rail::before{bottom:50%}
+.tl .rail i{position:relative;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #b8b6bf}
+.tl .nm{font-size:16px;font-weight:700;line-height:1.3}
+.tl .nm small{font-size:13px;font-weight:500;color:#77737f;margin-left:6px}
+.tl .nm span{display:block;font-size:14px;font-weight:500;color:#3b3946}
+.tl .ic{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:var(--c);color:#fff;font:800 12px/1 var(--f-app);letter-spacing:.04em}
+.tl .ic.pi{font-size:19px;font-weight:700}
+/* the app's "now": red time, red dot on the line, a thin pale-red rule (solid line above = already passed) */
+.tl li.now{min-height:32px}
+.tl li.now .tm{color:var(--now-ink);font-weight:900;font-family:var(--f-jp)}
+.tl li.now .rail::before{background:#8e8b96;top:0;bottom:50%}
+.tl li.now .rail::after{content:"";position:absolute;left:50%;top:50%;bottom:0;width:2px;margin-left:-1px;background:repeating-linear-gradient(to bottom,#b8b6bf 0 3px,transparent 3px 7px)}
+.tl li.now .rail i{width:12px;height:12px;background:var(--now);border:0}
+.tl li.now .rule{grid-column:3 / -1;height:2px;background:#f19a96;border-radius:1px}
 .tt figcaption{margin:12px 2px 0;font-size:var(--fs-small);font-weight:700;color:var(--muted)}
 
 /* =================== 17:01 the room and the lamp =================== */
@@ -240,6 +259,16 @@ html.studying .room .bulb{fill:var(--lamp)}
 .room .stand{position:absolute;left:51%;bottom:22.5%;width:22%}
 .room .stand .phone{--pw:100%;border-radius:22px;padding:4px;border-width:2px}
 .room .stand .phone img{border-radius:17px}
+/* while studying, the phone on the stand shows the running time (not the idle 0:00) */
+.stand-live{position:absolute;inset:4px;border-radius:17px;display:grid;place-items:center;align-content:center;gap:7px;background:rgba(23,20,33,.9);opacity:0}
+.stand-live .pix{--cell:3px;color:var(--lamp)}
+.stand-live i{width:8px;height:8px;border-radius:50%;background:var(--live)}
+html.studying .stand-live{opacity:1}
+/* copy | room, then the controls under the copy; on phones the room comes before the controls */
+.timer-cols{grid-template-areas:"copy room" "ctl room";grid-template-rows:auto 1fr;row-gap:0}
+.timer-cols > .st-copy{grid-area:copy}
+.timer-cols > .room-wrap{grid-area:room}
+.timer-cols > .timer-ctl{grid-area:ctl}
 .desk-top{position:absolute;left:0;right:0;bottom:22.5%;height:2px}
 .readout{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 18px;margin:26px 0 20px;padding:18px 20px 16px;border:2px solid var(--ink);border-radius:16px;background:var(--card);max-width:440px}
 .readout .pix{--cell:7px;color:var(--ink);opacity:.35}
@@ -255,16 +284,18 @@ html.studying .readout .pix{opacity:1}
 .slip h3{font-size:16px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px}
 .slip h3 small{font-size:13px;color:var(--muted);font-weight:700}
 .log{list-style:none;margin:0;padding:0}
-.log li{display:grid;grid-template-columns:44px 6px minmax(0,1fr) auto;align-items:center;column-gap:10px;min-height:44px;border-top:1.5px solid var(--line);font-size:15px;line-height:1.4}
+.log li{display:grid;grid-template-columns:44px 6px minmax(0,1fr) auto;align-items:center;column-gap:10px;min-height:58px;padding:7px 0;border-top:1.5px solid var(--line);font-size:15px;line-height:1.35}
 .log li:first-child{border-top:0}
 .log .lt{font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
-.log .lc{width:6px;height:22px;border-radius:3px;background:var(--c)}
-.log b{font-weight:900;margin-right:6px}
-.log .ld{font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
-.log li.mine{background:color-mix(in oklab,var(--lamp) 30%,transparent);margin:0 -10px;padding:0 10px;border-radius:10px}
+.log .lc{width:6px;height:34px;border-radius:3px;background:var(--c)}
+.log .lw b{display:block;font-weight:900}
+.log .lw small{display:block;font-size:13.5px;font-weight:500;color:var(--muted)}
+.log .ld{display:grid;justify-items:end;gap:3px;font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
+.log .add{font-style:normal;font-size:13px;padding:0 7px;border-radius:6px;background:color-mix(in oklab,var(--lamp) 55%,transparent)}
+.log li.mine{background:color-mix(in oklab,var(--lamp) 30%,transparent);margin:0 -10px;padding:7px 10px;border-radius:10px}
 .log li.mine .lt{color:var(--ink)}
-.duo{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:24px;align-items:start}
-.duo .shot{--pw:210px}
+.duo{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:24px;align-items:start}
+.duo .shot{--pw:200px}
 
 /* =================== 19:45 the day's tape and the real parts =================== */
 .board{display:grid;gap:16px}
@@ -296,7 +327,7 @@ html.studying .readout .pix{opacity:1}
 .facts dd{margin:4px 0 0}
 
 /* =================== 22:00 the building at night =================== */
-.night-cols{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:end}
+.night-cols{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:start}
 .tower{position:relative;padding:22px 18px 0;background:#2f376a;border:2px solid var(--night-line);border-bottom:0;border-radius:12px 12px 0 0;
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .tower::after{content:"";position:absolute;left:-14px;right:-14px;bottom:-2px;height:2px;background:var(--night-line)}
@@ -309,14 +340,13 @@ html.studying .readout .pix{opacity:1}
 .win.you.lit{border-style:solid;border-color:#e6b84c}
 .win .tm{font-variant-numeric:tabular-nums;font-weight:700}
 .tower-sill{height:26px;background:#2f376a;border-inline:2px solid var(--night-line)}
-.hint{margin-top:16px;font-size:var(--fs-small);color:var(--muted);font-weight:700}
+.hint{margin-top:16px;min-height:calc(2 * 1.8em);font-size:var(--fs-small);color:var(--muted);font-weight:700}
 
-/* =================== 22:30 how: tomorrow's three stops =================== */
+/* =================== 22:30 how: three steps, each marked with a small clock (no second rail) =================== */
 .how-line{list-style:none;margin:28px 0 0;padding:0;position:relative;max-width:620px}
-.how-line::before{content:"";position:absolute;left:8px;top:14px;bottom:30px;width:3px;margin-left:-1.5px;
-  background:repeating-linear-gradient(to bottom,var(--fg) 0 4px,transparent 4px 10px);opacity:.5}
-.how-line li{position:relative;display:grid;grid-template-columns:18px 1fr;column-gap:18px;padding-bottom:26px}
-.how-line li::before{content:"";grid-row:1 / span 3;width:18px;height:18px;margin-top:6px;border-radius:50%;background:var(--bg);border:3px solid var(--fg);position:relative;z-index:1}
+.how-line li{position:relative;display:grid;grid-template-columns:22px 1fr;column-gap:16px;padding-bottom:26px}
+.how-line li::before{content:"";grid-row:1 / span 3;width:22px;height:22px;margin-top:3px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Ccircle cx='11' cy='11' r='9.2' fill='none' stroke='%23ffd166' stroke-width='2.4'/%3E%3Cpath d='M11 5.6V11h4.2' fill='none' stroke='%23ffd166' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
 .how-cols{grid-template-columns:minmax(0,1fr) auto;align-items:center}
 .st-copy .how-line{margin-top:8px}
 .how-line .when{font-size:var(--fs-small);font-weight:700;color:var(--lamp)}
@@ -369,7 +399,11 @@ html.studying .readout .pix{opacity:1}
 /* =================== the study bar (the app's own bar) =================== */
 .bar{position:fixed;z-index:60;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(560px,calc(100% - 32px));
   display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;height:var(--bar-h);padding:0 10px 0 10px;
-  background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:18px;--focus:#3d47d6}
+  background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:18px;--focus:#3d47d6;
+  transition:transform .32s var(--ease),visibility 0s}
+/* the bar first comes in when the day reaches 17:00 (not in the first view) */
+html.js .bar.away{transform:translate(-50%,calc(100% + 40px));visibility:hidden;transition:transform .32s var(--ease),visibility 0s .32s}
+.bar-tag{position:absolute;left:14px;top:-13px;padding:1px 9px 2px;border:2px solid var(--ink);border-radius:8px;background:var(--card);font-size:12px;font-weight:900;line-height:1.3}
 .bar-tile{position:relative;display:grid;place-items:center;width:44px;height:44px;border-radius:11px;background:var(--sc,var(--s-en));color:#fff;font-weight:900;font-size:20px;line-height:1}
 .bar-tile.self{background:var(--ink)}
 .bar-live{position:absolute;left:-4px;top:-4px;width:13px;height:13px;border-radius:50%;background:var(--live);border:2.5px solid var(--card);display:none}
@@ -390,18 +424,24 @@ html.studying .bar-prog{display:block}
 .bar-prog i{display:block;height:100%;width:var(--p,0%);background:var(--sc,var(--s-en))}
 
 /* toasts carried by the crane */
-#toasts{position:fixed;top:calc(var(--nav-h) + 14px);right:16px;z-index:65;display:grid;gap:10px;justify-items:end;width:min(340px,calc(100vw - 32px));pointer-events:none}
+/* below the nav (and its menu), never over it; room above for the crane that carries it */
+#toasts{position:fixed;top:calc(var(--nav-h) + 52px);right:16px;z-index:45;display:grid;gap:10px;justify-items:end;width:min(340px,calc(100vw - 32px));pointer-events:none}
+html.menu-open #toasts{visibility:hidden}
 
 /* =================== phone widths =================== */
 @media (max-width:1100px){
-  :root{--line-x:124px}
-  .hero-grid{grid-template-columns:minmax(0,1fr) 420px;gap:36px}
+  :root{--line-x:124px;--fs-h1:clamp(34px,4.3vw,46px)}
+  .hero-grid{grid-template-columns:minmax(0,1fr) 380px;gap:36px}
   .st-time .pix{--cell:4px}
+  .st-name{font-size:14px}
 }
 @media (max-width:900px){
   .hero-grid{grid-template-columns:1fr}
   .tt{max-width:460px}
   .st-cols,.night-cols,.sheet-cols{grid-template-columns:1fr}
+  .timer-cols{grid-template-areas:"copy" "room" "ctl";grid-template-rows:auto;row-gap:24px}
+  .timer-cols .readout{margin-top:0}
+  .room-wrap{max-width:520px}
   .how-shot{display:none}
   .soon{grid-template-columns:1fr 1fr}
   .soon div:nth-child(3){padding-left:0;border-left:0}
@@ -417,28 +457,45 @@ html.studying .bar-prog{display:block}
   .logo{font-size:21px}
   .logo svg{width:26px;height:26px}
   .clock{padding:0 9px 0 8px;gap:6px}
-  /* station: stop + time on one row, body below */
+  /* station: stop + time + name on one row, body below */
   .station{grid-template-columns:22px 1fr;column-gap:12px}
   .stop{grid-column:1;grid-row:1;margin-top:7px;width:16px;height:16px}
-  .st-time{grid-column:2;grid-row:1;justify-self:start;padding-top:0;margin-bottom:10px}
+  .st-time{grid-column:2;grid-row:1;justify-self:start;display:flex;align-items:center;gap:14px;padding-top:0;margin-bottom:14px}
   .st-time .pix{--cell:4px}
+  .st-name{font-size:15px;text-align:left;max-width:none}
   .hero .st-time .pix{--cell:4px}
   .hero .stop{margin-top:7px}
   .st-body{grid-column:2;grid-row:2}
-  .kicker{min-height:0;margin:-4px 0 12px;font-size:15px}
-  .hero .leg-in{padding-top:18px}
-  .hero h1{margin-bottom:14px}
-  .hero .sub{margin-bottom:22px;line-height:1.8}
-  .ctas{margin-bottom:16px}
+  .leg-in{padding-block:52px}
+  /* the hero: the date sits on the time's row, so the timetable's after-school part reaches the first view */
+  .hero .station{position:relative}
+  .kicker{position:absolute;left:150px;top:2px;min-height:28px;margin:0;font-size:14.5px}
+  .hero .st-time{margin-bottom:12px}
+  .hero .leg-in{padding-top:16px;padding-bottom:48px}
+  .hero h1{margin-bottom:12px}
+  .hero .sub{margin-bottom:18px;line-height:1.75}
+  .ctas{margin-bottom:4px}
   .ctas .btn{min-height:50px;padding:0 18px;font-size:16px}
-  .tt-card{padding:12px 10px 14px}
-  .tt-grid,.tt-after{grid-template-columns:24px repeat(3,34px) minmax(0,1fr) 34px}
-  .tt-grid > *{height:32px}
-  .tt-grid{font-size:14px}
+  .hero-grid{gap:30px}
+  .tt-paper{padding:9px 10px 6px}
+  .tt-head{padding-bottom:4px;font-size:14px}
+  .tt-grid{grid-template-columns:24px repeat(3,34px) minmax(0,1fr) 34px;font-size:14px}
+  .tt-grid > *{height:30px}
   .tt-grid .today{padding-left:12px}
+  /* 1〜4限 fold into one line */
+  .tt-grid .up{display:none}
+  .tt-grid .fold{display:flex;grid-column:1 / -1;justify-content:flex-start;padding-left:4px;height:26px;font-size:13px;letter-spacing:.04em}
+  .tt-app{margin-top:10px;padding:8px 12px 4px}
+  .tl li{grid-template-columns:46px 20px minmax(0,1fr) auto;min-height:46px}
+  .tl li.now{min-height:28px}
+  .tl .ic{width:34px;height:34px;border-radius:9px}
+  .tl .nm{font-size:15px}
+  .tl .nm span{font-size:13.5px}
   .phone{--pw:210px}
-  .room{aspect-ratio:1 / 1}
-  .room .stand{left:46%;width:29%}
+  .room{aspect-ratio:4 / 3}
+  .room .stand{left:48%;width:25%}
+  .stand-live .pix{--cell:2px}
+  .readout{margin-top:20px}
   .readout .pix{--cell:6px}
   .duo{grid-template-columns:1fr}
   .tower{gap:10px;padding:16px 12px 0}
@@ -460,9 +517,14 @@ html.studying .bar-prog{display:block}
   .sheet tr{padding:12px 0;border-top:1.5px solid var(--line)}
   .sheet th,.sheet td{border:0;padding:0}
   .sheet td::before{content:attr(data-label)"：";color:var(--muted);font-weight:700;font-size:13px}
+  .station.next{margin-top:60px}
+  /* the crane's note: a thin strip under the nav, full width */
+  #toasts{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));top:calc(var(--nav-h) + 36px);width:auto;justify-items:stretch}
+  #toasts .ip-toast{max-width:none;min-width:0;width:100%;padding:8px 12px;font-size:14px;box-shadow:0 3px 0 0 var(--ink)}
 }
 @media (max-width:370px){
   .clock .lbl{display:none}
+  .kicker{left:142px;font-size:13.5px}
 }
 
 /* =================== less motion =================== */
@@ -527,34 +589,33 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
               <a class="btn btn-lime" href="#t1700">画面を見てみる <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 2h2v8.5l3-3 1.4 1.4L8 14.3 2.6 8.9 4 7.5l3 3z" fill="currentColor"/></svg></a>
               <a class="btn btn-ghost" href="#how">使い方</a>
             </div>
-            <p class="status"><span>iPhone 向けに、[公開日]ごろ公開予定</span><a href="#parents">おうちの方へ</a></p>
+            <p class="status"><span>[公開日]ごろ公開予定</span><a href="#parents">おうちの方へ</a></p>
           </div>
 
-          <figure class="tt" aria-label="学校の時間割の見本。木曜日は6限の体育まで。15:30 の赤い線のあと、放課後の行に 17:00 英語 長文読解、19:00 数学 青チャート。">
-            <div class="tt-card" id="tt-card" aria-hidden="true">
-              <div class="tt-head">学校の時間割 <small>見本</small></div>
+          <figure class="tt" aria-label="学校の時間割の見本。木曜日は6限の体育まで。その下の赤い「いま」の線から先が Inchly の時間割：放課後の 17:00 英語 長文読解、19:00 数学 青チャート。">
+            <div class="tt-paper" id="tt-paper" aria-hidden="true">
+              <div class="tt-head"><span>学校の時間割</span><small>見本</small></div>
               <div class="tt-grid">
                 <span></span><span class="d">月</span><span class="d">火</span><span class="d">水</span><span class="d today">木</span><span class="d">金</span>
-                <span class="p">1</span><span>国</span><span>英</span><span>数</span><span class="today">理科</span><span>社</span>
-                <span class="p">2</span><span>数</span><span>社</span><span>理</span><span class="today">英語</span><span>国</span>
-                <span class="p">3</span><span>英</span><span>数</span><span>国</span><span class="today">国語</span><span>英</span>
-                <span class="p">4</span><span>理</span><span>国</span><span>英</span><span class="today">数学</span><span>体</span>
+                <span class="fold">1〜4限　…</span>
+                <span class="p up">1</span><span class="up">国</span><span class="up">英</span><span class="up">数</span><span class="today up">理科</span><span class="up">社</span>
+                <span class="p up">2</span><span class="up">数</span><span class="up">社</span><span class="up">理</span><span class="today up">英語</span><span class="up">国</span>
+                <span class="p up">3</span><span class="up">英</span><span class="up">数</span><span class="up">国</span><span class="today up">国語</span><span class="up">英</span>
+                <span class="p up">4</span><span class="up">理</span><span class="up">国</span><span class="up">英</span><span class="today up">数学</span><span class="up">体</span>
                 <span class="p">5</span><span>社</span><span>音</span><span>美</span><span class="today">社会</span><span>数</span>
-                <span class="p last">6</span><span class="last">体</span><span class="last">理</span><span class="last">学</span><span class="today last">体育</span><span class="last">理</span>
-              </div>
-              <div class="tt-now"><i></i><span class="tt-now-l"><span class="pix" data-pix="15:30"></span><b>いま</b></span></div>
-              <div class="tt-after">
-                <span class="p">放課後</span>
-                <span class="empty"></span><span class="empty"></span><span class="empty"></span>
-                <ol class="tt-plan">
-                  <li><span class="t"><span class="pix" data-pix="17:00"></span></span><span class="s"><i style="--c:var(--s-en)"></i>英語<span>長文読解</span></span></li>
-                  <li><span class="t"><span class="pix" data-pix="19:00"></span></span><span class="s"><i style="--c:var(--s-ma)"></i>数学<span>青チャート</span></span></li>
-                </ol>
-                <span class="empty"></span>
+                <span class="p last">6</span><span class="last">体</span><span class="last">理</span><span class="last">総合</span><span class="today last">体育</span><span class="last">理</span>
               </div>
             </div>
-            <figcaption>6限までは学校の時間割。そのあとは、自分で入れる。</figcaption>
-            <inch-pal kind="tsuru" do="perch" on="#tt-card" scale="2"></inch-pal>
+            <div class="tt-app" aria-hidden="true">
+              <p class="tt-app-head"><span><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><rect width="16" height="16" rx="3.5" fill="#1b1726"/><rect x="2" y="10" width="2" height="3" fill="#E5484D"/><rect x="4.5" y="8" width="2" height="5" fill="#F2C46D"/><rect x="7" y="6" width="2" height="7" fill="#9AB8DB"/><rect x="9.5" y="4" width="2" height="9" fill="#5B8DEF"/><rect x="12" y="2" width="2" height="11" fill="#9D7BF5"/></svg>ここから Inchly</span><small>放課後</small></p>
+              <ol class="tl">
+                <li class="now"><span class="tm">いま</span><span class="rail"><i></i></span><span class="rule"></span></li>
+                <li><span class="tm">17:00<small>18:00</small></span><span class="rail"><i></i></span><span class="nm">英語<small>つぎ</small><span>長文読解</span></span><span class="ic" style="--c:var(--s-en)">ABC</span></li>
+                <li><span class="tm">19:00<small>20:00</small></span><span class="rail"><i></i></span><span class="nm">数学<span>青チャート</span></span><span class="ic pi" style="--c:var(--s-ma)">π</span></li>
+              </ol>
+            </div>
+            <figcaption>6限までは学校の時間割。放課後からは、Inchly に自分で入れる。</figcaption>
+            <inch-pal kind="tsuru" do="perch" on="#tt-paper" scale="2"></inch-pal>
           </figure>
         </div>
       </div>
@@ -566,12 +627,11 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 <section class="leg" data-sky="1" aria-label="17:00 から：時間割とタイマー">
   <div class="wrap leg-in">
     <article class="station" data-t="17:00" id="t1700" aria-labelledby="h1700">
-      <div class="st-time"><span class="pix" data-pix="17:00"></span></div>
+      <div class="st-time"><span class="pix" data-pix="17:00"></span><span class="st-name">時間割</span></div>
       <span class="stop" aria-hidden="true"></span>
       <div class="st-body">
         <div class="st-cols">
           <div class="st-copy">
-            <p class="chip"><i style="--c:var(--s-en)"></i>時間割</p>
             <h2 id="h1700">予定の時間に、<br>お知らせが届く。</h2>
             <p>時間割に入れた予定は、1日の1本の線にならぶ。終わったところは実線、これからは点線、いまの時刻に赤い点。このページの左の線も、同じ見方。</p>
             <p>予定の時刻になると、お知らせが届く。模試や入試の日は「締切」に入れておくと、あと何日かと ToDo の進みが見える。</p>
@@ -584,15 +644,16 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
       </div>
     </article>
 
-    <article class="station" data-t="17:01" id="t1701" aria-labelledby="h1701" style="margin-top:clamp(72px,9vw,120px)">
-      <div class="st-time"><span class="pix" data-pix="17:01"></span></div>
+    <article class="station next" data-t="17:01" id="t1701" aria-labelledby="h1701">
+      <div class="st-time"><span class="pix" data-pix="17:01"></span><span class="st-name">タイマー</span></div>
       <span class="stop" aria-hidden="true"></span>
       <div class="st-body">
-        <div class="st-cols">
+        <div class="st-cols timer-cols">
           <div class="st-copy">
-            <p class="chip"><i style="--c:var(--s-en)"></i>タイマー</p>
             <h2 id="h1701">押したら、<br>もう始まっている。</h2>
-            <p>画面の下のバーに、いまの予定がいつも出ている。「勉強を開始」を1回押すだけ。予定がない時間は「自習」で始めて、あとで科目に仕分ける。</p>
+            <p>画面の下のバーに、いまの予定がいつも出ている。「勉強を開始」を1回押すだけ。今日の予定がもう無いときは「自習」で始めて、あとで科目に仕分ける。</p>
+          </div>
+          <div class="timer-ctl">
             <div class="readout" role="group" aria-label="見本のタイマー">
               <span class="pix" id="ro-time" data-pix="00:00" role="timer" aria-label="0分0秒"></span>
               <span class="ro-meta"><b id="ro-name">英語 長文読解</b><span id="ro-plan">予定 1時間</span></span>
@@ -604,7 +665,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
             </div>
             <p class="fine">見本です。このページの中だけで動いて、どこにも保存しません。</p>
           </div>
-          <div class="st-visual">
+          <div class="st-visual room-wrap">
             <div class="room" id="room">
               <svg class="art" viewBox="0 0 160 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
                 <rect width="160" height="120" fill="#f0cfa6"/>
@@ -638,7 +699,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
                 <!-- a notebook -->
                 <rect x="100" y="86" width="34" height="6" fill="#fffcf5"/><rect x="100" y="86" width="34" height="1" fill="#1b1726"/><rect x="100" y="91" width="34" height="1" fill="#1b1726"/><rect x="116" y="86" width="2" height="6" fill="#5856D6"/>
               </svg>
-              <div class="stand"><div class="phone"><img src="img/timer-idle.webp" alt="アプリのタイマーの画面。英語 長文読解、17:00から18:00、0:00、のこり1時間。" width="786" height="1704" loading="lazy" decoding="async"></div></div>
+              <div class="stand"><div class="phone"><img src="img/timer-idle.webp" alt="アプリのタイマーの画面。英語 長文読解、17:00から18:00、0:00、のこり1時間。" width="786" height="1704" loading="lazy" decoding="async"><span class="stand-live" aria-hidden="true"><i></i><span class="pix" id="stand-pix" data-pix="00:00"></span></span></div></div>
               <div class="desk-top" id="desk"></div>
             </div>
             <inch-pal id="jiri" kind="jiri" do="sit" on="#desk" edge="box" at=".93" scale="3"></inch-pal>
@@ -653,12 +714,11 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 <section class="leg" data-sky="2" aria-labelledby="h1835">
   <div class="wrap leg-in">
     <article class="station" data-t="18:35" id="t1835">
-      <div class="st-time"><span class="pix" data-pix="18:35"></span></div>
+      <div class="st-time"><span class="pix" data-pix="18:35"></span><span class="st-name">記録</span></div>
       <span class="stop" aria-hidden="true"></span>
       <div class="st-body">
-        <div class="st-cols">
+        <div class="st-cols flip">
           <div class="st-copy">
-            <p class="chip"><i style="--c:var(--s-en)"></i>記録</p>
             <h2 id="h1835">✓ で、<br>今日の記録に。</h2>
             <p>終わったら ✓。投稿を書くように、ひとことメモを残せる（140字まで）。時間は5分ずつ直せる。タイムラインにも出すかは、そのつど選ぶ。</p>
             <p class="fine">0時をまたいだ勉強は、日ごとに分けて記録する。</p>
@@ -667,8 +727,8 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
             <div class="slip">
               <h3>今日の記録 <small>見本</small></h3>
               <ol class="log" id="log" aria-live="polite">
-                <li style="--c:var(--s-en)"><span class="lt">17:00</span><i class="lc" aria-hidden="true"></i><span><b>英語</b><span class="nb">長文読解</span></span><span class="ld">1時間35分</span></li>
-                <li style="--c:var(--s-ja)"><span class="lt">6:30</span><i class="lc" aria-hidden="true"></i><span><b>国語</b><span class="nb">古文単語</span></span><span class="ld">30分</span></li>
+                <li data-key="en-1020" style="--c:var(--s-en)"><span class="lt">17:00</span><i class="lc" aria-hidden="true"></i><span class="lw"><b>英語</b><small>長文読解</small></span><span class="ld"><span>1時間35分</span></span></li>
+                <li data-key="ja-390" style="--c:var(--s-ja)"><span class="lt">6:30</span><i class="lc" aria-hidden="true"></i><span class="lw"><b>国語</b><small>古文単語</small></span><span class="ld"><span>30分</span></span></li>
               </ol>
             </div>
             <figure class="shot">
@@ -686,12 +746,11 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 <section class="leg" data-sky="3" aria-labelledby="h1945">
   <div class="wrap leg-in">
     <article class="station" data-t="19:45" id="t1945">
-      <div class="st-time"><span class="pix" data-pix="19:45"></span></div>
+      <div class="st-time"><span class="pix" data-pix="19:45"></span><span class="st-name">続けた日数</span></div>
       <span class="stop" aria-hidden="true"></span>
       <div class="st-body">
         <div class="st-cols">
           <div class="st-copy">
-            <p class="chip"><i style="--c:var(--g3)"></i>続けた日数とバッジ</p>
             <h2 id="h1945">続けた日が、<br>目に見える。</h2>
             <p>数学が終わって、今日は2時間45分。勉強した日はマスが緑になり、<span class="nb">長くやった日ほど</span>濃くなる。</p>
             <dl class="facts">
@@ -725,12 +784,11 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 <section class="leg" data-sky="4" aria-label="22:00 から：友だち、使い方、おうちの方へ">
   <div class="wrap leg-in">
     <article class="station" data-t="22:00" id="t2200" aria-labelledby="h2200">
-      <div class="st-time"><span class="pix" data-pix="22:00"></span></div>
+      <div class="st-time"><span class="pix" data-pix="22:00"></span><span class="st-name">友だち</span></div>
       <span class="stop" aria-hidden="true"></span>
       <div class="st-body">
         <div class="st-cols">
           <div class="st-copy">
-            <p class="chip"><i style="--c:var(--lamp)"></i>友だち</p>
             <h2 id="h2200">ひとりの夜も、<br>だれかが机に向かう。</h2>
             <p>いま勉強中の友だちが、科目と時間といっしょに並ぶ。だれかが始めたら、「一緒に始める」をひと押し。<span class="nb">同じ志望校の人で</span>しぼったり、グループで集まったりもできる。</p>
             <p class="fine">勉強中を見せる相手は、設定で決められる。</p>
@@ -757,13 +815,12 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
       </div>
     </article>
 
-    <article class="station" data-t="22:30" id="how" aria-labelledby="h2230" style="margin-top:clamp(80px,10vw,128px)">
-      <div class="st-time"><span class="pix" data-pix="22:30"></span></div>
+    <article class="station next" data-t="22:30" id="how" aria-labelledby="h2230">
+      <div class="st-time"><span class="pix" data-pix="22:30"></span><span class="st-name">使い方</span></div>
       <span class="stop" aria-hidden="true"></span>
       <div class="st-body">
         <div class="st-cols how-cols">
           <div class="st-copy">
-            <p class="chip"><i style="--c:var(--lamp)"></i>使い方</p>
             <h2 id="h2230">入れるのは予定だけ。<br>あとは押すだけ。</h2>
             <ol class="how-line">
               <li><span class="when">今夜</span><h3>あしたの時間割に入れる。</h3><p>日にちと時間と科目を入れておく。</p></li>
@@ -779,7 +836,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
       </div>
     </article>
 
-    <div class="station" style="margin-top:clamp(64px,8vw,104px)">
+    <div class="station next">
       <span class="stop" aria-hidden="true" style="visibility:hidden"></span>
       <div class="st-body">
         <section class="sheet" id="parents" aria-labelledby="hp">
@@ -816,13 +873,13 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 <footer class="leg foot" data-sky="5" id="soon" aria-labelledby="hf">
   <div class="wrap leg-in">
     <div class="station" data-t="23:00">
-      <div class="st-time"><span class="pix" data-pix="23:00"></span></div>
+      <div class="st-time"><span class="pix" data-pix="23:00"></span><span class="st-name">近日公開</span></div>
       <span class="stop" aria-hidden="true"></span>
       <div class="st-body">
         <h2 id="hf">今夜も、<br>少しずつ前へ。</h2>
         <p class="after">あしたの放課後も、時間割はつづく。</p>
         <dl class="soon">
-          <div><dt>近日公開</dt><dd>iPhone 向けに、[公開日]ごろ公開する予定です。</dd></div>
+          <div><dt>公開の予定</dt><dd>iPhone 向けに、[公開日]ごろ公開する予定です。</dd></div>
           <div><dt>だれが使える</dt><dd>日本語で使えます。小学生から大人まで。13歳未満の人は、保護者の同意を得てから。</dd></div>
           <div><dt>ねだん</dt><dd>値段と、広告を出すかどうかは、決まったらこのページで知らせます。</dd></div>
           <div><dt>Android</dt><dd>[Android版の予定]</dd></div>
@@ -854,7 +911,8 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 <span id="now" aria-hidden="true"></span>
 
 <!-- the app's study bar: always here, shows the plan whose time has come -->
-<aside class="bar" id="bar" aria-label="勉強バー（見本）">
+<aside class="bar away" id="bar" aria-label="勉強バー（見本）">
+  <span class="bar-tag" aria-hidden="true">見本</span>
   <div class="bar-tile" id="bar-tile" aria-hidden="true"><span id="bar-glyph">A</span><i class="bar-live"></i></div>
   <div class="bar-text">
     <p class="bar-title" id="bar-title"><b>英語</b>長文読解</p>
@@ -976,7 +1034,8 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
     }
     const z = stops[stops.length - 1]; return { t: z.t, y: z.y, k: stops.length - 1 };
   }
-  let pageMin = 930;
+  let pageMin = 930, barShown = null;
+  const barEl = D.getElementById('bar');
   function update(force) {
     if (!stops.length) return;
     const sy = scrollY, p = timeAt(sy);
@@ -998,6 +1057,9 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
       if (crossed) ring();
       renderBar();
     }
+    /* the study bar comes in when the day reaches the 17:00 stop (it is not part of the first view) */
+    const showBar = !!session || (stops[1] && sy + innerHeight * .8 > stops[1].y);
+    if (showBar !== barShown) { barShown = showBar; barEl.classList.toggle('away', !showBar); barEl.inert = !showBar; }
     /* the nav takes the light of what is under it */
     const navLeg = legBox.find(L => sy + navH >= L.top && sy + navH < L.top + L.h + 1) || legBox[0];
     let ns = navLeg.sky;
@@ -1025,6 +1087,8 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
     { sub: 'en', title: '長文読解', from: 1020, to: 1080 },
     { sub: 'ma', title: '青チャート', from: 1140, to: 1200 }
   ];
+  /* the bar starts what the page's clock says; the 17:01 station starts its own 17:00 plan */
+  const STATION_T = 1021;
   const $ = id => D.getElementById(id);
   const bar = { tile: $('bar-tile'), glyph: $('bar-glyph'), title: $('bar-title'), sub: $('bar-sub'), go: $('bar-go'), done: $('bar-done'), fill: $('bar-fill') };
   let session = null, tick = 0, flash = 0, flashMsg = '';
@@ -1064,18 +1128,21 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
       bar.sub.textContent = c.mode === 'now' ? `いまの予定　${fmt(c.p.from)}〜${fmt(c.p.to)}` : `つぎ　${fmt(c.p.from)}から`;
       bar.go.setAttribute('aria-label', `${SUBJ[c.p.sub].name} ${c.p.title} の勉強を開始`);
     } else {
+      /* the app: when today's plans are over, the button starts 自習 right away */
       setTile('self');
-      bar.title.innerHTML = '<b>自習</b>予定なし';
-      bar.sub.textContent = '予定がない時間は、自習で始める';
+      bar.title.innerHTML = '<b>自習</b>今日の予定はおわり';
+      bar.sub.textContent = '押すと、自習で始まる';
       bar.go.setAttribute('aria-label', '自習を開始');
     }
   }
-  const ro = { time: $('ro-time'), name: $('ro-name'), plan: $('ro-plan'), fill: $('ro-fill'), go: $('go'), done: $('done') };
+  const ro = { time: $('ro-time'), name: $('ro-name'), plan: $('ro-plan'), fill: $('ro-fill'), go: $('go'), done: $('done'), stand: $('stand-pix') };
+  const hm = s => `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}`;
   function renderStation() {
     const s = elapsed();
     if (session) {
       const S = SUBJ[session.sub];
       pix(ro.time, mmss(Math.min(s, 5999)));
+      pix(ro.stand, mmss(Math.min(s, 5999)));
       ro.time.setAttribute('aria-label', `${Math.floor(s / 60)}分${s % 60}秒`);
       ro.name.textContent = `${S.name} ${session.title}`;
       ro.plan.textContent = session.plan ? `予定 1時間　のこり ${Math.max(0, Math.ceil(60 - s / 60))}分` : '予定なし';
@@ -1083,53 +1150,72 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
       ro.fill.style.setProperty('--p', session.plan ? Math.min(100, s / 36) + '%' : '100%');
       ro.go.hidden = true; ro.done.hidden = false;
     } else {
+      /* this station is 17:01: its sample is the 17:00 plan (a record goes onto that plan's line) */
+      const c = currentPlan(STATION_T);
       pix(ro.time, '00:00'); ro.time.setAttribute('aria-label', '0分0秒');
-      ro.name.textContent = '英語 長文読解'; ro.plan.textContent = '予定 1時間';
+      ro.name.textContent = `${SUBJ[c.p.sub].name} ${c.p.title}`;
+      ro.plan.textContent = `予定 1時間　${fmt(c.p.from)}〜${fmt(c.p.to)}`;
       ro.fill.style.setProperty('--p', '0%');
       ro.go.hidden = false; ro.done.hidden = true;
     }
+    /* your window counts in hours:minutes, like everyone else's */
     const you = $('win-you'), yt = $('win-you-t');
     you.classList.toggle('lit', !!session);
-    if (session) { you.style.setProperty('--c', SUBJ[session.sub].c); yt.textContent = `${SUBJ[session.sub].name} ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+    if (session) { you.style.setProperty('--c', SUBJ[session.sub].c); yt.textContent = `${SUBJ[session.sub].name} ${hm(s)}`; }
     else yt.textContent = 'まだ暗い';
-    $('win-hint').textContent = session ? 'あなたの窓にも、灯りがついた。' : '下のバーで勉強を始めると、あなたの窓にも灯りがつく。';
+    $('win-hint').textContent = session ? 'あなたの窓にも、灯りがついた。下のバーの ✓ で記録できる。' : '下のバーで勉強を始めると、あなたの窓にも灯りがつく。';
   }
   const jiri = () => D.getElementById('jiri');
   function ring() { const j = jiri(); if (j && j.poke) try { j.poke('note'); } catch (e) {} }
-  function start(fromStation) {
+  function start(at) {
     if (session) return;
-    let sub = 'en', title = '長文読解', plan = true;
-    if (!fromStation) {
-      const c = currentPlan(pageMin);
-      if (c.p) { sub = c.p.sub; title = c.p.title; } else { sub = 'self'; title = '予定なし'; plan = false; }
-    }
-    session = { sub, title, plan, start: Date.now() };
+    const c = currentPlan(at);
+    session = c.p
+      ? { sub: c.p.sub, title: c.p.title, plan: true, key: `${c.p.sub}-${c.p.from}`, at: fmt(c.p.from), start: Date.now() }
+      : { sub: 'self', title: '予定なし', plan: false, key: '', at: fmt(at), start: Date.now() };
     root.classList.add('studying');
     ring();
     renderBar(); renderStation();
+    if (!barShown) update();
     clearInterval(tick);
     tick = setInterval(() => { renderBar(); renderStation(); }, 1000);
   }
+  const durText = s => s >= 3600 ? `${Math.floor(s / 3600)}時間${Math.floor(s / 60) % 60}分` : s >= 60 ? `${Math.floor(s / 60)}分${s % 60}秒` : `${s}秒`;
   function record() {
     if (!session) return;
-    const s = Math.max(1, elapsed()), S = SUBJ[session.sub];
-    const dur = s >= 3600 ? `${Math.floor(s / 3600)}時間${Math.floor(s / 60) % 60}分` : s >= 60 ? `${Math.floor(s / 60)}分${s % 60}秒` : `${s}秒`;
-    const li = D.createElement('li');
-    li.className = 'mine'; li.style.setProperty('--c', S.c);
-    li.innerHTML = `<span class="lt">いま</span><i class="lc" aria-hidden="true"></i><span><b>${S.name}</b><span class="nb">${esc(session.title)}</span></span><span class="ld">${dur}</span>`;
-    const log = $('log'); log.insertBefore(li, log.firstChild);
-    while (log.querySelectorAll('li.mine').length > 3) log.querySelectorAll('li.mine')[3].remove();
+    const s = Math.max(1, elapsed()), S = SUBJ[session.sub], dur = durText(s);
+    const log = $('log');
+    /* a plan that already has a line in today's record: add to that line, don't make a second one */
+    let li = session.key ? log.querySelector(`li[data-key="${session.key}"]`) : null;
+    if (li) {
+      const add = (Number(li.dataset.add) || 0) + s;
+      li.dataset.add = add; li.classList.add('mine');
+      let em = li.querySelector('.add');
+      if (!em) { em = D.createElement('em'); em.className = 'add'; li.querySelector('.ld').appendChild(em); }
+      em.textContent = `＋${durText(add)}`;
+    } else {
+      li = D.createElement('li');
+      li.className = 'mine new'; li.style.setProperty('--c', S.c);
+      if (session.key) li.dataset.key = session.key;
+      li.dataset.add = s;
+      li.innerHTML = `<span class="lt">${session.at}</span><i class="lc" aria-hidden="true"></i><span class="lw"><b>${S.name}</b><small>${esc(session.title)}</small></span><span class="ld"><em class="add">${dur}</em></span>`;
+      log.insertBefore(li, log.firstChild);
+      while (log.querySelectorAll('li.new').length > 3) [...log.querySelectorAll('li.new')].pop().remove();
+    }
     session = null; clearInterval(tick);
     root.classList.remove('studying');
-    flash = Date.now() + 3200; flashMsg = `記録した：${S.name} ${dur}（見本）`;
+    /* one note only: the crane's card. (the bar says it only if the crane can't come) */
+    const msg = `記録しました：${S.name} ${dur}（見本）`;
+    let carried = false;
+    if (window.InchPix && InchPix.deliver) try { InchPix.deliver(msg, 4200); carried = true; } catch (e) {}
+    if (!carried) { flash = Date.now() + 3200; flashMsg = msg; setTimeout(renderBar, 3300); }
     renderBar(); renderStation();
-    setTimeout(renderBar, 3300);
-    if (window.InchPix && InchPix.deliver) try { InchPix.deliver(`記録しました：${S.name} ${dur}（見本）`, 4200); } catch (e) {}
+    update();
   }
   D.addEventListener('click', e => {
     const b = e.target.closest && e.target.closest('[data-act]');
     if (!b) return;
-    if (b.dataset.act === 'start') start(b.id === 'go');
+    if (b.dataset.act === 'start') start(b.id === 'go' ? STATION_T : pageMin);
     else if (b.dataset.act === 'record') record();
     /* keep focus on the visible control after the swap */
     const twin = b.id === 'go' ? ro.done : b.id === 'done' ? ro.go : b.id === 'bar-go' ? bar.done : b.id === 'bar-done' ? bar.go : null;
@@ -1140,6 +1226,8 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
   /* ---------- small things ---------- */
   const menu = $('menu');
   menu.addEventListener('click', e => { if (e.target.closest('a')) menu.open = false; });
+  /* opening the menu clears the crane's notes, so nothing covers it */
+  menu.addEventListener('toggle', () => root.classList.toggle('menu-open', menu.open));
   D.addEventListener('click', e => { if (menu.open && !menu.contains(e.target)) menu.open = false; });
   D.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.open) { menu.open = false; menu.querySelector('summary').focus(); } });
   const calm = $('calm');

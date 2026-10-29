@@ -1,0 +1,96 @@
+<title>Inchly サイトの4案</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+1:wght@400;700;800&family=DotGothic16&display=swap">
+<style>
+/* Layout: one column of four proposals, each a row of PC + phone first views; the pick is marked, not shouted. */
+:root{
+  --paper:#F3EEE3; --card:#FBF8F1; --ink:#17121F; --ink2:#5A5266; --line:#17121F; --lime:#C6F432; --pick:#E5484D;
+  --sans:"M PLUS 1","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+  --pixel:"DotGothic16","M PLUS 1",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#17121F;--card:#221B2C;--ink:#F3EEE3;--ink2:#B9B0C4;--line:#F3EEE3;--pick:#FF7A7E;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#17121F;--card:#221B2C;--ink:#F3EEE3;--ink2:#B9B0C4;--line:#F3EEE3;--pick:#FF7A7E;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:16px/1.7 var(--sans);margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+h1{font-size:clamp(26px,5vw,40px);line-height:1.25;margin:0 0 12px;text-wrap:balance;font-weight:800}
+.lead{color:var(--ink2);max-width:40em;margin:0 0 8px}
+.label{font-family:var(--pixel);font-size:13px;letter-spacing:.04em;color:var(--ink2)}
+.list{display:grid;gap:28px;margin-top:32px}
+.mock{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:20px;display:grid;gap:16px;min-width:0}
+.mock.pick{box-shadow:8px 8px 0 var(--lime)}
+.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
+.head h2{margin:0;font-size:22px;font-weight:800}
+.score{font-family:var(--pixel);font-size:14px}
+.badge{font-size:13px;font-weight:700;color:var(--pick);border:2px solid var(--pick);border-radius:999px;padding:0 10px}
+.shots{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);gap:12px;align-items:start}
+.shots img{display:block;width:100%;height:auto;border:2px solid var(--line);border-radius:10px;background:#fff}
+.mock p{margin:0;min-width:0}
+.mock dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px}
+.mock dt{font-weight:700;white-space:nowrap}
+.mock dd{margin:0;min-width:0}
+.open{justify-self:start;display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:2px solid var(--ink);border-radius:12px;background:var(--lime);color:#17121F;font-weight:800;text-decoration:none;box-shadow:0 4px 0 var(--ink)}
+.open:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.open:focus-visible{outline:3px solid #6B4CFF;outline-offset:3px}
+.next{margin-top:36px;border-top:2px solid var(--line);padding-top:20px}
+.next h2{font-size:20px;margin:0 0 8px}
+.next ol{margin:0;padding-left:1.4em}
+@media (max-width:640px){.shots{grid-template-columns:minmax(0,1fr)}.shots .pc{display:none}.shots .ph{max-width:300px}.mock dl{grid-template-columns:1fr}.mock dt{margin-top:6px}}
+@media (prefers-reduced-motion:reduce){.open:active{transform:none}}
+</style>
+
+<div class="wrap">
+  <p class="label">INCHLY 紹介サイト · モック</p>
+  <h1>piixpal の骨組みに、Inchly だけの芯を1つ。</h1>
+  <p class="lead">紙とインク、太い線、ぼかしのない影、押すと沈むボタンは残したまま、芯を4通りに変えて作りました。点数は、中高生の目とデザイナーの目の2人の審査の平均です。どれも見本で、本物のサイト（site/）は変えていません。</p>
+
+  <div class="list">
+    <article class="mock pick">
+      <div class="head"><h2>放課後から夜まで</h2><span class="score">84点</span><span class="badge">おすすめ</span></div>
+      <div class="shots"><img class="pc" src="shots/c-day-pc.webp" width="1200" height="750" alt="放課後案の PC の最初の画面。15:30 の時計、見出し「時間割は、6限で終わらない。」、右に学校の時間割と、その続きの Inchly のカード。"><img class="ph" src="shots/c-day-ph.webp" width="600" height="1298" alt="放課後案のスマホの最初の画面。"></div>
+      <dl><dt>芯</dt><dd>中高生の一日がページの時間の軸。学校の時間割の続きを Inchly が受け持ち、スクロールで夕方から夜へ。</dd>
+      <dt>強い</dt><dd>「学校の時間割 → ここから Inchly」で、説明なしにアプリの役目が伝わる。4案でいちばん piixpal から離れた。</dd>
+      <dt>弱い</dt><dd>長い（スマホで約12画面）。見本の記録が実時間なので「＋3秒」になり、手ごたえが弱い。</dd></dl>
+      <a class="open" href="c-day.html">開いてみる</a>
+    </article>
+
+    <article class="mock">
+      <div class="head"><h2>つみ上げ</h2><span class="score">81点</span></div>
+      <div class="shots"><img class="pc" src="shots/d-stack-pc.webp" width="1200" height="750" alt="つみ上げ案の PC の最初の画面。科目の色のブロックが積まれた塔。"><img class="ph" src="shots/d-stack-ph.webp" width="600" height="1298" alt="つみ上げ案のスマホの最初の画面。"></div>
+      <dl><dt>芯</dt><dd>1回の勉強が科目の色のブロックになり、塔として積み上がる。フッターは26週の塔の町並み（合計664時間）。</dd>
+      <dt>強い</dt><dd>押すと塔がのび、炎が上がって「目標の3時間に、届いた」。達成感は4案でいちばん。</dd>
+      <dt>弱い</dt><dd>極太の見出し書体が小さい見出しでつぶれる。PC の最初の画面の上が空いている。</dd></dl>
+      <a class="open" href="d-stack.html">開いてみる</a>
+    </article>
+
+    <article class="mock">
+      <div class="head"><h2>ものさし</h2><span class="score">76.5点</span></div>
+      <div class="shots"><img class="pc" src="shots/a-ruler-pc.webp" width="1200" height="750" alt="ものさし案の PC の最初の画面。今日の勉強が太い定規になり、尺取り虫が乗っている。"><img class="ph" src="shots/a-ruler-ph.webp" width="600" height="1298" alt="ものさし案のスマホの最初の画面。"></div>
+      <dl><dt>芯</dt><dd>名前の inch から。今日の勉強が太い定規になり、尺取り虫の「すん」が目盛りを進む。</dd>
+      <dt>強い</dt><dd>名前・ロゴ・機能が1本の線でつながる。旗を動かして目標を決める仕掛けが分かりやすい。</dd>
+      <dt>弱い</dt><dd>ヒーローより下が静かで、計器盤のように見える。中高生には少し冷たい。</dd></dl>
+      <a class="open" href="a-ruler.html">開いてみる</a>
+    </article>
+
+    <article class="mock">
+      <div class="head"><h2>ノートと文房具</h2><span class="score">72点</span></div>
+      <div class="shots"><img class="pc" src="shots/b-notebook-pc.webp" width="1200" height="750" alt="ノート案の PC の最初の画面。方眼ノートの上に今日の勉強と花丸。"><img class="ph" src="shots/b-notebook-ph.webp" width="600" height="1298" alt="ノート案のスマホの最初の画面。"></div>
+      <dl><dt>芯</dt><dd>日本の学校の机。方眼ノート、赤ペンの花丸、付箋、マスキングテープ。</dd>
+      <dt>強い</dt><dd>「✓ 記録する」で合計に赤ペンの花丸が描かれる瞬間。</dd>
+      <dt>弱い</dt><dd>かわいい手帳に寄り、高校生には子どもっぽい。スマホの最初の画面に仕掛けが入らない。</dd></dl>
+      <a class="open" href="b-notebook.html">開いてみる</a>
+    </article>
+  </div>
+
+  <section class="next">
+    <h2>審査の2人がそろって出した次の一手</h2>
+    <ol>
+      <li>「放課後から夜まで」で進める。芯は1つのまま、ほかの案からは部品だけを借りる。</li>
+      <li>つみ上げから：記録すると今日の塔にブロックが積まれ、目標に届く瞬間。フッターを26週の塔の町並みに。</li>
+      <li>ものさしから：見本の記録を早送りにして「＋25分」のような手ごたえに。保護者向けの「はじめ」の札の見せ方。</li>
+      <li>ノートから：記録した行に1回だけ付く印（花丸か、アプリの白フチのスタンプ）。</li>
+      <li>全案の宿題：主ボタンのライムが piixpal のまま。芯から出た色（夕方のランプの黄色など）に替える案もある。</li>
+    </ol>
+  </section>
+</div>
