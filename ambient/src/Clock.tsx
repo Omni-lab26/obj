@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { clockFont } from './fonts';
@@ -32,7 +32,7 @@ type Props = {
 export function Clock({ clock, tone }: Props) {
   const now = useNow();
   const { width } = useWindowDimensions();
-  const shown = useRef(new Animated.Value(clock.visible ? 1 : 0)).current;
+  const [shown] = useState(() => new Animated.Value(clock.visible ? 1 : 0));
 
   useEffect(() => {
     Animated.spring(shown, {
@@ -112,12 +112,11 @@ export function Clock({ clock, tone }: Props) {
 
 /** A small pill that confirms a long-press toggle, then fades away. */
 export function Toast({ toast, tone }: { toast: { text: string; id: number } | null; tone: 'dark' | 'light' }) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const [text, setText] = useState(toast?.text ?? '');
+  const [opacity] = useState(() => new Animated.Value(0));
+  const text = toast?.text ?? '';
 
   useEffect(() => {
     if (!toast) return;
-    setText(toast.text);
     opacity.setValue(0);
     Animated.sequence([
       Animated.timing(opacity, { toValue: 1, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true }),

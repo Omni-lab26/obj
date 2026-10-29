@@ -10,7 +10,9 @@ type AmbientWindow = Window & {
 export function SceneView({ scene, paused, digital, onReady, onTouch, onLongPress, onTone }: SceneViewProps) {
   const ref = useRef<HTMLIFrameElement>(null);
   const latest = useRef({ paused, digital });
-  latest.current = { paused, digital };
+  useEffect(() => {
+    latest.current = { paused, digital };
+  });
 
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {

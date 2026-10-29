@@ -38,19 +38,19 @@
 
   const P = {
     Lfrac: 0.105, // sole length / short side of the screen
-    soleW: 0.44, // sole width / length
+    soleW: 0.41, // sole width / length
     footGap: 0.375, // half the distance between left and right footprints (L)
-    plantLead: 0.57, // footprints land this far ahead of the pelvis's mid-stance spot (L)
-    swingIn: 0.65, // share of the footprint gap the swinging foot cuts in at mid-swing
-    hipHalf: 0.22, // half the distance between the hip joints (L)
+    plantLead: 0.41, // footprints land this far ahead of the pelvis's mid-stance spot (L)
+    swingIn: 0.35, // share of the footprint gap the swinging foot cuts in at mid-swing
+    hipHalf: 0.62, // half the distance between the hip joints (L)
     ankleZ: 0.25,
-    shin: 1.5,
-    thigh: 1.75,
-    hipZ: 3.4,
+    shin: 1.65,
+    thigh: 1.6,
+    hipZ: 3.1,
     torsoZ: 6.2,
-    rAnkle: 0.32,
-    rKnee: 0.36,
-    rHip: 0.37,
+    rAnkle: 0.36,
+    rKnee: 0.46,
+    rHip: 0.22,
     rTorso0: 0.5,
     rTorso1: 0.87,
     stepT: 0.758,
@@ -58,22 +58,24 @@
     heelOff: 0.25,
     flatAfter: 0.14,
     stepLen: 2.42,
-    heelPeak: 0.45, // heel height at toe-off
-    heelSwing: 0.95, // heel height early in the swing
-    toeSwing: 0.3,
+    heelPeak: 0.35, // heel height at toe-off
+    heelSwing: 0.65, // heel height early in the swing
+    toeSwing: 0.4,
     toeUp: 0.2,
     clearance: 0.05,
-    blur0: 0.02,
-    blurK: 0.24,
+    blur0: 0.03,
+    blurK: 0.3,
     ink0: 0.84,
     inkK: 0.17,
-    inkMin: 0.14,
-    torsoInk: 0.35,
-    torsoLean: 0, // how far (L) the top of the body is ahead of the pelvis
-    soleInk: 1, // ink of a sole flat on the glass
-    vpX: 0.48,
+    inkMin: 0.08,
+    torsoInk: 0.5,
+    torsoLean: 2, // how far (L) the top of the body is ahead of the pelvis
+    soleInk: 0.95, // ink of a sole flat on the glass
+    blurMax: 1, // the blur stops growing above this (L)
+    torsoBlur: 1, // the body's blur relative to the legs'
+    vpX: 0.44,
     vpY: -0.2,
-    hipShift: 2.0, // how far (L) a hip at the bottom edge leans toward the vanishing point
+    hipShift: 2.25, // how far (L) a hip at the bottom edge leans toward the vanishing point
     pitch: 2.5, // dot pitch in CSS px for 89 px soles
     solid0: 0.93,
     solid1: 0.99,
@@ -164,7 +166,7 @@
   const dl = {};
 
   const FIELD_VS = `
-attribute vec4 a0; // position (CSS px), ink, unused
+attribute vec4 a0; // position (CSS px), ink, blur scale
 attribute vec4 a1; // A.xy, B.xy
 attribute vec4 a2; // C.xy, rA, rB
 attribute vec4 a3; // rC, zA, zB, zC
@@ -173,8 +175,9 @@ varying vec4 v1;
 varying vec4 v2;
 varying vec4 v3;
 varying float vInk;
+varying float vBlur;
 void main() {
-  v1 = a1; v2 = a2; v3 = a3; vInk = a0.z;
+  v1 = a1; v2 = a2; v3 = a3; vInk = a0.z; vBlur = a0.w;
   gl_Position = vec4(a0.x / uView.x * 2.0 - 1.0, 1.0 - a0.y / uView.y * 2.0, 0.0, 1.0);
 }`;
 
@@ -185,10 +188,12 @@ uniform float uScale;
 uniform float uL;
 uniform vec4 uK;      // blur0, blurK, ink0, inkK (heights in sole lengths)
 uniform float uInkMin;
+uniform float uBlurMax;  // in sole lengths
 varying vec4 v1;
 varying vec4 v2;
 varying vec4 v3;
 varying float vInk;
+varying float vBlur;
 
 float seg(vec2 p, vec2 a, vec2 b, float ra, float rb, float za, float zb, out float z) {
   vec2 pa = p - a;
@@ -207,7 +212,7 @@ void main() {
   // Blend the two segments' heights near the joint so the blur has no seam.
   float z = mix(z2, z1, smoothstep(-0.15 * uL, 0.15 * uL, d2 - d1));
   float d = min(d1, d2);
-  float blur = max(0.6, (uK.x + uK.y * z) * uL);
+  float blur = max(0.6, min(uK.x + uK.y * z, uBlurMax) * vBlur * uL);
   float c = 1.0 - smoothstep(-blur, blur, d);
   float ink = clamp(uK.z - uK.w * z, uInkMin, 1.0) * vInk;
   gl_FragColor = vec4(vec3(1.0 - ink * c), 1.0);
@@ -261,7 +266,7 @@ void main() {
   }
 
   function initGL() {
-    const f = link(FIELD_VS, FIELD_FS, ['a0', 'a1', 'a2', 'a3'], ['uView', 'uScale', 'uL', 'uK', 'uInkMin']);
+    const f = link(FIELD_VS, FIELD_FS, ['a0', 'a1', 'a2', 'a3'], ['uView', 'uScale', 'uL', 'uK', 'uInkMin', 'uBlurMax']);
     fieldProg = f.p;
     Object.assign(fl, f.loc);
     const d = link(DOT_VS, DOT_FS, ['a'], ['uField', 'uRes', 'uPitch', 'uSolid', 'uPaper', 'uInk', 'uRaw']);
@@ -301,7 +306,7 @@ void main() {
 
   // One body part: up to two joined segments A→B→C between 3D points [x, y, z]
   // (CSS px), with radii in CSS px before projection and an ink multiplier.
-  function part(A, B, C, rA, rB, rC, ink) {
+  function part(A, B, C, rA, rB, rC, ink, blurScale = 1) {
     const pa = proj(A[0], A[1], A[2]);
     const pb = proj(B[0], B[1], B[2]);
     const pc = proj(C[0], C[1], C[2]);
@@ -311,7 +316,7 @@ void main() {
     const za = A[2] / L;
     const zb = B[2] / L;
     const zc = C[2] / L;
-    const pad = Math.max(ra, rb, rc) + (P.blur0 + P.blurK * Math.max(za, zb, zc)) * L + 2;
+    const pad = Math.max(ra, rb, rc) + Math.min(P.blur0 + P.blurK * Math.max(za, zb, zc), P.blurMax) * blurScale * L + 2;
     const x0 = Math.min(pa[0], pb[0], pc[0]) - pad;
     const x1 = Math.max(pa[0], pb[0], pc[0]) + pad;
     const y0 = Math.min(pa[1], pb[1], pc[1]) - pad;
@@ -328,7 +333,7 @@ void main() {
       verts[o] = x;
       verts[o + 1] = y;
       verts[o + 2] = ink;
-      verts[o + 3] = 0;
+      verts[o + 3] = blurScale;
       verts[o + 4] = pa[0];
       verts[o + 5] = pa[1];
       verts[o + 6] = pb[0];
@@ -361,6 +366,7 @@ void main() {
       gl.uniform1f(fl.uL, L);
       gl.uniform4f(fl.uK, P.blur0, P.blurK, P.ink0, P.inkK);
       gl.uniform1f(fl.uInkMin, P.inkMin);
+      gl.uniform1f(fl.uBlurMax, P.blurMax);
       gl.bindBuffer(gl.ARRAY_BUFFER, partBuf);
       gl.bufferData(gl.ARRAY_BUFFER, verts.subarray(0, vertCount * FLOATS), gl.DYNAMIC_DRAW);
       const stride = FLOATS * 4;
@@ -658,7 +664,7 @@ void main() {
     // The body above, faint.
     const base = [w.x, w.y, w.hipZ];
     const top = [w.x + ch * P.torsoLean * L, w.y + sh * P.torsoLean * L, P.torsoZ * L];
-    part(base, top, top, P.rTorso0 * L, P.rTorso1 * L, P.rTorso1 * L, P.torsoInk);
+    part(base, top, top, P.rTorso0 * L, P.rTorso1 * L, P.rTorso1 * L, P.torsoInk, P.torsoBlur);
   }
 
   function gone(w) {
@@ -734,10 +740,16 @@ void main() {
     const a = clamp(Math.min(w.card / 0.25, (3.4 - w.card) / 0.2), 0, 1);
     if (a <= 0) return;
     const s = clamp(L / 89, 0.72, 1);
-    const cw = 142 * s;
+    let name = w.tag.name;
+    if (w.glitchAt >= 0) name = name.slice(0, w.glitchAt) + w.glitchChar + name.slice(w.glitchAt + 1);
+    const fs = 9.5 * s;
+    const step = fs * 0.86;
+    // The card grows with the name, so long names are never cut.
+    const cw = Math.max(110 * s, 66 * s + name.length * step + 14 * s);
     const chh = 64 * s;
     let x = g.x1 + 12 * s;
     if (x + cw > Host.w - 6) x = g.x0 - 12 * s - cw;
+    x = clamp(x, 6, Host.w - cw - 6); // a walker at the edge still gets its whole card
     const y = clamp(g.cy - chh / 2, 6, Host.h - chh - 6);
     const lift = (1 - a) * 6;
     cards.save();
@@ -750,16 +762,11 @@ void main() {
     cards.fill();
     cards.shadowColor = 'transparent';
     drawIcon(cards, w.tag, x + 8 * s, y + lift + 8 * s, 48 * s);
-    let name = w.tag.name;
-    if (w.glitchAt >= 0) name = name.slice(0, w.glitchAt) + w.glitchChar + name.slice(w.glitchAt + 1);
-    const fs = 9.5 * s;
     cards.font = `400 ${fs}px ${hudRegular}`;
     cards.textBaseline = 'alphabetic';
     cards.fillStyle = '#3a3a3a';
     const tx = x + 66 * s;
-    const step = fs * 0.86;
-    const maxChars = Math.floor((cw - 72 * s) / step);
-    for (let i = 0; i < Math.min(name.length, maxChars); i++) cards.fillText(name[i], tx + i * step, y + lift + 28 * s);
+    for (let i = 0; i < name.length; i++) cards.fillText(name[i], tx + i * step, y + lift + 28 * s);
     cards.fillStyle = w.tag.color;
     for (let i = 0; i < w.number.length; i++) cards.fillText(w.number[i], tx + i * step * 1.05, y + lift + 45 * s);
     cards.restore();

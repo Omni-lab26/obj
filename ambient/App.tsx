@@ -55,9 +55,20 @@ function Player() {
   const scene = scenes[index];
 
   // ── chrome: shows on any touch, fades away when left alone ──────────────
-  const chrome = useRef(new Animated.Value(0)).current;
-  const [chromeOn, setChromeOn] = useState(false);
+  // Shown at launch, so the controls are discoverable; they fade when left alone.
+  const [chrome] = useState(() => new Animated.Value(1));
+  const [chromeOn, setChromeOn] = useState(true);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const hideChrome = useCallback(() => {
+    setChromeOn(false);
+    Animated.timing(chrome, {
+      toValue: 0,
+      duration: 600,
+      easing: Easing.inOut(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [chrome]);
 
   const showChrome = useCallback(() => {
     clearTimeout(hideTimer.current);
@@ -68,21 +79,13 @@ function Player() {
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-    hideTimer.current = setTimeout(() => {
-      setChromeOn(false);
-      Animated.timing(chrome, {
-        toValue: 0,
-        duration: 600,
-        easing: Easing.inOut(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    }, CHROME_IDLE_MS);
-  }, [chrome]);
+    hideTimer.current = setTimeout(hideChrome, CHROME_IDLE_MS);
+  }, [chrome, hideChrome]);
 
   useEffect(() => {
-    showChrome();
+    hideTimer.current = setTimeout(hideChrome, CHROME_IDLE_MS);
     return () => clearTimeout(hideTimer.current);
-  }, [showChrome]);
+  }, [hideChrome]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (s) => setPaused(s !== 'active'));
@@ -217,6 +220,7 @@ function Player() {
       <SettingsSheet
         open={settingsOpen}
         tone={tone}
+        credit={scene.credit}
         onClose={() => {
           setSettingsOpen(false);
           showChrome();

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ComponentType, type Ref } from 'react';
+import { useEffect, useRef, useState, type ComponentType, type Ref } from 'react';
 import { StyleSheet } from 'react-native';
 import { WebView as RNWebView, type WebViewMessageEvent, type WebViewProps } from 'react-native-webview';
 
@@ -25,7 +25,7 @@ export type SceneViewProps = {
 export function SceneView({ scene, paused, digital, onReady, onTouch, onLongPress, onTone }: SceneViewProps) {
   const ref = useRef<WebViewHandle>(null);
   // Read once: settings at load time; later changes go through injectJavaScript.
-  const initScript = useRef(`window.__ambientInit = ${JSON.stringify({ digital })}; true;`).current;
+  const [initScript] = useState(() => `window.__ambientInit = ${JSON.stringify({ digital })}; true;`);
 
   useEffect(() => {
     ref.current?.injectJavaScript(`window.__ambient && window.__ambient.${paused ? 'pause' : 'resume'}(); true;`);

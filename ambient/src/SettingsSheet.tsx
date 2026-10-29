@@ -1,6 +1,6 @@
 import Slider from '@react-native-community/slider';
 import { BlurView } from 'expo-blur';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Animated,
   Easing,
@@ -23,6 +23,8 @@ type Props = {
   open: boolean;
   onClose: () => void;
   tone: 'dark' | 'light';
+  /** Credit of the photo behind the sheet, when the current background is a photo. */
+  credit?: string;
 };
 
 function palette(tone: 'dark' | 'light') {
@@ -49,32 +51,36 @@ function palette(tone: 'dark' | 'light') {
       };
 }
 
-export function SettingsSheet({ open, onClose, tone }: Props) {
+export function SettingsSheet({ open, onClose, tone, credit }: Props) {
   const { settings, update } = useSettings();
   const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
   const c = palette(tone);
-  const [mounted, setMounted] = useState(open);
-  const progress = useRef(new Animated.Value(0)).current;
+  const [progress] = useState(() => new Animated.Value(0));
+  // The sheet stays mounted while it slides away after being closed.
+  const [closing, setClosing] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    setClosing(!open);
+  }
+  const mounted = open || closing;
 
   useEffect(() => {
     if (open) {
-      setMounted(true);
       Animated.spring(progress, { toValue: 1, useNativeDriver: true, speed: 16, bounciness: 2 }).start();
-    } else if (mounted) {
+    } else {
       Animated.timing(progress, {
         toValue: 0,
         duration: 260,
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
-      }).start(({ finished }) => finished && setMounted(false));
+      }).start(({ finished }) => finished && setClosing(false));
     }
-  }, [open, mounted, progress]);
+  }, [open, progress]);
 
   // The slider stays uncontrolled while the sheet is open so dragging never fights props.
   const initialDigital = useMemo(() => settings.digital, [open]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [digitalLabel, setDigitalLabel] = useState(settings.digital);
-  useEffect(() => setDigitalLabel(settings.digital), [settings.digital]);
 
   const setClock = (patch: Partial<typeof settings.clock>) =>
     update((s) => ({ ...s, clock: { ...s.clock, ...patch } }));
@@ -167,7 +173,7 @@ export function SettingsSheet({ open, onClose, tone }: Props) {
 
           <View style={styles.sectionRow}>
             <SectionTitle color={c.secondary}>デジタルレイヤー</SectionTitle>
-            <Text style={[styles.value, { color: c.secondary }]}>{Math.round(digitalLabel * 100)}%</Text>
+            <Text style={[styles.value, { color: c.secondary }]}>{Math.round(settings.digital * 100)}%</Text>
           </View>
           <Group color={c.group}>
             <View style={styles.sliderRow}>
@@ -177,10 +183,7 @@ export function SettingsSheet({ open, onClose, tone }: Props) {
                 minimumValue={0}
                 maximumValue={1}
                 value={initialDigital}
-                onValueChange={(v) => {
-                  setDigitalLabel(v);
-                  update((s) => ({ ...s, digital: v }));
-                }}
+                onValueChange={(v) => update((s) => ({ ...s, digital: v }))}
                 minimumTrackTintColor={c.accent}
                 maximumTrackTintColor={c.track}
                 accessibilityLabel="デジタルレイヤーの強さ"
@@ -191,6 +194,7 @@ export function SettingsSheet({ open, onClose, tone }: Props) {
           <Footnote color={c.secondary}>
             写真の背景にかける加工の強さです。左端は元の写真そのまま、右に行くほど文字・網点・ドットなどのデジタル表現が強くなります。
           </Footnote>
+          {credit ? <Footnote color={c.secondary}>いまの背景の写真: {credit}</Footnote> : null}
         </ScrollView>
       </Animated.View>
     </Modal>
