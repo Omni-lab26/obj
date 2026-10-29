@@ -133,11 +133,11 @@ html.studying .clock{display:none}
 .clock .pix{--px:3px}
 .clock-dot{width:9px;height:9px;border-radius:50%;background:var(--now);flex:none}
 /* while studying, the nav carries the study (it never sits on the text) */
-.chip{display:none;align-items:center;gap:8px;height:44px;padding:0 4px 0 12px;border:2px solid currentColor;border-radius:12px;white-space:nowrap;font-size:14px;font-weight:700}
+.chip{display:none;align-items:center;gap:8px;height:50px;padding:0 1px 0 12px;border:2px solid currentColor;border-radius:12px;white-space:nowrap;font-size:14px;font-weight:700}
 html.studying .chip{display:inline-flex}
 .chip-live{width:10px;height:10px;border-radius:50%;background:var(--live);flex:none}
 .chip .pix{--px:3px}
-.chip-btn{display:grid;place-items:center;width:44px;height:36px;border:2px solid var(--ink);border-radius:9px;background:var(--card);color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.chip-btn{display:grid;place-items:center;width:44px;height:44px;border:2px solid var(--ink);border-radius:9px;background:var(--card);color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .chip-btn svg{width:18px;height:18px}
 .links{display:flex;gap:2px;margin-left:auto}
 .links a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:9px;font-size:15.5px;font-weight:700;text-decoration:none;white-space:nowrap}
@@ -210,6 +210,8 @@ html:not(.js) #now{display:none}
 .floor{align-self:stretch;height:2px;margin:0 -12px;background:var(--fg,var(--ink))}
 .shot figcaption{flex:1 1 0;min-width:0;padding-bottom:4px;font-size:var(--fs-small);line-height:1.65;color:var(--muted)}
 .shot figcaption b{display:block;font-size:16px;color:var(--fg,var(--ink))}
+.shot.col{flex-direction:column;align-items:center;gap:10px}
+.shot.col figcaption{flex:none;width:var(--pw);text-align:center}
 .leg[data-sky="4"] .phone,.leg[data-sky="5"] .phone{border-color:var(--night-line)}
 .leg[data-sky="4"] .plinth{border-color:#0f1229}
 /* the enlarged screen */
@@ -280,7 +282,7 @@ html:not(.js) #now{display:none}
 .timer-cols > .st-copy{grid-area:copy}
 .timer-cols > .room-wrap{grid-area:room}
 .timer-cols > .ctl{grid-area:ctl}
-.timer-cols > .shot{grid-area:shot;align-self:end}
+.timer-cols > .shot{grid-area:shot;align-self:end;--pw:170px}
 .room{position:relative;aspect-ratio:16 / 10;border:2px solid var(--ink);border-radius:18px;overflow:hidden;background:#f0cfa6}
 .room svg.art{position:absolute;inset:0;width:100%;height:100%;shape-rendering:crispEdges}
 .room .cone{opacity:0}
@@ -322,7 +324,8 @@ html.studying .bar-sub .pix{opacity:1}
 
 /* =================== 18:35 the record slip =================== */
 .rec-cols{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)}
-.rec-vis{display:flex;align-items:flex-end;gap:28px}
+.rec-vis{display:flex;align-items:flex-start;gap:28px}
+.rec-vis .shot{--pw:170px}
 .slip{flex:1 1 auto;min-width:0;background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:16px 18px 10px}
 .slip h3{font-size:16px;margin-bottom:6px;display:flex;justify-content:space-between;gap:10px}
 .slip h3 small{font-size:13px;color:var(--muted);font-weight:700}
@@ -347,6 +350,7 @@ html.studying .bar-sub .pix{opacity:1}
 .day-cols > .cards{grid-area:cards}
 .day-cols > .read{grid-area:read}
 .cards{display:grid;gap:18px}
+figure.card{margin:0}
 .card{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:18px 20px 16px}
 .card-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 14px;font-size:15px;font-weight:900}
 .card-h small{font-size:13px;font-weight:700;color:var(--muted)}
@@ -377,15 +381,12 @@ html:not(.calm) .flame{transition:bottom .3s steps(3,end)}
 .delta{margin-top:6px;font-size:var(--fs-small);font-weight:700;color:var(--up);font-variant-numeric:tabular-nums}
 .goal-left{margin-top:2px;font-size:var(--fs-small);font-weight:900;font-variant-numeric:tabular-nums}
 .goal-left.done{color:var(--up)}
-.legend{display:flex;flex-wrap:wrap;gap:2px 12px;margin:14px 0 0;padding:12px 0 0;list-style:none;border-top:1.5px solid var(--line);font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
-.legend li{display:flex;align-items:center;gap:6px}
-.legend i{width:10px;height:10px;border:1.5px solid var(--ink);background:var(--c)}
 /* the week: from the side, or from above (= the grass) */
 .wk-total{font-size:28px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
 .wk-total small{font-size:var(--fs-small);margin-left:3px}
 .wk-delta{font-size:var(--fs-small);font-weight:700;color:var(--up)}
 .wk-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin-top:6px}
-.wk-top > div{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px}
+.wk-top > .wk-sum{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px}
 .seg{display:inline-flex;border:2px solid var(--ink);border-radius:12px;background:var(--card);box-shadow:0 4px 0 0 var(--ink);overflow:hidden}
 .seg button{display:inline-flex;align-items:center;min-height:44px;padding:0 15px;border:0;background:none;font:700 15px/1 var(--f-jp);color:var(--ink);cursor:pointer}
 .seg button+button{border-left:2px solid var(--ink)}
@@ -538,7 +539,7 @@ html:not(.calm) .week.top .wk-t::after{transition:visibility 0s .42s}
   .soon div:nth-child(n+3){border-top:2px solid var(--night-line)}
 }
 @media (max-width:760px){
-  :root{--wrap:calc(100% - max(16px,env(safe-area-inset-left,0px)) - max(16px,env(safe-area-inset-right,0px)));--line-x:11px;--nav-h:58px;--fs-body:16px;--fs-lead:16.5px;--cell:5px;--head:44px;--wc:2.6px}
+  :root{--wrap:calc(100% - max(16px,env(safe-area-inset-left,0px)) - max(16px,env(safe-area-inset-right,0px)));--line-x:11px;--nav-h:58px;--fs-body:16px;--fs-lead:16.5px;--cell:5px;--head:38px;--wc:2.6px}
   .wrap{width:auto;margin-inline:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .leg-in::before,.leg-in::after{left:calc(max(16px,env(safe-area-inset-left,0px)) + var(--line-x) - 1.5px)}
   .links,.soon-chip{display:none}
@@ -555,16 +556,19 @@ html:not(.calm) .week.top .wk-t::after{transition:visibility 0s .42s}
   .st-time .pix{--px:4px}
   .st-name{font-size:15px;text-align:left;max-width:none}
   .st-body{grid-column:2;grid-row:2}
-  .leg-in{padding-block:48px}
-  .station.next{margin-top:56px}
-  .st-copy h2{margin-bottom:14px}
+  .leg-in{padding-block:36px}
+  .station.next{margin-top:44px}
+  .st-copy h2{margin-bottom:12px}
+  body{line-height:1.75}
+  .facts dd{font-size:15px}
+  .facts{gap:12px;margin-top:18px}
   .st-cols{gap:26px}
   /* the hero: the date sits on the time's row, so the timetable's after-school part reaches the first view */
   .hero .station{position:relative}
   .kicker{position:absolute;left:150px;top:2px;min-height:28px;margin:0;font-size:14.5px}
   .hero .st-time{margin-bottom:12px}
   .hero .stop{margin-top:7px}
-  .hero .leg-in{padding-top:16px;padding-bottom:44px}
+  .hero .leg-in{padding-top:16px;padding-bottom:36px}
   .hero h1{margin-bottom:12px}
   .hero .sub{margin-bottom:18px;line-height:1.75}
   .ctas{margin-bottom:4px}
@@ -584,12 +588,14 @@ html:not(.calm) .week.top .wk-t::after{transition:visibility 0s .42s}
   .tl .nm{font-size:15px}
   .tl .nm span{font-size:13.5px}
   /* screens: a small phone on its stand, the words beside it; press to see it big */
-  .shot{--pw:112px;--ph:8px;gap:16px}
+  .shot,.rec-vis .shot,.timer-cols > .shot{--pw:96px;--ph:7px;gap:14px}
+  .shot.col{flex-direction:row;align-items:flex-end}
+  .shot.col figcaption{flex:1 1 0;width:auto;text-align:left}
   .phone{padding:4px;border-radius:20px}
   .phone img{border-radius:16px}
   .phone .lens{right:-6px;top:-6px;width:30px;height:30px}
-  .room{aspect-ratio:4 / 3}
-  .room .stand-in{left:48%;width:24%}
+  .room{aspect-ratio:16 / 10}
+  .room .stand-in{left:50%;width:20%}
   .stand-live .pix{--px:2px}
   .appbar{grid-template-columns:44px minmax(0,1fr);gap:12px;margin-top:0;padding:12px 12px 16px}
   .bar-tile{width:44px;height:44px}
@@ -609,24 +615,34 @@ html:not(.calm) .week.top .wk-t::after{transition:visibility 0s .42s}
   .total small{font-size:14px;margin:0 3px 0 2px}
   .card{padding:14px 14px 14px}
   .wk-chart{--ww:32px;margin-top:14px}
+  :root{--wc:2.2px}
   .wk-days span{width:32px}
   .wk-total{font-size:24px}
-  .read{--pw:112px;--ph:8px;gap:16px;align-items:flex-start}
+  .read{--pw:96px;--ph:7px;gap:14px;align-items:flex-start}
   .read-h{font-size:17px}
-  .night-cols{flex-direction:column;align-items:stretch;gap:22px}
-  .night-cols .shot figcaption{display:block}
-  .night-cols .shot{flex:auto}
-  .bldg{gap:10px;padding:14px 12px 0}
-  .win{min-height:70px;padding:8px 10px 7px}
+  .night-cols{gap:14px}
+  .night-cols .shot{--pw:84px}
+  .night-cols .shot .floor{margin:0 -6px}
+  .bldg{gap:8px;padding:12px 10px 0}
+  .win{min-height:66px;padding:8px 8px 7px;font-size:13px}
+  .win b{font-size:14px}
+  .hint{margin-top:10px}
   .how-line h3{font-size:19px}
   .sheet{padding:20px 16px 22px}
-  .sheet-head{flex-direction:column;align-items:flex-start;gap:2px;margin-bottom:16px}
+  .sheet-head{margin-bottom:16px;padding-bottom:10px}
+  .sheet-head small{display:none}
   .set{grid-template-columns:1fr;gap:8px;padding:12px 0}
+  .note{padding:0;border:0}
+  .notes{gap:16px}
+  .sheet-cols{margin-top:16px}
   .foot h2{font-size:38px}
   .soon{grid-template-columns:1fr}
-  .soon div,.soon div + div{padding:12px 0;border-left:0;border-top:2px solid var(--night-line)}
+  .soon div,.soon div + div{display:grid;grid-template-columns:6.4em minmax(0,1fr);gap:10px;padding:10px 0;border-left:0;border-top:2px solid var(--night-line)}
+  .soon dt{margin:0;padding-top:2px}
+  .foot .after{margin-bottom:20px}
+  .back{margin-top:18px}
   .soon div:first-child{border-top:0}
-  .sky{--room:104px;margin-top:32px}
+  .sky{--room:96px;margin-top:28px}
   .sky-row{gap:3px}
   .fb-name{flex-direction:column;align-items:flex-start;gap:2px}
   .zoom-in{flex-direction:column;align-items:center;gap:12px;padding:12px}
@@ -639,7 +655,8 @@ html:not(.calm) .week.top .wk-t::after{transition:visibility 0s .42s}
   .clock .lbl{display:none}
   .kicker{left:142px;font-size:13.5px}
   .chip .chip-s{display:none}
-  .shot,.read{--pw:100px}
+  .shot,.read,.rec-vis .shot,.timer-cols > .shot{--pw:88px}
+  .night-cols .shot{--pw:76px}
 }
 
 /* =================== less motion =================== */
@@ -741,14 +758,14 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 <section class="leg" data-sky="1" aria-labelledby="h1700">
   <div class="wrap leg-in">
     <article class="station" data-t="17:00" id="t1700">
-      <div class="st-time"><span class="pix" data-pix="17:00"></span><span class="st-name">時間割とタイマー</span></div>
+      <div class="st-time"><span class="pix" data-pix="17:00"></span><span class="st-name"><span class="nb">時間割と</span><span class="nb">タイマー</span></span></div>
       <span class="stop" aria-hidden="true"></span>
       <div class="st-body">
         <div class="st-cols timer-cols">
           <div class="st-copy">
             <h2 id="h1700">お知らせが来たら、<br><span class="nb">押すだけ。</span></h2>
             <p>時間割に入れた予定は、1日の1本の線にならぶ。終わったところは実線、これからは点線、いまの時刻に赤い点。このページの左の線も、同じ見方。</p>
-            <p>予定の時刻になると、お知らせが届く。画面の下のバーの「勉強を開始」を1回押せば、もう始まっている。予定がないときは「自習」で始めて、あとで科目に仕分ける。</p>
+            <p>予定の時刻になると、お知らせが届く。下のバーの「勉強を開始」を1回押せば、もう始まっている。予定がないときは「自習」で始めて、あとで科目に仕分ける。</p>
           </div>
           <div class="st-visual room-wrap">
             <div class="room" id="room">
@@ -836,7 +853,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
                 <li style="--c:var(--s-ja)"><span class="lt">6:30</span><i class="lc" aria-hidden="true"></i><span class="lw"><b>国語</b><small>古文単語</small></span><span class="ld"><span>30分</span></span></li>
               </ol>
             </div>
-            <figure class="shot" style="--k:2;--bc:var(--b2)">
+            <figure class="shot col" style="--k:2;--bc:var(--b2)">
               <div class="stand">
                 <button type="button" class="phone" aria-label="タイムラインの画面を大きく見る"><img src="img/timeline.webp" alt="アプリのタイムラインの画面。友だちの投稿に「勉強の記録」が付く。kaito：物理 名問の森 15〜18、1時間10分。" width="786" height="1704" loading="lazy" decoding="async"><span class="lens" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="m10.4 10.4 3.4 3.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span></button>
                 <span class="plinth" aria-hidden="true"></span><span class="floor" aria-hidden="true"></span>
@@ -869,7 +886,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 
           <div class="cards">
             <div class="card" role="group" aria-labelledby="tw-h">
-              <p class="card-h"><span id="tw-h">今日の勉強</span><small>見本　1マス＝5分</small></p>
+              <p class="card-h"><span id="tw-h">今日の勉強</span><small>見本　1マス＝5分　色は科目</small></p>
               <div class="tw-row">
                 <div class="axis" aria-hidden="true"><span class="ax-goal">目標<br>3時間</span><span class="ax-4h">4時間</span><span class="ax-unit">5分</span></div>
                 <div class="tower" id="tower" style="--top:33" aria-hidden="true">
@@ -884,17 +901,12 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
                   <p class="goal-left" id="goal-left">目標まで 0:15</p>
                 </div>
               </div>
-              <ul class="legend" aria-label="科目ごとの時間">
-                <li style="--c:var(--s-en)"><i aria-hidden="true"></i><span>英語 <span id="lg-en">1:35</span></span></li>
-                <li style="--c:var(--s-ma)"><i aria-hidden="true"></i>数学 0:40</li>
-                <li style="--c:var(--s-ja)"><i aria-hidden="true"></i>国語 0:30</li>
-              </ul>
             </div>
 
             <figure class="card week" id="week" role="group" aria-labelledby="wk-h">
               <p class="card-h"><span id="wk-h">この7日間</span><small>1本が1日</small></p>
               <div class="wk-top">
-                <div><span class="wk-total"><span id="wk-total">20.0</span><small>時間</small></span><span class="wk-delta" id="wk-delta">▲2.2時間 先週より</span></div>
+                <div class="wk-sum"><span class="wk-total"><span id="wk-total">20.0</span><small>時間</small></span><span class="wk-delta" id="wk-delta">▲2.2時間 先週より</span></div>
                 <div class="seg" role="group" aria-label="見る向き">
                   <button type="button" data-view="side" aria-pressed="true">横から</button>
                   <button type="button" data-view="top" aria-pressed="false">真上から</button>
@@ -924,7 +936,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
               <h3 class="read-h">読み方</h3>
               <p class="read-p">塔は、ホームの「今日の勉強」の<span class="nb">テープ（赤い枠）を</span>立てたもの。</p>
               <dl class="howread">
-                <div><dt><i class="ico ico-tape" aria-hidden="true"></i>色のテープ</dt><dd>科目ごとの時間。<span class="nb tn">英語 1:35、</span><span class="nb tn">数学 0:40、</span><span class="nb tn">国語 0:30。</span></dd></div>
+                <div><dt><i class="ico ico-tape" aria-hidden="true"></i>色のテープ</dt><dd>科目ごとの時間。<span class="nb tn">英語 <span id="lg-en">1:35</span>、</span><span class="nb tn">数学 0:40、</span><span class="nb tn">国語 0:30。</span></dd></div>
                 <div><dt><i class="ico ico-tick" aria-hidden="true"></i>0〜4h の目盛り</dt><dd>1時間ごとに長い線。</dd></div>
                 <div><dt><i class="ico ico-goal" aria-hidden="true"></i>目標 3h の線</dt><dd>1日の目標。<span class="nb tn">「目標まで 0:15」</span>も出る。</dd></div>
               </dl>
@@ -1329,7 +1341,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
     session = { min: 0 };
     ring();
     renderCtl();
-    setMsg('勉強中（1秒で3分すすむ見本）。<span class="nb">「記録する」で、</span><a href="#t1835">18:35 の記録</a>と<a href="#t1945">19:45 の塔</a>に入る。');
+    setMsg('勉強中（1秒で3分すすむ見本）。<span class="nb">「記録する」で、</span><a href="#t1835">18:35 の記録</a>と <a href="#t1945">19:45 の塔</a>に入る。');
     live.textContent = '英語 長文読解を始めました。';
     clearInterval(tick);
     tick = setInterval(() => {
@@ -1341,7 +1353,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
   function record(auto) {
     if (!session) return;
     clearInterval(tick);
-    const before = sum(), m = Math.max(1, session.min);
+    const before = sum(), m = Math.min(CAP - before, Math.max(5, Math.round(session.min / 5) * 5));   /* the app edits in 5-minute steps */
     session = null;
     added.push(m); lastNew = added.length - 1;
     if (auto || sum() >= CAP) capped = true;
