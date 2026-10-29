@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="ja" data-theme="paper">
+<head>
+<script>(()=>{const d=document.documentElement;d.classList.add('js');let t,c;try{t=localStorage.getItem('inchly-theme');c=localStorage.getItem('inchly-calm')}catch(e){}if(t!=='white'&&t!=='paper'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'white';d.dataset.theme=t;if(c==='1')d.classList.add('calm');addEventListener('load',()=>{if(!window.inchlySite)d.classList.remove('js')})})()</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly（インチリー）｜勉強した時間が、毎日つみ上がる。</title>
+<meta name="description" content="Inchly（インチリー）は、勉強した時間をはかって、記録して、友だちと見せ合える iPhone のアプリです。やった日はマスが緑に、続けた日数は炎といっしょに数えます。小学生から受験生まで。近日公開。">
+<meta name="theme-color" content="#f3eee3">
+<script>(()=>{const m=document.querySelector('meta[name="theme-color"]'),c={white:'#ffffff',paper:'#f3eee3',dark:'#0e0c13'}[document.documentElement.dataset.theme];if(m&&c)m.content=c})()</script>
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:site_name" content="Inchly">
+<meta property="og:title" content="Inchly（インチリー）｜勉強した時間が、毎日つみ上がる。">
+<meta property="og:description" content="時間をはかって、記録して、友だちと見せ合える。やった日はマスが緑に、続けた日数は炎といっしょに数える。iPhone の勉強アプリ、近日公開。">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/favicon.png" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;600&family=M+PLUS+1:wght@400..900&family=Silkscreen&display=swap" rel="stylesheet">
+<!-- the pixel labels use only these characters (kana, ASCII and the kanji on the page): one small file instead of twenty slices -->
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&amp;text=%21%22%23%24%25%26%27%28%29%2A%2B%2C-.%2F0123456789%3A%3B%3C%3D%3E%3F%40ABCDEFGHIJKLMNOPQRSTUVWXYZ%5B%5C%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~%C2%B7%E2%80%94%E2%80%A6%E2%86%91%E2%86%92%E2%86%93%E3%80%80%E3%80%81%E3%80%82%E3%80%8C%E3%80%8D%E3%80%8E%E3%80%8F%E3%81%81%E3%81%82%E3%81%83%E3%81%84%E3%81%85%E3%81%86%E3%81%87%E3%81%88%E3%81%89%E3%81%8A%E3%81%8B%E3%81%8C%E3%81%8D%E3%81%8E%E3%81%8F%E3%81%90%E3%81%91%E3%81%92%E3%81%93%E3%81%94%E3%81%95%E3%81%96%E3%81%97%E3%81%98%E3%81%99%E3%81%9A%E3%81%9B%E3%81%9C%E3%81%9D%E3%81%9E%E3%81%9F%E3%81%A0%E3%81%A1%E3%81%A2%E3%81%A3%E3%81%A4%E3%81%A5%E3%81%A6%E3%81%A7%E3%81%A8%E3%81%A9%E3%81%AA%E3%81%AB%E3%81%AC%E3%81%AD%E3%81%AE%E3%81%AF%E3%81%B0%E3%81%B1%E3%81%B2%E3%81%B3%E3%81%B4%E3%81%B5%E3%81%B6%E3%81%B7%E3%81%B8%E3%81%B9%E3%81%BA%E3%81%BB%E3%81%BC%E3%81%BD%E3%81%BE%E3%81%BF%E3%82%80%E3%82%81%E3%82%82%E3%82%83%E3%82%84%E3%82%85%E3%82%86%E3%82%87%E3%82%88%E3%82%89%E3%82%8A%E3%82%8B%E3%82%8C%E3%82%8D%E3%82%8E%E3%82%8F%E3%82%90%E3%82%91%E3%82%92%E3%82%93%E3%82%94%E3%82%95%E3%82%96%E3%82%A1%E3%82%A2%E3%82%A3%E3%82%A4%E3%82%A5%E3%82%A6%E3%82%A7%E3%82%A8%E3%82%A9%E3%82%AA%E3%82%AB%E3%82%AC%E3%82%AD%E3%82%AE%E3%82%AF%E3%82%B0%E3%82%B1%E3%82%B2%E3%82%B3%E3%82%B4%E3%82%B5%E3%82%B6%E3%82%B7%E3%82%B8%E3%82%B9%E3%82%BA%E3%82%BB%E3%82%BC%E3%82%BD%E3%82%BE%E3%82%BF%E3%83%80%E3%83%81%E3%83%82%E3%83%83%E3%83%84%E3%83%85%E3%83%86%E3%83%87%E3%83%88%E3%83%89%E3%83%8A%E3%83%8B%E3%83%8C%E3%83%8D%E3%83%8E%E3%83%8F%E3%83%90%E3%83%91%E3%83%92%E3%83%93%E3%83%94%E3%83%95%E3%83%96%E3%83%97%E3%83%98%E3%83%99%E3%83%9A%E3%83%9B%E3%83%9C%E3%83%9D%E3%83%9E%E3%83%9F%E3%83%A0%E3%83%A1%E3%83%A2%E3%83%A3%E3%83%A4%E3%83%A5%E3%83%A6%E3%83%A7%E3%83%A8%E3%83%A9%E3%83%AA%E3%83%AB%E3%83%AC%E3%83%AD%E3%83%AE%E3%83%AF%E3%83%B0%E3%83%B1%E3%83%B2%E3%83%B3%E3%83%B4%E3%83%B5%E3%83%B6%E3%83%B7%E3%83%B8%E3%83%B9%E3%83%BA%E3%83%BB%E3%83%BC%E4%B8%96%E4%B8%AD%E4%BA%BA%E4%BB%8A%E4%BC%91%E4%BD%BF%E5%85%AC%E5%88%B8%E5%89%8D%E5%89%B2%E5%8B%89%E5%8B%95%E5%8C%96%E5%8F%8B%E5%8F%97%E5%8F%B0%E5%8F%B2%E5%90%91%E5%9B%BD%E5%9C%9F%E5%9C%B0%E5%A0%B1%E5%A4%A7%E5%A7%8B%E5%AD%A6%E5%AE%9A%E5%B0%8F%E5%B0%91%E5%BC%B7%E6%83%85%E6%88%90%E6%8A%BC%E6%8C%87%E6%95%B0%E6%96%B9%E6%97%A5%E6%99%82%E6%9C%88%E6%9C%A8%E6%9C%AA%E6%9C%AC%E6%AD%A2%E6%AD%B3%E6%B0%91%E6%B0%97%E6%B0%B4%E6%BA%80%E7%81%AB%E7%82%8E%E7%89%A9%E7%90%86%E7%94%9F%E7%94%BB%E7%95%8C%E7%99%BA%E7%9B%AE%E7%9F%A5%E7%A7%91%E7%B6%9A%E7%B7%91%E8%88%9E%E8%8B%B1%E8%A6%8B%E8%A8%98%E8%A8%AD%E8%AA%9E%E8%BF%91%E9%80%A3%E9%81%8B%E9%81%94%E9%87%91%E9%8C%B2%E9%96%8B%E9%96%93%E9%9B%86%E9%9D%A2%E9%A1%94%E9%A8%93%E9%B3%B4%EF%BC%81%EF%BC%88%EF%BC%89%EF%BC%8B%EF%BC%8D%EF%BC%9A%EF%BC%9F&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<script src="js/pix.js" defer></script>
+<script src="js/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">本文へ</a>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="#top" aria-label="Inchly ホーム">
+      <svg class="logo-mark" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><rect class="bg" width="16" height="16" rx="3" fill="#17121f"/><rect x="1" y="10" width="2" height="3" fill="#E5484D"/><rect x="4" y="8" width="2" height="5" fill="#F2C46D"/><rect x="7" y="6" width="2" height="7" fill="#9AB8DB"/><rect x="10" y="4" width="2" height="9" fill="#5B8DEF"/><rect x="13" y="2" width="2" height="11" fill="#9D7BF5"/><rect class="sprout" x="13" y="0" width="2" height="1" fill="#c6f432"/></svg>
+      <span class="logo-word">inchly</span>
+    </a>
+    <nav class="links" aria-label="サイト">
+      <a href="#f-plan">時間割</a>
+      <a href="#f-timer">タイマー</a>
+      <a href="#f-record">記録</a>
+      <a href="#together">友だち</a>
+      <a href="#screens">画面</a>
+      <a href="#safety">おうちの方へ</a>
+    </nav>
+    <div class="theme" role="group" aria-label="テーマ">
+      <button type="button" data-set-theme="white" title="白" aria-label="白のテーマ" aria-pressed="false"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M3 0h2v1H3zM1 1h1v1H1zM6 1h1v1H6zM2 2h4v4H2zM0 3h1v2H0zM7 3h1v2H7zM1 6h1v1H1zM6 6h1v1H6zM3 7h2v1H3z"/></svg></button>
+      <button type="button" data-set-theme="paper" title="紙" aria-label="紙のテーマ" aria-pressed="false"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M1 0h6v1H1zM1 1h1v7H1zM6 1h1v5H6zM5 6h2v1H5zM2 7h4v1H2zM3 2h2v1H3zM3 4h2v1H3z"/></svg></button>
+      <button type="button" data-set-theme="dark" title="暗い" aria-label="暗いテーマ" aria-pressed="false"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M2 0h3v1H2zM1 1h3v1H1zM0 2h3v3H0zM0 5h4v1H0zM7 5h1v1H7zM1 6h6v1H1zM2 7h4v1H2zM6 1h1v1H6z"/></svg></button>
+    </div>
+    <a class="btn btn-ink btn-sm perch" href="#soon">近日公開</a>
+  </div>
+  <inch-pal kind="jiri" do="hang" at=".86" length="84"></inch-pal>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top" aria-labelledby="hero-h">
+  <div class="hero-bg" aria-hidden="true"></div>
+  <div class="sparks" aria-hidden="true">
+    <i style="left:33.1%;top:17.6%;--s:4px;--c:var(--ink);--t:4.55s;--d:-0.36s"></i>
+    <i style="left:53.4%;top:36.9%;--s:5px;--c:var(--lime-2);--t:2.77s;--d:-2.54s"></i>
+    <i style="left:5.6%;top:43.0%;--s:6px;--c:var(--coral);--t:2.81s;--d:-0.45s"></i>
+    <i style="left:42.8%;top:78.4%;--s:4px;--c:var(--violet);--t:2.97s;--d:-1.12s"></i>
+    <i style="left:62.2%;top:89.3%;--s:5px;--c:var(--sky);--t:4.33s;--d:-1.98s"></i>
+    <i style="left:95.7%;top:8.2%;--s:6px;--c:var(--ink);--t:5.18s;--d:-1.45s"></i>
+    <i style="left:15.8%;top:14.6%;--s:4px;--c:var(--lime-2);--t:3.53s;--d:-4.08s"></i>
+    <i style="left:19.3%;top:56.3%;--s:5px;--c:var(--coral);--t:4.52s;--d:-1.86s"></i>
+    <i style="left:54.6%;top:9.7%;--s:6px;--c:var(--violet);--t:2.78s;--d:-1.03s"></i>
+    <i style="left:67.3%;top:42.5%;--s:4px;--c:var(--sky);--t:3.54s;--d:-2.93s"></i>
+    <i style="left:45.5%;top:31.0%;--s:5px;--c:var(--ink);--t:4.98s;--d:-3.49s"></i>
+    <i style="left:25.4%;top:55.7%;--s:6px;--c:var(--lime-2);--t:4.18s;--d:-4.38s"></i>
+    <i style="left:72.0%;top:29.9%;--s:4px;--c:var(--coral);--t:5.54s;--d:-0.59s"></i>
+    <i style="left:42.1%;top:72.1%;--s:5px;--c:var(--violet);--t:3.06s;--d:-2.44s"></i>
+    <i style="left:5.8%;top:64.1%;--s:6px;--c:var(--sky);--t:4.89s;--d:-2.87s"></i>
+    <i style="left:86.0%;top:32.2%;--s:4px;--c:var(--ink);--t:4.69s;--d:-2.97s"></i>
+  </div>
+  <div class="wrap">
+    <div class="ribbon-row reveal" style="--i:0">
+      <p class="ribbon" id="ribbon">iPhone の勉強アプリ · 近日公開</p>
+      <inch-pal kind="tsuru" do="hoist" on="#ribbon" at=".08" scale="2"></inch-pal>
+      <inch-pal kind="mebu" do="hoist" on="#ribbon" at=".92" scale="2"></inch-pal>
+    </div>
+
+    <div class="wordmark reveal" style="--i:1" role="img" aria-label="inchly（インチリー）">
+      <canvas id="mark" aria-hidden="true"></canvas>
+      <span class="wordmark-fb" aria-hidden="true">inchly</span>
+      <inch-pal kind="penta" do="crawl" on="#mark" at=".35" scale="4"></inch-pal>
+    </div>
+
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <h1 class="lede reveal" style="--i:2" id="hero-h"><span class="l1" id="hero-l1">勉強した時間が、</span><br>毎日<em>つみ上がる</em>。<inch-pal kind="mebu" do="sit" on="#hero-l1" at=".84"></inch-pal></h1>
+        <p class="sub reveal" style="--i:3">時間をはかって、記録して、友だちと見せ合える。やった日はマスが緑に、続けた日数は炎といっしょに数える。小学生から受験生まで使える、iPhone のアプリです。</p>
+        <div class="ctas reveal" style="--i:4">
+          <a class="btn btn-lime perch" href="#screens">画面を見てみる <span aria-hidden="true">↓</span></a>
+          <a class="btn btn-ghost perch" href="#how">使い方 <span aria-hidden="true">↓</span></a>
+        </div>
+        <div class="hint reveal" style="--i:5">
+          <p><kbd>つつく</kbd> と反応する。<kbd>つかむ</kbd> と投げられる。<span class="if-hover">ボタンに近づくと、鶴が飛ぶ。</span><span class="if-touch">ボタンを押すと、鶴が飛ぶ。</span></p>
+          <div class="spawns">
+            <button type="button" class="spawn" data-spawn="pen">＋えんぴつ</button>
+            <button type="button" class="spawn" data-spawn="flame">＋ほのお</button>
+            <button type="button" class="spawn" data-spawn="eraser">＋けしごむ</button>
+            <button type="button" class="spawn" data-spawn="clear" hidden>かたづける</button>
+            <button type="button" class="spawn calm-btn" data-calm aria-pressed="false">動きを止める</button>
+          </div>
+        </div>
+        <p class="status reveal" style="--i:6"><i class="blip" aria-hidden="true"></i>公開予定：[公開日] · <a href="#safety">保護者の方へ <span aria-hidden="true">→</span></a></p>
+      </div>
+
+      <div class="hero-side reveal" style="--i:6">
+        <div class="window" id="hero-window">
+          <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>きょう.log</span></div>
+<pre><code><span class="c-c">// 1. 時間割から、始める</span>
+<span class="c-time">17:00</span> ▶&#xFE0E; <span class="c-subj">英語 長文読解</span>
+<span class="c-c">// 2. 止めたら、記録</span>
+<span class="c-time">17:39</span> ✓ <span class="c-subj">英語</span> <span class="c-num">39分</span>   <span class="c-num">+39 EXP</span>
+<span class="c-c">// 3. 草がのびる</span>
+今日 <span class="c-num">2時間45分</span>   <span class="c-num">▲1:17</span> 昨日より</code></pre>
+          <inch-pal kind="fusen" do="peek" at=".74"></inch-pal>
+        </div>
+        <p class="window-note">見本の記録です</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="ticker" id="ticker" aria-hidden="true">
+  <div class="ticker-track"><span>時間割から始める</span><span>止めたら記録</span><span>やった日は緑のマス</span><span>炎で数える連続記録</span><span>友だちがいま勉強中</span><span>バッジが集まる</span><span>小学生から受験生まで</span><span>iPhone で使える</span><span>もうすぐ公開</span><span>時間割から始める</span><span>止めたら記録</span><span>やった日は緑のマス</span><span>炎で数える連続記録</span><span>友だちがいま勉強中</span><span>バッジが集まる</span><span>小学生から受験生まで</span><span>iPhone で使える</span><span>もうすぐ公開</span></div>
+  <inch-pal kind="penta" do="crawl" edge="box" at=".2"></inch-pal>
+</div>
+
+<section class="sec" id="features" aria-labelledby="features-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div>
+        <p class="eyebrow reveal" style="--accent:var(--coral);--i:0">できること · 6つ</p>
+        <h2 class="reveal" style="--i:1" id="features-h">6つの道具。<br><span class="nb">それぞれ、</span><span class="nb">いい仕事をする。</span></h2>
+      </div>
+      <p class="reveal" style="--i:2">時間割、タイマー、記録、連続記録、バッジ、友だち。ひとつずつは小さいけれど、あわせると毎日が少しずつ前に進む。さわってみて。</p>
+    </header>
+
+    <div class="pals">
+      <div class="reveal" style="--i:3">
+        <article class="pal" id="f-plan" style="--accent:var(--lime)" aria-labelledby="f-plan-h">
+          <div class="habitat">
+            <div class="stops">
+              <button type="button" style="--sc:#5856D6"><b>17:00</b><i aria-hidden="true"></i><span>英語</span><small>長文読解</small></button>
+              <button type="button" style="--sc:#FF9500"><b>19:00</b><i aria-hidden="true"></i><span>数学</span><small>青チャート</small></button>
+              <button type="button" style="--sc:#D9A300"><b>21:00</b><i aria-hidden="true"></i><span>国語</span><small>古文単語</small></button>
+            </div>
+            <inch-pal kind="jiri" do="perch" on="#f-plan .stops button" scale="3"></inch-pal>
+            <span class="h-tip" aria-hidden="true">ふれてみて</span>
+          </div>
+          <div class="pal-body">
+            <div class="pal-top"><h3 id="f-plan-h">時間割</h3><span class="pal-no">No.01 · ならべる</span></div>
+            <p>1日の予定を、1本の線にならべる。次の予定は、画面の下のバーにいつも出る。時間が来たら、お知らせも届く。</p>
+            <ul class="traits"><li>予定</li><li>締切まであと何日</li><li>ちょっとせっかち</li></ul>
+            <div class="snip"><code>次 · 17:00 <b>英語 長文読解</b></code><a class="snip-go" href="#s-study" aria-label="時間割の画面へ">画面 <span aria-hidden="true">↓</span></a></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="reveal" style="--i:4">
+        <article class="pal" id="f-timer" style="--accent:var(--coral)" aria-labelledby="f-timer-h">
+          <div class="habitat">
+            <div class="h-timer">
+              <p class="h-time" id="ft-time" role="timer">00:00</p>
+              <button type="button" class="h-btn lime" id="ft-go" aria-label="はかる">▶&#xFE0E;</button>
+            </div>
+            <inch-pal kind="penta" do="crawl" on="#ft-time" scale="3"></inch-pal>
+            <span class="h-tip" aria-hidden="true">押してみて</span>
+          </div>
+          <div class="pal-body">
+            <div class="pal-top"><h3 id="f-timer-h">タイマー</h3><span class="pal-no">No.02 · はかる</span></div>
+            <p>押したら、もう始まっている。予定の時間をすぎても、止めるまではかる。<span class="nb">✓ を押せば、</span>そのまま今日の記録に。</p>
+            <ul class="traits"><li>ワンタップ</li><li>0時またぎもOK</li><li>せかさない</li></ul>
+            <div class="snip"><code>勉強中 · <b>英語 39:20</b></code><a class="snip-go" href="#s-timer" aria-label="タイマーの画面へ">画面 <span aria-hidden="true">↓</span></a></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="reveal" style="--i:5">
+        <article class="pal" id="f-record" style="--accent:var(--violet)" aria-labelledby="f-record-h">
+          <div class="habitat">
+            <div class="mini-grass" role="group" aria-label="勉強した日のマス"><button type="button" data-level="3" aria-label="1週目の日曜日 濃さ3"></button><button type="button" data-level="3" aria-label="1週目の月曜日 濃さ3"></button><button type="button" data-level="3" aria-label="1週目の火曜日 濃さ3"></button><button type="button" data-level="1" aria-label="1週目の水曜日 濃さ1"></button><button type="button" data-level="0" aria-label="1週目の木曜日 濃さ0"></button><button type="button" data-level="3" aria-label="1週目の金曜日 濃さ3"></button><button type="button" data-level="4" aria-label="1週目の土曜日 濃さ4"></button><button type="button" data-level="3" aria-label="2週目の日曜日 濃さ3"></button><button type="button" data-level="4" aria-label="2週目の月曜日 濃さ4"></button><button type="button" data-level="0" aria-label="2週目の火曜日 濃さ0"></button><button type="button" data-level="1" aria-label="2週目の水曜日 濃さ1"></button><button type="button" data-level="0" aria-label="2週目の木曜日 濃さ0"></button><button type="button" data-level="4" aria-label="2週目の金曜日 濃さ4"></button><button type="button" data-level="1" aria-label="2週目の土曜日 濃さ1"></button><button type="button" data-level="3" aria-label="3週目の日曜日 濃さ3"></button><button type="button" data-level="1" aria-label="3週目の月曜日 濃さ1"></button><button type="button" data-level="0" aria-label="3週目の火曜日 濃さ0"></button><button type="button" data-level="3" aria-label="3週目の水曜日 濃さ3"></button><button type="button" data-level="2" aria-label="3週目の木曜日 濃さ2"></button><button type="button" data-level="2" aria-label="3週目の金曜日 濃さ2"></button><button type="button" data-level="3" aria-label="3週目の土曜日 濃さ3"></button><button type="button" data-level="1" aria-label="4週目の日曜日 濃さ1"></button><button type="button" data-level="0" aria-label="4週目の月曜日 濃さ0"></button><button type="button" data-level="1" aria-label="4週目の火曜日 濃さ1"></button><button type="button" data-level="2" aria-label="4週目の水曜日 濃さ2"></button><button type="button" data-level="0" aria-label="4週目の木曜日 濃さ0"></button><button type="button" data-level="4" aria-label="4週目の金曜日 濃さ4"></button><button type="button" data-level="0" aria-label="4週目の土曜日 濃さ0"></button><button type="button" data-level="2" aria-label="5週目の日曜日 濃さ2"></button><button type="button" data-level="3" aria-label="5週目の月曜日 濃さ3"></button><button type="button" data-level="3" aria-label="5週目の火曜日 濃さ3"></button><button type="button" data-level="2" aria-label="5週目の水曜日 濃さ2"></button><button type="button" data-level="1" aria-label="5週目の木曜日 濃さ1"></button><button type="button" data-level="3" aria-label="5週目の金曜日 濃さ3"></button><button type="button" data-level="1" aria-label="5週目の土曜日 濃さ1"></button><button type="button" data-level="2" aria-label="6週目の日曜日 濃さ2"></button><button type="button" data-level="0" aria-label="6週目の月曜日 濃さ0"></button><button type="button" data-level="3" aria-label="6週目の火曜日 濃さ3"></button><button type="button" data-level="4" aria-label="6週目の水曜日 濃さ4"></button><button type="button" data-level="3" aria-label="6週目の木曜日 濃さ3"></button><button type="button" data-level="1" aria-label="6週目の金曜日 濃さ1"></button><button type="button" data-level="4" aria-label="6週目の土曜日 濃さ4"></button><button type="button" data-level="1" aria-label="7週目の日曜日 濃さ1"></button><button type="button" data-level="1" aria-label="7週目の月曜日 濃さ1"></button><button type="button" data-level="2" aria-label="7週目の火曜日 濃さ2"></button><button type="button" data-level="3" aria-label="7週目の水曜日 濃さ3"></button><button type="button" data-level="1" aria-label="7週目の木曜日 濃さ1"></button><button type="button" data-level="3" aria-label="7週目の金曜日 濃さ3"></button><button type="button" data-level="3" aria-label="7週目の土曜日 濃さ3"></button><button type="button" data-level="2" aria-label="8週目の日曜日 濃さ2"></button><button type="button" data-level="2" aria-label="8週目の月曜日 濃さ2"></button><button type="button" data-level="1" aria-label="8週目の火曜日 濃さ1"></button><button type="button" data-level="1" aria-label="8週目の水曜日 濃さ1"></button><button type="button" data-level="3" aria-label="8週目の木曜日 濃さ3"></button><button type="button" data-level="2" aria-label="8週目の金曜日 濃さ2"></button><button type="button" data-level="2" aria-label="8週目の土曜日 濃さ2"></button><button type="button" data-level="2" aria-label="9週目の日曜日 濃さ2"></button><button type="button" data-level="2" aria-label="9週目の月曜日 濃さ2"></button><button type="button" data-level="2" aria-label="9週目の火曜日 濃さ2"></button><button type="button" data-level="3" aria-label="9週目の水曜日 濃さ3"></button><button type="button" data-level="3" aria-label="9週目の木曜日 濃さ3"></button><button type="button" data-level="3" aria-label="9週目の金曜日 濃さ3"></button><button type="button" data-level="1" aria-label="9週目の土曜日 濃さ1"></button><button type="button" data-level="3" aria-label="10週目の日曜日 濃さ3"></button><button type="button" data-level="4" aria-label="10週目の月曜日 濃さ4"></button><button type="button" data-level="2" aria-label="10週目の火曜日 濃さ2"></button><button type="button" data-level="3" aria-label="10週目の水曜日 濃さ3"></button><button type="button" data-level="3" aria-label="10週目の木曜日 濃さ3"></button><button type="button" data-level="2" aria-label="10週目の金曜日 濃さ2"></button><button type="button" data-level="3" aria-label="10週目の土曜日 濃さ3"></button><button type="button" data-level="2" aria-label="11週目の日曜日 濃さ2"></button><button type="button" data-level="3" aria-label="11週目の月曜日 濃さ3"></button><button type="button" data-level="2" aria-label="11週目の火曜日 濃さ2"></button><button type="button" data-level="4" aria-label="11週目の水曜日 濃さ4"></button><button type="button" data-level="2" aria-label="11週目の木曜日 濃さ2"></button><button type="button" data-level="2" aria-label="11週目の金曜日 濃さ2"></button><button type="button" data-level="2" aria-label="11週目の土曜日 濃さ2"></button><button type="button" data-level="1" aria-label="12週目の日曜日 濃さ1"></button><button type="button" data-level="4" aria-label="12週目の月曜日 濃さ4"></button><button type="button" data-level="2" aria-label="12週目の火曜日 濃さ2"></button><button type="button" data-level="3" aria-label="12週目の水曜日 濃さ3"></button><button type="button" data-level="3" aria-label="12週目の木曜日 濃さ3"></button><button type="button" data-level="2" aria-label="12週目の金曜日 濃さ2"></button><button type="button" data-level="3" class="today" aria-label="12週目の土曜日（今日） 濃さ3"></button></div>
+            <inch-pal kind="mebu" do="sit" on="#f-record .mini-grass" edge="box" at=".6" scale="3"></inch-pal>
+            <span class="h-tip" aria-hidden="true">マスを押す</span>
+          </div>
+          <div class="pal-body">
+            <div class="pal-top"><h3 id="f-record-h">記録</h3><span class="pal-no">No.03 · のびる</span></div>
+            <p>勉強した日は、マスが緑に。<span class="nb">たくさん</span>やった日ほど、濃くなる。昨日との差も、すぐ分かる。</p>
+            <ul class="traits"><li>草</li><li>昨日との差</li><li>見られると照れる</li></ul>
+            <div class="snip"><code>今日 <b>2時間45分</b> ▲1:17</code><a class="snip-go" href="#s-home" aria-label="ホームの画面へ">画面 <span aria-hidden="true">↓</span></a></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="reveal" style="--i:6">
+        <article class="pal" id="f-streak" style="--accent:var(--sun)" aria-labelledby="f-streak-h">
+          <div class="habitat">
+            <ol class="days" aria-label="今週の連続記録">
+              <li class="on"><i aria-hidden="true"></i><span>月</span><span class="sr">達成</span></li>
+              <li class="on"><i aria-hidden="true"></i><span>火</span><span class="sr">達成</span></li>
+              <li class="on"><i aria-hidden="true"></i><span>水</span><span class="sr">達成</span></li>
+              <li class="on today"><i aria-hidden="true"></i><span>木</span><span class="sr">達成（今日）</span></li>
+              <li><i aria-hidden="true"></i><span>金</span></li>
+              <li><i aria-hidden="true"></i><span>土</span></li>
+              <li><i aria-hidden="true"></i><span>日</span></li>
+            </ol>
+            <inch-pal kind="bo" do="bounce" on="#f-streak .days" scale="3"></inch-pal>
+            <span class="h-tip" aria-hidden="true">つついて</span>
+          </div>
+          <div class="pal-body">
+            <div class="pal-top"><h3 id="f-streak-h">連続記録</h3><span class="pal-no">No.04 · つづく</span></div>
+            <p>続けた日数を、炎といっしょに数える。7日続けると休み券がもらえて、1日休んでも切れない。</p>
+            <ul class="traits"><li>連続日数</li><li>休み券</li><li>消えるのがこわい</li></ul>
+            <div class="snip"><code><b>23日連続</b> · 休み券 2枚</code><a class="snip-go" href="#s-home" aria-label="ホームの画面へ">画面 <span aria-hidden="true">↓</span></a></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="reveal" style="--i:7">
+        <article class="pal" id="f-badge" style="--accent:var(--sky)" aria-labelledby="f-badge-h">
+          <div class="habitat">
+            <img class="h-badges" src="img/part-badges.webp" alt="アプリのバッジ：100時間、300時間、500時間、7日連続、21日連続。7 / 11 達成。" width="726" height="252" loading="lazy" decoding="async">
+            <inch-pal kind="tsuru" do="perch" on="#f-badge .h-badges" scale="2"></inch-pal>
+            <span class="h-tip" aria-hidden="true">ながめる</span>
+          </div>
+          <div class="pal-body">
+            <div class="pal-top"><h3 id="f-badge-h">バッジ</h3><span class="pal-no">No.05 · あつめる</span></div>
+            <p>100時間、7日連続。目標に届くと、バッジがもらえる。勉強するほど、レベルも上がる。</p>
+            <ul class="traits"><li>バッジ</li><li>レベル</li><li>EXP</li></ul>
+            <div class="snip"><code><b>LV.25</b> · バッジ 7 / 11</code><a class="snip-go" href="#s-me" aria-label="マイページの画面へ">画面 <span aria-hidden="true">↓</span></a></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="reveal" style="--i:8">
+        <article class="pal" id="f-friends" style="--accent:var(--mint)" aria-labelledby="f-friends-h">
+          <div class="habitat">
+            <ul class="h-people" aria-label="いま勉強中の友だち（見本）">
+              <li style="--c:#5856D6"><i class="mp" aria-hidden="true"></i><span>英語 4:11</span></li>
+              <li style="--c:#3B82F6"><i class="mp" aria-hidden="true"></i><span>物理 3:12</span></li>
+              <li style="--c:#10B981"><i class="mp" aria-hidden="true"></i><span>化学 2:36</span></li>
+              <li style="--c:#FF9500"><i class="mp" aria-hidden="true"></i><span>数学 2:00</span></li>
+            </ul>
+            <button type="button" class="h-btn lime" id="ff-together">一緒に始める</button>
+            <span class="h-tip" aria-hidden="true">押してみて</span>
+          </div>
+          <div class="pal-body">
+            <div class="pal-top"><h3 id="f-friends-h">友だち</h3><span class="pal-no">No.06 · ならぶ</span></div>
+            <p>いま勉強中の友だちが、科目と時間といっしょに並ぶ。友だちが始めたら、「一緒に始める」をひと押し。</p>
+            <ul class="traits"><li>いま勉強中</li><li>一緒に始める</li><li>グループ</li></ul>
+            <div class="snip"><code><b>mio</b> · 英語を勉強中 · 4:11</code><a class="snip-go" href="#s-community" aria-label="友だちの画面へ">画面 <span aria-hidden="true">↓</span></a></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <p class="note reveal" style="--i:9">カードの中の名前と数字は見本です。</p>
+    <div class="more reveal" style="--i:10"><a class="btn" href="#screens">アプリの画面を見る <span aria-hidden="true">↓</span></a></div>
+  </div>
+</section>
+
+<section class="sec" id="subjects" aria-labelledby="subjects-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div>
+        <p class="eyebrow reveal" style="--accent:var(--sun);--i:0">科目 · 12の顔</p>
+        <h2 class="reveal" style="--i:1" id="subjects-h">科目ごとに、<br>小さな顔。</h2>
+      </div>
+      <p class="reveal" style="--i:2">英語は吹き出し、数学はπ、化学はフラスコ。アプリでは科目に絵がつく。ここではドット絵にして、動かしてみた。カーソルを動かしたり、さわったりしてみて。</p>
+    </header>
+
+    <div class="bigstage reveal" style="--i:3">
+      <div class="bs-grid">
+        <inch-face name="en" size="200"></inch-face>
+        <inch-face name="ma" size="200"></inch-face>
+        <inch-face name="ch" size="200"></inch-face>
+      </div>
+      <div class="bs-bar">
+        <span class="bs-label">大きな顔 · 指やカーソルのほうを向く</span>
+        <div class="seg bs-modes" data-face-look role="group" aria-label="顔の描き方">
+          <button type="button" data-look="square" aria-pressed="true">ドット</button>
+          <button type="button" data-look="round" aria-pressed="false">まる</button>
+          <button type="button" data-look="dot" aria-pressed="false">てん</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="shelf reveal" style="--i:4">
+      <button type="button" class="shelf-cell"><inch-face name="en" scale="5"></inch-face><span>英語</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="ma" scale="5"></inch-face><span>数学</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="ja" scale="5"></inch-face><span>国語</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="ph" scale="5"></inch-face><span>物理</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="ch" scale="5"></inch-face><span>化学</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="bi" scale="5"></inch-face><span>生物</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="es" scale="5"></inch-face><span>地学</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="wh" scale="5"></inch-face><span>世界史</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="jh" scale="5"></inch-face><span>日本史</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="ge" scale="5"></inch-face><span>地理</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="ci" scale="5"></inch-face><span>公民</span></button>
+      <button type="button" class="shelf-cell"><inch-face name="it" scale="5"></inch-face><span>情報</span></button>
+    </div>
+    <p class="note reveal" style="--i:5">アプリの科目の絵は線画です。ここではドット絵にしています。</p>
+  </div>
+</section>
+
+<section class="sec" id="together" aria-labelledby="together-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div>
+        <p class="eyebrow reveal" style="--accent:var(--sky);--i:0">友だち · いま勉強中</p>
+        <h2 class="reveal" style="--i:1" id="together-h">ひとりの夜も、<br>だれかが机に向かう。</h2>
+      </div>
+      <p class="reveal" style="--i:2">アプリでは、いま勉強中の人が科目と時間といっしょに並ぶ。ここにいるのは、見本の小さな人たち。ならべたり、ぶらぶらさせたり、あつめたりしてみて。</p>
+    </header>
+
+    <div class="crowd-stage reveal" style="--i:3">
+      <inch-crowd id="crowd" mode="form" text="がんばろ"></inch-crowd>
+      <div class="bs-bar">
+        <span class="bs-label">みんなの舞台 · 見本</span>
+        <div class="seg bs-modes" data-crowd role="group" aria-label="みんなの動き">
+          <button type="button" data-mode="form" aria-pressed="true">ならぶ</button>
+          <button type="button" data-mode="wander" aria-pressed="false">ぶらぶら</button>
+          <button type="button" data-mode="swarm" aria-pressed="false">あつまる</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="more reveal" style="--i:4"><a class="btn" href="#s-community">友だちの画面を見る <span aria-hidden="true">↓</span></a></div>
+  </div>
+</section>
+
+<section class="sec" id="play" aria-labelledby="play-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div>
+        <p class="eyebrow reveal" style="--accent:var(--coral);--i:0">がんばると · 気づく</p>
+        <h2 class="reveal" style="--i:1" id="play-h">がんばると、<br>ちゃんと気づく。</h2>
+      </div>
+      <p class="reveal" style="--i:2">始めると、目ざましが鳴る。記録すると、経験値がふえる。友だちが始めると、鶴が知らせる。7日続けると、券が出る。押してみて。</p>
+    </header>
+
+    <div class="play-grid">
+      <div class="play-card reveal" id="p-start" style="--i:3">
+        <p class="readout"></p>
+        <div class="p-act"><button type="button" class="btn btn-lime">勉強を開始</button></div>
+        <inch-pal kind="jiri" do="perch" on="#p-start .btn" scale="3"></inch-pal>
+        <small>ジリ · 押すと鳴る</small>
+      </div>
+      <div class="play-card reveal" id="p-record" style="--i:4">
+        <div class="p-act">
+          <span class="pop" aria-hidden="true">+39 EXP</span>
+          <button type="button" class="btn">✓ 記録する</button>
+        </div>
+        <span class="sr" role="status"></span>
+        <inch-pal kind="penta" do="crawl" on="#p-record .btn" edge="box" scale="3"></inch-pal>
+        <small>EXP · 記録でふえる</small>
+      </div>
+      <div class="play-card reveal" id="p-todo" style="--i:5">
+        <label class="pcap"><input type="checkbox"> <span>今日の ToDo、ぜんぶ終わり</span></label>
+        <inch-pal kind="mebu" do="sit" on="#p-todo .pcap" edge="box" at=".86" scale="3"></inch-pal>
+        <small>めぶ · チェックして</small>
+      </div>
+      <div class="play-card reveal" id="p-together" style="--i:6">
+        <div class="p-act"><button type="button" class="btn">一緒に始める</button></div>
+        <inch-pal kind="tsuru" do="perch" on="#p-together .btn" scale="3"></inch-pal>
+        <small>つる · 知らせを運ぶ</small>
+      </div>
+      <div class="play-card wide reveal" id="p-streak" style="--i:7">
+        <div class="p-week">
+          <div class="days" role="group" aria-label="1週間のマス">
+            <button type="button" aria-pressed="false">月</button>
+            <button type="button" aria-pressed="false">火</button>
+            <button type="button" aria-pressed="false">水</button>
+            <button type="button" aria-pressed="false">木</button>
+            <button type="button" aria-pressed="false">金</button>
+            <button type="button" aria-pressed="false">土</button>
+            <button type="button" aria-pressed="false">日</button>
+          </div>
+          <p class="ticket"><span>休み券 +1</span></p>
+        </div>
+        <inch-pal kind="bo" do="bounce" on="#p-streak .days" scale="3"></inch-pal>
+        <small>ボッ · 7日そろえて</small>
+      </div>
+    </div>
+    <p class="note reveal" style="--i:8">動きは見本です。</p>
+  </div>
+</section>
+
+<section class="sec" id="screens" aria-labelledby="screens-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div>
+        <p class="eyebrow reveal" style="--accent:var(--lime);--i:0">本物の画面 · 開発中</p>
+        <h2 class="reveal" style="--i:1" id="screens-h">アプリは、<br>こんな見た目。</h2>
+      </div>
+      <p class="reveal" style="--i:2">ホーム、タイマー、時間割、友だち、マイページ、タイムライン。開発中の画面なので、名前と数字は見本です。</p>
+    </header>
+
+    <div class="screens reveal" style="--i:3" tabindex="0" role="region" aria-label="アプリの画面">
+      <figure class="shot" id="s-home">
+        <div class="phone"><img src="img/home.webp" alt="ホーム画面。勉強した日の草のマス、23日連続の炎、いま勉強中の友だち。" width="786" height="1704" loading="lazy" decoding="async"></div>
+        <figcaption>ホーム</figcaption>
+      </figure>
+      <figure class="shot" id="s-timer">
+        <div class="phone"><img src="img/timer-live.webp" alt="タイマー画面。国語 古文単語を勉強中で、39:59 を計測しているところ。" width="786" height="1704" loading="lazy" decoding="async"></div>
+        <figcaption>タイマー</figcaption>
+      </figure>
+      <figure class="shot" id="s-study">
+        <div class="phone"><img src="img/study.webp" alt="時間割の画面。木曜日の予定が1本の線にならび、下に締切までの日数。" width="786" height="1704" loading="lazy" decoding="async"></div>
+        <figcaption>時間割</figcaption>
+      </figure>
+      <figure class="shot" id="s-community">
+        <div class="phone"><img src="img/community.webp" alt="友だちの画面。いま勉強中の人が、科目と時間といっしょに並ぶ。" width="786" height="1704" loading="lazy" decoding="async"></div>
+        <figcaption>友だち</figcaption>
+      </figure>
+      <figure class="shot" id="s-me">
+        <div class="phone"><img src="img/me.webp" alt="マイページ。レベル、合計時間、連続日数と、この7日の勉強時間のグラフ。" width="786" height="1704" loading="lazy" decoding="async"></div>
+        <figcaption>マイページ</figcaption>
+      </figure>
+      <figure class="shot" id="s-timeline">
+        <div class="phone"><img src="img/timeline.webp" alt="タイムライン。友だちの勉強の記録と、ひとことが並ぶ。" width="786" height="1704" loading="lazy" decoding="async"></div>
+        <figcaption>タイムライン</figcaption>
+      </figure>
+    </div>
+
+    <div class="looks reveal" style="--i:4">
+      <div class="looks-copy">
+        <h3>見た目は、ふたつから選べる。</h3>
+        <p>ふだんは明るいスタンダード。気分を変えたい夜は、ネオンの街みたいなサイバー。</p>
+        <div class="seg" data-looks role="group" aria-label="見た目">
+          <button type="button" data-look="standard" aria-pressed="true">スタンダード</button>
+          <button type="button" data-look="cyber" aria-pressed="false">サイバー</button>
+        </div>
+      </div>
+      <div class="looks-stage">
+        <div class="phone"><img id="looks-img" src="img/home.webp" alt="スタンダードの見た目のホーム画面" width="786" height="1704" loading="lazy" decoding="async"></div>
+      </div>
+    </div>
+    <p class="note reveal" style="--i:5">開発中の画面です。名前と数字は見本です。</p>
+  </div>
+</section>
+
+<section class="sec" id="how" aria-labelledby="how-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div>
+        <p class="eyebrow reveal" style="--accent:var(--sky);--i:0">使い方 · 3つ</p>
+        <h2 class="reveal" style="--i:1" id="how-h">入れるのは予定だけ。<br>あとは押すだけ。</h2>
+      </div>
+      <p class="reveal" style="--i:2">時間割に予定を入れておく。時間が来たら押す。終わったら ✓。それだけで、毎日の勉強が記録になる。</p>
+    </header>
+
+    <div class="how">
+      <ol class="steps">
+        <li class="step reveal" style="--i:3"><h3>時間割に入れる。</h3><p>日にちと時間と科目を入れておく。次の予定は、画面の下のバーにいつも出る。</p></li>
+        <li class="step reveal" style="--i:4"><h3>「勉強を開始」を押す。</h3><p>押したら、もう始まっている。止めるまで、ちゃんとはかる。</p></li>
+        <li class="step reveal" style="--i:5"><h3>✓ で記録。</h3><p>どこまでやったかを一言。書かなくても、時間はそのまま今日の記録に。</p></li>
+      </ol>
+
+      <div class="sandbox reveal" style="--i:6" id="sandbox">
+        <div class="sb-stage" id="sb-stage">
+          <div class="sb-read">
+            <p class="sb-time" id="sb-time" role="timer">00:00</p>
+            <div class="sb-gauge" aria-hidden="true"><i id="sb-bar"></i></div>
+            <p class="sb-left" id="sb-left" aria-hidden="true">−60:00</p>
+          </div>
+          <inch-pal kind="penta" do="crawl" on="#sb-time" scale="3"></inch-pal>
+        </div>
+        <div class="sb-controls">
+          <div class="field"><span>科目</span>
+            <div class="seg" data-sb-subject role="group" aria-label="科目">
+              <button type="button" data-subject="英語" aria-pressed="true">英語</button>
+              <button type="button" data-subject="数学" aria-pressed="false">数学</button>
+              <button type="button" data-subject="国語" aria-pressed="false">国語</button>
+              <button type="button" data-subject="物理" aria-pressed="false">物理</button>
+            </div>
+          </div>
+          <label class="field" for="sb-goal"><span><output id="sb-goal-out" for="sb-goal">目標 60分</output></span><input type="range" id="sb-goal" min="15" max="120" step="15" value="60" aria-label="目標の時間" aria-valuetext="60分"></label>
+          <div class="sb-go-row">
+            <button type="button" id="sb-go" class="btn btn-lime">勉強を開始</button>
+            <small>このページの中だけの見本（どこにも保存しない）</small>
+          </div>
+        </div>
+        <div class="sb-logbox">
+          <pre class="sb-log" id="sb-log" aria-live="polite"><span class="c-c">// ここに今日の記録がたまる</span></pre>
+          <button type="button" class="copy" id="sb-clear">けす</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="safety" aria-labelledby="safety-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div>
+        <p class="eyebrow reveal" style="--accent:var(--violet);--i:0">おうちの方へ</p>
+        <h2 class="reveal" style="--i:1" id="safety-h">見せる相手は、<br>自分で決める。</h2>
+      </div>
+      <p class="reveal" style="--i:2">はじめは、勉強中（ニックネーム・科目・時間）は全員に、メッセージはグループのメンバーまで。どちらも設定で、いつでも変えられる。</p>
+    </header>
+
+    <div class="api">
+      <div class="table-wrap reveal" style="--i:3">
+        <table role="table">
+          <caption>設定 · 6つ</caption>
+          <thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">設定</th><th role="columnheader" scope="col">できること</th><th role="columnheader" scope="col">はじめは</th></tr></thead>
+          <tbody role="rowgroup">
+            <tr role="row"><th role="rowheader" scope="row"><span class="key">勉強中を見せる相手</span></th><td role="cell" data-label="できること">全員／フォロワーだけ／見せない</td><td role="cell" data-label="はじめは">全員</td></tr>
+            <tr role="row"><th role="rowheader" scope="row"><span class="key">順位を見せる</span></th><td role="cell" data-label="できること">ランキングに出す／出さない（出さなくても自分の順位は見られる）</td><td role="cell" data-label="はじめは">出す</td></tr>
+            <tr role="row"><th role="rowheader" scope="row"><span class="key">メッセージを受け取る相手</span></th><td role="cell" data-label="できること">フォロー中の人／グループのメンバーまで／全員</td><td role="cell" data-label="はじめは">グループのメンバーまで</td></tr>
+            <tr role="row"><th role="rowheader" scope="row"><span class="key">ブロック・通報</span></th><td role="cell" data-label="できること">名前を押すと、どこからでもできる。ブロックした人は出てこない</td><td role="cell" data-label="はじめは">—</td></tr>
+            <tr role="row"><th role="rowheader" scope="row"><span class="key">13歳未満</span></th><td role="cell" data-label="できること">保護者の同意を得ているか、はじめにたずねる</td><td role="cell" data-label="はじめは">—</td></tr>
+            <tr role="row"><th role="rowheader" scope="row"><span class="key">記録の保存</span></th><td role="cell" data-label="できること">この iPhone の中に保存。圏外でも記録できる</td><td role="cell" data-label="はじめは">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="side">
+        <div class="panel reveal" style="--i:4">
+          <h3>13歳未満の人へ</h3>
+          <p>はじめに、<ruby>保護者<rt>ほごしゃ</rt></ruby>の<ruby>同意<rt>どうい</rt></ruby>を得ているかをたずねます。「保護者の同意を得ています」にチェックしないと、先へ進めません。</p>
+        </div>
+        <div class="panel reveal" style="--i:5">
+          <h3>記録のゆくえ</h3>
+          <p>記録は、この iPhone の中に保存されます。勉強中の表示（ニックネーム・科目・時間）と順位は、設定で決めた範囲の人に見えます。設定から、書き出しや、アカウントとデータの削除ができます。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="soon" aria-labelledby="soon-h">
+  <div class="wrap">
+    <header class="sec-head">
+      <div>
+        <p class="eyebrow reveal" style="--accent:var(--lime);--i:0">近日公開</p>
+        <h2 class="reveal" style="--i:1" id="soon-h">もうすぐ、<br>あなたの iPhone に。</h2>
+      </div>
+      <p class="reveal" style="--i:2">iPhone 向けに、[公開日]ごろ公開する予定。値段はまだ決めていない。決まったら、このページで知らせる。</p>
+    </header>
+
+    <div class="ways">
+      <div class="way reveal" style="--accent:var(--lime);--i:3"><span class="tag">iPhone</span><h3>iPhone で使える</h3><p>まずは iPhone から。日本語で使えます。</p></div>
+      <div class="way reveal" style="--accent:var(--sky);--i:4"><span class="tag">だれでも</span><h3>小学生から大人まで</h3><p>小学生も、中学生も、高校生も、資格の勉強をしている大人も。13歳未満の人は、保護者の同意を得てから。</p></div>
+      <div class="way reveal" style="--accent:var(--sun);--i:5"><span class="tag">ねだん</span><h3>まだ決めていない</h3><p>値段と、広告を出すかどうかは、決まったらこのページで知らせます。</p></div>
+      <div class="way reveal" style="--accent:var(--violet);--i:6"><span class="tag tag-dark">ANDROID</span><h3>Android は</h3><p>[Android版の予定]</p></div>
+    </div>
+
+    <div class="facts">
+      <div class="fact reveal" style="--i:7"><b>1タップ</b><span>で勉強が始まる</span></div>
+      <div class="fact reveal" style="--i:8"><b>0時</b><span>をまたいでも、ちゃんと分けて記録</span></div>
+      <div class="fact reveal" style="--i:9"><b>7日</b><span>続けると、休み券が1枚</span></div>
+      <div class="fact reveal" style="--i:10"><b>13歳</b><span>未満は、<span class="nb">はじめに</span>保護者の同意をたずねる</span></div>
+    </div>
+
+    <div class="more reveal" style="--i:11">
+      <a class="btn btn-lime" href="#top">いちばん上へ <span aria-hidden="true">↑</span></a>
+      <a class="btn" href="#safety">おうちの方へ <span aria-hidden="true">↑</span></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot" id="foot" aria-labelledby="foot-h">
+  <div class="foot-grass" aria-hidden="true"></div>
+  <div class="wrap foot-in">
+    <div class="foot-cta">
+      <h2 class="reveal" style="--i:0" id="foot-h">今夜も、<br><span class="lime">少しずつ前へ。</span></h2>
+      <div class="reveal" style="--i:1"><a class="btn btn-lime perch" href="#soon">近日公開 <span aria-hidden="true">↑</span></a></div>
+    </div>
+    <div class="foot-bottom">
+      <p class="foot-name"><a class="foot-logo" href="#top" aria-label="inchly（いちばん上へ）">inchly</a><span class="foot-read">インチリー</span></p>
+      <nav aria-label="フッター">
+        <a href="#features">できること</a>
+        <a href="#how">使い方</a>
+        <a href="#safety">おうちの方へ</a>
+        <a href="#soon">近日公開</a>
+        <button type="button" class="foot-calm" data-calm aria-pressed="false">動きを止める</button>
+      </nav>
+      <span class="foot-small">INCH BY INCH · 少しずつ前へ</span>
+    </div>
+    <p class="foot-legal">お問い合わせ：[連絡先]　·　プライバシーポリシーと利用規約は、公開までに用意します。　·　画面は開発中のものです。出てくる名前や記録は見本です。　·　iPhone は、米国および他の国々で登録された Apple Inc. の商標です。iPhone 商標は、アイホン株式会社のライセンスにもとづき使用されています。　·　© [年] [運営者名]</p>
+  </div>
+  <inch-pal kind="bo" do="bounce" scale="5"></inch-pal>
+</footer>
+
+<!-- the crane visits every .perch -->
+<inch-pal kind="tsuru" do="perch" on=".perch"></inch-pal>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="ruler" aria-hidden="true"></div>
+</body>
+</html>
