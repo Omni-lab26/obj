@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly つみ上げ案</title>
+<meta name="description" content="Inchly（インチリー）の紹介ページのモック「つみ上げ」案。1回の勉強が1つのブロックになり、毎日つみ上がる。">
+<meta name="theme-color" content="#f4efe4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   Inchly つみ上げ案 (d-stack)
+
+   Layout concept: everything stands on a floor. One study session is one
+   block: its height is the minutes (1 cell = 5 min), its colour the subject.
+   Scrolling grows the time scale: 今日 (the hero tower) → 7日 (a row of
+   towers) → 18週 (the grass = the towers seen from above) → 1年 (the
+   skyline the footer stands under). The logo's five rising bars are the
+   page's only emphasis: under つ・み・上・が・る in the h1, as the section
+   marks (1 → 4 bars, the logo builds as you read) and as the screens' plinths.
+   ===================================================================== */
+:root{
+  /* colour: the piixpal skeleton (paper, ink, a little lime) */
+  --paper:#f4efe4; --paper-2:#ebe4d5; --card:#fbf8f1;
+  --ink:#17121f; --ink-2:#3b3447; --muted:#5d5568; --line:#d6ccb8;
+  --lime:#c6f432;                  /* the main button, nowhere else */
+  --up:#127a43;                    /* "増えた" numbers, as in the app */
+  --now:#e5484d;                   /* いま: the red dot of the timetable */
+  /* blocks = subjects (data, never green) */
+  --en:#5856D6; --ma:#FF9500; --ja:#D9A300; --ph:#3B82F6; --ch:#17A2B8; --self:#8B8697;
+  /* the logo's five rising bars */
+  --b1:#E5484D; --b2:#F2C46D; --b3:#9AB8DB; --b4:#5B8DEF; --b5:#9D7BF5;
+  /* grass: the one green surface, because it is a feature of the app */
+  --g0:#e2dbca; --g1:#b4e9c6; --g2:#5fd28c; --g3:#21a35a; --g4:#127a43;
+  --wax:#f7a35c; --ticket:#ffd23f;
+
+  /* type roles */
+  --f-display:"Dela Gothic One","Zen Maru Gothic","Hiragino Sans",system-ui,sans-serif; /* h1, h2, big numbers, the logo word */
+  --f-body:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif; /* body, buttons, labels */
+  --t-h1:clamp(34px, 4.4vw, 64px);
+  --t-h2:clamp(28px, 3.1vw, 44px);
+  --t-h3:21px; --t-lead:18px; --t-body:16.5px; --t-small:14px; --t-label:13px;
+
+  /* the block unit */
+  --cell:8px;                      /* hero tower: 1 cell = 5 minutes */
+  --wc:3px;                        /* the week: 1 cell = 5 minutes, smaller */
+  --ease:cubic-bezier(.2,.8,.2,1); /* settles, never overshoots (the app's rule) */
+  --gut:max(16px, env(safe-area-inset-left, 0px));
+  --gut-r:max(16px, env(safe-area-inset-right, 0px));
+  color-scheme:light;
+}
+
+/* ---------- base ---------- */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{overflow-x:clip;scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:84px}
+body{margin:0;background:var(--paper);color:var(--ink);font:500 var(--t-body)/1.8 var(--f-body);
+  -webkit-font-smoothing:antialiased;line-break:strict;overflow-wrap:anywhere}
+img,svg,canvas{display:block;max-width:100%}
+a{color:inherit}
+p{margin:0;text-wrap:pretty}
+h1,h2,h3{margin:0;font-weight:400}
+::selection{background:var(--lime);color:var(--ink)}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.nb{white-space:nowrap}
+.skip{position:fixed;left:12px;top:-80px;z-index:100;padding:10px 16px;border:2px solid var(--ink);border-radius:12px;
+  background:var(--lime);color:var(--ink);font-weight:700;text-decoration:none;box-shadow:0 4px 0 var(--ink)}
+.skip:focus{top:12px}
+.wrap{max-width:1244px;margin:0 auto;padding-left:max(32px, var(--gut));padding-right:max(32px, var(--gut-r))}
+
+/* ---------- buttons: chunky, the floor never moves ---------- */
+.btn{--bg:var(--card);--fg:var(--ink);--sh:var(--ink);
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:52px;padding:0 22px;border:2px solid var(--ink);border-radius:12px;
+  background:var(--bg);color:var(--fg);font:700 16px/1 var(--f-body);text-decoration:none;white-space:nowrap;
+  cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 4px 0 0 var(--sh);transform:translateY(0);
+  transition:transform .18s var(--ease),box-shadow .18s var(--ease),background-color .2s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--sh);transition-duration:.05s}
+@media (hover:hover){
+  .btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 0 var(--sh)}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--sh)}
+}
+.btn-lime{--bg:var(--lime)}
+.btn-ink{--bg:var(--ink);--fg:var(--paper);--sh:var(--blk, #000)}
+.btn[disabled]{cursor:default;opacity:.55;transform:none;box-shadow:0 4px 0 0 var(--sh)}
+.textbtn{border:0;background:none;padding:6px 2px;font:700 var(--t-small)/1.4 var(--f-body);color:var(--ink);
+  text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;cursor:pointer}
+
+/* ---------- the logo: five rising bars on a floor ---------- */
+.bars{display:inline-flex;align-items:flex-end;gap:2px;height:22px;padding:0 2px;border-bottom:2px solid var(--ink);flex:none}
+.bars i{display:block;width:6px;border:2px solid var(--ink);border-bottom:0}
+.bars i:nth-child(1){height:7px;background:var(--b1)}
+.bars i:nth-child(2){height:10px;background:var(--b2)}
+.bars i:nth-child(3){height:13px;background:var(--b3)}
+.bars i:nth-child(4){height:16px;background:var(--b4)}
+.bars i:nth-child(5){height:20px;background:var(--b5)}
+
+/* ---------- nav ---------- */
+.nav{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:2px solid transparent;transition:border-color .2s}
+.nav.stuck{border-bottom-color:var(--ink)}
+.nav-in{display:flex;align-items:center;gap:20px;height:68px}
+.logo{display:inline-flex;align-items:flex-end;gap:10px;text-decoration:none;padding:4px 0}
+.logo-word{font:400 25px/1 var(--f-display);letter-spacing:.01em;white-space:nowrap;transform:translateY(2px)}
+.links{display:flex;gap:4px;margin-left:auto}
+.links a{padding:8px 12px;border-radius:10px;font:700 15px/1.2 var(--f-body);text-decoration:none;white-space:nowrap}
+.links a:hover{background:var(--paper-2)}
+.soon{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:2px solid var(--ink);border-radius:999px;
+  font:700 var(--t-label)/1.2 var(--f-body);white-space:nowrap}
+.soon i{width:8px;height:8px;background:var(--ink)}
+
+/* ---------- hero: today's tower ---------- */
+.hero{padding:36px 0 56px}
+@media (min-width:1061px){.hero{min-height:calc(100svh - 70px);display:flex;align-items:center}.hero>.wrap{width:100%}}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px 56px;align-items:end}
+.hero-copy{padding-bottom:30px}
+.kicker{font:700 var(--t-small)/1.4 var(--f-body);color:var(--muted);margin-bottom:18px}
+h1{font:400 var(--t-h1)/1.3 var(--f-display);letter-spacing:.01em}
+h1 .l1,h1 .l2{display:block}
+h1 .l2{margin-top:.34em}
+/* つ・み・上・が・る climb the logo's five bars */
+.rise{--st:.085em;display:inline-block;position:relative;line-height:1;white-space:nowrap}
+.rise>span{display:inline-block;position:relative;transform:translateY(calc(var(--k) * var(--st) * -1))}
+.rise>span::before{content:"";position:absolute;z-index:-1;left:.06em;width:.88em;top:calc(100% + .01em);
+  height:calc(var(--k) * var(--st) - .01em);background:var(--bc);border:2px solid var(--ink);border-bottom:0}
+.rise::after{content:"";position:absolute;left:-.04em;width:5.1em;top:100%;height:2px;background:var(--ink)}
+.rise>span:nth-child(1){--k:2;--bc:var(--b1)}
+.rise>span:nth-child(2){--k:3;--bc:var(--b2)}
+.rise>span:nth-child(3){--k:4;--bc:var(--b3)}
+.rise>span:nth-child(4){--k:5;--bc:var(--b4)}
+.rise>span:nth-child(5){--k:6;--bc:var(--b5)}
+@media (prefers-reduced-motion:no-preference){
+  html:not(.calm) .rise>span{animation:climb calc(var(--k) * .07s) steps(var(--k), end) both;animation-delay:calc(.25s + var(--k) * .12s)}
+  html:not(.calm) .rise>span::before{animation:grow calc(var(--k) * .07s) steps(var(--k), end) both;animation-delay:calc(.25s + var(--k) * .12s)}
+}
+@keyframes climb{from{transform:translateY(0)}}
+@keyframes grow{from{height:0}}
+.sub{margin-top:26px;max-width:30em;font-size:var(--t-lead);line-height:1.85;color:var(--ink-2);text-wrap:pretty}
+.ctas{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px}
+
+/* the stage: the tower, its floor, and what it says */
+.stage{position:relative}
+.stage-row{display:flex;align-items:flex-end;gap:28px;border-bottom:2px solid var(--ink)}
+.axis{position:relative;width:62px;align-self:stretch;flex:none}
+.goal-lab{position:absolute;right:0;bottom:calc(36 * var(--cell) + 6px);font:700 var(--t-label)/1.25 var(--f-body);text-align:right}
+.tower{position:relative;width:172px;height:calc(45 * var(--cell) + 80px);flex:none}
+@media (min-width:1061px){:root{--cell:10px}.tower{width:190px}}
+.goal{position:absolute;z-index:0;left:-70px;right:-14px;bottom:calc(36 * var(--cell) - 1px);border-top:2px dashed var(--ink);pointer-events:none}
+.tower.reached .goal{border-top-style:solid}
+.blk{position:absolute;z-index:1;left:0;right:0;bottom:calc(var(--b) * var(--cell) - 2px);height:calc(var(--h) * var(--cell) + 2px);
+  display:flex;align-items:center;padding:0 12px 0 10px;overflow:hidden;
+  background-color:var(--c);border:2px solid var(--ink);color:var(--on, var(--ink));
+  background-image:repeating-linear-gradient(to top, transparent 0 calc(var(--cell) - 1px), rgba(23,18,31,.13) calc(var(--cell) - 1px) var(--cell));
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.34), inset -7px 0 0 rgba(23,18,31,.14);
+  font:700 var(--t-label)/1 var(--f-body);white-space:nowrap}
+.blk.plan{z-index:1;background-color:color-mix(in srgb, var(--c) 13%, transparent);background-image:none;border-style:dashed;box-shadow:none}
+.blk.live{z-index:2}
+.blk.live::after{content:"";position:absolute;left:0;right:7px;top:0;height:3px;background:repeating-linear-gradient(90deg,var(--ink) 0 6px,transparent 6px 12px)}
+.cap{position:absolute;left:0;right:0;height:0;bottom:calc(var(--top) * var(--cell))}
+.panel{width:280px;padding-bottom:20px}
+.p-lab{font:700 var(--t-small)/1.4 var(--f-body);color:var(--muted)}
+.total{margin-top:4px;font:400 54px/1.05 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.total small{font-size:20px;margin:0 6px 0 3px}
+.delta{margin-top:8px;font:700 var(--t-small)/1.4 var(--f-body);color:var(--up)}
+.delta span{font-size:17px}
+.goal-left{margin-top:2px;font:700 var(--t-small)/1.4 var(--f-body)}
+.goal-left.done{color:var(--up)}
+.next{margin-top:18px;padding-top:14px;border-top:2px solid var(--line);min-height:82px}
+.next-lab{display:inline-block;margin-right:8px;padding:1px 8px;border:2px solid var(--ink);border-radius:999px;font:700 12px/1.4 var(--f-body);vertical-align:2px}
+.next b{font-weight:700}
+.next .meta{display:block;color:var(--muted);font-size:var(--t-small)}
+.clock{font:400 30px/1.15 var(--f-display);font-variant-numeric:tabular-nums}
+.clock small{margin-left:10px;font:700 var(--t-small)/1 var(--f-body);color:var(--muted)}
+.go-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:12px}
+.stage-note{margin-top:12px;font-size:var(--t-label);line-height:1.6;color:var(--muted)}
+
+/* ---------- sections ---------- */
+.sec{padding:120px 0 0}
+.kick{display:flex;align-items:flex-end;gap:12px;font:700 16px/1.2 var(--f-body);margin-bottom:24px}
+.kick .bars{height:28px;gap:3px}
+.kick .bars i{width:9px}
+.kick .bars i:nth-child(1){height:9px}.kick .bars i:nth-child(2){height:13px}.kick .bars i:nth-child(3){height:17px}.kick .bars i:nth-child(4){height:21px}.kick .bars i:nth-child(5){height:26px}
+.kick .bars i.o{background:transparent;border-color:#c4b79f;border-style:dashed}
+h2{font:400 var(--t-h2)/1.35 var(--f-display);letter-spacing:.01em}
+.lead{margin-top:20px;max-width:32em;font-size:var(--t-lead);line-height:1.85;color:var(--ink-2);text-wrap:pretty}
+.note{margin-top:20px;font-size:var(--t-label);color:var(--muted)}
+
+/* できること: header with the week */
+.feat-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,560px);gap:40px 64px;align-items:start}
+.week{margin:0}
+.wk-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+.wk-lab{font:700 var(--t-small)/1.4 var(--f-body);color:var(--muted)}
+.wk-total{font:400 34px/1.1 var(--f-display);font-variant-numeric:tabular-nums}
+.wk-total small{font-size:15px;margin-left:4px}
+.wk-delta{font:700 var(--t-small)/1.4 var(--f-body);color:var(--up)}
+.wk-chart{--ww:50px;position:relative;display:flex;justify-content:space-between;align-items:flex-end;
+  height:calc(60 * var(--wc) + 30px);margin-top:16px;padding:0 6px;border-bottom:2px solid var(--ink)}
+.wk-goal{position:absolute;left:0;right:0;bottom:calc(36 * var(--wc));border-top:2px dashed var(--ink);z-index:2;transition:opacity .2s}
+.wk-goal span{position:absolute;right:0;bottom:4px;font:700 12px/1.2 var(--f-body);background:var(--paper);padding:0 0 0 6px}
+.wk-t{position:relative;width:var(--ww);height:calc(var(--t) * var(--wc));display:flex;flex-direction:column-reverse;overflow:hidden}
+.wk-t>i{display:block;flex:none;height:calc(var(--h) * var(--wc) + 2px);margin-bottom:-2px;background:var(--c);border:2px solid var(--ink);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.34), inset -5px 0 0 rgba(23,18,31,.14)}
+.wk-t>i:first-child{margin-bottom:-2px}
+.wk-t::after{content:"";position:absolute;inset:0;background:var(--lv);border:2px solid var(--ink);visibility:hidden}
+.wk-days{display:flex;justify-content:space-between;padding:6px 6px 0}
+.wk-days span{width:50px;text-align:center;font:700 var(--t-label)/1.3 var(--f-body);color:var(--muted)}
+.wk-days span:last-child{color:var(--ink)}
+.week.top .wk-t{height:var(--ww)}
+.week.top .wk-t::after{visibility:visible}
+.week.top .wk-goal{opacity:0}
+@media (prefers-reduced-motion:no-preference){
+  html:not(.calm) .wk-t{transition:height .42s steps(6, end)}
+  html:not(.calm) .week.top .wk-t::after{transition:visibility 0s .42s}
+}
+.wk-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-top:16px}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:12px;background:var(--card);box-shadow:0 4px 0 0 var(--ink);overflow:hidden}
+.seg button{min-height:42px;padding:0 16px;border:0;background:none;font:700 15px/1 var(--f-body);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button:focus-visible{outline-offset:-5px;outline-color:var(--lime)}
+.seg button[aria-pressed="false"]:focus-visible{outline-color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.wk-cap{flex:1 1 240px;font-size:var(--t-small);line-height:1.6;color:var(--ink-2)}
+
+/* the six things, each a small scene standing on its own floor */
+.feats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:72px 48px;margin-top:88px}
+.feat h3{margin-top:14px;font:400 var(--t-h3)/1.35 var(--f-display)}
+.legend{position:relative;height:44px}
+.legend span{position:absolute;top:8px;font:700 12px/1.4 var(--f-body);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.legend span.now{color:#c4282d}
+.legend span.c{text-align:center;transform:translateX(calc(23px - 50%))}
+.swatches{display:flex;align-items:center;gap:4px}
+.swatches i{display:block;width:12px;height:12px;border:1.5px solid rgba(23,18,31,.35)}
+.feat p{margin-top:10px;font-size:var(--t-body);line-height:1.85;color:var(--ink-2);text-wrap:pretty}
+.scene{position:relative;height:184px;border-bottom:2px solid var(--ink)}
+.lab{position:absolute;font:700 12px/1.3 var(--f-body);white-space:nowrap}
+.lab.m{color:var(--muted)}
+.mini{position:absolute;bottom:-2px;border:2px solid var(--ink);background:var(--c);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.34), inset -5px 0 0 rgba(23,18,31,.14)}
+.mini.plan{background:color-mix(in srgb, var(--c) 13%, transparent);border-style:dashed;box-shadow:none}
+
+/* 1 時間割 */
+.tl-floor{position:absolute;left:0;right:0;bottom:-2px;height:2px}
+.tl-past{position:absolute;bottom:-2px;left:0;height:2px;background:var(--ink)}
+.sc-plan{border-bottom-style:dotted}
+.tl-now{position:absolute;bottom:-7px;width:12px;height:12px;background:var(--now);border:2px solid var(--ink)}
+.tl-check{position:absolute;inset:0;display:grid;place-items:center;font:700 16px/1 var(--f-body)}
+/* 2 タイマー */
+.ro{position:absolute;left:calc(4% + 124px);bottom:10px}
+.ro-name{display:block;font:700 var(--t-label)/1.3 var(--f-body);color:var(--muted)}
+.ro-time{display:block;font:400 44px/1.1 var(--f-display);font-variant-numeric:tabular-nums}
+.ro-left{display:block;font:700 var(--t-small)/1.3 var(--f-body);font-variant-numeric:tabular-nums;color:var(--muted)}
+/* 3 記録: the grass */
+.grass{position:absolute;left:0;bottom:12px;display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,11px);grid-auto-columns:11px;gap:3px;
+  padding:6px;border:2px solid var(--ink);background:var(--card)}
+.grass i{display:block;background:var(--g0)}
+.grass i.l1{background:var(--g1)}.grass i.l2{background:var(--g2)}.grass i.l3{background:var(--g3)}.grass i.l4{background:var(--g4)}
+.grass i.today{outline:2px solid var(--ink);outline-offset:-1px}
+.grass i.after{background:transparent}
+/* 4 連続記録: a candle of days */
+.candle{position:absolute;left:24px;bottom:-2px;width:46px;height:calc(23 * 5px + 4px);border:2px solid var(--ink);
+  background:var(--wax) repeating-linear-gradient(to top, transparent 0 4px, rgba(23,18,31,.28) 4px 5px);
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.35), inset -6px 0 0 rgba(23,18,31,.12)}
+.flame{position:absolute;left:28px;width:39px;height:54px;image-rendering:pixelated}
+.tickets{position:absolute;left:112px;bottom:0;display:flex;gap:6px;align-items:flex-end}
+.ticket{width:44px;height:28px;border:2px solid var(--ink);background:var(--ticket);display:grid;place-items:center;
+  font:700 12px/1 var(--f-body);background-image:radial-gradient(circle at 0 50%, var(--paper) 0 5px, transparent 5.5px),radial-gradient(circle at 100% 50%, var(--paper) 0 5px, transparent 5.5px)}
+.ticket.spare{background:transparent;border-style:dashed;color:var(--muted)}
+.big-n{position:absolute;font:400 34px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.big-n small{font:700 var(--t-small)/1 var(--f-body);margin-left:6px}
+/* 5 バッジ: notches on a tall tower */
+.tall{position:absolute;left:18px;bottom:-2px;width:40px;display:flex;flex-direction:column-reverse}
+.tall i{display:block;height:var(--h);margin-top:-2px;background:var(--c);border:2px solid var(--ink);box-shadow:inset -5px 0 0 rgba(23,18,31,.14)}
+.notch{position:absolute;left:58px;display:flex;align-items:center;gap:8px;transform:translateY(50%)}
+.notch::before{content:"";width:22px;border-top:2px solid var(--ink)}
+.medal{width:20px;height:20px;flex:none}
+.notch span{font:700 var(--t-label)/1 var(--f-body)}
+/* 6 友だち */
+.fr{position:absolute;bottom:-2px;width:46px}
+.fr i{position:absolute;left:0;right:0;bottom:0;height:var(--h);background:var(--c);border:2px solid var(--ink);
+  background-image:repeating-linear-gradient(to top, transparent 0 9px, rgba(23,18,31,.13) 9px 10px);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.34), inset -5px 0 0 rgba(23,18,31,.14)}
+.fr i::after{content:"";position:absolute;right:-12px;top:-2px;width:8px;height:8px;background:var(--up);border:2px solid var(--ink)}
+
+/* ---------- 画面: phones on the logo's plinths ---------- */
+.shelf{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0 20px;margin-top:64px;align-items:end}
+.shot{margin:0;display:flex;flex-direction:column}
+.phone{border:3px solid var(--ink);border-radius:30px;background:var(--ink);padding:5px}
+.phone img{width:100%;height:auto;border-radius:24px;background:#eceef1}
+.plinth{height:calc(var(--k) * 18px + 2px);margin:0 18% -2px;border:2px solid var(--ink);border-bottom:0;background:var(--bc);
+  background-image:repeating-linear-gradient(to top, transparent 0 17px, rgba(23,18,31,.22) 17px 18px);
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.35), inset -6px 0 0 rgba(23,18,31,.14)}
+.floor-seg{height:2px;background:var(--ink);margin:0 -10px}
+.shot figcaption{padding-top:12px;min-height:76px;font-size:var(--t-small);line-height:1.55;color:var(--ink-2)}
+.shot figcaption b{display:block;font:700 16px/1.4 var(--f-body);color:var(--ink)}
+
+/* ---------- 使い方: one block, three moments ---------- */
+.how-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 48px;margin:64px 0 0;padding:0;list-style:none}
+.step .scene{height:176px;border-bottom:0}
+.step .floor-seg{margin:0 -24px}
+.step:first-child .floor-seg{margin-left:0}
+.step:last-child .floor-seg{margin-right:0}
+.step-n{display:block;margin-top:20px;font:400 30px/1 var(--f-display)}
+.step h3{margin-top:10px;font:400 var(--t-h3)/1.4 var(--f-display)}
+.step p{margin-top:8px;color:var(--ink-2);line-height:1.85;text-wrap:pretty}
+.how-more{margin-top:44px}
+
+/* ---------- おうちの方へ ---------- */
+.care{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:40px 72px;align-items:start}
+.rules{margin:0;border-top:2px solid var(--ink)}
+.rules div{display:grid;grid-template-columns:13em minmax(0,1fr);gap:4px 24px;padding:16px 0;border-bottom:2px solid var(--line)}
+.rules dt{font-weight:700}
+.rules dd{margin:0;color:var(--ink-2)}
+.rules dd small{display:block;margin-top:2px;font-size:var(--t-small);color:var(--muted)}
+.care-note{margin-top:28px;padding-left:16px;border-left:4px solid var(--ink);font-size:var(--t-body);line-height:1.85;color:var(--ink-2)}
+.care-note b{display:block;color:var(--ink)}
+
+/* ---------- footer: the year stands on the ground ---------- */
+.foot{margin-top:150px}
+.sky{position:relative;height:190px;overflow:hidden}
+.sky-row{position:absolute;left:0;right:0;bottom:0;display:flex;gap:4px;align-items:flex-end;justify-content:center}
+.sky-t{flex:none;width:26px;display:flex;flex-direction:column-reverse}
+.sky-t i{display:block;height:var(--h);margin-bottom:-2px;background:var(--c);border:2px solid var(--ink);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.3), inset -5px 0 0 rgba(23,18,31,.14)}
+.ground{background:var(--ink);color:var(--paper);padding:30px 0 40px}
+.sky-cap{font-size:var(--t-label);color:#b9b1c4}
+.foot-top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-top:40px}
+.foot-mark{height:150px;gap:8px;padding:0 6px;border-bottom:3px solid var(--paper);margin-bottom:14px}
+.foot-mark i{width:30px;border:3px solid var(--paper);border-bottom:0}
+.foot-mark i:nth-child(1){height:42px}.foot-mark i:nth-child(2){height:66px}.foot-mark i:nth-child(3){height:90px}.foot-mark i:nth-child(4){height:114px}.foot-mark i:nth-child(5){height:142px}
+.foot-h{margin-top:0;font:400 clamp(36px, 5vw, 72px)/1.3 var(--f-display);letter-spacing:.01em}
+.foot-sub{margin-top:18px;max-width:36em;font-size:var(--t-lead);line-height:1.8;color:#e4dfe9}
+.foot-sub + .foot-sub{margin-top:6px}
+.foot-row{display:flex;flex-wrap:wrap;align-items:center;gap:16px 28px;margin-top:64px;padding-top:24px;border-top:2px solid #3b3447}
+.foot .logo{color:var(--paper)}
+.foot .bars{border-bottom-color:var(--paper)}
+.foot .bars i{border-color:var(--paper)}
+.foot-links{display:flex;flex-wrap:wrap;gap:4px 18px;margin-left:auto}
+.foot-links a{font-weight:700;font-size:var(--t-small);text-decoration:none;padding:6px 0}
+.foot-links a:hover{text-decoration:underline}
+.calm-btn{min-height:40px;padding:0 14px;border:2px solid var(--paper);border-radius:10px;background:none;color:var(--paper);font:700 var(--t-small)/1 var(--f-body);cursor:pointer}
+.calm-btn[aria-pressed="true"]{background:var(--paper);color:var(--ink)}
+.fine{margin-top:22px;font-size:var(--t-label);line-height:1.8;color:#b9b1c4}
+.fine span{display:inline-block;margin-right:1.2em;text-wrap:pretty}
+.foot :focus-visible{outline-color:var(--paper)}
+
+/* ---------- motion off ---------- */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+html.calm *,html.calm *::before,html.calm *::after{animation:none!important;transition:none!important}
+
+/* ---------- narrower ---------- */
+@media (max-width:1180px){
+  .shelf{gap:0 14px}
+  .floor-seg{margin:0 -7px}
+}
+@media (max-width:1060px){
+  .hero-grid{grid-template-columns:1fr}
+  .hero-copy{padding-bottom:0}
+  .stage{max-width:620px}
+  .feat-head{grid-template-columns:1fr}
+  .week{max-width:560px}
+  .feats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .care{grid-template-columns:1fr}
+  .links a.wide{display:none}
+}
+@media (max-width:860px){
+  .shelf{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0 16px;padding:0 var(--gut-r) 8px var(--gut);
+    margin-left:calc(-1 * max(32px, var(--gut)));margin-right:calc(-1 * max(32px, var(--gut-r)));scrollbar-width:thin}
+  .shot{flex:none;width:200px;scroll-snap-align:center}
+  .floor-seg{margin:0 -8px}
+  .how-grid{grid-template-columns:1fr;gap:40px}
+  .step .floor-seg{margin:0}
+}
+@media (max-width:640px){
+  :root{--cell:5px;--wc:3px;--t-lead:16.5px;--t-body:16px}
+  .wrap{padding-left:var(--gut);padding-right:var(--gut-r)}
+  .shelf{margin-left:calc(-1 * var(--gut));margin-right:calc(-1 * var(--gut-r))}
+  .nav-in{height:58px;gap:10px}
+  .logo-word{font-size:22px}
+  .links{gap:0}
+  .links a{padding:8px 8px;font-size:14px}
+  .links a.mid,.links a.short{display:none}
+  .soon{padding:5px 10px}
+  .soon i{display:none}
+  .hero{padding:22px 0 48px}
+  .hero-grid{gap:26px}
+  .kicker{margin-bottom:12px}
+  h1 .l2{margin-top:.4em}
+  .rise{--st:.1em}
+  .sub{margin-top:18px;line-height:1.75}
+  .ctas{gap:12px;margin-top:22px}
+  .ctas .btn{flex:1 1 auto;padding:0 16px}
+  .stage-row{gap:14px}
+  .axis{width:40px}
+  .goal{left:-46px;right:-8px}
+  .tower{width:100px;height:calc(45 * var(--cell) + 58px)}
+  .blk{padding:0 6px;font-size:12px}
+  .panel{flex:1;min-width:0;width:auto;padding-bottom:12px}
+  .total{font-size:32px}
+  .total small{font-size:14px;margin:0 3px 0 2px}
+  .delta span{font-size:15px}
+  .next{margin-top:10px;padding-top:10px;min-height:0;font-size:14px;line-height:1.6}
+  .clock{font-size:24px}
+  .go-row .btn{width:100%;min-height:48px;padding:0 12px}
+  .sec{padding-top:88px}
+  .wk-chart{--ww:34px;margin-top:12px}
+  .wk-days span{width:34px}
+  .feats{grid-template-columns:1fr;gap:56px;margin-top:64px}
+  .rules div{grid-template-columns:1fr}
+  .foot{margin-top:110px}
+  .sky{height:150px}
+  .sky-t{width:18px}
+  .foot-mark{display:none}
+  .foot-links{margin-left:0;width:100%}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">本文へ</a>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="#top" aria-label="Inchly（インチリー）ページの先頭へ">
+      <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="logo-word">inchly</span>
+    </a>
+    <nav class="links" aria-label="ページ内">
+      <a class="mid" href="#features">できること</a>
+      <a class="short" href="#screens">画面</a>
+      <a class="mid" href="#how">使い方</a>
+      <a href="#parents">おうちの方へ</a>
+    </nav>
+    <span class="soon"><i aria-hidden="true"></i>近日公開</span>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ===== 1日: today's tower ===== -->
+<section class="hero" id="top" aria-labelledby="hero-h">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="kicker">iPhone の勉強アプリ</p>
+      <h1 id="hero-h" aria-label="勉強した時間が、毎日つみ上がる。"><span class="l1" aria-hidden="true">勉強した時間が、</span><span class="l2" aria-hidden="true">毎日<span class="rise"><span>つ</span><span>み</span><span>上</span><span>が</span><span>る。</span></span></span></h1>
+      <p class="sub">はかった時間が、科目の色のブロックになって積み重なる。記録して、友だちと見せ合える。</p>
+      <div class="ctas">
+        <a class="btn btn-lime" href="#screens">画面を見てみる <span aria-hidden="true">↓</span></a>
+        <a class="btn" href="#how">使い方 <span aria-hidden="true">↓</span></a>
+      </div>
+    </div>
+
+    <div class="stage" role="group" aria-labelledby="stage-h">
+      <div class="stage-row">
+        <div class="axis" aria-hidden="true"><span class="goal-lab">目標<br>3時間</span></div>
+        <div class="tower" id="tower" style="--top:33">
+          <div class="goal" aria-hidden="true"></div>
+          <div id="blocks"></div>
+          <div class="cap" id="cap"></div>
+        </div>
+        <div class="panel">
+          <p class="p-lab" id="stage-h">今日の勉強</p>
+          <p class="total" id="total"><span>2</span><small>時間</small><span>45</span><small>分</small></p>
+          <p class="delta"><span id="delta">▲1:17</span> 昨日より</p>
+          <p class="goal-left" id="goal-left">目標まで 0:15</p>
+          <div class="next" id="next"></div>
+          <div class="go-row">
+            <button type="button" class="btn btn-ink" id="go"></button>
+            <button type="button" class="textbtn" id="reset" hidden>見本にもどす</button>
+          </div>
+        </div>
+      </div>
+      <p class="stage-note">見本の1日です。1マスが5分（はやおくりで0.3秒）。</p>
+      <p class="sr" aria-live="polite" id="live"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 7日: what it does ===== -->
+<section class="sec" id="features" aria-labelledby="features-h">
+  <div class="wrap">
+    <div class="feat-head">
+      <div>
+        <p class="kick"><span class="bars" aria-hidden="true"><i></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i></span>できること</p>
+        <h2 id="features-h">1回の勉強が、<br>1つのブロックになる。</h2>
+        <p class="lead">記録したぶんだけ、ブロックが積み重なる。1日で1本の塔になって、7本ならぶと1週間。</p>
+      </div>
+
+      <figure class="week" id="week">
+        <figcaption class="wk-head">
+          <span class="wk-lab">この7日間</span>
+          <span class="wk-total">20.0<small>時間</small></span>
+          <span class="wk-delta">▲2.2時間 先週より</span>
+        </figcaption>
+        <div class="wk-chart" role="img" aria-label="この7日間の見本。金 3時間25分、土 2時間45分、日 5時間、月 2時間10分、火 2時間30分、水 1時間25分、今日 2時間45分。1日の目標は3時間。">
+          <div class="wk-goal"><span>目標 3時間</span></div>
+          <div class="wk-t" style="--t:41;--lv:var(--g4)"><i style="--h:18;--c:var(--ma)"></i><i style="--h:23;--c:var(--ma)"></i></div>
+          <div class="wk-t" style="--t:33;--lv:var(--g3)"><i style="--h:12;--c:var(--en)"></i><i style="--h:10;--c:var(--ma)"></i><i style="--h:11;--c:var(--ma)"></i></div>
+          <div class="wk-t" style="--t:60;--lv:var(--g4)"><i style="--h:18;--c:var(--en)"></i><i style="--h:18;--c:var(--en)"></i><i style="--h:12;--c:var(--ma)"></i><i style="--h:12;--c:var(--ma)"></i></div>
+          <div class="wk-t" style="--t:26;--lv:var(--g2)"><i style="--h:15;--c:var(--en)"></i><i style="--h:11;--c:var(--ma)"></i></div>
+          <div class="wk-t" style="--t:30;--lv:var(--g3)"><i style="--h:16;--c:var(--en)"></i><i style="--h:14;--c:var(--ma)"></i></div>
+          <div class="wk-t" style="--t:17;--lv:var(--g2)"><i style="--h:5;--c:var(--ma)"></i><i style="--h:12;--c:var(--ch)"></i></div>
+          <div class="wk-t" style="--t:33;--lv:var(--g3)"><i style="--h:6;--c:var(--ja)"></i><i style="--h:7;--c:var(--en)"></i><i style="--h:8;--c:var(--ma)"></i><i style="--h:12;--c:var(--en)"></i></div>
+        </div>
+        <div class="wk-days" aria-hidden="true"><span>金</span><span>土</span><span>日</span><span>月</span><span>火</span><span>水</span><span>今日</span></div>
+        <div class="wk-foot">
+          <div class="seg" role="group" aria-label="見る向き">
+            <button type="button" data-view="side" aria-pressed="true">横から</button>
+            <button type="button" data-view="top" aria-pressed="false">真上から</button>
+          </div>
+          <p class="wk-cap" id="wk-cap" aria-live="polite">1本が1日。色は科目、高さは時間。</p>
+        </div>
+      </figure>
+    </div>
+
+    <div class="feats">
+      <article class="feat" aria-labelledby="f1">
+        <div class="scene sc-plan" aria-hidden="true">
+          <div class="tl-past" style="width:27%"></div>
+          <div class="mini" style="--c:var(--ja);left:4%;width:17%;height:32px"><span class="tl-check">✓</span></div>
+          <span class="tl-now" style="left:calc(27% - 6px)"></span>
+          <span class="lab" style="left:36%;bottom:70px">つぎ</span>
+          <div class="mini plan" id="plan-en" style="--c:var(--en);left:36%;width:26%;height:62px"></div>
+          <div class="mini plan" style="--c:var(--ma);left:70%;width:26%;height:62px"></div>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <span style="left:4%">6:30<br>国語</span>
+          <span class="now" style="left:calc(27% - 12px)">7:32<br>いま</span>
+          <span style="left:36%">17:00<br>英語</span>
+          <span style="left:70%">19:00<br>数学</span>
+        </div>
+        <h3 id="f1">時間割</h3>
+        <p>1日の予定を、1本の線にならべる。終わった所は実線、これからは点線。予定の時刻になると、お知らせが届く。</p>
+      </article>
+
+      <article class="feat" aria-labelledby="f2">
+        <div class="scene" aria-hidden="true">
+          <div class="mini plan" style="--c:var(--ja);left:4%;width:100px;height:146px"></div>
+          <div class="blk" style="--c:var(--ja);--cell:6px;--b:0;--h:16;left:4%;right:auto;width:100px;bottom:-2px"></div>
+          <span class="lab m" style="left:calc(4% + 108px);bottom:132px">予定 1時間</span>
+          <div class="ro">
+            <span class="ro-time">39:59</span>
+            <span class="ro-left">のこり 20:01</span>
+          </div>
+        </div>
+        <div class="legend" aria-hidden="true"><span style="left:4%">国語<br>古文単語</span></div>
+        <h3 id="f2">タイマー</h3>
+        <p>「勉強を開始」を押したら、もう始まっている。予定までの線と、のこりの時間が見える。止めるまで、ちゃんとはかる。</p>
+      </article>
+
+      <article class="feat" aria-labelledby="f3">
+        <div class="scene" aria-hidden="true">
+          <span class="lab" style="left:0;top:4px">勉強した日</span>
+          <span class="lab m" style="left:84px;top:4px">今年 253日</span>
+          <div class="grass" id="grass"></div>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <span class="swatches" style="left:0">少<i style="background:var(--g0)"></i><i style="background:var(--g1)"></i><i style="background:var(--g2)"></i><i style="background:var(--g3)"></i><i style="background:var(--g4)"></i>多</span>
+        </div>
+        <h3 id="f3">記録</h3>
+        <p>✓ を押せば、今日の記録になる。勉強した日はマスが緑に。たくさんやった日ほど、濃い緑になる。</p>
+      </article>
+
+      <article class="feat" aria-labelledby="f4">
+        <div class="scene" aria-hidden="true">
+          <canvas class="flame" id="flame" width="39" height="54" style="bottom:117px"></canvas>
+          <div class="candle"></div>
+          <span class="big-n" style="left:112px;top:30px">23<small>日連続</small></span>
+          <div class="tickets"><span class="ticket">券</span><span class="ticket">券</span><span class="ticket spare">券</span></div>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <span style="left:14px">1段が<br>1日</span>
+          <span style="left:112px">休み券 2枚<br>（3枚まで）</span>
+        </div>
+        <h3 id="f4">連続記録</h3>
+        <p>続けた日数を、炎といっしょに数える。7日続けるごとに、休み券が1枚。休んだ日に自動で使われて、連続が切れない。</p>
+      </article>
+
+      <article class="feat" aria-labelledby="f5">
+        <div class="scene" aria-hidden="true">
+          <div class="tall">
+            <i style="--h:34px;--c:var(--en)"></i><i style="--h:30px;--c:var(--ma)"></i><i style="--h:26px;--c:var(--ja)"></i><i style="--h:30px;--c:var(--en)"></i><i style="--h:22px;--c:var(--ph)"></i><i style="--h:24px;--c:var(--ma)"></i>
+          </div>
+          <div class="notch" style="bottom:24px"><svg class="medal" viewBox="0 0 10 10" shape-rendering="crispEdges"><path fill="#17121f" d="M3 0h4v1H3zM2 1h1v1H2zM7 1h1v1H7zM1 2h1v4H1zM8 2h1v4H8zM2 6h1v1H2zM7 6h1v1H7zM3 7h4v1H3zM2 8h2v2H2zM6 8h2v2H6z"/><path fill="#ffd23f" d="M3 1h4v1H3zM2 2h6v4H2zM3 6h4v1H3z"/><path fill="#fff7d1" d="M3 2h2v1H3zM3 3h1v1H3z"/></svg><span>100時間</span></div>
+          <div class="notch" style="bottom:72px"><svg class="medal" viewBox="0 0 10 10" shape-rendering="crispEdges"><path fill="#17121f" d="M3 0h4v1H3zM2 1h1v1H2zM7 1h1v1H7zM1 2h1v4H1zM8 2h1v4H8zM2 6h1v1H2zM7 6h1v1H7zM3 7h4v1H3zM2 8h2v2H2zM6 8h2v2H6z"/><path fill="#ffd23f" d="M3 1h4v1H3zM2 2h6v4H2zM3 6h4v1H3z"/><path fill="#fff7d1" d="M3 2h2v1H3zM3 3h1v1H3z"/></svg><span>300時間</span></div>
+          <div class="notch" style="bottom:120px"><svg class="medal" viewBox="0 0 10 10" shape-rendering="crispEdges"><path fill="#17121f" d="M3 0h4v1H3zM2 1h1v1H2zM7 1h1v1H7zM1 2h1v4H1zM8 2h1v4H8zM2 6h1v1H2zM7 6h1v1H7zM3 7h4v1H3zM2 8h2v2H2zM6 8h2v2H6z"/><path fill="#ffd23f" d="M3 1h4v1H3zM2 2h6v4H2zM3 6h4v1H3z"/><path fill="#fff7d1" d="M3 2h2v1H3zM3 3h1v1H3z"/></svg><span>500時間</span></div>
+        </div>
+        <div class="legend" aria-hidden="true"><span style="left:18px">1年で<br>664時間</span></div>
+        <h3 id="f5">バッジ</h3>
+        <p>つみ上げた時間が100時間、300時間、500時間に届くと、バッジ。7日連続、21日連続でももらえる。勉強1分で1 EXP、レベルも上がる。</p>
+      </article>
+
+      <article class="feat" aria-labelledby="f6">
+        <div class="scene" aria-hidden="true">
+          <div class="fr" style="left:4%"><i style="--h:126px;--c:var(--en)"></i></div>
+          <div class="fr" style="left:28%"><i style="--h:96px;--c:var(--ph)"></i></div>
+          <div class="fr" style="left:52%"><i style="--h:78px;--c:var(--ch)"></i></div>
+          <div class="fr" style="left:76%"><i style="--h:60px;--c:var(--ma)"></i></div>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <span class="c" style="left:4%">mio<br>英語 4:11</span>
+          <span class="c" style="left:28%">kaito<br>物理 3:12</span>
+          <span class="c" style="left:52%">ゆなっぴ<br>化学 2:36</span>
+          <span class="c" style="left:76%">そら<br>数学 2:00</span>
+        </div>
+        <h3 id="f6">友だち</h3>
+        <p>いま勉強中の友だちが、科目と時間といっしょに並ぶ。友だちが始めたら、「一緒に始める」をひと押し。</p>
+      </article>
+    </div>
+    <p class="note">名前と数字は、アプリの画面と同じ見本です。</p>
+  </div>
+</section>
+
+<!-- ===== the app itself ===== -->
+<section class="sec" id="screens" aria-labelledby="screens-h">
+  <div class="wrap">
+    <p class="kick"><span class="bars" aria-hidden="true"><i></i><i></i><i class="o"></i><i class="o"></i><i class="o"></i></span>画面</p>
+    <h2 id="screens-h">つみ上がりを、<br>目で見る。</h2>
+    <p class="lead">ホームを開くと、勉強した日のマスと炎と、いま勉強中の友だち。開発中の画面なので、名前と数字は見本です。</p>
+    <div class="shelf">
+      <figure class="shot" style="--k:1;--bc:var(--b1)">
+        <div class="phone"><img src="img/home.webp" width="786" height="1704" loading="lazy" alt="ホームの画面。勉強した日のマスが18週ぶん、23日連続の炎、いま勉強中の友だち4人。"></div>
+        <div class="plinth" aria-hidden="true"></div><div class="floor-seg" aria-hidden="true"></div>
+        <figcaption><b>ホーム</b>勉強した日と、炎と、友だち</figcaption>
+      </figure>
+      <figure class="shot" style="--k:2;--bc:var(--b2)">
+        <div class="phone"><img src="img/study.webp" width="786" height="1704" loading="lazy" alt="時間割の画面。10月29日の予定が1本の線にならび、いまの時刻に赤い点。下に締切まであと何日。"></div>
+        <div class="plinth" aria-hidden="true"></div><div class="floor-seg" aria-hidden="true"></div>
+        <figcaption><b>時間割</b>1日を1本の線に</figcaption>
+      </figure>
+      <figure class="shot" style="--k:3;--bc:var(--b3)">
+        <div class="phone"><img src="img/timer-live.webp" width="786" height="1704" loading="lazy" alt="タイマーの画面。国語 古文単語のカードに、大きく39:59、のこり20:01。"></div>
+        <div class="plinth" aria-hidden="true"></div><div class="floor-seg" aria-hidden="true"></div>
+        <figcaption><b>タイマー</b>予定を1枚ずつのカードに</figcaption>
+      </figure>
+      <figure class="shot" style="--k:4;--bc:var(--b4)">
+        <div class="phone"><img src="img/community.webp" width="786" height="1704" loading="lazy" alt="みんなの画面。いま勉強中の人が、名前と科目と時間といっしょに12人ならぶ。"></div>
+        <div class="plinth" aria-hidden="true"></div><div class="floor-seg" aria-hidden="true"></div>
+        <figcaption><b>みんな</b>いま勉強中の人と、ランキング</figcaption>
+      </figure>
+      <figure class="shot" style="--k:5;--bc:var(--b5)">
+        <div class="phone"><img src="img/me.webp" width="786" height="1704" loading="lazy" alt="マイページの画面。664時間、23日連続、今週57位。この7日間の勉強が、科目の色で積み上がった棒。"></div>
+        <div class="plinth" aria-hidden="true"></div><div class="floor-seg" aria-hidden="true"></div>
+        <figcaption><b>マイページ</b>この7日間の積み上げ</figcaption>
+      </figure>
+    </div>
+    <p class="note">見た目は、明るいスタンダードと、夜の街のようなサイバーの2つから選べる。</p>
+  </div>
+</section>
+
+<!-- ===== how: one block, three moments ===== -->
+<section class="sec" id="how" aria-labelledby="how-h">
+  <div class="wrap">
+    <p class="kick"><span class="bars" aria-hidden="true"><i></i><i></i><i></i><i class="o"></i><i class="o"></i></span>使い方</p>
+    <h2 id="how-h">入れるのは予定だけ。<br>あとは押すだけ。</h2>
+    <ol class="how-grid">
+      <li class="step">
+        <div class="scene" aria-hidden="true">
+          <span class="lab" style="left:20px;bottom:84px">17:00 英語 長文読解</span>
+          <div class="mini plan" style="--c:var(--en);left:20px;width:150px;height:74px"></div>
+          <span class="lab m" style="left:182px;bottom:56px">予定<br>1時間</span>
+        </div>
+        <div class="floor-seg" aria-hidden="true"></div>
+        <span class="step-n" aria-hidden="true">1</span>
+        <h3>時間割に入れる。</h3>
+        <p>日にちと時間と科目を入れておく。次の予定は、画面の下のバーにいつも出る。</p>
+      </li>
+      <li class="step">
+        <div class="scene" aria-hidden="true">
+          <span class="lab" style="left:20px;bottom:84px">英語 0:25</span>
+          <div class="mini plan" style="--c:var(--en);left:20px;width:150px;height:74px"></div>
+          <div class="blk live" style="--c:var(--en);--on:#fff;--cell:6px;--b:0;--h:5;left:20px;right:auto;width:150px;bottom:-2px"></div>
+          <span class="lab m" style="left:182px;bottom:4px">はかって<br>いる</span>
+        </div>
+        <div class="floor-seg" aria-hidden="true"></div>
+        <span class="step-n" aria-hidden="true">2</span>
+        <h3>「勉強を開始」を押す。</h3>
+        <p>押したら、もう始まっている。予定の時間をすぎても、止めるまではかる。</p>
+      </li>
+      <li class="step">
+        <div class="scene" aria-hidden="true">
+          <div class="blk" style="--c:var(--ja);--cell:6px;--b:0;--h:6;left:20px;right:auto;width:150px">国語 30分</div>
+          <div class="blk" style="--c:var(--ma);--cell:6px;--b:6;--h:8;left:20px;right:auto;width:150px">数学 40分</div>
+          <div class="blk" style="--c:var(--en);--on:#fff;--cell:6px;--b:14;--h:12;left:20px;right:auto;width:150px">英語 60分</div>
+          <span class="lab" style="left:182px;bottom:120px">✓ 積んだ</span>
+        </div>
+        <div class="floor-seg" aria-hidden="true"></div>
+        <span class="step-n" aria-hidden="true">3</span>
+        <h3>✓ で記録する。</h3>
+        <p>どこまでやったかを一言（140字まで）。書かなくても、時間はそのまま今日の記録に。</p>
+      </li>
+    </ol>
+    <p class="how-more"><a class="btn" href="#top">いちばん上の塔で、ためす <span aria-hidden="true">↑</span></a></p>
+  </div>
+</section>
+
+<!-- ===== for parents ===== -->
+<section class="sec" id="parents" aria-labelledby="parents-h">
+  <div class="wrap care">
+    <div>
+      <p class="kick"><span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i class="o"></i></span>おうちの方へ</p>
+      <h2 id="parents-h">見せる相手は、<br>自分で決める。</h2>
+      <p class="lead">はじめは、勉強中の表示<span class="nb">（ニックネーム・科目・時間）</span>は全員に、メッセージはグループのメンバーまで。どちらも設定で、いつでも変えられます。</p>
+      <p class="care-note"><b>記録のゆくえ</b>記録は、この iPhone の中に保存されます。勉強中の表示と順位は、設定で決めた範囲の人に見えます。設定から、書き出しや、アカウントとデータの削除ができます。</p>
+    </div>
+    <dl class="rules">
+      <div><dt>勉強中を見せる相手</dt><dd>全員／フォロワーだけ／見せない<small>はじめは全員</small></dd></div>
+      <div><dt>順位を見せる</dt><dd>ランキングに出す／出さない<small>はじめは出す。出さなくても、自分の順位は見られます</small></dd></div>
+      <div><dt>メッセージを受け取る相手</dt><dd>フォロー中の人／グループのメンバーまで／全員<small>はじめはグループのメンバーまで</small></dd></div>
+      <div><dt>ブロック・通報</dt><dd>名前を押すと、どこからでもできます</dd></div>
+      <div><dt>13歳未満</dt><dd>保護者の同意を得ているか、はじめにたずねます</dd></div>
+      <div><dt>記録の保存</dt><dd>この iPhone の中に保存します。<span class="nb">圏外でも記録できます</span></dd></div>
+      <div><dt>ねだんと広告</dt><dd>決まったら、このページでお知らせします</dd></div>
+    </dl>
+  </div>
+</section>
+
+</main>
+
+<!-- ===== 1年: the footer stands under the year's skyline ===== -->
+<footer class="foot" aria-labelledby="foot-h">
+  <div class="sky" aria-hidden="true"><div class="sky-row" id="sky"></div></div>
+  <div class="ground">
+    <div class="wrap">
+      <p class="sky-cap">1週間を1本の塔にして、1年ぶん並べた見本</p>
+      <div class="foot-top">
+        <h2 class="foot-h" id="foot-h">今夜も、<br>少しずつ前へ。</h2>
+        <span class="bars foot-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      </div>
+      <p class="foot-sub">inch by inch は、英語で「少しずつ」。<br><span class="nb">Inchly（インチリー）</span>の名前は、<span class="nb">ここから。</span></p>
+      <p class="foot-sub">iPhone 向けに、[公開日]ごろ公開する予定です。<br><span class="nb">Android は [Android版の予定]。</span></p>
+      <div class="foot-row">
+        <a class="logo" href="#top" aria-label="Inchly（インチリー）ページの先頭へ">
+          <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <span class="logo-word">inchly</span>
+        </a>
+        <nav class="foot-links" aria-label="ページ内（下）">
+          <a href="#features">できること</a><a href="#screens">画面</a><a href="#how">使い方</a><a href="#parents">おうちの方へ</a>
+        </nav>
+        <button type="button" class="calm-btn" id="calm" aria-pressed="false">動きを止める</button>
+      </div>
+      <p class="fine"><span>お問い合わせ：[連絡先]</span><span>プライバシーポリシーと利用規約は、公開までに用意します。</span><span>画面は開発中のものです。出てくる名前や記録は見本です。</span><span>iPhone は、米国および他の国々で登録された Apple Inc. の商標です。iPhone 商標は、アイホン株式会社のライセンスにもとづき使用されています。</span><span>© [年] [運営者名]</span></p>
+    </div>
+  </div>
+</footer>
+
+<!-- residents: each has a job here -->
+<inch-pal kind="bo" do="sit" on="#cap" edge="box" at=".5"></inch-pal>
+<inch-pal kind="jiri" do="sit" on="#plan-en" edge="box" at=".5"></inch-pal>
+<inch-pal kind="mebu" do="sit" on="#grass" edge="box" at=".96"></inch-pal>
+
+<script src="shared/pix.js" defer></script>
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const html = document.documentElement;
+  const calm = () => html.classList.contains('calm') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- 動きを止める (remembered when the browser lets us) ---------- */
+  try { if (localStorage.getItem('inchly-d-stack-calm') === '1') html.classList.add('calm'); } catch (e) { /* no storage: fine */ }
+  const calmBtn = $('#calm');
+  const syncCalm = () => calmBtn.setAttribute('aria-pressed', String(html.classList.contains('calm')));
+  calmBtn.addEventListener('click', () => {
+    html.classList.toggle('calm');
+    syncCalm();
+    try { localStorage.setItem('inchly-d-stack-calm', html.classList.contains('calm') ? '1' : '0'); } catch (e) { /* fine */ }
+  });
+  syncCalm();
+
+  /* ---------- nav line once the page moves ---------- */
+  const nav = $('#nav');
+  const onScroll = () => nav.classList.toggle('stuck', scrollY > 6);
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* =====================================================================
+     Today's tower. 1 cell = 5 minutes. Sessions stack in the order they
+     happened; the next plan waits as a dashed box on top.
+     ===================================================================== */
+  const SUBJ = {
+    ja: { n: '国語', c: 'var(--ja)' },
+    en: { n: '英語', c: 'var(--en)', on: '#fff' },
+    ma: { n: '数学', c: 'var(--ma)' },
+    self: { n: '自習', c: 'var(--self)' }
+  };
+  const GOAL = 180, CAP = 255, YESTERDAY = 88, STEP = 5, TICK = 300;
+  const BASE = [['ja', 30], ['en', 35], ['ma', 40], ['en', 60]];
+  const FIRST_PLAN = { s: 'ma', at: '19:00', name: '青チャート', min: 60 };
+  let done, plan, run, timer, capped;
+
+  const tower = $('#tower'), blocksEl = $('#blocks'), go = $('#go'), reset = $('#reset'), next = $('#next'), live = $('#live');
+  const hm = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+  const sum = () => done.reduce((a, b) => a + b[1], 0);
+
+  function block(s, min, b, cls) {
+    const d = document.createElement('div');
+    const S = SUBJ[s];
+    d.className = 'blk' + (cls ? ' ' + cls : '');
+    d.style.cssText = `--b:${b};--h:${min / STEP};--c:${S.c}` + (S.on ? `;--on:${S.on}` : '');
+    if (cls !== 'plan' && min >= 15) d.textContent = `${S.n} ${min}分`;
+    return d;
+  }
+
+  function render() {
+    const base = sum(), cur = run ? run.min : 0, total = base + cur;
+    blocksEl.textContent = '';
+    let b = 0;
+    for (const [s, m] of done) { blocksEl.appendChild(block(s, m, b)); b += m / STEP; }
+    if (plan && !capped) blocksEl.appendChild(block(plan.s, plan.min, b, 'plan'));
+    if (run) blocksEl.appendChild(block(run.s, Math.max(cur, 0), b, 'live'));
+    tower.style.setProperty('--top', String(total / STEP));
+    tower.classList.toggle('reached', total >= GOAL);
+
+    const t = $('#total');
+    t.innerHTML = `<span>${Math.floor(total / 60)}</span><small>時間</small><span>${String(total % 60).padStart(2, '0')}</span><small>分</small>`;
+    $('#delta').textContent = '▲' + hm(total - YESTERDAY);
+    const gl = $('#goal-left');
+    gl.textContent = total >= GOAL ? '目標の3時間に、届いた' : `目標まで ${hm(GOAL - total)}`;
+    gl.classList.toggle('done', total >= GOAL);
+
+    if (capped) {
+      next.innerHTML = `<b>見本はここまで。</b><span class="meta">${Math.floor(sum() / 60)}時間${String(sum() % 60).padStart(2, '0')}分ぶん、積みました。</span>`;
+    } else if (run) {
+      const S = SUBJ[run.s];
+      const left = plan ? plan.min - cur : null;
+      const tail = left == null ? '' : left > 0 ? `<small>−${hm(left)}</small>` : '<small>予定クリア、延長中</small>';
+      next.innerHTML = `<span class="next-lab">はかっている</span><b>${S.n}</b>${plan ? ' ' + plan.name : ''}<span class="clock">${hm(cur)}${tail}</span>`;
+    } else if (plan) {
+      next.innerHTML = `<span class="next-lab">つぎ</span><b>${plan.at} ${SUBJ[plan.s].n}</b> ${plan.name}<span class="meta">予定 1時間（点線の箱）</span>`;
+    } else {
+      next.innerHTML = '<span class="next-lab">つぎ</span><b>予定なし</b><span class="meta">押すと「自習」で始まる</span>';
+    }
+
+    const s = run ? run.s : plan ? plan.s : 'self';
+    go.style.setProperty('--blk', SUBJ[s].c);
+    if (capped) { go.hidden = true; reset.hidden = false; reset.textContent = '見本にもどす'; }
+    else {
+      go.hidden = false;
+      go.innerHTML = run ? '<span aria-hidden="true">✓</span>記録する' : '<span aria-hidden="true">▶&#xFE0E;</span>勉強を開始';
+      reset.hidden = done.length === BASE.length && !run;
+    }
+  }
+
+  function start() {
+    run = { s: plan ? plan.s : 'self', min: 0 };
+    render();
+    timer = setInterval(() => {
+      const before = sum() + run.min;
+      run.min += STEP;
+      const after = before + STEP;
+      if (before < GOAL && after >= GOAL) poke('star');
+      if (after >= CAP) { record(true); return; }
+      render();
+    }, TICK);
+  }
+
+  function record(auto) {
+    clearInterval(timer); timer = null;
+    const r = run; run = null;
+    if (r && r.min > 0) {
+      done.push([r.s, r.min]);
+      plan = null;
+      poke('check');
+      live.textContent = `${SUBJ[r.s].n}を${r.min}分、記録しました。今日は${Math.floor(sum() / 60)}時間${sum() % 60}分。`;
+    }
+    if (auto || sum() >= CAP) capped = true;
+    const hadFocus = document.activeElement === go;
+    render();
+    if (capped && hadFocus) reset.focus({ preventScroll: true });
+  }
+
+  function restart() {
+    clearInterval(timer); timer = null;
+    done = BASE.map(x => x.slice()); plan = Object.assign({}, FIRST_PLAN); run = null; capped = false;
+    render();
+  }
+
+  function poke(icon) { try { if (window.InchPix) window.InchPix.poke('bo', icon); } catch (e) { /* the flame is optional */ } }
+
+  go.addEventListener('click', () => { if (run) record(false); else start(); });
+  reset.addEventListener('click', () => { restart(); live.textContent = '見本の1日にもどしました。'; go.focus(); });
+  restart();
+
+  /* =====================================================================
+     The week: from the side, then from above (the grass).
+     ===================================================================== */
+  const week = $('#week'), cap = $('#wk-cap');
+  const CAPS = {
+    side: '1本が1日。色は科目、高さは時間。',
+    top: '真上から見ると、1日が1マス。たくさんやった日ほど、<span class="nb">濃い緑。</span>これが、ホームの<span class="nb">「勉強した日」。</span>'
+  };
+  week.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    const v = b.dataset.view;
+    week.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    week.classList.toggle('top', v === 'top');
+    cap.innerHTML = CAPS[v];
+  }));
+
+  /* ---------- seeded numbers, so the pictures are the same every time ---------- */
+  const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+  /* the grass: 18 weeks, today is a Thursday in the last column */
+  const grass = $('#grass'), rg = rng(29);
+  const frag = document.createDocumentFragment();
+  for (let w = 0; w < 18; w++) for (let d = 0; d < 7; d++) {
+    const i = document.createElement('i');
+    if (w === 17 && d > 3) i.className = 'after';
+    else {
+      const r = rg();
+      const lv = r < .12 ? 0 : r < .24 ? 1 : r < .5 ? 2 : r < .8 ? 3 : 4;
+      i.className = (lv ? 'l' + lv : '') + (w === 17 && d === 3 ? ' today' : '');
+    }
+    frag.appendChild(i);
+  }
+  grass.appendChild(frag);
+
+  /* the year's skyline: one tower per week, stacked by subject */
+  const sky = $('#sky'), rs = rng(664), cols = ['var(--en)', 'var(--ma)', 'var(--ja)', 'var(--ph)', 'var(--ch)', 'var(--en)', 'var(--ma)'];
+  const skyFrag = document.createDocumentFragment();
+  for (let k = 0; k < 64; k++) {
+    const t = document.createElement('div');
+    t.className = 'sky-t';
+    const hours = 3 + rs() * 13 + (rs() < .18 ? 8 : 0) + Math.sin(k / 4.3) * 3;
+    let left = Math.max(3, hours) * 6.6;
+    const n = 2 + Math.floor(rs() * 2);
+    for (let j = 0; j < n; j++) {
+      const i = document.createElement('i');
+      const h = j === n - 1 ? left : Math.max(14, Math.round(left * (.3 + rs() * .3)));
+      left -= h;
+      i.style.setProperty('--h', Math.max(12, Math.round(h)) + 'px');
+      i.style.setProperty('--c', cols[Math.floor(rs() * cols.length)]);
+      t.appendChild(i);
+    }
+    skyFrag.appendChild(t);
+  }
+  sky.appendChild(skyFrag);
+
+  /* ---------- after pix.js: the flame on the streak candle ---------- */
+  addEventListener('DOMContentLoaded', () => {
+    const cv = $('#flame');
+    if (!cv || !window.InchPix || !InchPix.drawFrame) return;
+    const ctx = cv.getContext('2d');
+    InchPix.drawFrame(ctx, 'bo', 'happy:0', 0, 0, 3);
+  });
+})();
+</script>
+</body>
+</html>

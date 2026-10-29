@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly 勉強</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="shared/app.css">
+<style>
+/* ===== 勉強タブ（時間割・締切）だけの部品。色・字・影は shared/app.css のトークンだけ ===== */
+
+/* 見出しの右の「＋ 追加」と、見出しの横の灰の字 */
+.sec-h > .key{margin-left:auto}
+.sec-sub{font-size:var(--fs-sub);color:var(--ink-3);white-space:nowrap}
+.blk{display:flex;flex-direction:column;gap:10px}
+.blk + .blk{margin-top:10px}
+
+/* 曜日の切りかえ（1枚の板。選んだ日がライム、今日は太字） */
+.dow > button{padding:0;font-size:14px}
+.dow > button.is-today{color:var(--ink);font-weight:800}
+
+/* ---------- 今日：1本の線（路線図） ---------- */
+.tt{padding:8px 0}
+.tl .row{display:grid;grid-template-columns:50px 38px minmax(0,1fr) auto;align-items:center;gap:0;min-height:44px;padding:0 12px;border-top:0}
+.tl .row + .row{border-top:0}
+.tl .row::before{inset:2px 6px}
+/* 時刻の列：右寄せ・等幅の数字 */
+.tl-time{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding-right:6px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tl-time b{font:700 13px/16px var(--f-body)}
+.tl-time small{font:400 11px/14px var(--f-body);color:var(--ink-3)}
+.tl-time .past{font:500 12px/1 var(--f-body);color:var(--ink-3)}
+.tl-time .now{font:800 12px/1 var(--f-body);color:var(--pause)}
+/* 線：済んだ所はインクの実線、これからはドットの点線 */
+.tl-rail{position:relative;align-self:stretch;display:grid;place-items:center}
+.tl-rail::before,.tl-rail::after{content:"";position:absolute;left:50%;width:2px;margin-left:-1px;background:var(--ink)}
+.tl-rail::before{top:0;bottom:50%}
+.tl-rail::after{top:50%;bottom:0}
+.tl-rail.ahead::before,.tl-rail.ahead::after{background:repeating-linear-gradient(to bottom,var(--ink-3) 0 2px,transparent 2px 5px)}
+.tl-rail.first::before,.tl-rail.last::after{display:none}
+.tl-node{position:relative;z-index:1;display:grid;place-items:center;line-height:0}
+/* 済んだ予定：小さな絵（カードの地のフチで線の上に乗る）＋ インクの ✓ */
+.tl-node.done{padding:2px;border-radius:8px;background:var(--card)}
+.tl-node .ck{position:absolute;right:-4px;bottom:-4px;width:15px;height:15px;display:grid;place-items:center;background:var(--ink);color:var(--on-ink);box-shadow:0 0 0 2px var(--card)}
+/* これからの駅：科目の色の四角（サイトの時間割の駅） */
+.tl-stn{display:block;width:12px;height:12px;background:var(--c);box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--card)}
+/* いま：紅の四角と紅の線 */
+.tl-nowdot{display:block;width:10px;height:10px;background:var(--pause);box-shadow:0 0 0 2px var(--card)}
+.tl-nowline{grid-column:3 / -1;height:2px;margin-left:6px;background:var(--pause)}
+.tl .is-now{min-height:26px}
+/* 中身 */
+.tl-main{min-width:0;padding-left:6px;padding-right:8px}
+.tl-one{display:block;font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-one b{color:var(--ink);font-weight:700}
+.tl-name{display:flex;align-items:center;gap:7px;min-width:0}
+.tl-name b{font:700 15px/1.3 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-memo{display:block;font-size:var(--fs-sub);line-height:1.4;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-end{font:700 var(--fs-tiny)/1 var(--f-body);color:var(--ink-2);white-space:nowrap}
+.tl .is-ahead{min-height:74px}
+/* いまの予定：紙2の地、線の上に絵、止まったライムの輪（サイトの「光る駅」を止めた形） */
+.tl .is-live{min-height:66px;margin:2px 6px;padding:0 6px;width:calc(100% - 12px);border-radius:14px;background:var(--paper-2)}
+.tl-node.live{padding:3px;border-radius:11px;background:var(--paper-2)}
+.tl-node.live .subj{box-shadow:0 0 0 2px var(--ink),0 0 0 5px var(--lime),0 0 0 7px var(--ink)}
+
+/* ---------- ほかの曜日：ふつうの行 ---------- */
+.tt-plain{padding:2px 12px}
+.tt-plain .row{display:grid;grid-template-columns:50px auto minmax(0,1fr);gap:10px;min-height:62px;padding:8px 0}
+.tt-plain .row::before{inset:2px -6px}
+.tt-plain .tl-time{padding-right:0}
+
+/* ---------- 締切 ---------- */
+.dl{padding-block:4px}
+.dl .row{gap:12px}
+.dl .stk{transform:rotate(-6deg);width:40px;display:grid;place-items:center}
+.dl .row-end{gap:5px}
+.dl-days{display:flex;align-items:baseline;gap:1px;white-space:nowrap}
+.dl-days .mid{font-size:var(--fs-num)}
+.dl-days.is-soon .mid{color:var(--due-ink)}
+.dl-days .unit{margin-right:0}
+.dl-todo{display:flex;gap:4px;height:8px}
+.dl-todo i{width:8px;height:8px;box-shadow:var(--ring-thin)}
+.dl-todo i.on{background:var(--ink)}
+
+/* 横の説明の切りかえ */
+.note .seg{margin-top:16px}
+.note .seg-cap{display:block;margin-top:18px;font-size:12px;color:var(--ink-3)}
+.sheet-panel p.muted{font-size:13px;margin-bottom:4px}
+.key-danger{--fg:var(--pause)}
+.note-links .link{min-width:44px;justify-content:center}
+</style>
+</head>
+<body data-tab="study" data-bar="live">
+<div class="stage">
+  <div class="app">
+    <main class="screen">
+      <header class="hdr" data-hdr="date" data-title="10月29日（木）"></header>
+      <div class="stack">
+
+        <section class="blk" aria-labelledby="tt-h">
+          <h2 class="sec-h"><span class="sec-t" id="tt-h" style="--accent:var(--sky)">時間割</span>
+            <button class="key key-sm" type="button" data-soon aria-label="予定を追加"><i data-pi="plus"></i>追加</button></h2>
+          <div class="seg seg-block dow" role="group" aria-label="曜日" id="dow"></div>
+          <div class="card" id="tt"></div>
+        </section>
+
+        <section class="blk" aria-labelledby="dl-h">
+          <h2 class="sec-h"><span class="sec-t" id="dl-h" style="--accent:var(--coral)">締切</span><span class="sec-sub">ToDoの進み具合</span>
+            <button class="key key-sm" type="button" data-soon aria-label="締切を追加"><i data-pi="plus"></i>追加</button></h2>
+          <div class="card dl"><div class="rows" id="dl"></div></div>
+        </section>
+
+      </div>
+    </main>
+
+    <div class="sheet" id="sheet-dl" hidden>
+      <div class="sheet-scrim" data-close-sheet></div>
+      <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-dl-h">
+        <span class="sheet-grab" aria-hidden="true"></span>
+        <div class="sheet-h"><h2 id="sheet-dl-h">第4回 記述模試</h2></div>
+        <p class="muted" id="sheet-dl-s">11月8日 · あと10日</p>
+        <div class="sheet-acts">
+          <button class="key key-block key-lg key-danger" type="button" id="dl-del">この締切を削除</button>
+          <button class="key key-block" type="button" data-close-sheet>やめる</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="note">
+    <p class="label-j sq">この画面で見てほしい点</p>
+    <h1>勉強（時間割・締切）</h1>
+    <p>今日の予定を1本の線で見る画面です。ここでは何も始めません。始めるのは下の勉強バーから。</p>
+    <ul>
+      <li>済んだ予定は線の上に小さな絵と ✓。これからの予定はサイトの時間割と同じ「科目の色の四角の駅」。</li>
+      <li>「いま」の線は紅（<code>#D7003A</code>）。アプリの赤 <code>#FF3B30</code> は紙の上で小さな時刻が読みにくい（3.3:1）ので、NOW の札と同じ紅にした（5.0:1）。</li>
+      <li>いまの予定は紙2の地に絵を線の上へ。駅はライムの輪で止まったまま光る（サイトの「光る駅」を動かさない形）。</li>
+      <li>曜日はライムの切りかえ。ほかの曜日はふつうの行になる。</li>
+      <li>締切は旗・カレンダー・トロフィーのシール。21日以内の日数は締切の色。下の四角は ToDo の進み。</li>
+    </ul>
+    <span class="seg-cap">見本の時刻（押すと切りかわる）</span>
+    <div class="seg seg-block" role="group" aria-label="見本の時刻" id="scene">
+      <button type="button" aria-pressed="true" data-scene="a">7:32 国語を勉強中</button>
+      <button type="button" aria-pressed="false" data-scene="b">17:05 英語の時間</button>
+    </div>
+    <p class="note-links"><a class="link" href="index.html">一覧へ</a><a class="link" href="timer.html">タイマー</a><a class="link" href="system.html">部品</a></p>
+  </aside>
+</div>
+<script src="shared/app.js"></script>
+<script>
+(() => {
+  'use strict';
+  const A = window.App;
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* 見本の時間割（inchly-app/src/store.ts の b1〜b6）。曜日は 0=月 … 6=日 */
+  const DOW = ['月', '火', '水', '木', '金', '土', '日'];
+  const TODAY = 3; // 10月29日（木）
+  const PLANS = [
+    { id: 'b1', s: 'ja', memo: '古文単語', start: '6:30', min: 30, days: [0, 1, 2, 3, 4] },
+    { id: 'b2', s: 'en', memo: '長文読解', start: '17:00', min: 60, days: [0, 1, 2, 3, 4] },
+    { id: 'b3', s: 'ma', memo: '青チャート', start: '19:00', min: 60, days: [0, 1, 2, 3, 4] },
+    { id: 'b4', s: 'ph', memo: '名問の森', start: '21:00', min: 45, days: [0, 2, 4] },
+    { id: 'b5', s: 'en', memo: '過去問', start: '9:00', min: 120, days: [5, 6] },
+    { id: 'b6', s: 'ma', memo: '模試の復習', start: '13:00', min: 90, days: [5, 6] }
+  ];
+  /* 見本の時刻：7:32（国語を勉強中。今のアプリの画面写真）と 17:05（英語の予定の時間。まだ始めていない） */
+  const SCENES = {
+    a: { now: '7:32', done: ['b1'], bar: null },
+    b: { now: '17:05', done: ['b1'], bar: { state: 'idle', subj: 'en', next: false, title: '長文読解', sub: 'いま · 17:00–18:00' } }
+  };
+  const DEADLINES = [
+    { name: '第4回 記述模試', date: '11月8日', days: 10, todo: [1, 3], stk: 'flag' },
+    { name: '共通テスト', date: '1月16日', days: 79, todo: [1, 1], stk: 'cal' },
+    { name: '東大 二次試験', date: '2月25日', days: 119, todo: null, stk: 'trophy' }
+  ];
+
+  const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const clk = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+  const endOf = p => clk(toMin(p.start) + p.min);
+  const on = d => PLANS.filter(p => p.days.includes(d)).sort((a, b) => toMin(a.start) - toMin(b.start));
+  const name = p => A.SUBJ[p.s].name;
+
+  let scene = location.hash === '#t1705' ? 'b' : 'a';
+  let day = TODAY;
+
+  /* ---------- 曜日 ---------- */
+  $('#dow').innerHTML = DOW.map((w, i) =>
+    `<button type="button" aria-pressed="${i === day}" class="${i === TODAY ? 'is-today' : ''}" data-d="${i}" aria-label="${w}曜日${i === TODAY ? '（今日）' : ''}">${w}</button>`).join('');
+  $('#dow').addEventListener('change', () => {
+    const b = $('#dow > [aria-pressed="true"]');
+    day = +b.dataset.d;
+    paint();
+  });
+
+  /* ---------- 時間割 ---------- */
+  const times = p => `<span class="tl-time"><b>${p.start}</b><small>${endOf(p)}</small></span>`;
+  function todayLine() {
+    const sc = SCENES[scene], now = toMin(sc.now);
+    const list = on(TODAY);
+    const stops = [], rows = [];
+    list.forEach(p => {
+      const done = sc.done.includes(p.id), end = toMin(p.start) + p.min;
+      if (done || end <= now) stops.push({ p, done });
+      else rows.push({ p, live: toMin(p.start) <= now });
+    });
+    const firstAhead = rows.find(r => !r.live);
+    if (firstAhead) firstAhead.next = true;
+    let h = '';
+    stops.forEach(({ p, done }, i) => {
+      const lab = `${p.start}から ${name(p)} ${p.memo}。${done ? '終わった' : 'やらずに時間が過ぎた'}。押すと編集`;
+      h += `<button class="row is-stop" type="button" data-plan="${p.id}" aria-label="${esc(lab)}">
+        <span class="tl-time"><span class="past">${p.start}</span></span>
+        <span class="tl-rail${i === 0 ? ' first' : ''}"><span class="tl-node done"><span class="subj" style="--size:24px" data-s="${p.s}" aria-hidden="true"></span><i class="ck" aria-hidden="true">${A.icon('check', 1)}</i></span></span>
+        <span class="tl-main"><span class="tl-one"><b>${name(p)}</b> · ${esc(p.memo)}</span></span>
+        <span class="tl-end">完了</span></button>`;
+    });
+    h += `<div class="row is-now" role="img" aria-label="いま ${sc.now}">
+        <span class="tl-time"><span class="now">${sc.now}</span></span>
+        <span class="tl-rail${stops.length ? '' : ' first'}${rows.length ? '' : ' last'}"><i class="tl-nowdot tl-node"></i></span>
+        <span class="tl-nowline"></span></div>`;
+    rows.forEach(({ p, live, next }, i) => {
+      const last = i === rows.length - 1;
+      const lab = `${p.start}から ${name(p)} ${p.memo}${live ? '。いまの予定' : next ? '。つぎの予定' : ''}。押すと編集`;
+      h += `<button class="row is-ahead${live ? ' is-live' : ''}" type="button" data-plan="${p.id}" aria-label="${esc(lab)}">
+        ${times(p)}
+        <span class="tl-rail${live ? '' : ' ahead'}${last ? ' last' : ''}">${live
+          ? `<span class="tl-node live"><span class="subj md" data-s="${p.s}" aria-hidden="true"></span></span>`
+          : `<i class="tl-stn tl-node" style="--c:${A.SUBJ[p.s].c}"></i>`}</span>
+        <span class="tl-main"><span class="tl-name"><b>${name(p)}</b>${live ? '<span class="tag now">NOW</span>' : ''}${next ? '<span class="tag next">つぎ</span>' : ''}</span><span class="tl-memo">${esc(p.memo)}</span></span>
+        ${live ? '<span></span>' : `<span class="subj lg" data-s="${p.s}" aria-hidden="true"></span>`}</button>`;
+    });
+    return `<div class="tl">${h}</div>`;
+  }
+  function plainRows(d) {
+    const list = on(d);
+    if (!list.length) return `<div class="empty"><b>${DOW[d]}曜日の時間割はまだありません</b><span>「追加」で日と始める時刻と科目を決めておくと、1タップで始められます。次の予定の時刻に知らせます</span></div>`;
+    return `<div class="rows">${list.map(p => `<button class="row" type="button" data-plan="${p.id}" aria-label="${esc(`${p.start}から ${name(p)} ${p.memo}。押すと編集`)}">
+        ${times(p)}<span class="subj" style="--size:38px" data-s="${p.s}" aria-hidden="true"></span>
+        <span class="tl-main" style="padding:0"><span class="tl-name"><b>${name(p)}</b></span><span class="tl-memo">${esc(p.memo)}</span></span></button>`).join('')}</div>`;
+  }
+  function paint() {
+    const box = $('#tt');
+    box.className = 'card ' + (day === TODAY ? 'tt' : 'tt-plain');
+    box.innerHTML = day === TODAY ? todayLine() : plainRows(day);
+    A.upgrade(box);
+  }
+  $('#tt').addEventListener('click', e => {
+    if (e.target.closest('[data-plan]')) A.toast({ title: 'この見本では開きません', sub: '予定の編集は、まだ作っていません', ms: 2000 });
+  });
+
+  /* ---------- 締切 ---------- */
+  function deadlines() {
+    $('#dl').innerHTML = DEADLINES.map((d, i) => `<button class="row" type="button" data-dl="${i}" aria-label="${esc(`${d.name}。${d.date}、あと${d.days}日。${d.todo ? `ToDo ${d.todo[0]}/${d.todo[1]}` : 'ToDoなし'}`)}">
+      <span data-stk="${d.stk}" data-scale="2"></span>
+      <span class="row-main"><span class="row-t">${esc(d.name)}</span><span class="row-s">${d.date} · ${d.todo ? `ToDo ${d.todo[0]}/${d.todo[1]}` : 'ToDoなし'}</span></span>
+      <span class="row-end"><span class="dl-days${d.days <= 21 ? ' is-soon' : ''}"><b class="mid">${d.days}</b><span class="unit">日</span></span>
+        ${d.todo ? `<span class="dl-todo" aria-hidden="true">${Array.from({ length: d.todo[1] }, (_, k) => `<i class="${k < d.todo[0] ? 'on' : ''}"></i>`).join('')}</span>` : ''}</span></button>`).join('');
+    A.upgrade($('#dl'));
+  }
+  let picked = -1;
+  $('#dl').addEventListener('click', e => {
+    const r = e.target.closest('[data-dl]'); if (!r) return;
+    picked = +r.dataset.dl;
+    const d = DEADLINES[picked];
+    $('#sheet-dl-h').textContent = d.name;
+    $('#sheet-dl-s').textContent = `${d.date} · あと${d.days}日`;
+    A.sheet.open('sheet-dl');
+  });
+  $('#dl-del').addEventListener('click', () => {
+    if (picked >= 0) { DEADLINES.splice(picked, 1); picked = -1; }
+    A.sheet.close('sheet-dl');
+    setTimeout(() => {
+      deadlines();
+      if (!DEADLINES.length) $('#dl').innerHTML = '<div class="empty" style="margin:8px 0"><b>締切はまだありません</b><span>模試や申込の日を入れておきましょう</span></div>';
+    }, A.reduced() ? 0 : 300);
+  });
+
+  /* ---------- 見本の時刻の切りかえ（横の説明から。#t1705 でも開ける） ---------- */
+  let liveBar = null;
+  function setScene(k) {
+    scene = k;
+    const sc = SCENES[k];
+    document.querySelectorAll('#scene > button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.scene === k)));
+    const os = document.querySelector('.app > .os > span'); if (os) os.textContent = sc.now;
+    document.body.dataset.time = sc.now;
+    const cur = document.querySelector('.chrome > .sbar');
+    if (cur) {
+      if (!liveBar) liveBar = cur.dataset.state === 'idle' ? null : cur;
+      const want = sc.bar ? A.renderStudyBar(sc.bar) : liveBar;
+      if (want && want !== cur) cur.replaceWith(want);
+    }
+    if (day === TODAY) paint();
+  }
+  $('#scene').addEventListener('change', () => { const b = $('#scene > [aria-pressed="true"]'); setScene(b.dataset.scene); history.replaceState(null, '', b.dataset.scene === 'b' ? '#t1705' : location.pathname); });
+
+  paint();
+  deadlines();
+  const start = () => { if (scene !== 'a') setScene(scene); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(start, 0)); else setTimeout(start, 0);
+})();
+</script>
+</body>
+</html>

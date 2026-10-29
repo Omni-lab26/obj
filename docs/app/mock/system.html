@@ -18,7 +18,7 @@
   .sys-top h1{margin:18px 0 10px;font:800 clamp(26px,4vw,40px)/1.2 var(--f-body);letter-spacing:-.02em;word-break:auto-phrase}
   .sys-top p{max-width:46em;color:var(--ink-2);font-size:15px;line-height:1.75}
   .sys-nav{display:flex;flex-wrap:wrap;gap:0 14px;margin-top:12px}
-  .sys-nav a{display:inline-flex;align-items:center;min-height:44px;font-size:13px;font-weight:600;color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:4px}
+  .sys-nav a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;font-size:13px;font-weight:600;color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:4px}
   .rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:22px 0 4px}
   .rule{display:flex;align-items:center;gap:14px;padding:14px;border-radius:16px;background:var(--paper-2);box-shadow:inset 0 0 0 1.5px var(--line-2)}
   .rule p{font-size:13px;line-height:1.6;color:var(--ink-2)}
@@ -199,7 +199,7 @@
 
     <figure class="spec"><div class="spec-stage stack-sm">
       <h3 class="sec-h"><span class="sec-t" style="--accent:var(--g3)">勉強した日</span><span class="sec-a">今年 <b>253</b>日</span></h3>
-      <h3 class="sec-h"><span class="sec-t" style="--accent:var(--run)">いま勉強中の友達</span><a class="sec-a link" href="#rows" style="margin-left:auto;font-size:13px;min-height:28px">もっと見る</a></h3>
+      <h3 class="sec-h"><span class="sec-t" style="--accent:var(--run)">いま勉強中の友達</span><a class="link" href="#rows">もっと見る</a></h3>
       <h3 class="sec-h"><span class="sec-t" style="--accent:var(--due)">締切</span><span class="sec-a">ToDoの進み具合</span></h3>
       <div class="row-flex"><span class="label sq">TODAY · 10.29</span><span class="label-j sq" style="--accent:var(--sky)">休み券 2枚</span></div>
     </div><figcaption><b>見出し（ドット）とラベル</b>カードの上の見出しは <code>.sec-h</code>：■＋DotGothic16 の 16px（元の大きさでにじまない）。右は補足 12。小さな札は <code>.label</code>（英数字）と <code>.label-j</code>（日本語）。</figcaption></figure>
@@ -245,7 +245,7 @@
       <button class="key key-sm" type="button"><i data-pi="plus"></i>追加</button>
       <button class="key key-sm" type="button"><i data-pi="sort"></i>並べ替え</button>
       <button class="key key-icon" type="button" aria-label="予定を編集"><i data-pi="edit"></i></button>
-      <button class="key key-round key-lime" type="button" aria-label="はじめる" style="min-height:64px"><i data-pi="play" data-scale="2.5"></i></button>
+      <button class="key key-round key-lime" type="button" aria-label="はじめる" style="--d:64px"><i data-pi="play" data-scale="3"></i></button>
     </div><figcaption><b>小さいボタン・アイコン・丸</b><code>.key-sm</code> は面 32、指の届く所は 44（見えないはみ出し）。<code>.key-icon</code> は 44 の四角。<code>.key-round</code> はタイマーの ▶ / ❚❚。</figcaption></figure>
 
     <figure class="spec"><div class="spec-stage keys">
@@ -316,12 +316,13 @@
     <figure class="spec"><div class="spec-stage">
       <section class="card" style="padding-block:6px">
         <div class="rows">
-          <a class="row" href="#rows"><span data-stk="flame" style="width:36px;display:grid;place-items:center"></span><span class="row-main"><span class="row-t">第4回 記述模試</span><span class="row-s">11月8日 · ToDo 1/3</span></span><span class="row-end"><span class="row-v" style="color:var(--due-ink)">10 <small style="font-size:12px">日</small></span></span><span class="chev" data-pi="right"></span></a>
+          <a class="row" href="#rows"><span data-stk="flag" style="width:36px;display:grid;place-items:center;transform:rotate(-6deg)"></span><span class="row-main"><span class="row-t">第4回 記述模試</span><span class="row-s">11月8日 · ToDo 1/3</span></span><span class="row-end"><span class="row-v" style="color:var(--due-ink)">10 <small style="font-size:12px">日</small></span></span><span class="chev" data-pi="right"></span></a>
           <a class="row" href="#rows"><span class="subj md" data-s="ja"></span><span class="row-main"><span class="row-t">国語 <span style="font-weight:500;color:var(--ink-3)">古文単語 61〜80</span></span><span class="row-s num">6:30 · 30分</span></span><span class="chev" data-pi="right"></span></a>
+          <a class="row" href="#rows"><span data-stk="cal" style="width:36px;display:grid;place-items:center;transform:rotate(4deg)"></span><span class="row-main"><span class="row-t">共通テスト</span><span class="row-s">1月16日 · ToDo 1/1</span></span><span class="row-end"><span class="row-v">79 <small style="font-size:12px">日</small></span></span><span class="chev" data-pi="right"></span></a>
           <div class="row row-sm"><span class="row-main"><span class="row-t" style="font-weight:500;font-size:14px">勉強 1分</span></span><span class="row-v num">+1 EXP</span></div>
         </div>
       </section>
-    </div><figcaption><b>締切・記録・ただの行</b>押せる行は <code>a.row</code> か <code>button.row</code>（右に ›）。押せない行は <code>div.row</code>。</figcaption></figure>
+    </div><figcaption><b>締切・記録・ただの行</b>締切のシールは少し傾ける（21日以内は旗、2番目はカレンダー、ほかはトロフィー）。押せる行は <code>a.row</code> か <code>button.row</code>（右に ›）。押せない行は <code>div.row</code>。</figcaption></figure>
   </div>
 </section>
 
@@ -454,9 +455,9 @@
 
     <figure class="spec"><div class="spec-stage stack-sm">
       <div class="row-flex" style="gap:18px;align-items:flex-end">
-        <span data-stk="trophy" data-scale="3"></span><span data-stk="flame" data-scale="3"></span><span data-stk="star" data-scale="3"></span><span data-stk="sun" data-scale="3"></span>
+        <span data-stk="trophy" data-scale="3"></span><span data-stk="flame" data-scale="3"></span><span data-stk="star" data-scale="3"></span><span data-stk="sun" data-scale="3"></span><span data-stk="flag" data-scale="3"></span><span data-stk="cal" data-scale="3"></span>
       </div>
-    </div><figcaption><b>シール <code>[data-stk]</code></b>trophy（時間）・flame（連続）・star（1日の目標）・sun（朝勉）。押せないので床ではなく薄い斜めの影。</figcaption></figure>
+    </div><figcaption><b>シール <code>[data-stk]</code></b>trophy（時間）・flame（連続）・star（1日の目標）・sun（朝勉）・flag と cal（締切）。押せないので床ではなく薄い斜めの影。</figcaption></figure>
 
     <figure class="spec"><div class="spec-stage stack-sm">
       <section class="card" style="display:flex;align-items:center;gap:14px">
@@ -506,7 +507,7 @@
   <p>アイコンは 12 マスのドット絵（1マス 2pt、線の太さが輪郭と同じ 2pt）。動きは MOTION.md のトークンだけで、transform と opacity しか動かしません。「視差効果を減らす」では全部止まります。</p>
   <div class="grid">
     <figure class="spec"><div class="spec-stage"><div class="icons" id="icons"></div></div>
-      <figcaption><b>アイコン <code>&lt;i data-pi="home"&gt;</code></b>色は文字の色。小さな ▶ ❚❚ ＋ ✓ は 1.5pt のマス。</figcaption></figure>
+      <figcaption><b>アイコン <code>&lt;i data-pi="home"&gt;</code></b>色は文字の色。どれも1マス 2pt。小さな ▶ ❚❚ ＋ ✓ › はマスを減らして小さく描く。</figcaption></figure>
     <figure class="spec"><div class="spec-stage">
       <table class="mt">
         <thead><tr><th>名前</th><th>長さ</th><th>使う所</th></tr></thead>
@@ -533,9 +534,6 @@
 </div>
 
 <template id="shell-src">
-<!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>画面の見本</title><link rel="stylesheet" href="shared/app.css"></head>
-<body data-tab="home" data-bar="live">
 <div class="stage"><div class="app"><main class="screen">
   <header class="hdr" data-hdr="home"></header>
   <div class="stack">
@@ -556,8 +554,6 @@
     </div></section>
   </div>
 </main></div></div>
-<script src="shared/app.js"></script>
-</body></html>
 </template>
 
 <script src="shared/app.js"></script>
@@ -614,7 +610,8 @@
 
   /* 画面の見本（同じ部品で組んだ1枚） */
   const fr = document.getElementById('shell-demo');
-  fr.srcdoc = document.getElementById('shell-src').innerHTML.trim();
+  fr.srcdoc = '<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>画面の見本</title><link rel="stylesheet" href="shared/app.css"></head>' +
+    '<body data-tab="home" data-bar="live">' + document.getElementById('shell-src').innerHTML.trim() + '<script src="shared/app.js"><\/script></body></html>';
 })();
 </script>
 </body>

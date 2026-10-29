@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly ホーム（はじめて）</title>
+<meta name="description" content="新しいスタンダードのホーム（はじめての人・記録なし・使い方の案内）">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="shared/app.css">
+<style>
+/* ===== ホームの画面だけの部品（shared/app.css のトークンと部品を使う） ===== */
+
+/* 画面そのものに紙を敷く（右にずらしたとき、下からメニューが見えるように） */
+.app > .screen{z-index:1;background:var(--dots),var(--paper);touch-action:pan-y pinch-zoom}
+@media (max-width:430px){ .app > .screen{min-height:100vh;min-height:100dvh} }
+body.is-dragging{user-select:none;-webkit-user-select:none}
+
+/* ---------- 草 ---------- */
+.blk-grass .grass-c{touch-action:none;cursor:pointer}
+
+/* ---------- 連続（炎・数・7日） ---------- */
+.streak{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:12px 16px}
+.streak .flame{flex:none}
+.streak-n{min-width:0;display:flex;flex-direction:column;gap:4px}
+.streak-n p{white-space:nowrap}
+.streak-n .unit{margin-left:3px}
+.streak-s{font-size:var(--fs-sub);line-height:1.2;color:var(--ink-3)}
+.streak .wk{margin-left:auto;gap:4px}
+.streak .wk-d{min-width:20px;gap:5px}
+.streak .wk-d i{width:20px;height:20px}
+
+/* ---------- いま勉強中の友達 ---------- */
+.fr{padding:14px 16px 4px}
+.fr > .sec-h{flex-wrap:wrap;row-gap:6px;margin-bottom:2px}
+.fr-tools{margin-left:auto;display:flex;align-items:center;gap:12px}
+.fr-tools .link{margin:-8px 0;font-size:13px}
+.chip.sort > .face{gap:5px;padding:0 9px 0 11px;font-size:12px;color:var(--ink-2)}
+.chip.sort .pi{color:var(--ink-3)}
+.fr-row{gap:10px}
+.fr-row .row-end{min-width:42px}
+.spark{flex:none;display:block;overflow:visible}
+.grip{flex:none;display:grid;place-items:center;width:22px;height:36px;color:var(--ink-3)}
+.fr-empty{padding:12px 0 14px;font-size:13px;color:var(--ink-3)}
+
+/* ---------- 今日の勉強（主役の1枚） ---------- */
+.today{margin-right:6px}
+.today > .sec-h{flex-wrap:wrap;row-gap:6px}
+.today > .sec-h .tag{margin-left:auto}
+.today-d{margin-top:-6px;font-size:var(--fs-sub);color:var(--ink-3);font-variant-numeric:tabular-nums}
+.today-num{display:flex;align-items:flex-end;margin-top:10px}
+.today-num .unit{margin:0 7px 2px 3px}
+.today-diff{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding-bottom:1px}
+.today-diff small{font-size:var(--fs-tiny);line-height:1.2;color:var(--ink-3)}
+.today .tape{margin-top:18px}
+.today .tape-bar{touch-action:none;cursor:pointer}
+/* 開くたびに 0 から転がる数字（transform だけ。行きすぎない） */
+.roll{display:inline-flex}
+.rd{display:inline-block;height:1em;overflow:hidden}
+.rc{display:block;transform:translateY(calc(var(--d,0) * -10%));transition:transform var(--t-present) var(--ios)}
+.rc > span{display:block;height:1em;line-height:1}
+
+/* ---------- バッジ ---------- */
+.badge:not(.is-locked) .stk svg{transform:rotate(-6deg)}
+.badges:focus-visible{outline-offset:-3px;border-radius:12px}
+
+/* ---------- 押して読む札（草の日・テープの科目）：インクの小さな札が fade で出る ---------- */
+.tip{position:absolute;z-index:6;left:0;top:0;display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:7px;
+  background:var(--ink);color:var(--on-ink);font:700 11px/1 var(--f-body);font-variant-numeric:tabular-nums;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity var(--t-fade-out) linear}
+.tip.is-on{opacity:1;transition-duration:var(--t-fade)}
+.tip i{flex:none;width:7px;height:7px;background:var(--c);box-shadow:0 0 0 1.5px var(--on-ink)}
+.tip span{font-weight:500;color:rgba(251,248,241,.72)}
+.tape .tape-seg{transition:opacity var(--t-micro) var(--ios)}
+.tape.is-hot .tape-seg{opacity:.4}
+.tape.is-hot .tape-seg.is-hot{opacity:1}
+
+/* ---------- シートの中（並び順・もっと見る・記録しますか？） ---------- */
+.sheet-h .sec-a{margin-left:0}
+.sheet-note{color:var(--ink-2);font-size:var(--fs-body);line-height:1.65}
+.opt-list{padding:4px 14px}
+.opt{gap:12px;min-height:64px}
+.opt .row-s{white-space:normal;overflow:visible}
+.opt-box{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--card);box-shadow:var(--ring-thin);color:var(--ink)}
+.opt-box .pi{opacity:0;transition:opacity var(--t-micro) var(--ios)}
+.opt[aria-checked="true"] .opt-box{background:var(--lime);box-shadow:var(--ring)}
+.opt[aria-checked="true"] .opt-box .pi{opacity:1}
+.all-list{padding:2px 14px}
+.all-list .av{--size:38px}
+.all-list .row-t{font-size:14.5px}
+
+/* ---------- サイドメニュー（ホームを右にスワイプ） ---------- */
+.side{position:fixed;z-index:0;top:0;bottom:0;left:0;width:78%;display:flex;flex-direction:column;gap:22px;
+  padding:calc(var(--safe-top) + 14px) 18px calc(var(--safe-bottom) + 18px) 20px;background:var(--dots),var(--paper);
+  opacity:0;transform:translateX(-25%);visibility:hidden;outline:none}
+.side-head{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.side-head .logo{font-size:26px;min-height:36px}
+.side-head .logo svg{width:30px;height:30px}
+.side-who{font-size:12.5px;color:var(--ink-3)}
+.side-list{padding:2px 14px}
+.mrow{gap:14px;min-height:54px}
+.mrow .row-t{font-size:16px}
+.mi{flex:none;display:grid;place-items:center;width:26px;height:26px}
+.side-sub{flex:none;font-size:var(--fs-sub);color:var(--ink-3)}
+.side-foot{margin-top:auto}
+/* 右に残るホーム：インクの輪郭と少しの暗さ。押すと閉じる */
+.peek{position:fixed;z-index:2;inset:0;width:100%;margin:0;padding:0;border:0;border-radius:28px;background:rgba(23,18,31,.12);
+  box-shadow:0 0 0 2px var(--ink);opacity:0;visibility:hidden;cursor:pointer;touch-action:none}
+.peek:focus-visible{outline-offset:-6px;border-radius:28px}
+.app.menu-live > .screen{clip-path:inset(var(--clip-t,0px) 0 var(--clip-b,0px) 0 round 28px)}
+.app.menu-live .side,.app.menu-live .peek{visibility:visible}
+.app.is-menu > .screen{transform:translateX(78%)}
+.app.is-menu .peek{transform:translateX(78%);opacity:1}
+.app.is-menu .side{transform:none;opacity:1}
+.app.is-menu > .chrome{transform:translateY(24px);opacity:0}
+.app.menu-anim > .screen,.app.menu-anim .peek,.app.menu-anim .side,.app.menu-anim > .chrome{transition:transform var(--t-present) var(--ios),opacity var(--t-present) var(--ios)}
+.app.menu-anim.is-closing > .screen,.app.menu-anim.is-closing .peek,.app.menu-anim.is-closing .side,.app.menu-anim.is-closing > .chrome{transition-duration:var(--t-dismiss)}
+/* キーボードの人のための「メニューを開く」（フォーカスしたときだけ見える。スワイプの代わり） */
+.menu-kb{position:absolute;z-index:31;left:12px;top:calc(var(--safe-top) + 6px);opacity:0;pointer-events:none}
+.menu-kb:focus-visible{opacity:1;pointer-events:auto}
+
+/* ---------- はじめての人：使い方の案内（止まった絵が fade で出る） ---------- */
+.tour{position:fixed;z-index:58;inset:0;animation:fade-in var(--t-fade) linear both}
+.tour.is-out{animation:fade-out var(--t-fade-out) linear both}
+.tour-dim{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;background:none;cursor:pointer}
+.tour-hole{position:absolute;border-radius:14px;pointer-events:none;box-shadow:0 0 0 2px var(--card),0 0 0 200vmax rgba(23,18,31,.58)}
+.tour-bub{position:absolute;display:flex;flex-direction:column;gap:6px;padding:16px 16px 14px;border-radius:18px;background:var(--card);
+  box-shadow:var(--ring),var(--lift);outline:none;animation:fade-in var(--t-fade) linear both}
+.tour-bub h2{font:800 16px/1.35 var(--f-body)}
+.tour-bub p{font-size:14px;line-height:1.65;color:var(--ink-2)}
+.tour-foot{display:flex;align-items:center;gap:12px;margin-top:6px}
+.tour-dots{flex:1;display:flex;gap:5px}
+.tour-dots i{width:7px;height:7px;background:var(--line-2)}
+.tour-dots i.on{background:var(--ink)}
+.tour-skip{color:var(--ink-3);font-weight:600;font-size:14px}
+.tour-tail{position:absolute;width:20px;height:11px}
+.tour-tail.up{top:-10px}
+.tour-tail.down{bottom:-10px}
+.tour-pix{position:absolute;right:18px;top:-46px}
+
+/* ---------- 横の説明（広い画面）の中のボタン ---------- */
+.note .keys{margin-top:16px}
+</style>
+</head>
+<body data-page="new" data-tab="home" data-bar="idle" data-bar-subj="none" data-bar-title="今日の時間割" data-bar-sub="このあとの予定はありません">
+<div class="stage">
+  <div class="app">
+    <nav class="side" aria-label="メニュー" tabindex="-1">
+      <div class="side-head">
+        <span class="logo" role="img" aria-label="Inchly"><span class="logo-mark"></span><span class="logo-word" aria-hidden="true">inchly</span></span>
+        <p class="side-who">はる · @haru_study</p>
+      </div>
+      <div class="card side-list"><div class="rows">
+        <a class="row mrow" href="#" data-soon aria-label="設定"><span class="mi"><i data-pi="gear"></i></span><span class="row-main"><span class="row-t">設定</span></span><i class="chev" data-pi="right"></i></a>
+        <a class="row mrow" href="#" data-soon aria-label="科目と色"><span class="mi"><span class="pi" data-rows="book" aria-hidden="true"></span></span><span class="row-main"><span class="row-t">科目と色</span></span><i class="chev" data-pi="right"></i></a>
+        <a class="row mrow" href="#" data-soon aria-label="ブックマーク"><span class="mi"><span class="pi" data-rows="bookmark" aria-hidden="true"></span></span><span class="row-main"><span class="row-t">ブックマーク</span></span><i class="chev" data-pi="right"></i></a>
+        <a class="row mrow" href="#" data-soon aria-label="テーマ（スタンダード）"><span class="mi"><span class="pi" data-rows="sun" aria-hidden="true"></span></span><span class="row-main"><span class="row-t">テーマ</span></span><span class="side-sub">スタンダード</span><i class="chev" data-pi="right"></i></a>
+      </div></div>
+      <div class="side-foot"><button class="key" type="button" data-soon aria-label="時間割に予定を追加"><i data-pi="plus"></i>時間割に追加</button></div>
+    </nav>
+    <main class="screen">
+      <button class="key key-sm menu-kb" type="button">メニューを開く</button>
+      <header class="hdr">
+        <a class="logo" href="home-new.html" aria-label="Inchly ホーム"><span class="logo-mark"></span><span class="logo-word" aria-hidden="true">inchly</span></a>
+        <button class="key key-sm lv" type="button" data-open-sheet="sheet-level" aria-label="レベル 1。押すとくわしく"><span class="face"><span class="lv-n">Lv.1</span><span class="lv-bar"><i style="--p:0"></i></span></span></button>
+        <div class="kgroup"><button type="button" data-soon aria-label="さがす"><i data-pi="search"></i></button><button type="button" data-soon aria-label="お知らせ（未読あり）"><i data-pi="bell"></i><span class="udot"></span></button><button type="button" data-soon aria-label="メッセージ"><i data-pi="chat"></i></button></div>
+      </header>
+      <div class="stack">
+      <section class="card blk-grass" aria-labelledby="h-grass">
+        <div class="sec-h"><h2 class="sec-t" id="h-grass" style="--accent:var(--g3)">勉強した日</h2><span class="sec-a">今年 <b>0</b>日</span></div>
+        <div class="grass" data-empty></div>
+      </section>
+
+      <section class="card streak" aria-label="連続 0日。休み券 1">
+        <span class="flame" data-days="0"></span>
+        <div class="streak-n" aria-hidden="true">
+          <p><span class="mid">0</span><span class="unit">日連続</span></p>
+          <p class="streak-s">休み券 1</p>
+        </div>
+        <div class="wk" role="img" aria-label="今週：まだ勉強した日はありません。今日は木曜日"><span class="wk-d"><i></i>月</span><span class="wk-d"><i></i>火</span><span class="wk-d"><i></i>水</span><span class="wk-d is-today is-wait"><i></i>木</span><span class="wk-d is-future"><i></i>金</span><span class="wk-d is-future"><i></i>土</span><span class="wk-d is-future"><i></i>日</span></div>
+      </section>
+
+      <section class="card fr" aria-labelledby="h-fr">
+        <div class="sec-h"><h2 class="sec-t" id="h-fr" style="--accent:var(--run)">いま勉強中の友達</h2>
+          <div class="fr-tools">
+            <button class="chip sort" type="button" id="fr-sort" data-open-sheet="sheet-sort" aria-label="並び順（勉強時間順）"><span class="sort-t">勉強時間順</span><i data-pi="down" data-scale="1.5"></i></button>
+            <a class="link" href="#" data-open-sheet="sheet-friends">もっと見る</a>
+          </div>
+        </div>
+        <div class="rows" id="fr-rows"></div>
+      </section>
+
+      <section class="card hero today" aria-labelledby="h-today">
+        <div class="sec-h"><h2 class="sec-t" id="h-today" style="--accent:var(--coral)">今日の勉強</h2></div>
+        <p class="today-d">10月29日（木）</p>
+        <div class="today-num">
+          <span class="sr" id="today-sr">今日 0時間00分。昨日と同じ</span>
+          <span class="big roll" data-k="h" data-v="0" aria-hidden="true"></span><span class="unit" aria-hidden="true">時間</span>
+          <span class="big roll" data-k="m" data-v="00" aria-hidden="true"></span><span class="unit" aria-hidden="true">分</span>
+          <span class="today-diff" aria-hidden="true"><span class="delta up">0:00</span><small>昨日より</small></span>
+        </div>
+        <div class="tape" data-goal="180" data-parts="" data-reveal></div>
+      </section>
+
+      <section class="card" aria-labelledby="h-badges">
+        <div class="sec-h"><h2 class="sec-t" id="h-badges" style="--accent:var(--sun)">バッジ</h2><span class="sec-a"><b>0</b> / 11</span></div>
+        <div class="badges" role="list" tabindex="0" aria-label="バッジ（横にスクロールできます）">
+          <div class="badge is-locked" role="listitem" aria-label="100時間 あと100時間"><span data-stk="trophy"></span><b>100時間</b><small>あと100時間</small></div>
+          <div class="badge is-locked" role="listitem" aria-label="300時間 あと300時間"><span data-stk="trophy"></span><b>300時間</b><small>あと300時間</small></div>
+          <div class="badge is-locked" role="listitem" aria-label="500時間 あと500時間"><span data-stk="trophy"></span><b>500時間</b><small>あと500時間</small></div>
+          <div class="badge is-locked" role="listitem" aria-label="700時間 あと700時間"><span data-stk="trophy"></span><b>700時間</b><small>あと700時間</small></div>
+          <div class="badge is-locked" role="listitem" aria-label="1000時間 あと1000時間"><span data-stk="trophy"></span><b>1000時間</b><small>あと1000時間</small></div>
+          <div class="badge is-locked" role="listitem" aria-label="7日連続 あと7日"><span data-stk="flame"></span><b>7日連続</b><small>あと7日</small></div>
+          <div class="badge is-locked" role="listitem" aria-label="21日連続 あと21日"><span data-stk="flame"></span><b>21日連続</b><small>あと21日</small></div>
+          <div class="badge is-locked" role="listitem" aria-label="30日連続 あと30日"><span data-stk="flame"></span><b>30日連続</b><small>あと30日</small></div>
+          <div class="badge is-locked" role="listitem" aria-label="100日連続 あと100日"><span data-stk="flame"></span><b>100日連続</b><small>あと100日</small></div>
+          <div class="badge is-locked" role="listitem" aria-label="1日5時間 あと5時間"><span data-stk="star"></span><b>1日5時間</b><small>あと5時間</small></div>
+          <div class="badge is-locked" role="listitem" aria-label="朝勉10回 あと10回"><span data-stk="sun"></span><b>朝勉10回</b><small>あと10回</small></div>
+        </div>
+      </section>
+      </div>
+    </main>
+    <button class="peek" type="button" aria-label="メニューを閉じる"></button>
+
+    <div class="sheet" id="sheet-sort" hidden>
+      <div class="sheet-scrim" data-close-sheet></div>
+      <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-sort-h">
+        <span class="sheet-grab" aria-hidden="true"></span>
+        <div class="sheet-h"><h2 id="sheet-sort-h">並び順</h2><button class="tbtn" type="button" data-close-sheet>やめる</button></div>
+        <div class="card opt-list"><div class="rows" role="radiogroup" aria-labelledby="sheet-sort-h">
+          <button class="row opt" type="button" role="radio" aria-checked="true" data-v="time"><span class="opt-box"><i data-pi="check"></i></span><span class="row-main"><span class="row-t">勉強時間順</span><span class="row-s">今日いちばん長く勉強している人から</span></span></button>
+          <button class="row opt" type="button" role="radio" aria-checked="false" data-v="name"><span class="opt-box"><i data-pi="check"></i></span><span class="row-main"><span class="row-t">名前順</span><span class="row-s">あいうえお・ABC順</span></span></button>
+          <button class="row opt" type="button" role="radio" aria-checked="false" data-v="mine"><span class="opt-box"><i data-pi="check"></i></span><span class="row-main"><span class="row-t">自分で並べる</span><span class="row-s">右の ≡ をつかむか、行を長押しして上下にずらす</span></span></button>
+        </div></div>
+        <div class="sheet-acts"><button class="key key-ink key-block key-lg" type="button" id="sort-ok">この順にする</button></div>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet-friends" hidden>
+      <div class="sheet-scrim" data-close-sheet></div>
+      <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-friends-h">
+        <span class="sheet-grab" aria-hidden="true"></span>
+        <div class="sheet-h"><h2 id="sheet-friends-h">いま勉強中の友達</h2><span class="sec-a"><b id="fr-all-n">5</b>人</span></div>
+        <div class="card all-list"><div class="rows" id="fr-all"></div></div>
+        <div class="sheet-acts"><button class="key key-block" type="button" data-close-sheet>閉じる</button></div>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet-level" hidden>
+      <div class="sheet-scrim" data-close-sheet></div>
+      <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-level-h">
+        <span class="sheet-grab" aria-hidden="true"></span>
+        <div class="sheet-h"><h2 id="sheet-level-h">レベル</h2></div>
+        <div style="display:flex;align-items:baseline;gap:10px"><span class="big">Lv.1</span><span class="muted">今日 <b class="num" style="color:var(--run-ink)">+0 EXP</b></span></div>
+        <div class="lv-bar" style="width:100%;height:10px;margin:14px 0 6px"><i style="--p:0"></i></div>
+        <p class="muted" style="font-size:12px">Lv.2 まで あと <b class="num" style="color:var(--ink)">72 EXP</b></p>
+        <div class="hr-soft"></div>
+        <p class="sec-h" style="margin-bottom:6px"><span class="sec-t">EXP のもらい方</span></p>
+        <div class="rows">
+          <div class="row row-sm"><span class="row-main"><span class="row-t" style="font-weight:500;font-size:14px">勉強 1分</span></span><span class="row-v num">+1 EXP</span></div>
+          <div class="row row-sm"><span class="row-main"><span class="row-t" style="font-weight:500;font-size:14px;white-space:normal">1日の目標（3時間）を達成した日</span></span><span class="row-v num">+30 EXP</span></div>
+          <div class="row row-sm"><span class="row-main"><span class="row-t" style="font-weight:500;font-size:14px;white-space:normal">ToDoを1つ完了（1日5つまで）</span></span><span class="row-v num">+10 EXP</span></div>
+        </div>
+        <div class="sheet-acts"><button class="key key-block" type="button" data-close-sheet>閉じる</button></div>
+      </div>
+    </div>
+  </div>
+  <aside class="note">
+    <p class="label-j sq">この画面で見てほしい点</p>
+    <h1>ホーム（はじめての人）</h1>
+    <p>登録した直後のホーム。記録がまだないので、草・連続・今日・バッジが「まだ」の形になります。名前は見本と同じ「はる」にしました。</p>
+    <ul><li>まず「ようこそ」のトーストと、使い方の案内（アプリと同じ文）。暗い所か「次へ」で進みます。</li><li>草は空きマスと今日の枠だけ。炎のボッは灰色で眠っていて、揺れません。</li><li>今日は 0時間00分。締切の札はなく、テープは「目標まで 3:00」だけ。</li><li>バッジは 0 / 11。今のアプリは「1日5時間」「朝勉10回」が最初から達成になる不具合があるので、ここでは正しく「まだ」にしました。</li><li>時間割がないので、バーは「今日の時間割 / このあとの予定はありません」。勉強を開始は自習で始まります。</li></ul>
+    <div class="keys"><button class="key key-sm" type="button" data-tour>使い方をもう一度見る</button></div>
+    <p class="note-links"><a class="link" href="home.html">ホーム</a><a class="link" href="home-live.html">勉強中</a><a class="link" href="menu.html">メニュー</a><a class="link" href="img/home.webp">今のアプリ（写真）</a><a class="link" href="index.html">一覧へ</a><a class="link" href="system.html">部品</a></p>
+  </aside>
+</div>
+<script src="shared/app.js"></script>
+<script>
+(function(){var R={"book":[".kkkk..kkkk.","k....kk....k","k.kk.kk.kk.k","k....kk....k","k.kk.kk.kk.k","k....kk....k","k.kk.kk.kk.k","k....kk....k","kkkkkkkkkkkk",".....kk....."],"bookmark":["kkkkkkkkkk","k........k","k........k","k........k","k........k","k........k","k........k","k........k","k...kk...k","k..k..k..k","k.k....k.k","kk......kk"],"sun":[".....kk.....",".k...kk...k.","..k......k..","....kkkk....","...k....k...","kk.k....k.kk","kk.k....k.kk","...k....k...","....kkkk....","..k......k..",".k...kk...k.",".....kk....."]};document.querySelectorAll('[data-rows]').forEach(function(el){el.innerHTML=App._rowsSVG(R[el.dataset.rows],{k:'currentColor'},2);});document.querySelectorAll('.logo-mark').forEach(function(el){el.outerHTML=App.LOGO;});})();
+/* ホームの画面だけの動き（App.* を使う）。body[data-page] = home | live | new | menu */
+(() => {
+  'use strict';
+  const A = window.App;
+  const doc = document, body = doc.body;
+  const PAGE = body.dataset.page;
+  const NEW = PAGE === 'new';
+  const WIDE = window.matchMedia('(min-width: 431px)');
+  const reduced = () => A.reduced();
+  const $ = (s, r = doc) => r.querySelector(s);
+  const $$ = (s, r = doc) => [...r.querySelectorAll(s)];
+  const pad = n => String(n).padStart(2, '0');
+  const hm = m => `${Math.floor(m / 60)}:${pad(Math.round(m % 60))}`;
+  const jhm = m => `${Math.floor(m / 60)}時間${pad(m % 60)}分`;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const later = (fn, ms) => setTimeout(fn, reduced() ? 0 : ms);
+
+  /* =========================================================
+   * 1. いま勉強中の友達（見本の5人。今日の時間・昨日比・7日はアプリの計算と同じ値）
+   * ========================================================= */
+  const FRIENDS = [
+    { n: 'mio', s: '英語', g: '東大 文一', today: 251, diff: 64, week: [212, 160, 103, 95, 117, 187, 251] },
+    { n: 'そら', s: '数学', g: '東大 理一', today: 120, diff: 17, week: [184, 70, 148, 226, 109, 103, 120] },
+    { n: 'kaito', s: '物理', g: '科学大', today: 192, diff: -8, week: [203, 67, 142, 141, 216, 200, 192] },
+    { n: 'ゆなっぴ', s: '化学', g: '東大 理二', today: 156, diff: 70, week: [204, 220, 148, 241, 81, 86, 156] },
+    { n: 'れん', s: '世界史', g: '一橋', today: 92, diff: -18, week: [149, 164, 123, 198, 111, 110, 92] }
+  ];
+  const SORTS = { time: '勉強時間順', name: '名前順', mine: '自分で並べる' };
+  let sort = 'time';
+  let order = sorted('time');
+  function sorted(v) {
+    if (v === 'mine') return order.slice();
+    const l = FRIENDS.slice();
+    if (v === 'name') l.sort((a, b) => a.n.localeCompare(b.n, 'ja'));
+    else l.sort((a, b) => b.today - a.today);
+    return l;
+  }
+  /* 7日の小さな線：上がった人はインク、下がった人は赤（グラフに緑は使わない） */
+  function spark(week, up, W = 52, H = 26) {
+    const lo = Math.min(...week), hi = Math.max(...week), span = Math.max(1, hi - lo);
+    const p = week.map((m, i) => [i / (week.length - 1) * (W - 6) + 3, H - 4 - (m - lo) / span * (H - 8)]);
+    const d = p.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('');
+    const [ex, ey] = p[p.length - 1];
+    return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="color:${up ? 'var(--ink)' : 'var(--down)'}" aria-hidden="true" focusable="false">` +
+      `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` +
+      `<rect x="${(ex - 3).toFixed(1)}" y="${(ey - 3).toFixed(1)}" width="6" height="6" fill="currentColor"/></svg>`;
+  }
+  const GRIP = A._rowsSVG(['kkkkkkkk', '........', '........', 'kkkkkkkk', '........', '........', 'kkkkkkkk'], { k: 'currentColor' }, 2);
+  function friendRow(f, all) {
+    const up = f.diff >= 0;
+    const label = `${f.n} のプロフィール（${f.s}を勉強中。今日 ${jhm(f.today)}。昨日より ${jhm(Math.abs(f.diff))}${up ? '多い' : '少ない'}）`;
+    return `<a class="row fr-row" href="#" data-soon aria-label="${label}">` +
+      `<span class="av" data-n="${f.n}"></span>` +
+      `<span class="row-main"><span class="row-t">${f.n}</span><span class="row-s"><i class="dot sm run"></i>${f.s}を勉強中${all ? ` · ${f.g} 志望` : ''}</span></span>` +
+      `<span class="row-end"><span class="row-v">${hm(f.today)}</span><span class="delta ${up ? 'up' : 'down'}">${hm(Math.abs(f.diff))}</span></span>` +
+      spark(f.week, up) +
+      (all ? '' : `<span class="grip" aria-hidden="true">${GRIP}</span>`) +
+      `</a>`;
+  }
+  function renderFriends() {
+    const box = $('#fr-rows');
+    if (!box) return;
+    box.innerHTML = order.length ? order.slice(0, 4).map(f => friendRow(f)).join('') : '<p class="fr-empty">いま勉強中の友達はいません</p>';
+    A.upgrade(box);
+    const t = $('#fr-sort .sort-t');
+    if (t) { t.textContent = SORTS[sort]; $('#fr-sort').setAttribute('aria-label', `並び順（${SORTS[sort]}）`); }
+  }
+  renderFriends();
+
+  /* 並び順のシート */
+  doc.addEventListener('click', e => {
+    if (e.target.closest('#fr-sort')) $$('#sheet-sort .opt').forEach(o => o.setAttribute('aria-checked', String(o.dataset.v === sort)));
+    const opt = e.target.closest('#sheet-sort .opt');
+    if (opt) $$('#sheet-sort .opt').forEach(o => o.setAttribute('aria-checked', String(o === opt)));
+    if (e.target.closest('#sort-ok')) {
+      const v = ($('#sheet-sort .opt[aria-checked="true"]') || {}).dataset.v || 'time';
+      order = sorted(v); sort = v; renderFriends();
+      A.sheet.close('sheet-sort');
+    }
+    if (e.target.closest('[data-open-sheet="sheet-friends"]')) {
+      const box = $('#fr-all');
+      if (box) { box.innerHTML = order.map(f => friendRow(f, true)).join(''); A.upgrade(box); }
+      const n = $('#fr-all-n'); if (n) n.textContent = order.length;
+    }
+  });
+  /* シートの中の行を押してプロフィールを開こうとしたら、先にシートを閉じる */
+  doc.addEventListener('click', e => { if (e.target.closest('#sheet-friends .row')) A.sheet.close('sheet-friends'); }, true);
+
+  /* =========================================================
+   * 2. 今日の合計：開くたびに 0 から転がる（transform だけ）
+   * ========================================================= */
+  function rollTo(el, v) {
+    v = String(v);
+    if (el.querySelectorAll(':scope > .rd').length !== v.length) {
+      el.innerHTML = v.split('').map(() => `<span class="rd"><span class="rc">${'0123456789'.split('').map(n => `<span>${n}</span>`).join('')}</span></span>`).join('');
+      el.offsetWidth; // 0 の位置をいったん描く
+    }
+    [...el.children].forEach((rd, i) => rd.firstElementChild.style.setProperty('--d', v[i]));
+  }
+  $$('.roll').forEach(el => rollTo(el, el.dataset.v.replace(/\d/g, '0')));
+
+  /* =========================================================
+   * 3. 押して読む札：草（その日）とテープ（その科目）
+   * ========================================================= */
+  function tipIn(host) {
+    let t = host.querySelector(':scope > .tip');
+    if (!t) { t = doc.createElement('div'); t.className = 'tip'; t.setAttribute('aria-hidden', 'true'); host.appendChild(t); }
+    return t;
+  }
+  function placeTip(t, host, x, y) {
+    const hr = host.getBoundingClientRect();
+    const w = t.offsetWidth, h = t.offsetHeight;
+    t.style.left = clamp(x - hr.left - w / 2, 6, hr.width - w - 6) + 'px';
+    t.style.top = (y - hr.top - h - 7) + 'px';
+  }
+  function pressRead(el, onAt, onEnd, holdMs) {
+    let down = false, hide = 0;
+    el.addEventListener('pointerdown', e => { if (e.button) return; down = true; clearTimeout(hide); try { el.setPointerCapture(e.pointerId); } catch (_) { /* 古いブラウザ */ } onAt(e); });
+    el.addEventListener('pointermove', e => { if (down) onAt(e); });
+    const up = () => { if (!down) return; down = false; hide = setTimeout(onEnd, holdMs); };
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+  }
+  /* 草：今日は 10月29日（木）。最後の列の月曜は 10月26日 */
+  const END = new Date(2026, 9, 26);
+  const TODAY_MIN = NEW ? 0 : 165;
+  function minutesOf(i, l) {
+    if (i === 17 * 7 + 3) return TODAY_MIN;          // 今日
+    if (!NEW && i === 17 * 7 + 2) return 88;          // 昨日：物理 55分 + 数学 33分
+    if (!+l) return 0;
+    const r = ((i + 1) * 2654435761 >>> 0) % 1000 / 1000; // 見本の日の長さ（段に合わせた、毎回同じ値）
+    return Math.round([0, 15 + r * 40, 60 + r * 55, 120 + r * 65, 190 + r * 100][+l]);
+  }
+  function wireGrass(g) {
+    const card = g.closest('.card'), grid = $('.grass-c', g);
+    if (!card || !grid) return;
+    const cells = $$('.gc', grid);
+    if (!NEW && cells[17 * 7 + 2]) cells[17 * 7 + 2].dataset.l = '2';
+    const tip = tipIn(card);
+    pressRead(grid, e => {
+      const r = grid.getBoundingClientRect();
+      const col = clamp(Math.floor((e.clientX - r.left) / (r.width / 18)), 0, 17);
+      const row = clamp(Math.floor((e.clientY - r.top) / (r.height / 7)), 0, 6);
+      const i = col * 7 + row, cell = cells[i];
+      if (!cell || cell.classList.contains('future')) return;
+      const d = new Date(END); d.setDate(END.getDate() - (17 - col) * 7 + row);
+      const m = minutesOf(i, cell.dataset.l);
+      tip.innerHTML = `${d.getMonth() + 1}月${d.getDate()}日 <span>· ${m ? jhm(m) : '記録なし'}</span>`;
+      const cr = cell.getBoundingClientRect();
+      placeTip(tip, card, cr.left + cr.width / 2, cr.top);
+      tip.classList.add('is-on');
+    }, () => tip.classList.remove('is-on'), 1400);
+  }
+  function wireTape(tp) {
+    const card = tp.closest('.card'), bar = $('.tape-bar', tp);
+    if (!card || !bar) return;
+    const parts = (tp.dataset.parts || '').split(',').filter(Boolean).map(p => { const [id, min] = p.split(':'); return { s: A.SUBJ[id], min: +min }; }).filter(p => p.min > 0);
+    const tip = tipIn(card);
+    pressRead(bar, e => {
+      const segs = $$('.tape-seg', tp);
+      let hit = -1;
+      segs.forEach((s, i) => { const r = s.getBoundingClientRect(); if (e.clientX >= r.left - 2 && e.clientX <= r.right + 4) hit = i; });
+      segs.forEach((s, i) => s.classList.toggle('is-hot', i === hit));
+      tp.classList.toggle('is-hot', hit >= 0);
+      if (hit < 0) { tip.classList.remove('is-on'); return; }
+      const p = parts[hit], r = segs[hit].getBoundingClientRect();
+      tip.innerHTML = `<i style="--c:${p.s.c}"></i>${p.s.name} <span>${hm(p.min)}</span>`;
+      placeTip(tip, card, r.left + r.width / 2, bar.getBoundingClientRect().top);
+      tip.classList.add('is-on');
+    }, () => { tip.classList.remove('is-on'); tp.classList.remove('is-hot'); $$('.tape-seg', tp).forEach(s => s.classList.remove('is-hot')); }, 1200);
+  }
+
+  /* =========================================================
+   * 4. サイドメニュー：ホームを右にスワイプ（指に 1:1 でついてくる）
+   * ========================================================= */
+  const app = $('.app'), scr = $('.app > .screen'), side = $('.side'), peek = $('.peek');
+  const chromeEl = () => $('.app > .chrome');
+  const appW = () => app.getBoundingClientRect().width;
+  let menuOpen = false, settle = 0;
+  function clipVars() {
+    if (WIDE.matches) { scr.style.setProperty('--clip-t', '0px'); scr.style.setProperty('--clip-b', '0px'); return; }
+    const y = window.scrollY;
+    scr.style.setProperty('--clip-t', y + 'px');
+    scr.style.setProperty('--clip-b', Math.max(0, scr.offsetHeight - y - window.innerHeight) + 'px');
+  }
+  function paint(p) {
+    const w = appW(), x = p * w * .78;
+    scr.style.transform = `translateX(${x}px)`;
+    peek.style.transform = `translateX(${x}px)`; peek.style.opacity = p;
+    side.style.opacity = Math.min(1, p * 1.6); side.style.transform = `translateX(${(p - 1) * w * .25}px)`;
+    const c = chromeEl(); if (c) { c.style.opacity = 1 - p; c.style.transform = `translateY(${p * 24}px)`; }
+  }
+  function clearPaint() { [scr, peek, side, chromeEl()].forEach(el => { if (el) { el.style.transform = ''; el.style.opacity = ''; } }); }
+  function setMenu(open, anim = true) {
+    clearTimeout(settle);
+    if (!app.classList.contains('menu-live')) clipVars();
+    app.classList.add('menu-live');
+    app.classList.toggle('menu-anim', anim && !reduced());
+    app.classList.toggle('is-closing', !open);
+    app.offsetWidth; // いまの位置から動き出す
+    app.classList.toggle('is-menu', open);
+    clearPaint();
+    menuOpen = open;
+    scr.inert = open; side.inert = !open;
+    const c = chromeEl(); if (c) c.inert = open;
+    if (open) side.focus({ preventScroll: true });
+    settle = setTimeout(() => {
+      app.classList.remove('menu-anim', 'is-closing');
+      if (!menuOpen) app.classList.remove('menu-live');
+    }, reduced() || !anim ? 0 : 520);
+  }
+  A.menu = { open: () => setMenu(true), close: () => setMenu(false), isOpen: () => menuOpen };
+  if (side) side.inert = true;
+  /* ホームを右へ */
+  (() => {
+    if (!scr || !side) return;
+    let sx = 0, sy = 0, st = 0, on = false, decided = false, drag = false, w = 0, lastX = 0, lastT = 0, vx = 0, eat = false;
+    const SKIP = '.badges, .grass-c, .tape-bar, .menu-kb, input, textarea, select';
+    scr.addEventListener('pointerdown', e => {
+      if (menuOpen || (e.button && e.button !== 0) || e.target.closest(SKIP)) return;
+      on = true; decided = false; drag = false; sx = lastX = e.clientX; sy = e.clientY; st = lastT = performance.now(); vx = 0; w = appW();
+    });
+    scr.addEventListener('pointermove', e => {
+      if (!on) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (!decided) {
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+        decided = true;
+        drag = dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.2;
+        if (!drag) { on = false; return; }
+        try { scr.setPointerCapture(e.pointerId); } catch (_) { /* なし */ }
+        clipVars(); app.classList.add('menu-live'); app.classList.remove('menu-anim'); body.classList.add('is-dragging');
+      }
+      const now = performance.now();
+      vx = (e.clientX - lastX) / Math.max(1, now - lastT); lastX = e.clientX; lastT = now;
+      paint(clamp(dx / (w * .78), 0, 1));
+    });
+    const end = e => {
+      if (!on) return; on = false;
+      if (!drag) return;
+      body.classList.remove('is-dragging');
+      eat = true; setTimeout(() => { eat = false; }, 50);
+      const p = clamp((e.clientX - sx) / (w * .78), 0, 1);
+      setMenu(p > .45 || vx > .5);
+    };
+    scr.addEventListener('pointerup', end);
+    scr.addEventListener('pointercancel', end);
+    scr.addEventListener('click', e => { if (eat) { e.preventDefault(); e.stopPropagation(); eat = false; } }, true);
+  })();
+  /* 右のホームを押すか、左にスワイプで閉じる */
+  (() => {
+    if (!peek) return;
+    let sx = 0, on = false, moved = false, w = 0, lastX = 0, lastT = 0, vx = 0;
+    peek.addEventListener('pointerdown', e => { if (e.button) return; on = true; moved = false; sx = lastX = e.clientX; lastT = performance.now(); w = appW(); try { peek.setPointerCapture(e.pointerId); } catch (_) { /* なし */ } });
+    peek.addEventListener('pointermove', e => {
+      if (!on) return;
+      const dx = e.clientX - sx;
+      if (!moved && Math.abs(dx) < 8) return;
+      if (!moved) { moved = true; app.classList.remove('menu-anim'); body.classList.add('is-dragging'); }
+      const now = performance.now(); vx = (e.clientX - lastX) / Math.max(1, now - lastT); lastX = e.clientX; lastT = now;
+      paint(clamp(1 + dx / (w * .78), 0, 1));
+    });
+    const end = e => {
+      if (!on) return; on = false;
+      body.classList.remove('is-dragging');
+      if (!moved) return;
+      const p = clamp(1 + (e.clientX - sx) / (w * .78), 0, 1);
+      setMenu(!(p < .65 || vx < -.5));
+    };
+    peek.addEventListener('pointerup', end);
+    peek.addEventListener('pointercancel', end);
+    peek.addEventListener('click', e => { if (moved) { e.preventDefault(); moved = false; return; } setMenu(false); });
+  })();
+  doc.addEventListener('keydown', e => { if (e.key === 'Escape' && menuOpen && !$('.sheet:not([hidden]):not(.is-static)')) setMenu(false); });
+  doc.addEventListener('click', e => {
+    if (e.target.closest('.menu-kb, [data-menu-open]')) { e.preventDefault(); setMenu(true); }
+    if (e.target.closest('[data-tour]')) tour();
+  });
+
+  /* =========================================================
+   * 5. 勉強中：バーを下に引くと時間が止まり「記録しますか？」
+   * ========================================================= */
+  let was = false, recorded = false;
+  function askRecord() {
+    const sb = $('.chrome .sbar');
+    if (!sb || sb.dataset.state === 'idle' || recorded) return;
+    was = sb.dataset.state === 'live';
+    if (was) A.bar.set('paused');
+    const min = Math.max(1, Math.round(+sb.dataset.elapsed / 60));
+    const name = $('.sbar-t', sb).textContent;
+    $('#ask-body').textContent = `${name} ${min}分。バーを消すと時間は止まります。記録すると今日の合計に入ります`;
+    $('#ask-save').querySelector('.face').textContent = `${min}分を記録する`;
+    $('#ask-save').dataset.min = min;
+    A.sheet.open('sheet-ask');
+  }
+  function wirePull(sb) {
+    let y0 = null, dy = 0, pid = null, moved = false;
+    sb.addEventListener('pointerdown', e => { if (e.button || e.target.closest('.sbar-pp')) return; y0 = e.clientY; dy = 0; moved = false; pid = e.pointerId; sb.style.transition = 'none'; });
+    sb.addEventListener('pointermove', e => {
+      if (y0 === null || e.pointerId !== pid) return;
+      dy = e.clientY - y0;
+      if (!moved && Math.abs(dy) < 6) return;
+      if (!moved) { moved = true; try { sb.setPointerCapture(pid); } catch (_) { /* なし */ } }
+      sb.style.transform = `translateY(${dy > 0 ? Math.min(60, dy * .6) : dy * .15}px)`;
+    });
+    const end = () => {
+      if (y0 === null) return;
+      const pulled = moved && dy > 28;
+      y0 = null;
+      sb.style.transition = 'transform var(--t-move) var(--ios)';
+      sb.style.transform = '';
+      if (pulled) askRecord();
+    };
+    sb.addEventListener('pointerup', end);
+    sb.addEventListener('pointercancel', end);
+    sb.addEventListener('click', e => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
+  }
+  function afterRecord(min) {
+    recorded = true;
+    const name = $('.chrome .sbar .sbar-t').textContent;
+    A.sheet.close('sheet-ask');
+    /* バーは時間割の次の予定へ。タブの点も消える */
+    const ch = chromeEl();
+    const old = $('.chrome .sbar'), oldTab = $('.chrome .tabbar');
+    if (old) old.replaceWith(A.renderStudyBar({ state: 'idle', subj: 'ma', title: '数学 · 青チャート', sub: '次 · 19:00から' }));
+    if (oldTab) oldTab.replaceWith(A.renderTabBar(body.dataset.tab, {}));
+    body.dataset.bar = 'idle';
+    if (ch) ch.style.transform = '';
+    /* 今日の合計とテープが伸びる */
+    const total = 165 + min, diff = 77 + min;
+    const [h, m] = [String(Math.floor(total / 60)), pad(total % 60)];
+    rollTo($('.roll[data-k="h"]'), h); rollTo($('.roll[data-k="m"]'), m);
+    $('.today-diff .delta').textContent = hm(diff);
+    $('#today-sr').textContent = `今日 ${jhm(total)}。昨日より ${jhm(diff)}多い`;
+    const tp = $('.today .tape');
+    const nt = doc.createElement('div');
+    nt.className = 'tape'; nt.dataset.goal = '180'; nt.dataset.parts = `en:${95 + min},ma:40,ja:30`; nt.setAttribute('data-reveal', '');
+    tp.replaceWith(nt); A.upgrade(nt.parentElement); wireTape(nt);
+    later(() => A.toast({ title: `${name} ${min}分を記録しました`, exp: `+${min} EXP`, pix: 'penta', from: 'idle', face: 'happy' }), 300);
+  }
+  if (PAGE === 'live') {
+    const sheet = $('#sheet-ask');
+    /* 閉じたら（続ける・うしろ・Esc）、止める前に動いていれば続きから */
+    new MutationObserver(() => {
+      if (sheet.hidden && was && !recorded) { was = false; if (A.bar.state() === 'paused') A.bar.set('live'); }
+    }).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
+    doc.addEventListener('click', e => {
+      if (e.target.closest('#ask-save')) afterRecord(+$('#ask-save').dataset.min || 39);
+      if (e.target.closest('[data-pull]')) askRecord();
+    });
+  }
+
+  /* =========================================================
+   * 6. はじめての人：ようこそのトーストと、使い方の案内（アプリの Tour と同じ7つ）
+   * ========================================================= */
+  const STEPS = [
+    { title: 'Inchly へようこそ', body: '使い方を少しだけ紹介します。あとで メニューの 設定 › 使い方をもう一度見る から、いつでも見られます。', pix: 'idle' },
+    { at: '.chrome .sbar-go', title: '勉強はここから', body: '「勉強を開始」を押すと、すぐタイマーが始まります。時間割の予定があればその予定で、なければ自習で始まり、科目はあとから付けられます。' },
+    { at: '.chrome .sbar[data-state="live"], .chrome .sbar[data-state="paused"]', title: '勉強中はこのバー', body: '進んでいる時間がここに出ます。押すとタイマーのカード、下に引くと止めて記録できます。' },
+    { at: '.chrome .tab:nth-child(3)', title: '時間割と締切', body: '予定を入れておくと、その時刻に下のバーに出て、1タップで始められます。終えた予定には ✓ が付きます。' },
+    { at: '.chrome .tab:nth-child(5)', title: 'グラフで振り返る', body: 'マイページで、この7日間とこれまでの勉強時間をグラフで見られます。棒を押すと、何を勉強したかの内訳も出ます。' },
+    { at: '.hdr .kgroup > :nth-child(3)', title: 'メッセージ', body: '右上の吹き出しから、仲間と1対1でやりとりできます。' },
+    { title: 'メニューは右にスワイプ', body: 'ホームを右にスワイプすると、設定・テーマ・科目と色のメニューが出ます。' },
+    { title: '準備OK', body: 'さっそく下の「勉強を開始」から始めてみよう。', pix: 'happy' }
+  ];
+  let touring = false;
+  function tour() {
+    if (touring) return;
+    touring = true;
+    if (menuOpen) setMenu(false, false);
+    const list = STEPS.filter(s => !s.at || $(s.at));
+    let i = 0, bub = null;
+    const root = doc.createElement('div');
+    root.className = 'tour';
+    root.innerHTML = '<button class="tour-dim" type="button" tabindex="-1" aria-hidden="true"></button><div class="tour-hole"></div>';
+    app.appendChild(root);
+    const hole = $('.tour-hole', root);
+    const before = doc.activeElement;
+    const frame = () => {
+      if (WIDE.matches) { const r = app.getBoundingClientRect(); return { l: r.left, t: r.top, W: r.width, H: r.height }; }
+      return { l: 0, t: 0, W: window.innerWidth, H: window.innerHeight };
+    };
+    function place() {
+      if (!bub) return;
+      const s = list[i], f = frame();
+      let r = null;
+      if (s.at) { const b = $(s.at).getBoundingClientRect(); r = { x: b.left - f.l - 6, y: b.top - f.t - 6, w: b.width + 12, h: b.height + 12 }; }
+      Object.assign(hole.style, r ? { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' } : { left: f.W / 2 + 'px', top: f.H / 2 + 'px', width: '0px', height: '0px' });
+      const BW = Math.min(320, f.W - 32);
+      const below = r ? r.y + r.h / 2 < f.H / 2 : false;
+      const cx = r ? r.x + r.w / 2 : f.W / 2;
+      const bx = clamp(cx - BW / 2, 16, f.W - 16 - BW);
+      bub.style.width = BW + 'px'; bub.style.left = bx + 'px';
+      bub.style.top = bub.style.bottom = '';
+      if (!r) bub.style.top = Math.round(f.H * .36) + 'px';
+      else if (below) bub.style.top = (r.y + r.h + 16) + 'px';
+      else bub.style.bottom = (f.H - r.y + 16) + 'px';
+      const tail = $('.tour-tail', bub);
+      if (tail) { tail.classList.toggle('up', below); tail.classList.toggle('down', !below); tail.style.left = (clamp(cx - bx, 18, BW - 18) - 10) + 'px'; tail.innerHTML = below ? TAIL_UP : TAIL_DOWN; }
+    }
+    const TAIL_UP = '<path d="M0 11L10 1l10 10z" style="fill:var(--card)"/><path d="M0 11L10 1l10 10" fill="none" style="stroke:var(--ink)" stroke-width="2"/>';
+    const TAIL_DOWN = '<path d="M0 0l10 10L20 0z" style="fill:var(--card)"/><path d="M0 0l10 10L20 0" fill="none" style="stroke:var(--ink)" stroke-width="2"/>';
+    function draw() {
+      const s = list[i], last = i === list.length - 1;
+      const nb = doc.createElement('div');
+      nb.className = 'tour-bub'; nb.tabIndex = -1;
+      nb.setAttribute('role', 'dialog'); nb.setAttribute('aria-modal', 'true'); nb.setAttribute('aria-labelledby', 'tour-t'); nb.setAttribute('aria-describedby', 'tour-b');
+      nb.innerHTML = (s.pix ? `<span class="tour-pix" data-pix="mebu" data-face="${s.pix}" data-scale="3"></span>` : '') +
+        (s.at ? '<svg class="tour-tail" viewBox="0 0 20 11" width="20" height="11" aria-hidden="true" focusable="false"></svg>' : '') +
+        `<h2 id="tour-t">${s.title}</h2><p id="tour-b">${s.body}</p>` +
+        `<div class="tour-foot"><span class="tour-dots" role="img" aria-label="${i + 1} / ${list.length}">${list.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</span>` +
+        (last ? '' : '<button class="tbtn tour-skip" type="button" aria-label="使い方をスキップ">スキップ</button>') +
+        `<button class="key key-ink key-sm tour-next" type="button" aria-label="${last ? '使い方を終わる' : '次へ'}">${last ? 'はじめる' : '次へ'}</button></div>`;
+      if (bub) bub.remove();
+      bub = nb; root.appendChild(nb);
+      A.upgrade(nb);
+      place();
+      nb.focus({ preventScroll: true });
+    }
+    function next() { if (i + 1 >= list.length) end(); else { i++; draw(); } }
+    function end() {
+      window.removeEventListener('resize', place); window.removeEventListener('scroll', place);
+      doc.removeEventListener('keydown', keys, true);
+      root.classList.add('is-out');
+      later(() => { root.remove(); touring = false; }, 170);
+      if (before && before.focus && before !== body) before.focus({ preventScroll: true });
+    }
+    function keys(e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); end(); return; }
+      if (e.key === 'Tab' && bub) {
+        const f = $$('button', bub);
+        const at = f.indexOf(doc.activeElement);
+        e.preventDefault();
+        f[(at + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+      }
+    }
+    root.addEventListener('click', e => {
+      if (e.target.closest('.tour-skip')) end();
+      else if (e.target.closest('.tour-next') || e.target.closest('.tour-dim')) next();
+    });
+    window.addEventListener('resize', place); window.addEventListener('scroll', place, { passive: true });
+    doc.addEventListener('keydown', keys, true);
+    draw();
+  }
+  A.tour = tour;
+
+  /* =========================================================
+   * 7. ページを読んだあと（App が部品を描いたあと）
+   * ========================================================= */
+  function ready() {
+    $$('.blk-grass .grass').forEach(wireGrass);
+    $$('.today .tape').forEach(wireTape);
+    later(() => $$('.roll').forEach(el => rollTo(el, el.dataset.v)), 120);
+    if (PAGE === 'live') { const sb = $('.chrome .sbar'); if (sb) { sb.style.touchAction = 'none'; wirePull(sb); } }
+    if (NEW) {
+      A.toast({ title: 'ようこそ、はるさん', sub: '最初の記録は、下の「勉強を開始」から', ms: 3200 });
+      later(tour, 700);
+    }
+    if (PAGE === 'menu') later(() => setMenu(true), 350);
+    /* 比べる用：下の2本のバーを今のアプリのすりガラスに */
+    const gb = $('#glass-toggle');
+    if (gb) gb.addEventListener('click', () => {
+      const on = body.dataset.chrome !== 'glass';
+      if (on) body.dataset.chrome = 'glass'; else delete body.dataset.chrome;
+      gb.setAttribute('aria-pressed', String(on));
+      gb.querySelector('.face').textContent = on ? '下のバーを紙にもどす' : '下のバーをすりガラスで見る';
+    });
+  }
+  if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', ready); else ready();
+})();
+</script>
+</body>
+</html>

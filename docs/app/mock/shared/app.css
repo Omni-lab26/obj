@@ -127,6 +127,8 @@ body[data-bar="none"][data-tab="none"] .screen,body:not([data-tab]):not([data-ba
     box-shadow:0 0 0 10px var(--ink),12px 12px 0 10px var(--lime-2)}
   .screen{height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
   .screen::-webkit-scrollbar{display:none}
+  /* 枠の中では .screen がスクロールする箱。貼りつく位置は箱の余白から数えるので、余白ぶん上へ */
+  .screen > .hdr{top:calc(-1 * var(--safe-top))}
   /* iPhone の上の帯（時刻・ノッチ）と下のホームバー：枠の中だけの絵 */
   .os{position:absolute;z-index:80;left:0;right:0;top:0;height:var(--safe-top);display:flex;align-items:center;justify-content:space-between;
     padding:6px 30px 0 40px;pointer-events:none;font:600 15px/1 "Inter",var(--f-body);font-variant-numeric:tabular-nums;color:var(--ink)}
@@ -145,19 +147,20 @@ body[data-bar="none"][data-tab="none"] .screen,body:not([data-tab]):not([data-ba
 .note .note-links{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:16px}
 
 /* ---------- 4. ヘッダー ---------- */
-.hdr{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;height:calc(var(--hdr-h) + var(--safe-top));
+.hdr{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:8px;height:calc(var(--hdr-h) + var(--safe-top));
   margin:calc(-1 * var(--safe-top)) calc(-1 * var(--gutter)) 4px;padding:var(--safe-top) var(--gutter) 0;background:var(--dots),var(--paper)}
 .hdr::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--ink);opacity:0;transition:opacity var(--t-micro) var(--ios)}
 .hdr.is-scrolled::after{opacity:1}
 .hdr-sp{flex:1}
+.hdr > .kgroup{margin-left:auto}
 .hdr-t{font:700 var(--fs-h)/1.2 var(--f-body)}
-.logo{display:inline-flex;align-items:center;gap:7px;min-height:44px;flex:none;color:var(--ink);font:800 22px/1 var(--f-logo);letter-spacing:-.045em}
+.logo{display:inline-flex;align-items:center;gap:6px;min-height:44px;flex:none;color:var(--ink);font:800 22px/1 var(--f-logo);letter-spacing:-.045em}
 .logo svg{width:26px;height:26px;flex:none}
 .logo-word{transform:translateY(-1px)}
 /* レベルのチップ */
-.lv > .face{gap:7px;font:700 13px/1 var(--f-body);padding:0 10px}
+.lv > .face{gap:6px;font:700 13px/1 var(--f-body);padding:0 9px}
 .lv-n{font-variant-numeric:tabular-nums}
-.lv-bar{position:relative;width:28px;height:6px;background:var(--paper-2);box-shadow:var(--ring-thin);overflow:hidden}
+.lv-bar{position:relative;width:22px;height:6px;background:var(--paper-2);box-shadow:var(--ring-thin);overflow:hidden}
 .lv-bar i{position:absolute;inset:0;background:var(--ink);transform-origin:0 50%;transform:scaleX(var(--p,.4))}
 
 /* アイコンの板：押せるアイコンをまとめた1枚（床あり） */
@@ -179,6 +182,7 @@ body[data-bar="none"][data-tab="none"] .screen,body:not([data-tab]):not([data-ba
 .sec-t::before{content:"";flex:none;width:8px;height:8px;background:var(--accent,var(--sun));box-shadow:0 0 0 2px var(--ink)}
 .sec-a{margin-left:auto;font-size:var(--fs-sub);color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
 .sec-a b{color:var(--ink);font-weight:700}
+.sec-h .link{margin:-8px 0 -8px auto;font-size:13px}
 /* 小さなドットのラベル（英数字は Silkscreen、日本語は DotGothic16） */
 .label{display:inline-flex;align-items:center;gap:7px;font:400 11px/1.2 var(--f-pix);letter-spacing:.06em;color:var(--ink-2);text-transform:uppercase}
 .label-j{display:inline-flex;align-items:center;gap:7px;font:400 13px/1.2 var(--f-pixj);letter-spacing:.02em;color:var(--ink-2)}
@@ -220,11 +224,11 @@ body[data-bar="none"][data-tab="none"] .screen,body:not([data-tab]):not([data-ba
 .key-block{display:flex;width:100%}
 .key-sm{--kd:3px;min-height:32px;font-size:13px}
 .key-sm > .face{padding:0 12px;gap:6px}
-.key-sm::after,.chip::after{content:"";position:absolute;inset:-6px -2px}   /* 指の届く範囲を 44 に */
+.key-sm::after,.chip::after{content:"";position:absolute;inset:-6px -4px}   /* 指の届く範囲を 44 に */
 .key-icon > .face{width:44px;padding:0}
 .key-sm.key-icon > .face{width:36px}
-.key-round{--rk:999px}
-.key-round > .face{padding:0;aspect-ratio:1}
+.key-round{--rk:999px;--d:56px;width:var(--d);min-height:var(--d)}
+.key-round > .face{padding:0}
 .key:disabled,.key[aria-disabled="true"]{box-shadow:none;cursor:default}
 .key:disabled > .face,.key[aria-disabled="true"] > .face{background:var(--paper-2);color:var(--ink-3);box-shadow:0 0 0 2px var(--line-2);transform:none}
 .keys{display:flex;flex-wrap:wrap;gap:14px 12px;align-items:flex-start}
@@ -246,7 +250,7 @@ body[data-bar="none"][data-tab="none"] .screen,body:not([data-tab]):not([data-ba
 .chip.is-down > .face{transform:translateY(calc(var(--kd) - .5px));transition:transform var(--t-press) var(--press-ease)}
 .chip[aria-pressed="true"] > .face{background:var(--lime);transform:translateY(var(--kd))}
 .chip .pi svg{width:12px;height:12px}
-.chip-add > .face{padding:0 10px}
+.chip-add > .face{min-width:38px;justify-content:center;padding:0 8px}
 
 /* 切りかえ（今週/今月/今日）：1枚の板（床3pt）。選んだ所がライム */
 .seg{display:inline-flex;align-items:stretch;max-width:100%;border-radius:var(--r-key);background:var(--card);box-shadow:var(--ring),0 3px 0 2px var(--ink);overflow:hidden}
@@ -430,10 +434,10 @@ a.row:focus-visible,button.row:focus-visible{outline-offset:-1px}
 .tape-rule{position:relative;height:30px;margin-top:2px}
 .tape-rule i{position:absolute;top:0;width:1.5px;height:4px;margin-left:-.75px;background:var(--ink);opacity:.45}
 .tape-rule i.h{height:8px;opacity:.85;width:2px;margin-left:-1px}
-.tape-rule span{position:absolute;top:11px;transform:translateX(-50%);font:400 10px/1 var(--f-pix);letter-spacing:.04em;color:var(--ink-3);white-space:nowrap}
+.tape-rule span{position:absolute;top:11px;transform:translateX(-50%);font:500 10px/1 var(--f-body);font-variant-numeric:tabular-nums;color:var(--ink-3);white-space:nowrap}
 .tape-rule span.first{transform:none}
 .tape-rule span.last{transform:translateX(-100%)}
-.tape-goal{position:absolute;top:-4px;height:30px;width:2px;margin-left:-1px;background:var(--ink)}
+.tape-goal{position:absolute;top:-22px;height:30px;width:2px;margin-left:-1px;background:var(--ink)}
 .tape-goal::before{content:"";position:absolute;top:-4px;left:-4px;width:10px;height:5px;background:var(--ink);clip-path:polygon(0 0,100% 0,50% 100%)}
 .tape-rule span.goal{font:800 11px/1 var(--f-body);color:var(--ink);letter-spacing:0}
 .tape-rule span.goal.is-done{color:var(--run-ink)}
@@ -469,6 +473,9 @@ a.row:focus-visible,button.row:focus-visible{outline-offset:-1px}
 .wk-d.is-rest i{background:var(--sky)}
 .wk-d.is-future i{background:none;box-shadow:none;outline:1.5px dashed rgba(23,18,31,.38);outline-offset:-1.5px}
 .wk-d i .pi svg{width:10px;height:auto}
+
+/* 幅 360 未満（小さな iPhone）：ロゴの字をしまう */
+@media (max-width:359px){ .hdr .logo-word{display:none} }
 
 /* ---------- 21. 動きを減らす設定：全部止める（押した印は残る） ---------- */
 @media (prefers-reduced-motion:reduce){

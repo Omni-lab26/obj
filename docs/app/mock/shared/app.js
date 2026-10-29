@@ -311,7 +311,33 @@ rr.kYyyyok.rr
 ...r.kkk.r...
 ..r...r...r..
 ......r......`) },
-    flame: { pal: PAL.bo, rows: bo('a', 'happy', 'smile') }
+    flame: { pal: PAL.bo, rows: bo('a', 'happy', 'smile') },
+    flag: { pal: { k: INK, r: '#ff4d6d', R: '#ff8fa3' }, rows: R(`
+kk..........
+kkkkkkkkkkk.
+kkRRRRRRRRrk
+kkRrrrrrrrk.
+kkRrrrrrrk..
+kkRrrrrrrrk.
+kkrrrrrrrrrk
+kkkkkkkkkkk.
+kk..........
+kk..........
+kk..........
+kk..........`) },
+    cal: { pal: { k: INK, r: '#ff6b4a', w: '#ffffff', g: '#e3dfee' }, rows: R(`
+..k.....k...
+.kkk...kkk..
+kkkkkkkkkkkk
+krrrrrrrrrrk
+krrrrrrrrrrk
+kkkkkkkkkkkk
+kwwwwwwwwwwk
+kwkkwkkwkkwk
+kwwwwwwwwwwk
+kwkkwkkwggwk
+kwwwwwwwwwwk
+kkkkkkkkkkkk`) }
   };
   function sticker(name, scale = 2) {
     const a = STK_ART[name] || (CREATURES[name] && { pal: CREATURES[name].pal, rows: CREATURES[name].faces.idle });
@@ -332,25 +358,25 @@ rr.kYyyyok.rr
     chat: R(`.kkkkkkkkkk. k..........k k..........k k.kk.kk.kk.k k..........k k..........k .kk.kkkkkkk. ..k.k....... ..kk........ ..k.........`),
     gear: R(`.....kk..... ..k.kkkk.k.. .kkk....kkk. ..k......k.. .k...kk...k. kk..k..k..kk kk..k..k..kk .k...kk...k. ..k......k.. .kkk....kkk. ..k.kkkk.k.. .....kk.....`),
     cal: R(`..k.....k... kkkkkkkkkkkk k..........k kkkkkkkkkkkk k..........k k.kk.kk.kk.k k..........k k.kk.kk.kk.k k..........k kkkkkkkkkkkk`),
-    play: R(`k....... kkk..... kkkkk... kkkkkkk. kkkkkkk. kkkkk... kkk..... k.......`),
-    pause: R(`kkk..kkk kkk..kkk kkk..kkk kkk..kkk kkk..kkk kkk..kkk kkk..kkk kkk..kkk`),
-    plus: R(`...kk... ...kk... ...kk... kkkkkkkk kkkkkkkk ...kk... ...kk... ...kk...`),
-    check: R(`........k .......kk k.....kk. kk...kk.. .kk.kk... ..kkk.... ...k.....`),
-    right: R(`kk... .kk.. ..kk. ...kk ...kk ..kk. .kk.. kk...`),
-    left: R(`...kk ..kk. .kk.. kk... kk... .kk.. ..kk. ...kk`),
-    down: R(`kk....kk .kk..kk. ..kkkk.. ...kk...`),
-    x: R(`kk....kk kkk..kkk .kkkkkk. ..kkkk.. ..kkkk.. .kkkkkk. kkk..kkk kk....kk`),
+    play: R(`k... kk.. kkk. kkkk kkk. kk.. k...`),
+    pause: R(`kk..kk kk..kk kk..kk kk..kk kk..kk kk..kk kk..kk`),
+    plus: R(`...k... ...k... ...k... kkkkkkk ...k... ...k... ...k...`),
+    check: R(`......k .....k. k...k.. .k.k... ..k....`),
+    right: R(`k... .k.. ..k. ...k ..k. .k.. k...`),
+    left: R(`...k ..k. .k.. k... .k.. ..k. ...k`),
+    down: R(`k.....k .k...k. ..k.k.. ...k...`),
+    x: R(`k.....k .k...k. ..k.k.. ...k... ..k.k.. .k...k. k.....k`),
     heart: R(`.kk...kk. kkkk.kkkk kkkkkkkkk kkkkkkkkk .kkkkkkk. ..kkkkk.. ...kkk... ....k....`),
     'heart-o': R(`.kk...kk. k..k.k..k k...k...k k.......k .k.....k. ..k...k.. ...k.k... ....k....`),
     edit: R(`.......kk. ......k..k .....k..k. ....k..k.. ...k..k... ..k..k.... .k..k..... k..k...... kkk.......`),
-    more: R(`kk..kk..kk kk..kk..kk`),
+    more: R(`kk.kk.kk kk.kk.kk`),
     sort: R(`..k...... .kkk..... kkkkk.... ..k...... ..k...k.. ..k...k.. ....kkkkk .....kkk. ......k..`)
   };
-  const SMALL = { play: 1, pause: 1, plus: 1, check: 1, right: 1, left: 1, down: 1, x: 1, more: 1 };
+  /* どのアイコンも 1マス 2pt（線の太さが輪郭と同じ）。小さな ▶ ❚❚ ＋ ✓ › はマスの数を減らして小さくする */
   function icon(name, scale) {
     const rows = ICONS[name];
     if (!rows) return '';
-    return rowsSVG(rows, { k: 'currentColor' }, scale || (SMALL[name] ? 1.5 : 2));
+    return rowsSVG(rows, { k: 'currentColor' }, scale || 2);
   }
 
   /* 科目の線の絵（inchly-app の SubjectGlyph と同じ線。インクで描く） */
@@ -514,7 +540,7 @@ rr.kYyyyok.rr
     const right = kind === 'home' ? `<div class="kgroup">${btn('search', 'さがす')}${btn('bell', 'お知らせ', 1)}${btn('chat', 'メッセージ', 1)}</div>`
       : kind === 'search' ? `<div class="kgroup">${btn('search', 'さがす')}</div>`
       : kind === 'gear' ? `<div class="kgroup">${btn('gear', '設定')}</div>` : '';
-    el.innerHTML = left + '<span class="hdr-sp"></span>' + right + el.innerHTML;
+    el.innerHTML = left + right + el.innerHTML;
   }
 
   /* =====================================================================
