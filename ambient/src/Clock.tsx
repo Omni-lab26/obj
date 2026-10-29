@@ -1,33 +1,41 @@
 import { useEffect, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { clockFont } from './fonts';
 import type { Settings } from './settings';
+import { durationLabel, formatDuration, stopwatchElapsed, timerDone, timerLeft, timerRunning } from './timers';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
-/** Re-renders on every second boundary. */
-function useNow() {
-  const [now, setNow] = useState(() => new Date());
+/** Current time in ms: on every second boundary, or ten times a second when fast. */
+function useNow(fast: boolean) {
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
+    const step = fast ? 100 : 1000;
     let t: ReturnType<typeof setTimeout>;
     const tick = () => {
-      const d = new Date();
+      const d = Date.now();
       setNow(d);
-      t = setTimeout(tick, 1000 - d.getMilliseconds() + 5);
+      t = setTimeout(tick, step - (d % step) + 5);
     };
-    t = setTimeout(tick, 1000 - new Date().getMilliseconds() + 5);
+    t = setTimeout(tick, step - (Date.now() % step) + 5);
     return () => clearTimeout(t);
-  }, []);
+  }, [fast]);
   return now;
 }
 
 type Props = {
   clock: Settings['clock'];
+  mode: Settings['mode'];
+  timer: Settings['timer'];
+  stopwatch: Settings['stopwatch'];
   /** Light text over dark scenes, dark text over light ones. */
   tone: 'dark' | 'light';
   /** How long the colours take to follow a tone change (the scene crossfade). */
   fadeMs?: number;
+  /** Timer and stopwatch: tap the digits to start or pause, hold to reset. */
+  onToggle: () => void;
+  onReset: () => void;
 };
 
 const FACES = {
@@ -36,9 +44,52 @@ const FACES = {
   light: { ink: '#111114', inkSoft: 'rgba(17,17,20,0.62)', halo: 'rgba(255,255,255,0.75)' },
 };
 
-/** The centre clock. It never takes touches; long-press anywhere toggles it. */
-export function Clock({ clock, tone, fadeMs = 520 }: Props) {
-  const now = useNow();
+type Face = { label: string; main: string; small: string; hint: string; dim: boolean };
+
+/** What the centre shows right now, in any of the three modes. */
+function faceFor(p: Props, now: number): Face {
+  if (p.mode === 'stopwatch') {
+    const e = stopwatchElapsed(p.stopwatch, now);
+    const running = p.stopwatch.startAt != null;
+    return {
+      label: 'ストップウォッチ',
+      main: formatDuration(e),
+      small: e < 3_600_000 ? `.${Math.floor((e % 1000) / 100)}` : '',
+      hint: running ? '' : e > 0 ? 'タップで再開・長押しでリセット' : 'タップで開始',
+      dim: false,
+    };
+  }
+  if (p.mode === 'timer') {
+    const left = timerLeft(p.timer, now);
+    if (timerDone(p.timer)) {
+      return { label: '時間です', main: formatDuration(0), small: '', hint: 'タップで閉じる', dim: Math.floor(now / 500) % 2 === 1 };
+    }
+    const running = timerRunning(p.timer);
+    return {
+      label: `タイマー ${durationLabel(p.timer.duration)}`,
+      // Count down in whole seconds that change when a full second has passed.
+      main: formatDuration(left + 999),
+      small: '',
+      hint: running ? '' : left < p.timer.duration ? 'タップで再開・長押しでリセット' : 'タップで開始',
+      dim: false,
+    };
+  }
+  const d = new Date(now);
+  const h = d.getHours();
+  return {
+    label: p.clock.date ? `${d.getMonth() + 1}月${d.getDate()}日 ${WEEKDAYS[d.getDay()]}曜日` : '',
+    main: `${p.clock.hour24 ? h : h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')}`,
+    small: p.clock.seconds ? String(d.getSeconds()).padStart(2, '0') : '',
+    hint: '',
+    dim: false,
+  };
+}
+
+/** The centre clock, timer or stopwatch. Long-press anywhere else toggles it. */
+export function Clock(props: Props) {
+  const { clock, mode, timer, stopwatch, tone, fadeMs = 520, onToggle, onReset } = props;
+  const fast = (mode === 'stopwatch' && stopwatch.startAt != null) || (mode === 'timer' && (timerRunning(timer) || timerDone(timer)));
+  const now = useNow(fast);
   const { width } = useWindowDimensions();
   const [shown] = useState(() => new Animated.Value(clock.visible ? 1 : 0));
   // 0 = colours for a dark scene, 1 = for a light one. Both faces are drawn and
@@ -64,35 +115,34 @@ export function Clock({ clock, tone, fadeMs = 520 }: Props) {
     }).start();
   }, [tone, toneMix, fadeMs]);
 
+  const f = faceFor(props, now);
   const font = clockFont(clock.font);
-  // Scale with the screen, but stop growing on tablets.
-  const scale = Math.min(width / 390, 1.6);
+  // Scale with the screen, but stop growing on tablets; longer readings (seconds,
+  // hours) get smaller digits so the line never turns long and thin.
+  const fit = Math.min(1, 5 / (f.main.length + (f.small ? 1.1 : 0)));
+  const scale = Math.min(width / 390, 1.6) * fit;
   const size = (font.time.fontSize ?? 96) * scale;
-  const h = now.getHours();
-  const hours = clock.hour24 ? String(h) : String(h % 12 || 12);
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-  const date = `${now.getMonth() + 1}月${now.getDate()}日 ${WEEKDAYS[now.getDay()]}曜日`;
+  const interactive = mode !== 'clock';
 
-  const face = (f: (typeof FACES)['dark']) => (
+  const face = (c: (typeof FACES)['dark']) => (
     <>
-      {clock.date && (
-        <Text style={[styles.date, { color: f.inkSoft, textShadowColor: f.halo }]} numberOfLines={1}>
-          {date}
+      {f.label ? (
+        <Text style={[styles.date, { color: c.inkSoft, textShadowColor: c.halo }]} numberOfLines={1}>
+          {f.label}
         </Text>
-      )}
-      <View style={styles.row}>
+      ) : null}
+      <View style={[styles.row, { opacity: f.dim ? 0.3 : 1 }]}>
         <Text
           style={[
             font.time,
             styles.time,
-            { fontSize: size, lineHeight: size * 1.08, color: f.ink, textShadowColor: f.halo, letterSpacing: (font.time.letterSpacing ?? 0) * scale },
+            { fontSize: size, lineHeight: size * 1.08, color: c.ink, textShadowColor: c.halo, letterSpacing: (font.time.letterSpacing ?? 0) * scale },
           ]}
           numberOfLines={1}
         >
-          {hours}:{minutes}
+          {f.main}
         </Text>
-        {clock.seconds && (
+        {f.small ? (
           <Text
             style={[
               font.time,
@@ -100,24 +150,30 @@ export function Clock({ clock, tone, fadeMs = 520 }: Props) {
               {
                 fontSize: size * font.secondsScale,
                 lineHeight: size * font.secondsScale * 1.1,
-                color: f.inkSoft,
-                textShadowColor: f.halo,
+                color: c.inkSoft,
+                textShadowColor: c.halo,
                 letterSpacing: 0,
                 marginLeft: size * 0.06,
                 marginBottom: size * 0.16,
               },
             ]}
           >
-            {seconds}
+            {f.small}
           </Text>
-        )}
+        ) : null}
       </View>
+      {f.hint ? (
+        <Text style={[styles.hint, { color: c.inkSoft, textShadowColor: c.halo }]} numberOfLines={1}>
+          {f.hint}
+        </Text>
+      ) : null}
     </>
   );
 
   return (
-    <View pointerEvents="none" style={styles.layer}>
+    <View pointerEvents={interactive && clock.visible ? 'box-none' : 'none'} style={styles.layer}>
       <Animated.View
+        pointerEvents="box-none"
         style={[
           styles.block,
           {
@@ -126,10 +182,20 @@ export function Clock({ clock, tone, fadeMs = 520 }: Props) {
           },
         ]}
       >
-        <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
-          {face(FACES.dark)}
-        </Animated.View>
-        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(FACES.light)}</Animated.View>
+        <Pressable
+          disabled={!interactive}
+          onPress={onToggle}
+          onLongPress={onReset}
+          delayLongPress={500}
+          hitSlop={16}
+          accessibilityRole={interactive ? 'button' : undefined}
+          accessibilityLabel={interactive ? `${f.label} ${f.main}` : undefined}
+        >
+          <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
+            {face(FACES.dark)}
+          </Animated.View>
+          <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(FACES.light)}</Animated.View>
+        </Pressable>
       </Animated.View>
     </View>
   );
@@ -200,6 +266,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
+  },
+  hint: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: '500',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   toastWrap: {
     position: 'absolute',

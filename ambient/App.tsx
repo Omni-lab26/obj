@@ -13,6 +13,16 @@ import { SceneView } from './src/SceneView';
 import { scenes, type Scene } from './src/scenes';
 import { SettingsProvider, useSettings } from './src/settings';
 import { SettingsSheet } from './src/SettingsSheet';
+import {
+  durationLabel,
+  resetStopwatch,
+  resetTimer,
+  setTimerDuration,
+  TIMER_PRESETS,
+  toggleStopwatch,
+  toggleTimer,
+  useTimerAlarm,
+} from './src/timers';
 
 const CHROME_IDLE_MS = 3500;
 const FADE_MS = 520;
@@ -138,6 +148,28 @@ function Player() {
   }, [clockVisible, update]);
 
   const shown = scenes.find((s) => s.id === shownId) ?? scene;
+  // ── timer and stopwatch: tap the digits to start/pause, hold to reset ──────
+  const toggleCount = useCallback(() => {
+    const now = Date.now();
+    update((s) =>
+      s.mode === 'timer'
+        ? { ...s, timer: toggleTimer(s.timer, now) }
+        : s.mode === 'stopwatch'
+          ? { ...s, stopwatch: toggleStopwatch(s.stopwatch, now) }
+          : s
+    );
+  }, [update]);
+  const resetCount = useCallback(() => {
+    update((s) =>
+      s.mode === 'timer' ? { ...s, timer: resetTimer(s.timer) } : s.mode === 'stopwatch' ? { ...s, stopwatch: resetStopwatch() } : s
+    );
+  }, [update]);
+  useTimerAlarm(settings.timer, update, () => setToast({ text: 'タイマーが終わりました', id: Date.now() }));
+  const setMode = (mode: typeof settings.mode) => {
+    update((s) => ({ ...s, mode, clock: { ...s.clock, visible: true } }));
+    showChrome();
+  };
+
   const tone = measuredTone[shown.id] ?? shown.tone;
   const dark = tone === 'dark';
   const ink = dark ? '#ffffff' : '#111114';
@@ -163,7 +195,16 @@ function Player() {
         </Animated.View>
       ))}
 
-      <Clock clock={clock} tone={tone} fadeMs={FADE_MS} />
+      <Clock
+        clock={clock}
+        mode={settings.mode}
+        timer={settings.timer}
+        stopwatch={settings.stopwatch}
+        tone={tone}
+        fadeMs={FADE_MS}
+        onToggle={toggleCount}
+        onReset={resetCount}
+      />
       <Toast toast={toast} tone={tone} />
 
       <Animated.View
@@ -177,6 +218,32 @@ function Player() {
           },
         ]}
       >
+        <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight, styles.segShadow]}>
+          <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.segGlass, { borderColor: glassEdge }]}>
+            {MODES.map((m) => (
+              <Segment key={m.id} label={m.label} selected={settings.mode === m.id} ink={ink} dark={dark} onPress={() => setMode(m.id)} />
+            ))}
+          </BlurView>
+        </View>
+        {settings.mode === 'timer' && (
+          <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight, styles.segShadow]}>
+            <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.segGlass, { borderColor: glassEdge }]}>
+              {TIMER_PRESETS.map((ms) => (
+                <Segment
+                  key={ms}
+                  label={durationLabel(ms)}
+                  selected={settings.timer.duration === ms}
+                  ink={ink}
+                  dark={dark}
+                  onPress={() => {
+                    update((s) => ({ ...s, timer: setTimerDuration(ms) }));
+                    showChrome();
+                  }}
+                />
+              ))}
+            </BlurView>
+          </View>
+        )}
         <View style={styles.dockRow}>
           <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight]}>
             <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.pill, { borderColor: glassEdge }]}>
@@ -235,6 +302,30 @@ function Player() {
   );
 }
 
+const MODES = [
+  { id: 'clock', label: '時計' },
+  { id: 'timer', label: 'タイマー' },
+  { id: 'stopwatch', label: 'ストップウォッチ' },
+] as const;
+
+function Segment({ label, selected, ink, dark, onPress }: { label: string; selected: boolean; ink: string; dark: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={4}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      style={({ pressed }) => [
+        styles.segment,
+        selected && { backgroundColor: dark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)' },
+        { opacity: pressed ? 0.5 : 1 },
+      ]}
+    >
+      <Text style={[styles.segmentText, { color: ink, opacity: selected ? 1 : 0.62 }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 function NavButton({ direction, color, onPress, label }: { direction: 1 | -1; color: string; onPress: () => void; label: string }) {
   return (
     <Pressable
@@ -258,6 +349,31 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
+  },
+  segShadow: {
+    marginBottom: 10,
+  },
+  segGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 40,
+    paddingHorizontal: 4,
+    gap: 2,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
+  segment: {
+    height: 32,
+    paddingHorizontal: 13,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0,
   },
   dockRow: {
     flexDirection: 'row',

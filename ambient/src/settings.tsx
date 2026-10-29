@@ -11,6 +11,12 @@ export type Settings = {
     date: boolean;
     hour24: boolean;
   };
+  /** What the centre shows. */
+  mode: 'clock' | 'timer' | 'stopwatch';
+  /** Running while endAt is set; otherwise left is what remains (0 = finished). */
+  timer: { duration: number; endAt: number | null; left: number };
+  /** Running while startAt is set; elapsed is the time banked before it. */
+  stopwatch: { startAt: number | null; elapsed: number };
   /** Digital layer: 0 = the raw picture (素), 1 = fully digital. */
   digital: number;
   /** Last scene shown, restored on launch. */
@@ -19,6 +25,9 @@ export type Settings = {
 
 export const defaultSettings: Settings = {
   clock: { visible: true, font: 'system', seconds: false, date: true, hour24: true },
+  mode: 'clock',
+  timer: { duration: 5 * 60_000, endAt: null, left: 5 * 60_000 },
+  stopwatch: { startAt: null, elapsed: 0 },
   digital: 0.65,
   scene: 'koi',
 };
@@ -40,6 +49,8 @@ function withDefaults(stored: Partial<Settings>): Settings {
     ...defaultSettings,
     ...stored,
     clock: { ...defaultSettings.clock, ...stored.clock },
+    timer: { ...defaultSettings.timer, ...stored.timer },
+    stopwatch: { ...defaultSettings.stopwatch, ...stored.stopwatch },
   };
 }
 
