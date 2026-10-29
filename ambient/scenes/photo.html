@@ -27,7 +27,7 @@
   const P = PHOTO || {
     image: q.get('image') || 'https://picsum.photos/id/1015/1170/2532',
     focus: [Number(q.get('fx') || 0.5), Number(q.get('fy') || 0.5)],
-    recipe: { effect: q.get('effect') || 'ascii-mosaic', params: {}, animate: q.get('animate') || 'shimmer' },
+    recipe: { effect: q.get('effect') || 'ascii', params: {}, animate: q.get('animate') || 'shimmer' },
   };
   if (q.get('amount')) Host.digital = Number(q.get('amount'));
 
@@ -44,24 +44,37 @@
   d.setAmount(Host.digital);
 
   // Tell the app whether the clock area is light or dark, so its text stays readable.
+  // Measured on the drawn picture (effects can darken or lighten it a lot), whenever
+  // the picture, the size or the digital amount changes.
+  let toneDue = true;
+  let tone = '';
   function reportTone() {
-    const l = d.lumaAt(Host.w * 0.15, Host.h * 0.36, Host.w * 0.85, Host.h * 0.6);
-    Host.post({ type: 'tone', tone: l > 0.58 ? 'light' : 'dark' });
+    toneDue = false;
+    const l = d.drawnLumaAt(Host.w * 0.15, Host.h * 0.36, Host.w * 0.85, Host.h * 0.6);
+    const next = l > 0.55 ? 'light' : 'dark';
+    if (next !== tone) {
+      tone = next;
+      Host.post({ type: 'tone', tone });
+    }
   }
 
   d.setImage(P.image, { focus: P.focus || [0.5, 0.5] })
     .then(() => {
-      reportTone();
       Host.start({
         frame: (dt, t) => {
-          if (!Host.warming) d.draw(t);
+          if (Host.warming) return;
+          d.draw(t);
+          if (toneDue) reportTone();
         },
         resize: () => {
           d.resize();
-          reportTone();
+          toneDue = true;
         },
         tap: (x, y) => d.tap(x, y, Host.time),
-        digital: (v) => d.setAmount(v),
+        digital: (v) => {
+          d.setAmount(v);
+          toneDue = true;
+        },
       });
     })
     .catch(() => {

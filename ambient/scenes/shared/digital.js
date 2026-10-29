@@ -35,11 +35,15 @@ uniform vec3 uPal3;
 uniform vec3 uAccent;
 uniform float uGlyphs;    // glyph count in the atlas
 uniform float uAnimate;   // 0 none, 1 shimmer, 2 drift, 3 scan, 4 breathe, 5 rain
+uniform vec2 uLevels;     // black and white points of the visible picture
 
 vec2 imgUV(vec2 px) { return (px / uRes) * uCover.xy + uCover.zw; }
+// Auto contrast that grows with the amount, so flat pictures still give the effects
+// something to work with while 素 stays the untouched photo.
+vec3 lev(vec3 c) { return mix(c, clamp((c - uLevels.x) / (uLevels.y - uLevels.x), 0.0, 1.0), min(uAmount * 2.0, 1.0)); }
 // Photo at a screen position; bias > 0 reads a blurrier mip (average over ~2^bias texels).
-vec3 photo(vec2 px) { return texture2D(uImage, imgUV(px)).rgb; }
-vec3 photoBlur(vec2 px, float bias) { return texture2D(uImage, imgUV(px), bias).rgb; }
+vec3 photo(vec2 px) { return lev(texture2D(uImage, imgUV(px)).rgb); }
+vec3 photoBlur(vec2 px, float bias) { return lev(texture2D(uImage, imgUV(px), bias).rgb); }
 // Mip bias that averages over a square of side "px" device pixels.
 float mipFor(float px) { return log2(max(1.0, px * uTexSize.x * uCover.x / uRes.x)); }
 // Average colour of the cell of side "size" device px containing px; returns the cell centre too.
@@ -149,14 +153,14 @@ vec3 pal4(float t) {
     function program(id) {
       if (programs[id]) return programs[id];
       const def = effects[id];
-      const fs = `${HEADER}\n${def.src}\nvoid main() {\n  vec2 px = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);\n  vec3 col = uAmount <= 0.0005 ? photo(px) : effect(px);\n  gl_FragColor = vec4(col, 1.0);\n}`;
+      const fs = `${HEADER}\n${def.src}\nvoid main() {\n  vec2 px = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);\n  vec3 col = uAmount <= 0.0005 ? texture2D(uImage, imgUV(px)).rgb : effect(px);\n  gl_FragColor = vec4(col, 1.0);\n}`;
       const p = gl.createProgram();
       gl.attachShader(p, compile(gl.VERTEX_SHADER, 'attribute vec2 a; void main() { gl_Position = vec4(a, 0.0, 1.0); }'));
       gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
       gl.linkProgram(p);
       if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
       const l = {};
-      for (const n of ['uImage', 'uAtlas', 'uRes', 'uCover', 'uTexSize', 'uDpr', 'uAmount', 'uTime', 'uTap', 'uP0', 'uP1', 'uPal0', 'uPal1', 'uPal2', 'uPal3', 'uAccent', 'uGlyphs', 'uAnimate']) {
+      for (const n of ['uImage', 'uAtlas', 'uRes', 'uCover', 'uTexSize', 'uDpr', 'uAmount', 'uTime', 'uTap', 'uP0', 'uP1', 'uPal0', 'uPal1', 'uPal2', 'uPal3', 'uAccent', 'uGlyphs', 'uAnimate', 'uLevels']) {
         l[n] = gl.getUniformLocation(p, n);
       }
       l.a = gl.getAttribLocation(p, 'a');
@@ -206,6 +210,7 @@ vec3 pal4(float t) {
             small = { n, data: sctx.getImageData(0, 0, n, n).data };
           } catch (e) {}
           image = { w, h, tw: c.width, th: c.height, focus: o.focus || [0.5, 0.5], small };
+          levelsKey = '';
           resolve(image);
         };
         if (typeof src === 'string') {
@@ -248,6 +253,37 @@ vec3 pal4(float t) {
       return [sx, sy, ox, oy];
     }
 
+    // Black and white points (2nd and 98th percentile luma) of the visible part of
+    // the picture, widened so the stretch never exceeds 1.8x.
+    let levelsKey = '';
+    let levelsVal = [0, 1];
+    function levels(cv) {
+      const key = cv.join(',');
+      if (key === levelsKey) return levelsVal;
+      levelsKey = key;
+      levelsVal = [0, 1];
+      if (!image.small) return levelsVal;
+      const { n, data } = image.small;
+      const ls = [];
+      for (let y = 0; y < n; y++) {
+        for (let x = 0; x < n; x++) {
+          const u = (x + 0.5) / n;
+          const v = (y + 0.5) / n;
+          if (u < cv[2] || u > cv[2] + cv[0] || v < cv[3] || v > cv[3] + cv[1]) continue;
+          const i = (y * n + x) * 4;
+          ls.push((0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]) / 255);
+        }
+      }
+      if (ls.length < 16) return levelsVal;
+      ls.sort((a, b) => a - b);
+      const lo = ls[Math.floor(ls.length * 0.02)];
+      const hi = ls[Math.ceil(ls.length * 0.98) - 1];
+      const span = Math.max(hi - lo, 1 / 1.8);
+      const black = Math.min(1 - span, Math.max(0, (lo + hi) / 2 - span / 2));
+      levelsVal = [black, black + span];
+      return levelsVal;
+    }
+
     function draw(t) {
       if (!image || !recipe) return;
       resize();
@@ -265,7 +301,9 @@ vec3 pal4(float t) {
       gl.bindTexture(gl.TEXTURE_2D, atlasTex);
       gl.uniform1i(l.uAtlas, 1);
       gl.uniform2f(l.uRes, canvas.width, canvas.height);
-      gl.uniform4fv(l.uCover, cover());
+      const cv = cover();
+      gl.uniform4fv(l.uCover, cv);
+      gl.uniform2fv(l.uLevels, levels(cv));
       gl.uniform2f(l.uTexSize, image.tw, image.th);
       gl.uniform1f(l.uDpr, dpr);
       gl.uniform1f(l.uAmount, amount);
@@ -308,7 +346,30 @@ vec3 pal4(float t) {
       return sum / count;
     }
 
-    return { setImage, setRecipe, setAmount, tap, draw, resize, lumaAt, get recipe() { return recipe; } };
+    /**
+     * Average luminance (0..1) of what draw() just put under a rectangle in CSS px.
+     * Call it right after draw(), in the same frame, so the drawing buffer is intact.
+     */
+    function drawnLumaAt(x0, y0, x1, y1) {
+      const X0 = Math.max(0, Math.round(x0 * dpr));
+      const X1 = Math.min(canvas.width, Math.round(x1 * dpr));
+      const Y0 = Math.max(0, canvas.height - Math.round(y1 * dpr));
+      const Y1 = Math.min(canvas.height, canvas.height - Math.round(y0 * dpr));
+      const w = X1 - X0;
+      const h = Y1 - Y0;
+      if (w <= 0 || h <= 0) return 0.5;
+      const buf = new Uint8Array(w * h * 4);
+      gl.readPixels(X0, Y0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+      let sum = 0;
+      let n = 0;
+      for (let i = 0; i < buf.length; i += 4 * 7) {
+        sum += 0.2126 * buf[i] + 0.7152 * buf[i + 1] + 0.0722 * buf[i + 2];
+        n++;
+      }
+      return sum / n / 255;
+    }
+
+    return { setImage, setRecipe, setAmount, tap, draw, resize, lumaAt, drawnLumaAt, get recipe() { return recipe; } };
   }
 
   window.Digital = { create, define, effects, GLYPHS };

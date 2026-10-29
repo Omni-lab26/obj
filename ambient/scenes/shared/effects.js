@@ -116,7 +116,8 @@ vec3 effect(vec2 px) {
     float dm = screenDot(px - vec2(0.0, off), pitch, radians(75.0), c3.g);
     float dy = screenDot(px, pitch, radians(0.0), c3.b);
     float dk = screenDot(px, pitch, radians(45.0), pow(k, 1.2));
-    vec3 ink = uPal0 * (1.0 - vec3(0.0, 0.9, 0.95) * dc) * (1.0 - vec3(0.85, 0.0, 0.3) * dm) * (1.0 - vec3(0.0, 0.05, 0.9) * dy);
+    // Process inks as filters: cyan takes red, magenta takes green, yellow takes blue.
+    vec3 ink = uPal0 * (1.0 - vec3(0.95, 0.3, 0.06) * dc) * (1.0 - vec3(0.07, 0.95, 0.45) * dm) * (1.0 - vec3(0.0, 0.05, 0.95) * dy);
     printed = mix(printed, ink * (1.0 - 0.92 * dk), s3);
   }
   vec3 col = mix(raw, printed, smoothstep(0.0, 0.3, a));

@@ -1,0 +1,113 @@
+# Ambient メモ
+
+## 1. スマホで再生中の音楽をアプリ内に表示できるか（調査メモ・2026年10月時点）
+
+### 結論
+
+- **できる。ただし条件付き。** Expo Go のままでは無理で、アプリにネイティブのコードを少し足した「開発ビルド」が必要です。
+- **Android は広く対応できる。** 通知へのアクセスをユーザーに許可してもらえば、Spotify・YouTube Music・Apple Music・Amazon Music・LINE MUSIC など、通知に再生中の曲が出るアプリならほぼすべての曲名・アーティスト・ジャケット・再生位置を読めます。
+- **iPhone はかなり限られる。** 公開されている方法で読めるのは Apple 純正の「ミュージック」アプリの曲だけです。Spotify や YouTube Music の曲名は読めません（非公開の仕組みを使うと審査で落ちます）。どのアプリでも「何かが再生中かどうか」だけなら分かります。
+- **Spotify は別ルートがあるが一般公開は難しい。** Spotify の公式APIで読めますが、個人開発のアプリは利用者5人までという制限があり、一般公開には法人かつ月間25万人以上の利用者が必要です。
+
+### 方法ごとの比較
+
+| 方法 | 対応する音楽アプリ | Expo Goで動く? | 必要なもの | 注意点 |
+| --- | --- | --- | --- | --- |
+| Android: 通知アクセス + MediaSession | 通知に再生中の曲が出るアプリほぼ全部 | 動かない（開発ビルド） | 小さなネイティブモジュール、設定で「通知へのアクセス」を許可してもらう | 「全通知を読めます」という警告が出るので、許可の説明画面が大事 |
+| iPhone: MusicKit（純正ミュージックアプリ） | Apple Music / ミュージックアプリのみ | 動かない（開発ビルド） | 小さなネイティブモジュール、「メディアとApple Music」の許可 | Spotify等は対象外 |
+| iPhone/Android: 「何か再生中」フラグ | 全部（ただし曲名なし） | 動かない（開発ビルド） | ごく小さなネイティブモジュール。Androidは許可不要 | 曲名・ジャケットは取れない。♪マークの表示などに |
+| Spotify 公式API | Spotify のみ（どの端末で再生中でも） | 試作なら可能性あり | Spotifyの開発者登録、ログイン | 開発中は利用者5人まで、一般公開は法人・月25万人以上が条件 |
+| Last.fm | Last.fm に記録（スクロブル）している人のみ | 動く（通信だけ） | APIキーとユーザー名 | Spotify は Last.fm 連携できるが、使っている人が限られる |
+| iPhone: 非公開API（MediaRemote） | 全部 | — | — | App Store 審査ガイドライン 2.5.1 違反で却下される。**使わない** |
+
+### おすすめの進め方
+
+1. **今（Expo Go）**: 何もしない。背景と時計を磨くことに集中。
+2. **開発ビルドに移るタイミングで**: 自前の小さな Expo モジュールを1つ作り、
+   - Android は「通知へのアクセス」方式で全アプリ対応（1〜2日）
+   - iPhone は純正ミュージックアプリ対応＋「何か再生中」フラグ（1〜2日）
+3. Spotify の公式連携は、利用者が増えて条件を満たせるようになってから検討。
+
+### 表示イメージ案（このアプリらしく）
+
+- **時計の下に小さく1行**: 「♪ 曲名 — アーティスト」を時計と同じフォントで。長押しで時計と一緒に表示/非表示。
+- **背景が曲に反応**: ジャケットの色を拾って、鯉の池の水の色やデジタルレイヤーの色味を少しだけ寄せる。一時停止中は背景の動きもゆっくりに。
+- **通りすがりの背景では**: 歩いている人のタグ（名前ラベル）の1つが曲名になって画面を横切る。
+
+### 参考（一次情報）
+
+- iOS MPMusicPlayerController（純正ミュージックアプリの状態のみ）: https://developer.apple.com/documentation/mediaplayer/mpmusicplayercontroller
+- iOS 何か再生中フラグ（isOtherAudioPlaying）: https://developer.apple.com/documentation/avfaudio/avaudiosession/isotheraudioplaying
+- App Store 審査ガイドライン 2.5.1（公開APIのみ）: https://developer.apple.com/app-store/review/guidelines/
+- Android MediaSessionManager.getActiveSessions: https://developer.android.com/reference/android/media/session/MediaSessionManager
+- Spotify 利用者数の制限（開発モード5人、拡張は法人・25万MAU）: https://developer.spotify.com/documentation/web-api/concepts/quota-modes
+- Spotify 2026年2月の開発者向け変更: https://developer.spotify.com/blog/2026-02-06-update-on-developer-access-and-platform-security
+- Last.fm user.getRecentTracks（再生中の曲に nowplaying 属性）: https://www.last.fm/api/show/user.getRecentTracks
+- Expo の自作ネイティブモジュール: https://docs.expo.dev/modules/overview/
+
+---
+
+## 2. 背景が日に日に増えていく仕組み（設計メモ）
+
+ねらい: リリース後も毎日なにか新しい背景が届くようにして、ユーザーを飽きさせない。
+
+### 背景は2種類あり、届け方が違う
+
+| 種類 | 例 | 中身 | 追加のしかた |
+| --- | --- | --- | --- |
+| 写真＋デジタル加工 | 集めた写真に「文字モザイク」「網点」などのレシピをかけたもの | 画像URL＋レシピ（JSON） | サーバーのカタログに1行足すだけ。アプリの更新は不要 |
+| 動く生成シーン | 鯉・サメ・通りすがりのようなコードで描く背景 | シーン用のHTML/JS | EAS Update（審査なしで配信できるJSの更新）で追加。週1本くらいのペース |
+
+写真のほうは今回集めた約2,000枚とレシピ（`catalog/backgrounds.json`）があるので、1日1枚でも5年以上もちます。
+
+### カタログ（サーバーに置くJSON）
+
+```json
+{
+  "version": 12,
+  "items": [
+    {
+      "id": "2026-11-01-sea-ascii",
+      "releaseAt": "2026-11-01T05:00:00+09:00",
+      "type": "photo",
+      "title": "夜明けの海", "credit": "Photo by …", "license": "Unsplash License",
+      "image": "https://…/1170x2532.jpg",
+      "recipe": { "effect": "ascii", "params": { "cell": 9 }, "animate": "shimmer" }
+    },
+    {
+      "id": "2026-11-03-jellyfish",
+      "releaseAt": "2026-11-03T05:00:00+09:00",
+      "type": "scene",
+      "scene": "jellyfish",
+      "minAppVersion": "1.2.0"
+    }
+  ]
+}
+```
+
+- 置き場所: GitHub Pages か Cloudflare R2（CDN付き）。どちらも無料枠で足ります。
+- アプリは起動時と1日1回だけ取得（ETagで差分がなければ通信ほぼゼロ）。
+- `releaseAt` が今より前のものだけ表示 → 先の分まで入れておけば、サーバーを触らなくても毎朝ひとつずつ解禁されます。
+- `minAppVersion` より古いアプリには出さない（新しいシーンのコードが入っていないため）。
+- 写真の背景は、すでにこのアプリの `scenes/photos.json` と同じ形（画像URL・焦点・レシピ・タイトル・クレジット）なので、そのままカタログに載せられます。
+
+### アプリ側でやること
+
+1. 背景リストをデータ駆動にする（`src/scenes.ts` をカタログの形にそろえる）
+2. カタログ取得＋画像キャッシュ（expo-file-system で保存、オフラインでも表示、古いものは自動削除）
+3. 新着に「NEW」バッジ、ドックに「今日の背景」
+4. 毎朝のローカル通知「今日の背景が届きました」（expo-notifications、設定でオン/オフ）
+5. 「集めた背景 ◯/◯」「お気に入り」「過去の背景をさかのぼる」で、続けて開く理由を作る
+6. （開発ビルドが必要）ホーム画面ウィジェットに今日の背景
+
+### 運用の流れ
+
+- 「来週分の背景を7つ作って」と頼む → Claude がカタログに追加するPRを作る → マージで公開
+- 各アイテムにクレジットとライセンス（Unsplash / NASA / CC0 / パブリックドメイン）を必ず持たせる
+- 画像は配信用のCDN（R2など）にスマホ向けサイズで置き直す。元のサイトに直接つなぐと、サイトの都合で消えたり遅くなったりするうえ、メトロポリタン美術館の画像は加工用に読み込めない（CORSの許可がない）
+- 生成シーンは EAS Update で配信し、カタログ側で `releaseAt` を決めて解禁日をそろえる
+
+### 注意
+
+- App Store の審査ガイドラインでは、アプリの機能を変えるコードを後からダウンロードして実行することは制限されています。写真＋レシピ（データ）の追加は問題ありません。生成シーンの追加は EAS Update（Expo公式の更新の仕組み）で行うのが安全です。
+- 端末の時計をずらせば先の背景を見られますが、困る仕組みではないので気にしなくてよいと考えています（気になる場合はサーバー側で未来分を返さないようにします）。

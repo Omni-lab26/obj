@@ -94,7 +94,9 @@
   /** Digital layer amount from the app's settings: 0 = raw picture, 1 = fully digital. */
   Host.digital = typeof init.digital === 'number' ? init.digital : 0.65;
   // Test hooks: #seed=N makes Math.random repeatable; step(dt) advances one frame by hand
-  // (call pause() first) so a test can capture exact frame sequences.
+  // (call pause() first, or load with #hold so the clock never runs on its own) so a
+  // test can capture exact frame sequences.
+  if (/[#&]hold(&|$)/.test(location.hash)) paused = true;
   const seedMatch = /seed=(\d+)/.exec(location.hash);
   if (seedMatch) {
     let a = Number(seedMatch[1]) >>> 0;
