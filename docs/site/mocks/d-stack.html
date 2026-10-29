@@ -58,6 +58,9 @@
 html{overflow-x:clip;scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:84px}
 body{margin:0;background:var(--paper);color:var(--ink);font:500 var(--t-body)/1.8 var(--f-body);
   -webkit-font-smoothing:antialiased;line-break:strict;overflow-wrap:anywhere}
+/* short lines (headings, leads, captions) break between phrases where the browser can;
+   longer paragraphs keep the even Japanese edge */
+h1,h2,h3,.sub,.lead,.foot-sub,.wk-cap,.shot figcaption,.fine span,.note,.stage-note,.rules dd,.sky-cap{word-break:auto-phrase}
 img,svg,canvas{display:block;max-width:100%}
 a{color:inherit}
 p{margin:0;text-wrap:pretty}
@@ -147,7 +150,11 @@ h1 .l2{margin-top:.34em}
 .axis{position:relative;width:62px;align-self:stretch;flex:none}
 .goal-lab{position:absolute;right:0;bottom:calc(36 * var(--cell) + 6px);font:700 var(--t-label)/1.25 var(--f-body);text-align:right}
 .tower{position:relative;width:172px;height:calc(45 * var(--cell) + 80px);flex:none}
-@media (min-width:1061px){:root{--cell:10px}.tower{width:190px}}
+@media (min-width:1061px){
+  :root{--cell:10px}.tower{width:190px}
+  /* on a desk screen the tower grows with the window's height (9–12px a cell) */
+  @supports (width:round(down, 10.5px, 1px)){:root{--cell:clamp(9px, round(down, calc((100svh - 300px) / 50), 1px), 12px)}}
+}
 .goal{position:absolute;z-index:0;left:-70px;right:-14px;bottom:calc(36 * var(--cell) - 1px);border-top:2px dashed var(--ink);pointer-events:none}
 .tower.reached .goal{border-top-style:solid}
 .blk{position:absolute;z-index:1;left:0;right:0;bottom:calc(var(--b) * var(--cell) - 2px);height:calc(var(--h) * var(--cell) + 2px);
@@ -172,7 +179,7 @@ h1 .l2{margin-top:.34em}
 .next-lab{display:inline-block;margin-right:8px;padding:1px 8px;border:2px solid var(--ink);border-radius:999px;font:700 12px/1.4 var(--f-body);vertical-align:2px}
 .next b{font-weight:700}
 .next .meta{display:block;color:var(--muted);font-size:var(--t-small)}
-.clock{font:400 30px/1.15 var(--f-display);font-variant-numeric:tabular-nums}
+.clock{display:block;margin-top:4px;font:400 30px/1.15 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
 .clock small{margin-left:10px;font:700 var(--t-small)/1 var(--f-body);color:var(--muted)}
 .go-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:12px}
 .stage-note{margin-top:12px;font-size:var(--t-label);line-height:1.6;color:var(--muted)}
@@ -282,7 +289,8 @@ h2{font:400 var(--t-h2)/1.35 var(--f-display);letter-spacing:.01em}
 .fr i{position:absolute;left:0;right:0;bottom:0;height:var(--h);background:var(--c);border:2px solid var(--ink);
   background-image:repeating-linear-gradient(to top, transparent 0 9px, rgba(23,18,31,.13) 9px 10px);
   box-shadow:inset 0 2px 0 rgba(255,255,255,.34), inset -5px 0 0 rgba(23,18,31,.14)}
-.fr i::after{content:"";position:absolute;right:-12px;top:-2px;width:8px;height:8px;background:var(--up);border:2px solid var(--ink)}
+/* the top block is still being measured: the same dashed lid as the hero's live block */
+.fr i::after{content:"";position:absolute;left:0;right:5px;top:0;height:3px;background:repeating-linear-gradient(90deg,var(--ink) 0 6px,transparent 6px 12px)}
 
 /* ---------- 画面: phones on the logo's plinths ---------- */
 .shelf{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0 20px;margin-top:64px;align-items:end}
@@ -319,13 +327,16 @@ h2{font:400 var(--t-h2)/1.35 var(--f-display);letter-spacing:.01em}
 
 /* ---------- footer: the year stands on the ground ---------- */
 .foot{margin-top:150px}
-.sky{position:relative;height:190px;overflow:hidden}
-.sky-row{position:absolute;left:0;right:0;bottom:0;display:flex;gap:4px;align-items:flex-end;justify-content:center}
-.sky-t{flex:none;width:26px;display:flex;flex-direction:column-reverse}
-.sky-t i{display:block;height:var(--h);margin-bottom:-2px;background:var(--c);border:2px solid var(--ink);
-  box-shadow:inset 0 2px 0 rgba(255,255,255,.3), inset -5px 0 0 rgba(23,18,31,.14)}
+.sky{--hpx:7px;position:relative;height:200px}
+.sky-row{position:absolute;left:0;right:0;bottom:0;display:flex;gap:4px;align-items:flex-end;justify-content:space-between}
+.sky-t{position:relative;flex:1 1 0;min-width:0;max-width:30px;display:flex;flex-direction:column-reverse}
+.sky-t i{display:block;height:calc(var(--hr) * var(--hpx));margin-bottom:-2px;background:var(--c);border:2px solid var(--ink);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.3), inset -4px 0 0 rgba(23,18,31,.14)}
+.sky-t i:first-child{margin-bottom:0}
+.sky-now{position:absolute;right:0;bottom:calc(100% + 6px);font:700 var(--t-label)/1 var(--f-body);color:var(--ink);white-space:nowrap}
 .ground{background:var(--ink);color:var(--paper);padding:30px 0 40px}
 .sky-cap{font-size:var(--t-label);color:#b9b1c4}
+.cap-narrow{display:none}
 .foot-top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-top:40px}
 .foot-mark{height:150px;gap:8px;padding:0 6px;border-bottom:3px solid var(--paper);margin-bottom:14px}
 .foot-mark i{width:30px;border:3px solid var(--paper);border-bottom:0}
@@ -375,6 +386,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
   .floor-seg{margin:0 -8px}
   .how-grid{grid-template-columns:1fr;gap:40px}
   .step .floor-seg{margin:0}
+  .step:not(:last-child) .scene{height:112px}
 }
 @media (max-width:640px){
   :root{--cell:5px;--wc:3px;--t-lead:16.5px;--t-body:16px}
@@ -413,8 +425,11 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
   .feats{grid-template-columns:1fr;gap:56px;margin-top:64px}
   .rules div{grid-template-columns:1fr}
   .foot{margin-top:110px}
-  .sky{height:150px}
-  .sky-t{width:18px}
+  .sky{--hpx:5.4px;height:160px}
+  .sky-row{gap:3px}
+  .sky-t:nth-child(-n+26){display:none}
+  .cap-wide{display:none}
+  .cap-narrow{display:inline}
   .foot-mark{display:none}
   .foot-links{margin-left:0;width:100%}
 }
@@ -520,18 +535,18 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
     <div class="feats">
       <article class="feat" aria-labelledby="f1">
         <div class="scene sc-plan" aria-hidden="true">
-          <div class="tl-past" style="width:27%"></div>
-          <div class="mini" style="--c:var(--ja);left:4%;width:17%;height:32px"><span class="tl-check">✓</span></div>
-          <span class="tl-now" style="left:calc(27% - 6px)"></span>
-          <span class="lab" style="left:36%;bottom:70px">つぎ</span>
-          <div class="mini plan" id="plan-en" style="--c:var(--en);left:36%;width:26%;height:62px"></div>
-          <div class="mini plan" style="--c:var(--ma);left:70%;width:26%;height:62px"></div>
+          <div class="tl-past" style="width:57%"></div>
+          <div class="mini" style="--c:var(--ja);left:4%;width:14%;height:32px"><span class="tl-check">✓</span></div>
+          <div class="mini" style="--c:var(--en);left:24%;width:26%;height:62px;color:#fff"><span class="tl-check">✓</span></div>
+          <span class="tl-now" style="left:calc(57% - 6px)"></span>
+          <span class="lab" style="left:66%;bottom:70px">つぎ</span>
+          <div class="mini plan" id="plan-ma" style="--c:var(--ma);left:66%;width:30%;height:62px"></div>
         </div>
         <div class="legend" aria-hidden="true">
           <span style="left:4%">6:30<br>国語</span>
-          <span class="now" style="left:calc(27% - 12px)">7:32<br>いま</span>
-          <span style="left:36%">17:00<br>英語</span>
-          <span style="left:70%">19:00<br>数学</span>
+          <span style="left:24%">17:00<br>英語</span>
+          <span class="now" style="left:calc(57% - 16px)">18:12<br>いま</span>
+          <span style="left:66%;padding-left:12px">19:00<br>数学</span>
         </div>
         <h3 id="f1">時間割</h3>
         <p>1日の予定を、1本の線にならべる。終わった所は実線、これからは点線。予定の時刻になると、お知らせが届く。</p>
@@ -596,6 +611,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 
       <article class="feat" aria-labelledby="f6">
         <div class="scene" aria-hidden="true">
+          <span class="lab" style="left:0;top:4px">いま勉強中</span>
           <div class="fr" style="left:4%"><i style="--h:126px;--c:var(--en)"></i></div>
           <div class="fr" style="left:28%"><i style="--h:96px;--c:var(--ph)"></i></div>
           <div class="fr" style="left:52%"><i style="--h:78px;--c:var(--ch)"></i></div>
@@ -674,7 +690,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
           <span class="lab" style="left:20px;bottom:84px">英語 0:25</span>
           <div class="mini plan" style="--c:var(--en);left:20px;width:150px;height:74px"></div>
           <div class="blk live" style="--c:var(--en);--on:#fff;--cell:6px;--b:0;--h:5;left:20px;right:auto;width:150px;bottom:-2px"></div>
-          <span class="lab m" style="left:182px;bottom:4px">はかって<br>いる</span>
+          <span class="lab" style="left:182px;bottom:4px">勉強中</span>
         </div>
         <div class="floor-seg" aria-hidden="true"></div>
         <span class="step-n" aria-hidden="true">2</span>
@@ -723,16 +739,16 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 
 <!-- ===== 1年: the footer stands under the year's skyline ===== -->
 <footer class="foot" aria-labelledby="foot-h">
-  <div class="sky" aria-hidden="true"><div class="sky-row" id="sky"></div></div>
+  <div class="wrap" aria-hidden="true"><div class="sky"><div class="sky-row" id="sky"></div></div></div>
   <div class="ground">
     <div class="wrap">
-      <p class="sky-cap">1週間を1本の塔にして、1年ぶん並べた見本</p>
+      <p class="sky-cap"><span class="cap-wide">1週間を1本の塔にして、この1年（52週）をならべた見本。ぜんぶで664時間。</span><span class="cap-narrow">1週間を1本の塔にして、この半年（26週）をならべた見本。</span>右はしが今週の20時間。</p>
       <div class="foot-top">
         <h2 class="foot-h" id="foot-h">今夜も、<br>少しずつ前へ。</h2>
         <span class="bars foot-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       </div>
       <p class="foot-sub">inch by inch は、英語で「少しずつ」。<br><span class="nb">Inchly（インチリー）</span>の名前は、<span class="nb">ここから。</span></p>
-      <p class="foot-sub">iPhone 向けに、[公開日]ごろ公開する予定です。<br><span class="nb">Android は [Android版の予定]。</span></p>
+      <p class="foot-sub">iPhone 向けに、<span class="nb">[公開日]ごろ公開する予定です。</span><br><span class="nb">Android は [Android版の予定]。</span></p>
       <div class="foot-row">
         <a class="logo" href="#top" aria-label="Inchly（インチリー）ページの先頭へ">
           <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
@@ -750,7 +766,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 
 <!-- residents: each has a job here -->
 <inch-pal kind="bo" do="sit" on="#cap" edge="box" at=".5"></inch-pal>
-<inch-pal kind="jiri" do="sit" on="#plan-en" edge="box" at=".5"></inch-pal>
+<inch-pal kind="jiri" do="sit" on="#plan-ma" edge="box" at=".5"></inch-pal>
 <inch-pal kind="mebu" do="sit" on="#grass" edge="box" at=".96"></inch-pal>
 
 <script src="shared/pix.js" defer></script>
@@ -829,9 +845,9 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
       const S = SUBJ[run.s];
       const left = plan ? plan.min - cur : null;
       const tail = left == null ? '' : left > 0 ? `<small>−${hm(left)}</small>` : '<small>予定クリア、延長中</small>';
-      next.innerHTML = `<span class="next-lab">はかっている</span><b>${S.n}</b>${plan ? ' ' + plan.name : ''}<span class="clock">${hm(cur)}${tail}</span>`;
+      next.innerHTML = `<span class="next-lab">勉強中</span><span class="nb"><b>${S.n}</b>${plan ? ' ' + plan.name : ''}</span><span class="clock">${hm(cur)}${tail}</span>`;
     } else if (plan) {
-      next.innerHTML = `<span class="next-lab">つぎ</span><b>${plan.at} ${SUBJ[plan.s].n}</b> ${plan.name}<span class="meta">予定 1時間（点線の箱）</span>`;
+      next.innerHTML = `<span class="next-lab">つぎ</span><span class="nb"><b>${plan.at} ${SUBJ[plan.s].n}</b> ${plan.name}</span><span class="meta">予定 1時間（点線の箱）</span>`;
     } else {
       next.innerHTML = '<span class="next-lab">つぎ</span><b>予定なし</b><span class="meta">押すと「自習」で始まる</span>';
     }
@@ -919,25 +935,32 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
   }
   grass.appendChild(frag);
 
-  /* the year's skyline: one tower per week, stacked by subject */
-  const sky = $('#sky'), rs = rng(664), cols = ['var(--en)', 'var(--ma)', 'var(--ja)', 'var(--ph)', 'var(--ch)', 'var(--en)', 'var(--ma)'];
+  /* the year's skyline: 52 weekly towers, oldest on the left. They add up
+     to the 664 hours on the badge card, and the last one is this week's
+     20.0 hours from the week chart. Phones show the latest 26 (CSS). */
+  const sky = $('#sky'), rs = rng(664), cols = ['var(--en)', 'var(--ma)', 'var(--ja)', 'var(--ph)', 'var(--ch)'];
+  const WEEKS = 52, YEAR = 664, NOW = 20;
+  const raw = [];
+  for (let k = 0; k < WEEKS - 1; k++) raw.push(5 + k * .17 + rs() * 6 + ([10, 11, 30, 31, 46].includes(k) ? 6 : 0));
+  const f = (YEAR - NOW) / raw.reduce((a, b) => a + b, 0);
+  const hrs = raw.map(v => v * f).concat(NOW);
   const skyFrag = document.createDocumentFragment();
-  for (let k = 0; k < 64; k++) {
+  hrs.forEach((hours, k) => {
     const t = document.createElement('div');
     t.className = 'sky-t';
-    const hours = 3 + rs() * 13 + (rs() < .18 ? 8 : 0) + Math.sin(k / 4.3) * 3;
-    let left = Math.max(3, hours) * 6.6;
-    const n = 2 + Math.floor(rs() * 2);
+    let left = hours;
+    const n = hours > 9 ? 3 : 2;
     for (let j = 0; j < n; j++) {
       const i = document.createElement('i');
-      const h = j === n - 1 ? left : Math.max(14, Math.round(left * (.3 + rs() * .3)));
+      const h = j === n - 1 ? left : Math.max(1.8, left * (.28 + rs() * .22));
       left -= h;
-      i.style.setProperty('--h', Math.max(12, Math.round(h)) + 'px');
+      i.style.setProperty('--hr', h.toFixed(2));
       i.style.setProperty('--c', cols[Math.floor(rs() * cols.length)]);
       t.appendChild(i);
     }
+    if (k === WEEKS - 1) { const s = document.createElement('span'); s.className = 'sky-now'; s.textContent = '今週'; t.appendChild(s); }
     skyFrag.appendChild(t);
-  }
+  });
   sky.appendChild(skyFrag);
 
   /* ---------- after pix.js: the flame on the streak candle ---------- */

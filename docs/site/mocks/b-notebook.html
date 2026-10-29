@@ -42,6 +42,7 @@
   --g0:#e6e2d8; --g1:#b4e9c6; --g2:#5fd28c; --g3:#21a35a; --g4:#127a43;
   --flame:#f0641c; --due:#b4410a;
   --focus:#2f5fb3;
+  --margin-line:rgba(52,94,158,.5); /* ノートの余白線（印刷） */
 
   /* 文字の役 */
   --f-print:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif; /* 印刷：見出しと本文 */
@@ -51,7 +52,7 @@
   /* 方眼 */
   --cell:24px;
   --pad-l:calc(var(--cell) * 2); --pad-r:calc(var(--cell) * 2);
-  --sheet-w:min(1252px, 100% - 160px);
+  --sheet-w:min(1252px, 100% - 120px);
   --edge:2px;                /* ノートの左右のふち */
   --ease:cubic-bezier(.2,.8,.2,1);      /* 行きすぎない */
   color-scheme:light;
@@ -157,15 +158,15 @@ inch-pal{display:none}
 /* ---------- 最初の画面 ---------- */
 .hero{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:calc(var(--cell) * 2);align-items:center;
   padding:calc(var(--cell) * 1) 0 calc(var(--cell) * 2)}
-.hero h1{font:900 clamp(44px, calc((100vw - 768px) / 7.6), 84px)/1.55 var(--f-print);letter-spacing:.01em}
-.hm{position:relative;display:inline-block;margin:0 1em 0 .9em}
-.hm svg{position:absolute;left:50%;top:50%;width:3.86em;height:2.08em;transform:translate(-50%,-50%);overflow:visible;pointer-events:none;
+.hero h1{font:900 clamp(44px, calc((100vw - 768px) / 7.6), 84px)/1.6 var(--f-print);letter-spacing:.01em}
+.hm{position:relative;display:inline-block;margin:0 .66em 0 .9em}
+.hm svg{position:absolute;left:50%;top:50%;width:3.7em;height:1.99em;transform:translate(-52%,-50%);overflow:visible;pointer-events:none;
   fill:none;stroke:var(--red);stroke-linecap:round;stroke-linejoin:round}
 .hm path{stroke-width:3.6px;vector-effect:non-scaling-stroke}
 .hero-sub{margin-top:calc(var(--cell) * 1.25);max-width:31em;font-size:17px;line-height:1.95;color:var(--ink-2)}
 .ctas{display:flex;flex-wrap:wrap;gap:14px 16px;margin-top:calc(var(--cell) * 1.5)}
 .hero-status{margin-top:calc(var(--cell) * 1);font-size:14px;color:var(--muted)}
-.hero-status a{margin-left:.6em;font-weight:700;color:var(--ink);text-underline-offset:3px}
+.hero-status a{display:inline-flex;align-items:center;min-height:44px;margin-left:.6em;font-weight:700;color:var(--ink);text-underline-offset:3px}
 
 /* 今日の勉強：えんぴつで書いた枠 */
 .hero-side{position:relative}
@@ -181,13 +182,14 @@ inch-pal{display:none}
   min-height:calc(var(--cell) * 2);border-bottom:1.5px dashed rgba(70,66,77,.32);font-family:var(--f-hand);font-weight:600;color:var(--pencil);font-size:21px;line-height:1.2}
 .t-time{font-variant-numeric:tabular-nums;text-align:right}
 .sq{display:block;width:14px;height:14px;background:var(--c);box-shadow:0 0 0 2px var(--ink)}
-.t-sub small{margin-left:.45em;font-size:17px;color:var(--muted)}
-.t-min{justify-self:end;padding-right:.35em}
-.ring{position:relative;display:inline-block;padding:0 .1em}
+.t-sub{min-width:0;white-space:nowrap}
+.t-sub small{margin-left:.45em;font-size:17px;color:var(--muted);white-space:nowrap}
+.t-min{justify-self:end;padding-right:.5em}
+.ring{position:relative;display:inline-block;padding:0 .3em}
 .ring svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);overflow:visible;pointer-events:none;
   fill:none;stroke:var(--red);stroke-linecap:round;stroke-linejoin:round}
-.ring.s svg{width:3.2em;height:1.71em}
-.ring.l svg{width:7em;height:1.85em}
+.ring.s svg{width:3.7em;height:1.8em}
+.ring.l svg{width:7.3em;height:2.05em}
 .ring svg path{stroke-width:2.6px;vector-effect:non-scaling-stroke}
 .t-total{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:14px;min-height:calc(var(--cell) * 4.5);padding-top:4px}
 .t-label{font-size:21px}
@@ -240,12 +242,32 @@ inch-pal{display:none}
   .sec{padding-top:calc(var(--cell) * 3)}
 }
 
-/* できること */
-.feats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:calc(var(--cell) * 1.5);row-gap:calc(var(--cell) * 3);margin-top:calc(var(--cell) * 3)}
-.feat h3{margin-top:calc(var(--cell) * 1)}
-.feat > p{margin-top:6px;font-size:16px;line-height:1.85;color:var(--ink-2)}
-.fig{position:relative;height:calc(var(--cell) * 7)}
-/* 時間割 */
+/* できること：左の余白線に、えんぴつで名前を書く。大きい3つ（時間割・タイマー・記録）は1行ずつ */
+.feats{--mg:calc(var(--cell) * 6);position:relative;margin-top:calc(var(--cell) * 3)}
+.feats::before{content:"";position:absolute;top:calc(var(--cell) * -1);bottom:calc(var(--cell) * -1);left:calc(var(--mg) + var(--cell) / 2 - 1px);width:2px;background:var(--margin-line);pointer-events:none}
+.feat{display:grid;grid-template-columns:var(--mg) var(--cell) calc(var(--cell) * 12) calc(var(--cell) * 2) minmax(0,1fr);align-items:start}
+.feat + .feat,.feat + .more{margin-top:calc(var(--cell) * 3)}
+.f-name{grid-column:1;margin:0;font-family:var(--f-hand);font-weight:600;color:var(--pencil);font-size:24px;line-height:calc(var(--cell) * 2)}
+.feat > p{grid-column:3;padding-top:9px;font-size:16px;line-height:1.85;color:var(--ink-2)}
+.feat > .fig{grid-column:5;grid-row:1}
+.fig{position:relative;min-height:calc(var(--cell) * 5)}
+/* ほかにも：小さい3つを1行に */
+.more{display:grid;grid-template-columns:var(--mg) var(--cell) minmax(0,1fr)}
+.more > .f-name{font-size:21px}
+.more-list{grid-column:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:calc(var(--cell) * 2)}
+.feat-s .f-name{font-size:21px}
+.feat-s .fig{height:calc(var(--cell) * 7)}
+.feat-s > p{margin-top:6px;font-size:16px;line-height:1.85;color:var(--ink-2)}
+.note-end{text-align:right;margin-top:calc(var(--cell) * 2)}
+/* 時間割：今日の線と、締切 */
+.fig-plan{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:calc(var(--cell) * 2)}
+.fg-h{display:flex;align-items:center;height:var(--cell);margin-bottom:calc(var(--cell) * .5);font-size:14px;font-weight:700;color:var(--muted)}
+.fg-h.due{color:var(--due)}
+.dues{list-style:none;margin:0;padding:0}
+.dues li{display:flex;align-items:baseline;gap:10px;height:calc(var(--cell) * 1.5);border-bottom:1.5px solid var(--rule);font-size:15px;line-height:calc(var(--cell) * 1.5)}
+.dues span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dues b{margin-left:auto;font-weight:900;font-size:17px;color:var(--due);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dues li:first-child b{font-size:21px}
 .route{list-style:none;margin:0;padding:0}
 .route li{position:relative;display:grid;grid-template-columns:calc(var(--cell) * 2.5) var(--cell) minmax(0,1fr);align-items:center;height:calc(var(--cell) * 1.5);font-size:16px}
 .route b{font-weight:700;font-variant-numeric:tabular-nums}
@@ -253,23 +275,23 @@ inch-pal{display:none}
 .route li:not(:last-child)::after{content:"";position:absolute;left:calc(var(--cell) * 3 - 1px);top:50%;height:calc(var(--cell) * 1.5);width:2px;background:var(--ink)}
 .route span{padding-left:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .route small{color:var(--muted);font-size:14px;margin-left:.4em}
-.deadline{display:flex;align-items:baseline;gap:10px;margin-top:calc(var(--cell) * 1);padding-top:8px;border-top:2px solid var(--ink);font-size:15px}
-.deadline .k{font-weight:700;color:var(--due)}
-.deadline b{margin-left:auto;font-weight:900;font-size:21px;color:var(--due);font-variant-numeric:tabular-nums}
 /* タイマー */
+.fig-timer{max-width:calc(var(--cell) * 16)}
 .tm-sub{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700}
 .tm-time{margin-top:6px;font:900 46px/1.2 var(--f-print);font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .tm-bar{margin-top:12px;height:12px;border:2px solid var(--ink);border-radius:6px;overflow:hidden;background:#fffdf8}
-.tm-bar i{display:block;height:100%;width:66%;background:var(--s-ja)}
+.tm-bar i{display:block;height:100%;width:66%;background:var(--s-ma)}
 .tm-plan{display:flex;justify-content:space-between;margin-top:8px;font-size:14px;color:var(--muted)}
-/* 記録：草は方眼のマスそのもの */
+/* 記録：草は方眼のマスそのもの。めぶ（芽）は今週の列の上に住む */
+.fig-grass{padding-top:calc(var(--cell) * 2);overflow-x:clip}
+.mebu{position:absolute;left:0;top:0;display:block;pointer-events:none;image-rendering:pixelated}
 .grass{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,var(--cell));grid-auto-columns:var(--cell);width:max-content}
 .grass i{display:block;padding:3px}
 .grass i::before{content:"";display:block;width:100%;height:100%;border-radius:2px;background:var(--lv,transparent)}
 .grass i[data-l="0"]{--lv:var(--g0)} .grass i[data-l="1"]{--lv:var(--g1)} .grass i[data-l="2"]{--lv:var(--g2)} .grass i[data-l="3"]{--lv:var(--g3)} .grass i[data-l="4"]{--lv:var(--g4)}
 .grass i.is-today::before{box-shadow:0 0 0 2px var(--ink)}
 /* 連続記録 */
-.streak{display:grid;grid-template-columns:auto 1fr;column-gap:calc(var(--cell) * 1);height:100%;align-items:end}
+.streak{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;column-gap:calc(var(--cell) * 1);height:100%;align-items:end}
 .st-days{display:flex;padding-bottom:4px}
 .st-days span{display:flex;flex-direction:column;align-items:center;width:var(--cell);font-size:13px;line-height:1.5;color:var(--muted)}
 .st-days span i{display:block;width:var(--cell);height:var(--cell);padding:5px}
@@ -280,7 +302,7 @@ inch-pal{display:none}
 .st-count{align-self:start;padding-top:calc(var(--cell) * .5)}
 .st-count b{display:block;font:900 46px/1.1 var(--f-print);font-variant-numeric:tabular-nums}
 .st-count span{display:block;font-weight:700;font-size:16px}
-.st-ticket{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:14px;color:var(--ink-2)}
+.st-ticket{grid-column:1 / -1;display:flex;align-items:center;gap:6px;margin-top:8px;font-size:14px;line-height:1.5;color:var(--ink-2);white-space:nowrap}
 .st-ticket i{display:block;width:22px;height:14px;border:2px dashed var(--ink);border-radius:3px;background:#fffdf8}
 /* バッジ：テープで貼る */
 .taped{position:relative;margin:0;padding-top:calc(var(--cell) * 1)}
@@ -299,14 +321,18 @@ inch-pal{display:none}
 .friends li em{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;min-width:2.6em;text-align:right}
 
 /* 画面：テープで貼った写真 */
-.shots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:calc(var(--cell) * 2);margin-top:calc(var(--cell) * 3);padding-top:14px}
-.shot{position:relative;margin:0;transform:rotate(var(--r,0deg))}
+/* PC：前の列に大きく3枚（ホーム・タイマー・時間割）、2列目に小さく3枚 */
+.shots{--g:calc(var(--cell) * 2);display:flex;flex-wrap:wrap;justify-content:center;column-gap:var(--g);row-gap:calc(var(--cell) * 3);margin-top:calc(var(--cell) * 3);padding-top:14px}
+.shot{position:relative;flex:0 0 calc((100% - var(--g) * 2) / 3);margin:0;transform:rotate(var(--r,0deg))}
+.shot.sm{flex-basis:calc((100% - var(--g) * 2) / 3 * .72)}
 .shot img{width:100%;border:2px solid var(--ink);border-radius:18px;background:#fff}
+.shot.sm img{border-radius:14px}
 .shot figcaption{margin-top:12px;text-align:center;font-family:var(--f-hand);font-weight:600;font-size:21px;line-height:1.3;color:var(--pencil)}
 @media (max-width:999px){
-  .shots{display:flex;gap:calc(var(--cell) * 1.5);overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;
+  .shots{flex-wrap:nowrap;justify-content:flex-start;gap:calc(var(--cell) * 1.5);overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;
     margin-inline:calc(-1 * var(--pad-l)) calc(-1 * var(--pad-r));padding:18px var(--pad-r) 14px var(--pad-l);scroll-padding-inline:var(--pad-l);scrollbar-width:thin}
-  .shot{flex:0 0 min(56%, 240px);scroll-snap-align:start}
+  .shot,.shot.sm{flex:0 0 min(56%, 240px);scroll-snap-align:start}
+  .shot.sm img{border-radius:18px}
 }
 
 /* 使い方 */
@@ -319,7 +345,7 @@ inch-pal{display:none}
 .mini b{font-weight:700;font-variant-numeric:tabular-nums}
 .mini small{font-size:13px;color:var(--muted)}
 .mini-bar{position:relative;border-radius:16px;overflow:hidden}
-.mini-bar::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:62%;background:var(--s-ja)}
+.mini-bar::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:66%;background:var(--s-ma)}
 .mini-bar .pz{margin-left:auto;font-weight:900;letter-spacing:-.1em}
 .mini-rec .memo{min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
 .mini-rec .ok{display:grid;place-items:center;flex:none;width:30px;height:30px;margin-left:auto;border-radius:50%;background:var(--ink);color:#fffdf8;font-size:15px;font-weight:900}
@@ -336,14 +362,21 @@ inch-pal{display:none}
 .renraku thead th{padding-top:10px;padding-bottom:10px;font-size:13px;font-weight:700;color:var(--muted);background:#f7f3ea}
 .renraku tbody th{font-weight:700;width:30%}
 .renraku td.init{font-weight:700;white-space:nowrap}
+.renraku .opt{white-space:nowrap}
 .pnotes{display:grid;gap:calc(var(--cell) * 1.5)}
 .pnotes p{margin-top:6px;font-size:16px;color:var(--ink-2)}
 
 /* ---------- 締め：ノートの裏表紙 ---------- */
-.cover{position:relative;background:var(--kraft);border-top:2px solid var(--ink);color:var(--ink)}
+.cover{--focus:var(--ink);position:relative;background:var(--kraft);border-top:2px solid var(--ink);color:var(--ink)}
+/* ノートの紙の下に、紙の束の小口（いちばん下が裏表紙） */
+.cover::before{content:"";position:absolute;left:50%;top:0;width:var(--sheet-w);height:16px;transform:translateX(-50%);
+  background:repeating-linear-gradient(to bottom, var(--sheet) 0 4px, rgba(23,18,31,.45) 4px 5.5px);
+  border:2px solid var(--ink);border-top:0;border-radius:0 0 8px 8px;pointer-events:none}
 .cover-in{width:var(--sheet-w);margin:0 auto;padding:calc(var(--cell) * 4) var(--pad-r) 40px var(--pad-l)}
 .cv-top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px 40px;flex-wrap:wrap}
 .cv-top h2{font:900 clamp(36px, 5.2vw, 72px)/1.35 var(--f-print);letter-spacing:.01em}
+.cv-status{display:flex;align-items:center;gap:12px;margin:0 0 10px;font:700 21px/1.4 var(--f-print)}
+.cv-status i{flex:none;width:14px;height:14px;background:var(--ink)}
 .cv-mid{display:grid;grid-template-columns:minmax(0,18fr) minmax(0,28fr);gap:calc(var(--cell) * 2);margin-top:calc(var(--cell) * 3);align-items:start}
 .namelabel{position:relative;background:var(--label);border:2px solid var(--ink);border-radius:12px;padding:16px 24px 18px;transform:rotate(-1.2deg);max-width:440px}
 .nl-k{display:block;font:700 13px/1 var(--f-print);color:var(--muted);letter-spacing:.2em}
@@ -364,13 +397,31 @@ inch-pal{display:none}
 .legal{margin-top:16px;font-size:14px;line-height:1.8;color:#3a2e1e}
 
 /* ---------- 広さごと ---------- */
-@media (max-width:1179px){
+/* 960〜1179：2列のまま、右を 400px にして字を少し小さく */
+@media (min-width:960px) and (max-width:1179px){
+  .hero{grid-template-columns:minmax(0,1fr) 400px;gap:calc(var(--cell) * 1.5)}
+  .hero h1{font-size:clamp(42px, calc((100vw - 600px) / 9.2), 54px)}
+  .hero-sub{font-size:16px;line-height:1.85}
+  .today{padding:16px 18px 20px}
+  .t-rows li{grid-template-columns:2.7em 12px minmax(0,1fr) auto;column-gap:9px;font-size:19px}
+  .t-rows .sq{width:12px;height:12px}
+  .t-sub small{font-size:15px}
+  .t-label{font-size:19px}
+  .t-sum{font-size:28px}
+  .t-diff{font-size:15px}
+}
+@media (max-width:959px){
   .hero{grid-template-columns:minmax(0,1fr);gap:calc(var(--cell) * 2)}
   .hero-side{max-width:520px}
   .hero h1{font-size:clamp(44px, 5.9vw, 72px)}
 }
 @media (max-width:999px){
-  .feats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .feats{--mg:calc(var(--cell) * 5)}
+  .feat{grid-template-columns:var(--mg) var(--cell) minmax(0,1fr)}
+  .feat > p{grid-column:3;grid-row:1}
+  .feat > .fig{grid-column:3;grid-row:2;margin-top:calc(var(--cell) * 1)}
+  .more-list{grid-template-columns:minmax(0,1fr);row-gap:calc(var(--cell) * 2.5)}
+  .feat-s .fig{max-width:calc(var(--cell) * 16)}
   .steps{grid-template-columns:minmax(0,1fr);gap:calc(var(--cell) * 1.5)}
   .parents{grid-template-columns:1fr}
   .cv-mid{grid-template-columns:1fr}
@@ -394,15 +445,20 @@ inch-pal{display:none}
   .hero-status{margin-top:calc(var(--cell) * .75)}
   .hero-side{margin-top:calc(var(--cell) * 1)}
   .today{padding:14px 16px 18px}
-  .t-rows li{grid-template-columns:2.7em 12px minmax(0,1fr) auto;column-gap:9px;font-size:19px}
+  .t-rows li{grid-template-columns:2.7em 12px minmax(0,1fr) auto;column-gap:9px;font-size:18px}
   .t-rows .sq{width:12px;height:12px}
-  .t-sub small{font-size:15px}
+  .t-sub small{font-size:14px}
   .t-sum{font-size:28px}
   .t-diff{font-size:15px}
   .t-label{font-size:19px}
-  .feats{grid-template-columns:minmax(0,1fr);row-gap:calc(var(--cell) * 2.5)}
-  .fig{height:auto;min-height:calc(var(--cell) * 7)}
-  .fig-grass,.fig-streak{height:calc(var(--cell) * 7)}
+  .feats::before{display:none}
+  .feat,.more{display:block}
+  .feat + .feat,.feat + .more{margin-top:calc(var(--cell) * 3)}
+  .f-name{line-height:1.5}
+  .feat > p{padding-top:0;margin-top:4px}
+  .more > .f-name{display:none}
+  .feat-s .fig{max-width:none}
+  .fig-plan{grid-template-columns:minmax(0,1fr);row-gap:calc(var(--cell) * 1)}
   .tm-time,.st-count b{font-size:42px}
   .renraku thead{display:none}
   .renraku table,.renraku tbody,.renraku tr,.renraku th,.renraku td{display:block;width:auto}
@@ -414,7 +470,8 @@ inch-pal{display:none}
   .renraku td.init.none{display:none}
   .rk-head{padding:10px 16px}
   .cover-in{padding-top:calc(var(--cell) * 3)}
-  .cv-top .btn{width:100%}
+  .cover::before{border-left:0;border-right:0;border-radius:0}
+  .cv-status{font-size:19px;margin:0}
   .nl-name b{font-size:40px}
   .calm{margin-left:0}
   .spec dl div{grid-template-columns:1fr;gap:2px}
@@ -423,6 +480,10 @@ inch-pal{display:none}
   .t-diff{grid-area:diff}
   .t-diff b{display:inline;margin-left:.4em}
   .t-sum{grid-area:sum;margin:22px 0 26px}
+}
+/* 380 未満のスマホ：科目の下の小さい字（古文単語など）は出さない。丸が字にかからないように */
+@media (max-width:379px){
+  .t-sub small{display:none}
 }
 
 /* ---------- 動きを止める ---------- */
@@ -470,7 +531,7 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
   <section class="hero" aria-labelledby="hero-h">
     <div class="hero-copy">
       <h1 id="hero-h">今日の勉強に、<br><span class="hm">花丸<svg viewBox="0 0 386 208" aria-hidden="true" focusable="false"><path d="M107.4 60.4Q120.4 55.8 127.4 53.8Q134.4 51.9 141.8 50.2Q149.2 48.5 156.9 47.3Q164.7 46.1 172.6 45.1Q180.5 44.1 188.5 43.6Q196.5 43.1 204.5 42.9Q212.5 42.7 220.5 42.9Q228.4 43.1 236.2 43.7Q243.9 44.3 251.3 45.3Q258.7 46.4 265.7 47.8Q272.7 49.2 279.3 50.9Q285.8 52.6 291.8 54.7Q297.8 56.7 303.2 59.1Q308.5 61.4 313.0 64.1Q317.4 66.8 321.2 69.7Q325.0 72.6 328.0 75.7Q331.0 78.8 333.1 82.1Q335.3 85.4 336.4 88.8Q337.5 92.2 337.8 95.7Q338.1 99.2 337.6 102.7Q337.0 106.3 335.3 109.8Q333.5 113.3 331.1 116.8Q328.8 120.3 325.4 123.7Q322.0 127.1 317.7 130.3Q313.4 133.5 308.5 136.6Q303.6 139.7 297.9 142.6Q292.3 145.5 285.9 148.1Q279.6 150.7 272.6 153.0Q265.7 155.3 258.3 157.3Q250.9 159.3 243.0 160.9Q235.2 162.6 227.1 163.8Q218.9 165.0 210.7 166.0Q202.4 166.9 194.0 167.4Q185.6 167.8 177.3 167.9Q168.9 167.9 160.7 167.5Q152.5 167.2 144.5 166.5Q136.4 165.8 128.8 164.7Q121.1 163.6 114.0 162.0Q106.8 160.4 100.1 158.5Q93.4 156.7 87.3 154.5Q81.1 152.3 75.7 149.8Q70.2 147.2 65.8 144.3Q61.4 141.4 57.5 138.4Q53.6 135.4 50.8 132.1Q48.0 128.8 45.9 125.3Q43.8 121.9 42.8 118.3Q41.9 114.7 41.8 111.0Q41.7 107.4 42.5 103.7Q43.3 100.0 45.1 96.3Q47.0 92.6 49.9 89.0Q52.8 85.4 56.6 81.9Q60.5 78.4 64.9 75.1Q69.4 71.7 74.8 68.5Q80.3 65.4 86.4 62.5Q92.5 59.6 99.2 56.9Q106.0 54.3 113.3 51.9Q120.6 49.5 128.5 47.6Q136.4 45.6 144.6 44.0Q152.8 42.5 161.3 41.1Q169.7 39.8 168.4 38.8Q167.1 37.8 166.5 37.1Q165.9 36.5 165.4 35.4Q165.0 34.4 164.9 32.9Q164.8 31.4 165.0 29.7Q165.3 27.9 166.0 26.0Q166.7 24.0 167.9 22.0Q169.1 20.0 170.8 18.0Q172.4 16.0 174.6 14.3Q176.7 12.5 179.3 11.0Q181.8 9.5 184.7 8.4Q187.6 7.3 190.7 6.6Q193.8 5.9 196.9 5.8Q200.1 5.6 203.3 5.9Q206.4 6.3 209.5 7.1Q212.5 7.9 215.2 9.1Q217.9 10.4 220.3 12.0Q222.7 13.6 224.6 15.4Q226.5 17.2 228.0 19.2Q229.4 21.1 230.4 23.1Q231.3 25.0 231.8 26.8Q232.3 28.6 232.3 30.2Q232.4 31.8 232.1 33.0Q231.8 34.2 231.2 35.0Q230.6 35.8 230.0 36.2Q229.3 36.5 228.6 36.3Q227.9 36.1 227.3 35.5Q226.8 34.8 226.5 33.8Q226.1 32.7 226.2 31.3Q226.2 29.8 226.7 28.2Q227.1 26.5 228.1 24.7Q229.0 22.9 230.5 21.1Q231.9 19.3 233.8 17.6Q235.8 15.9 238.1 14.5Q240.5 13.1 243.2 12.0Q246.0 10.9 249.0 10.2Q252.0 9.6 255.1 9.4Q258.3 9.2 261.5 9.6Q264.7 9.9 267.7 10.8Q270.8 11.6 273.7 12.9Q276.5 14.2 279.0 15.9Q281.6 17.6 283.7 19.6Q285.8 21.6 287.4 23.7Q289.0 25.9 290.2 28.1Q291.3 30.3 291.9 32.4Q292.5 34.6 292.7 36.5Q292.9 38.4 292.7 40.1Q292.5 41.7 291.9 42.9Q291.4 44.1 290.7 44.9Q290.1 45.6 289.3 45.9Q288.6 46.2 287.9 46.0Q287.2 45.8 286.7 45.2Q286.2 44.6 286.0 43.6Q285.8 42.6 286.0 41.3Q286.2 39.9 286.8 38.4Q287.5 36.9 288.6 35.2Q289.8 33.6 291.5 32.1Q293.2 30.5 295.4 29.2Q297.6 27.9 300.3 26.9Q303.0 25.8 306.0 25.3Q309.0 24.7 312.2 24.7Q315.4 24.7 318.7 25.2Q322.0 25.8 325.3 27.0Q328.5 28.1 331.5 29.8Q334.5 31.6 337.2 33.8Q339.8 36.0 342.0 38.6Q344.2 41.2 345.7 44.1Q347.3 47.0 348.3 50.0Q349.2 52.9 349.6 55.8Q349.9 58.8 349.6 61.4Q349.3 64.1 348.5 66.4Q347.7 68.7 346.5 70.5Q345.3 72.2 343.8 73.4Q342.4 74.6 340.9 75.1Q339.3 75.6 337.9 75.4Q336.6 75.3 335.5 74.5Q334.4 73.8 333.9 72.5Q333.3 71.3 333.4 69.7Q333.4 68.1 334.2 66.5Q335.0 64.8 336.5 63.2Q338.0 61.7 340.1 60.4Q342.3 59.2 345.0 58.5Q347.8 57.8 350.9 57.7Q354.0 57.7 357.3 58.5Q360.7 59.3 363.9 61.0Q367.2 62.6 370.1 65.1Q373.0 67.6 375.4 70.8Q377.8 74.1 379.4 77.8Q381.0 81.6 381.7 85.7Q382.4 89.7 382.1 93.8Q381.8 97.9 380.6 101.8Q379.4 105.6 377.4 108.9Q375.3 112.3 372.7 114.9Q370.1 117.5 367.1 119.2Q364.1 121.0 361.0 121.8Q358.0 122.7 355.1 122.7Q352.2 122.7 349.7 121.9Q347.3 121.2 345.5 120.0Q343.6 118.7 342.5 117.1Q341.4 115.5 341.1 113.9Q340.7 112.3 341.1 110.8Q341.5 109.3 342.6 108.3Q343.7 107.3 345.3 106.8Q346.8 106.4 348.6 106.6Q350.4 106.8 352.3 107.8Q354.2 108.7 355.9 110.4Q357.6 112.0 358.9 114.3Q360.3 116.5 361.1 119.3Q362.0 122.0 362.2 125.2Q362.5 128.3 362.0 131.5Q361.6 134.8 360.5 138.1Q359.4 141.3 357.6 144.4Q355.8 147.4 353.5 150.2Q351.2 152.9 348.4 155.1Q345.6 157.3 342.5 159.0Q339.3 160.7 336.1 161.7Q332.8 162.8 329.6 163.2Q326.3 163.6 323.2 163.4Q320.2 163.3 317.4 162.6Q314.6 161.9 312.3 160.8Q309.9 159.8 308.1 158.4Q306.2 157.0 304.9 155.6Q303.6 154.1 302.9 152.6Q302.1 151.2 301.9 149.9Q301.6 148.6 301.8 147.6Q302.0 146.6 302.6 145.9Q303.1 145.3 303.9 145.1Q304.6 144.8 305.5 145.1Q306.4 145.3 307.3 146.1Q308.2 146.8 309.0 148.1Q309.8 149.3 310.3 151.1Q310.8 152.8 311.0 154.9Q311.1 157.0 310.8 159.4Q310.5 161.8 309.7 164.3Q308.9 166.9 307.5 169.4Q306.1 172.0 304.2 174.4Q302.2 176.9 299.8 179.0Q297.4 181.2 294.6 183.0Q291.7 184.8 288.6 186.1Q285.4 187.4 282.1 188.2Q278.8 189.0 275.4 189.2Q272.0 189.4 268.8 189.0Q265.5 188.6 262.5 187.8Q259.4 186.9 256.8 185.5Q254.1 184.2 251.9 182.6Q249.8 180.9 248.1 179.0Q246.4 177.2 245.4 175.2Q244.3 173.3 243.8 171.5Q243.3 169.6 243.3 168.0Q243.3 166.4 243.8 165.1Q244.2 163.9 245.0 163.1Q245.9 162.3 246.9 162.1Q247.9 161.9 249.0 162.3Q250.0 162.7 251.0 163.7Q251.9 164.7 252.6 166.2Q253.3 167.7 253.5 169.6Q253.8 171.5 253.6 173.7Q253.4 176.0 252.7 178.4Q251.9 180.8 250.6 183.2Q249.3 185.6 247.4 188.0Q245.5 190.3 243.1 192.4Q240.7 194.4 237.9 196.2Q235.0 197.9 231.9 199.1Q228.7 200.3 225.3 201.0Q222.0 201.7 218.6 201.9Q215.1 202.0 211.8 201.6Q208.4 201.2 205.3 200.2Q202.2 199.3 199.4 197.9Q196.6 196.5 194.3 194.8Q191.9 193.1 190.1 191.2Q188.2 189.2 186.9 187.2Q185.6 185.2 184.8 183.2Q184.0 181.2 183.7 179.4Q183.5 177.7 183.6 176.2Q183.8 174.7 184.3 173.6Q184.8 172.5 185.5 171.9Q186.2 171.3 187.0 171.2Q187.8 171.1 188.6 171.5Q189.4 171.8 190.0 172.6Q190.7 173.5 191.1 174.8Q191.5 176.1 191.5 177.8Q191.5 179.5 191.1 181.4Q190.6 183.4 189.7 185.5Q188.7 187.6 187.2 189.7Q185.7 191.8 183.7 193.8Q181.6 195.7 179.1 197.4Q176.6 199.1 173.6 200.5Q170.7 201.8 167.4 202.7Q164.2 203.5 160.7 203.8Q157.3 204.1 153.9 203.8Q150.4 203.6 147.0 202.7Q143.7 201.9 140.6 200.5Q137.5 199.2 134.8 197.4Q132.0 195.6 129.8 193.4Q127.5 191.3 125.8 188.9Q124.1 186.5 123.0 184.1Q121.9 181.7 121.3 179.3Q120.8 177.0 120.8 174.9Q120.8 172.8 121.3 171.0Q121.8 169.3 122.6 168.0Q123.4 166.7 124.5 166.0Q125.5 165.3 126.7 165.2Q127.8 165.1 128.8 165.6Q129.8 166.1 130.6 167.2Q131.3 168.3 131.7 169.8Q132.0 171.3 131.9 173.2Q131.7 175.0 131.0 177.0Q130.3 179.1 129.0 181.2Q127.6 183.2 125.7 185.2Q123.8 187.1 121.4 188.8Q118.9 190.5 116.0 191.8Q113.1 193.1 109.8 193.8Q106.6 194.6 103.1 194.8Q99.6 195.0 96.1 194.6Q92.6 194.2 89.2 193.2Q85.8 192.2 82.6 190.6Q79.5 189.1 76.7 187.0Q73.9 185.0 71.7 182.6Q69.4 180.2 67.7 177.5Q65.9 174.9 64.8 172.2Q63.7 169.5 63.1 166.9Q62.6 164.2 62.6 161.8Q62.6 159.4 63.1 157.4Q63.6 155.4 64.4 153.8Q65.3 152.2 66.3 151.2Q67.4 150.2 68.5 149.7Q69.6 149.3 70.6 149.4Q71.6 149.5 72.5 150.1Q73.3 150.7 73.7 151.7Q74.2 152.7 74.2 154.1Q74.2 155.5 73.7 157.1Q73.1 158.7 72.0 160.4Q70.8 162.1 69.1 163.6Q67.3 165.2 65.0 166.4Q62.6 167.7 59.8 168.6Q57.0 169.4 53.8 169.7Q50.6 170.0 47.2 169.6Q43.8 169.2 40.4 168.2Q37.0 167.1 33.8 165.3Q30.5 163.5 27.7 161.1Q24.8 158.7 22.4 155.7Q20.1 152.7 18.4 149.4Q16.7 146.0 15.7 142.4Q14.8 138.9 14.6 135.3Q14.5 131.8 15.1 128.4Q15.8 125.1 17.1 122.2Q18.4 119.3 20.2 117.0Q22.1 114.7 24.2 113.2Q26.4 111.7 28.7 111.0Q31.0 110.3 33.1 110.3Q35.2 110.4 36.9 111.2Q38.6 112.0 39.7 113.4Q40.8 114.7 41.1 116.4Q41.3 118.1 40.8 119.7Q40.2 121.4 38.8 122.8Q37.4 124.2 35.4 125.1Q33.3 126.0 30.8 126.1Q28.3 126.2 25.6 125.5Q22.9 124.8 20.3 123.2Q17.6 121.7 15.3 119.3Q13.0 116.8 11.2 113.7Q9.5 110.6 8.5 107.0Q7.4 103.5 7.3 99.6Q7.1 95.7 7.8 91.9Q8.5 88.0 10.0 84.3Q11.6 80.7 13.8 77.4Q16.1 74.2 18.9 71.6Q21.7 68.9 24.9 67.0Q28.1 65.1 31.5 63.9Q34.8 62.8 38.1 62.3Q41.4 61.9 44.5 62.2Q47.6 62.5 50.2 63.4Q52.9 64.2 55.0 65.5Q57.1 66.8 58.6 68.4Q60.0 69.9 60.9 71.6Q61.7 73.2 61.9 74.7Q62.0 76.2 61.6 77.5Q61.2 78.7 60.4 79.5Q59.5 80.4 58.3 80.7Q57.1 81.0 55.8 80.7Q54.4 80.4 53.0 79.5Q51.6 78.6 50.3 77.1Q49.1 75.5 48.1 73.5Q47.2 71.4 46.7 68.8Q46.2 66.3 46.3 63.4Q46.3 60.6 47.0 57.5Q47.7 54.5 49.0 51.5Q50.3 48.4 52.3 45.5Q54.3 42.7 56.8 40.1Q59.3 37.5 62.3 35.4Q65.3 33.3 68.7 31.8Q72.0 30.2 75.6 29.3Q79.1 28.3 82.7 28.1Q86.2 27.8 89.7 28.1Q93.1 28.5 96.2 29.4Q99.4 30.3 102.1 31.7Q104.8 33.2 106.9 34.9Q109.1 36.7 110.7 38.6Q112.2 40.6 113.2 42.6Q114.1 44.6 114.4 46.4Q114.8 48.3 114.5 49.9Q114.3 51.5 113.6 52.6Q112.9 53.8 111.8 54.5Q110.8 55.1 109.5 55.1Q108.3 55.1 107.0 54.5Q105.8 53.8 104.7 52.6Q103.6 51.4 102.8 49.6Q102.1 47.8 101.7 45.6Q101.4 43.4 101.6 40.9Q101.7 38.4 102.5 35.7Q103.3 33.0 104.7 30.3Q106.1 27.6 108.1 25.1Q110.1 22.5 112.6 20.2Q115.2 18.0 118.2 16.1Q121.2 14.3 124.5 13.0Q127.8 11.7 131.3 10.9Q134.8 10.2 138.3 10.0Q141.9 9.9 145.3 10.3Q148.7 10.8 151.9 11.7Q155.1 12.7 157.9 14.2Q160.7 15.6 163.0 17.4Q165.3 19.2 167.0 21.2Q168.8 23.1 170.0 25.2Q171.2 27.2 171.8 29.2Q172.5 31.2 172.6 32.9Q172.7 34.6 172.4 36.0Q172.0 37.4 171.4 38.3Q170.7 39.3 169.8 39.7Q169.0 40.1 168.0 40.0Q167.1 39.9 166.2 39.3Q165.4 38.6 164.7 37.5Q164.0 36.3 163.7 34.7Q163.4 33.1 163.5 31.2Q163.6 29.3 164.2 27.1Q164.8 25.0 165.9 22.7Q167.0 20.5 168.7 18.3Q170.4 16.2 172.6 14.2Q174.8 12.2 177.4 10.5L180.1 8.9"/></svg></span>を。</h1>
-      <p class="hero-sub">時間をはかって、✓ で記録して、友だちと見せ合える。やった日はマスが緑に、続けた日数は炎で数える。iPhone の勉強アプリです。</p>
+      <p class="hero-sub">がんばった日は、自分に花丸。時間をはかって、記録して、友だちと見せ合える。やった日はマスが緑に、続けた日数は炎で数える。iPhone の勉強アプリです。</p>
       <div class="ctas">
         <a class="btn btn-lime" href="#screens">画面を見てみる <span aria-hidden="true">↓</span></a>
         <a class="btn btn-ghost" href="#how">使い方 <span aria-hidden="true">↓</span></a>
@@ -485,9 +546,9 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
           <p class="t-goal hand">目標 3時間</p>
         </div>
         <ol class="t-rows">
-          <li><span class="t-time">6:30</span><i class="sq" style="--c:var(--s-ja)" aria-hidden="true"></i><span class="t-sub">国語<small>古文単語</small></span><span class="t-min"><span class="ring s">30分<svg viewBox="0 0 120 64" aria-hidden="true" focusable="false"><path d="M70.1 8.6Q75.5 8.8 78.1 9.1Q80.8 9.3 83.2 9.7Q85.7 10.1 88.1 10.7Q90.4 11.2 92.6 11.8Q94.7 12.5 96.6 13.3Q98.5 14.1 100.2 15.0Q102.0 15.9 103.3 16.9Q104.7 17.9 105.9 19.0Q107.0 20.1 108.0 21.3Q108.9 22.4 109.4 23.7Q109.9 24.9 110.2 26.2Q110.4 27.5 110.3 28.8Q110.3 30.1 109.9 31.4Q109.5 32.8 108.9 34.1Q108.2 35.4 107.2 36.7Q106.1 38.0 104.9 39.3Q103.6 40.6 102.0 41.8Q100.5 43.0 98.6 44.2Q96.8 45.3 94.7 46.4Q92.7 47.5 90.4 48.5Q88.2 49.5 85.8 50.3Q83.3 51.2 80.7 51.9Q78.1 52.7 75.4 53.3Q72.7 53.9 69.8 54.4Q67.0 54.9 64.2 55.3Q61.4 55.6 58.5 55.8Q55.6 56.0 52.8 56.1Q49.9 56.1 47.1 56.0Q44.3 56.0 41.6 55.7Q38.9 55.5 36.4 55.0Q33.8 54.6 31.4 54.1Q29.0 53.6 26.8 52.9Q24.6 52.2 22.6 51.4Q20.6 50.6 18.8 49.7Q17.0 48.7 15.6 47.7Q14.1 46.6 12.9 45.5Q11.7 44.4 10.7 43.2Q9.7 42.0 9.2 40.7Q8.7 39.5 8.4 38.1Q8.1 36.8 8.1 35.5Q8.1 34.1 8.4 32.8Q8.8 31.4 9.5 30.0Q10.2 28.7 11.2 27.3Q12.2 26.0 13.6 24.6Q15.0 23.3 16.5 22.1Q18.1 20.8 19.9 19.6Q21.8 18.4 23.9 17.3Q26.0 16.2 28.3 15.2Q30.6 14.2 33.2 13.3Q35.7 12.4 38.3 11.6Q41.0 10.8 43.8 10.1Q46.6 9.5 49.4 9.0Q52.3 8.5 55.3 8.1Q58.2 7.7 61.1 7.5Q64.1 7.3 67.0 7.2Q69.9 7.2 72.8 7.3Q75.7 7.3 78.5 7.6Q81.3 7.8 83.9 8.2Q86.6 8.6 89.1 9.2Q91.5 9.7 93.9 10.4Q96.2 11.1 98.3 11.9Q100.3 12.8 102.1 13.7Q103.9 14.7 105.5 15.7L107.0 16.8"/></svg></span><span class="sr">（記録ずみ）</span></span></li>
-          <li><span class="t-time">17:00</span><i class="sq" style="--c:var(--s-en)" aria-hidden="true"></i><span class="t-sub">英語<small>長文読解</small></span><span class="t-min"><span class="ring l">1時間35分<svg viewBox="0 0 200 64" aria-hidden="true" focusable="false"><path d="M121.2 7.7Q130.8 8.0 135.4 8.3Q140.0 8.6 144.4 9.1Q148.8 9.5 153.0 10.1Q157.1 10.7 160.9 11.4Q164.6 12.1 168.0 12.9Q171.3 13.8 174.3 14.8Q177.2 15.7 179.7 16.8Q182.1 17.9 184.0 19.0Q185.9 20.2 187.3 21.4Q188.7 22.7 189.7 24.0Q190.7 25.3 190.8 26.6Q191.0 28.0 190.8 29.3Q190.5 30.7 189.7 32.1Q189.0 33.5 187.5 34.8Q185.9 36.2 184.1 37.6Q182.2 38.9 179.8 40.2Q177.3 41.5 174.4 42.8Q171.6 44.1 168.1 45.2Q164.6 46.4 160.8 47.5Q157.1 48.6 152.9 49.6Q148.7 50.6 144.2 51.5Q139.7 52.4 135.0 53.1Q130.2 53.8 125.3 54.5Q120.4 55.1 115.3 55.6Q110.2 56.1 105.1 56.4Q99.9 56.7 94.8 56.9Q89.6 57.1 84.5 57.1Q79.4 57.1 74.4 57.0Q69.4 56.8 64.6 56.5Q59.8 56.2 55.2 55.8Q50.6 55.4 46.3 54.8Q42.0 54.2 38.1 53.5Q34.3 52.7 30.7 51.9Q27.2 51.0 24.1 50.0Q21.1 49.0 18.4 48.0Q15.8 46.9 13.9 45.7Q12.0 44.5 10.3 43.2Q8.7 42.0 7.8 40.6Q6.9 39.3 6.6 37.9Q6.3 36.5 6.4 35.1Q6.4 33.7 7.3 32.3Q8.2 30.9 9.5 29.4Q10.9 28.0 12.8 26.6Q14.8 25.2 17.3 23.9Q19.7 22.5 22.6 21.2Q25.5 19.9 29.0 18.7Q32.5 17.4 36.3 16.3Q40.1 15.1 44.4 14.1Q48.6 13.1 53.3 12.1Q57.9 11.2 62.7 10.4Q67.6 9.6 72.6 9.0Q77.7 8.3 82.9 7.8Q88.1 7.3 93.4 6.9Q98.7 6.6 104.0 6.4Q109.4 6.2 114.6 6.2Q119.9 6.2 125.0 6.3Q130.2 6.4 135.2 6.6Q140.2 6.9 144.9 7.4Q149.6 7.8 154.1 8.4Q158.6 8.9 162.7 9.7Q166.7 10.5 170.4 11.3Q174.0 12.2 177.2 13.2L180.5 14.2"/></svg></span><span class="sr">（記録ずみ）</span></span></li>
-          <li class="t-now"><span class="t-time">19:00</span><i class="sq" style="--c:var(--s-ma)" aria-hidden="true"></i><span class="t-sub">数学<small>青チャート</small></span><span class="t-min"><span class="ring s draw">40分<svg viewBox="0 0 120 64" aria-hidden="true" focusable="false"><path pathLength="1" d="M70.1 8.6Q75.5 8.8 78.1 9.1Q80.8 9.3 83.2 9.7Q85.7 10.1 88.1 10.7Q90.4 11.2 92.6 11.8Q94.7 12.5 96.6 13.3Q98.5 14.1 100.2 15.0Q102.0 15.9 103.3 16.9Q104.7 17.9 105.9 19.0Q107.0 20.1 108.0 21.3Q108.9 22.4 109.4 23.7Q109.9 24.9 110.2 26.2Q110.4 27.5 110.3 28.8Q110.3 30.1 109.9 31.4Q109.5 32.8 108.9 34.1Q108.2 35.4 107.2 36.7Q106.1 38.0 104.9 39.3Q103.6 40.6 102.0 41.8Q100.5 43.0 98.6 44.2Q96.8 45.3 94.7 46.4Q92.7 47.5 90.4 48.5Q88.2 49.5 85.8 50.3Q83.3 51.2 80.7 51.9Q78.1 52.7 75.4 53.3Q72.7 53.9 69.8 54.4Q67.0 54.9 64.2 55.3Q61.4 55.6 58.5 55.8Q55.6 56.0 52.8 56.1Q49.9 56.1 47.1 56.0Q44.3 56.0 41.6 55.7Q38.9 55.5 36.4 55.0Q33.8 54.6 31.4 54.1Q29.0 53.6 26.8 52.9Q24.6 52.2 22.6 51.4Q20.6 50.6 18.8 49.7Q17.0 48.7 15.6 47.7Q14.1 46.6 12.9 45.5Q11.7 44.4 10.7 43.2Q9.7 42.0 9.2 40.7Q8.7 39.5 8.4 38.1Q8.1 36.8 8.1 35.5Q8.1 34.1 8.4 32.8Q8.8 31.4 9.5 30.0Q10.2 28.7 11.2 27.3Q12.2 26.0 13.6 24.6Q15.0 23.3 16.5 22.1Q18.1 20.8 19.9 19.6Q21.8 18.4 23.9 17.3Q26.0 16.2 28.3 15.2Q30.6 14.2 33.2 13.3Q35.7 12.4 38.3 11.6Q41.0 10.8 43.8 10.1Q46.6 9.5 49.4 9.0Q52.3 8.5 55.3 8.1Q58.2 7.7 61.1 7.5Q64.1 7.3 67.0 7.2Q69.9 7.2 72.8 7.3Q75.7 7.3 78.5 7.6Q81.3 7.8 83.9 8.2Q86.6 8.6 89.1 9.2Q91.5 9.7 93.9 10.4Q96.2 11.1 98.3 11.9Q100.3 12.8 102.1 13.7Q103.9 14.7 105.5 15.7L107.0 16.8"/></svg></span></span></li>
+          <li><span class="t-time">6:30</span><i class="sq" style="--c:var(--s-ja)" aria-hidden="true"></i><span class="t-sub">国語<small>古文単語</small></span><span class="t-min"><span class="ring s">30分<svg viewBox="0 0 120 64" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M70.1 8.6Q75.5 8.8 78.1 9.1Q80.8 9.3 83.2 9.7Q85.7 10.1 88.1 10.7Q90.4 11.2 92.6 11.8Q94.7 12.5 96.6 13.3Q98.5 14.1 100.2 15.0Q102.0 15.9 103.3 16.9Q104.7 17.9 105.9 19.0Q107.0 20.1 108.0 21.3Q108.9 22.4 109.4 23.7Q109.9 24.9 110.2 26.2Q110.4 27.5 110.3 28.8Q110.3 30.1 109.9 31.4Q109.5 32.8 108.9 34.1Q108.2 35.4 107.2 36.7Q106.1 38.0 104.9 39.3Q103.6 40.6 102.0 41.8Q100.5 43.0 98.6 44.2Q96.8 45.3 94.7 46.4Q92.7 47.5 90.4 48.5Q88.2 49.5 85.8 50.3Q83.3 51.2 80.7 51.9Q78.1 52.7 75.4 53.3Q72.7 53.9 69.8 54.4Q67.0 54.9 64.2 55.3Q61.4 55.6 58.5 55.8Q55.6 56.0 52.8 56.1Q49.9 56.1 47.1 56.0Q44.3 56.0 41.6 55.7Q38.9 55.5 36.4 55.0Q33.8 54.6 31.4 54.1Q29.0 53.6 26.8 52.9Q24.6 52.2 22.6 51.4Q20.6 50.6 18.8 49.7Q17.0 48.7 15.6 47.7Q14.1 46.6 12.9 45.5Q11.7 44.4 10.7 43.2Q9.7 42.0 9.2 40.7Q8.7 39.5 8.4 38.1Q8.1 36.8 8.1 35.5Q8.1 34.1 8.4 32.8Q8.8 31.4 9.5 30.0Q10.2 28.7 11.2 27.3Q12.2 26.0 13.6 24.6Q15.0 23.3 16.5 22.1Q18.1 20.8 19.9 19.6Q21.8 18.4 23.9 17.3Q26.0 16.2 28.3 15.2Q30.6 14.2 33.2 13.3Q35.7 12.4 38.3 11.6Q41.0 10.8 43.8 10.1Q46.6 9.5 49.4 9.0Q52.3 8.5 55.3 8.1Q58.2 7.7 61.1 7.5Q64.1 7.3 67.0 7.2Q69.9 7.2 72.8 7.3Q75.7 7.3 78.5 7.6Q81.3 7.8 83.9 8.2Q86.6 8.6 89.1 9.2Q91.5 9.7 93.9 10.4Q96.2 11.1 98.3 11.9Q100.3 12.8 102.1 13.7Q103.9 14.7 105.5 15.7L107.0 16.8"/></svg></span><span class="sr">（記録ずみ）</span></span></li>
+          <li><span class="t-time">17:00</span><i class="sq" style="--c:var(--s-en)" aria-hidden="true"></i><span class="t-sub">英語<small>長文読解</small></span><span class="t-min"><span class="ring l">1時間35分<svg viewBox="0 0 200 64" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M121.2 7.7Q130.8 8.0 135.4 8.3Q140.0 8.6 144.4 9.1Q148.8 9.5 153.0 10.1Q157.1 10.7 160.9 11.4Q164.6 12.1 168.0 12.9Q171.3 13.8 174.3 14.8Q177.2 15.7 179.7 16.8Q182.1 17.9 184.0 19.0Q185.9 20.2 187.3 21.4Q188.7 22.7 189.7 24.0Q190.7 25.3 190.8 26.6Q191.0 28.0 190.8 29.3Q190.5 30.7 189.7 32.1Q189.0 33.5 187.5 34.8Q185.9 36.2 184.1 37.6Q182.2 38.9 179.8 40.2Q177.3 41.5 174.4 42.8Q171.6 44.1 168.1 45.2Q164.6 46.4 160.8 47.5Q157.1 48.6 152.9 49.6Q148.7 50.6 144.2 51.5Q139.7 52.4 135.0 53.1Q130.2 53.8 125.3 54.5Q120.4 55.1 115.3 55.6Q110.2 56.1 105.1 56.4Q99.9 56.7 94.8 56.9Q89.6 57.1 84.5 57.1Q79.4 57.1 74.4 57.0Q69.4 56.8 64.6 56.5Q59.8 56.2 55.2 55.8Q50.6 55.4 46.3 54.8Q42.0 54.2 38.1 53.5Q34.3 52.7 30.7 51.9Q27.2 51.0 24.1 50.0Q21.1 49.0 18.4 48.0Q15.8 46.9 13.9 45.7Q12.0 44.5 10.3 43.2Q8.7 42.0 7.8 40.6Q6.9 39.3 6.6 37.9Q6.3 36.5 6.4 35.1Q6.4 33.7 7.3 32.3Q8.2 30.9 9.5 29.4Q10.9 28.0 12.8 26.6Q14.8 25.2 17.3 23.9Q19.7 22.5 22.6 21.2Q25.5 19.9 29.0 18.7Q32.5 17.4 36.3 16.3Q40.1 15.1 44.4 14.1Q48.6 13.1 53.3 12.1Q57.9 11.2 62.7 10.4Q67.6 9.6 72.6 9.0Q77.7 8.3 82.9 7.8Q88.1 7.3 93.4 6.9Q98.7 6.6 104.0 6.4Q109.4 6.2 114.6 6.2Q119.9 6.2 125.0 6.3Q130.2 6.4 135.2 6.6Q140.2 6.9 144.9 7.4Q149.6 7.8 154.1 8.4Q158.6 8.9 162.7 9.7Q166.7 10.5 170.4 11.3Q174.0 12.2 177.2 13.2L180.5 14.2"/></svg></span><span class="sr">（記録ずみ）</span></span></li>
+          <li class="t-now"><span class="t-time">19:00</span><i class="sq" style="--c:var(--s-ma)" aria-hidden="true"></i><span class="t-sub">数学<small>青チャート</small></span><span class="t-min"><span class="ring s draw">40分<svg viewBox="0 0 120 64" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path pathLength="1" d="M70.1 8.6Q75.5 8.8 78.1 9.1Q80.8 9.3 83.2 9.7Q85.7 10.1 88.1 10.7Q90.4 11.2 92.6 11.8Q94.7 12.5 96.6 13.3Q98.5 14.1 100.2 15.0Q102.0 15.9 103.3 16.9Q104.7 17.9 105.9 19.0Q107.0 20.1 108.0 21.3Q108.9 22.4 109.4 23.7Q109.9 24.9 110.2 26.2Q110.4 27.5 110.3 28.8Q110.3 30.1 109.9 31.4Q109.5 32.8 108.9 34.1Q108.2 35.4 107.2 36.7Q106.1 38.0 104.9 39.3Q103.6 40.6 102.0 41.8Q100.5 43.0 98.6 44.2Q96.8 45.3 94.7 46.4Q92.7 47.5 90.4 48.5Q88.2 49.5 85.8 50.3Q83.3 51.2 80.7 51.9Q78.1 52.7 75.4 53.3Q72.7 53.9 69.8 54.4Q67.0 54.9 64.2 55.3Q61.4 55.6 58.5 55.8Q55.6 56.0 52.8 56.1Q49.9 56.1 47.1 56.0Q44.3 56.0 41.6 55.7Q38.9 55.5 36.4 55.0Q33.8 54.6 31.4 54.1Q29.0 53.6 26.8 52.9Q24.6 52.2 22.6 51.4Q20.6 50.6 18.8 49.7Q17.0 48.7 15.6 47.7Q14.1 46.6 12.9 45.5Q11.7 44.4 10.7 43.2Q9.7 42.0 9.2 40.7Q8.7 39.5 8.4 38.1Q8.1 36.8 8.1 35.5Q8.1 34.1 8.4 32.8Q8.8 31.4 9.5 30.0Q10.2 28.7 11.2 27.3Q12.2 26.0 13.6 24.6Q15.0 23.3 16.5 22.1Q18.1 20.8 19.9 19.6Q21.8 18.4 23.9 17.3Q26.0 16.2 28.3 15.2Q30.6 14.2 33.2 13.3Q35.7 12.4 38.3 11.6Q41.0 10.8 43.8 10.1Q46.6 9.5 49.4 9.0Q52.3 8.5 55.3 8.1Q58.2 7.7 61.1 7.5Q64.1 7.3 67.0 7.2Q69.9 7.2 72.8 7.3Q75.7 7.3 78.5 7.6Q81.3 7.8 83.9 8.2Q86.6 8.6 89.1 9.2Q91.5 9.7 93.9 10.4Q96.2 11.1 98.3 11.9Q100.3 12.8 102.1 13.7Q103.9 14.7 105.5 15.7L107.0 16.8"/></svg></span></span></li>
         </ol>
         <div class="t-total">
           <span class="t-label hand">合計</span>
@@ -496,7 +557,7 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
         </div>
         <div class="t-act">
           <button type="button" class="btn btn-ink" id="rec" aria-describedby="rec-hint">✓ 記録する</button>
-          <p class="t-hint" id="rec-hint">押すと、数学の40分に丸がつく。</p>
+          <p class="t-hint" id="rec-hint">押すと、数学の40分が今日の合計に入る。</p>
         </div>
         <div class="t-week">
           <span class="k">今週</span>
@@ -512,7 +573,7 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
         </div>
         <p class="sr" role="status" id="rec-status"></p>
       </div>
-      <p class="note">ノートの中身は見本です。</p>
+      <p class="note">ノートと花丸は、このページの見本です。</p>
       <inch-pal kind="penta" do="sit" on="#today" edge="box" at=".1"></inch-pal>
     </div>
   </section>
@@ -524,93 +585,107 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
 
     <div class="feats">
       <article class="feat" aria-labelledby="f-plan-h">
-        <div class="fig" data-snap>
-          <ol class="route" aria-label="時間割の見本">
-            <li style="--c:var(--s-ja)"><b>6:30</b><i aria-hidden="true"></i><span>国語<small>古文単語</small></span></li>
-            <li style="--c:var(--s-en)"><b>17:00</b><i aria-hidden="true"></i><span>英語<small>長文読解</small></span></li>
-            <li style="--c:var(--s-ma)"><b>19:00</b><i aria-hidden="true"></i><span>数学<small>青チャート</small></span></li>
-          </ol>
-          <p class="deadline"><span class="k">締切</span><span>第4回 記述模試</span><b>あと10日</b></p>
-        </div>
-        <h3 id="f-plan-h">時間割</h3>
+        <h3 class="f-name" id="f-plan-h">時間割</h3>
         <p>1日の予定を、1本の線にならべる。時間が来たら、お知らせが届く。締切まで、あと何日かも分かる。</p>
+        <div class="fig fig-plan" data-snap>
+          <div>
+            <p class="fg-h">今日の予定</p>
+            <ol class="route" aria-label="今日の予定の見本">
+              <li style="--c:var(--s-ja)"><b>6:30</b><i aria-hidden="true"></i><span>国語<small>古文単語</small></span></li>
+              <li style="--c:var(--s-en)"><b>17:00</b><i aria-hidden="true"></i><span>英語<small>長文読解</small></span></li>
+              <li style="--c:var(--s-ma)"><b>19:00</b><i aria-hidden="true"></i><span>数学<small>青チャート</small></span></li>
+            </ol>
+          </div>
+          <div>
+            <p class="fg-h due">締切</p>
+            <ul class="dues" aria-label="締切の見本">
+              <li><span>第4回 記述模試</span><b>あと10日</b></li>
+              <li><span>共通テスト</span><b>あと79日</b></li>
+              <li><span>東大 二次試験</span><b>あと119日</b></li>
+            </ul>
+          </div>
+        </div>
       </article>
 
       <article class="feat" aria-labelledby="f-timer-h">
-        <div class="fig" data-snap>
-          <p class="tm-sub"><i class="sq" style="--c:var(--s-ja)" aria-hidden="true"></i>国語　古文単語</p>
+        <h3 class="f-name" id="f-timer-h">タイマー</h3>
+        <p>押したら、もう始まっている。予定の時間をすぎても、止めるまではかる。</p>
+        <div class="fig fig-timer" data-snap>
+          <p class="tm-sub"><i class="sq" style="--c:var(--s-ma)" aria-hidden="true"></i>数学　青チャート</p>
           <p class="tm-time" aria-label="39分59秒">39:59</p>
           <div class="tm-bar" aria-hidden="true"><i></i></div>
           <p class="tm-plan"><span>勉強中</span><span>予定 1時間</span></p>
         </div>
-        <h3 id="f-timer-h">タイマー</h3>
-        <p>押したら、もう始まっている。予定の時間をすぎても、止めるまではかる。</p>
       </article>
 
       <article class="feat" aria-labelledby="f-record-h">
+        <h3 class="f-name" id="f-record-h">記録</h3>
+        <p>「記録する」を押すと、今日の記録になる。勉強した日はマスが緑に、たくさんやった日ほど濃くなる。</p>
         <div class="fig fig-grass" data-snap>
-          <div class="grass" id="grass" role="img" aria-label="勉強した日のマスの見本。勉強した日は緑で、多い日ほど濃い。いちばん右の列が今週。"></div>
-          <inch-pal kind="mebu" do="sit" on="#grass" edge="box" at=".86"></inch-pal>
+          <canvas class="mebu" id="mebu" width="36" height="57" aria-hidden="true"></canvas>
+          <div class="grass" id="grass" role="img" aria-label="勉強した日のマスの見本。勉強した日は緑で、多い日ほど濃い。いちばん右の列が今週で、木曜が今日。"><i data-l="0"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="0"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="2"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="2"></i><i data-l="2"></i><i data-l="4"></i><i data-l="3"></i><i data-l="3"></i><i data-l="2"></i><i data-l="1"></i><i data-l="3"></i><i data-l="2"></i><i data-l="3"></i><i data-l="3"></i><i data-l="1"></i><i data-l="3"></i><i data-l="3"></i><i data-l="1"></i><i data-l="2"></i><i data-l="1"></i><i data-l="1"></i><i data-l="3"></i><i data-l="0"></i><i data-l="4"></i><i data-l="0"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="2"></i><i data-l="0"></i><i data-l="4"></i><i data-l="3"></i><i data-l="2"></i><i data-l="0"></i><i data-l="2"></i><i data-l="4"></i><i data-l="3"></i><i data-l="2"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="2"></i><i data-l="2"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="1"></i><i data-l="0"></i><i data-l="4"></i><i data-l="3"></i><i data-l="1"></i><i data-l="4"></i><i data-l="4"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="2"></i><i data-l="0"></i><i data-l="4"></i><i data-l="3"></i><i data-l="2"></i><i data-l="0"></i><i data-l="1"></i><i data-l="2"></i><i data-l="2"></i><i data-l="4"></i><i data-l="4"></i><i data-l="2"></i><i data-l="4"></i><i data-l="4"></i><i data-l="0"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="3"></i><i data-l="4"></i><i data-l="0"></i><i data-l="0"></i><i data-l="3"></i><i data-l="0"></i><i data-l="4"></i><i data-l="3"></i><i data-l="2"></i><i data-l="3"></i><i data-l="3"></i><i data-l="1"></i><i data-l="2"></i><i data-l="0"></i><i data-l="4"></i><i data-l="4"></i><i data-l="2"></i><i data-l="3"></i><i data-l="3"></i><i data-l="2"></i><i data-l="4"></i><i data-l="3"></i><i data-l="4"></i><i data-l="2"></i><i data-l="3"></i><i data-l="1"></i><i data-l="0"></i><i data-l="0"></i><i data-l="4"></i><i data-l="2"></i><i data-l="3"></i><i data-l="3"></i><i data-l="2"></i><i data-l="4"></i><i data-l="2" class="is-today"></i><i></i><i></i><i></i></div>
         </div>
-        <h3 id="f-record-h">記録</h3>
-        <p>✓ を押すと、今日の記録になる。勉強した日はマスが緑に、たくさんやった日ほど濃くなる。</p>
       </article>
 
-      <article class="feat" aria-labelledby="f-streak-h">
-        <div class="fig fig-streak" data-snap>
-          <div class="streak">
-            <div class="st-days" id="st-days" aria-label="今週の連続記録。月曜から木曜まで達成。">
-              <span class="on"><i></i>月</span><span class="on"><i></i>火</span><span class="on"><i></i>水</span><span class="on is-today"><i></i>木</span><span><i></i>金</span><span><i></i>土</span><span><i></i>日</span>
+      <div class="more">
+        <p class="f-name" aria-hidden="true">ほかにも</p>
+        <div class="more-list">
+          <article class="feat-s" aria-labelledby="f-streak-h">
+            <h3 class="f-name" id="f-streak-h">連続記録</h3>
+            <div class="fig fig-streak" data-snap>
+              <div class="streak">
+                <div class="st-days" id="st-days" aria-label="今週の連続記録。月曜から木曜まで達成。">
+                  <span class="on"><i></i>月</span><span class="on"><i></i>火</span><span class="on"><i></i>水</span><span class="on is-today"><i></i>木</span><span><i></i>金</span><span><i></i>土</span><span><i></i>日</span>
+                </div>
+                <div class="st-count"><b>23</b><span>日連続</span></div>
+                <p class="st-ticket"><i aria-hidden="true"></i><i aria-hidden="true"></i>休み券 2枚</p>
+              </div>
+              <inch-pal kind="bo" do="sit" on="#st-days" edge="box" at=".5"></inch-pal>
             </div>
-            <div class="st-count">
-              <b>23</b><span>日連続</span>
-              <p class="st-ticket"><i aria-hidden="true"></i><i aria-hidden="true"></i>休み券 2枚</p>
+            <p>続けた日数を、炎といっしょに数える。7日続けると休み券がもらえて、1日休んでも切れない。</p>
+          </article>
+
+          <article class="feat-s" aria-labelledby="f-badge-h">
+            <h3 class="f-name" id="f-badge-h">バッジ</h3>
+            <div class="fig" data-snap>
+              <figure class="taped">
+                <span class="tape" aria-hidden="true"></span>
+                <img src="img/part-badges.webp" alt="アプリのバッジ：100時間、300時間、500時間、7日連続、21日連続。7 / 11 達成。" width="726" height="252" loading="lazy" decoding="async">
+              </figure>
             </div>
-          </div>
-          <inch-pal kind="bo" do="sit" on="#st-days" edge="box" at=".5"></inch-pal>
-        </div>
-        <h3 id="f-streak-h">連続記録</h3>
-        <p>続けた日数を、炎といっしょに数える。7日続けると休み券がもらえて、1日休んでも切れない。</p>
-      </article>
+            <p>100時間、7日連続。目標に届くと、バッジがもらえる。勉強するほど、レベルも上がる。</p>
+          </article>
 
-      <article class="feat" aria-labelledby="f-badge-h">
-        <div class="fig" data-snap>
-          <figure class="taped">
-            <span class="tape" aria-hidden="true"></span>
-            <img src="img/part-badges.webp" alt="アプリのバッジ：100時間、300時間、500時間、7日連続、21日連続。7 / 11 達成。" width="726" height="252" loading="lazy" decoding="async">
-          </figure>
+          <article class="feat-s" aria-labelledby="f-friends-h">
+            <h3 class="f-name" id="f-friends-h">友だち</h3>
+            <div class="fig friends" data-snap>
+              <p class="fr-h"><i aria-hidden="true"></i>いま勉強中</p>
+              <ul>
+                <li><i class="sq" style="--c:var(--s-en)" aria-hidden="true"></i><b>mio</b><span>英語</span><em>4:11</em></li>
+                <li><i class="sq" style="--c:var(--s-ph)" aria-hidden="true"></i><b>kaito</b><span>物理</span><em>3:12</em></li>
+                <li><i class="sq" style="--c:var(--s-ch)" aria-hidden="true"></i><b>ゆなっぴ</b><span>化学</span><em>2:36</em></li>
+                <li><i class="sq" style="--c:var(--s-ma)" aria-hidden="true"></i><b>そら</b><span>数学</span><em>2:00</em></li>
+              </ul>
+            </div>
+            <p>いま勉強中の友だちが、科目と時間といっしょに並ぶ。「一緒に始める」で、同じ時間に机に向かえる。</p>
+          </article>
         </div>
-        <h3 id="f-badge-h">バッジ</h3>
-        <p>100時間、7日連続。目標に届くと、バッジがもらえる。勉強するほど、レベルも上がる。</p>
-      </article>
-
-      <article class="feat" aria-labelledby="f-friends-h">
-        <div class="fig friends" data-snap>
-          <p class="fr-h"><i aria-hidden="true"></i>いま勉強中</p>
-          <ul>
-            <li><i class="sq" style="--c:var(--s-en)" aria-hidden="true"></i><b>mio</b><span>英語</span><em>4:11</em></li>
-            <li><i class="sq" style="--c:var(--s-ph)" aria-hidden="true"></i><b>kaito</b><span>物理</span><em>3:12</em></li>
-            <li><i class="sq" style="--c:var(--s-ch)" aria-hidden="true"></i><b>ゆなっぴ</b><span>化学</span><em>2:36</em></li>
-            <li><i class="sq" style="--c:var(--s-ma)" aria-hidden="true"></i><b>そら</b><span>数学</span><em>2:00</em></li>
-          </ul>
-        </div>
-        <h3 id="f-friends-h">友だち</h3>
-        <p>いま勉強中の友だちが、科目と時間といっしょに並ぶ。「一緒に始める」で、同じ時間に机に向かえる。</p>
-      </article>
+      </div>
     </div>
-    <p class="note">名前と数字は見本です。</p>
+    <p class="note note-end">名前と数字は見本です。</p>
   </section>
 
   <section class="sec" id="screens" aria-labelledby="screens-h">
     <p class="tab">画面</p>
     <h2 id="screens-h">開発中の画面を、<br>ノートに貼っておく。</h2>
     <p class="sec-lead">ホーム、タイマー、時間割、友だち、マイページ。見た目は、スタンダードのほかにサイバーも選べる。名前と数字は見本です。</p>
-    <div class="shots" tabindex="0" role="region" aria-label="アプリの画面">
+    <div class="shots" id="shots" role="region" aria-label="アプリの画面">
       <figure class="shot" style="--r:-1.2deg"><span class="tape" aria-hidden="true"></span><img src="img/home.webp" alt="ホーム画面。勉強した日の草のマス、23日連続の炎、いま勉強中の友だち。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>ホーム</figcaption></figure>
       <figure class="shot" style="--r:.8deg"><span class="tape" aria-hidden="true"></span><img src="img/timer-live.webp" alt="タイマー画面。国語 古文単語を勉強中で、39:59 をはかっているところ。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>タイマー</figcaption></figure>
       <figure class="shot" style="--r:-.6deg"><span class="tape" aria-hidden="true"></span><img src="img/study.webp" alt="時間割の画面。木曜日の予定が1本の線にならび、下に締切までの日数。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>時間割</figcaption></figure>
-      <figure class="shot" style="--r:1.1deg"><span class="tape" aria-hidden="true"></span><img src="img/community.webp" alt="友だちの画面。いま勉強中の人が、科目と時間といっしょに並ぶ。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>友だち</figcaption></figure>
-      <figure class="shot" style="--r:-.9deg"><span class="tape" aria-hidden="true"></span><img src="img/me.webp" alt="マイページ。合計の時間、連続日数と、この7日の科目ごとの勉強時間。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>マイページ</figcaption></figure>
+      <figure class="shot sm" style="--r:1.1deg"><span class="tape" aria-hidden="true"></span><img src="img/community.webp" alt="友だちの画面。いま勉強中の人が、科目と時間といっしょに並ぶ。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>友だち</figcaption></figure>
+      <figure class="shot sm" style="--r:-.9deg"><span class="tape" aria-hidden="true"></span><img src="img/me.webp" alt="マイページ。合計の時間、連続日数と、この7日の科目ごとの勉強時間。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>マイページ</figcaption></figure>
+      <figure class="shot sm" style="--r:.7deg"><span class="tape" aria-hidden="true"></span><img src="img/cyber-home.webp" alt="サイバーの見た目にしたホーム画面。夜の街の勉強端末のような色と字。" width="786" height="1704" loading="lazy" decoding="async"><figcaption>見た目：サイバー</figcaption></figure>
     </div>
   </section>
 
@@ -619,18 +694,18 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
     <h2 id="how-h">入れるのは予定だけ。<br>あとは押すだけ。</h2>
     <ol class="steps">
       <li class="step">
-        <div class="step-top"><span class="step-n" aria-hidden="true">1</span><div class="mini" aria-hidden="true"><b>17:00</b><i class="sq" style="--c:var(--s-en)"></i>英語<small>長文読解</small></div></div>
+        <div class="step-top"><span class="step-n" aria-hidden="true">1</span><div class="mini" aria-hidden="true"><b>19:00</b><i class="sq" style="--c:var(--s-ma)"></i>数学<small>青チャート</small></div></div>
         <h3>時間割に入れる。</h3>
         <p>日にちと時間と科目を入れておく。次の予定は、画面の下のバーにいつも出る。</p>
       </li>
       <li class="step">
-        <div class="step-top"><span class="step-n" aria-hidden="true">2</span><div class="mini mini-bar" aria-hidden="true"><i class="sq" style="--c:var(--s-ja)"></i><b>国語</b><span class="num">39:24</span><small>予定 1時間</small><span class="pz">❚❚</span></div></div>
+        <div class="step-top"><span class="step-n" aria-hidden="true">2</span><div class="mini mini-bar" aria-hidden="true"><i class="sq" style="--c:var(--s-ma)"></i><b>数学</b><span class="num">39:24</span><small>予定 1時間</small><span class="pz">❚❚</span></div></div>
         <h3>「勉強を開始」を押す。</h3>
         <p>押したら、もう始まっている。止めるまで、ちゃんとはかる。</p>
       </li>
       <li class="step">
-        <div class="step-top"><span class="step-n" aria-hidden="true">3</span><div class="mini mini-rec" aria-hidden="true"><b>英語 40分</b><span class="memo">ひとこと（140字まで）</span><span class="ok">✓</span></div></div>
-        <h3>✓ で記録。</h3>
+        <div class="step-top"><span class="step-n" aria-hidden="true">3</span><div class="mini mini-rec" aria-hidden="true"><b>数学 40分</b><span class="memo">ひとこと（140字まで）</span><span class="ok">✓</span></div></div>
+        <h3>終わったら、記録する。</h3>
         <p>どこまでやったかを一言。書かなくても、時間はそのまま今日の記録に。</p>
       </li>
     </ol>
@@ -646,9 +721,9 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
         <table>
           <thead><tr><th scope="col">設定</th><th scope="col">できること</th><th scope="col">はじめは</th></tr></thead>
           <tbody>
-            <tr><th scope="row">勉強中を見せる相手</th><td>全員／フォロワーだけ／見せない</td><td class="init">全員</td></tr>
+            <tr><th scope="row">勉強中を見せる相手</th><td><span class="opt">全員／</span><span class="opt">フォロワーだけ／見せない</span></td><td class="init">全員</td></tr>
             <tr><th scope="row">順位を見せる</th><td>ランキングに出す／出さない（出さなくても、自分の順位は見られる）</td><td class="init">出す</td></tr>
-            <tr><th scope="row">メッセージを受け取る相手</th><td>フォロー中の人／グループのメンバーまで／全員</td><td class="init">グループのメンバーまで</td></tr>
+            <tr><th scope="row">メッセージを受け取る相手</th><td><span class="opt">フォロー中の人／</span><span class="opt">グループのメンバーまで／全員</span></td><td class="init">グループのメンバーまで</td></tr>
             <tr><th scope="row">ブロック・通報</th><td>名前を押すと、どこからでもできる。ブロックした人は出てこない</td><td class="init none">—</td></tr>
             <tr><th scope="row">13歳未満</th><td>保護者の同意を得ているか、はじめにたずねる</td><td class="init none">—</td></tr>
             <tr><th scope="row">記録の保存</th><td>この iPhone の中に保存。圏外でも記録できる</td><td class="init none">—</td></tr>
@@ -675,7 +750,7 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
   <div class="cover-in">
     <div class="cv-top">
       <h2 id="foot-h">今夜も、<br>少しずつ前へ。</h2>
-      <a class="btn btn-lime" href="#screens">画面を見てみる <span aria-hidden="true">↑</span></a>
+      <p class="cv-status"><i aria-hidden="true"></i>iPhone 向けに、近日公開</p>
     </div>
     <div class="cv-mid">
       <div class="namelabel">
@@ -688,7 +763,7 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
         <dl>
           <div><dt>公開</dt><dd>iPhone 向けに、[公開日]ごろ公開する予定です。</dd></div>
           <div><dt>ねだん</dt><dd>値段と、広告を出すかどうかは、決まったらこのページで知らせます。</dd></div>
-          <div><dt>使える人</dt><dd>日本語で使えます。小学生から大人まで。13歳未満の人は、保護者の同意を得てから。</dd></div>
+          <div><dt>使える人</dt><dd>日本語で使えます。小学生から大人まで。</dd></div>
           <div><dt>Android</dt><dd>[Android版の予定]</dd></div>
         </dl>
       </div>
@@ -739,26 +814,112 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
   document.addEventListener('click', e => { if (!tl.hidden && !e.target.closest('.toc')) setToc(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !tl.hidden) { setToc(false); tb.focus(); } });
 
-  /* 草：方眼のマスにそのまま塗る。幅に入るだけの週を出す（右の列が今週） */
+  /* 画面写真：横に動く幅（999px 以下）のときだけ、Tab で止まる */
+  const shots = $('#shots'), SMQ = matchMedia('(max-width: 999px)');
+  const syncShots = () => { if (SMQ.matches) shots.setAttribute('tabindex', '0'); else shots.removeAttribute('tabindex'); };
+  syncShots();
+  if (SMQ.addEventListener) SMQ.addEventListener('change', syncShots); else if (SMQ.addListener) SMQ.addListener(syncShots);
+
+  /* 草：方眼のマスにそのまま塗る。幅に入るだけの週を出す（右の列が今週、木曜が今日）。
+     HTML には 18 週ぶんを最初から書いてある（JS がなくても見える）。ここでは幅に合わせて描き直すだけ */
   const grass = $('#grass');
   let seed = 29;
   const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   const LV = Array.from({ length: 40 * 7 }, () => { const r = rnd(); return r < .1 ? 0 : r < .22 ? 1 : r < .5 ? 2 : r < .8 ? 3 : 4; });
-  const THIS_WEEK = [3, 2, 4, 3];   // 月〜木（木が今日）
+  const THIS_WEEK = [3, 2, 4];                 // 月〜水
+  const THU = { before: 2, after: 3 };         // 木（今日）。記録すると1段こくなる（ヒーローの「今週」と同じ）
+  let gcols = -1, gThu = THU.before;
   function drawGrass(cols) {
-    if (grass.dataset.cols === String(cols)) return;
-    grass.dataset.cols = cols;
+    gcols = cols;
     let html = '';
     for (let c = 0; c < cols; c++) {
       for (let r = 0; r < 7; r++) {
-        if (c === cols - 1) {
-          if (r < 4) html += `<i data-l="${THIS_WEEK[r]}"${r === 3 ? ' class="is-today"' : ''}></i>`;
-          else html += '<i></i>';
-        } else html += `<i data-l="${LV[(c + 40 - cols) * 7 + r]}"></i>`;
+        if (c === cols - 1) html += r < 3 ? `<i data-l="${THIS_WEEK[r]}"></i>` : r === 3 ? `<i data-l="${gThu}" class="is-today"></i>` : '<i></i>';
+        else html += `<i data-l="${LV[(c + 40 - cols) * 7 + r]}"></i>`;
       }
     }
     grass.innerHTML = html;
   }
+  const setThu = l => { gThu = l; const t = grass.querySelector('.is-today'); if (t) t.dataset.l = String(l); };
+
+  /* めぶ：草の番をする芽。ふだんは今週の2列左に立っている。
+     記録したあと草が見えると、1マスずつ今週の列の上へ移り、木曜のマスが1段こくなって、芽がのびる。
+     絵は shared/pix.js の めぶを drawFrame で1コマずつ描くだけ（本も居眠りもない）。 */
+  const mebu = $('#mebu');
+  const MB = { S: 3, col: 2, grow: 0, hop: 0, blink: false, done: false, state: false, run: 0 };
+  let MF = null;
+  function mebuFrames() {
+    if (MF) return MF;
+    const IP = window.InchPix; if (!IP || !IP.drawFrame) return null;
+    const mk = f => { const c = document.createElement('canvas'); c.width = 12; c.height = 16; IP.drawFrame(c.getContext('2d'), 'mebu', f, 0, 0, 1); return c; };
+    const pal = (IP._art && IP._art.SPR && IP._art.SPR.mebu && IP._art.SPR.mebu.pal) || {};
+    MF = { n: mk('idle:0'), blink: mk('idle:3'), up: mk('happy:0'), h: pal.h || '#3f9a2a' };
+    return MF;
+  }
+  function paintMebu() {
+    const F = mebuFrames(); if (!F) { mebu.hidden = true; return; }
+    mebu.hidden = false;
+    const S = MB.S, dpr = Math.min(3, Math.max(1, Math.round(devicePixelRatio || 1)));
+    const W = 12 * S, H = 19 * S;
+    if (mebu.width !== W * dpr) { mebu.width = W * dpr; mebu.height = H * dpr; mebu.style.width = W + 'px'; mebu.style.height = H + 'px'; }
+    const c = mebu.getContext('2d');
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, mebu.width, mebu.height);
+    c.imageSmoothingEnabled = false; c.setTransform(S * dpr, 0, 0, S * dpr, 0, 0);
+    const g = MB.grow;
+    if (!g) { c.drawImage(MB.blink ? F.blink : F.n, 0, 3); return; }
+    c.drawImage(F.up, 0, 5, 12, 11, 0, 8, 12, 11);   // 鉢と顔は床のまま
+    c.drawImage(F.up, 0, 0, 12, 5, 0, 3 - g, 12, 5); // 葉は g ドットぶん上へ
+    c.fillStyle = F.h; c.fillRect(5, 8 - g, 2, g);   // のびた茎
+  }
+  function placeMebu() {
+    if (gcols < 1) return;
+    const cell = parseFloat(getComputedStyle(sheet).getPropertyValue('--cell')) || 24;
+    const W = 12 * MB.S, H = 19 * MB.S;
+    const x = grass.offsetLeft + (gcols - 1 - MB.col) * cell + cell / 2 - W / 2;
+    const y = grass.offsetTop - H - MB.hop;
+    mebu.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+  }
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  let grassSeen = false;
+  async function syncMebu() {
+    if (MB.state === MB.done) return;
+    const run = ++MB.run;
+    if (!MB.done) {                       // けしごむで消した：もとの場所へ
+      MB.state = false; MB.col = 2; MB.grow = 0; MB.hop = 0;
+      setThu(THU.before); placeMebu(); paintMebu(); return;
+    }
+    if (still()) {                        // 動きを止めているときは、最後の形だけ
+      MB.state = true; MB.col = 0; MB.grow = 3; MB.hop = 0;
+      setThu(THU.after); placeMebu(); paintMebu(); return;
+    }
+    if (!grassSeen) return;               // 草が見えたときに動く
+    MB.state = true;
+    await wait(250); if (run !== MB.run) return;
+    while (MB.col > 0) {                  // 1マスずつ、段で移る
+      MB.hop = MB.S * 2; MB.col--; placeMebu();
+      await wait(120); if (run !== MB.run) return;
+      MB.hop = 0; placeMebu();
+      await wait(160); if (run !== MB.run) return;
+    }
+    setThu(THU.after);
+    for (const g of [1, 2, 3]) { MB.grow = g; paintMebu(); await wait(170); if (run !== MB.run) return; }
+  }
+  let blinkT = 0;
+  function blinkLoop() {
+    clearTimeout(blinkT);
+    if (!grassSeen) return;
+    blinkT = setTimeout(() => {
+      if (!still() && !MB.grow && !document.hidden) { MB.blink = true; paintMebu(); setTimeout(() => { MB.blink = false; paintMebu(); }, 150); }
+      blinkLoop();
+    }, 2600 + Math.random() * 3000);
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(es => {
+      const e = es[es.length - 1];
+      grassSeen = e.isIntersecting && e.intersectionRatio >= .5;
+      if (grassSeen) { syncMebu(); blinkLoop(); } else clearTimeout(blinkT);
+    }, { threshold: [0, .5, 1] }).observe(grass.parentElement);
+  } else grassSeen = true;
 
   /* 図を方眼の線にそろえる */
   const sheet = $('.sheet');
@@ -776,25 +937,30 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
       if (d > .5 && d < cell - .5) f.style.marginTop = d + 'px';
     });
     const box = grass.parentElement.getBoundingClientRect();
-    const dx = mod(cell - mod(box.left - x0));
-    grass.style.marginLeft = (dx > .5 && dx < cell - .5 ? dx : 0) + 'px';
-    drawGrass(Math.max(8, Math.min(40, Math.floor((box.width - (dx > .5 && dx < cell - .5 ? dx : 0)) / cell))));
+    let dx = mod(cell - mod(box.left - x0));
+    if (!(dx > .5 && dx < cell - .5)) dx = 0;
+    grass.style.marginLeft = dx + 'px';
+    const cols = Math.max(8, Math.min(40, Math.floor((box.width - dx - cell * .5) / cell)));
+    if (cols !== gcols) drawGrass(cols);
+    placeMebu();
   }
   snap();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(snap);
-  addEventListener('load', snap);
+  document.addEventListener('DOMContentLoaded', () => { paintMebu(); placeMebu(); });
+  addEventListener('load', () => { snap(); paintMebu(); });
   let rt = 0; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(snap, 120); });
 
-  /* さわる仕掛け：✓ 記録する → 赤ペンで丸、合計に花丸 */
+  /* さわる仕掛け：✓ 記録する → 数学の40分に赤丸、合計に花丸（花丸はこのページの見本）。
+     文は、アプリで本当に変わること（合計、昨日より、今日のマス）を言う */
   const today = $('#today'), rec = $('#rec'), sum = $('#sum'), hint = $('#rec-hint'), status = $('#rec-status'), wk = $('#wk-today');
   const fmt = m => `${Math.floor(m / 60)}時間${String(m % 60).padStart(2, '0')}分`;
   const BEFORE = 125, AFTER = 165;
-  let done = false, tick = 0;
+  let done = false, tick = 0, lag = 0;
   function count(from, to) {
-    clearInterval(tick);
+    clearInterval(tick); clearTimeout(lag);
     if (still()) { sum.textContent = fmt(to); return; }
     let m = from;
-    setTimeout(() => {
+    lag = setTimeout(() => {
       tick = setInterval(() => { m += 5; sum.textContent = fmt(Math.min(m, to)); if (m >= to) clearInterval(tick); }, 70);
     }, 380);
   }
@@ -806,20 +972,21 @@ html.calm *,html.calm *::before,html.calm *::after{transition:none!important;ani
       wk.dataset.l = '3';
       rec.textContent = 'けしごむで消す';
       rec.classList.remove('btn-ink'); rec.classList.add('is-erase');
-      hint.textContent = '丸がついた。';
-      status.textContent = '数学の40分を記録した。今日の合計は2時間45分。';
+      hint.textContent = '記録した。合計が2時間45分に、木曜のマスが1段こくなった。';
+      status.textContent = '数学の40分を記録した。今日の合計は2時間45分で、昨日より1時間17分多い。木曜のマスが1段こくなった。';
       const pen = document.querySelector('inch-pal[kind="penta"]');
       if (pen && typeof pen.poke === 'function') pen.poke('heart');
     } else {
-      clearInterval(tick);
+      clearInterval(tick); clearTimeout(lag);
       today.classList.remove('is-done');
       sum.textContent = fmt(BEFORE);
       wk.dataset.l = '2';
       rec.textContent = '✓ 記録する';
       rec.classList.add('btn-ink'); rec.classList.remove('is-erase');
-      hint.textContent = '押すと、数学の40分に丸がつく。';
-      status.textContent = '消した。今日の合計は2時間05分。';
+      hint.textContent = '押すと、数学の40分が今日の合計に入る。';
+      status.textContent = '記録を消した。今日の合計は2時間05分。';
     }
+    MB.done = done; syncMebu();
   });
 })();
 </script>

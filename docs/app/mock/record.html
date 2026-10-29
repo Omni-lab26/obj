@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly 記録シート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="shared/app.css">
+<style>
+/* ===== 記録シート（この勉強を記録）だけの部品。色・字・影・動きは shared/app.css のトークンだけ ===== */
+
+/* 全画面（タブバーも勉強バーもない）。下に「今日」の帯が貼りつくぶん、下を空ける */
+body[data-bar="none"][data-tab="none"] .screen.rec-screen{display:flex;flex-direction:column;padding-bottom:calc(var(--safe-bottom) + 76px)}
+@media (max-width:430px){ .rec-screen{min-height:100vh;min-height:100dvh} }
+
+/* 上：左に「続ける」、右に「記録する」（投稿を書く画面と同じ並び） */
+.rec-top .tbtn{margin-left:-4px;padding:0 8px;font-weight:600}
+.rec-top .key-ink > .face{padding:0 20px}
+.rec-navt{position:absolute;left:64px;right:64px;bottom:0;height:var(--hdr-h);display:flex;align-items:center;justify-content:center;pointer-events:none}
+
+/* 書く所：主役のカード1枚（ライムの影）。右に 6px はみ出すぶん空ける */
+/* 紙1枚が下の帯まで続く（今のアプリの白い全画面と同じ）。中身は上から。空いた所を押すとメモに書ける */
+.rec-card{flex:1 0 auto;margin:6px 6px 0 0}
+.rec-main{display:flex;gap:12px}
+.rec-coin{--size:42px;border-radius:50%}
+.rec-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+.rec-name{display:flex;align-items:baseline;gap:8px;min-height:24px}
+.rec-name b{flex:none;font:800 var(--fs-h)/1.3 var(--f-body)}
+.rec-name span{flex:1;min-width:0;font-size:12.5px;line-height:1.3;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* メモ：18pt。枠は描かない（紙に直接書く）。入力中だけフォーカスの輪 */
+.rec-memo{display:block;width:100%;min-height:124px;margin:-4px 0 0;padding:0;border:0;background:none;resize:none;
+  font:400 18px/26px var(--f-body);color:var(--ink);outline:none}
+.rec-memo::placeholder{color:var(--ink-3)}
+.rec-memo:focus-visible{outline:3px solid var(--focus);outline-offset:6px;border-radius:6px}
+
+/* ついているもの：科目・時間（直せる）・何時から何時・予定とくらべて */
+.rec-chips{display:flex;flex-wrap:wrap;align-items:center;gap:10px 8px}
+.rec-chips .tag{min-height:32px;padding:0 11px;border-radius:var(--r-chip);font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.rec-chips .tag .dot{width:8px;height:8px}
+/* − 39分 ＋：押せるのはこの板だけ（床あり）。ヘッダーのアイコンの板と同じ作り */
+.step.kgroup{height:36px;border-radius:var(--r-chip)}
+.step.kgroup > button{width:44px}
+.step.kgroup > button::after{inset:-4px 0}
+.step.kgroup > :first-child{border-radius:var(--r-chip) 0 0 var(--r-chip)}
+.step.kgroup > :last-child{border-radius:0 var(--r-chip) var(--r-chip) 0}
+.step.kgroup > .step-v{width:auto;min-width:52px;padding:0 6px;cursor:default;font:800 13px/1 var(--f-body);font-variant-numeric:tabular-nums;white-space:nowrap}
+.step.kgroup > .step-v::after{content:none}
+.step.kgroup > button:disabled{color:var(--ink-3);cursor:default}
+
+/* 自分だけのメモ ⇄ タイムラインにも投稿する：1行の切りかえ（オンでライム） */
+.rec-share{display:flex;align-items:center;gap:8px;width:100%;min-height:48px;margin-top:-2px;padding:6px 0 0;border:0;border-top:1.5px solid var(--line);
+  background:none;color:var(--ink);font:700 13.5px/1.35 var(--f-body);text-align:left;cursor:pointer}
+.rec-share > span:not(.sw){flex:1;min-width:0}
+.rec-share:focus-visible{outline-offset:2px}
+.sw{position:relative;flex:none;width:46px;height:26px;margin-right:2px;border-radius:9px;background:var(--paper-2);box-shadow:var(--ring),0 3px 0 2px var(--ink);
+  transition:background-color var(--t-micro) var(--ios)}
+.sw i{position:absolute;left:4px;top:4px;width:18px;height:18px;border-radius:5px;background:var(--card);box-shadow:var(--ring-thin);
+  transition:transform var(--t-micro) var(--ios),background-color var(--t-micro) var(--ios)}
+.rec-share[aria-checked="true"] .sw{background:var(--lime)}
+.rec-share[aria-checked="true"] .sw i{transform:translateX(20px);background:var(--ink)}
+
+/* 自習のとき：何の科目だったか（えらばなければ、あとで仕分け）と内容 */
+.rec-free{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1.5px solid var(--line)}
+.rec-q{display:flex;align-items:baseline;gap:8px;min-width:0}
+.rec-q b{flex:none;font:700 13px/1.3 var(--f-body);color:var(--ink-2)}
+.rec-q span{flex:1;min-width:0;font-size:11.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-picks{display:flex;gap:4px;margin:0 calc(-1 * var(--pad));padding:2px var(--pad) 4px;overflow-x:auto;scrollbar-width:none}
+.rec-picks::-webkit-scrollbar{display:none}
+.pick{flex:none;display:flex;flex-direction:column;align-items:center;gap:5px;width:66px;min-height:72px;padding:6px 0 5px;border:0;border-radius:12px;background:none;color:var(--ink-2);
+  font:500 11px/1.2 var(--f-body);cursor:pointer;transition:background-color var(--t-micro) var(--ios)}
+.pick .subj{--size:40px}
+.pick[aria-checked="true"]{background:var(--lime);box-shadow:var(--ring);color:var(--ink);font-weight:700}
+.pick:focus-visible{outline-offset:-2px}
+.rec-in{display:block;width:100%;height:44px;padding:0 12px;border:0;border-radius:10px;background:var(--paper-2);box-shadow:var(--ring-soft);
+  font:400 16px/1.2 var(--f-body);color:var(--ink)}
+.rec-in::placeholder{color:var(--ink-3)}
+.rec-hints{flex-wrap:nowrap;margin:-4px calc(-1 * var(--pad)) 0;padding:6px var(--pad) 8px;overflow-x:auto;scrollbar-width:none}
+.rec-hints::-webkit-scrollbar{display:none}
+.rec-hints .chip > .face{font-weight:500;color:var(--ink-2)}
+
+/* 下の帯：今日の合計がどう変わるか ＋ メモの残り（140字の輪） */
+.rec-band{position:fixed;z-index:40;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;min-height:calc(52px + var(--safe-bottom));
+  padding:8px var(--gutter) calc(var(--safe-bottom) + 8px);background:var(--card);box-shadow:0 -2px 0 0 var(--ink)}
+.rec-today{flex:1;min-width:0;font-size:12.5px;line-height:1.4;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.rec-today b{color:var(--ink);font-weight:800}
+.rec-today small{font-size:12px}
+.rec-left{flex:none;font:600 12px/1 var(--f-body);font-variant-numeric:tabular-nums;color:var(--ink-3)}
+.rec-left.is-over{color:var(--down)}
+.rec-ring{flex:none;width:26px;height:26px}
+.rec-ring .tr{stroke:var(--paper-2)}
+.rec-ring .fg{transition:stroke var(--t-micro) var(--ios)}
+
+/* 記録したら：紙を薄くかぶせて「えらい！」のシール。fade と 0.98→1 だけ（ふくらまない・回らない） */
+.rec-done{position:fixed;z-index:75;inset:0;display:grid;place-items:center;padding-bottom:40px;background:rgba(243,238,227,.74);pointer-events:none;
+  animation:fade-in var(--t-fade) linear both}
+.rec-done.is-out{animation:fade-out var(--t-fade-out) linear both}
+.stamp{display:flex;flex-direction:column;align-items:center;animation:stamp-in var(--t-micro) var(--ios) both}
+@keyframes stamp-in{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+.stamp-w{margin-top:-26px;padding:7px 14px 8px;border-radius:12px;background:var(--sun);transform:rotate(-5deg);
+  box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink),3px 4px 0 5px rgba(23,18,31,.22);font:400 32px/1 var(--f-pixj);letter-spacing:.02em;color:var(--ink);white-space:nowrap}
+
+/* トースト：アプリでは記録のあとタイマーに戻ってから出る。見本はこの画面に残るので、上の「続ける」「記録しました」を隠さないよう帯の下に出す */
+.app > .toasts{top:calc(var(--safe-top) + var(--hdr-h) + 4px)}
+
+/* 記録する勉強がないとき */
+.rec-empty{margin-top:28px}
+.rec-empty .empty{padding:32px 20px 28px;gap:10px}
+.rec-empty .empty span:last-child{font-size:var(--fs-sub);color:var(--ink-3)}
+
+/* 横の説明の切りかえ */
+.note .seg{margin-top:8px}
+.note .seg > button{padding:0 10px}
+.note .seg-cap{display:block;margin-top:18px;font-size:12px;color:var(--ink-3)}
+.note .note-again{margin-top:14px}
+.note-links .link{min-width:44px;justify-content:center}
+
+@media (max-width:359px){
+  .rec-share{font-size:12.5px}
+}
+</style>
+</head>
+<body data-tab="none" data-bar="none" data-time="7:31">
+<div class="stage">
+  <div class="app">
+    <main class="screen rec-screen">
+
+      <!-- ふつう・自習のとき -->
+      <header class="hdr rec-top" id="top">
+        <a class="tbtn" href="timer.html" aria-label="続ける（タイマーにもどる）">続ける</a>
+        <span class="hdr-sp"></span>
+        <button class="key key-ink" type="button" id="save">記録する</button>
+      </header>
+
+      <section class="card hero rec-card" id="composer" aria-label="この勉強を記録">
+        <div class="rec-free" id="free" hidden>
+          <p class="rec-q"><b id="free-q">何の科目を勉強した？</b><span id="free-hint">選ばなければ、あとで仕分けに</span></p>
+          <div class="rec-picks" id="picks" role="radiogroup" aria-label="勉強した科目"></div>
+          <input class="rec-in" id="what" type="text" maxlength="30" placeholder="内容（例：相対性理論、例題41〜50）" aria-label="勉強した内容" autocomplete="off">
+          <div class="chips rec-hints" id="hints" role="group" aria-label="前に書いた内容">
+            <button class="chip" type="button" data-w="相対性理論">相対性理論</button>
+            <button class="chip" type="button" data-w="ベクトル">ベクトル</button>
+            <button class="chip" type="button" data-w="長文読解 第3講">長文読解 第3講</button>
+            <button class="chip" type="button" data-w="古文単語 61〜80">古文単語 61〜80</button>
+          </div>
+        </div>
+
+        <div class="rec-main">
+          <span class="subj rec-coin" data-s="ja" id="coin" aria-hidden="true"></span>
+          <div class="rec-col">
+            <p class="rec-name"><b id="name">国語</b><span id="task">古文単語 315 · 61〜80</span></p>
+            <textarea class="rec-memo" id="memo" rows="4" placeholder="どこまでやった？ どうだった？" aria-label="メモ（どこまでやった？ どうだった？）"></textarea>
+            <div class="rec-chips">
+              <span class="tag"><i class="dot" id="chip-dot" style="--c:var(--s-ja)"></i><span id="chip-name">国語</span></span>
+              <span class="kgroup step" role="group" aria-label="勉強した時間">
+                <button type="button" id="minus" aria-label="5分へらす"><i class="pi" id="minus-ic"></i></button>
+                <span class="step-v" id="min" aria-live="polite">39分</span>
+                <button type="button" id="plus" aria-label="5分ふやす"><i class="pi" data-pi="plus"></i></button>
+              </span>
+              <span class="tag" id="span">6:52〜7:31</span>
+              <span class="tag" id="vsplan">予定の60分の中で</span>
+            </div>
+            <button class="rec-share" type="button" role="switch" aria-checked="false" id="share">
+              <i class="pi" id="share-ic"></i><span id="share-t">自分だけのメモ</span><span class="sw" aria-hidden="true"><i></i></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 記録する勉強がないとき -->
+      <header class="hdr" id="top-empty" hidden>
+        <a class="ibtn" href="timer.html" aria-label="戻る"><i data-pi="left"></i></a>
+        <p class="hdr-t rec-navt">この勉強を記録</p>
+      </header>
+      <div class="rec-empty" id="empty" hidden>
+        <div class="empty">
+          <span data-pix="mebu" data-face="sleep" data-scale="4"></span>
+          <b>記録する勉強がありません</b>
+          <span>タイマーで勉強を始めると、ここで記録できます</span>
+        </div>
+      </div>
+    </main>
+
+    <footer class="rec-band" id="band">
+      <p class="rec-today" id="today">今日 2時間45分 → <b>3時間24分</b></p>
+      <span class="rec-left" id="left" hidden aria-live="polite"></span>
+      <svg class="rec-ring" viewBox="0 0 26 26" aria-hidden="true"><circle class="tr" cx="13" cy="13" r="10" fill="none" stroke-width="3"/><circle class="fg" id="ring" cx="13" cy="13" r="10" fill="none" stroke="#17121F" stroke-width="3" stroke-dasharray="0 63" stroke-linecap="butt" transform="rotate(-90 13 13)"/></svg>
+    </footer>
+
+    <div class="rec-done" id="done" hidden aria-hidden="true">
+      <div class="stamp"><span data-stk="star" data-scale="8"></span><b class="stamp-w">えらい！</b></div>
+    </div>
+  </div>
+
+  <aside class="note">
+    <p class="label-j sq">この画面で見てほしい点</p>
+    <h1>記録シート</h1>
+    <p>タイマーの ✓ や「メモを書いて記録する」で開く、投稿を書くような画面です。並びは今のアプリと同じ。</p>
+    <ul>
+      <li>左上の「続ける」でタイマーに戻り、右上の「記録する」で保存。決める操作はインクの面（床はライム）の1つだけ。</li>
+      <li>書く所は主役のカード1枚（ライムの影）。メモは枠を描かず、紙にそのまま書く。</li>
+      <li>押せるのは「− 39分 ＋」の板（5分ずつ）だけなので、床があるのもここだけ。ほかの札は押せない。</li>
+      <li>「自分だけのメモ」⇄「タイムラインにも投稿する」は1行の切りかえ。オンでライム。</li>
+      <li>下の帯で今日の合計がどう変わるか。メモの残りは輪（140字。残り20字で黄、こえると赤）。</li>
+      <li>記録すると「えらい！」のシールが fade で出て約1.1秒で消え、トースト。アプリはこのあとタイマーに戻る（見本はこの画面のまま）。</li>
+    </ul>
+    <span class="seg-cap">見本の状態</span>
+    <div class="seg seg-block" role="group" aria-label="見本の状態" id="modes">
+      <button type="button" aria-pressed="true" data-mode="normal">ふつう</button>
+      <button type="button" aria-pressed="false" data-mode="free">自習のとき</button>
+      <button type="button" aria-pressed="false" data-mode="empty">記録がない</button>
+    </div>
+    <button class="key key-sm note-again" type="button" id="again">はじめにもどす</button>
+    <p class="note-links"><a class="link" href="index.html">一覧へ</a><a class="link" href="timer.html">タイマー</a><a class="link" href="moments.html">出来事</a><a class="link" href="system.html">部品</a></p>
+  </aside>
+</div>
+<script src="shared/app.js"></script>
+<script>
+(() => {
+  'use strict';
+  const A = window.App;
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const hm = m => `${Math.floor(m / 60)}時間${pad(m % 60)}分`;      // アプリの hm と同じ（2時間45分）
+  const clk = m => `${Math.floor(m / 60)}:${pad(m % 60)}`;           // 1日の中の分 → 6:52
+  const MAX = 140;                 // メモの字数
+  const BEFORE = 165;              // 今日すでに 2時間45分
+  const END = 7 * 60 + 31;         // 終わった時刻 7:31（いま）
+  const RING = 2 * Math.PI * 10;
+
+  /* 見本：国語 39分（予定 60分）／自習 25分（予定なし）／記録する勉強がない */
+  const MODES = {
+    normal: { s: 'ja', min: 39, plan: 60, free: false },
+    free: { s: 'free', min: 25, plan: null, free: true },
+    empty: null
+  };
+  const FREE_LIST = ['free', 'en', 'ma', 'ph', 'ch', 'ja'];
+  let mode = 'normal', st = null, phase = 'idle', timer = 0;
+
+  function start() {
+
+  /* − のアイコン（共通のドットのアイコンにないので、同じ作りでここで描く） */
+  $('#minus-ic').innerHTML = A._rowsSVG(['.......', '.......', '.......', 'kkkkkkk', '.......', '.......', '.......'], { k: 'currentColor' }, 2);
+
+  /* 自習のときの科目の列 */
+  $('#picks').innerHTML = FREE_LIST.map(id => {
+    const s = A.SUBJ[id];
+    const label = id === 'free' ? '自習のまま' : s.name;
+    return `<button class="pick" type="button" role="radio" aria-checked="false" data-pick="${id}" aria-label="${id === 'free' ? '自習のまま（仕分けない）' : s.name}"><span class="subj" data-s="${id}" aria-hidden="true"></span><span>${label}</span></button>`;
+  }).join('');
+  A.upgrade($('#picks'));
+
+  const subjOf = () => {
+    if (!st.free) return st.s;
+    return st.pick && st.pick !== 'free' ? st.pick : 'free';
+  };
+
+  function paint() {
+    if (!st) return;
+    const sid = subjOf(), s = A.SUBJ[sid];
+    // 科目のコイン・名前・内容
+    const coin = $('#coin');
+    coin.dataset.s = sid; coin.innerHTML = ''; coin.style.removeProperty('--c');
+    A.upgrade(coin.parentElement);
+    $('#name').textContent = s.name;
+    $('#task').textContent = st.free ? st.what.trim() : s.task;
+    $('#chip-name').textContent = s.name;
+    $('#chip-dot').style.setProperty('--c', s.c);
+    // 時間と、何時から何時（日をまたぐと「翌」）
+    let start = END - st.min, prev = 0;
+    if (start < 0) { prev = -start; start += 1440; }
+    $('#min').textContent = `${st.min}分`;
+    $('#min').setAttribute('aria-label', `勉強した時間 ${st.min}分`);
+    $('#minus').disabled = st.min <= 1;
+    $('#plus').disabled = st.min >= 600;
+    $('#span').textContent = `${clk(start)}〜${prev ? '翌' : ''}${clk(END)}`;
+    const vp = $('#vsplan');
+    vp.hidden = !st.plan;
+    if (st.plan) vp.textContent = st.min > st.plan ? `予定の${st.plan}分をこえて` : `予定の${st.plan}分の中で`;
+    // 下の帯：今日の合計（前の日に入るぶんは別に）
+    const todayPart = st.min - prev;
+    $('#today').innerHTML = `今日 ${hm(BEFORE)} → <b>${hm(BEFORE + todayPart)}</b>${prev ? `<small>（前の日に${prev}分）</small>` : ''}`;
+    // 自習の問い
+    if (st.free) {
+      $('#free-q').textContent = st.pick ? '科目' : '何の科目を勉強した？';
+      $('#free-hint').hidden = !!st.pick;
+      document.querySelectorAll('.pick').forEach(b => b.setAttribute('aria-checked', String(b.dataset.pick === st.pick)));
+    }
+    // 切りかえ
+    const sh = $('#share');
+    sh.setAttribute('aria-checked', String(st.share));
+    $('#share-t').textContent = st.share ? 'タイムラインにも投稿する' : '自分だけのメモ';
+    $('#share-ic').innerHTML = A.icon(st.share ? 'people' : 'person', 2);
+    paintCount();
+  }
+
+  function paintCount() {
+    const used = $('#memo').value.length, left = MAX - used, over = left < 0;
+    const f = Math.min(1, used / MAX);
+    const ring = $('#ring');
+    ring.setAttribute('stroke-dasharray', `${(RING * f).toFixed(2)} ${RING.toFixed(2)}`);
+    ring.style.stroke = over ? 'var(--down)' : used > MAX - 20 ? 'var(--due)' : 'var(--ink)';
+    const l = $('#left');
+    l.hidden = !used; l.textContent = String(left); l.classList.toggle('is-over', over);
+    const save = $('#save');
+    const name = A.SUBJ[subjOf()].name;
+    if (phase === 'idle') {
+      save.setAttribute('aria-disabled', String(over));
+      save.setAttribute('aria-label', over ? `メモが${-left}字多いので記録できません` : `${name} ${st.min}分を記録する`);
+    }
+  }
+
+  function setMode(m) {
+    mode = m in MODES ? m : 'normal';
+    clearTimeout(timer);
+    phase = 'idle';
+    const d = MODES[mode];
+    st = d ? { ...d, pick: null, what: '', share: false } : null;
+    const empty = !st;
+    $('#top').hidden = empty; $('#composer').hidden = empty; $('#band').hidden = empty;
+    $('#top-empty').hidden = !empty; $('#empty').hidden = !empty;
+    $('#done').hidden = true; $('#done').classList.remove('is-out');
+    const save = $('#save');
+    save.disabled = false; save.querySelector('.face').textContent = '記録する';
+    $('#memo').value = ''; $('#what').value = '';
+    if (st) { $('#free').hidden = !st.free; paint(); }
+    document.querySelectorAll('#modes > button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    try { history.replaceState(null, '', mode === 'normal' ? location.pathname : '#' + mode); } catch (e) { /* 見本なので無視 */ }
+  }
+
+  /* 時間を 5分ずつ直す */
+  const adjust = d => { if (phase !== 'idle') return; st.min = Math.max(1, Math.min(600, st.min + d)); paint(); };
+  $('#minus').addEventListener('click', () => adjust(-5));
+  $('#plus').addEventListener('click', () => adjust(5));
+
+  $('#memo').addEventListener('input', paintCount);
+  $('#composer').addEventListener('click', e => { if (e.target === e.currentTarget || e.target.matches('.rec-main, .rec-col')) $('#memo').focus(); });
+  $('#what').addEventListener('input', e => { st.what = e.target.value; paint(); });
+  $('#hints').addEventListener('click', e => { const c = e.target.closest('[data-w]'); if (!c) return; st.what = c.dataset.w; $('#what').value = st.what; paint(); });
+  $('#picks').addEventListener('click', e => {
+    const b = e.target.closest('.pick'); if (!b || phase !== 'idle') return;
+    const id = b.dataset.pick;
+    // 「自習のまま」をもう一度押すと、えらんでいない（あとで仕分け）に戻る
+    st.pick = id === 'free' && st.pick === 'free' ? null : id;
+    paint();
+  });
+  $('#share').addEventListener('click', () => { if (phase !== 'idle') return; st.share = !st.share; paint(); });
+
+  /* 記録する：シールが出て、約1.1秒でトースト（アプリはここでタイマーに戻る） */
+  $('#save').addEventListener('click', () => {
+    if (phase !== 'idle' || !st) return;
+    if (MAX - $('#memo').value.length < 0) return;
+    phase = 'done';
+    const save = $('#save');
+    save.querySelector('.face').textContent = '記録しました';
+    save.disabled = true; save.removeAttribute('aria-disabled'); save.setAttribute('aria-label', '記録しました');
+    const name = A.SUBJ[subjOf()].name, min = st.min, share = st.share;
+    const done = $('#done');
+    done.hidden = false; done.classList.remove('is-out');
+    timer = setTimeout(() => {
+      done.classList.add('is-out');
+      timer = setTimeout(() => { done.hidden = true; done.classList.remove('is-out'); }, A.reduced() ? 0 : 170);
+      A.toast({ title: `${name} ${min}分を記録しました`, exp: `+${min} EXP`, sub: share ? 'タイムラインにも投稿しました' : '', pix: 'penta', from: 'idle', face: 'happy', ms: 3200 });
+    }, 1100);
+  });
+
+  $('#modes').addEventListener('change', () => { const b = $('#modes > [aria-pressed="true"]'); if (b) setMode(b.dataset.mode); });
+  $('#again').addEventListener('click', () => setMode(mode));
+  window.addEventListener('hashchange', () => setMode(location.hash.slice(1)));
+
+  setMode(location.hash.slice(1));
+  }
+  /* app.js が部品を描いたあと（DOMContentLoaded の順番）に始める */
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
+</body>
+</html>

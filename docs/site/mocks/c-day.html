@@ -317,6 +317,8 @@ html.studying .readout .pix{opacity:1}
   background:repeating-linear-gradient(to bottom,var(--fg) 0 4px,transparent 4px 10px);opacity:.5}
 .how-line li{position:relative;display:grid;grid-template-columns:18px 1fr;column-gap:18px;padding-bottom:26px}
 .how-line li::before{content:"";grid-row:1 / span 3;width:18px;height:18px;margin-top:6px;border-radius:50%;background:var(--bg);border:3px solid var(--fg);position:relative;z-index:1}
+.how-cols{grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.st-copy .how-line{margin-top:8px}
 .how-line .when{font-size:var(--fs-small);font-weight:700;color:var(--lamp)}
 .how-line h3{font-size:22px;line-height:1.45}
 .how-line p{color:var(--muted);margin-top:4px}
@@ -400,6 +402,7 @@ html.studying .bar-prog{display:block}
   .hero-grid{grid-template-columns:1fr}
   .tt{max-width:460px}
   .st-cols,.night-cols,.sheet-cols{grid-template-columns:1fr}
+  .how-shot{display:none}
   .soon{grid-template-columns:1fr 1fr}
   .soon div:nth-child(3){padding-left:0;border-left:0}
   .soon div:nth-child(n+3){border-top:2px solid var(--night-line)}
@@ -451,6 +454,7 @@ html.studying .bar-prog{display:block}
   .sheet-head{flex-direction:column;align-items:flex-start;gap:2px}
   .sheet caption{display:block;padding-bottom:4px}
   .town{height:88px;margin-top:36px}
+  .fb-name{flex-direction:column;align-items:flex-start;gap:2px}
   .sheet table,.sheet thead,.sheet tbody,.sheet tr,.sheet th,.sheet td{display:block;width:auto!important}
   .sheet thead{display:none}
   .sheet tr{padding:12px 0;border-top:1.5px solid var(--line)}
@@ -498,7 +502,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
         <a href="#t1945"><span>19:45</span>続けた日数とバッジ</a>
         <a href="#t2200"><span>22:00</span>友だち</a>
         <a href="#how"><span>22:30</span>使い方</a>
-        <a href="#parents"><span></span>おうちの方へ</a>
+        <a href="#parents"><span>別紙</span>おうちの方へ</a>
         <a href="#soon"><span>23:00</span>近日公開</a>
       </nav>
     </details>
@@ -663,8 +667,8 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
             <div class="slip">
               <h3>今日の記録 <small>見本</small></h3>
               <ol class="log" id="log" aria-live="polite">
-                <li style="--c:var(--s-en)"><span class="lt">17:00</span><i class="lc" aria-hidden="true"></i><span><b>英語</b>長文読解</span><span class="ld">1時間35分</span></li>
-                <li style="--c:var(--s-ja)"><span class="lt">6:30</span><i class="lc" aria-hidden="true"></i><span><b>国語</b>古文単語</span><span class="ld">30分</span></li>
+                <li style="--c:var(--s-en)"><span class="lt">17:00</span><i class="lc" aria-hidden="true"></i><span><b>英語</b><span class="nb">長文読解</span></span><span class="ld">1時間35分</span></li>
+                <li style="--c:var(--s-ja)"><span class="lt">6:30</span><i class="lc" aria-hidden="true"></i><span><b>国語</b><span class="nb">古文単語</span></span><span class="ld">30分</span></li>
               </ol>
             </div>
             <figure class="shot">
@@ -757,13 +761,21 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
       <div class="st-time"><span class="pix" data-pix="22:30"></span></div>
       <span class="stop" aria-hidden="true"></span>
       <div class="st-body">
-        <p class="chip"><i style="--c:var(--lamp)"></i>使い方</p>
-        <h2 id="h2230" style="font-size:var(--fs-h2);line-height:1.32">入れるのは予定だけ。<br>あとは押すだけ。</h2>
-        <ol class="how-line">
-          <li><span class="when">今夜</span><h3>あしたの時間割に入れる。</h3><p>日にちと時間と科目を入れておく。</p></li>
-          <li><span class="when">あした 17:00</span><h3>「勉強を開始」を押す。</h3><p>お知らせが来たら、下のバーから1回。</p></li>
-          <li><span class="when">終わったら</span><h3>✓ で記録。</h3><p>ひとことは書かなくてもいい。時間はそのまま今日の記録に。</p></li>
-        </ol>
+        <div class="st-cols how-cols">
+          <div class="st-copy">
+            <p class="chip"><i style="--c:var(--lamp)"></i>使い方</p>
+            <h2 id="h2230">入れるのは予定だけ。<br>あとは押すだけ。</h2>
+            <ol class="how-line">
+              <li><span class="when">今夜</span><h3>あしたの時間割に入れる。</h3><p>日にちと時間と科目を入れておく。</p></li>
+              <li><span class="when">あした 17:00</span><h3>「勉強を開始」を押す。</h3><p>お知らせが来たら、下のバーから1回。</p></li>
+              <li><span class="when">終わったら</span><h3>✓ で記録。</h3><p>ひとことは書かなくてもいい。時間はそのまま今日の記録に。</p></li>
+            </ol>
+          </div>
+          <figure class="st-visual shot how-shot" style="--pw:220px">
+            <div class="phone"><img src="img/timer-live.webp" alt="アプリのタイマーの画面。国語 古文単語を勉強中で、39:59、のこり20分1秒。下に一時停止のボタンと ✓。" width="786" height="1704" loading="lazy" decoding="async"></div>
+            <figcaption>アプリの画面：勉強中のタイマー</figcaption>
+          </figure>
+        </div>
       </div>
     </article>
 
@@ -953,9 +965,14 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
   }
   function timeAt(sy) {
     if (sy <= stops[0].s) return { t: stops[0].t, y: stops[0].y, k: 0 };
+    /* the dot rests on each station for a short stretch, then moves on */
     for (let i = 0; i < stops.length - 1; i++) {
       const a = stops[i], b = stops[i + 1];
-      if (sy <= b.s) { const f = (sy - a.s) / Math.max(1, b.s - a.s); return { t: a.t + f * (b.t - a.t), y: a.y + f * (b.y - a.y), k: i }; }
+      if (sy <= b.s) {
+        const dw = Math.min(28, (b.s - a.s) / 4);
+        const f = Math.max(0, Math.min(1, (sy - a.s - (i ? dw : 0)) / Math.max(1, b.s - a.s - dw - (i ? dw : 0))));
+        return { t: a.t + f * (b.t - a.t), y: a.y + f * (b.y - a.y), k: i };
+      }
     }
     const z = stops[stops.length - 1]; return { t: z.t, y: z.y, k: stops.length - 1 };
   }
@@ -1099,7 +1116,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
     const dur = s >= 3600 ? `${Math.floor(s / 3600)}時間${Math.floor(s / 60) % 60}分` : s >= 60 ? `${Math.floor(s / 60)}分${s % 60}秒` : `${s}秒`;
     const li = D.createElement('li');
     li.className = 'mine'; li.style.setProperty('--c', S.c);
-    li.innerHTML = `<span class="lt">いま</span><i class="lc" aria-hidden="true"></i><span><b>${S.name}</b>${esc(session.title)}</span><span class="ld">${dur}</span>`;
+    li.innerHTML = `<span class="lt">いま</span><i class="lc" aria-hidden="true"></i><span><b>${S.name}</b><span class="nb">${esc(session.title)}</span></span><span class="ld">${dur}</span>`;
     const log = $('log'); log.insertBefore(li, log.firstChild);
     while (log.querySelectorAll('li.mine').length > 3) log.querySelectorAll('li.mine')[3].remove();
     session = null; clearInterval(tick);
@@ -1107,7 +1124,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
     flash = Date.now() + 3200; flashMsg = `記録した：${S.name} ${dur}（見本）`;
     renderBar(); renderStation();
     setTimeout(renderBar, 3300);
-    if (window.InchPix && InchPix.deliver) try { InchPix.deliver(`記録しました。${S.name} ${dur}（見本。どこにも保存しません）`, 4200); } catch (e) {}
+    if (window.InchPix && InchPix.deliver) try { InchPix.deliver(`記録しました：${S.name} ${dur}（見本）`, 4200); } catch (e) {}
   }
   D.addEventListener('click', e => {
     const b = e.target.closest && e.target.closest('[data-act]');

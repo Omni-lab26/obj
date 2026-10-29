@@ -41,7 +41,7 @@
 .tl-node{position:relative;z-index:1;display:grid;place-items:center;line-height:0}
 /* 済んだ予定：小さな絵（カードの地のフチで線の上に乗る）＋ インクの ✓ */
 .tl-node.done{padding:2px;border-radius:8px;background:var(--card)}
-.tl-node .ck{position:absolute;right:-4px;bottom:-4px;width:15px;height:15px;display:grid;place-items:center;background:var(--ink);color:var(--on-ink);box-shadow:0 0 0 2px var(--card)}
+.tl-node .ck{position:absolute;right:-5px;bottom:-5px;width:13px;height:13px;display:grid;place-items:center;background:var(--ink);color:var(--on-ink);box-shadow:0 0 0 2px var(--card)}
 /* これからの駅：科目の色の四角（サイトの時間割の駅） */
 .tl-stn{display:block;width:12px;height:12px;background:var(--c);box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--card)}
 /* いま：紅の四角と紅の線 */
@@ -67,24 +67,29 @@
 .tt-plain .row{display:grid;grid-template-columns:50px auto minmax(0,1fr);gap:10px;min-height:62px;padding:8px 0}
 .tt-plain .row::before{inset:2px -6px}
 .tt-plain .tl-time{padding-right:0}
+/* はじめての人：空き枠（ことばの途中で折り返さない） */
+.tt-empty .empty{background:var(--card)}
+.tt-empty .empty > span:not([data-pix]){word-break:auto-phrase;text-wrap:balance}
 
 /* ---------- 締切 ---------- */
 .dl{padding-block:4px}
 .dl .row{gap:12px}
-.dl .stk{transform:rotate(-6deg);width:40px;display:grid;place-items:center}
+/* シールは −6° と +6° を交互に（アプリと同じ。止まったまま） */
+.dl .stk{transform:rotate(var(--tilt,-6deg));width:40px;display:grid;place-items:center}
 .dl .row-end{gap:5px}
-.dl-days{display:flex;align-items:baseline;gap:1px;white-space:nowrap}
-.dl-days .mid{font-size:var(--fs-num)}
-.dl-days.is-soon .mid{color:var(--due-ink)}
-.dl-days .unit{margin-right:0}
+/* 日数はふつうの字の 17px（アプリは 14pt の太字）。時間割より目立たせない */
+.dl-days{display:flex;align-items:baseline;gap:2px;white-space:nowrap}
+.dl-days b{font:700 17px/1.15 var(--f-body);color:var(--ink)}
+.dl-days.is-soon b{color:var(--due-ink)}
+.dl-days small{font:500 var(--fs-tiny)/1 var(--f-body);color:var(--ink-3)}
+.dl-empty{justify-content:center;min-height:56px;color:var(--ink-3);font-size:13px}
 .dl-todo{display:flex;gap:4px;height:8px}
 .dl-todo i{width:8px;height:8px;box-shadow:var(--ring-thin)}
 .dl-todo i.on{background:var(--ink)}
 
 /* 横の説明の切りかえ */
-.note .seg{margin-top:16px}
+.note .chips{margin-top:10px}
 .note .seg-cap{display:block;margin-top:18px;font-size:12px;color:var(--ink-3)}
-.sheet-panel p.muted{font-size:13px;margin-bottom:4px}
 .key-danger{--fg:var(--pause)}
 .note-links .link{min-width:44px;justify-content:center}
 </style>
@@ -116,11 +121,9 @@
       <div class="sheet-scrim" data-close-sheet></div>
       <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-dl-h">
         <span class="sheet-grab" aria-hidden="true"></span>
-        <div class="sheet-h"><h2 id="sheet-dl-h">第4回 記述模試</h2></div>
-        <p class="muted" id="sheet-dl-s">11月8日 · あと10日</p>
+        <div class="sheet-h"><h2 id="sheet-dl-h">第4回 記述模試</h2><button class="tbtn" type="button" data-close-sheet>やめる</button></div>
         <div class="sheet-acts">
           <button class="key key-block key-lg key-danger" type="button" id="dl-del">この締切を削除</button>
-          <button class="key key-block" type="button" data-close-sheet>やめる</button>
         </div>
       </div>
     </div>
@@ -135,12 +138,14 @@
       <li>「いま」の線は紅（<code>#D7003A</code>）。アプリの赤 <code>#FF3B30</code> は紙の上で小さな時刻が読みにくい（3.3:1）ので、NOW の札と同じ紅にした（5.0:1）。</li>
       <li>いまの予定は紙2の地に絵を線の上へ。駅はライムの輪で止まったまま光る（サイトの「光る駅」を動かさない形）。</li>
       <li>曜日はライムの切りかえ。ほかの曜日はふつうの行になる。</li>
-      <li>締切は旗・カレンダー・トロフィーのシール。21日以内の日数は締切の色。下の四角は ToDo の進み。</li>
+      <li>締切は旗・カレンダー・トロフィーのシール（並び順で決まり、左右に交互に傾く）。日数はふつうの太字で、21日以内は締切の色。下の四角は ToDo の進み。</li>
+      <li>「17:05」では、いまの線が 17:00 の予定の上に来る（アプリと同じ並び）。</li>
     </ul>
     <span class="seg-cap">見本の時刻（押すと切りかわる）</span>
-    <div class="seg seg-block" role="group" aria-label="見本の時刻" id="scene">
-      <button type="button" aria-pressed="true" data-scene="a">7:32 国語を勉強中</button>
-      <button type="button" aria-pressed="false" data-scene="b">17:05 英語の時間</button>
+    <div class="chips" data-single role="group" aria-label="見本の時刻" id="scene">
+      <button class="chip" type="button" aria-pressed="true" data-scene="a">7:32 国語を勉強中</button>
+      <button class="chip" type="button" aria-pressed="false" data-scene="b">17:05 英語の時間</button>
+      <button class="chip" type="button" aria-pressed="false" data-scene="n">はじめて使う人</button>
     </div>
     <p class="note-links"><a class="link" href="index.html">一覧へ</a><a class="link" href="timer.html">タイマー</a><a class="link" href="system.html">部品</a></p>
   </aside>
@@ -164,24 +169,26 @@
     { id: 'b5', s: 'en', memo: '過去問', start: '9:00', min: 120, days: [5, 6] },
     { id: 'b6', s: 'ma', memo: '模試の復習', start: '13:00', min: 90, days: [5, 6] }
   ];
-  /* 見本の時刻：7:32（国語を勉強中。今のアプリの画面写真）と 17:05（英語の予定の時間。まだ始めていない） */
+  /* 見本の時刻：7:32（国語を勉強中。今のアプリの画面写真）と 17:05（英語の予定の時間。まだ始めていない）と、はじめて使う人（予定も締切もない） */
   const SCENES = {
     a: { now: '7:32', done: ['b1'], bar: null },
-    b: { now: '17:05', done: ['b1'], bar: { state: 'idle', subj: 'en', next: false, title: '長文読解', sub: 'いま · 17:00–18:00' } }
+    b: { now: '17:05', done: ['b1'], bar: { state: 'idle', subj: 'en', next: false, title: '長文読解', sub: 'いま · 17:00–18:00', href: 'timer.html#idle', goHref: 'timer.html#idle' } },
+    n: { now: '7:32', done: [], fresh: true, bar: { state: 'idle', subj: 'none', title: '今日の時間割', sub: 'このあとの予定はありません', href: 'timer.html#new', goHref: 'timer.html#new' } }
   };
+  const HASH = { a: '', b: '#t1705', n: '#new' };
   const DEADLINES = [
-    { name: '第4回 記述模試', date: '11月8日', days: 10, todo: [1, 3], stk: 'flag' },
-    { name: '共通テスト', date: '1月16日', days: 79, todo: [1, 1], stk: 'cal' },
-    { name: '東大 二次試験', date: '2月25日', days: 119, todo: null, stk: 'trophy' }
+    { name: '第4回 記述模試', date: '11月8日', days: 10, todo: [1, 3] },
+    { name: '共通テスト', date: '1月16日', days: 79, todo: [1, 1] },
+    { name: '東大 二次試験', date: '2月25日', days: 119, todo: null }
   ];
 
   const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
   const clk = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
   const endOf = p => clk(toMin(p.start) + p.min);
-  const on = d => PLANS.filter(p => p.days.includes(d)).sort((a, b) => toMin(a.start) - toMin(b.start));
+  const on = d => SCENES[scene].fresh ? [] : PLANS.filter(p => p.days.includes(d)).sort((a, b) => toMin(a.start) - toMin(b.start));
   const name = p => A.SUBJ[p.s].name;
 
-  let scene = location.hash === '#t1705' ? 'b' : 'a';
+  let scene = Object.keys(HASH).find(k => HASH[k] && HASH[k] === location.hash) || 'a';
   let day = TODAY;
 
   /* ---------- 曜日 ---------- */
@@ -195,9 +202,12 @@
 
   /* ---------- 時間割 ---------- */
   const times = p => `<span class="tl-time"><b>${p.start}</b><small>${endOf(p)}</small></span>`;
+  /* 空のとき（アプリの文言）。はじめての人なので、めぶが寝ている */
+  const emptyTT = d => `<div class="empty"><span data-pix="mebu" data-face="sleep" data-scale="3"></span><b>${d === TODAY ? '今日' : DOW[d] + '曜日'}の時間割はまだありません</b><span>「追加」で日と始める時刻と科目を決めておくと、1タップで始められます。次の予定の時刻に知らせます</span></div>`;
   function todayLine() {
     const sc = SCENES[scene], now = toMin(sc.now);
     const list = on(TODAY);
+    if (!list.length) return emptyTT(TODAY);
     const stops = [], rows = [];
     list.forEach(p => {
       const done = sc.done.includes(p.id), end = toMin(p.start) + p.min;
@@ -234,14 +244,15 @@
   }
   function plainRows(d) {
     const list = on(d);
-    if (!list.length) return `<div class="empty"><b>${DOW[d]}曜日の時間割はまだありません</b><span>「追加」で日と始める時刻と科目を決めておくと、1タップで始められます。次の予定の時刻に知らせます</span></div>`;
+    if (!list.length) return emptyTT(d);
     return `<div class="rows">${list.map(p => `<button class="row" type="button" data-plan="${p.id}" aria-label="${esc(`${p.start}から ${name(p)} ${p.memo}。押すと編集`)}">
         ${times(p)}<span class="subj" style="--size:38px" data-s="${p.s}" aria-hidden="true"></span>
         <span class="tl-main" style="padding:0"><span class="tl-name"><b>${name(p)}</b></span><span class="tl-memo">${esc(p.memo)}</span></span></button>`).join('')}</div>`;
   }
   function paint() {
     const box = $('#tt');
-    box.className = 'card ' + (day === TODAY ? 'tt' : 'tt-plain');
+    /* 空のときは、点線の空き枠だけ（カードの中に入れると枠が2重になる） */
+    box.className = !on(day).length ? 'tt-empty' : 'card ' + (day === TODAY ? 'tt' : 'tt-plain');
     box.innerHTML = day === TODAY ? todayLine() : plainRows(day);
     A.upgrade(box);
   }
@@ -250,11 +261,16 @@
   });
 
   /* ---------- 締切 ---------- */
+  /* シールはアプリの決まり（standard.tsx）：21日以内は旗、2番目はカレンダー、ほかはトロフィー。傾きは −6° と +6° を交互に。並びから毎回決める */
+  const stkOf = (d, i) => d.days <= 21 ? 'flag' : i === 1 ? 'cal' : 'trophy';
   function deadlines() {
-    $('#dl').innerHTML = DEADLINES.map((d, i) => `<button class="row" type="button" data-dl="${i}" aria-label="${esc(`${d.name}。${d.date}、あと${d.days}日。${d.todo ? `ToDo ${d.todo[0]}/${d.todo[1]}` : 'ToDoなし'}`)}">
-      <span data-stk="${d.stk}" data-scale="2"></span>
+    const list = SCENES[scene].fresh ? [] : DEADLINES;
+    $('#dl').innerHTML = !list.length
+      ? '<button class="row dl-empty" type="button" data-soon aria-label="締切を追加">模試や申込の日を入れておきましょう</button>'
+      : list.map((d, i) => `<button class="row" type="button" data-dl="${i}" aria-label="${esc(`${d.name}。${d.date}、あと${d.days}日。${d.todo ? `ToDo ${d.todo[0]}/${d.todo[1]}` : 'ToDoなし'}`)}">
+      <span data-stk="${stkOf(d, i)}" data-scale="2" style="--tilt:${i % 2 ? 6 : -6}deg"></span>
       <span class="row-main"><span class="row-t">${esc(d.name)}</span><span class="row-s">${d.date} · ${d.todo ? `ToDo ${d.todo[0]}/${d.todo[1]}` : 'ToDoなし'}</span></span>
-      <span class="row-end"><span class="dl-days${d.days <= 21 ? ' is-soon' : ''}"><b class="mid">${d.days}</b><span class="unit">日</span></span>
+      <span class="row-end"><span class="dl-days${d.days <= 21 ? ' is-soon' : ''}"><b class="num">${d.days}</b><small>日</small></span>
         ${d.todo ? `<span class="dl-todo" aria-hidden="true">${Array.from({ length: d.todo[1] }, (_, k) => `<i class="${k < d.todo[0] ? 'on' : ''}"></i>`).join('')}</span>` : ''}</span></button>`).join('');
     A.upgrade($('#dl'));
   }
@@ -262,9 +278,7 @@
   $('#dl').addEventListener('click', e => {
     const r = e.target.closest('[data-dl]'); if (!r) return;
     picked = +r.dataset.dl;
-    const d = DEADLINES[picked];
-    $('#sheet-dl-h').textContent = d.name;
-    $('#sheet-dl-s').textContent = `${d.date} · あと${d.days}日`;
+    $('#sheet-dl-h').textContent = DEADLINES[picked].name;
     A.sheet.open('sheet-dl');
   });
   $('#dl-del').addEventListener('click', () => {
@@ -272,16 +286,17 @@
     A.sheet.close('sheet-dl');
     setTimeout(() => {
       deadlines();
-      if (!DEADLINES.length) $('#dl').innerHTML = '<div class="empty" style="margin:8px 0"><b>締切はまだありません</b><span>模試や申込の日を入れておきましょう</span></div>';
+      /* アプリの文言（Editors.tsx の deadlineActions） */
+      A.toast({ title: '締切を削除しました', sub: 'ひも付いていたToDoは残ります' });
     }, A.reduced() ? 0 : 300);
   });
 
-  /* ---------- 見本の時刻の切りかえ（横の説明から。#t1705 でも開ける） ---------- */
+  /* ---------- 見本の時刻の切りかえ（横の説明から。#t1705 #new でも開ける） ---------- */
   let liveBar = null;
   function setScene(k) {
     scene = k;
     const sc = SCENES[k];
-    document.querySelectorAll('#scene > button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.scene === k)));
+    document.querySelectorAll('#scene > [data-scene]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.scene === k)));
     const os = document.querySelector('.app > .os > span'); if (os) os.textContent = sc.now;
     document.body.dataset.time = sc.now;
     const cur = document.querySelector('.chrome > .sbar');
@@ -290,13 +305,38 @@
       const want = sc.bar ? A.renderStudyBar(sc.bar) : liveBar;
       if (want && want !== cur) cur.replaceWith(want);
     }
-    if (day === TODAY) paint();
+    paint();
+    deadlines();
   }
-  $('#scene').addEventListener('change', () => { const b = $('#scene > [aria-pressed="true"]'); setScene(b.dataset.scene); history.replaceState(null, '', b.dataset.scene === 'b' ? '#t1705' : location.pathname); });
+  $('#scene').addEventListener('change', () => {
+    const b = $('#scene > [aria-pressed="true"]'); if (!b) return;
+    setScene(b.dataset.scene);
+    history.replaceState(null, '', HASH[b.dataset.scene] || location.pathname);
+  });
+
+  /* ---------- 勉強バーとタイマーの時間をそろえる（見本だけの便利。sessionStorage がなくても動く） ----------
+     バーを押すと、いまの時間を to:'timer' で残す（timer.html が続きから始める）。
+     タイマーから戻ると、timer.html が to:'bar' で残した時間からバーが進む。 */
+  const BAR_KEY = 'inchly-mock-bar';
+  document.addEventListener('click', e => {
+    const m = e.target.closest('.chrome > .sbar .sbar-main'); if (!m) return;
+    const sb = m.closest('.sbar');
+    if (sb.dataset.state !== 'live' && sb.dataset.state !== 'paused') return;
+    try { sessionStorage.setItem(BAR_KEY, JSON.stringify({ to: 'timer', elapsed: +sb.dataset.elapsed, state: sb.dataset.state, at: Date.now() })); } catch (_) { /* なくてもよい */ }
+  });
+  function barFromTimer() {
+    let o = null;
+    try { o = JSON.parse(sessionStorage.getItem(BAR_KEY) || 'null'); if (o && o.to === 'bar') sessionStorage.removeItem(BAR_KEY); } catch (_) { return; }
+    if (!o || o.to !== 'bar' || !(o.elapsed >= 0) || Date.now() - o.at > 30 * 60e3) return;
+    const sb = document.querySelector('.chrome > .sbar');
+    if (!sb || sb.dataset.state === 'idle') return;
+    sb.dataset.elapsed = Math.round(o.elapsed + (o.state === 'live' ? (Date.now() - o.at) / 1000 : 0));
+    A.bar.set(o.state === 'paused' ? 'paused' : 'live');
+  }
 
   paint();
   deadlines();
-  const start = () => { if (scene !== 'a') setScene(scene); };
+  const start = () => { barFromTimer(); if (scene !== 'a') setScene(scene); else document.querySelectorAll('#scene > [data-scene]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.scene === 'a'))); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(start, 0)); else setTimeout(start, 0);
 })();
 </script>

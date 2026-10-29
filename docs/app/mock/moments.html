@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly 出来事</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="shared/app.css">
+<style>
+/* ===== 出来事（モーメント）だけの部品。色・字・影・動きは shared/app.css のトークンだけ ===== */
+
+/* 見本の操作盤（アプリの画面ではない。出来事を1つずつ出すためのもの） */
+.mo-list .seg > button{padding:0 8px;font-size:13px}
+.mo-rows{margin-top:6px}
+.mo-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0}
+.mo-row:last-child{padding-bottom:2px}
+.mo-row + .mo-row{border-top:1.5px solid var(--line)}
+.mo-ic{--accent:var(--sun);flex:none;display:grid;place-items:center;width:40px;height:40px;margin-top:2px;border-radius:var(--r-tile);
+  background:var(--dots),color-mix(in oklab,var(--accent) 40%,var(--card));box-shadow:var(--ring);color:var(--ink)}
+.mo-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-top:2px}
+.mo-txt b{font:700 var(--fs-h)/1.3 var(--f-body)}
+.mo-txt small{font-size:var(--fs-sub);line-height:1.45;color:var(--ink-3);word-break:auto-phrase}
+.mo-opt{margin-top:8px}
+.mo-go{margin-top:4px}
+.mo-reset{align-self:center;color:var(--ink-2);font-size:14px;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+
+/* まん中のカード：止まった住人が1匹。0.98→1 と fade で出て、少し止まり、fade で消える（はねない・ふくらまない・飛ばない） */
+.mo-layer{position:fixed;z-index:55;inset:0;display:grid;place-items:center;padding:0 40px 150px;pointer-events:none}
+.mo-card{width:min(264px,100%);border-radius:var(--r-lg);background:var(--card);box-shadow:var(--ring),var(--lift);overflow:hidden;text-align:center;
+  animation:mo-in var(--t-micro) var(--ios) both}
+.mo-layer.is-out .mo-card{animation:fade-out var(--t-dismiss) var(--ios) both}
+@keyframes mo-in{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+.mo-well{--accent:var(--sun);display:grid;place-items:center;height:100px;background:var(--dots),color-mix(in oklab,var(--accent) 34%,var(--card));box-shadow:inset 0 -2px 0 0 var(--ink)}
+.mo-body{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 18px 18px}
+.mo-k{font:400 var(--fs-pixh)/1.25 var(--f-pixj);letter-spacing:.02em;color:var(--ink)}
+.mo-word{font:800 24px/1.2 var(--f-body);letter-spacing:-.01em}
+.mo-s{font-size:12.5px;line-height:1.45;color:var(--ink-2)}
+.mo-ticket{display:inline-flex;align-items:center;gap:6px;min-height:26px;margin-top:2px;padding:0 10px;border-radius:7px;background:var(--sky);box-shadow:var(--ring-thin);
+  font:800 12px/1 var(--f-body);color:var(--ink)}
+
+/* トーストの補足が長いとき（レベルアップ＋休み券）、1字だけの行を作らない（共通のトーストへの頼みごと：shared_needs） */
+.toast-txt small{word-break:auto-phrase;text-wrap:pretty}
+
+/* 横の説明 */
+.note .seg{margin-top:8px}
+.note .seg-cap{display:block;margin-top:18px;font-size:12px;color:var(--ink-3)}
+.note-links .link{min-width:44px;justify-content:center}
+</style>
+</head>
+<body data-tab="home" data-bar="idle" data-bar-subj="ja" data-bar-title="国語 · 古文単語" data-bar-sub="いま · 6:30–7:30" data-bar-next="false">
+<div class="stage">
+  <div class="app">
+    <main class="screen">
+      <header class="hdr" data-hdr="home"></header>
+      <div class="stack">
+        <section class="card mo-list" aria-labelledby="mo-h">
+          <h2 class="sec-h"><span class="sec-t" id="mo-h" style="--accent:var(--coral)">出来事の見本</span><span class="sec-a">押すと1回だけ出ます</span></h2>
+          <div class="seg seg-block" role="group" aria-label="見せ方" id="how">
+            <button type="button" aria-pressed="true" data-how="card">まん中にも出す</button>
+            <button type="button" aria-pressed="false" data-how="toast">上の知らせだけ</button>
+          </div>
+          <div class="mo-rows">
+            <div class="mo-row">
+              <span class="mo-ic" style="--accent:var(--sky)" aria-hidden="true"><i data-pi="play" data-scale="3"></i></span>
+              <div class="mo-txt"><b>勉強を始めた</b><small>「勉強を開始」や ▶ を押したとき</small></div>
+              <button class="key key-sm mo-go" type="button" data-play="start" aria-label="勉強を始めた を見る">見る</button>
+            </div>
+            <div class="mo-row">
+              <span class="mo-ic" style="--accent:var(--sun)" aria-hidden="true"><i data-pi="check" data-scale="3"></i></span>
+              <div class="mo-txt"><b>ToDo を終えた</b><small>ToDo を終わりにしたとき</small>
+                <div class="chips mo-opt" role="group" aria-label="ToDo の見本"><button class="chip" type="button" aria-pressed="false" id="opt-all">ぜんぶ終わり</button></div>
+              </div>
+              <button class="key key-sm mo-go" type="button" data-play="todo" aria-label="ToDo を終えた を見る">見る</button>
+            </div>
+            <div class="mo-row">
+              <span class="mo-ic" style="--accent:var(--coral)" aria-hidden="true"><i data-pi="clock"></i></span>
+              <div class="mo-txt"><b>目安に届いた</b><small>予定の長さ（60分）をこえたとき</small></div>
+              <button class="key key-sm mo-go" type="button" data-play="target" aria-label="目安に届いた を見る">見る</button>
+            </div>
+            <div class="mo-row">
+              <span class="mo-ic" style="--accent:var(--sun)" aria-hidden="true"><i data-pi="edit"></i></span>
+              <div class="mo-txt"><b>記録した</b><small>記録シートなどで記録したとき</small>
+                <div class="chips mo-opt" role="group" aria-label="記録の見本"><button class="chip" type="button" aria-pressed="true" id="opt-lv">レベルアップ</button><button class="chip" type="button" aria-pressed="true" id="opt-ticket">休み券</button></div>
+              </div>
+              <button class="key key-sm mo-go" type="button" data-play="record" aria-label="記録した を見る">見る</button>
+            </div>
+          </div>
+        </section>
+
+        <button class="tbtn mo-reset" type="button" id="reset">見本をはじめにもどす</button>
+      </div>
+    </main>
+    <div class="mo-layer" id="layer" hidden aria-hidden="true"></div>
+  </div>
+
+  <aside class="note">
+    <p class="label-j sq">この画面で見てほしい点</p>
+    <h1>出来事（モーメント）</h1>
+    <p>勉強を始めた・ToDo を終えた・目安に届いた・記録した の4つ。今のスタンダードはトーストだけ。新しいスタンダードでは、住人が1匹出て顔だけが変わります。</p>
+    <ul>
+      <li>動きは fade と 0.98→1 だけ。はねない・ふくらまない・かけらも飛ばない。0.2秒で出て、1.3〜1.8秒で消える。</li>
+      <li>住人は止まった絵。出てから約0.45秒で顔だけが fade で変わる（ペンタ＝始めた・記録した、ふせん＝ToDo、ジリ＝目安の時間）。</li>
+      <li>起きたことは、いつも上のトーストに字で書く。文言は今のアプリのまま。</li>
+      <li>「上の知らせだけ」は静かな案。まん中のカードを出さず、トーストの中の住人の顔が変わる。</li>
+      <li>下の勉強バーも変わる（始めた→勉強中、目安→線がオレンジ、記録→次の予定）。レベルが上がるとヘッダーの Lv も変わる。</li>
+    </ul>
+    <span class="seg-cap">見せ方（画面の中の切りかえと同じ）</span>
+    <div class="seg seg-block" role="group" aria-label="見せ方（説明の側）" id="how2">
+      <button type="button" aria-pressed="true" data-how="card">まん中にも出す</button>
+      <button type="button" aria-pressed="false" data-how="toast">上の知らせだけ</button>
+    </div>
+    <p class="note-links"><a class="link" href="index.html">一覧へ</a><a class="link" href="record.html">記録シート</a><a class="link" href="timer.html">タイマー</a><a class="link" href="system.html">部品</a></p>
+  </aside>
+</div>
+<script src="shared/app.js"></script>
+<script>
+(() => {
+  'use strict';
+  const A = window.App;
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* 出来事ごとの中身。トーストの文言は inchly-app のスタンダード（model.ts・record.tsx）のまま。
+     「勉強を始めた」はスタンダードに文言がないので、ピクセル箱の出来事の文言（国語をはじめました）を使う。 */
+  const SHOWS = {
+    start: () => ({
+      accent: 'var(--sky)', pix: 'penta', from: 'sleep', to: 'look', ms: 1300,
+      big: '<p class="mo-word">スタート！</p>', s: '国語 · 予定 1時間',
+      toast: { title: '国語をはじめました' }
+    }),
+    todo: () => {
+      const all = $('#opt-all').getAttribute('aria-pressed') === 'true';
+      return {
+        accent: 'var(--sun)', pix: 'fusen', from: 'idle', to: 'happy', ms: 1400,
+        k: all ? 'ToDo ぜんぶクリア！' : 'ToDo クリア！', big: '<p class="big">+10 EXP</p>', s: all ? '' : '古文単語 61〜80',
+        toast: all ? { title: '今日のToDo、ぜんぶ終わり', exp: '+10 EXP' } : { title: 'ToDoを完了しました', exp: '+10 EXP' }
+      };
+    },
+    target: () => ({
+      accent: 'var(--coral)', pix: 'jiri', from: 'idle', to: 'ring', ms: 1700,
+      k: 'たっせい！', big: '<p><span class="big">60</span><span class="unit">分</span></p>', s: 'このまま続けても、記録してもOK',
+      toast: { title: '次の予定の時間です', sub: 'このまま続けても、記録して次へ行ってもOK' }
+    }),
+    record: () => {
+      const lv = $('#opt-lv').getAttribute('aria-pressed') === 'true';
+      const ticket = $('#opt-ticket').getAttribute('aria-pressed') === 'true';
+      const subs = ['+39 EXP', ticket ? '7日連続！休み券を1枚もらいました' : ''].filter(Boolean).join(' · ');
+      return {
+        accent: 'var(--sun)', pix: 'penta', from: 'idle', to: 'happy', ms: 1800, lv, ticket,
+        k: lv ? 'レベルアップ！' : '国語 39分', big: lv ? '<p class="big">Lv.26</p>' : '<p class="big">+39 EXP</p>', s: lv ? '国語 39分 · +39 EXP' : '',
+        toast: lv ? { title: 'レベルアップ！ Lv.26', sub: `国語 39分を記録 · ${subs}`, ms: 3600 }
+          : { title: '国語 39分を記録しました', exp: '+39 EXP', sub: ticket ? '7日連続！休み券を1枚もらいました' : '', ms: ticket ? 3400 : 2800 }
+      };
+    }
+  };
+
+  let how = 'card', timers = [], myBar = null, ticker = 0, level = 25;
+  const layer = $('#layer');
+  const later = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
+
+  /* ---------- まん中のカード ---------- */
+  function clearShow() { timers.forEach(clearTimeout); timers = []; layer.hidden = true; layer.classList.remove('is-out'); layer.innerHTML = ''; }
+  function play(kind) {
+    const d = SHOWS[kind]();
+    clearShow();
+    if (how === 'card') {
+      layer.innerHTML = `<div class="mo-card"><div class="mo-well" style="--accent:${d.accent}"><span data-pix="${d.pix}" data-face="${d.from}" data-scale="${d.pix === 'penta' ? 5 : 4}"></span></div>
+        <div class="mo-body">${d.k ? `<p class="mo-k">${esc(d.k)}</p>` : ''}${d.big}${d.s ? `<p class="mo-s">${esc(d.s)}</p>` : ''}${d.ticket ? '<span class="mo-ticket">休み券 +1</span>' : ''}</div></div>`;
+      A.upgrade(layer);
+      layer.hidden = false;
+      const px = layer.querySelector('.pix');
+      later(() => A.face(px, d.to), 450);                          // 出てから顔だけが変わる（動きを減らす設定でも、差しかえは見せる）
+      later(() => layer.classList.add('is-out'), d.ms - 280);      // 消える 0.28 秒
+      later(() => { layer.hidden = true; layer.classList.remove('is-out'); layer.innerHTML = ''; }, d.ms);
+      A.toast(d.toast);
+    } else {
+      A.toast(Object.assign({}, d.toast, { pix: d.pix, from: d.from, face: d.to }));
+    }
+    after(kind, d);
+  }
+
+  /* ---------- 出来事のあとで変わる所：勉強バーとヘッダーの Lv ---------- */
+  function paintMine() {
+    if (!myBar || !myBar.querySelector('.sbar-time')) return;
+    const e = +myBar.dataset.elapsed, plan = +myBar.dataset.plan * 60;
+    myBar.querySelector('.sbar-time').textContent = A.clock(e);
+    const line = myBar.querySelector('.pline');
+    line.classList.toggle('is-over', e > plan);
+    line.firstElementChild.style.setProperty('--p', Math.min(1, e / plan).toFixed(4));
+  }
+  function setBar(o) {
+    const ch = document.querySelector('.app > .chrome');
+    if (!ch) return;
+    const nb = A.renderStudyBar(o);
+    const old = ch.querySelector('.sbar');
+    if (old) old.replaceWith(nb); else ch.prepend(nb);
+    myBar = nb;
+    setTabs();
+    clearInterval(ticker);
+    if (o.state === 'live') ticker = setInterval(() => { if (myBar.dataset.state !== 'live') return; myBar.dataset.elapsed = +myBar.dataset.elapsed + 1; paintMine(); }, 1000);
+  }
+  function setTabs() {
+    const ch = document.querySelector('.app > .chrome');
+    const tb = ch && ch.querySelector('.tabbar');
+    if (tb) tb.replaceWith(A.renderTabBar('home', { study: myBar ? myBar.dataset.state : 'idle' }));
+  }
+  function setLv(n) {
+    level = n;
+    const lv = document.querySelector('.hdr .lv');
+    if (!lv) return;
+    lv.querySelector('.lv-n').textContent = `Lv.${n}`;
+    lv.querySelector('.lv-bar i').style.setProperty('--p', n > 25 ? '.03' : '.4');
+    lv.setAttribute('aria-label', `レベル ${n}。押すとくわしく`);
+  }
+  const IDLE_NOW = { state: 'idle', subj: 'ja', title: '国語 · 古文単語', sub: 'いま · 6:30–7:30', next: false };
+  function after(kind, d) {
+    if (kind === 'start') setBar({ state: 'live', subj: 'ja', elapsed: 0, plan: 60, tail: '予定 1時間' });
+    if (kind === 'target') setBar({ state: 'live', subj: 'ja', elapsed: 3600, plan: 60, tail: '予定 1時間' });
+    if (kind === 'record') { setBar({ state: 'idle' }); if (d.lv) setLv(26); }
+  }
+
+  function start() {
+    document.querySelectorAll('[data-play]').forEach(b => b.addEventListener('click', () => play(b.dataset.play)));
+    const segs = ['#how', '#how2'].map(s => $(s));
+    segs.forEach(seg => seg.addEventListener('change', () => {
+      const on = seg.querySelector('[aria-pressed="true"]');
+      how = on ? on.dataset.how : 'card';
+      segs.forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.how === how))));
+      clearShow();
+    }));
+    $('#reset').addEventListener('click', () => { clearShow(); setBar(IDLE_NOW); setLv(25); });
+    // バーの ❚❚ / ▶ を押したら、タブの点も合わせる（app.js が先にバーを切りかえる）
+    document.addEventListener('click', e => {
+      // 押した ❚❚ の絵は app.js が描きなおして外れるので、押した時点の道すじで見る
+      if (myBar && e.composedPath().some(n => n.classList && n.classList.contains('sbar-pp'))) setTabs();
+      // レベルのシートの数字も合わせる（シートは押したときに作られる）
+      if (e.target.closest('.hdr .lv') && level > 25) {
+        const big = document.querySelector('#sheet-level .big');
+        if (big) big.textContent = `Lv.${level}`;
+        const bar = document.querySelector('#sheet-level .lv-bar i');
+        if (bar) bar.style.setProperty('--p', '.03');
+        const nx = document.querySelector('#sheet-level .lv-bar + p');
+        if (nx) nx.innerHTML = 'Lv.27 まで あと <b class="num" style="color:var(--ink)">3,633 EXP</b>';
+        const today = document.querySelector('#sheet-level .big + .muted b');
+        if (today) today.textContent = '+204 EXP';   // 今日 2時間45分 + 39分
+      }
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
+</body>
+</html>

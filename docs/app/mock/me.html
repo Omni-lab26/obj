@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly マイページ</title>
+<meta name="description" content="新しいスタンダードのマイページ（サンプルのアカウント・成長のページ）">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="shared/app.css">
+<style>
+/* ===== マイページ・みんな・タイムラインで共通（shared/app.css のトークンと部品の上に足す物） ===== */
+
+/* ---------- 上に貼りつく下線のタブ（ヘッダーのすぐ下） ---------- */
+.tabs-stick{position:sticky;z-index:25;top:calc(var(--hdr-h) + var(--safe-top));margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter);background:var(--dots),var(--paper)}
+@media (min-width:431px){ .screen .tabs-stick{top:var(--hdr-h)} }
+.tabs-stick::after{content:"";position:absolute;left:0;right:0;bottom:-1.5px;height:2px;background:var(--ink);opacity:0;transition:opacity var(--t-micro) var(--ios)}
+.tabs-stick.is-stuck::after{opacity:1}
+.hdr.is-tabbed::after{opacity:0}
+.tabs-stick .utabs{border-bottom-width:2px}
+.tabs-stick .utabs > *{font-size:15px}
+.pane{animation:fade-in var(--t-fade) linear both}
+
+/* ---------- 0 から転がる数字（transform だけ。行きすぎない） ---------- */
+.roll{display:inline-flex}
+.rd{display:inline-block;height:1em;overflow:hidden}
+.rc{display:block;transform:translateY(calc(var(--d,0) * -10%));transition:transform var(--t-move) var(--ios)}
+.rc > span{display:block;height:1em;line-height:1}
+
+/* ---------- 投稿の行（カードではなく線で区切る） ---------- */
+.feed{margin:0 calc(-1 * var(--gutter));background:var(--card);box-shadow:0 2px 0 var(--ink)}
+.post{position:relative;display:flex;gap:10px;padding:14px var(--gutter) 4px;border-top:1.5px solid var(--line)}
+.post:first-child{border-top:0}
+.post.is-new{animation:fade-in var(--t-fade) linear both}
+.post-av{position:relative;flex:none;align-self:flex-start;display:grid;place-items:center;width:44px;height:44px;margin:-2px;padding:0;border:0;border-radius:14px;background:none;cursor:pointer}
+.post-av .av{--size:40px}
+.post-av:focus-visible{outline-offset:0}
+.post-main{flex:1;min-width:0}
+.post-h{display:flex;align-items:center;gap:5px;min-height:22px}
+.post-n{flex:0 1 auto;min-width:0;font:700 14.5px/1.3 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.post-m{flex:0 2 auto;min-width:0;font-size:13px;line-height:1.3;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.post-more{margin:-11px -10px -11px auto;color:var(--ink-3)}
+.post-t{margin-top:2px;font-size:14.5px;line-height:1.6;color:var(--ink)}
+.post-tags{font-size:14px;line-height:1.6;font-weight:700;color:var(--ink-2)}
+/* 勉強の記録：くぼみの箱に、科目の絵・ドットの札・時間 */
+.rec{display:flex;align-items:center;gap:11px;margin-top:9px;padding:10px 12px;border-radius:var(--r);background:var(--paper-2);box-shadow:var(--ring-thin)}
+.rec .subj{--size:32px}
+.rec-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.rec-main .label-j{font-size:12px;color:var(--ink-3)}
+.rec-t{font-size:13px;line-height:1.4;color:var(--ink-2);word-break:keep-all;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.rec-t b{font-size:14px;color:var(--ink);margin-right:6px}
+.rec-v{flex:none;font:800 15px/1.2 var(--f-body);font-variant-numeric:tabular-nums}
+/* 操作の行：返信・役に立った・しおり・共有（字と同じ 2pt の線のドットのアイコン） */
+.post-acts{display:flex;align-items:center;gap:18px;margin:2px 0 0 -10px}
+.pa{display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;min-width:44px;padding:0 8px;color:var(--ink-3);font:500 13px/1 var(--f-body);font-variant-numeric:tabular-nums}
+.pa-ic{position:relative;display:grid;place-items:center;width:18px;height:18px;line-height:0}
+.pa-ic > span{position:absolute;inset:0;display:grid;place-items:center}
+.pa-ic > .is-in{animation:fade-in var(--t-fade) linear both}
+.pa[aria-pressed="true"]{color:var(--ink);font-weight:700}
+.pa-help[aria-pressed="true"]{color:var(--due-ink)}
+
+/* ---------- 右下の「＋」（勉強バーの上） ---------- */
+.fab{position:fixed;z-index:35;right:20px;bottom:calc(var(--chrome-bottom) + var(--kd) + var(--tab-h) + var(--chrome-gap) + var(--bar-h) + var(--kd) + 14px)}
+.fab > .face{background:var(--card)}
+
+/* ---------- シートの中の入力 ---------- */
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld-l{font:700 13px/1.3 var(--f-body);color:var(--ink-2)}
+.fld textarea,.fld input{width:100%;margin:0;border:0;border-radius:12px;background:var(--card);box-shadow:var(--ring-thin);padding:12px 14px;font:400 16px/1.6 var(--f-body);color:var(--ink);resize:none;outline:none}
+.fld input{min-height:48px}
+.fld textarea{min-height:110px}
+.fld textarea:focus,.fld input:focus{box-shadow:var(--ring)}
+.fld textarea:focus-visible,.fld input:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.fld-n{align-self:flex-end;font-size:var(--fs-sub);color:var(--ink-3);font-variant-numeric:tabular-nums}
+.fld-err{margin-top:-2px;font:700 12px/1.3 var(--f-body);color:var(--down)}
+.sheet-sec{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.sheet-sec > .fld-l{margin-bottom:-2px}
+.sheet-panel{scrollbar-width:none}
+.sheet-panel::-webkit-scrollbar{display:none}
+
+/* ---------- 小さな画面（幅 360 未満） ---------- */
+@media (max-width:359px){
+  .post-acts{gap:8px}
+}
+
+/* ===== マイページだけ ===== */
+
+/* ---------- 勉強カード（クレジットカードの比率。主役の1枚） ---------- */
+.mecard{margin-right:6px;aspect-ratio:85.6/53.98;display:flex;flex-direction:column;justify-content:space-between;padding:16px 18px 15px;overflow:hidden;
+  background:var(--dots),var(--card);touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:transform var(--t-release) var(--ios)}
+.mecard.is-drag{transition:transform var(--t-press) var(--press-ease)}
+.mecard.is-follow{transition:none}
+/* 光の帯：止まっているときは左の端。指でなぞると指についてくる（1:1）。離すと行きすぎずに戻る */
+.mc-sheen{position:absolute;top:0;bottom:0;left:-25%;width:150%;pointer-events:none;
+  background:linear-gradient(110deg,transparent 33%,rgba(198,244,50,.28) 33% 39%,rgba(88,200,255,.22) 39% 45%,rgba(255,210,63,.26) 45% 51%,transparent 51%);
+  transform:translateX(-50%);transition:transform var(--t-move) var(--ios)}
+.mecard.is-follow .mc-sheen{transition:none}
+.mc-top,.mc-mid,.mc-bot{position:relative;display:flex;align-items:center}
+.mc-top{justify-content:space-between}
+.mc-logo{display:inline-flex;align-items:center;gap:5px;font:800 18px/1 var(--f-logo);letter-spacing:-.045em}
+.mc-logo svg{width:20px;height:20px}
+.mc-lv{display:inline-flex;align-items:center;gap:6px;font:800 13px/1 var(--f-body);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.mc-lv .lv-bar{width:26px}
+.mc-mid{gap:16px}
+.mc-chip{flex:none;display:grid;grid-template-columns:repeat(7,5px);gap:2px;padding:5px;border-radius:7px;background:color-mix(in oklab,var(--sun) 34%,var(--card));box-shadow:var(--ring-thin)}
+.mc-chip i{width:5px;height:5px;background:var(--g0)}
+.mc-chip i[data-l="1"]{background:var(--g1)} .mc-chip i[data-l="2"]{background:var(--g2)} .mc-chip i[data-l="3"]{background:var(--g3)} .mc-chip i[data-l="4"]{background:var(--g4)}
+.mc-stats{display:flex;gap:18px;min-width:0}
+.mc-stat{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mc-stat .mid{display:block;height:1.05em}
+.mc-l{font-size:11px;line-height:1.2;color:var(--ink-3);white-space:nowrap}
+.mc-bot{gap:10px}
+.mc-bot .av{--size:34px}
+.mc-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.mc-who b{font:700 15px/1.25 var(--f-body)}
+.mc-who span{font-size:12px;line-height:1.3;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-since{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.mc-since .label{font-size:11px;color:var(--ink-3)}
+.mc-since b{font:700 13px/1.1 var(--f-body);font-variant-numeric:tabular-nums}
+
+/* ---------- 自己紹介・数・ボタン ---------- */
+.who{display:flex;flex-direction:column;gap:2px;padding:2px 2px 0}
+.bio{font-size:14px;line-height:1.6;color:var(--ink-2);text-spacing-trim:trim-start}
+.bio .keep{white-space:nowrap}
+.counts{display:flex;flex-wrap:wrap;gap:0 18px;margin:-4px 0 -6px}
+.cnt{display:inline-flex;align-items:baseline;gap:5px;min-height:44px;min-width:44px;padding:12px 0 0;border:0;background:none;color:var(--ink);cursor:pointer}
+.cnt b{font:700 15px/1 var(--f-body);font-variant-numeric:tabular-nums}
+.cnt span{font-size:12px;color:var(--ink-3)}
+.cnt:focus-visible{outline-offset:2px}
+.me-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.me-btns .key{font-size:14px}
+.me-btns .key > .face{padding:0 10px}
+.me .tabs-stick{margin-top:2px}
+
+/* ---------- 成長：グラフの束（横にすべらせる。1枚ずつ止まる） ---------- */
+.deck{display:flex;gap:10px;margin:0 calc(-1 * var(--gutter));padding:4px var(--gutter) 6px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 var(--gutter);
+  overscroll-behavior-x:contain;scrollbar-width:none;cursor:grab}
+.deck::-webkit-scrollbar{display:none}
+.deck.is-grab{cursor:grabbing;scroll-snap-type:none}
+.deck:focus-visible{outline-offset:-3px;border-radius:24px}
+.dk{flex:0 0 100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column}
+.dk > .sec-h{margin-bottom:0;flex-wrap:wrap;row-gap:6px}
+.dk-num{display:flex;align-items:flex-end;gap:2px;margin-top:10px}
+.dk-num .unit{margin:0 6px 2px 4px}
+.dk-diff{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding-bottom:1px}
+.dk-diff small,.dk-num small{font-size:11px;line-height:1.2;color:var(--ink-3)}
+.deck-dots{display:flex;justify-content:center;gap:6px;margin-top:-2px}
+.deck-dots i{width:6px;height:6px;background:var(--ink);opacity:.25;transition:opacity var(--t-micro) var(--ios)}
+.deck-dots i.on{width:18px;opacity:1}
+
+/* 1枚目：この7日間（科目の色の積み上げ棒。緑は使わない） */
+.wk-plot{position:relative;height:150px;margin-top:14px}
+.wk-cols{position:absolute;inset:0;display:flex;gap:10px}
+.wcol{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;padding:0;border:0;background:none;cursor:pointer}
+.wcol::after{content:"";position:absolute;inset:0 -5px}
+.wcol:focus-visible{outline-offset:2px;border-radius:4px}
+.wstack{display:flex;flex-direction:column-reverse;box-shadow:var(--ring-thin);transform-origin:50% 100%;transition:opacity var(--t-micro) var(--ios)}
+.wstack.grow{animation:grow var(--t-move) var(--ios) calc(var(--i) * 30ms) both}
+@keyframes grow{from{transform:scaleY(0)}to{transform:none}}
+.wseg{flex:none;background:var(--c);opacity:.82}
+.wcol.is-today .wseg{opacity:1}
+.wseg + .wseg{box-shadow:0 1.5px 0 var(--ink)}
+.wk-plot.has-sel .wstack{opacity:.25}
+.wk-plot.has-sel .wcol[aria-pressed="true"] .wstack{opacity:1}
+.wgoal{position:absolute;left:0;right:0;height:0;border-top:1.5px dashed var(--ink);pointer-events:none}
+.wtip{position:absolute;z-index:2;top:0;left:0;padding:4px 8px;border-radius:7px;background:var(--ink);color:var(--on-ink);font:700 11.5px/1.3 var(--f-body);font-variant-numeric:tabular-nums;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity var(--t-fade-out) linear}
+.wtip.is-on{opacity:1;transition-duration:var(--t-fade)}
+.wk-x{display:flex;gap:10px;margin-top:6px}
+.wk-x span{flex:1 1 0;text-align:center;font-size:11px;line-height:1.2;color:var(--ink-3)}
+.wk-x span.on{color:var(--ink);font-weight:700}
+.wk-foot{min-height:46px;margin-top:auto;padding-top:10px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px}
+.key-row{display:flex;flex-wrap:wrap;gap:4px 12px}
+.key-row span{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.key-row span i{width:8px;height:8px;background:var(--c);box-shadow:var(--ring-thin)}
+.key-row span i.goal{width:12px;height:0;background:none;box-shadow:none;border-top:1.5px dashed var(--ink)}
+.wday{display:flex;align-items:center;gap:8px;min-height:24px}
+.wday b{flex:1;min-width:0;font:700 12.5px/1.3 var(--f-body);font-variant-numeric:tabular-nums}
+.wday .link{min-height:24px;font-size:12.5px;position:relative}
+.wday .link::after{content:"";position:absolute;inset:-10px -6px}
+
+/* 2枚目：これまでの勉強時間（インクの線。緑は使わない） */
+.dk-h{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.dk-h .sec-h{flex:1 1 auto}
+.seg-sm > button{flex:none;min-width:44px;padding:0 8px;font-size:13px}
+.climb{position:relative;flex:1 1 auto;min-height:130px;margin:14px 0 16px}
+.climb svg{position:absolute;inset:0;overflow:visible}
+.climb .clip{position:absolute;inset:0;overflow:hidden}
+.climb .clip > div{position:absolute;inset:0}
+.climb.reveal .clip{animation:clip-in var(--t-present) var(--ios) .15s both}
+.climb.reveal .clip > div{animation:clip-counter var(--t-present) var(--ios) .15s both}
+@keyframes clip-in{from{transform:translateX(-100%)}to{transform:none}}
+@keyframes clip-counter{from{transform:translateX(100%)}to{transform:none}}
+.climb .ml{position:absolute;left:0;font:600 10.5px/1.2 var(--f-body);color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap;background:var(--card);padding-right:4px}
+.climb .ml.done{font-weight:500;color:var(--ink-3)}
+.climb .ax{position:absolute;bottom:-16px;font-size:10.5px;line-height:1.2;color:var(--ink-3)}
+
+/* 次のバッジ */
+.nb{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:14px;row-gap:8px;align-items:center;padding:14px 16px}
+.nb-stk{grid-row:1 / span 3;align-self:center}
+.nb-stk.is-locked{filter:grayscale(1);opacity:.38}
+.nb-t{display:flex;align-items:baseline;gap:8px}
+.nb-t b{flex:1;min-width:0;font:700 14px/1.3 var(--f-body)}
+.nb-t span{font:800 14px/1.3 var(--f-body);font-variant-numeric:tabular-nums;white-space:nowrap}
+.meter{position:relative;height:8px;background:var(--paper-2);box-shadow:var(--ring-thin);overflow:hidden}
+.meter i{position:absolute;inset:0;background:var(--ink);transform-origin:0 50%;transform:scaleX(var(--p,0))}
+.meter.grow i{animation:meter-in var(--t-present) var(--ios) .3s both}
+@keyframes meter-in{from{transform:scaleX(0)}to{transform:scaleX(var(--p,0))}}
+.nb-s{font-size:12px;line-height:1.4;color:var(--ink-3)}
+.nb-s b{color:var(--ink);font-weight:700}
+
+/* 過去の自分と3枚 */
+.vs{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px}
+.vs .card{padding:10px 10px 11px;border-radius:16px}
+.vs small{display:block;font-size:11px;line-height:1.3;color:var(--ink-3);white-space:nowrap}
+.vs b{display:block;margin-top:3px;font:800 16px/1.3 var(--f-body);color:var(--up);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ---------- 記録 ---------- */
+.sum{font-size:14px;line-height:1.6;color:var(--ink-2);padding:0 2px}
+.sum b{color:var(--ink);font-variant-numeric:tabular-nums}
+.sum b.up{color:var(--up)}
+.blk > .sec-h{margin-bottom:10px;padding:0 2px}
+.blk > .sec-h .key{margin-left:auto}
+.blk > .sec-h .link{margin:-8px 0 -8px auto;font-size:13px}
+.srow{gap:10px}
+.srow .s-at{flex:none;width:38px;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.srow .s-bar{flex:none;align-self:stretch;width:4px;margin:4px 0;background:var(--c);box-shadow:var(--ring-thin)}
+.srow .row-t{font-size:14px}
+.srow .row-v{font-size:15px}
+.srow .row-v small{font-size:11px;font-weight:500;color:var(--ink-3);margin-left:1px}
+.s-foot{display:flex;align-items:center;gap:8px;min-height:40px;border-top:1.5px solid var(--line);font-size:12px;color:var(--ink-3)}
+.s-foot b{margin-left:auto;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ---------- グラフ ---------- */
+.cd-h{display:flex;align-items:flex-start;gap:12px}
+.cd-h > div{flex:1;min-width:0}
+.cd-num{display:flex;align-items:flex-end;margin-top:6px}
+.cd-num .unit{margin:0 6px 1px 4px}
+.cd-l{font-size:12px;line-height:1.3;color:var(--ink-2)}
+/* 直近20日：上に科目の積み上げ、下に赤で「目標に足りない分」 */
+.sb-plot{position:relative;height:127px;margin-top:14px;touch-action:pan-y;cursor:crosshair}
+.sb-base{position:absolute;left:0;right:0;top:104px;height:1.5px;background:var(--ink)}
+.sb-cols{position:absolute;inset:0;display:flex;gap:6px}
+.sb-col{position:relative;flex:1 1 0;min-width:0;transition:opacity var(--t-micro) var(--ios)}
+.sb-up{position:absolute;left:0;right:0;bottom:23px;display:flex;flex-direction:column-reverse;box-shadow:0 0 0 1px var(--ink);transform-origin:50% 100%}
+.sb-up i{flex:none;background:var(--c)}
+.sb-up i + i{box-shadow:0 1px 0 var(--ink)}
+.sb-dn{position:absolute;left:0;right:0;top:107px;background:var(--down);box-shadow:0 0 0 1px var(--ink);transform-origin:50% 0}
+.sb-plot.grow .sb-up,.sb-plot.grow .sb-dn{animation:grow var(--t-move) var(--ios) calc(var(--i) * 12ms) both}
+.sb-plot.has-hot .sb-col{opacity:.3}
+.sb-plot.has-hot .sb-col.hot{opacity:1}
+.sb-tip{position:absolute;z-index:2;top:0;left:0;width:172px;padding:8px 10px;border-radius:12px;background:var(--card);box-shadow:var(--ring),4px 4px 0 0 var(--lime-2);
+  display:flex;flex-direction:column;gap:4px;pointer-events:none;opacity:0;transition:opacity var(--t-micro) var(--ios),transform var(--t-micro) var(--ios)}
+.sb-tip.is-on{opacity:1}
+.sb-tip p{display:flex;align-items:center;gap:6px;font-size:12px;line-height:1.35;font-variant-numeric:tabular-nums}
+.sb-tip p span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-tip p i{flex:none;width:8px;height:8px;background:var(--c);box-shadow:var(--ring-thin)}
+.sb-tip p.t{color:var(--ink-3)} .sb-tip p.t b{color:var(--ink)}
+.sb-x{display:flex;justify-content:space-between;margin-top:2px;font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.sb-key{margin-top:10px;padding-top:10px;border-top:1.5px solid var(--line)}
+/* この7日間の科目 */
+.subrow{gap:12px}
+.subrow .subj{--size:30px}
+.sr-top{display:flex;align-items:baseline;gap:8px}
+.sr-top .row-t{flex:1}
+.sr-top .row-v{font-size:14px}
+.sr-top .row-v small{font-size:11px;font-weight:500;color:var(--ink-3)}
+.sr-bot{display:flex;align-items:center;gap:10px;margin-top:6px}
+.sr-bot .meter{flex:1;height:6px}
+.sr-bot .meter i{background:var(--c)}
+.sr-bot span{flex:none;min-width:70px;text-align:right;font:700 11px/1.2 var(--f-body);font-variant-numeric:tabular-nums;color:var(--up)}
+.sr-bot span.low{color:var(--due-ink)}
+/* 模試の偏差値 */
+.sc-h{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-2)}
+.sc-h span:first-child{flex:1}
+.sc-h .when{color:var(--ink-3);font-variant-numeric:tabular-nums}
+.sc-num{display:flex;align-items:flex-end;gap:8px;margin-top:6px}
+.sc-num .dec{font:800 18px/1 var(--f-num);color:var(--ink-3);margin-left:-6px;padding-bottom:1px}
+.sc-num .delta{padding-bottom:3px}
+.sc-num small{font-size:11px;color:var(--ink-3);padding-bottom:4px}
+.sc-plot{position:relative;height:112px;margin:16px 0 12px;touch-action:pan-y;cursor:crosshair}
+.sc-plot svg{position:absolute;inset:0;overflow:visible}
+.sc-plot .gl{position:absolute;right:0;font-size:10.5px;line-height:1;color:var(--ink-3);font-variant-numeric:tabular-nums;transform:translateY(-50%)}
+.sc-plot.fade svg{animation:fade-in var(--t-fade) linear both}
+
+/* ---------- 投稿 ---------- */
+.me-feed{box-shadow:0 -2px 0 var(--ink),0 2px 0 var(--ink)}
+.posts-go{padding-top:8px}
+
+@media (max-width:359px){
+  .mc-mid{gap:10px}
+  .mc-stats{gap:10px}
+  .mecard{padding:13px 14px 12px}
+  .vs{grid-template-columns:1fr 1fr}
+  .vs .card:last-child{grid-column:1 / -1}
+}
+</style>
+</head>
+<body data-tab="me" data-bar="live">
+<div class="stage">
+  <div class="app">
+    <main class="screen">
+      <header class="hdr" data-hdr="gear"></header>
+      <div class="stack me">
+
+        <!-- 勉強カード（主役） -->
+        <section class="card hero mecard" aria-label="はるの勉強カード。指でなぞると光が動きます">
+          <span class="mc-sheen" aria-hidden="true"></span>
+          <div class="mc-top">
+            <span class="mc-logo"><span class="logo-mark"></span><span>inchly</span></span>
+            <span class="mc-lv">Lv.25<span class="lv-bar" aria-hidden="true"><i style="--p:.4"></i></span></span>
+          </div>
+          <div class="mc-mid">
+            <span class="mc-chip" role="img" aria-label="この5週間の草"></span>
+            <div class="mc-stats">
+              <p class="mc-stat"><span class="mid"><span class="roll" data-v="664" data-from="000"></span></span><span class="mc-l">時間 / 1年</span><span class="sr">1年で664時間</span></p>
+              <p class="mc-stat"><span class="mid"><span class="roll" data-v="23" data-from="00"></span></span><span class="mc-l">日連続</span><span class="sr">23日連続</span></p>
+              <p class="mc-stat"><span class="mid"><span class="roll" data-v="57" data-from="00"></span></span><span class="mc-l">位 / 今週</span><span class="sr">今週57位</span></p>
+            </div>
+          </div>
+          <div class="mc-bot">
+            <span class="av" data-n="はる" style="--c:#6E56CF"></span>
+            <span class="mc-who"><b>はる</b><span>@haru_study · 東大 理一 志望</span></span>
+            <span class="mc-since"><span class="label">Since</span><b>04/26</b></span>
+          </div>
+        </section>
+
+        <div class="who">
+          <p class="bio wb">高3。数学は青チャート2周目。朝型にしたい<span class="keep">（今は夜型）。</span></p>
+          <div class="counts">
+            <button class="cnt" type="button" id="cnt-posts" aria-label="2投稿。投稿のページへ"><b>2</b><span>投稿</span></button>
+            <button class="cnt" type="button" data-soon aria-label="フォロー一覧"><b>128</b><span>フォロー</span></button>
+            <button class="cnt" type="button" data-soon aria-label="フォロワー一覧"><b>342</b><span>フォロワー</span></button>
+          </div>
+        </div>
+        <div class="me-btns">
+          <button class="key" type="button" id="b-edit">プロフィールを編集</button>
+          <button class="key" type="button" id="b-share">カードを共有</button>
+        </div>
+
+        <div class="tabs-stick">
+          <div class="utabs" role="tablist" aria-label="マイページ">
+            <button role="tab" type="button" id="t-growth" aria-selected="true" aria-controls="p-growth" data-k="growth">成長</button>
+            <button role="tab" type="button" id="t-log" aria-selected="false" aria-controls="p-log" data-k="log" tabindex="-1">記録</button>
+            <button role="tab" type="button" id="t-charts" aria-selected="false" aria-controls="p-charts" data-k="charts" tabindex="-1">グラフ</button>
+            <button role="tab" type="button" id="t-posts" aria-selected="false" aria-controls="p-posts" data-k="posts" tabindex="-1">投稿</button>
+          </div>
+        </div>
+
+        <!-- ===== 成長 ===== -->
+        <section class="stack pane" id="p-growth" role="tabpanel" aria-labelledby="t-growth">
+          <div>
+            <div class="deck" id="deck" tabindex="0" role="group" aria-roledescription="カルーセル" aria-label="グラフ 1/2。左右にすべらせて切り替え">
+              <section class="card dk" id="dk-week" aria-label="この7日間">
+                <h2 class="sec-h"><span class="sec-t">この7日間</span><span class="sec-a">1日の目標 <b>3</b>時間</span></h2>
+                <div class="dk-num"><span class="big">20.0</span><span class="unit">時間</span><span class="dk-diff"><span class="delta up">2.2時間</span><small>先週より</small></span></div>
+                <div class="wk-plot" id="wk-plot"><div class="wk-cols" id="wk-cols"></div><i class="wgoal" id="wk-goal"></i><span class="wtip" id="wk-tip"></span></div>
+                <div class="wk-x" id="wk-x" aria-hidden="true"></div>
+                <div class="wk-foot" id="wk-foot"></div>
+              </section>
+              <section class="card dk" id="dk-total" aria-label="これまでの勉強時間">
+                <div class="dk-h">
+                  <h2 class="sec-h"><span class="sec-t">これまでの勉強時間</span></h2>
+                  <div class="seg seg-sm" role="group" aria-label="グラフの足（日・週・月）" id="frame"><button type="button" aria-pressed="false" data-f="day" aria-label="日ごと">日</button><button type="button" aria-pressed="true" data-f="week" aria-label="週ごと">週</button><button type="button" aria-pressed="false" data-f="month" aria-label="月ごと">月</button></div>
+                </div>
+                <div class="dk-num"><span class="big"><span class="roll" id="total-roll" data-v="664.7" data-from="000.0"></span><span class="sr">664.7時間</span></span><span class="unit">時間</span><span class="delta up">2.2</span><small>&nbsp;先週より</small></div>
+                <div class="climb" id="climb" role="img"></div>
+              </section>
+            </div>
+            <div class="deck-dots" aria-hidden="true"><i class="on"></i><i></i></div>
+          </div>
+
+          <section class="card nb" aria-label="次のバッジ">
+            <span class="nb-stk is-locked" data-stk="trophy" data-scale="3"></span>
+            <p class="nb-t"><b>次のバッジ · 700時間</b><span>あと35.3時間</span></p>
+            <div class="meter" id="nb-meter" style="--p:.8235" role="img" aria-label="500時間から700時間まで、いま664.7時間"><i></i></div>
+            <p class="nb-s">このペースなら <b>11月12日</b>に届きます</p>
+          </section>
+
+          <div class="vs">
+            <section class="card"><small>昨日より</small><b>▲ 1:17</b></section>
+            <section class="card"><small>先週より</small><b>▲ 2.2h</b></section>
+            <section class="card"><small>1日平均 · 先月より</small><b>▲ 11分</b></section>
+          </div>
+        </section>
+
+        <!-- ===== 記録 ===== -->
+        <section class="stack pane" id="p-log" role="tabpanel" aria-labelledby="t-log" hidden>
+          <p class="sum">今週は <b>20.0時間</b>。先週より <b class="up">▲ 2.2時間</b></p>
+          <div class="blk">
+            <h2 class="sec-h"><span class="sec-t" style="--accent:var(--coral)">今日の記録</span><button class="key key-sm" type="button" data-soon aria-label="記録を手で追加"><i data-pi="plus"></i>手で追加</button></h2>
+            <section class="card" style="padding-block:2px 0">
+              <div class="rows" id="s-rows"></div>
+              <div class="s-foot"><span>4回 · 押すと直せます</span><b>2時間45分</b></div>
+            </section>
+          </div>
+          <div class="blk">
+            <h2 class="sec-h"><span class="sec-t" style="--accent:var(--g3)">この半年</span><span class="sec-a"><b>386</b>時間</span></h2>
+            <section class="card"><div class="grass" data-weeks="26" data-levels="2222122100014411233332222233303023422023433233044330224431223443320304333324033223432223244233204403003433023044000000432133343233234203020432333343302344002224434233343223334332300"></div></section>
+          </div>
+        </section>
+
+        <!-- ===== グラフ ===== -->
+        <section class="stack pane" id="p-charts" role="tabpanel" aria-labelledby="t-charts" hidden>
+          <section class="card" aria-label="勉強時間の積み上げ">
+            <div class="cd-h">
+              <div><h2 class="sec-h"><span class="sec-t" id="sb-title">勉強時間 · 直近20日</span></h2>
+                <div class="cd-num"><span class="mid" id="sb-total">57.1</span><span class="unit">時間</span></div></div>
+              <div class="seg seg-sm" role="group" aria-label="日ごと・週ごと" id="sb-mode" style="flex:none"><button type="button" aria-pressed="true" data-m="day">日</button><button type="button" aria-pressed="false" data-m="week">週</button></div>
+            </div>
+            <div class="sb-plot" id="sb-plot" role="img"><span class="sb-base"></span><div class="sb-cols" id="sb-cols"></div><div class="sb-tip" id="sb-tip"></div></div>
+            <div class="sb-x" id="sb-x" aria-hidden="true"></div>
+            <div class="key-row sb-key" id="sb-key" aria-hidden="true"></div>
+          </section>
+          <div class="blk">
+            <h2 class="sec-h"><span class="sec-t" style="--accent:var(--sky)">この7日間の科目</span><a class="link" href="#" data-soon aria-label="科目と色を編集">科目と色を編集</a></h2>
+            <section class="card" style="padding-block:4px"><div class="rows" id="sub-rows"></div></section>
+          </div>
+          <div class="blk">
+            <h2 class="sec-h"><span class="sec-t" style="--accent:var(--coral)">模試の偏差値</span><span class="sec-a">最終更新 10月14日</span></h2>
+            <section class="card" aria-label="全統記述模試の偏差値">
+              <p class="sc-h"><span>全統記述模試 · 偏差値</span><span class="when" id="sc-when">最新</span></p>
+              <div class="sc-num"><span class="mid" id="sc-whole">64</span><span class="dec" id="sc-dec">.8</span><span class="delta up" id="sc-delta">1.2</span><small id="sc-from">3か月前から</small></div>
+              <div class="sc-plot" id="sc-plot" role="img"></div>
+              <div class="seg seg-block" role="group" aria-label="期間" id="sc-win"><button type="button" aria-pressed="true" data-w="13">3か月</button><button type="button" aria-pressed="false" data-w="26">半年</button><button type="button" aria-pressed="false" data-w="52">1年</button></div>
+            </section>
+          </div>
+        </section>
+
+        <!-- ===== 投稿 ===== -->
+        <section class="pane" id="p-posts" role="tabpanel" aria-labelledby="t-posts" hidden>
+          <div class="feed me-feed" id="me-feed"></div>
+          <div class="posts-go"><button class="key key-block" type="button" data-open-sheet="sheet-post"><i data-pi="plus"></i>投稿する</button></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <aside class="note">
+    <p class="label-j sq">この画面で見てほしい点</p>
+    <h1>マイページ</h1>
+    <p>サンプルのアカウント（はる）のマイページ。上から 勉強カード → 自己紹介と数 → 2つのボタン → 成長 / 記録 / グラフ / 投稿。並びと中身は今のアプリと同じです。</p>
+    <ul>
+      <li>主役は勉強カードの1枚だけ（ライムの影）。左上のロゴ、右上の Lv.25、草のチップと 664・23・57。指で横になぞると光の帯がついてきて、離すと戻ります。</li>
+      <li>成長のグラフは横にすべらせて2枚。1枚目は科目の色の積み上げ棒、2枚目はインクの線。どちらも緑は使いません（緑は草と計測中だけ）。</li>
+      <li>次のバッジは灰色のシール（まだ取っていない）と、インクの進み棒。</li>
+      <li>タブは上に貼りつきます。記録・グラフ・投稿も押して見られます。</li>
+    </ul>
+    <p class="note-links"><a class="link" href="img/me.webp">今のアプリ（写真）</a><a class="link" href="index.html">一覧へ</a><a class="link" href="system.html">部品</a></p>
+  </aside>
+</div>
+<script src="shared/app.js"></script>
+<script>
+/* ===== マイページ・みんな・タイムラインで共通の小さな道具（App.* を使う） ===== */
+const S = (() => {
+  'use strict';
+  const A = window.App;
+  const doc = document;
+  const $ = (s, r = doc) => r.querySelector(s);
+  const $$ = (s, r = doc) => [...r.querySelectorAll(s)];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const later = (fn, ms) => setTimeout(fn, A.reduced() ? 0 : ms);
+  const hm = m => (m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ? `${m % 60}分` : ''}` : `${m}分`);
+
+  /* ---------- 小さなドットのアイコン（2pt の線。字の色） ---------- */
+  const R = s => s.trim().split(/\s+/);
+  const ROWS = {
+    chat: R(`.kkkkkkk. k.......k k.......k k.......k .kk.kkkk. ..k.k.... ..kk..... ..k......`),
+    bulb: R(`..kkk.. .k...k. k.....k k.....k .k...k. ..k.k.. ..kkk.. ....... ..kkk..`),
+    bulbOn: R(`..kkk.. .kyyyk. kyyyyyk kyyyyyk .kyyyk. ..kyk.. ..kkk.. ....... ..kkk..`),
+    mark: R(`kkkkkkk k.....k k.....k k.....k k.....k k.....k k..k..k k.k.k.k kk...kk`),
+    markOn: R(`kkkkkkk kkkkkkk kkkkkkk kkkkkkk kkkkkkk kkkkkkk kkkkkkk kkk.kkk kk...kk`),
+    share: R(`....k.... ...kkk... ..k.k.k.. ....k.... kk..k..kk k.......k k.......k k.......k kkkkkkkkk`),
+    book: R(`.kkkk..kkkk. k....kk....k k.kk.kk.kk.k k....kk....k k.kk.kk.kk.k k....kk....k kkkkkkkkkkkk .....kk.....`),
+    sun: R(`.....kk..... .k...kk...k. ..k......k.. ....kkkk.... ...k....k... kk.k....k.kk kk.k....k.kk ...k....k... ....kkkk.... ..k......k.. .k...kk...k. .....kk.....`)
+  };
+  const ico = (name, scale = 2, pal) => A._rowsSVG(ROWS[name], pal || { k: 'currentColor' }, scale);
+
+  /* ---------- 転がる数字：<span class="roll" data-v="1,263"> ---------- */
+  function roll(el, value) {
+    const v = String(value);
+    const cols = [...v];
+    if (el.dataset.len !== String(cols.length) || el.dataset.shape !== v.replace(/\d/g, '0')) {
+      el.innerHTML = cols.map(c => /\d/.test(c) ? `<span class="rd"><span class="rc" style="--d:0">${'0123456789'.split('').map(n => `<span>${n}</span>`).join('')}</span></span>` : `<span>${esc(c)}</span>`).join('');
+      el.dataset.len = cols.length; el.dataset.shape = v.replace(/\d/g, '0');
+      el.setAttribute('aria-hidden', 'true');
+      void el.offsetWidth; // 0 の位置を決めてから転がす
+    }
+    const ds = $$('.rc', el);
+    let k = 0;
+    cols.forEach(c => { if (/\d/.test(c)) { ds[k].style.setProperty('--d', c); k++; } });
+  }
+
+  /* ---------- 上に貼りつくタブ：貼りついたらインクの線をタブの下へ ---------- */
+  function stickyTabs(tabs) {
+    const hdr = $('.hdr');
+    const on = () => {
+      const s = A.scroller();
+      const y = s === doc.scrollingElement ? window.scrollY : s.scrollTop;
+      const stuck = y > 4 && tabs.getBoundingClientRect().top <= hdr.getBoundingClientRect().bottom + 1;
+      tabs.classList.toggle('is-stuck', stuck);
+      hdr.classList.toggle('is-tabbed', stuck);
+    };
+    const scr = $('.app > .screen');
+    if (scr) scr.addEventListener('scroll', on, { passive: true });
+    window.addEventListener('scroll', on, { passive: true });
+    window.addEventListener('resize', on);
+    on();
+    return on;
+  }
+  /* タブの位置まで戻す（切りかえたとき、前のページの途中に取り残さない） */
+  function keepTabs(tabs) {
+    const s = A.scroller();
+    const isDoc = s === doc.scrollingElement;
+    const hdrB = $('.hdr').getBoundingClientRect().bottom;
+    if (tabs.getBoundingClientRect().top > hdrB + 1) return; // まだ貼りついていない：そのまま
+    tabs.style.position = 'static';
+    const natural = tabs.getBoundingClientRect().top; // 貼りつく前の位置
+    tabs.style.position = '';
+    const d = natural - hdrB;
+    if (d < 0) { if (isDoc) window.scrollBy(0, d); else s.scrollTop += d; }
+  }
+  /* 下線のタブと中身のページ */
+  function tabPanes(utabs, onShow) {
+    utabs.addEventListener('change', () => {
+      const cur = $('[role="tab"][aria-selected="true"]', utabs);
+      const want = cur.getAttribute('aria-controls');
+      new Set($$('[role="tab"]', utabs).map(t => t.getAttribute('aria-controls'))).forEach(id => { const p = doc.getElementById(id); if (p) p.hidden = id !== want; });
+      onShow && onShow(cur.dataset.k);
+    });
+    // ← → でタブを動かす
+    utabs.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const all = $$('[role="tab"]', utabs), i = all.indexOf(doc.activeElement);
+      if (i < 0) return;
+      const n = all[(i + (e.key === 'ArrowRight' ? 1 : all.length - 1)) % all.length];
+      n.focus(); n.click(); e.preventDefault();
+    });
+  }
+
+  /* ---------- 投稿（アプリの data.ts の POSTS と同じ） ---------- */
+  const POSTS = [
+    { id: 'p1', n: 'kaito', h: 'kaito', c: '#3E8C78', w: '8分前', t: '電磁気、名問の森で流れがやっとつかめてきた。コンデンサーはまだあやしい', tags: ['#物理'], u: 12, r: 2, rec: { s: 'ph', min: 70, note: '名問の森 15〜18' } },
+    { id: 'p2', n: 'mio', h: 'mio.k', c: '#C47A55', w: '12分前', t: '古文の参考書、やっと1周。2周目は音読しながらやる', tags: ['#古文'], u: 23, r: 4 },
+    { id: 'p3', n: 'nnn_0w0', h: 'nnn_0w0', c: '#8A8A8E', w: '40分前', t: 'ベクトル全然わからん　内積のとこから誰か助けて', tags: [], u: 0, r: 1 },
+    { id: 'p4', n: 'そら', h: 'sora_06', c: '#5D6DB8', w: '1時間前', t: '朝の数学おわり。例題60まで来た', tags: [], u: 31, r: 3, rec: { s: 'ma', min: 95, note: '青チャート 数III 例題52〜60' } },
+    { id: 'p5', n: 'りん', h: 'rin_todai', c: '#4B7A3B', w: '2時間前', t: '東大英語の要約(1A)は毎年出るので、過去問15年分を1日1題。要約したあと音読までやると、本番で時間が余った。量より回数。', tags: ['#東京大学', '#英語'], u: 128, r: 14 },
+    { id: 'm1', n: 'はる', h: 'haru_study', c: '#6E56CF', w: '2時間前', t: '模試の偏差値、3か月で +6.6。数学の「次にやること」を毎回決めるようにしてから、机に向かうまでが早くなった。', tags: [], u: 54, r: 6, mine: true },
+    { id: 'p6', n: 'taku', h: 'taku_1203', c: '#8A6D3B', w: '3時間前', t: 'もう無理、今日は寝る。明日5時起き', tags: [], u: 7, r: 2 },
+    { id: 'p7', n: 'そら', h: 'sora_06', c: '#5D6DB8', w: '5時間前', t: '置換積分、何を t に置くかから説明してる15分の動画でやっとわかった。休憩中にちょうどいい長さ', tags: ['#数学', '#おすすめ動画'], u: 86, r: 9 },
+    { id: 'p8', n: 'kaito', h: 'kaito', c: '#3E8C78', w: '昨日', t: '電磁気、エッセンスと名問の森どっちから入るのがいい？ 力学はエッセンスでなんとかなった', tags: ['#物理', '#質問'], u: 21, r: 17 },
+    { id: 'm2', n: 'はる', h: 'haru_study', c: '#6E56CF', w: '昨日', t: '古文単語、朝の10分だけでも草が埋まるのがうれしい。', tags: [], u: 31, r: 1, mine: true, rec: { s: 'ja', min: 10, note: '古文単語 41〜60' } }
+  ];
+  const FOLLOWING = ['mio', 'そら', 'kaito']; // はるがフォローしている人（store.ts の following）
+  const state = { helpful: new Set(), marks: new Set() };
+
+  function postHTML(p) {
+    const sj = p.rec && A.SUBJ[p.rec.s];
+    const who = `${p.n}のプロフィール`;
+    return `<article class="post${p.fresh ? ' is-new' : ''}" data-id="${p.id}" aria-label="${esc(p.n)}の投稿">
+      ${p.mine ? `<span class="post-av" aria-hidden="true"><span class="av" data-n="${esc(p.n)}" style="--c:${p.c}"></span></span>`
+        : `<button class="post-av" type="button" data-soon aria-label="${esc(who)}"><span class="av" data-n="${esc(p.n)}" style="--c:${p.c}"></span></button>`}
+      <div class="post-main">
+        <div class="post-h"><b class="post-n">${esc(p.n)}</b><span class="post-m">@${esc(p.h)} · ${esc(p.w)}</span>${p.mine ? '' : `<button class="ibtn post-more" type="button" data-soon aria-label="${esc(who)}"><i data-pi="more"></i></button>`}</div>
+        <p class="post-t">${esc(p.t)}</p>
+        ${p.tags.length ? `<p class="post-tags">${p.tags.map(esc).join(' ')}</p>` : ''}
+        ${p.rec ? `<div class="rec"><span class="subj" data-s="${p.rec.s}" aria-hidden="true"></span><span class="rec-main"><span class="label-j">勉強の記録</span><span class="rec-t"><b>${sj.name}</b>${esc(p.rec.note || '')}</span></span><b class="rec-v">${hm(p.rec.min)}</b></div>` : ''}
+        <div class="post-acts">
+          <button class="ibtn pa" type="button" data-act="reply" aria-label="返信 ${p.r}件"><span class="pa-ic">${ico('chat')}</span><span>${p.r}</span></button>
+          <button class="ibtn pa pa-help" type="button" data-act="help" aria-pressed="${state.helpful.has(p.id)}" aria-label="役に立った ${p.u}"><span class="pa-ic"><span>${ico(state.helpful.has(p.id) ? 'bulbOn' : 'bulb', 2, state.helpful.has(p.id) ? { k: '#17121F', y: '#FFD23F' } : null)}</span></span><span class="roll" data-base="${p.u}"></span></button>
+          <button class="ibtn pa" type="button" data-act="mark" aria-pressed="${state.marks.has(p.id)}" aria-label="ブックマーク"><span class="pa-ic"><span>${ico(state.marks.has(p.id) ? 'markOn' : 'mark')}</span></span></button>
+          <button class="ibtn pa" type="button" data-act="share" aria-label="共有"><span class="pa-ic">${ico('share')}</span></button>
+        </div>
+      </div>
+    </article>`;
+  }
+  function renderPosts(box, list) {
+    box.innerHTML = list.map(postHTML).join('');
+    $$('.pa-help', box).forEach(b => { const p = POSTS.find(x => x.id === b.closest('.post').dataset.id); roll($('.roll', b), String(p.u + (state.helpful.has(p.id) ? 1 : 0))); });
+    A.upgrade(box);
+  }
+  function swapIcon(btn, svg) {
+    const box = $('.pa-ic', btn);
+    if (A.reduced()) { box.innerHTML = `<span>${svg}</span>`; return; }
+    const n = doc.createElement('span'); n.className = 'is-in'; n.innerHTML = svg;
+    box.appendChild(n);
+    n.addEventListener('animationend', () => { box.innerHTML = `<span>${svg}</span>`; }, { once: true });
+  }
+  /* 投稿の操作（ページの中のどこでも） */
+  doc.addEventListener('click', e => {
+    const b = e.target.closest('.post .pa');
+    if (!b) return;
+    const id = b.closest('.post').dataset.id;
+    const p = POSTS.find(x => x.id === id);
+    const act = b.dataset.act;
+    if (act === 'reply') A.toast({ title: '返信はこれから作ります', ms: 2200 });
+    if (act === 'share') A.toast({ title: 'リンクをコピーしました', ms: 2200 });
+    if (act === 'help') {
+      const on = !state.helpful.has(id);
+      on ? state.helpful.add(id) : state.helpful.delete(id);
+      // 同じ投稿がページに2つあっても、両方そろえる
+      $$(`.post[data-id="${id}"] .pa-help`).forEach(x => {
+        x.setAttribute('aria-pressed', String(on));
+        swapIcon(x, ico(on ? 'bulbOn' : 'bulb', 2, on ? { k: '#17121F', y: '#FFD23F' } : null));
+        roll($('.roll', x), String(p.u + (on ? 1 : 0)));
+      });
+    }
+    if (act === 'mark') {
+      const on = !state.marks.has(id);
+      on ? state.marks.add(id) : state.marks.delete(id);
+      $$(`.post[data-id="${id}"] [data-act="mark"]`).forEach(x => {
+        x.setAttribute('aria-pressed', String(on));
+        x.setAttribute('aria-label', on ? 'ブックマークを外す' : 'ブックマーク');
+        swapIcon(x, ico(on ? 'markOn' : 'mark'));
+      });
+      if (on) A.toast({ title: 'ブックマークしました', sub: 'メニューの「ブックマーク」から見られます', pix: 'tsuru', from: 'idle', face: 'happy' });
+    }
+  });
+
+  /* ---------- 投稿を書くシート ---------- */
+  function compose(onPost) {
+    const sh = doc.getElementById('sheet-post');
+    if (!sh) return;
+    const ta = $('textarea', sh), n = $('.fld-n', sh), err = $('.fld-err', sh), go = $('#post-go', sh);
+    const sync = () => {
+      n.textContent = `${ta.value.length}/280`;
+      const ok = !!ta.value.trim();
+      go.disabled = !ok;
+      if (ok) err.hidden = true;
+    };
+    ta.addEventListener('input', sync);
+    ta.addEventListener('blur', () => { if (!ta.value.trim()) err.hidden = false; });
+    doc.addEventListener('click', e => {
+      if (!e.target.closest('[data-open-sheet="sheet-post"]')) return;
+      ta.value = ''; err.hidden = true; sync();
+      $$('.chips', sh).forEach(g => $$('.chip', g).forEach((c, i) => c.setAttribute('aria-pressed', String(i === 0))));
+      later(() => ta.focus({ preventScroll: true }), 520);
+    });
+    go.addEventListener('click', () => {
+      if (!ta.value.trim()) { err.hidden = false; return; }
+      go.disabled = true;
+      $('.face', go).textContent = '投稿しています…';
+      const withRec = $('[data-k="attach"] .chip[aria-pressed="true"]', sh).dataset.v === 'last';
+      const tag = $('[data-k="tag"] .chip[aria-pressed="true"]', sh).dataset.v;
+      setTimeout(() => {
+        const p = { id: 'n' + Date.now(), n: 'はる', h: 'haru_study', c: '#6E56CF', w: 'たった今', t: ta.value.trim(), tags: tag ? [tag] : [], u: 0, r: 0, mine: true, fresh: true,
+          rec: withRec ? { s: 'ma', min: 40, note: '青チャート 例題38〜40' } : undefined };
+        POSTS.unshift(p);
+        A.sheet.close('sheet-post');
+        $('.face', go).textContent = '投稿する';
+        A.toast({ title: '投稿しました', ms: 2200 });
+        onPost && onPost(p);
+      }, A.reduced() ? 0 : 600);
+    });
+  }
+  const SHEET_POST = `<div class="sheet" id="sheet-post" hidden>
+    <div class="sheet-scrim" data-close-sheet></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-post-h">
+      <span class="sheet-grab" aria-hidden="true"></span>
+      <div class="sheet-h"><h2 id="sheet-post-h">投稿</h2><button class="tbtn" type="button" data-close-sheet>やめる</button></div>
+      <label class="fld"><span class="fld-l">いま何してる？</span><textarea maxlength="280" rows="4" aria-describedby="post-n"></textarea><span class="fld-n" id="post-n">0/280</span></label>
+      <p class="fld-err" hidden>なにか書いてください</p>
+      <div class="sheet-sec"><div class="chips" data-single role="group" aria-label="勉強の記録" data-k="attach">
+        <button class="chip" type="button" aria-pressed="true" data-v="last">記録をつける（数学 40分）</button><button class="chip" type="button" aria-pressed="false" data-v="">つけない</button></div>
+      <div class="chips" data-single role="group" aria-label="タグ" data-k="tag">
+        <button class="chip" type="button" aria-pressed="true" data-v="">タグなし</button><button class="chip" type="button" aria-pressed="false" data-v="#質問">#質問</button><button class="chip" type="button" aria-pressed="false" data-v="#おすすめ">#おすすめ</button></div></div>
+      <div class="sheet-acts"><button class="key key-ink key-block key-lg" type="button" id="post-go" disabled>投稿する</button></div>
+    </div>
+  </div>`;
+
+  return { $, $$, esc, later, hm, ico, roll, stickyTabs, keepTabs, tabPanes, POSTS, FOLLOWING, renderPosts, compose, SHEET_POST, ROWS };
+})();
+
+(() => {
+  'use strict';
+  const A = window.App, doc = document;
+  const { $, $$, esc, later, roll } = S;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const pad = n => String(n).padStart(2, '0');
+  const hmc = m => `${Math.floor(m / 60)}:${pad(Math.round(m % 60))}`;
+  const jpHm = m => (m >= 60 ? `${Math.floor(m / 60)}時間${Math.round(m % 60) ? `${Math.round(m % 60)}分` : ''}` : `${Math.round(m)}分`);
+  const ORDER = ['en', 'ma', 'ph', 'ch', 'ja'];
+  const SJ = A.SUBJ;
+  doc.querySelector('.app').insertAdjacentHTML('beforeend', S.SHEET_POST);
+  $$('.logo-mark').forEach(el => { el.outerHTML = A.LOGO; });
+
+  /* ---------- 勉強カード ---------- */
+  const GRASS5 = '33433023440022244342333432233343323'; // この5週間（古い順・今日まで）
+  $('.mc-chip').innerHTML = [...GRASS5].map(l => `<i data-l="${l}"></i>`).join('');
+  $$('.mecard .roll, #total-roll').forEach(el => roll(el, el.dataset.from));
+  later(() => $$('.mecard .roll').forEach(el => roll(el, el.dataset.v)), 150);
+  later(() => roll($('#total-roll'), '664.7'), 200);
+
+  // 指でなぞると光の帯がついてきて、カードが少し傾く（指に 1:1）。離すと行きすぎずに戻る
+  (() => {
+    const card = $('.mecard'), sheen = $('.mc-sheen');
+    let id = null;
+    const follow = (x, y) => {
+      const r = card.getBoundingClientRect();
+      const nx = clamp((x - r.left) / r.width * 2 - 1, -1, 1), ny = clamp((y - r.top) / r.height * 2 - 1, -1, 1);
+      card.style.transform = `perspective(700px) rotateX(${(-ny * 6).toFixed(2)}deg) rotateY(${(nx * 6).toFixed(2)}deg) scale(.98)`;
+      sheen.style.transform = `translateX(${(nx * 50 - 2).toFixed(2)}%)`;
+    };
+    card.addEventListener('pointerdown', e => {
+      if (A.reduced() || (e.button && e.button !== 0)) return;
+      id = e.pointerId;
+      card.classList.add('is-drag');
+      follow(e.clientX, e.clientY);
+      setTimeout(() => { if (id !== null) { card.classList.remove('is-drag'); card.classList.add('is-follow'); } }, 90);
+    });
+    card.addEventListener('pointermove', e => { if (e.pointerId === id) follow(e.clientX, e.clientY); });
+    const end = e => { if (e.pointerId !== id) return; id = null; card.classList.remove('is-drag', 'is-follow'); card.style.transform = ''; sheen.style.transform = ''; };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => card.addEventListener(n, end));
+    card.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') end(e); });
+  })();
+
+  $('#b-edit').addEventListener('click', () => A.toast({ title: 'プロフィールの編集はこれから作ります', ms: 2200 }));
+  $('#b-share').addEventListener('click', () => A.toast({ title: 'カードの画像を保存しました', ms: 2200 }));
+
+  /* ---------- タブ ---------- */
+  const utabs = $('.utabs'), tabs = $('.tabs-stick');
+  S.stickyTabs(tabs);
+  S.tabPanes(utabs, k => {
+    S.keepTabs(tabs);
+    if (k === 'growth') { growWeek(); drawClimb(true); meter(); }
+    if (k === 'charts') { drawSB(true); drawScore(true); }
+  });
+  $('#cnt-posts').addEventListener('click', () => $('#t-posts').click());
+
+  /* ---------- 成長 1枚目：この7日間（アプリの記録から計算した値） ---------- */
+  const WEEK = [
+    { x: '金', d: '10月23日（金）', p: { ma: 195 } },
+    { x: '土', d: '10月24日（土）', p: { en: 60, ma: 105 } },
+    { x: '日', d: '10月25日（日）', p: { en: 180, ma: 123 } },
+    { x: '月', d: '10月26日（月）', p: { en: 75, ma: 55 } },
+    { x: '火', d: '10月27日（火）', p: { en: 80, ma: 75 } },
+    { x: '水', d: '10月28日（水）', p: { ma: 33, ph: 55 } },
+    { x: '今日', d: '10月29日（木）', p: { en: 95, ma: 40, ja: 30 } }
+  ];
+  WEEK.forEach(d => { d.min = Object.values(d.p).reduce((a, b) => a + b, 0); });
+  const GOAL = 180, TOP = Math.max(GOAL, ...WEEK.map(d => d.min)) * 1.06;
+  const used = ORDER.filter(s => WEEK.some(d => d.p[s]));
+  const wkCols = $('#wk-cols'), wkPlot = $('#wk-plot'), tip = $('#wk-tip');
+  wkCols.innerHTML = WEEK.map((d, i) => `<button class="wcol${i === 6 ? ' is-today' : ''}" type="button" aria-pressed="false" aria-label="${d.x === '今日' ? '今日' : d.d} ${jpHm(d.min)}" data-i="${i}">
+    <span class="wstack" style="height:${(d.min / TOP * 100).toFixed(2)}%;--i:${i}">${used.filter(s => d.p[s]).map(s => `<i class="wseg" style="--c:${SJ[s].c};height:${(d.p[s] / d.min * 100).toFixed(2)}%"></i>`).join('')}</span></button>`).join('');
+  $('#wk-goal').style.bottom = (GOAL / TOP * 100).toFixed(2) + '%';
+  $('#wk-x').innerHTML = WEEK.map((d, i) => `<span class="${i === 6 ? 'on' : ''}">${d.x}</span>`).join('');
+  const legend = () => `<div class="key-row">${used.map(s => `<span><i style="--c:${SJ[s].c}"></i>${SJ[s].name}</span>`).join('')}<span><i class="goal"></i>目標</span></div>`;
+  $('#wk-foot').innerHTML = legend();
+  let sel = null;
+  function pick(i) {
+    sel = sel === i ? null : i;
+    $$('.wcol', wkCols).forEach((c, k) => c.setAttribute('aria-pressed', String(k === sel)));
+    wkPlot.classList.toggle('has-sel', sel !== null);
+    $$('#wk-x span').forEach((s, k) => s.classList.toggle('on', sel === null ? k === 6 : k === sel));
+    if (sel === null) { tip.classList.remove('is-on'); $('#wk-foot').innerHTML = legend(); return; }
+    const d = WEEK[sel], col = $$('.wcol', wkCols)[sel];
+    tip.textContent = `${d.x} ${hmc(d.min)}`;
+    const pw = wkPlot.clientWidth, cw = col.offsetWidth, tw = tip.offsetWidth;
+    const x = clamp(col.offsetLeft + cw / 2 - tw / 2, 0, pw - tw), y = Math.max(0, wkPlot.clientHeight * (1 - d.min / TOP) - 28);
+    tip.style.transform = `translate(${x}px,${y}px)`;
+    tip.classList.add('is-on');
+    $('#wk-foot').innerHTML = `<div class="wday"><b>${d.d} · ${jpHm(d.min)}</b><a class="link" href="#" data-soon aria-label="${esc(d.d)}の内訳">内訳 ›</a></div>
+      <div class="key-row">${used.filter(s => d.p[s]).map(s => `<span><i style="--c:${SJ[s].c}"></i>${SJ[s].name} ${hmc(d.p[s])}</span>`).join('')}</div>`;
+  }
+  wkCols.addEventListener('click', e => { const c = e.target.closest('.wcol'); if (c) pick(+c.dataset.i); });
+  function growWeek() {
+    if (A.reduced()) return;
+    $$('.wstack', wkCols).forEach(s => { s.classList.remove('grow'); void s.offsetWidth; s.classList.add('grow'); });
+  }
+  growWeek();
+
+  /* ---------- 成長 2枚目：これまでの勉強時間（インクの線） ---------- */
+  const CURVES = {
+    day: [591.7, 591.7, 592.9, 595.4, 599.1, 603.2, 603.2, 603.2, 604.8, 606.1, 607.6, 612.7, 617, 620.1, 623.9, 624.9, 626.9, 629.3, 632.6, 637.4, 639.4, 641.3, 642.5, 644.7, 648, 650.7, 655.8, 658, 660.5, 662, 664.8],
+    week: [278.9, 287.8, 293.4, 306.7, 319.3, 330.8, 344.1, 363.7, 378.2, 395.6, 414, 431.4, 446.2, 464.2, 483.2, 494, 510.4, 519.3, 531, 549.3, 560, 576.8, 592.9, 606.1, 626.9, 644.7, 664.8],
+    month: [7.2, 59.8, 106.8, 150.9, 198.9, 241.6, 281.1, 328.5, 393.9, 466.1, 524.2, 591.7, 664.8]
+  };
+  Object.keys(CURVES).forEach(k => { CURVES[k] = CURVES[k].map(v => Math.round((v - 0.1) * 10) / 10); }); // 今日の終わりを 664.7 に
+  const FROM = { day: '30日前', week: '半年前', month: '1年前' };
+  let frame = 'week';
+  const climb = $('#climb');
+  function drawClimb(reveal) {
+    const w = climb.clientWidth, h = climb.clientHeight;
+    if (!w || !h) return;
+    const c = CURVES[frame], next = 700, prev = 500;
+    const first = c[0], last = c[c.length - 1], span = Math.max(1, last - first);
+    const showNext = next - last < span * 1.5, showPrev = first - prev < span * 1.5 && prev > 0;
+    const padv = span * 0.12 + 1;
+    const lo = Math.min(first, showPrev ? prev : first) - padv, hi = Math.max(last, showNext ? next : last) + padv;
+    const X = i => (w - 6) * (i / (c.length - 1)) + 2, Y = v => 6 + (h - 12) * (1 - (v - lo) / (hi - lo));
+    const line = c.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+    const ms = [...(showPrev ? [prev] : []), ...(showNext ? [next] : [])].filter(m => m > lo && m < hi);
+    const ex = X(c.length - 1), ey = Y(last);
+    climb.innerHTML = `<svg width="${w}" height="${h}" aria-hidden="true">${ms.map(m => `<line x1="0" x2="${w}" y1="${Y(m)}" y2="${Y(m)}" stroke="${m === next ? '#2B2436' : '#C9BFAB'}" stroke-width="1.5" stroke-dasharray="3 4"/>`).join('')}</svg>
+      <div class="clip"><div><svg width="${w}" height="${h}" aria-hidden="true">
+        <path d="${line} L${ex},${h} L${X(0)},${h} Z" fill="rgba(23,18,31,.08)"/>
+        <path d="${line}" fill="none" stroke="#17121F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="square"/>
+        <rect x="${ex - 4.5}" y="${ey - 4.5}" width="9" height="9" fill="#17121F" stroke="#FBF8F1" stroke-width="2"/></svg></div></div>
+      ${showNext ? `<span class="ml" style="top:${Y(next) - 15}px">${next}時間</span>` : ''}
+      ${showPrev && prev > lo ? `<span class="ml done" style="top:${Y(prev) - 15}px">${prev}時間 達成</span>` : ''}
+      <span class="ax" style="left:0">${FROM[frame]}</span><span class="ax" style="right:0">今日</span>`;
+    climb.setAttribute('aria-label', `${FROM[frame]}から${Math.round(last - first)}時間ふえました`);
+    if (reveal && !A.reduced()) { climb.classList.remove('reveal'); void climb.offsetWidth; climb.classList.add('reveal'); }
+  }
+  $('#frame').addEventListener('change', () => { frame = $('#frame [aria-pressed="true"]').dataset.f; drawClimb(true); });
+  new ResizeObserver(() => drawClimb(false)).observe(climb);
+
+  /* 束の点と、マウスでもつかんで横にすべらせられるように */
+  const deck = $('#deck'), dots = $$('.deck-dots i');
+  let shown = 0;
+  deck.addEventListener('scroll', () => {
+    const p = Math.round(deck.scrollLeft / Math.max(1, deck.scrollWidth - deck.clientWidth));
+    if (p === shown) return;
+    shown = p;
+    dots.forEach((d, i) => d.classList.toggle('on', i === p));
+    deck.setAttribute('aria-label', `グラフ ${p + 1}/2。左右にすべらせて切り替え`);
+    if (p === 1) drawClimb(true);
+  }, { passive: true });
+  (() => {
+    let sx = 0, sl = 0, on = false, moved = false;
+    deck.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || e.button) return; on = true; moved = false; sx = e.clientX; sl = deck.scrollLeft; });
+    window.addEventListener('pointermove', e => {
+      if (!on) return;
+      const dx = e.clientX - sx;
+      if (!moved && Math.abs(dx) > 6) { moved = true; deck.classList.add('is-grab'); }
+      if (moved) deck.scrollLeft = sl - dx;
+    });
+    window.addEventListener('pointerup', e => {
+      if (!on) return; on = false;
+      if (!moved) return;
+      const dx = e.clientX - sx, step = deck.clientWidth - 22;
+      const p = clamp(Math.round(sl / step) + (dx < -40 ? 1 : dx > 40 ? -1 : 0), 0, 1);
+      deck.classList.remove('is-grab');
+      deck.scrollTo({ left: p * (deck.scrollWidth - deck.clientWidth), behavior: A.reduced() ? 'auto' : 'smooth' });
+    });
+    deck.addEventListener('click', e => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
+  })();
+
+  function meter() {
+    if (A.reduced()) return;
+    const m = $('#nb-meter'); m.classList.remove('grow'); void m.offsetWidth; m.classList.add('grow');
+  }
+  meter();
+
+  /* ---------- 記録：今日の記録（アプリの見本の記録） ---------- */
+  const TODAY = [
+    { at: '6:30', s: 'ja', min: 30, note: '古文単語 61〜80' },
+    { at: '7:40', s: 'en', min: 60, note: '長文読解 第3講' },
+    { at: '17:40', s: 'en', min: 35, note: '' },
+    { at: '19:00', s: 'ma', min: 40, note: '青チャート 例題38〜40' }
+  ];
+  $('#s-rows').innerHTML = TODAY.map(x => `<button class="row srow" type="button" data-soon aria-label="${x.at} ${SJ[x.s].name} ${x.min}分。押すと直せます">
+    <span class="s-at">${x.at}</span><span class="s-bar" style="--c:${SJ[x.s].c}" aria-hidden="true"></span>
+    <span class="row-main"><span class="row-t">${SJ[x.s].name}</span>${x.note ? `<span class="row-s">${esc(x.note)}</span>` : ''}</span>
+    <span class="row-v">${x.min}<small>分</small></span><i class="chev" data-pi="right"></i></button>`).join('');
+
+  /* ---------- グラフ：直近20日 / 20週 ---------- */
+  const D20 = [['10月10日', [305, 0, 0, 0, 0]], ['10月11日', [160, 98, 0, 0, 0]], ['10月12日', [100, 85, 0, 0, 0]], ['10月13日', [0, 120, 108, 0, 0]], ['10月14日', [30, 30, 0, 0, 0]], ['10月15日', [0, 120, 0, 0, 0]], ['10月16日', [0, 90, 53, 0, 0]], ['10月17日', [55, 100, 43, 0, 0]], ['10月18日', [160, 125, 0, 0, 0]], ['10月19日', [48, 75, 0, 0, 0]], ['10月20日', [60, 55, 0, 0, 0]], ['10月21日', [30, 0, 40, 0, 0]], ['10月22日', [0, 135, 0, 0, 0]], ['10月23日', [0, 195, 0, 0, 0]], ['10月24日', [60, 105, 0, 0, 0]], ['10月25日', [180, 123, 0, 0, 0]], ['10月26日', [75, 55, 0, 0, 0]], ['10月27日', [80, 75, 0, 0, 0]], ['10月28日', [0, 33, 55, 0, 0]], ['10月29日', [95, 40, 0, 0, 30]]];
+  const W20 = [['6月18日', [601, 346, 228, 0, 0]], ['6月25日', [313, 403, 155, 0, 0]], ['7月2日', [488, 413, 143, 0, 0]], ['7月9日', [598, 386, 80, 40, 0]], ['7月16日', [533, 458, 53, 0, 0]], ['7月23日', [575, 185, 38, 93, 0]], ['7月30日', [526, 435, 115, 0, 0]], ['8月6日', [588, 430, 126, 0, 0]], ['8月13日', [285, 360, 0, 0, 0]], ['8月20日', [423, 528, 35, 0, 0]], ['8月27日', [120, 335, 78, 0, 0]], ['9月3日', [110, 536, 0, 55, 0]], ['9月10日', [385, 684, 0, 28, 0]], ['9月17日', [298, 260, 85, 0, 0]], ['9月24日', [370, 581, 60, 0, 0]], ['10月1日', [546, 415, 0, 0, 0]], ['10月8日', [448, 345, 0, 0, 0]], ['10月15日', [640, 503, 108, 0, 0]], ['10月22日', [353, 580, 136, 0, 0]], ['10月29日', [490, 626, 55, 0, 30]]];
+  const hmL = m => (m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ? pad(m % 60) + '分' : ''}` : `${m}分`);
+  let sbMode = 'day', hot = null, hideT = 0;
+  const sbPlot = $('#sb-plot'), sbCols = $('#sb-cols'), sbTip = $('#sb-tip');
+  const sbData = () => (sbMode === 'day' ? D20 : W20).map(([label, parts]) => { const total = parts.reduce((a, b) => a + b, 0); return { label, parts, total, short: Math.max(0, (sbMode === 'day' ? 180 : 1260) - total) }; });
+  function drawSB(grow) {
+    const cols = sbData();
+    const maxUp = Math.max(...cols.map(c => c.total)), maxShort = Math.max(1, ...cols.map(c => c.short));
+    const up = m => m / maxUp * 96, dn = m => m / maxShort * 18;
+    const total = cols.reduce((a, c) => a + c.total, 0) / 60;
+    $('#sb-title').textContent = sbMode === 'day' ? '勉強時間 · 直近20日' : '勉強時間 · 直近20週';
+    $('#sb-total').textContent = total.toFixed(1);
+    sbCols.innerHTML = cols.map((c, i) => `<div class="sb-col" style="--i:${i}">
+      <span class="sb-up" style="height:${up(c.total).toFixed(1)}px">${c.parts.map((m, k) => m ? `<i style="--c:${SJ[ORDER[k]].c};height:${(m / c.total * 100).toFixed(2)}%"></i>` : '').join('')}</span>
+      ${c.short ? `<span class="sb-dn" style="height:${Math.max(3, dn(c.short)).toFixed(1)}px"></span>` : ''}</div>`).join('');
+    $('#sb-x').innerHTML = `<span>${cols[0].label}</span><span>${cols[19].label}</span>`;
+    const usedK = ORDER.filter((s, k) => cols.some(c => c.parts[k] > 0));
+    $('#sb-key').innerHTML = usedK.map(s => `<span><i style="--c:${SJ[s].c}"></i>${SJ[s].name}</span>`).join('') + '<span><i style="--c:var(--down)"></i>目標に足りない分</span>';
+    sbPlot.setAttribute('aria-label', `${sbMode === 'day' ? '直近20日' : '直近20週'}の勉強時間。合計${total.toFixed(1)}時間`);
+    if (grow && !A.reduced()) { sbPlot.classList.remove('grow'); void sbPlot.offsetWidth; sbPlot.classList.add('grow'); }
+    setHot(null);
+  }
+  function setHot(i) {
+    hot = i;
+    sbPlot.classList.toggle('has-hot', i !== null);
+    $$('.sb-col', sbCols).forEach((c, k) => c.classList.toggle('hot', k === i));
+    if (i === null) { sbTip.classList.remove('is-on'); return; }
+    const c = sbData()[i], col = $$('.sb-col', sbCols)[i];
+    const top2 = c.parts.map((m, k) => ({ m, k })).filter(x => x.m).sort((a, b) => b.m - a.m).slice(0, 2);
+    sbTip.innerHTML = `<p class="t"><span>${sbMode === 'day' ? c.label : c.label + 'の週'}</span><b>${hmL(c.total)}</b></p>` +
+      top2.map(({ m, k }) => `<p><i style="--c:${SJ[ORDER[k]].c}"></i><span>${SJ[ORDER[k]].name}</span>${hmL(m)}</p>`).join('') +
+      `<p><i style="--c:${c.short ? 'var(--down)' : 'var(--ink)'}"></i><span>${c.short ? '目標まで' : '目標'}</span><b style="color:${c.short ? 'var(--down)' : 'var(--up)'}">${c.short ? '−' + hmL(c.short) : '達成'}</b></p>`;
+    const pw = sbPlot.clientWidth, left = col.offsetLeft, cw = col.offsetWidth;
+    let x = left + cw + 10; if (x + 172 > pw) x = left - 172 - 10;
+    sbTip.style.transform = `translate(${x}px,-6px)`;
+    sbTip.classList.add('is-on');
+  }
+  const at = e => { const r = sbPlot.getBoundingClientRect(); return clamp(Math.floor((e.clientX - r.left) / r.width * 20), 0, 19); };
+  let scrub = false;
+  sbPlot.addEventListener('pointerdown', e => { scrub = true; clearTimeout(hideT); setHot(at(e)); });
+  sbPlot.addEventListener('pointermove', e => { if (scrub || e.pointerType === 'mouse') { clearTimeout(hideT); const i = at(e); if (i !== hot) setHot(i); } });
+  const leave = () => { scrub = false; clearTimeout(hideT); hideT = setTimeout(() => setHot(null), 1400); };
+  sbPlot.addEventListener('pointerup', leave); sbPlot.addEventListener('pointercancel', leave); sbPlot.addEventListener('pointerleave', leave);
+  $('#sb-mode').addEventListener('change', () => { sbMode = $('#sb-mode [aria-pressed="true"]').dataset.m; drawSB(true); });
+
+  /* この7日間の科目（直近7日の記録から。ペース通りかは字で） */
+  const WEEKH = { en: 8.2, ma: 10.4, ph: 0.9, ch: 0, ja: 0.5 }, GOALH = { en: 7, ma: 8, ph: 5, ch: 3, ja: 3 };
+  $('#sub-rows').innerHTML = ORDER.map(s => {
+    const w = WEEKH[s], g = GOALH[s], p = Math.min(100, Math.round(w / g * 100)), low = p < 80;
+    return `<div class="row subrow"><span class="subj" data-s="${s}" aria-hidden="true"></span><span class="row-main">
+      <span class="sr-top"><span class="row-t">${SJ[s].name}</span><span class="row-v">${w.toFixed(1)}<small> / ${g}h</small></span></span>
+      <span class="sr-bot"><span class="meter" style="--c:${SJ[s].c};--p:${(p / 100).toFixed(2)}" aria-hidden="true"><i></i></span><span class="${low ? 'low' : ''}">${low ? `あと${(g - w).toFixed(1)}時間` : `${p}%`}</span></span></span></div>`;
+  }).join('');
+
+  /* 模試の偏差値（アプリの ScoreCard と同じ作り方の見本） */
+  const SC = [55.7, 56, 56.3, 56.6, 57.2, 57.5, 58.1, 58.3, 58.1, 58.6, 59.2, 59.3, 59.3, 60.1, 60.2, 60.1, 60.1, 60.5, 61.1, 61.1, 61.1, 61.4, 61.3, 61.4, 61.3, 61.5, 61.6, 61.3, 61.9, 61.8, 61.5, 61.9, 62.1, 62.4, 62.9, 62.8, 63.3, 63.5, 63.8, 63.6, 63.5, 64, 64.3, 64.3, 65, 65.5, 65.4, 65.1, 65.1, 64.7, 65, 64.8];
+  const WINS = { 13: '3か月前から', 26: '半年前から', 52: '1年前から' };
+  let win = 13, scHot = null;
+  const scPlot = $('#sc-plot');
+  const weekLabel = back => { const d = new Date(2026, 9, 29); d.setDate(d.getDate() - back * 7); return `${d.getMonth() + 1}月${d.getDate()}日`; };
+  function smooth(p) {
+    let d = `M${p[0][0]},${p[0][1]}`;
+    for (let i = 0; i < p.length - 1; i++) {
+      const p0 = p[i - 1] || p[i], p1 = p[i], p2 = p[i + 1], p3 = p[i + 2] || p2;
+      d += ` C${(p1[0] + (p2[0] - p0[0]) / 6).toFixed(1)},${(p1[1] + (p2[1] - p0[1]) / 6).toFixed(1)} ${(p2[0] - (p3[0] - p1[0]) / 6).toFixed(1)},${(p2[1] - (p3[1] - p1[1]) / 6).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+    }
+    return d;
+  }
+  let geo = null;
+  function drawScore(fade) {
+    const w = scPlot.clientWidth, H = 112, AX = 30;
+    if (!w) return;
+    const pts = SC.slice(-win), lo = Math.min(...pts) - 0.6, hi = Math.max(...pts) + 0.6;
+    const X = i => (w - AX - 8) * (i / (pts.length - 1)) + 2, Y = v => 6 + (H - 12) * (1 - (v - lo) / (hi - lo));
+    const xy = pts.map((v, i) => [X(i), Y(v)]);
+    geo = { X, Y, pts, w, AX };
+    const grid = [hi - 0.6, (lo + hi) / 2, lo + 0.6];
+    scPlot.innerHTML = `<svg width="${w}" height="${H}" aria-hidden="true">${grid.map(v => `<line x1="0" x2="${w - AX + 2}" y1="${Y(v)}" y2="${Y(v)}" stroke="#C9BFAB" stroke-width="1" stroke-dasharray="2 4"/>`).join('')}
+      <path d="${smooth(xy)} L${xy[xy.length - 1][0]},${H} L${xy[0][0]},${H} Z" fill="rgba(23,18,31,.08)"/>
+      <path d="${smooth(xy)}" fill="none" stroke="#17121F" stroke-width="2.5" stroke-linecap="round"/>
+      <g id="sc-hot"></g></svg>${grid.map(v => `<span class="gl" style="top:${Y(v)}px">${v.toFixed(1)}</span>`).join('')}`;
+    scPlot.setAttribute('aria-label', `偏差値の推移。${WINS[win].replace('から', '')}で+${(pts[pts.length - 1] - pts[0]).toFixed(1)}`);
+    if (fade && !A.reduced()) { scPlot.classList.remove('fade'); void scPlot.offsetWidth; scPlot.classList.add('fade'); }
+    showScore(null);
+  }
+  function showScore(i) {
+    scHot = i;
+    if (!geo) return;
+    const { X, Y, pts } = geo, idx = i === null ? pts.length - 1 : i, v = pts[idx], delta = v - pts[0];
+    const [whole, dec] = v.toFixed(1).split('.');
+    $('#sc-whole').textContent = whole; $('#sc-dec').textContent = '.' + dec;
+    const dl = $('#sc-delta'); dl.className = 'delta ' + (delta >= 0 ? 'up' : 'down'); dl.textContent = Math.abs(delta).toFixed(1);
+    $('#sc-from').textContent = WINS[win];
+    $('#sc-when').textContent = i === null ? '最新' : weekLabel(pts.length - 1 - idx);
+    const g = $('#sc-hot');
+    if (g) g.innerHTML = `${i === null ? '' : `<line x1="${X(idx)}" x2="${X(idx)}" y1="0" y2="112" stroke="#17121F" stroke-width="1"/>`}<rect x="${X(idx) - 4.5}" y="${Y(v) - 4.5}" width="9" height="9" fill="#17121F" stroke="#FBF8F1" stroke-width="2"/>`;
+  }
+  const scAt = e => { const r = scPlot.getBoundingClientRect(); return clamp(Math.round((e.clientX - r.left - 2) / (r.width - 38) * (geo.pts.length - 1)), 0, geo.pts.length - 1); };
+  let scDown = false;
+  scPlot.addEventListener('pointerdown', e => { if (!geo) return; scDown = true; showScore(scAt(e)); });
+  scPlot.addEventListener('pointermove', e => { if (geo && (scDown || e.pointerType === 'mouse')) showScore(scAt(e)); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => scPlot.addEventListener(n, () => { scDown = false; showScore(null); }));
+  $('#sc-win').addEventListener('change', () => { win = +$('#sc-win [aria-pressed="true"]').dataset.w; drawScore(true); });
+  new ResizeObserver(() => { drawScore(false); }).observe(scPlot);
+  drawSB(false);
+
+  /* ---------- 投稿：自分の投稿 ---------- */
+  const feed = $('#me-feed');
+  const mine = () => S.POSTS.filter(p => p.mine);
+  S.renderPosts(feed, mine());
+  S.compose(() => {
+    S.renderPosts(feed, mine());
+    $('#cnt-posts b').textContent = mine().length;
+    $('#cnt-posts').setAttribute('aria-label', `${mine().length}投稿。投稿のページへ`);
+  });
+})();
+</script>
+</body>
+</html>

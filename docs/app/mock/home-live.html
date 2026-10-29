@@ -32,28 +32,47 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
 
 /* ---------- いま勉強中の友達 ---------- */
 .fr{padding:14px 16px 4px}
-.fr > .sec-h{flex-wrap:wrap;row-gap:6px;margin-bottom:2px}
-.fr-tools{margin-left:auto;display:flex;align-items:center;gap:12px}
+.fr > .sec-h{flex-wrap:wrap;column-gap:8px;row-gap:6px;margin-bottom:2px}
+.fr-tools{margin-left:auto;display:flex;align-items:center;gap:8px}
 .fr-tools .link{margin:-8px 0;font-size:13px}
-.chip.sort > .face{gap:5px;padding:0 9px 0 11px;font-size:12px;color:var(--ink-2)}
+.chip.sort > .face{gap:4px;padding:0 7px 0 9px;font-size:12px;color:var(--ink-2)}
 .chip.sort .pi{color:var(--ink-3)}
 .fr-row{gap:10px}
 .fr-row .row-end{min-width:42px}
 .spark{flex:none;display:block;overflow:visible}
-.grip{flex:none;display:grid;place-items:center;width:22px;height:36px;color:var(--ink-3)}
+.grip{flex:none;display:grid;place-items:center;width:30px;height:44px;margin-right:-6px;color:var(--ink-3);touch-action:none;cursor:grab}
 .fr-empty{padding:12px 0 14px;font-size:13px;color:var(--ink-3)}
+.row-s-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 左にスワイプ：下から赤い「非表示」 */
+#fr-rows .fr-row{padding:0}
+.fr-slide{flex:1;min-width:0;align-self:stretch;display:flex;align-items:center;gap:10px;min-height:60px;padding:8px 0}
+.fr-del{position:absolute;z-index:-1;inset:3px 0;display:flex;align-items:center;justify-content:flex-end;padding-right:16px;border-radius:12px;
+  background:var(--down);color:var(--on-ink);font:700 13px/1 var(--f-body);opacity:0}
+.fr-row.is-swiping{overflow:hidden}
+#fr-rows a.fr-row.is-swiping::before{opacity:0;transition:none}
+.fr-row.is-swiping .fr-slide{background:var(--card)}
+/* ≡ をつかんだ行：輪郭＋ライムの影で浮く（影は動かさない） */
+.fr-row.is-lift{z-index:3;border-top-color:transparent}
+.fr-row.is-lift + .fr-row{border-top-color:transparent}
+.fr-row.is-lift .fr-slide{margin:0 -8px;padding:8px;border-radius:14px;background:var(--card);box-shadow:var(--ring),var(--lift)}
+.fr-row.is-lift .grip{cursor:grabbing}
+.fr-row.is-new{animation:fade-in var(--t-fade) linear both}
+/* もっと見る：非表示にした人 */
+.fr-off-h{padding:14px 0 4px;font:600 12.5px/1.4 var(--f-body);color:var(--ink-3)}
+.fr-off-h + .fr-row{border-top:0}
+.fr-row.is-off .av,.fr-row.is-off .row-main{opacity:.55}
 
 /* ---------- 今日の勉強（主役の1枚） ---------- */
-.today{margin-right:6px}
-.today > .sec-h{flex-wrap:wrap;row-gap:6px}
-.today > .sec-h .tag{margin-left:auto}
+.blk-today{margin-right:6px}
+.blk-today > .sec-h{flex-wrap:wrap;row-gap:6px}
+.blk-today > .sec-h .tag{margin-left:auto}
 .today-d{margin-top:-6px;font-size:var(--fs-sub);color:var(--ink-3);font-variant-numeric:tabular-nums}
 .today-num{display:flex;align-items:flex-end;margin-top:10px}
 .today-num .unit{margin:0 7px 2px 3px}
 .today-diff{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding-bottom:1px}
 .today-diff small{font-size:var(--fs-tiny);line-height:1.2;color:var(--ink-3)}
-.today .tape{margin-top:18px}
-.today .tape-bar{touch-action:none;cursor:pointer}
+.blk-today .tape{margin-top:18px}
+.blk-today .tape-bar{touch-action:none;cursor:pointer}
 /* 開くたびに 0 から転がる数字（transform だけ。行きすぎない） */
 .roll{display:inline-flex}
 .rd{display:inline-block;height:1em;overflow:hidden}
@@ -127,7 +146,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
 .tour-bub{position:absolute;display:flex;flex-direction:column;gap:6px;padding:16px 16px 14px;border-radius:18px;background:var(--card);
   box-shadow:var(--ring),var(--lift);outline:none;animation:fade-in var(--t-fade) linear both}
 .tour-bub h2{font:800 16px/1.35 var(--f-body)}
-.tour-bub p{font-size:14px;line-height:1.65;color:var(--ink-2)}
+.tour-bub p{font-size:14px;line-height:1.65;color:var(--ink-2);word-break:auto-phrase}
 .tour-foot{display:flex;align-items:center;gap:12px;margin-top:6px}
 .tour-dots{flex:1;display:flex;gap:5px}
 .tour-dots i{width:7px;height:7px;background:var(--line-2)}
@@ -142,7 +161,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
 .note .keys{margin-top:16px}
 </style>
 </head>
-<body data-page="live" data-tab="home" data-bar="live" data-bar-subj="en" data-bar-title="英語" data-bar-tail="予定 1時間">
+<body data-page="live" data-tab="home" data-bar="live" data-bar-subj="en" data-bar-title="英語" data-bar-tail="予定 1時間" data-time="17:39">
 <div class="stage">
   <div class="app">
     <nav class="side" aria-label="メニュー" tabindex="-1">
@@ -186,7 +205,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
         <div class="rows" id="fr-rows"></div>
       </section>
 
-      <section class="card hero today" aria-labelledby="h-today">
+      <section class="card hero blk-today" aria-labelledby="h-today">
         <div class="sec-h"><h2 class="sec-t" id="h-today" style="--accent:var(--coral)">今日の勉強</h2><span class="tag"><i class="dot due"></i>第4回 記述模試まで <b>10</b>日</span></div>
         <p class="today-d">10月29日（木）</p>
         <div class="today-num">
@@ -316,45 +335,173 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
       `<rect x="${(ex - 3).toFixed(1)}" y="${(ey - 3).toFixed(1)}" width="6" height="6" fill="currentColor"/></svg>`;
   }
   const GRIP = A._rowsSVG(['kkkkkkkk', '........', '........', 'kkkkkkkk', '........', '........', 'kkkkkkkk'], { k: 'currentColor' }, 2);
+  let hidden = [];                                   // 左にスワイプで外した人（名前）
+  const shown = () => order.filter(f => !hidden.includes(f.n));
   function friendRow(f, all) {
     const up = f.diff >= 0;
-    const label = `${f.n} のプロフィール（${f.s}を勉強中。今日 ${jhm(f.today)}。昨日より ${jhm(Math.abs(f.diff))}${up ? '多い' : '少ない'}）`;
-    return `<a class="row fr-row" href="#" data-soon aria-label="${label}">` +
-      `<span class="av" data-n="${f.n}"></span>` +
-      `<span class="row-main"><span class="row-t">${f.n}</span><span class="row-s"><i class="dot sm run"></i>${f.s}を勉強中${all ? ` · ${f.g} 志望` : ''}</span></span>` +
+    const label = `${f.n} のプロフィール（${f.s}を勉強中。今日 ${jhm(f.today)}。昨日より ${jhm(Math.abs(f.diff))}${up ? '多い' : '少ない'}）${all ? '' : '。左にスワイプで非表示'}`;
+    const inner = `<span class="av" data-n="${f.n}"></span>` +
+      `<span class="row-main"><span class="row-t">${f.n}</span><span class="row-s"><i class="dot sm run"></i><span class="row-s-t">${f.s}を勉強中${all ? ` · ${f.g} 志望` : ''}</span></span></span>` +
       `<span class="row-end"><span class="row-v">${hm(f.today)}</span><span class="delta ${up ? 'up' : 'down'}">${hm(Math.abs(f.diff))}</span></span>` +
-      spark(f.week, up) +
-      (all ? '' : `<span class="grip" aria-hidden="true">${GRIP}</span>`) +
-      `</a>`;
+      spark(f.week, up, all ? 44 : 52);
+    if (all) return `<a class="row fr-row" href="#" data-soon aria-label="${label}">${inner}</a>`;
+    return `<a class="row fr-row" href="#" data-soon data-n="${f.n}" aria-label="${label}">` +
+      `<span class="fr-del" aria-hidden="true">非表示</span>` +
+      `<span class="fr-slide">${inner}<span class="grip" aria-hidden="true">${GRIP}</span></span></a>`;
   }
-  function renderFriends() {
+  function hiddenRow(f) {
+    return `<div class="row fr-row is-off"><span class="av" data-n="${f.n}"></span>` +
+      `<span class="row-main"><span class="row-t">${f.n}</span><span class="row-s"><span class="row-s-t">${f.s}を勉強中 · ${f.g} 志望</span></span></span>` +
+      `<button class="key key-sm fr-back" type="button" data-n="${f.n}" aria-label="${f.n} をホームに戻す">表示する</button></div>`;
+  }
+  /* 並びが変わったら、残った行は前の場所から move で動く（transform だけ。行きすぎない） */
+  function renderFriends(flip) {
     const box = $('#fr-rows');
     if (!box) return;
-    box.innerHTML = order.length ? order.slice(0, 4).map(f => friendRow(f)).join('') : '<p class="fr-empty">いま勉強中の友達はいません</p>';
+    const before = {};
+    if (flip) $$('.fr-row', box).forEach(r => { before[r.dataset.n] = r.getBoundingClientRect().top; });
+    const list = shown();
+    box.innerHTML = list.length ? list.slice(0, 4).map(f => friendRow(f)).join('') : '<p class="fr-empty">いま勉強中の友達はいません</p>';
     A.upgrade(box);
     const t = $('#fr-sort .sort-t');
     if (t) { t.textContent = SORTS[sort]; $('#fr-sort').setAttribute('aria-label', `並び順（${SORTS[sort]}）`); }
+    if (!flip || reduced()) return;
+    $$('.fr-row', box).forEach(r => {
+      const was = before[r.dataset.n];
+      if (was === undefined) { r.classList.add('is-new'); return; }
+      const dy = was - r.getBoundingClientRect().top;
+      if (!dy) return;
+      r.style.transform = `translateY(${dy}px)`;
+      r.offsetWidth;
+      r.style.transition = 'transform var(--t-move) var(--ios)';
+      r.style.transform = '';
+      setTimeout(() => { r.style.transition = ''; }, 420);
+    });
+  }
+  function renderAll() {
+    const box = $('#fr-all');
+    if (!box) return;
+    const list = shown(), off = order.filter(f => hidden.includes(f.n));
+    box.innerHTML = list.map(f => friendRow(f, true)).join('') +
+      (off.length ? `<p class="fr-off-h">非表示にした人</p>` + off.map(hiddenRow).join('') : '');
+    A.upgrade(box);
+    const n = $('#fr-all-n'); if (n) n.textContent = list.length;
+  }
+  function hideFriend(name) {
+    hidden = hidden.concat(name);
+    renderFriends(true);
+    A.toast({ title: `${name} を非表示にしました`, sub: 'もっと見る から戻せます', action: { label: '元に戻す', onClick() { showFriend(name); } } });
+  }
+  function showFriend(name) {
+    if (!hidden.includes(name)) return;
+    hidden = hidden.filter(x => x !== name);
+    renderFriends(true);
+    if (!$('#sheet-friends').hidden) renderAll();
   }
   renderFriends();
 
-  /* 並び順のシート */
+  /* 行を左にスワイプ → 非表示。≡ をつかんで上下 → 自分で並べる（指に 1:1 でついてくる） */
+  (() => {
+    const box = $('#fr-rows');
+    if (!box) return;
+    let g = null;
+    const slideOf = r => $('.fr-slide', r);
+    box.addEventListener('pointerdown', e => {
+      if (e.button) return;
+      const row = e.target.closest('.fr-row');
+      if (!row || g) return;
+      const grip = e.target.closest('.grip');
+      const rows = $$('.fr-row', box);
+      g = { row, grip: !!grip, x0: e.clientX, y0: e.clientY, id: e.pointerId, mode: grip ? 'drag' : null, dx: 0, dy: 0, vx: 0, lx: e.clientX, lt: performance.now(),
+        rows, i: rows.indexOf(row), w: row.getBoundingClientRect().width,
+        step: rows.length > 1 ? rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().top : 62, t: rows.indexOf(row) };
+      if (grip) {
+        e.stopPropagation();                       // メニューのスワイプは始めない
+        try { row.setPointerCapture(e.pointerId); } catch (_) { /* なし */ }
+        row.classList.add('is-lift'); body.classList.add('is-dragging');
+        rows.forEach(r => { if (r !== row) r.style.transition = 'transform var(--t-move) var(--ios)'; });
+      }
+    });
+    box.addEventListener('pointermove', e => {
+      if (!g || e.pointerId !== g.id) return;
+      g.dx = e.clientX - g.x0; g.dy = e.clientY - g.y0;
+      const now = performance.now(); g.vx = (e.clientX - g.lx) / Math.max(1, now - g.lt); g.lx = e.clientX; g.lt = now;
+      if (!g.mode) {
+        if (Math.abs(g.dx) < 10 && Math.abs(g.dy) < 10) return;
+        if (g.dx < 0 && Math.abs(g.dx) > Math.abs(g.dy) * 1.2) {
+          g.mode = 'swipe';
+          try { g.row.setPointerCapture(g.id); } catch (_) { /* なし */ }
+          g.row.classList.add('is-swiping'); body.classList.add('is-dragging');
+        } else { g = null; return; }
+      }
+      if (g.mode === 'swipe') {
+        const x = clamp(g.dx, -g.w, 0);
+        slideOf(g.row).style.transform = `translateX(${x}px)`;
+        $('.fr-del', g.row).style.opacity = Math.min(1, -x / 60);
+      } else {
+        const n = g.rows.length;
+        const dy = clamp(g.dy, -g.i * g.step, (n - 1 - g.i) * g.step);
+        g.row.style.transform = `translateY(${dy}px)`;
+        g.t = clamp(Math.round(g.i + dy / g.step), 0, n - 1);
+        g.rows.forEach((r, j) => {
+          if (r === g.row) return;
+          const sh = g.i < j && j <= g.t ? -g.step : g.t <= j && j < g.i ? g.step : 0;
+          r.style.transform = sh ? `translateY(${sh}px)` : '';
+        });
+      }
+    });
+    const end = e => {
+      if (!g || e.pointerId !== g.id) return;
+      const s = g; g = null;
+      body.classList.remove('is-dragging');
+      if (!s.mode) return;
+      s.row.dataset.moved = '1'; setTimeout(() => { delete s.row.dataset.moved; }, 60);
+      if (s.mode === 'swipe') {
+        const sl = slideOf(s.row), del = $('.fr-del', s.row);
+        const go = s.dx < -s.w * 0.35 || s.vx < -0.5;
+        sl.style.transition = reduced() ? 'none' : `transform var(${go ? '--t-dismiss' : '--t-release'}) var(--ios)`;
+        sl.style.transform = go ? `translateX(${-s.w - 8}px)` : '';
+        if (!go) { del.style.transition = 'opacity var(--t-release) var(--ios)'; del.style.opacity = 0; }
+        later(() => { if (go) hideFriend(s.row.dataset.n); else { s.row.classList.remove('is-swiping'); sl.style.transition = ''; del.style.transition = ''; } }, go ? 280 : 300);
+      } else {
+        /* 指を離した場所に置く：並びを自分の順にする */
+        const list = shown().slice(0, s.rows.length);
+        const [m] = list.splice(s.i, 1); list.splice(s.t, 0, m);
+        const changed = s.t !== s.i;
+        s.row.style.transition = reduced() ? 'none' : 'transform var(--t-move) var(--ios)';
+        s.row.style.transform = changed ? `translateY(${(s.t - s.i) * s.step}px)` : '';
+        later(() => {
+          s.row.classList.remove('is-lift');
+          if (changed) {
+            order = list.concat(order.filter(f => !list.includes(f)));
+            sort = 'mine';
+            renderFriends();
+          } else s.rows.forEach(r => { r.style.transition = ''; r.style.transform = ''; });
+        }, 380);
+      }
+    };
+    box.addEventListener('pointerup', end);
+    box.addEventListener('pointercancel', end);
+    /* スワイプやつかんだあとの click は、プロフィールを開かない */
+    box.addEventListener('click', e => { const r = e.target.closest('.fr-row'); if (r && (r.dataset.moved || e.target.closest('.grip'))) { e.preventDefault(); e.stopPropagation(); } }, true);
+  })();
+
+  /* 並び順のシート・もっと見る */
   doc.addEventListener('click', e => {
     if (e.target.closest('#fr-sort')) $$('#sheet-sort .opt').forEach(o => o.setAttribute('aria-checked', String(o.dataset.v === sort)));
     const opt = e.target.closest('#sheet-sort .opt');
     if (opt) $$('#sheet-sort .opt').forEach(o => o.setAttribute('aria-checked', String(o === opt)));
     if (e.target.closest('#sort-ok')) {
       const v = ($('#sheet-sort .opt[aria-checked="true"]') || {}).dataset.v || 'time';
-      order = sorted(v); sort = v; renderFriends();
+      order = sorted(v); sort = v; renderFriends(true);
       A.sheet.close('sheet-sort');
     }
-    if (e.target.closest('[data-open-sheet="sheet-friends"]')) {
-      const box = $('#fr-all');
-      if (box) { box.innerHTML = order.map(f => friendRow(f, true)).join(''); A.upgrade(box); }
-      const n = $('#fr-all-n'); if (n) n.textContent = order.length;
-    }
+    if (e.target.closest('[data-open-sheet="sheet-friends"]')) renderAll();
+    const back = e.target.closest('.fr-back');
+    if (back) showFriend(back.dataset.n);
   });
   /* シートの中の行を押してプロフィールを開こうとしたら、先にシートを閉じる */
-  doc.addEventListener('click', e => { if (e.target.closest('#sheet-friends .row')) A.sheet.close('sheet-friends'); }, true);
+  doc.addEventListener('click', e => { if (e.target.closest('#sheet-friends a.row')) A.sheet.close('sheet-friends'); }, true);
 
   /* =========================================================
    * 2. 今日の合計：開くたびに 0 から転がる（transform だけ）
@@ -446,7 +593,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
   const app = $('.app'), scr = $('.app > .screen'), side = $('.side'), peek = $('.peek');
   const chromeEl = () => $('.app > .chrome');
   const appW = () => app.getBoundingClientRect().width;
-  let menuOpen = false, settle = 0;
+  let menuOpen = false, settle = 0, opener = null;
   function clipVars() {
     if (WIDE.matches) { scr.style.setProperty('--clip-t', '0px'); scr.style.setProperty('--clip-b', '0px'); return; }
     const y = window.scrollY;
@@ -471,21 +618,30 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
     app.classList.toggle('is-menu', open);
     clearPaint();
     menuOpen = open;
+    const fromMenu = side.contains(doc.activeElement) || doc.activeElement === peek;
+    if (open) opener = doc.activeElement;
     scr.inert = open; side.inert = !open;
     const c = chromeEl(); if (c) c.inert = open;
     if (open) side.focus({ preventScroll: true });
+    else if (fromMenu) {
+      /* 閉じたら、開いたボタン（キーボードの「メニューを開く」など）へフォーカスを戻す */
+      if (opener && opener !== body && opener.isConnected && !side.contains(opener)) opener.focus({ preventScroll: true });
+      else doc.activeElement.blur();
+    }
     settle = setTimeout(() => {
       app.classList.remove('menu-anim', 'is-closing');
       if (!menuOpen) app.classList.remove('menu-live');
     }, reduced() || !anim ? 0 : 520);
   }
   A.menu = { open: () => setMenu(true), close: () => setMenu(false), isOpen: () => menuOpen };
+  window.addEventListener('resize', () => { if (menuOpen) clipVars(); }); // 画面の向きが変わっても、右に残るホームの切り抜きを合わせる
   if (side) side.inert = true;
   /* ホームを右へ */
   (() => {
     if (!scr || !side) return;
     let sx = 0, sy = 0, st = 0, on = false, decided = false, drag = false, w = 0, lastX = 0, lastT = 0, vx = 0, eat = false;
     const SKIP = '.badges, .grass-c, .tape-bar, .menu-kb, input, textarea, select';
+    scr.addEventListener('dragstart', e => e.preventDefault()); // 行のリンクをマウスで引いても、メニューのスワイプが切れない
     scr.addEventListener('pointerdown', e => {
       if (menuOpen || (e.button && e.button !== 0) || e.target.closest(SKIP)) return;
       on = true; decided = false; drag = false; sx = lastX = e.clientX; sy = e.clientY; st = lastT = performance.now(); vx = 0; w = appW();
@@ -565,6 +721,8 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
   }
   function wirePull(sb) {
     let y0 = null, dy = 0, pid = null, moved = false;
+    /* マウスで引いたとき、リンクのドラッグ（ブラウザの機能）が始まって指の動きが切れないように */
+    sb.addEventListener('dragstart', e => e.preventDefault());
     sb.addEventListener('pointerdown', e => { if (e.button || e.target.closest('.sbar-pp')) return; y0 = e.clientY; dy = 0; moved = false; pid = e.pointerId; sb.style.transition = 'none'; });
     sb.addEventListener('pointermove', e => {
       if (y0 === null || e.pointerId !== pid) return;
@@ -602,7 +760,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
     rollTo($('.roll[data-k="h"]'), h); rollTo($('.roll[data-k="m"]'), m);
     $('.today-diff .delta').textContent = hm(diff);
     $('#today-sr').textContent = `今日 ${jhm(total)}。昨日より ${jhm(diff)}多い`;
-    const tp = $('.today .tape');
+    const tp = $('.blk-today .tape');
     const nt = doc.createElement('div');
     nt.className = 'tape'; nt.dataset.goal = '180'; nt.dataset.parts = `en:${95 + min},ma:40,ja:30`; nt.setAttribute('data-reveal', '');
     tp.replaceWith(nt); A.upgrade(nt.parentElement); wireTape(nt);
@@ -719,7 +877,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none}
    * ========================================================= */
   function ready() {
     $$('.blk-grass .grass').forEach(wireGrass);
-    $$('.today .tape').forEach(wireTape);
+    $$('.blk-today .tape').forEach(wireTape);
     later(() => $$('.roll').forEach(el => rollTo(el, el.dataset.v)), 120);
     if (PAGE === 'live') { const sb = $('.chrome .sbar'); if (sb) { sb.style.touchAction = 'none'; wirePull(sb); } }
     if (NEW) {

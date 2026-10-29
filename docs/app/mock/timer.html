@@ -24,12 +24,12 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
 .tm-top{display:flex;flex-direction:column;align-items:center;flex:none}
 .tm-grab{position:relative;display:grid;place-items:start center;width:96px;height:22px;padding-top:7px;border-radius:12px}
 .tm-grab::after{content:"";position:absolute;inset:-4px 0 -18px}
-.tm-grab span{display:block;width:40px;height:5px;border-radius:3px;background:rgba(23,18,31,.34)}
+.tm-grab span{display:block;width:40px;height:5px;border-radius:3px;background:color-mix(in oklab, var(--ink) 34%, transparent)}
 .tm-grab:focus-visible{outline-offset:0}
 .tm-state{display:inline-flex;align-items:center;gap:7px;min-height:26px;margin:4px 0 6px;padding:3px 10px;border-radius:8px;background:var(--card);box-shadow:var(--ring-thin);
   font:700 12px/1.2 var(--f-body);color:var(--ink);white-space:nowrap}
+/* 一時停止中：アプリと同じく文言は「国語を勉強中」のまま、点を消して字を紅に */
 .tm-state.is-paused{color:var(--pause)}
-.tm-state .pi svg{width:auto}
 
 /* 見出し：今日の時間割 ›（押すと勉強タブ）と日付、並べ替え */
 .tm-head{display:flex;align-items:flex-start;gap:10px;flex:none;padding:4px 20px 10px}
@@ -47,17 +47,19 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
 .slide{position:relative;display:flex;flex:none;width:var(--W,328px);scroll-snap-align:center;scroll-snap-stop:always;transform-origin:50% 50%}
 .slide-lift{position:absolute;inset:0;border-radius:var(--r-lg);background:var(--lime-2);transform:translate(6px,6px);opacity:0}
 .slide-hit{position:absolute;inset:0;z-index:3;padding:0;border:0;border-radius:var(--r-lg);background:none;cursor:pointer}
+/* 隣のカード：カードは不透明のまま、紙2の幕を重ねて薄く見せる（幕の opacity だけ動かす） */
+.slide-veil{position:absolute;inset:0;z-index:2;border-radius:var(--r-lg);background:var(--paper-2);opacity:0;pointer-events:none}
 .slide-hit:focus-visible{outline-offset:-3px}
 
 /* 予定のカード：紙・インクの輪郭。真ん中の1枚だけライムの影（主役） */
 .tcard{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:16px;border-radius:var(--r-lg);background:var(--card);box-shadow:var(--ring)}
 /* 絵：科目の色＋点、インクの線の絵、輪郭つきの大きな科目名、状態の札 */
 .tart{position:relative;flex:1 1 auto;min-height:110px;max-height:calc(var(--W,328px) - 32px);border-radius:14px;overflow:hidden;
-  background:radial-gradient(rgba(23,18,31,.13) 1px,transparent 1.3px) 0 0/14px 14px,var(--c);box-shadow:inset 0 0 0 2px var(--ink)}
+  background:radial-gradient(color-mix(in oklab, var(--ink) 13%, transparent) 1px,transparent 1.3px) 0 0/14px 14px,var(--c);box-shadow:inset 0 0 0 2px var(--ink)}
 .tart-g{position:absolute;right:14px;top:14px;width:36%;max-width:46%;aspect-ratio:1;color:var(--ink);opacity:.82}
 .tart-g svg{width:100%;height:100%}
 .tart-n{position:absolute;left:16px;bottom:12px;font:800 46px/1.1 var(--f-body);letter-spacing:-.03em;color:var(--card);white-space:nowrap;
-  text-shadow:-2px 0 0 var(--ink),2px 0 0 var(--ink),0 -2px 0 var(--ink),0 2px 0 var(--ink),-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink),4px 4px 0 var(--ink)}
+  text-shadow:-2px 0 0 var(--ink),2px 0 0 var(--ink),0 -2px 0 var(--ink),0 2px 0 var(--ink),-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink)}
 .tchip{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:8px;background:var(--card);box-shadow:var(--ring-thin);
   font:700 12px/1 var(--f-body);font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
 .tchip.is-paused{color:var(--pause)}
@@ -82,15 +84,16 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
 .ttime{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:2px}
 .tbig{font:800 62px/1 var(--f-num);letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
 .tcard[data-state="idle"] .tbig,.tcard[data-state="paused"] .tbig{color:var(--ink-3)}
+/* 1時間をこえた「1:04:12」は、カードの幅に合わせて小さく（右の「+4:12」が切れないように） */
+.tbig.is-long{font-size:min(62px,calc((var(--W,328px) - 90px) / 3.4))}
 .trest{flex:none;padding-bottom:6px;font:500 15px/1 var(--f-body);font-variant-numeric:tabular-nums;color:var(--ink-3);white-space:nowrap}
 .trest.is-over{color:var(--due-ink);font-weight:700}
-/* ボタン3つ：✎ / ▶・❚❚ / ✓ */
-.tkeys{display:flex;align-items:center;justify-content:center;gap:30px;flex:none;padding-bottom:4px}
-.tk-side{min-height:52px}
-.tk-side > .face{width:52px}
+/* ボタン3つ：✎ / ▶・❚❚ / ✓。主役は真ん中の丸だけ。✎ と ✓ は板の中の操作なので床なし（アプリも地なし） */
+.tkeys{display:flex;align-items:center;justify-content:center;gap:34px;flex:none;padding-bottom:4px}
+.tk-side{min-width:52px;min-height:52px;color:var(--ink)}
 /* 予定を追加のカード（いちばん左） */
 .tadd{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:0 24px;border:0;border-radius:var(--r-lg);
-  background:rgba(251,248,241,.55);outline:2px dashed rgba(23,18,31,.45);outline-offset:-2px;color:var(--ink);cursor:pointer;text-align:center}
+  background:color-mix(in oklab, var(--card) 55%, transparent);outline:2px dashed color-mix(in oklab, var(--ink) 45%, transparent);outline-offset:-2px;color:var(--ink);cursor:pointer;text-align:center}
 .tadd b{font:700 16px/1.3 var(--f-body)}
 .tadd small{font-size:13px;color:var(--ink-2)}
 .tadd .plus{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--card);box-shadow:var(--ring)}
@@ -99,6 +102,8 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
 .pager{display:flex;align-items:center;justify-content:center;gap:12px;flex:none;min-height:24px;margin-top:2px}
 .dots{position:relative;display:flex;gap:6px}
 .dots i{width:8px;height:8px;background:var(--card);box-shadow:var(--ring-thin)}
+/* いちばん左は「予定を追加」のカード：四角ではなく小さな＋ */
+.dots i.add{background:linear-gradient(var(--ink-2),var(--ink-2)) center/8px 2px no-repeat,linear-gradient(var(--ink-2),var(--ink-2)) center/2px 8px no-repeat;box-shadow:none}
 .dots b{position:absolute;left:0;top:0;width:8px;height:8px;background:var(--ink);box-shadow:var(--ring-thin);transform:translateX(calc(var(--p,0) * 14px))}
 .pager-l{min-width:36px;font:700 12px/1 var(--f-body);font-variant-numeric:tabular-nums;color:var(--ink-2)}
 
@@ -112,7 +117,7 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
 .wait .key{margin-top:4px}
 
 /* 広告の枠：灰色の空き枠だけ（実在の広告は描かない） */
-.ad{display:grid;place-items:center;flex:none;height:60px;margin:12px 16px 0;border-radius:14px;background:#D4D1CB;color:#4F4B55}
+.ad{display:grid;place-items:center;flex:none;height:60px;margin:12px 16px 0;border-radius:14px;background:color-mix(in oklab, var(--ink-3) 24%, var(--paper));color:var(--ink-2)}
 .ad span{font:700 12px/1 var(--f-body);letter-spacing:.12em}
 
 /* シートの中の行 */
@@ -120,7 +125,7 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
 #all-rows .row{gap:10px}
 
 /* 横の説明の切りかえ */
-.note .seg{margin-top:8px}
+.note .chips{margin-top:10px}
 .note .seg-cap{display:block;margin-top:18px;font-size:12px;color:var(--ink-3)}
 .note-links .link{min-width:44px;justify-content:center}
 </style>
@@ -153,11 +158,10 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
       <div class="sheet-scrim" data-close-sheet></div>
       <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-menu-h">
         <span class="sheet-grab" aria-hidden="true"></span>
-        <div class="sheet-h"><h2 id="sheet-menu-h">英語 · 長文読解</h2></div>
+        <div class="sheet-h"><h2 id="sheet-menu-h">英語 · 長文読解</h2><button class="tbtn" type="button" data-close-sheet>やめる</button></div>
         <div class="sheet-acts">
           <button class="key key-ink key-block key-lg" type="button" id="menu-end">この予定を終わりにする</button>
           <button class="key key-block" type="button" data-soon aria-label="予定を編集">予定を編集</button>
-          <button class="key key-block" type="button" data-close-sheet>やめる</button>
         </div>
       </div>
     </div>
@@ -166,11 +170,10 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
       <div class="sheet-scrim" data-close-sheet></div>
       <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-all-h">
         <span class="sheet-grab" aria-hidden="true"></span>
-        <div class="sheet-h"><h2 id="sheet-all-h">まとめて記録</h2></div>
+        <div class="sheet-h"><h2 id="sheet-all-h">まとめて記録</h2><button class="tbtn" type="button" data-close-sheet>やめる</button></div>
         <div class="rows" id="all-rows"></div>
         <div class="sheet-acts">
           <button class="key key-ink key-block key-lg" type="button" id="all-save">ぜんぶ記録する</button>
-          <button class="key key-block" type="button" data-close-sheet>やめる</button>
         </div>
       </div>
     </div>
@@ -179,19 +182,22 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
   <aside class="note">
     <p class="label-j sq">この画面で見てほしい点</p>
     <h1>タイマー</h1>
-    <p>今日の予定が1枚ずつのカード。横にすべらせて、真ん中のカードで始める・止める・終わる。勉強バーから開く全画面です。</p>
+    <p>今日の予定が1枚ずつのカード。横にすべらせて、真ん中のカードで始める・止める・終わる。</p>
     <ul>
-      <li>うしろは真ん中のカードの科目の色を紙に混ぜた地（今の「科目の色の暗い地」を明るい紙にした形）。すべらすと隣の色へ移る。</li>
-      <li>カードは紙とインクの輪郭。真ん中の1枚だけライムの影（主役）。▶ はライム＝始める。❚❚ はふつうの面。</li>
-      <li>勉強中は緑の点と緑の線、一時停止中は紅の字と灰の線。線の下は予定の長さの定規（10分ごと）。</li>
-      <li>ほかのカードの ▶ で始めると、前のカードは「記録まち」になり、下に「まとめて記録」が出る。</li>
+      <li>うしろは真ん中のカードの科目の色を紙に混ぜた地。隣のカードは透かさず、紙の幕で薄くする。</li>
+      <li>▶ はライム＝始める。✎ と ✓ は床なしにして、真ん中の丸を主役にした。</li>
+      <li>一時停止中は線が灰、札が紅の「一時停止中」。上の字はアプリと同じ「国語を勉強中」のまま紅。</li>
+      <li>直接開くと今の画面写真と同じ 39:59 から。勉強タブのバーから来ると、バーの続きから。</li>
       <li>広告は灰色の空き枠だけ。</li>
     </ul>
-    <span class="seg-cap">見本の状態（カードの ▶ ❚❚ でも、ほかのカードを始めても変わる）</span>
-    <div class="seg seg-block" role="group" aria-label="見本の状態" id="modes">
-      <button type="button" aria-pressed="true" data-mode="live">勉強中</button>
-      <button type="button" aria-pressed="false" data-mode="paused">一時停止中</button>
-      <button type="button" aria-pressed="false" data-mode="held">記録まち</button>
+    <span class="seg-cap">見本の状態（カードの ▶ ❚❚ でも変わる）</span>
+    <div class="chips" data-single role="group" aria-label="見本の状態" id="modes">
+      <button class="chip" type="button" aria-pressed="false" data-mode="idle">これから</button>
+      <button class="chip" type="button" aria-pressed="true" data-mode="live">勉強中</button>
+      <button class="chip" type="button" aria-pressed="false" data-mode="paused">一時停止中</button>
+      <button class="chip" type="button" aria-pressed="false" data-mode="over">予定をこえた</button>
+      <button class="chip" type="button" aria-pressed="false" data-mode="held">記録まち</button>
+      <button class="chip" type="button" aria-pressed="false" data-mode="new">はじめて使う人</button>
     </div>
     <p class="note-links"><a class="link" href="index.html">一覧へ</a><a class="link" href="study.html">勉強タブ</a><a class="link" href="system.html">部品</a></p>
   </aside>
@@ -211,15 +217,39 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
     b2: { s: 'en', memo: '長文読解', span: '17:00–18:00', min: 60 },
     b3: { s: 'ma', memo: '青チャート', span: '19:00–20:00', min: 60 }
   };
-  /* 見本の状態。秒は 39:59（今の画面写真）から */
+  /* 見本の状態。秒は 39:59（今の画面写真 timer-live）から。これから＝画面写真 timer-idle（国語は済み、英語が真ん中） */
   const MODES = {
+    idle: { cards: [['b2', 'idle', 0], ['b3', 'idle', 0]], center: 1 },
     live: { cards: [['b1', 'live', 2399], ['b2', 'idle', 0], ['b3', 'idle', 0]], center: 1 },
     paused: { cards: [['b1', 'paused', 2399], ['b2', 'idle', 0], ['b3', 'idle', 0]], center: 1 },
-    held: { cards: [['b1', 'held', 2400], ['b2', 'live', 12], ['b3', 'idle', 0]], center: 1 }
+    over: { cards: [['b1', 'live', 3852], ['b2', 'idle', 0], ['b3', 'idle', 0]], center: 1 },
+    held: { cards: [['b1', 'held', 2400], ['b2', 'live', 12], ['b3', 'idle', 0]], center: 1 },
+    new: { cards: [], center: 0 }
   };
+  /* 勉強バーから来たとき：バーの時間の続きから（study.html がバーを押したときに to:'timer' で書く。ほかのページからは 39:59）。
+     戻るときは国語の時間を to:'bar' で書き、study.html のバーが続きから進む。sessionStorage は見本の便利だけ（なくても動く） */
+  const BAR_KEY = 'inchly-mock-bar';
+  function fromBar() {
+    try {
+      const o = JSON.parse(sessionStorage.getItem(BAR_KEY) || 'null');
+      if (!o || o.to !== 'timer') return null;
+      sessionStorage.removeItem(BAR_KEY);
+      if (!(o.elapsed >= 0) || Date.now() - o.at > 30 * 60e3) return null;
+      const sec = Math.round(o.elapsed + (o.state === 'live' ? (Date.now() - o.at) / 1000 : 0));
+      return { state: o.state === 'paused' ? 'paused' : 'live', sec };
+    } catch (_) { return null; }
+  }
+  function toBar() {
+    try {
+      const c = cards.find(x => x.id === 'b1' && (x.state === 'live' || x.state === 'paused'));
+      if (c) sessionStorage.setItem(BAR_KEY, JSON.stringify({ to: 'bar', elapsed: c.sec, state: c.state, at: Date.now() }));
+      else sessionStorage.removeItem(BAR_KEY);
+    } catch (_) { /* 見本なので、残せなくてもよい */ }
+  }
   const subj = c => A.SUBJ[PLAN[c.id].s];
   const clock = A.clock; // m:ss / h:mm:ss
   const mins = sec => Math.max(1, Math.round(sec / 60));
+  const long = t => t.split(':').length > 2 ? ' is-long' : '';
   const jpHm = m => m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ? m % 60 + '分' : ''}` : `${m}分`;
 
   const deck = $('#deck'), track = $('#track'), wash = $('#wash');
@@ -267,12 +297,12 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
       <div class="tclock">
         <div class="tline" aria-hidden="true"><i style="--p:${k.done.toFixed(4)}"></i>${k.over ? `<i class="ov" style="--p:${k.done.toFixed(4)}"></i>` : ''}</div>
         <div class="truler" aria-hidden="true">${ruler(p.min)}</div>
-        <div class="ttime"><span class="tbig" role="timer" aria-label="勉強した時間 ${k.left}">${k.left}</span><span class="trest${k.over ? ' is-over' : ''}">${k.right}</span></div>
+        <div class="ttime"><span class="tbig${long(k.left)}" role="timer" aria-label="勉強した時間 ${k.left}">${k.left}</span><span class="trest${k.over ? ' is-over' : ''}">${k.right}</span></div>
       </div>
       <div class="tkeys">
-        <button class="key key-icon tk-side" type="button" data-act="edit" aria-label="${esc(s.name)}の予定を編集"><i data-pi="edit"></i></button>
+        <button class="ibtn tk-side" type="button" data-act="edit" aria-label="${esc(s.name)}の予定を編集"><i data-pi="edit"></i></button>
         <button class="key key-round${main.cls}" type="button" style="--d:70px" data-act="main" aria-label="${esc(main.lab)}"><i data-pi="${main.icon}" data-scale="3"></i></button>
-        <button class="key key-icon tk-side" type="button" data-act="done" aria-label="${esc(doneLab)}"><i data-pi="check" data-scale="3"></i></button>
+        <button class="ibtn tk-side" type="button" data-act="done" aria-label="${esc(doneLab)}"><i data-pi="check" data-scale="3"></i></button>
       </div>
     </article>`;
   }
@@ -281,10 +311,11 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
   /* ---------- 束を組む ---------- */
   function build() {
     n = cards.length + 1;
-    track.innerHTML = `<div class="slide" data-i="0">${addHTML}<button class="slide-hit" type="button" data-go="0" aria-label="予定を追加のカードを真ん中に"></button></div>` +
-      cards.map((c, i) => `<div class="slide" data-i="${i + 1}"><span class="slide-lift" aria-hidden="true"></span>${cardHTML(c, i)}<button class="slide-hit" type="button" data-go="${i + 1}" aria-label="${esc(subj(c).name)}の予定を真ん中に"></button></div>`).join('');
+    const veil = '<i class="slide-veil" aria-hidden="true"></i>';
+    track.innerHTML = `<div class="slide" data-i="0">${addHTML}${veil}<button class="slide-hit" type="button" data-go="0" aria-label="予定を追加のカードを真ん中に"></button></div>` +
+      cards.map((c, i) => `<div class="slide" data-i="${i + 1}"><span class="slide-lift" aria-hidden="true"></span>${cardHTML(c, i)}${veil}<button class="slide-hit" type="button" data-go="${i + 1}" aria-label="${esc(subj(c).name)}の予定を真ん中に"></button></div>`).join('');
     wash.innerHTML = [`<i style="--w:var(--paper-2)"></i>`, ...cards.map(c => `<i style="--w:color-mix(in oklab, ${subj(c).c} 58%, var(--paper))"></i>`)].join('');
-    $('#dots').innerHTML = Array.from({ length: n }, () => '<i></i>').join('') + '<b></b>';
+    $('#dots').innerHTML = '<i class="add"></i>' + Array.from({ length: n - 1 }, () => '<i></i>').join('') + '<b></b>';
     A.upgrade(track);
     shown = -1;
     measure();
@@ -297,12 +328,30 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
     track.style.setProperty('--W', W + 'px');
     track.style.setProperty('--side', ((dw - W) / 2) + 'px');
   }
+  /* 押して隣へ：移動のトークン（--t-move 0.38 秒・--ios の曲線）で scrollLeft を動かす。指で触れたら止める */
+  const ios = (() => {
+    const bz = (t, a, b) => 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t;
+    return x => { let lo = 0, hi = 1, t = x; for (let k = 0; k < 24; k++) { t = (lo + hi) / 2; if (bz(t, .32, 0) < x) lo = t; else hi = t; } return bz(t, .72, 1); };
+  })();
+  let tw = 0;
+  const stopTween = () => { if (tw) { cancelAnimationFrame(tw); tw = 0; deck.style.scrollSnapType = ''; } };
   function goTo(i, smooth = true) {
-    deck.scrollTo({ left: i * step, behavior: smooth && !reduced() ? 'smooth' : 'auto' });
-    if (!smooth) paintAround();
+    stopTween();
+    const to = i * step, from = deck.scrollLeft;
+    if (!smooth || reduced() || Math.abs(to - from) < 1) { deck.scrollLeft = to; paintAround(); return; }
+    const dur = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--t-move')) || .38) * 1000;
+    const t0 = performance.now();
+    deck.style.scrollSnapType = 'none';
+    const frame = now => {
+      const k = Math.min(1, (now - t0) / dur);
+      deck.scrollLeft = from + (to - from) * ios(k);
+      if (k < 1) tw = requestAnimationFrame(frame); else { tw = 0; deck.style.scrollSnapType = ''; }
+    };
+    tw = requestAnimationFrame(frame);
   }
+  ['pointerdown', 'wheel', 'touchstart'].forEach(ev => deck.addEventListener(ev, stopTween, { passive: true }));
 
-  /* ---------- すべらすあいだ：大きさ・透明度・地の色・点（transform と opacity だけ） ---------- */
+  /* ---------- すべらすあいだ：大きさ・幕・地の色・点（transform と opacity だけ） ---------- */
   let raf = 0;
   function paintAround() {
     raf = 0;
@@ -310,7 +359,7 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
     track.querySelectorAll(':scope > .slide').forEach((sl, i) => {
       const d = Math.min(1, Math.abs(p - i));
       sl.style.transform = d ? `scale(${(1 - 0.05 * d).toFixed(4)})` : '';
-      sl.style.opacity = (1 - 0.42 * d).toFixed(3);
+      const veil = sl.querySelector('.slide-veil'); if (veil) veil.style.opacity = (0.5 * d).toFixed(3);
       const lift = sl.querySelector('.slide-lift'); if (lift) lift.style.opacity = Math.max(0, 1 - 2 * d).toFixed(3);
     });
     const base = Math.floor(p), f = p - base;
@@ -336,7 +385,7 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
     const r = cards.find(c => c.state === 'live' || c.state === 'paused');
     const el = $('#state');
     el.classList.toggle('is-paused', !!r && r.state === 'paused');
-    el.innerHTML = !r ? 'これから' : r.state === 'paused' ? `<i class="pi">${A.icon('pause', 1)}</i>${esc(subj(r).name)}を一時停止中` : `<i class="dot run"></i>${esc(subj(r).name)}を勉強中`;
+    el.innerHTML = !r ? 'これから' : r.state === 'paused' ? `${esc(subj(r).name)}を勉強中<span class="sr">（一時停止中）</span>` : `<i class="dot run"></i>${esc(subj(r).name)}を勉強中`;
     $('#sort').hidden = cards.filter(c => c.state !== 'held').length < 2;
   }
   function paintWait() {
@@ -369,7 +418,7 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
       const k = clockOf(c);
       if (k.over !== wasOver) { redraw(i); return; }
       const card = track.querySelector(`.tcard[data-i="${i}"]`); if (!card) return;
-      const big = card.querySelector('.tbig'); big.textContent = k.left; big.setAttribute('aria-label', `勉強した時間 ${k.left}`);
+      const big = card.querySelector('.tbig'); big.textContent = k.left; big.classList.toggle('is-long', !!long(k.left)); big.setAttribute('aria-label', `勉強した時間 ${k.left}`);
       card.querySelector('.trest').textContent = k.right;
       card.querySelectorAll('.tline i').forEach(x => x.style.setProperty('--p', k.done.toFixed(4)));
     });
@@ -432,35 +481,42 @@ body[data-bar="none"][data-tab="none"] .screen.tm-screen{display:flex;flex-direc
     A.sheet.close('sheet-all');
     setTimeout(() => {
       removeWhere(c => c.state !== 'idle');
-      A.toast({ title: `${done.map(c => `${subj(c).name} ${mins(c.sec)}分`).join('・')}を記録しました`, exp: `+${total} EXP`, pix: 'penta', from: 'idle', face: 'happy' });
+      /* アプリの文言（model.ts の saveAll）：「2つ・41分を記録しました」「+41 EXP」 */
+      A.toast({ title: `${done.length}つ・${jpHm(total)}を記録しました`, exp: `+${total} EXP`, pix: 'penta', from: 'idle', face: 'happy' });
     }, reduced() ? 0 : 300);
   });
 
-  /* 取っ手：来たページへ戻る（なければホーム） */
+  /* 取っ手：来たページへ戻る（なければホーム）。国語の時間をバーへ渡す */
   $('#grab').addEventListener('click', e => {
+    toBar();
     try {
       const r = document.referrer && new URL(document.referrer);
       if (r && r.origin === location.origin && !/timer\.html$/.test(r.pathname)) { e.preventDefault(); location.href = r.href; }
     } catch (_) { /* そのままホームへ */ }
   });
 
-  /* ---------- 見本の状態（横の説明から。#paused #held でも開ける） ---------- */
-  function load(m) {
+  /* ---------- 見本の状態（横の説明から。#idle #paused #over #held #new でも開ける） ---------- */
+  function load(m, bar) {
     cards = MODES[m].cards.map(([id, state, sec]) => ({ id, state, sec, fav: false }));
+    if (bar) Object.assign(cards[0], bar);
     center = MODES[m].center;
     build();
     goTo(center, false);
-    document.querySelectorAll('#modes > button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+    document.querySelectorAll('#modes > [data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
   }
   $('#modes').addEventListener('change', () => {
-    const m = $('#modes > [aria-pressed="true"]').dataset.mode;
+    const b = $('#modes > [aria-pressed="true"]'); if (!b) return;
+    const m = b.dataset.mode;
     load(m);
     history.replaceState(null, '', m === 'live' ? location.pathname : '#' + m);
   });
   window.addEventListener('resize', () => { measure(); goTo(center, false); });
+  /* 記録シートなど、ほかのページへ移るときも国語の時間をバーへ渡す */
+  window.addEventListener('pagehide', toBar);
 
   const first = (location.hash || '').slice(1);
-  load(MODES[first] ? first : 'live');
+  if (MODES[first]) load(first);
+  else { const b = fromBar(); load(b && b.state === 'paused' ? 'paused' : 'live', b); }
   /* 枠の部品（app.js）が組み上がったあと、幅をはかり直して真ん中に */
   const settle = () => { measure(); goTo(center, false); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(settle)); else requestAnimationFrame(settle);

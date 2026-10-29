@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly みんな</title>
+<meta name="description" content="新しいスタンダードのみんな（自習室・ランキング・グループ。国語を勉強中）">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="shared/app.css">
+<style>
+/* ===== マイページ・みんな・タイムラインで共通（shared/app.css のトークンと部品の上に足す物） ===== */
+
+/* ---------- 上に貼りつく下線のタブ（ヘッダーのすぐ下） ---------- */
+.tabs-stick{position:sticky;z-index:25;top:calc(var(--hdr-h) + var(--safe-top));margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter);background:var(--dots),var(--paper)}
+@media (min-width:431px){ .screen .tabs-stick{top:var(--hdr-h)} }
+.tabs-stick::after{content:"";position:absolute;left:0;right:0;bottom:-1.5px;height:2px;background:var(--ink);opacity:0;transition:opacity var(--t-micro) var(--ios)}
+.tabs-stick.is-stuck::after{opacity:1}
+.hdr.is-tabbed::after{opacity:0}
+.tabs-stick .utabs{border-bottom-width:2px}
+.tabs-stick .utabs > *{font-size:15px}
+.pane{animation:fade-in var(--t-fade) linear both}
+
+/* ---------- 0 から転がる数字（transform だけ。行きすぎない） ---------- */
+.roll{display:inline-flex}
+.rd{display:inline-block;height:1em;overflow:hidden}
+.rc{display:block;transform:translateY(calc(var(--d,0) * -10%));transition:transform var(--t-move) var(--ios)}
+.rc > span{display:block;height:1em;line-height:1}
+
+/* ---------- 投稿の行（カードではなく線で区切る） ---------- */
+.feed{margin:0 calc(-1 * var(--gutter));background:var(--card);box-shadow:0 2px 0 var(--ink)}
+.post{position:relative;display:flex;gap:10px;padding:14px var(--gutter) 4px;border-top:1.5px solid var(--line)}
+.post:first-child{border-top:0}
+.post.is-new{animation:fade-in var(--t-fade) linear both}
+.post-av{position:relative;flex:none;align-self:flex-start;display:grid;place-items:center;width:44px;height:44px;margin:-2px;padding:0;border:0;border-radius:14px;background:none;cursor:pointer}
+.post-av .av{--size:40px}
+.post-av:focus-visible{outline-offset:0}
+.post-main{flex:1;min-width:0}
+.post-h{display:flex;align-items:center;gap:5px;min-height:22px}
+.post-n{flex:0 1 auto;min-width:0;font:700 14.5px/1.3 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.post-m{flex:0 2 auto;min-width:0;font-size:13px;line-height:1.3;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.post-more{margin:-11px -10px -11px auto;color:var(--ink-3)}
+.post-t{margin-top:2px;font-size:14.5px;line-height:1.6;color:var(--ink)}
+.post-tags{font-size:14px;line-height:1.6;font-weight:700;color:var(--ink-2)}
+/* 勉強の記録：くぼみの箱に、科目の絵・ドットの札・時間 */
+.rec{display:flex;align-items:center;gap:11px;margin-top:9px;padding:10px 12px;border-radius:var(--r);background:var(--paper-2);box-shadow:var(--ring-thin)}
+.rec .subj{--size:32px}
+.rec-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.rec-main .label-j{font-size:12px;color:var(--ink-3)}
+.rec-t{font-size:13px;line-height:1.4;color:var(--ink-2);word-break:keep-all;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.rec-t b{font-size:14px;color:var(--ink);margin-right:6px}
+.rec-v{flex:none;font:800 15px/1.2 var(--f-body);font-variant-numeric:tabular-nums}
+/* 操作の行：返信・役に立った・しおり・共有（字と同じ 2pt の線のドットのアイコン） */
+.post-acts{display:flex;align-items:center;gap:18px;margin:2px 0 0 -10px}
+.pa{display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;min-width:44px;padding:0 8px;color:var(--ink-3);font:500 13px/1 var(--f-body);font-variant-numeric:tabular-nums}
+.pa-ic{position:relative;display:grid;place-items:center;width:18px;height:18px;line-height:0}
+.pa-ic > span{position:absolute;inset:0;display:grid;place-items:center}
+.pa-ic > .is-in{animation:fade-in var(--t-fade) linear both}
+.pa[aria-pressed="true"]{color:var(--ink);font-weight:700}
+.pa-help[aria-pressed="true"]{color:var(--due-ink)}
+
+/* ---------- 右下の「＋」（勉強バーの上） ---------- */
+.fab{position:fixed;z-index:35;right:20px;bottom:calc(var(--chrome-bottom) + var(--kd) + var(--tab-h) + var(--chrome-gap) + var(--bar-h) + var(--kd) + 14px)}
+.fab > .face{background:var(--card)}
+
+/* ---------- シートの中の入力 ---------- */
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld-l{font:700 13px/1.3 var(--f-body);color:var(--ink-2)}
+.fld textarea,.fld input{width:100%;margin:0;border:0;border-radius:12px;background:var(--card);box-shadow:var(--ring-thin);padding:12px 14px;font:400 16px/1.6 var(--f-body);color:var(--ink);resize:none;outline:none}
+.fld input{min-height:48px}
+.fld textarea{min-height:110px}
+.fld textarea:focus,.fld input:focus{box-shadow:var(--ring)}
+.fld textarea:focus-visible,.fld input:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.fld-n{align-self:flex-end;font-size:var(--fs-sub);color:var(--ink-3);font-variant-numeric:tabular-nums}
+.fld-err{margin-top:-2px;font:700 12px/1.3 var(--f-body);color:var(--down)}
+.sheet-sec{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.sheet-sec > .fld-l{margin-bottom:-2px}
+.sheet-panel{scrollbar-width:none}
+.sheet-panel::-webkit-scrollbar{display:none}
+
+/* ---------- 小さな画面（幅 360 未満） ---------- */
+@media (max-width:359px){
+  .post-acts{gap:8px}
+}
+
+/* ===== みんなだけ ===== */
+.hdr{margin-bottom:0}
+.tabs-stick ~ .pane{margin-top:14px}
+
+/* ---------- いま勉強中（自習室） ---------- */
+.live-n{display:flex;align-items:center;gap:9px;padding:0 2px}
+.live-n .dot{width:9px;height:9px}
+.live-n .mid{display:inline-flex;height:1.05em}
+.live-n > span:last-child{font-size:13px;color:var(--ink-2);padding-top:6px}
+.room-f{flex-wrap:nowrap;overflow-x:auto;margin:-6px calc(-1 * var(--gutter)) -8px;padding:6px var(--gutter) 10px;scrollbar-width:none}
+.room-f::-webkit-scrollbar{display:none}
+.room{padding:4px 2px}
+.seats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.seat{position:relative;display:flex;flex-direction:column;align-items:center;gap:0;min-width:0;padding:12px 2px 10px;border:0;border-radius:14px;background:none;color:inherit;text-align:center;cursor:pointer;isolation:isolate}
+.seat::before{content:"";position:absolute;inset:3px;z-index:-1;border-radius:14px;background:var(--paper-2);opacity:0;transition:opacity var(--t-micro) var(--ios)}
+.seat.is-down::before{opacity:1}
+.seat:focus-visible{outline-offset:-3px}
+.seat .av{--size:44px;margin-bottom:9px;box-shadow:var(--ring),0 0 0 4px var(--card),0 0 0 6px var(--g1)}
+.seat.is-you{cursor:default}
+.seat.is-you .av{box-shadow:var(--ring),0 0 0 4px var(--card),0 0 0 6px var(--run)}
+.seat b{max-width:100%;font:700 12.5px/1.35 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat > span:not(.av){max-width:100%;font-size:11px;line-height:1.35;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat .seat-t{color:var(--ink-2);font-variant-numeric:tabular-nums}
+.seats.is-in{animation:fade-in var(--t-fade) linear both}
+.vis{display:flex;align-items:center;gap:6px;margin-top:-6px;padding:0 2px;font-size:12px;color:var(--ink-3)}
+.vis .link{position:relative;font-size:12px;min-width:44px;justify-content:center}
+
+/* ---------- ランキング ---------- */
+.rk-card{margin-right:6px;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:6px;align-items:end;padding:14px 16px}
+.rk-l{font-size:12px;line-height:1.3;color:var(--ink-2)}
+.rk-n{display:flex;align-items:flex-end;margin-top:6px}
+.rk-n .big{display:inline-flex;height:1em}
+.rk-n .unit{margin:0 0 1px 4px}
+.rk-d{grid-column:1 / -1}
+.rk-d .delta{white-space:normal}
+.dist{display:flex;align-items:flex-end;gap:1.5px;width:110px;height:44px;margin-bottom:4px}
+.dist i{flex:1 1 0;background:var(--line-2);transform-origin:50% 100%}
+.dist i.me{background:var(--ink)}
+.dist.grow i{animation:grow var(--t-move) var(--ios) calc(var(--i) * 10ms) both}
+@keyframes grow{from{transform:scaleY(0)}to{transform:none}}
+.rk-row{gap:10px;min-height:52px}
+.rk-i{flex:none;display:grid;place-items:center;width:34px;font:700 13px/1 var(--f-body);color:var(--ink-3);font-variant-numeric:tabular-nums}
+.rk-row .av{--size:30px}
+.rk-row .row-t{font-size:14px}
+.rk-row .row-v,.rk-me .row-v{font-size:14px}
+.rk-row .row-v small,.rk-me .row-v small{font-size:11px;font-weight:500;color:var(--ink-3)}
+.rk-me{display:flex;align-items:center;gap:10px;min-height:48px;margin:4px -8px 8px;padding:6px 8px;border-radius:12px}
+.rk-me .rk-i{color:var(--ink)}
+.rk-me .av{--size:30px}
+.rk-me .row-t{flex:1;font:700 14px/1.3 var(--f-body)}
+
+/* ---------- グループ ---------- */
+.grow-row{gap:12px}
+.gmark{--size:38px;flex:none;position:relative;display:grid;place-items:center;width:var(--size);height:var(--size);border-radius:11px;background:var(--c,var(--card));box-shadow:var(--ring);overflow:hidden;color:var(--ink)}
+.gmark.four{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;place-items:stretch}
+.gmark.four i{box-shadow:0 0 0 1px var(--ink)}
+.grow-row .state{flex:none;font-size:11.5px}
+.grow-row .state.quiet{color:var(--ink-3);font-weight:600}
+
+/* ---------- 絞り込みを追加（シート） ---------- */
+.pick{gap:10px;min-height:48px}
+.pick .row-t{font-size:14.5px;font-weight:600}
+.pick .pick-s{flex:none;font-size:12px;color:var(--ink-3)}
+.pick .pi{flex:none;color:var(--ink-2)}
+.pick.is-on .pi{color:var(--run-ink)}
+.prow{gap:10px;min-height:56px}
+.prow .av{--size:32px}
+.prow .row-t{font-size:14px}
+.prow .chip{min-width:96px}
+.prow .chip > .face{justify-content:center;width:100%}
+.none{padding:8px 0;font-size:13px;color:var(--ink-3)}
+</style>
+</head>
+<body data-tab="community" data-bar="live">
+<div class="stage">
+  <div class="app">
+    <main class="screen">
+      <header class="hdr" data-hdr="search"></header>
+      <div class="tabs-stick">
+        <div class="utabs" role="tablist" aria-label="みんな">
+          <button role="tab" type="button" id="t-live" aria-selected="true" aria-controls="p-live" data-k="live">いま勉強中</button>
+          <button role="tab" type="button" id="t-rank" aria-selected="false" aria-controls="p-rank" data-k="rank" tabindex="-1">ランキング</button>
+          <button role="tab" type="button" id="t-groups" aria-selected="false" aria-controls="p-groups" data-k="groups" tabindex="-1">グループ</button>
+        </div>
+      </div>
+
+      <!-- ===== いま勉強中：自習室 ===== -->
+      <section class="stack pane" id="p-live" role="tabpanel" aria-labelledby="t-live">
+        <p class="live-n"><i class="dot run" aria-hidden="true"></i><span class="mid"><span class="roll" id="live-count"></span></span><span><span class="sr" id="live-sr">1,263</span>人が机に向かってる</span></p>
+        <div class="chips room-f" data-single role="group" aria-label="絞り込み" id="room-f">
+          <button class="chip" type="button" aria-pressed="true" data-f="all">みんな</button>
+          <button class="chip" type="button" aria-pressed="false" data-f="follow">フォロー中</button>
+          <button class="chip" type="button" aria-pressed="false" data-f="東大">東大志望</button>
+          <button class="chip chip-add" type="button" data-open-sheet="sheet-room" aria-label="絞り込みを追加"><i data-pi="plus"></i></button>
+        </div>
+        <section class="card room" aria-label="いま勉強中の人"><div class="seats" id="seats"></div></section>
+        <p class="vis">勉強中は全員に見えています<a class="link" href="#" data-soon aria-label="見え方の設定">変更</a></p>
+      </section>
+
+      <!-- ===== ランキング ===== -->
+      <section class="stack pane" id="p-rank" role="tabpanel" aria-labelledby="t-rank" hidden>
+        <div class="seg seg-block" role="group" aria-label="期間" id="rk-p"><button type="button" aria-pressed="true" data-p="w">今週</button><button type="button" aria-pressed="false" data-p="m">今月</button><button type="button" aria-pressed="false" data-p="t">今日</button></div>
+        <section class="card hero rk-card" aria-label="あなたの順位">
+          <div>
+            <p class="rk-l">東大志望 312人の中で</p>
+            <p class="rk-n"><span class="big"><span class="roll" id="rk-n"></span></span><span class="unit">位</span><span class="sr" id="rk-sr">57位</span></p>
+          </div>
+          <div class="dist" id="dist" role="img" aria-label="分布の中のあなたの位置（黒い棒）"></div>
+          <p class="rk-d"><span class="delta up" id="rk-d">上位18% · 先週から9つ上がりました</span></p>
+        </section>
+        <section class="card" style="padding-block:4px 0"><div class="rows" id="rk-rows"></div><div class="rk-me well" id="rk-me"></div></section>
+      </section>
+
+      <!-- ===== グループ ===== -->
+      <section class="stack pane" id="p-groups" role="tabpanel" aria-labelledby="t-groups" hidden>
+        <button class="key key-block" type="button" data-soon aria-label="グループを作る"><i data-pi="plus"></i>グループを作る</button>
+        <div>
+          <h2 class="sec-h" style="margin:4px 2px 10px"><span class="sec-t" style="--accent:var(--sky)">参加中</span></h2>
+          <section class="card" style="padding-block:4px"><div class="rows" id="g-rows"></div></section>
+        </div>
+      </section>
+    </main>
+  </div>
+  <aside class="note">
+    <p class="label-j sq">この画面で見てほしい点</p>
+    <h1>みんな</h1>
+    <p>いま勉強中（自習室）・ランキング・グループの3つのページ。並びと中身は今のアプリと同じです。</p>
+    <ul>
+      <li>自習室は12席。いちばん左上が「あなた」（国語 39分、勉強中だけ出ます）。人のまわりの輪は草のうすい緑、あなたは勉強の緑。時間は毎秒進みます。</li>
+      <li>「1,263人が机に向かってる」の数は、ときどき転がって増えます。チップの「＋」で志望校の絞り込みと、人のフォロー。</li>
+      <li>ランキングの「57 位」がこのページの主役（ライムの影）。分布の棒は緑にせず、あなたの位置をインクの棒で示します。</li>
+      <li>グループの「3人が勉強中」は勉強の緑の点と字。</li>
+    </ul>
+    <p class="note-links"><a class="link" href="img/community.webp">今のアプリ（写真）</a><a class="link" href="index.html">一覧へ</a><a class="link" href="system.html">部品</a></p>
+  </aside>
+</div>
+<script src="shared/app.js"></script>
+<script>
+/* ===== マイページ・みんな・タイムラインで共通の小さな道具（App.* を使う） ===== */
+const S = (() => {
+  'use strict';
+  const A = window.App;
+  const doc = document;
+  const $ = (s, r = doc) => r.querySelector(s);
+  const $$ = (s, r = doc) => [...r.querySelectorAll(s)];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const later = (fn, ms) => setTimeout(fn, A.reduced() ? 0 : ms);
+  const hm = m => (m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ? `${m % 60}分` : ''}` : `${m}分`);
+
+  /* ---------- 小さなドットのアイコン（2pt の線。字の色） ---------- */
+  const R = s => s.trim().split(/\s+/);
+  const ROWS = {
+    chat: R(`.kkkkkkk. k.......k k.......k k.......k .kk.kkkk. ..k.k.... ..kk..... ..k......`),
+    bulb: R(`..kkk.. .k...k. k.....k k.....k .k...k. ..k.k.. ..kkk.. ....... ..kkk..`),
+    bulbOn: R(`..kkk.. .kyyyk. kyyyyyk kyyyyyk .kyyyk. ..kyk.. ..kkk.. ....... ..kkk..`),
+    mark: R(`kkkkkkk k.....k k.....k k.....k k.....k k.....k k..k..k k.k.k.k kk...kk`),
+    markOn: R(`kkkkkkk kkkkkkk kkkkkkk kkkkkkk kkkkkkk kkkkkkk kkkkkkk kkk.kkk kk...kk`),
+    share: R(`....k.... ...kkk... ..k.k.k.. ....k.... kk..k..kk k.......k k.......k k.......k kkkkkkkkk`),
+    book: R(`.kkkk..kkkk. k....kk....k k.kk.kk.kk.k k....kk....k k.kk.kk.kk.k k....kk....k kkkkkkkkkkkk .....kk.....`),
+    sun: R(`.....kk..... .k...kk...k. ..k......k.. ....kkkk.... ...k....k... kk.k....k.kk kk.k....k.kk ...k....k... ....kkkk.... ..k......k.. .k...kk...k. .....kk.....`)
+  };
+  const ico = (name, scale = 2, pal) => A._rowsSVG(ROWS[name], pal || { k: 'currentColor' }, scale);
+
+  /* ---------- 転がる数字：<span class="roll" data-v="1,263"> ---------- */
+  function roll(el, value) {
+    const v = String(value);
+    const cols = [...v];
+    if (el.dataset.len !== String(cols.length) || el.dataset.shape !== v.replace(/\d/g, '0')) {
+      el.innerHTML = cols.map(c => /\d/.test(c) ? `<span class="rd"><span class="rc" style="--d:0">${'0123456789'.split('').map(n => `<span>${n}</span>`).join('')}</span></span>` : `<span>${esc(c)}</span>`).join('');
+      el.dataset.len = cols.length; el.dataset.shape = v.replace(/\d/g, '0');
+      el.setAttribute('aria-hidden', 'true');
+      void el.offsetWidth; // 0 の位置を決めてから転がす
+    }
+    const ds = $$('.rc', el);
+    let k = 0;
+    cols.forEach(c => { if (/\d/.test(c)) { ds[k].style.setProperty('--d', c); k++; } });
+  }
+
+  /* ---------- 上に貼りつくタブ：貼りついたらインクの線をタブの下へ ---------- */
+  function stickyTabs(tabs) {
+    const hdr = $('.hdr');
+    const on = () => {
+      const s = A.scroller();
+      const y = s === doc.scrollingElement ? window.scrollY : s.scrollTop;
+      const stuck = y > 4 && tabs.getBoundingClientRect().top <= hdr.getBoundingClientRect().bottom + 1;
+      tabs.classList.toggle('is-stuck', stuck);
+      hdr.classList.toggle('is-tabbed', stuck);
+    };
+    const scr = $('.app > .screen');
+    if (scr) scr.addEventListener('scroll', on, { passive: true });
+    window.addEventListener('scroll', on, { passive: true });
+    window.addEventListener('resize', on);
+    on();
+    return on;
+  }
+  /* タブの位置まで戻す（切りかえたとき、前のページの途中に取り残さない） */
+  function keepTabs(tabs) {
+    const s = A.scroller();
+    const isDoc = s === doc.scrollingElement;
+    const hdrB = $('.hdr').getBoundingClientRect().bottom;
+    if (tabs.getBoundingClientRect().top > hdrB + 1) return; // まだ貼りついていない：そのまま
+    tabs.style.position = 'static';
+    const natural = tabs.getBoundingClientRect().top; // 貼りつく前の位置
+    tabs.style.position = '';
+    const d = natural - hdrB;
+    if (d < 0) { if (isDoc) window.scrollBy(0, d); else s.scrollTop += d; }
+  }
+  /* 下線のタブと中身のページ */
+  function tabPanes(utabs, onShow) {
+    utabs.addEventListener('change', () => {
+      const cur = $('[role="tab"][aria-selected="true"]', utabs);
+      const want = cur.getAttribute('aria-controls');
+      new Set($$('[role="tab"]', utabs).map(t => t.getAttribute('aria-controls'))).forEach(id => { const p = doc.getElementById(id); if (p) p.hidden = id !== want; });
+      onShow && onShow(cur.dataset.k);
+    });
+    // ← → でタブを動かす
+    utabs.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const all = $$('[role="tab"]', utabs), i = all.indexOf(doc.activeElement);
+      if (i < 0) return;
+      const n = all[(i + (e.key === 'ArrowRight' ? 1 : all.length - 1)) % all.length];
+      n.focus(); n.click(); e.preventDefault();
+    });
+  }
+
+  /* ---------- 投稿（アプリの data.ts の POSTS と同じ） ---------- */
+  const POSTS = [
+    { id: 'p1', n: 'kaito', h: 'kaito', c: '#3E8C78', w: '8分前', t: '電磁気、名問の森で流れがやっとつかめてきた。コンデンサーはまだあやしい', tags: ['#物理'], u: 12, r: 2, rec: { s: 'ph', min: 70, note: '名問の森 15〜18' } },
+    { id: 'p2', n: 'mio', h: 'mio.k', c: '#C47A55', w: '12分前', t: '古文の参考書、やっと1周。2周目は音読しながらやる', tags: ['#古文'], u: 23, r: 4 },
+    { id: 'p3', n: 'nnn_0w0', h: 'nnn_0w0', c: '#8A8A8E', w: '40分前', t: 'ベクトル全然わからん　内積のとこから誰か助けて', tags: [], u: 0, r: 1 },
+    { id: 'p4', n: 'そら', h: 'sora_06', c: '#5D6DB8', w: '1時間前', t: '朝の数学おわり。例題60まで来た', tags: [], u: 31, r: 3, rec: { s: 'ma', min: 95, note: '青チャート 数III 例題52〜60' } },
+    { id: 'p5', n: 'りん', h: 'rin_todai', c: '#4B7A3B', w: '2時間前', t: '東大英語の要約(1A)は毎年出るので、過去問15年分を1日1題。要約したあと音読までやると、本番で時間が余った。量より回数。', tags: ['#東京大学', '#英語'], u: 128, r: 14 },
+    { id: 'm1', n: 'はる', h: 'haru_study', c: '#6E56CF', w: '2時間前', t: '模試の偏差値、3か月で +6.6。数学の「次にやること」を毎回決めるようにしてから、机に向かうまでが早くなった。', tags: [], u: 54, r: 6, mine: true },
+    { id: 'p6', n: 'taku', h: 'taku_1203', c: '#8A6D3B', w: '3時間前', t: 'もう無理、今日は寝る。明日5時起き', tags: [], u: 7, r: 2 },
+    { id: 'p7', n: 'そら', h: 'sora_06', c: '#5D6DB8', w: '5時間前', t: '置換積分、何を t に置くかから説明してる15分の動画でやっとわかった。休憩中にちょうどいい長さ', tags: ['#数学', '#おすすめ動画'], u: 86, r: 9 },
+    { id: 'p8', n: 'kaito', h: 'kaito', c: '#3E8C78', w: '昨日', t: '電磁気、エッセンスと名問の森どっちから入るのがいい？ 力学はエッセンスでなんとかなった', tags: ['#物理', '#質問'], u: 21, r: 17 },
+    { id: 'm2', n: 'はる', h: 'haru_study', c: '#6E56CF', w: '昨日', t: '古文単語、朝の10分だけでも草が埋まるのがうれしい。', tags: [], u: 31, r: 1, mine: true, rec: { s: 'ja', min: 10, note: '古文単語 41〜60' } }
+  ];
+  const FOLLOWING = ['mio', 'そら', 'kaito']; // はるがフォローしている人（store.ts の following）
+  const state = { helpful: new Set(), marks: new Set() };
+
+  function postHTML(p) {
+    const sj = p.rec && A.SUBJ[p.rec.s];
+    const who = `${p.n}のプロフィール`;
+    return `<article class="post${p.fresh ? ' is-new' : ''}" data-id="${p.id}" aria-label="${esc(p.n)}の投稿">
+      ${p.mine ? `<span class="post-av" aria-hidden="true"><span class="av" data-n="${esc(p.n)}" style="--c:${p.c}"></span></span>`
+        : `<button class="post-av" type="button" data-soon aria-label="${esc(who)}"><span class="av" data-n="${esc(p.n)}" style="--c:${p.c}"></span></button>`}
+      <div class="post-main">
+        <div class="post-h"><b class="post-n">${esc(p.n)}</b><span class="post-m">@${esc(p.h)} · ${esc(p.w)}</span>${p.mine ? '' : `<button class="ibtn post-more" type="button" data-soon aria-label="${esc(who)}"><i data-pi="more"></i></button>`}</div>
+        <p class="post-t">${esc(p.t)}</p>
+        ${p.tags.length ? `<p class="post-tags">${p.tags.map(esc).join(' ')}</p>` : ''}
+        ${p.rec ? `<div class="rec"><span class="subj" data-s="${p.rec.s}" aria-hidden="true"></span><span class="rec-main"><span class="label-j">勉強の記録</span><span class="rec-t"><b>${sj.name}</b>${esc(p.rec.note || '')}</span></span><b class="rec-v">${hm(p.rec.min)}</b></div>` : ''}
+        <div class="post-acts">
+          <button class="ibtn pa" type="button" data-act="reply" aria-label="返信 ${p.r}件"><span class="pa-ic">${ico('chat')}</span><span>${p.r}</span></button>
+          <button class="ibtn pa pa-help" type="button" data-act="help" aria-pressed="${state.helpful.has(p.id)}" aria-label="役に立った ${p.u}"><span class="pa-ic"><span>${ico(state.helpful.has(p.id) ? 'bulbOn' : 'bulb', 2, state.helpful.has(p.id) ? { k: '#17121F', y: '#FFD23F' } : null)}</span></span><span class="roll" data-base="${p.u}"></span></button>
+          <button class="ibtn pa" type="button" data-act="mark" aria-pressed="${state.marks.has(p.id)}" aria-label="ブックマーク"><span class="pa-ic"><span>${ico(state.marks.has(p.id) ? 'markOn' : 'mark')}</span></span></button>
+          <button class="ibtn pa" type="button" data-act="share" aria-label="共有"><span class="pa-ic">${ico('share')}</span></button>
+        </div>
+      </div>
+    </article>`;
+  }
+  function renderPosts(box, list) {
+    box.innerHTML = list.map(postHTML).join('');
+    $$('.pa-help', box).forEach(b => { const p = POSTS.find(x => x.id === b.closest('.post').dataset.id); roll($('.roll', b), String(p.u + (state.helpful.has(p.id) ? 1 : 0))); });
+    A.upgrade(box);
+  }
+  function swapIcon(btn, svg) {
+    const box = $('.pa-ic', btn);
+    if (A.reduced()) { box.innerHTML = `<span>${svg}</span>`; return; }
+    const n = doc.createElement('span'); n.className = 'is-in'; n.innerHTML = svg;
+    box.appendChild(n);
+    n.addEventListener('animationend', () => { box.innerHTML = `<span>${svg}</span>`; }, { once: true });
+  }
+  /* 投稿の操作（ページの中のどこでも） */
+  doc.addEventListener('click', e => {
+    const b = e.target.closest('.post .pa');
+    if (!b) return;
+    const id = b.closest('.post').dataset.id;
+    const p = POSTS.find(x => x.id === id);
+    const act = b.dataset.act;
+    if (act === 'reply') A.toast({ title: '返信はこれから作ります', ms: 2200 });
+    if (act === 'share') A.toast({ title: 'リンクをコピーしました', ms: 2200 });
+    if (act === 'help') {
+      const on = !state.helpful.has(id);
+      on ? state.helpful.add(id) : state.helpful.delete(id);
+      // 同じ投稿がページに2つあっても、両方そろえる
+      $$(`.post[data-id="${id}"] .pa-help`).forEach(x => {
+        x.setAttribute('aria-pressed', String(on));
+        swapIcon(x, ico(on ? 'bulbOn' : 'bulb', 2, on ? { k: '#17121F', y: '#FFD23F' } : null));
+        roll($('.roll', x), String(p.u + (on ? 1 : 0)));
+      });
+    }
+    if (act === 'mark') {
+      const on = !state.marks.has(id);
+      on ? state.marks.add(id) : state.marks.delete(id);
+      $$(`.post[data-id="${id}"] [data-act="mark"]`).forEach(x => {
+        x.setAttribute('aria-pressed', String(on));
+        x.setAttribute('aria-label', on ? 'ブックマークを外す' : 'ブックマーク');
+        swapIcon(x, ico(on ? 'markOn' : 'mark'));
+      });
+      if (on) A.toast({ title: 'ブックマークしました', sub: 'メニューの「ブックマーク」から見られます', pix: 'tsuru', from: 'idle', face: 'happy' });
+    }
+  });
+
+  /* ---------- 投稿を書くシート ---------- */
+  function compose(onPost) {
+    const sh = doc.getElementById('sheet-post');
+    if (!sh) return;
+    const ta = $('textarea', sh), n = $('.fld-n', sh), err = $('.fld-err', sh), go = $('#post-go', sh);
+    const sync = () => {
+      n.textContent = `${ta.value.length}/280`;
+      const ok = !!ta.value.trim();
+      go.disabled = !ok;
+      if (ok) err.hidden = true;
+    };
+    ta.addEventListener('input', sync);
+    ta.addEventListener('blur', () => { if (!ta.value.trim()) err.hidden = false; });
+    doc.addEventListener('click', e => {
+      if (!e.target.closest('[data-open-sheet="sheet-post"]')) return;
+      ta.value = ''; err.hidden = true; sync();
+      $$('.chips', sh).forEach(g => $$('.chip', g).forEach((c, i) => c.setAttribute('aria-pressed', String(i === 0))));
+      later(() => ta.focus({ preventScroll: true }), 520);
+    });
+    go.addEventListener('click', () => {
+      if (!ta.value.trim()) { err.hidden = false; return; }
+      go.disabled = true;
+      $('.face', go).textContent = '投稿しています…';
+      const withRec = $('[data-k="attach"] .chip[aria-pressed="true"]', sh).dataset.v === 'last';
+      const tag = $('[data-k="tag"] .chip[aria-pressed="true"]', sh).dataset.v;
+      setTimeout(() => {
+        const p = { id: 'n' + Date.now(), n: 'はる', h: 'haru_study', c: '#6E56CF', w: 'たった今', t: ta.value.trim(), tags: tag ? [tag] : [], u: 0, r: 0, mine: true, fresh: true,
+          rec: withRec ? { s: 'ma', min: 40, note: '青チャート 例題38〜40' } : undefined };
+        POSTS.unshift(p);
+        A.sheet.close('sheet-post');
+        $('.face', go).textContent = '投稿する';
+        A.toast({ title: '投稿しました', ms: 2200 });
+        onPost && onPost(p);
+      }, A.reduced() ? 0 : 600);
+    });
+  }
+  const SHEET_POST = `<div class="sheet" id="sheet-post" hidden>
+    <div class="sheet-scrim" data-close-sheet></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-post-h">
+      <span class="sheet-grab" aria-hidden="true"></span>
+      <div class="sheet-h"><h2 id="sheet-post-h">投稿</h2><button class="tbtn" type="button" data-close-sheet>やめる</button></div>
+      <label class="fld"><span class="fld-l">いま何してる？</span><textarea maxlength="280" rows="4" aria-describedby="post-n"></textarea><span class="fld-n" id="post-n">0/280</span></label>
+      <p class="fld-err" hidden>なにか書いてください</p>
+      <div class="sheet-sec"><div class="chips" data-single role="group" aria-label="勉強の記録" data-k="attach">
+        <button class="chip" type="button" aria-pressed="true" data-v="last">記録をつける（数学 40分）</button><button class="chip" type="button" aria-pressed="false" data-v="">つけない</button></div>
+      <div class="chips" data-single role="group" aria-label="タグ" data-k="tag">
+        <button class="chip" type="button" aria-pressed="true" data-v="">タグなし</button><button class="chip" type="button" aria-pressed="false" data-v="#質問">#質問</button><button class="chip" type="button" aria-pressed="false" data-v="#おすすめ">#おすすめ</button></div></div>
+      <div class="sheet-acts"><button class="key key-ink key-block key-lg" type="button" id="post-go" disabled>投稿する</button></div>
+    </div>
+  </div>`;
+
+  return { $, $$, esc, later, hm, ico, roll, stickyTabs, keepTabs, tabPanes, POSTS, FOLLOWING, renderPosts, compose, SHEET_POST, ROWS };
+})();
+
+(() => {
+  'use strict';
+  const A = window.App, doc = document;
+  const { $, $$, esc, later, roll } = S;
+  const pad = n => String(n).padStart(2, '0');
+  const hms = s => `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(Math.floor(s) % 60)}`;
+  const comma = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  /* ---------- タブ ---------- */
+  const utabs = $('.utabs'), tabs = $('.tabs-stick');
+  S.stickyTabs(tabs);
+  S.tabPanes(utabs, k => {
+    const s = A.scroller(); if (s === doc.scrollingElement) window.scrollTo(0, 0); else s.scrollTop = 0;
+    if (k === 'rank') growDist();
+  });
+
+  /* ---------- 自習室（アプリの data.ts の ROOM と同じ人） ---------- */
+  const ROOM = [
+    { n: 'mio', h: 'mio.k', c: '#C47A55', s: '英語', t: 4380, g: '東大 文一' },
+    { n: 'そら', h: 'sora_06', c: '#5D6DB8', s: '数学', t: 2885, g: '東大 理一' },
+    { n: 'kaito', h: 'kaito', c: '#3E8C78', s: '物理', t: 1730, g: '科学大' },
+    { n: 'ゆなっぴ', h: 'yuna', c: '#8E6283', s: '化学', t: 950, g: '東大 理二' },
+    { n: 'れん', h: 'ren.d', c: '#4B7A3B', s: '世界史', t: 520, g: '一橋' },
+    { n: 'taku', h: 'taku_1203', c: '#8A6D3B', s: '数学', t: 6120, g: '京大 工' },
+    { n: 'さき', h: 'saki.ozw', c: '#B4545C', s: '生物', t: 3310, g: '医学部' },
+    { n: 'ゆうき', h: 'yk_ronin', c: '#5B7B8E', s: '日本史', t: 2140, g: '早稲田' },
+    { n: 'つばさ', h: 'tsubasa_t', c: '#5D6DB8', s: '英語', t: 1405, g: '東大 理一' },
+    { n: 'あおい', h: 'aoi_07', c: '#3E8C78', s: '現代文', t: 660, g: '阪大' },
+    { n: 'ひなた', h: 'hinata.s', c: '#B39548', s: '化学', t: 205, g: '東大 理二' }
+  ];
+  const following = new Set(['mio.k', 'sora_06', 'kaito']);
+  let f = 'all', since = 3;
+  const seats = $('#seats');
+  const myMin = () => { const b = $('.sbar'); return b ? Math.floor(+b.dataset.elapsed / 60) : 39; };
+  const people = () => ROOM.filter(p => f === 'follow' ? following.has(p.h) : f === 'all' ? true : p.g.startsWith(f));
+  function drawSeats(fade) {
+    const me = `<div class="seat is-you" role="img" aria-label="あなた 国語 ${myMin()}分"><span class="av" data-n="はる" style="--c:#6E56CF"></span><b>あなた</b><span>国語</span><span class="seat-t" id="my-t">${myMin()}分</span></div>`;
+    seats.innerHTML = me + people().map(p => `<button class="seat" type="button" data-n="${esc(p.n)}" aria-label="${esc(p.n)} ${p.s} ${hms(p.t + since).replace(/^00:/, '')}"><span class="av" data-n="${esc(p.n)}" style="--c:${p.c}"></span><b>${esc(p.n)}</b><span>${p.s}</span><span class="seat-t" data-t="${p.t}">${hms(p.t + since).replace(/^00:/, '')}</span></button>`).join('');
+    A.upgrade(seats);
+    if (fade && !A.reduced()) { seats.classList.remove('is-in'); void seats.offsetWidth; seats.classList.add('is-in'); }
+  }
+  drawSeats(false);
+  setInterval(() => {
+    since++;
+    $$('.seat-t[data-t]', seats).forEach(el => { const t = hms(+el.dataset.t + since).replace(/^00:/, ''); el.textContent = t; const b = el.closest('.seat'); b.setAttribute('aria-label', `${b.dataset.n} ${b.children[2].textContent} ${t}`); });
+    const my = $('#my-t'); if (my) my.textContent = `${myMin()}分`;
+  }, 1000);
+  seats.addEventListener('click', e => { const b = e.target.closest('button.seat'); if (b) A.toast({ title: 'この見本では開きません', sub: `${b.dataset.n} のプロフィールは、まだ作っていません`, ms: 2000 }); });
+  $('#room-f').addEventListener('change', () => { const c = $('#room-f .chip[aria-pressed="true"]'); if (!c) return; f = c.dataset.f; drawSeats(true); });
+
+  // いま机に向かっている人の数：数秒ごとに 1〜3 人ふえて、数字が転がる
+  let count = 1263;
+  const cEl = $('#live-count');
+  roll(cEl, '0,000');
+  later(() => roll(cEl, comma(count)), 60);
+  setInterval(() => { count += 1 + Math.floor(Math.random() * 3); roll(cEl, comma(count)); $('#live-sr').textContent = comma(count); }, 4200);
+
+  /* ---------- ＋：絞り込みを追加 ---------- */
+  const SCHOOLS = ['東大', '京大', '一橋', '科学大', '阪大', '東北大', '早稲田', '慶應', '医学部'];
+  const added = new Set(['東大']);
+  doc.querySelector('.app').insertAdjacentHTML('beforeend', `<div class="sheet" id="sheet-room" hidden>
+    <div class="sheet-scrim" data-close-sheet></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-room-h">
+      <span class="sheet-grab" aria-hidden="true"></span>
+      <div class="sheet-h"><h2 id="sheet-room-h">絞り込みを追加</h2><button class="tbtn" type="button" data-close-sheet>やめる</button></div>
+      <label class="fld"><span class="fld-l">志望校・名前でさがす</span><input type="search" maxlength="20" id="room-q" autocomplete="off"></label>
+      <div class="sheet-sec"><p class="fld-l">志望校で絞り込む</p><div class="rows" id="room-schools"></div></div>
+      <div class="sheet-sec"><p class="fld-l">人をフォローする</p><div class="rows" id="room-people"></div></div>
+    </div></div>`);
+  const q = $('#room-q');
+  function drawSearch() {
+    const v = q.value.trim();
+    const sc = SCHOOLS.filter(x => !v || x.includes(v));
+    $('#room-schools').innerHTML = sc.length ? sc.map(x => {
+      const n = ROOM.filter(p => p.g.startsWith(x)).length;
+      return `<button class="row row-sm pick${added.has(x) ? ' is-on' : ''}" type="button" data-x="${x}"><span class="row-main"><span class="row-t">${x}志望</span></span><span class="pick-s">${n ? `${n}人が勉強中` : 'いま勉強中の人はいません'}</span><i data-pi="${added.has(x) ? 'check' : 'plus'}" aria-label="${added.has(x) ? '追加ずみ' : '追加'}"></i></button>`;
+    }).join('') : '<p class="none">見つかりませんでした</p>';
+    const ps = ROOM.filter(p => !v || (p.n + p.h + p.g).includes(v)).slice(0, 6);
+    $('#room-people').innerHTML = ps.map(p => `<div class="row prow"><span class="av" data-n="${esc(p.n)}" style="--c:${p.c}"></span><span class="row-main"><span class="row-t">${esc(p.n)}</span><span class="row-s">@${esc(p.h)} · ${esc(p.g)}</span></span>
+      <button class="chip" type="button" data-h="${esc(p.h)}" aria-pressed="${following.has(p.h)}" aria-label="${esc(p.n)}をフォロー">${following.has(p.h) ? 'フォロー中' : 'フォロー'}</button></div>`).join('');
+    A.upgrade($('#sheet-room'));
+  }
+  drawSearch();
+  q.addEventListener('input', drawSearch);
+  doc.addEventListener('click', e => { if (e.target.closest('[data-open-sheet="sheet-room"]')) { q.value = ''; drawSearch(); } });
+  $('#room-schools').addEventListener('click', e => {
+    const b = e.target.closest('.pick'); if (!b) return;
+    const x = b.dataset.x, box = $('#room-f');
+    if (!added.has(x)) {
+      added.add(x);
+      $('.chip-add', box).insertAdjacentHTML('beforebegin', `<button class="chip" type="button" aria-pressed="false" data-f="${x}">${x}志望</button>`);
+      A.upgrade(box);
+    }
+    $$('.chip[aria-pressed]', box).forEach(c => c.setAttribute('aria-pressed', String(c.dataset.f === x)));
+    f = x; drawSeats(true);
+    A.sheet.close('sheet-room');
+  });
+  $('#room-people').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    const h = b.dataset.h, on = !following.has(h);
+    on ? following.add(h) : following.delete(h);
+    b.setAttribute('aria-pressed', String(on));
+    $('.face', b).textContent = on ? 'フォロー中' : 'フォロー';
+    if (f === 'follow') drawSeats(false);
+  });
+
+  /* ---------- ランキング（アプリの community.tsx と同じ値） ---------- */
+  const DIST = [2, 4, 7, 11, 16, 22, 27, 31, 33, 32, 29, 25, 21, 17, 13, 10, 7, 5, 3, 2];
+  const RANK = [{ n: 'ひなた', c: '#C99A22', h: 42.5 }, { n: 'つばさ', c: '#4A5BD4', h: 39.8 }, { n: 'mio', c: '#D9653B', h: 38.1 }, { n: 'あおい', c: '#1F8A70', h: 36.4 }, { n: 'そら', c: '#4A5BD4', h: 35.9 }];
+  const BY = {
+    w: { rank: 57, delta: '上位18% · 先週から9つ上がりました', me: 20.0, scale: 1 },   // 今週は自分の直近7日の記録（20.0時間）
+    m: { rank: 71, delta: '上位23% · 先月から4つ上がりました', me: 69.3, scale: 3.1 },
+    t: { rank: 38, delta: '上位12% · 今日はいい調子です', me: 165 / 60, scale: 0.13 }
+  };
+  let per = 'w';
+  const rkN = $('#rk-n');
+  roll(rkN, '00');
+  function drawRank(first) {
+    const r = BY[per];
+    later(() => roll(rkN, String(r.rank)), first ? 120 : 0);
+    $('#rk-sr').textContent = `${r.rank}位`;
+    $('#rk-d').textContent = r.delta;
+    const pos = Math.round(14 - (r.rank - 57) / 12);
+    $('#dist').innerHTML = DIST.map((x, i) => `<i class="${i === pos ? 'me' : ''}" style="height:${Math.max(2, x / 33 * 44).toFixed(1)}px;--i:${i}"></i>`).join('');
+    $('#rk-rows').innerHTML = RANK.map((x, i) => `<button class="row rk-row" type="button" data-n="${esc(x.n)}"><span class="rk-i">${i < 3 ? `<span data-stk="${i === 0 ? 'trophy' : 'star'}" data-scale="1.5" style="transform:rotate(${i === 2 ? 8 : -6}deg)" aria-label="${i + 1}位"></span>` : i + 1}</span><span class="av" data-n="${esc(x.n)}" style="--c:${x.c}"></span><span class="row-main"><span class="row-t">${esc(x.n)}</span></span><span class="row-v">${(x.h * r.scale).toFixed(1)}<small> 時間</small></span></button>`).join('');
+    $('#rk-me').innerHTML = `<span class="rk-i">${r.rank}</span><span class="av" data-n="はる" style="--c:#6E56CF"></span><span class="row-t">あなた</span><span class="row-v">${r.me.toFixed(1)}<small> 時間</small></span>`;
+    A.upgrade($('#rk-rows')); A.upgrade($('#rk-me'));
+    if (!first) growDist();
+  }
+  function growDist() { if (A.reduced()) return; const d = $('#dist'); d.classList.remove('grow'); void d.offsetWidth; d.classList.add('grow'); }
+  drawRank(true);
+  $('#rk-p').addEventListener('change', () => { per = $('#rk-p [aria-pressed="true"]').dataset.p; drawRank(false); });
+  $('#rk-rows').addEventListener('click', e => { const b = e.target.closest('.rk-row'); if (b) A.toast({ title: 'この見本では開きません', sub: `${b.dataset.n} のプロフィールは、まだ作っていません`, ms: 2000 }); });
+
+  /* ---------- グループ（アプリの data.ts の GROUPS と同じ） ---------- */
+  const GROUPS = [
+    { n: '東大 理一 2027', m: 24, join: '招待制', studying: 3, mark: `<span class="gmark four">${['#C47A55', '#5D6DB8', '#3E8C78', '#8E6283'].map(c => `<i style="background:${c}"></i>`).join('')}</span>` },
+    { n: '朝活 6:00 スタート', m: 12, join: '公開', studying: 1, mark: `<span class="gmark" style="--c:color-mix(in oklab,var(--sun) 55%,var(--card))">${S.ico('sun')}</span>` },
+    { n: '英語長文 毎日1題', m: 41, join: '公開', studying: 2, mark: `<span class="gmark" style="--c:color-mix(in oklab,var(--sky) 45%,var(--card))">${S.ico('book')}</span>` }
+  ];
+  $('#g-rows').innerHTML = GROUPS.map(g => `<a class="row grow-row" href="#" data-soon aria-label="${esc(g.n)}（${g.m}人 · ${g.join}）">${g.mark}<span class="row-main"><span class="row-t">${esc(g.n)}</span><span class="row-s">${g.m}人 · ${g.join}</span></span>
+    ${g.studying ? `<span class="state run"><i class="dot run sm"></i>${g.studying}人が勉強中</span>` : '<span class="state quiet">いまは静か</span>'}<i class="chev" data-pi="right"></i></a>`).join('');
+})();
+</script>
+</body>
+</html>
