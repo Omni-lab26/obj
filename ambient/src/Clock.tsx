@@ -210,9 +210,9 @@ function makeFaceGesture(swipeX: SharedValue<number>, span: SharedValue<number>)
   };
 }
 
-// While editing, the digits' gestures give way to this (both stay attached, one on
-// and the other off: swapping one for the other on the same view can leave a gesture
-// stuck on the web). It follows the fingers themselves: one moves the digits, two
+// While editing, the digits' gestures give way to this, on a layer over the whole
+// screen (both stay attached, each on and off in turn: swapping one for the other on
+// the same view can leave a gesture stuck on the web). It follows the fingers themselves: one moves the digits, two
 // also pinch them bigger or smaller, and a finger added or lifted mid-way just
 // carries on from there (so a drag can turn into a pinch without letting go). It all
 // runs on the UI thread, and only the result goes back to JS, once, when the last
@@ -561,7 +561,15 @@ export function Clock(props: Props) {
     wheelsY.set(wheelsLift);
   }, [wheelsX, wheelsY, timerPage, wheelsShift, wheelsLift]);
 
-  const face = (m: Settings['mode'], f: Face, c: (typeof FACES)['dark'], label: string, labelOpacity: Animated.Value | number, measure: boolean) => {
+  const face = (
+    m: Settings['mode'],
+    f: Face,
+    c: (typeof FACES)['dark'],
+    label: string,
+    labelOpacity: Animated.Value | number,
+    measure: boolean,
+    framed: boolean
+  ) => {
     const size = sizeFor(m);
     const cell = digitPerPt * size;
     // The date's width (not a mode's name, which shows only for a moment).
@@ -626,7 +634,7 @@ export function Clock(props: Props) {
               </Text>
             ) : null}
           </Reanimated.View>
-          {measure && edit ? (
+          {framed && edit ? (
             <Reanimated.View
               pointerEvents="none"
               style={[
@@ -666,9 +674,9 @@ export function Clock(props: Props) {
       <>
         <FaceBackdrop tone={tone} />
         <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
-          {face(m, f, FACES.dark, label, labelOpacity, current)}
+          {face(m, f, FACES.dark, label, labelOpacity, current, current)}
         </Animated.View>
-        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(m, f, FACES.light, label, labelOpacity, false)}</Animated.View>
+        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(m, f, FACES.light, label, labelOpacity, false, current)}</Animated.View>
       </>
     );
   };
@@ -713,30 +721,26 @@ export function Clock(props: Props) {
             :
           </Text>
           <View style={[styles.stage, { width }]}>
-            <GestureDetector gesture={editGesture.gesture}>
-              <View collapsable={false}>
-                <GestureDetector gesture={faceGesture.gesture}>
-                  <Reanimated.View
-                    style={[styles.pages, { width }, rowStyle]}
-                    accessible
-                    accessibilityRole="button"
-                    accessibilityLabel={`${MODE_NAMES[mode]} ${current.main}`}
-                    accessibilityHint="左右にスワイプで時計・タイマー・ストップウォッチを切り替え"
-                  >
-                    <View style={[styles.side, { left: -width, width }]}>{page(prev)}</View>
-                    <View
-                      style={styles.page}
-                      onLayout={(e) => {
-                        const { width: w, height: h } = e.nativeEvent.layout;
-                        if (Math.abs(w - block.w) > 0.5 || Math.abs(h - block.h) > 0.5 || block.scale !== scale) setBlock({ w, h, scale });
-                      }}
-                    >
-                      {page(mode)}
-                    </View>
-                    <View style={[styles.side, { left: width, width }]}>{page(next)}</View>
-                  </Reanimated.View>
-                </GestureDetector>
-              </View>
+            <GestureDetector gesture={faceGesture.gesture}>
+              <Reanimated.View
+                style={[styles.pages, { width }, rowStyle]}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={`${MODE_NAMES[mode]} ${current.main}`}
+                accessibilityHint="左右にスワイプで時計・タイマー・ストップウォッチを切り替え"
+              >
+                <View style={[styles.side, { left: -width, width }]}>{page(prev)}</View>
+                <View
+                  style={styles.page}
+                  onLayout={(e) => {
+                    const { width: w, height: h } = e.nativeEvent.layout;
+                    if (Math.abs(w - block.w) > 0.5 || Math.abs(h - block.h) > 0.5 || block.scale !== scale) setBlock({ w, h, scale });
+                  }}
+                >
+                  {page(mode)}
+                </View>
+                <View style={[styles.side, { left: width, width }]}>{page(next)}</View>
+              </Reanimated.View>
             </GestureDetector>
             {/* The timer's rulers stand outside the face's layout, so the digits never
                 move when they come and go. They stay mounted, just hidden, while the
@@ -773,6 +777,11 @@ export function Clock(props: Props) {
           </View>
         </Animated.View>
       </Reanimated.View>
+      {/* While editing, the whole screen takes the fingers (a second finger can land
+          anywhere, however far from the digits); otherwise it lets everything through. */}
+      <GestureDetector gesture={editGesture.gesture}>
+        <View pointerEvents={edit ? 'auto' : 'none'} style={StyleSheet.absoluteFill} collapsable={false} />
+      </GestureDetector>
     </View>
   );
 }
