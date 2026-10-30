@@ -5,6 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { onMoment } from '../moments';
 import { hair, lift, useT } from '../theme';
 import { haptic, Press, StdKey, Txt } from './base';
 import { Sticker } from './Sticker';
@@ -127,8 +128,30 @@ const hosts: number[] = [];
 const hostSubs = new Set<() => void>();
 const hostsChanged = () => hostSubs.forEach((f) => f());
 
+// スタンダード's 始めた note (its kit's moment, ジリ) sits where the toasts do, for 2.8s:
+// the toasts step down under it meanwhile, and back up once it's gone (ui/motion move).
+const START_NOTE_MS = 2800;
+const START_NOTE_H = 56 + 16; // the note, its lime shadow and a gap
+function useUnderStartNote(on: boolean) {
+  const y = useSharedValue(0);
+  useEffect(() => {
+    if (!on) return;
+    let id: ReturnType<typeof setTimeout> | undefined;
+    const off = onMoment((m) => {
+      if (m.kind !== 'start') return;
+      y.set(move(START_NOTE_H));
+      clearTimeout(id);
+      id = setTimeout(() => y.set(move(0)), START_NOTE_MS);
+    });
+    return () => { off(); clearTimeout(id); };
+  }, [on, y]);
+  return useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+}
+
 export function ToastHost() {
   const insets = useSafeAreaInsets();
+  const std = useStd();
+  const under = useUnderStartNote(std);
   const [me] = useState(() => ++hostSeq);
   const [top, setTop] = useState(true);
   useEffect(() => {
@@ -158,6 +181,13 @@ export function ToastHost() {
     if (next) collapse.current = setTimeout(() => { setSpread(false); items.forEach((x) => schedule(x.id, 2400)); }, 4500);
   };
   if (!top) return null;
+  if (std) {
+    return (
+      <Animated.View pointerEvents="box-none" style={[{ position: 'absolute', top: insets.top + 6, left: 12, right: 12, zIndex: 100, height: spread ? list.length * GAP : 70 }, under]}>
+        {list.map((it, i) => <ToastCard key={it.id} item={it} index={i} spread={spread} onPress={onPress} />)}
+      </Animated.View>
+    );
+  }
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', top: insets.top + 6, left: 12, right: 12, zIndex: 100, height: spread ? list.length * GAP : 70 }}>
       {list.map((it, i) => <ToastCard key={it.id} item={it} index={i} spread={spread} onPress={onPress} />)}

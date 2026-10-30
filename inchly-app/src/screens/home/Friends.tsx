@@ -19,6 +19,8 @@ import { Icon } from '@/ui/Icon';
 import { dismiss, M, micro, move } from '@/ui/motion';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
+import { Pix } from '@/themes/standard/pixel';
+import { LIFT, S, useStd } from '@/ui/stdLook';
 
 // Friends studying now, like a portfolio's holdings: who, what, how long
 // today and against yesterday, and a line of their last seven days. Four at
@@ -64,7 +66,15 @@ export type FriendsLook = {
   Row: ComponentType<{ f: Friend }>;
   /** a row's ground (it covers what a swipe shows under it) and the line between rows */
   ground: string; line: string;
+  /** the grip's (≡) color, when not the theme's faint ink */
+  grip?: string;
+  /** the red a left swipe shows: inset from the row's top and bottom, and rounded (else the row's full height, square) */
+  swipeInset?: number; swipeRadius?: number;
+  /** the row lifted by a drag: an edge and shadow drawn over it, rounded (else a soft shadow under it) */
+  liftShadow?: string; liftRadius?: number;
 };
+/** スタンダード's, when its kit doesn't say: the grip in line 2, the swipe's red inset and rounded, the lifted row in the ink outline and the lime shadow. */
+const STD_ROW = { grip: S.line2, swipeInset: 3, swipeRadius: 12, liftShadow: LIFT, liftRadius: 12 };
 
 const hide = (f: Friend) => {
   setFriendHidden(f.h, true);
@@ -133,6 +143,8 @@ type Shared = { slots: SharedValue<Record<string, number>>; dragging: SharedValu
 
 function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f: Friend; n: number; first: boolean; onDrop: (order: Record<string, number>) => void; look?: FriendsLook }) {
   const t = useT();
+  const std = useStd();
+  const dress = { ...(std ? STD_ROW : {}), ...look };
   const h = f.h;
   const start = useSharedValue(0);
   const swipe = useSharedValue(0);
@@ -197,10 +209,13 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f
   return (
     <Animated.View style={[{ position: 'absolute', left: 0, right: 0, top: 0, height: ROW }, place]}
       onLayout={(e) => width.set(e.nativeEvent.layout.width)}>
-      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 6, right: 6, top: 2, bottom: 2, borderRadius: look ? 0 : 14, backgroundColor: look?.ground ?? t.surface,
-        boxShadow: '0px 10px 24px rgba(15,23,42,0.16), 0px 2px 6px rgba(15,23,42,0.08)' }, shadow]} />
+      {dress.liftShadow ? null : (
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 6, right: 6, top: 2, bottom: 2, borderRadius: look ? 0 : 14, backgroundColor: look?.ground ?? t.surface,
+          boxShadow: '0px 10px 24px rgba(15,23,42,0.16), 0px 2px 6px rgba(15,23,42,0.08)' }, shadow]} />
+      )}
       {/* under the row: what a left swipe does */}
-      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: t.red, alignItems: 'flex-end', justifyContent: 'center', paddingRight: 18 }, behind]}>
+      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, top: dress.swipeInset ?? 0, bottom: dress.swipeInset ?? 0, borderRadius: dress.swipeRadius ?? 0,
+        backgroundColor: t.red, alignItems: 'flex-end', justifyContent: 'center', paddingRight: 18 }, behind]}>
         <Txt size={13} w="700" color="#fff">非表示</Txt>
       </Animated.View>
       <GestureDetector gesture={rowGesture}>
@@ -226,11 +241,15 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f
           {/* the grip: drag from here at once */}
           <GestureDetector gesture={drag.grip}>
             <View accessibilityRole="adjustable" accessibilityLabel={`${f.n}を並べ替える`} style={{ width: 40, height: ROW, alignItems: 'center', justifyContent: 'center' }}>
-              <Grip />
+              {dress.grip ? <Pix name="grip" color={dress.grip} /> : <Grip />}
             </View>
           </GestureDetector>
         </Animated.View>
       </GestureDetector>
+      {/* lifted, the row's edge and shadow drawn over it (they'd be under its ground otherwise) */}
+      {dress.liftShadow ? (
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 4, right: 4, top: 3, bottom: 3, borderRadius: dress.liftRadius ?? 0, boxShadow: dress.liftShadow }, shadow]} />
+      ) : null}
       {first ? null : <View pointerEvents="none" style={{ position: 'absolute', left: 61, right: 14, top: 0, height: hair, backgroundColor: look?.line ?? t.line }} />}
     </Animated.View>
   );
@@ -276,17 +295,21 @@ function Spark({ week, color, still }: { week: number[]; color: string; still?: 
 /** もっと見る: everyone studying now, one under another, and the ones you took off the list — a card in the middle of the screen. */
 function Everyone({ open, close }: { open: boolean; close: () => void }) {
   const t = useT();
+  const std = useStd();
   const { list, hidden } = useFriends();
   const see = (f: Friend) => { close(); setTimeout(() => personSheet(f.n, f.c), 220); };
   return (
     <Dialog open={open} close={close} title="いま勉強中の友達" aside={`${list.length}人`}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
-        {list.map((f) => <Line key={f.h} f={f} onPress={() => see(f)} />)}
+        {list.map((f, i) => <Line key={f.h} f={f} first={i === 0} onPress={() => see(f)} />)}
         {hidden.length ? (
           <>
-            <Txt size={12.5} w="600" tone="ink3" style={{ paddingTop: 14, paddingBottom: 2 }}>非表示にした人</Txt>
-            {hidden.map((f) => (
-              <Line key={f.h} f={f} dim right={
+            <Txt size={std ? 13 : 12.5} w={std ? '700' : '600'} tone={std ? 'ink2' : 'ink3'} style={{ paddingTop: 14, paddingBottom: 2 }}>非表示にした人</Txt>
+            {hidden.map((f, i) => (
+              <Line key={f.h} f={f} first={i === 0} dim right={std ? (
+                // スタンダード: a small key
+                <Btn small label="表示する" onPress={() => { setFriendHidden(f.h, false); haptic.soft(); }} />
+              ) :
                 <Press onPress={() => { setFriendHidden(f.h, false); haptic.soft(); }} scale={0.94} accessibilityRole="button" accessibilityLabel={`${f.n}をホームに戻す`}
                   style={{ height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: t.sunken, justifyContent: 'center' }}>
                   <Txt size={12} w="600">表示する</Txt>
@@ -299,12 +322,15 @@ function Everyone({ open, close }: { open: boolean; close: () => void }) {
     </Dialog>
   );
 }
-function Line({ f, onPress, right, dim }: { f: Friend; onPress?: () => void; right?: ReactNode; dim?: boolean }) {
+function Line({ f, onPress, right, dim, first }: { f: Friend; onPress?: () => void; right?: ReactNode; dim?: boolean; first?: boolean }) {
   const t = useT();
+  const std = useStd();
   const up = f.diff >= 0;
   return (
     <Press onPress={onPress} disabled={!onPress} scale={0.99} accessibilityLabel={`${f.n} ${f.s}を勉強中。今日${hm(f.today)}`}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 8, opacity: dim ? 0.6 : 1 }}>
+      style={[{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 8, opacity: dim ? 0.6 : 1 },
+        // スタンダード: rows split by the 1.5pt line, as every list
+        std && { minHeight: 60, borderTopWidth: first ? 0 : 1.5, borderTopColor: S.line }]}>
       <Avatar name={f.n} color={f.c} size={38} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <Txt size={14.5} w="600" lh={19} numberOfLines={1}>{f.n}</Txt>
