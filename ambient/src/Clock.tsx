@@ -312,9 +312,11 @@ function makeEditGesture(px: SharedValue<number>, py: SharedValue<number>, zoom:
 }
 
 const FACES = {
-  // A soft halo of the background colour keeps digits legible over busy scenes.
-  dark: { ink: '#ffffff', inkSoft: 'rgba(255,255,255,0.85)', halo: 'rgba(0,0,0,0.7)' },
-  light: { ink: '#0b0b0e', inkSoft: 'rgba(11,11,14,0.78)', halo: 'rgba(255,255,255,0.95)' },
+  // (What keeps them legible over a busy scene is the one soft veil behind the whole
+  // block, FaceBackdrop: no glow round each digit, which a phone clips to the digit's
+  // own box and so shows as a patch behind every one.)
+  dark: { ink: '#ffffff', inkSoft: 'rgba(255,255,255,0.85)' },
+  light: { ink: '#0b0b0e', inkSoft: 'rgba(11,11,14,0.78)' },
 };
 
 type Face = { label: string; main: string; small: string; hint: string; dim: boolean };
@@ -380,8 +382,8 @@ export function Clock(props: Props) {
   const { width, height } = useWindowDimensions();
   const [shown] = useState(() => new Animated.Value(clock.visible ? 1 : 0));
   // 0 = colours for a dark scene, 1 = for a light one. Both faces are drawn and
-  // crossfaded with the scene, so neither the digits nor their halo flash in the
-  // wrong colour over the outgoing background.
+  // crossfaded with the scene, so the digits never flash in the wrong colour over
+  // the outgoing background.
   const [toneMix] = useState(() => new Animated.Value(tone === 'light' ? 1 : 0));
   // The modes sit round a ring like pages; pos is where the row is (0 clock, 1 timer,
   // 2 stopwatch, then round again).
@@ -625,7 +627,7 @@ export function Clock(props: Props) {
       <>
         <Reanimated.View style={[styles.line, styles.labelLine, aboveStyle]}>
           <Animated.Text
-            style={[styles.date, { color: c.inkSoft, textShadowColor: c.halo, opacity: labelOpacity }]}
+            style={[styles.date, { color: c.inkSoft, opacity: labelOpacity }]}
             numberOfLines={1}
             onLayout={measureLabel}
           >
@@ -649,7 +651,7 @@ export function Clock(props: Props) {
               const digit = ch >= '0' && ch <= '9';
               return (
                 <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
-                  <Text style={[font.time, styles.time, { fontSize: size, lineHeight: size * 1.08, color: c.ink, textShadowColor: c.halo, letterSpacing: 0 }]}>
+                  <Text style={[font.time, styles.time, { fontSize: size, lineHeight: size * 1.08, color: c.ink, letterSpacing: 0 }]}>
                     {ch}
                   </Text>
                 </View>
@@ -664,7 +666,6 @@ export function Clock(props: Props) {
                     fontSize: size * font.secondsScale,
                     lineHeight: size * font.secondsScale * 1.1,
                     color: c.inkSoft,
-                    textShadowColor: c.halo,
                     letterSpacing: 0,
                     marginLeft: size * 0.06,
                     marginBottom: size * 0.16,
@@ -697,7 +698,7 @@ export function Clock(props: Props) {
         {/* The hint's line stays even when empty, so the digits never move (and it
             steps aside while editing, which its taps and holds have no part in). */}
         <Reanimated.View style={[styles.line, styles.hintLine, belowStyle, { opacity: edit ? 0 : 1 }]}>
-          <Text style={[styles.hint, { color: c.inkSoft, textShadowColor: c.halo }]} numberOfLines={1}>
+          <Text style={[styles.hint, { color: c.inkSoft }]} numberOfLines={1}>
             {f.hint || '\u00a0'}
           </Text>
         </Reanimated.View>
@@ -705,16 +706,13 @@ export function Clock(props: Props) {
     );
   };
 
-  // A colour chosen in settings takes over from the scene's, on both faces. The halo
-  // stays the scene's, unless the colour is as dark as a dark scene (or as light as a
-  // light one): then it turns over, to set the digits off.
+  // A colour chosen in settings takes over from the scene's, on both faces. The veil
+  // behind stays the scene's (darkening a dark one, lightening a light one), unless the
+  // colour is as dark as a dark scene or as light as a light one: then it turns over,
+  // to set the digits off.
   const custom = clock.color ? colorHex(clock.color) : null;
-  const inks = custom
-    ? {
-        dark: { ink: custom, inkSoft: withAlpha(custom, 0.82), halo: luminance(custom) < 0.08 ? FACES.light.halo : FACES.dark.halo },
-        light: { ink: custom, inkSoft: withAlpha(custom, 0.82), halo: luminance(custom) > 0.6 ? FACES.dark.halo : FACES.light.halo },
-      }
-    : FACES;
+  const inks = custom ? { dark: { ink: custom, inkSoft: withAlpha(custom, 0.82) }, light: { ink: custom, inkSoft: withAlpha(custom, 0.82) } } : FACES;
+  const veil: 'dark' | 'light' = !custom ? tone : tone === 'dark' ? (luminance(custom) < 0.08 ? 'light' : 'dark') : luminance(custom) > 0.6 ? 'dark' : 'light';
 
   // One page per mode, round a ring. The pages that aren't showing carry their mode's
   // name, so it is there as soon as one slides in, and stays a moment once it lands.
@@ -725,7 +723,7 @@ export function Clock(props: Props) {
     const labelOpacity = current && flash ? flashOpacity : 1;
     return (
       <>
-        <FaceBackdrop tone={tone} />
+        <FaceBackdrop tone={veil} />
         <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
           {face(m, f, inks.dark, label, labelOpacity, current, current)}
         </Animated.View>
@@ -942,8 +940,6 @@ const styles = StyleSheet.create({
   },
   time: {
     textAlign: 'center',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
     includeFontPadding: false,
   },
   line: {
@@ -963,15 +959,11 @@ const styles = StyleSheet.create({
     lineHeight: LABEL.height,
     fontWeight: '600',
     letterSpacing: 0,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   },
   hint: {
     fontSize: 13,
     lineHeight: HINT.height,
     fontWeight: '500',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
   },
   toastWrap: {
     position: 'absolute',

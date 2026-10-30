@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     textAlign: 'center',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowRadius: 3,
   },
   resetButton: {
     height: 32,
