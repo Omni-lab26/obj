@@ -13,7 +13,6 @@ import Reanimated, {
 } from 'react-native-reanimated';
 
 import { FaceBackdrop } from './FaceBackdrop';
-import { ResizeIcon } from './icons';
 import { clockFont } from './fonts';
 import type { Settings } from './settings';
 import { TimerSaves } from './TimerSaves';
@@ -69,13 +68,14 @@ type Props = {
   onFace: (face: Settings['face']) => void;
 };
 
-const MARGIN = 12; // kept clear around the digits at the screen's edges
+const MARGIN = 12; // kept clear above and below the digits at the screen's edges
+const EDGE = 6; // kept clear beside the edit frame at the screen's sides
 // The buttons in the top corners (in App: the pen on the left, settings on the
 // right): the digits stay out from under them.
 const TOOLS = { left: 136, right: 64, height: 54 };
 const MIN_SCALE = 0.35;
 // The edit frame's reach past the digits' line, sideways and up and down.
-const FRAME = { x: 12, y: 8 };
+const FRAME = { x: 12, y: 10 };
 // How far the digits' line sits below the block's centre (the label's line above it
 // is a point taller than the hint's below).
 const ROW_SHIFT = (23 + 2 - (6 + 18)) / 2;
@@ -101,11 +101,12 @@ type Limits = {
 };
 
 // Only the digits grow and shrink under a zoom; the label and hint keep their size
-// and move apart to make room. (Defined before the worklets that use them: a worklet takes in
+// and move apart to make room. The width counts the edit frame around the digits, so
+// that stays whole on screen too. (Defined before the worklets that use them: a worklet takes in
 // what it refers to when it is defined.)
 function blockW(k: number, p: Limits) {
   'worklet';
-  return Math.max(p.rowW * k, p.sideW);
+  return Math.max(p.rowW * k + 2 * FRAME.x, p.sideW);
 }
 function blockH(k: number, p: Limits) {
   'worklet';
@@ -121,7 +122,7 @@ function clampPlace(x: number, y: number, k: number, p: Limits) {
   'worklet';
   const bw = blockW(k, p);
   const bh = blockH(k, p);
-  const dx = Math.max(0, p.W / 2 - MARGIN - bw / 2);
+  const dx = Math.max(0, p.W / 2 - EDGE - bw / 2);
   const cx = Math.min(dx, Math.max(-dx, x));
   const l = p.W / 2 + cx - bw / 2;
   const underTools = l < Math.max(p.left, 12) + TOOLS.left || l + bw > p.W - Math.max(p.right, 12) - TOOLS.right;
@@ -142,16 +143,6 @@ function clampPlace(x: number, y: number, k: number, p: Limits) {
     else if (high) cy = highest;
   }
   return { x: cx, y: Math.min(bottom, Math.max(top, cy)) };
-}
-
-/** The resize handle's offset from the digits' centre: the frame's top right corner,
- *  pulled in where that would be off screen. */
-function handleAt(x: number, y: number, k: number, p: Limits) {
-  'worklet';
-  return {
-    x: Math.min((p.rowW * k) / 2 + FRAME.x, p.W - 22 - (p.W / 2 + x)),
-    y: Math.max(-((p.rowH * k) / 2 + FRAME.y), p.top + 22 - (p.cy0 + y + ROW_SHIFT)),
-  };
 }
 
 const MODES: Settings['mode'][] = ['clock', 'timer', 'stopwatch'];
@@ -212,64 +203,73 @@ function makeFaceGesture(swipeX: SharedValue<number>, span: SharedValue<number>)
   };
 }
 
-// While editing, the digits' gestures give way to this (both stay attached, one on
+// While editing, the digits' gestures give way to these (both stay attached, one on
 // and the other off: swapping one for the other on the same view can leave a gesture
-// stuck on the web). One finger moves the digits, or resizes them when it starts on
-// the handle at the frame's top right: pulled out from the centre they grow, pushed
-// in they shrink. It all runs on the UI thread, and only the result goes back to JS,
-// once, when the finger lifts: nothing re-renders while dragging.
+// stuck on the web): one finger moves the digits, two pinch them bigger or smaller.
+// It all runs on the UI thread, and only the result goes back to JS, once, when the
+// fingers lift: nothing re-renders while dragging.
 function makeEditGesture(px: SharedValue<number>, py: SharedValue<number>, zoom: SharedValue<number>, lim: SharedValue<Limits>, busy: SharedValue<number>) {
   const h = { done: (_x: number, _y: number, _k: number) => {} };
   const done = (x: number, y: number, k: number) => h.done(x, y, k);
-  // (A shared value, not a plain object: each callback gets its own copy of those.)
-  const at = makeMutable({ x: 0, y: 0, k: 1, hx: 1, hy: -1, resize: false, on: false });
+  // (Shared values, not plain objects: each callback gets its own copy of those.)
+  const panAt = makeMutable({ x: 0, y: 0, on: false });
+  const pinchAt = makeMutable({ k: 1, on: false });
+  const begin = () => {
+    'worklet';
+    busy.set(busy.get() + 1);
+  };
+  const end = () => {
+    'worklet';
+    busy.set(Math.max(0, busy.get() - 1));
+    if (busy.get() === 0) runOnJS(done)(px.get(), py.get(), zoom.get());
+  };
   const pan = Gesture.Pan()
     .enabled(false)
     .maxPointers(1)
     .minDistance(1)
-    .onBegin((e) => {
-      const p = lim.get();
-      const k = zoom.get();
-      const hd = handleAt(px.get(), py.get(), k, p);
-      const resize = Math.hypot(e.absoluteX - (p.W / 2 + px.get() + hd.x), e.absoluteY - (p.cy0 + py.get() + ROW_SHIFT + hd.y)) < 34;
-      at.set({ x: px.get(), y: py.get(), k, hx: hd.x, hy: hd.y, resize, on: false });
-    })
     .onStart(() => {
-      at.set({ ...at.get(), on: true });
-      busy.set(1);
+      panAt.set({ x: px.get(), y: py.get(), on: true });
+      begin();
     })
     .onUpdate((e) => {
-      const s = at.get();
-      const p = lim.get();
-      if (s.resize) {
-        // How far the finger has gone along the line from the centre to the handle.
-        const len = Math.max(24, Math.hypot(s.hx, s.hy));
-        const along = (e.translationX * s.hx + e.translationY * s.hy) / len;
-        const k = Math.min(p.kMax, Math.max(p.kMin, (s.k * (len + along)) / len));
-        const c = clampPlace(s.x, s.y, k, p);
-        zoom.set(k);
-        px.set(c.x);
-        py.set(c.y);
-      } else {
-        const c = clampPlace(s.x + e.translationX, s.y + e.translationY, zoom.get(), p);
-        px.set(c.x);
-        py.set(c.y);
-      }
+      const s = panAt.get();
+      const c = clampPlace(s.x + e.translationX, s.y + e.translationY, zoom.get(), lim.get());
+      px.set(c.x);
+      py.set(c.y);
     })
     .onFinalize(() => {
-      if (!at.get().on) return;
-      at.set({ ...at.get(), on: false });
-      busy.set(0);
-      runOnJS(done)(px.get(), py.get(), zoom.get());
+      if (!panAt.get().on) return;
+      panAt.set({ ...panAt.get(), on: false });
+      end();
+    });
+  const pinch = Gesture.Pinch()
+    .enabled(false)
+    .onStart(() => {
+      pinchAt.set({ k: zoom.get(), on: true });
+      begin();
+    })
+    .onUpdate((e) => {
+      const p = lim.get();
+      const k = Math.min(p.kMax, Math.max(p.kMin, pinchAt.get().k * e.scale));
+      const c = clampPlace(px.get(), py.get(), k, p);
+      zoom.set(k);
+      px.set(c.x);
+      py.set(c.y);
+    })
+    .onFinalize(() => {
+      if (!pinchAt.get().on) return;
+      pinchAt.set({ k: 1, on: false });
+      end();
     });
   return {
-    gesture: pan,
+    gesture: Gesture.Simultaneous(pan, pinch),
     set(next: typeof h) {
       Object.assign(h, next);
     },
     // On only while the digits are being edited.
     enable(on: boolean) {
       pan.enabled(on);
+      pinch.enabled(on);
     },
   };
 }
@@ -405,15 +405,17 @@ export function Clock(props: Props) {
   const digitsStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() }] }));
   const aboveStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (-lim.get().rowH * (zoom.get() - 1)) / 2 }] }));
   const belowStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (lim.get().rowH * (zoom.get() - 1)) / 2 }] }));
-  // The edit frame hugs the digits as they zoom; the handle sits on its top right corner.
+  // The edit frame is drawn at the digits' laid-out size, and stretched with them
+  // while a pinch zooms them (a transform, not a new layout).
   const frameStyle = useAnimatedStyle(() => {
     const p = lim.get();
     const k = zoom.get();
-    return { width: p.rowW * k + 2 * FRAME.x, height: p.rowH * k + 2 * FRAME.y };
-  });
-  const handleStyle = useAnimatedStyle(() => {
-    const hd = handleAt(px.get(), py.get(), zoom.get(), lim.get());
-    return { transform: [{ translateX: hd.x }, { translateY: hd.y }] };
+    return {
+      transform: [
+        { scaleX: (p.rowW * k + 2 * FRAME.x) / (p.rowW + 2 * FRAME.x) },
+        { scaleY: (p.rowH * k + 2 * FRAME.y) / (p.rowH + 2 * FRAME.y) },
+      ],
+    };
   });
   // The mode's name shows above the digits for a moment after a change, then fades
   // away (the line keeps its place, so the digits never jump).
@@ -478,7 +480,7 @@ export function Clock(props: Props) {
   const need = (wheelsH || 160) + 10;
   const fit = digitPerPt
     ? Math.min(
-        ...MODES.map((m) => (width - 2 * MARGIN) / rowWidth(m, baseSize(m))),
+        ...MODES.map((m) => (width - 2 * EDGE - 2 * FRAME.x) / rowWidth(m, baseSize(m))),
         ...MODES.map((m) => (tall - 50) / (baseSize(m) * 1.08)),
         (tall - 50 - need) / (baseSize('timer') * 1.08)
       )
@@ -695,14 +697,14 @@ export function Clock(props: Props) {
                       {edit ? (
                         <>
                           <View pointerEvents="none" style={[styles.centre, styles.onRow]}>
-                            <Reanimated.View style={[styles.frame, { borderColor: FACES[tone].inkSoft }, frameStyle]} />
+                            <Reanimated.View
+                              style={[
+                                styles.frame,
+                                { width: rowW + 2 * FRAME.x, height: rowH + 2 * FRAME.y, borderColor: FACES[tone].inkSoft },
+                                frameStyle,
+                              ]}
+                            />
                           </View>
-                          {/* Drag this to resize (it answers through the edit gesture). */}
-                          <Reanimated.View pointerEvents="none" style={[styles.centre, styles.onRow, handleStyle]}>
-                            <View style={[styles.handleDot, { backgroundColor: FACES[tone].ink }]}>
-                              <ResizeIcon color={tone === 'dark' ? '#0b0b0e' : '#ffffff'} size={16} />
-                            </View>
-                          </Reanimated.View>
                         </>
                       ) : null}
                     </View>
@@ -839,18 +841,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderStyle: 'dashed',
     borderRadius: 14,
-  },
-  handleDot: {
-    position: 'absolute',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
   },
   measure: {
     position: 'absolute',

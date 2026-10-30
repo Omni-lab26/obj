@@ -351,7 +351,7 @@ function Player() {
           ]}
         >
           <Text style={[styles.editHintText, { color: ink, textShadowColor: dark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.95)' }]}>
-            指でドラッグして移動・右上の丸を引いて大きさ
+            1本指で移動・2本指でつまんで大きさ
           </Text>
         </View>
       ) : null}

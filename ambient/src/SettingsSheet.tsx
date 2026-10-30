@@ -116,7 +116,7 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
             </Card>
 
             <Card title="フォント" c={c}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fonts}>
+              <View style={styles.fonts}>
                 {clockFonts.map((f) => {
                   const selected = settings.clock.font === f.id;
                   return (
@@ -132,13 +132,17 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
                         { transform: [{ scale: pressed ? 0.96 : 1 }] },
                       ]}
                     >
+                      {/* Small enough that every font's four digits fit the tile whole. */}
                       <Text
                         numberOfLines={1}
+                        ellipsizeMode="clip"
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.6}
                         style={[
                           f.time,
                           {
-                            fontSize: (f.time.fontSize ?? 96) * 0.4,
-                            letterSpacing: (f.time.letterSpacing ?? 0) * 0.4,
+                            fontSize: (f.time.fontSize ?? 96) * 0.27,
+                            letterSpacing: (f.time.letterSpacing ?? 0) * 0.27,
                             color: selected ? c.onInk : c.ink,
                             includeFontPadding: false,
                           },
@@ -150,7 +154,7 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
                     </Pressable>
                   );
                 })}
-              </ScrollView>
+              </View>
             </Card>
 
             {hasPhotos ? (
@@ -308,12 +312,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0,
   },
+  // Every font at once, three (or more, on a wide screen) to a row.
   fonts: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   font: {
-    width: 108,
-    height: 92,
+    flexGrow: 1,
+    flexBasis: '30%',
+    minWidth: 92,
+    height: 86,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
