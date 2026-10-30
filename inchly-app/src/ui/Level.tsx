@@ -6,6 +6,7 @@ import { hair, useT } from '../theme';
 import { Btn, Press, Txt } from './base';
 import { openSheet } from './Sheet';
 import { Sticker } from './Sticker';
+import { useStd } from './stdLook';
 
 // Level and EXP: a small chip in home's header, and a sheet that says how far
 // you are and how EXP is earned. Everything is worked out from your records.
@@ -31,6 +32,8 @@ export function levelSheet() {
 }
 function LevelSheet({ close }: { close: () => void }) {
   const t = useT();
+  // スタンダード: the ink face is a sheet's one decision; closing isn't one
+  const std = useStd();
   const l = useLevel();
   const sessions = useStore((s) => s.sessions);
   const goalMin = useStore((s) => s.goalMin);
@@ -69,7 +72,7 @@ function LevelSheet({ close }: { close: () => void }) {
         <Txt size={11.5} tone="ink3">記録と完了したToDoから計算するので、記録を直すとEXPも変わります。上のレベルほど、次までに少し多く必要です</Txt>
       </View>
       <Txt num size={12} tone="ink3">{`これまでの合計 ${n(l.exp)} EXP`}</Txt>
-      <Btn kind="primary" wide label="閉じる" onPress={close} />
+      <Btn kind={std ? 'quiet' : 'primary'} wide label="閉じる" onPress={close} />
     </View>
   );
 }

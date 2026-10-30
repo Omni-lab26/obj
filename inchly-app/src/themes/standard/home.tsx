@@ -240,14 +240,15 @@ function Today() {
       <SecHead title="今日の勉強" accent={S.ink} right={next ? <Tag dot={S.due}>{`${next.t}まで `}<J size={12} lh={16} w="800" num>{next.days}</J>日</Tag> : null} />
       <J size={12} lh={16} num color={S.ink3} style={{ marginTop: 2 }}>{jpDate(new Date())}</J>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 10 }} accessible
-        accessibilityLabel={`今日 ${Math.floor(today.min / 60)}時間${today.min % 60}分。昨日より${Math.floor(Math.abs(diff) / 60)}時間${Math.abs(diff) % 60}分${diff >= 0 ? '多い' : '少ない'}`}>
+        accessibilityLabel={`今日 ${Math.floor(today.min / 60)}時間${today.min % 60}分。${diff ? `昨日より${Math.floor(Math.abs(diff) / 60)}時間${Math.abs(diff) % 60}分${diff > 0 ? '多い' : '少ない'}` : '昨日と同じ'}`}>
         <Rolling value={shown ? String(Math.floor(today.min / 60)) : '0'} size={32} weight="800" />
         <J size={13} w="700" lh={16} color={S.ink3} style={{ marginLeft: 3, marginRight: 7, marginBottom: 5 }}>時間</J>
         <Rolling value={shown ? pad(today.min % 60) : '00'} size={32} weight="800" />
         <J size={13} w="700" lh={16} color={S.ink3} style={{ marginLeft: 3, marginBottom: 5 }}>分</J>
         <View style={{ flex: 1 }} />
         <View style={{ alignItems: 'flex-end', gap: 2, marginBottom: 2 }}>
-          <J size={12} w="700" lh={15} num color={diff >= 0 ? S.up : S.down}>{`${diff >= 0 ? '▲' : '▼'} ${hm(Math.abs(diff))}`}</J>
+          {/* no change: neither up nor down */}
+          <J size={12} w="700" lh={15} num color={!diff ? S.ink3 : diff > 0 ? S.up : S.down}>{`${!diff ? '±' : diff > 0 ? '▲' : '▼'} ${hm(Math.abs(diff))}`}</J>
           <J size={11} lh={13} color={S.ink3}>昨日より</J>
         </View>
       </View>

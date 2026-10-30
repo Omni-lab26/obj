@@ -26,7 +26,7 @@ export default function Bookmarks() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
         {list.length ? list.map((p, i) => <PostRow key={p.id} p={p} first={i === 0} />) : (
           <View style={{ paddingTop: 40 }}>
-            <Empty title="ブックマークはまだありません" sub="タイムラインの投稿の しおりのボタンを押すと、ここに残ります" />
+            <Empty title="ブックマークはまだありません" sub={std ? 'タイムラインの投稿の しおりのボタンを押すと、\nここに残ります' : 'タイムラインの投稿の しおりのボタンを押すと、ここに残ります'} />
           </View>
         )}
       </ScrollView>

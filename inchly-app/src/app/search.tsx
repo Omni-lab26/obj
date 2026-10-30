@@ -51,6 +51,7 @@ function compareSheet(us: Uni[]) {
 }
 function CompareTable({ us, close }: { us: Uni[]; close: () => void }) {
   const t = useT();
+  const std = useStd(); // the ink face is a sheet's one decision; closing isn't one
   const me = minutesIn(getState().sessions, 7) / 60;
   const maxFans = Math.max(...us.map((u) => u.fans));
   const minAvg = Math.min(...us.map((u) => u.avg));
@@ -83,7 +84,7 @@ function CompareTable({ us, close }: { us: Uni[]; close: () => void }) {
           ))}
         </View>
       ))}
-      <Btn kind="primary" wide label="閉じる" onPress={close} style={{ marginTop: 18 }} />
+      <Btn kind={std ? 'quiet' : 'primary'} wide label="閉じる" onPress={close} style={{ marginTop: 18 }} />
     </View>
   );
 }
@@ -174,7 +175,7 @@ export default function Search() {
         ))}
         <Txt size={11} tone="ink3" style={{ paddingHorizontal: 20, paddingVertical: 12 }}>偏差値は河合塾の目安（サンプル）</Txt>
       </Animated.View>
-    ) : <Empty title={`「${q}」に合う大学はありません`} sub="「東大」「工学部」みたいに短くすると見つかりやすい" />;
+    ) : <Empty title={`「${q}」に合う大学はありません`} sub={std ? '「東大」「工学部」みたいに\n短くすると見つかりやすい' : '「東大」「工学部」みたいに短くすると見つかりやすい'} />;
   } else {
     const list = PEOPLE.filter((p) => !blocked.includes(p.n) && (!q || (p.n + p.h + p.g).includes(q)));
     body = list.length ? (

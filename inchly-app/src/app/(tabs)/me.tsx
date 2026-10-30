@@ -63,7 +63,7 @@ export default function Me() {
       <RefreshScroll ref={scroll} onRefresh={replayCharts} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: pad }} stickyHeaderIndices={[3]}
         onScroll={(e) => { offset.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={32}>
         <HoloCard lv={level.lv} name={a?.name ?? 'はる'} handle={a?.handle ?? 'haru_study'} goal={a?.aim ? `${a.aim} 志望` : gradeOf(a ?? null)} since="04/26"
-          stats={[{ v: shown ? String(Math.floor(g.total)) : '000', from: '000', label: '時間 / 1年' }, { v: shown ? String(streak) : '00', from: '00', label: '日連続' }, { v: shown ? '57' : '00', from: '00', label: '位 / 今週' }]} />
+          stats={[{ v: shown ? String(Math.floor(g.total)) : '000', from: '000', label: '時間 / 1年' }, { v: shown ? String(streak) : '00', from: '00', label: '日連続' }, { v: std && !g.total ? '—' : shown ? '57' : '00', from: '00', label: '位 / 今週' }]} />
         <View style={{ paddingHorizontal: 20, paddingTop: 14 }}>
           <Txt size={std ? 14 : 13} tone="ink2" lh={std ? 22 : 20}>{a?.via === 'demo' || !a ? `高3。数学は青チャート2周目。朝型にしたい${std ? '\n' : ''}（今は夜型）。` : `${gradeOf(a)}。`}</Txt>
           <View style={{ flexDirection: 'row', gap: 18, paddingTop: 8 }}>

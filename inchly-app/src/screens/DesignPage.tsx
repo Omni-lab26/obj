@@ -114,7 +114,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
       </Section>
       ) : null}
 
-      <Txt size={11.5} tone="ink3" style={{ textAlign: 'center', paddingTop: 22, paddingHorizontal: 24 }}>設定の「見た目」と横のメニューの「テーマ」から、いつでもここに来られます</Txt>
+      <Txt size={11.5} tone="ink3" style={{ textAlign: 'center', paddingTop: 22, paddingHorizontal: 24 }}>{std ? '設定の「見た目」と横のメニューの「テーマ」から、\nいつでもここに来られます' : '設定の「見た目」と横のメニューの「テーマ」から、いつでもここに来られます'}</Txt>
     </ScrollView>
   );
   return (

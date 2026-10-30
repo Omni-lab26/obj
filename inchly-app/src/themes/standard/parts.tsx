@@ -21,7 +21,8 @@ import { Pix } from './pixel';
 type TextProps = Parameters<typeof T>[0];
 /** Japanese (and body) text: always the system face, whatever the theme's display face. */
 export function J(props: TextProps) {
-  return <T {...props} style={[props.style, { fontFamily: (props.size ?? 14) >= 20 ? font.display : font.text }]} />;
+  // iOS's own line breaking: a last line of one lone character is avoided
+  return <T lineBreakStrategyIOS="standard" {...props} style={[props.style, { fontFamily: (props.size ?? 14) >= 20 ? font.display : font.text }]} />;
 }
 // The two bundled faces are set at their own line height, so iOS and the web place the glyphs
 // alike (iOS trims a line set shorter than the face from the top, which cuts the glyphs' tops);

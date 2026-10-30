@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Switch, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Switch, useWindowDimensions, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -37,6 +37,7 @@ export default function Welcome() {
   // スタンダード: the boxes are cards with the 2pt ink outline (on the outer view; the inner one clips its rows)
   const box = std ? { borderRadius: SR.mid, backgroundColor: S.card, borderWidth: 0, boxShadow: ring() } : null;
   const insets = useSafeAreaInsets();
+  const short = useWindowDimensions().height < 700;
   const [step, setStep] = useState<Step>(0);
   const [via, setVia] = useState<Account['via']>('apple');
   const [name, setName] = useState('');
@@ -86,15 +87,18 @@ export default function Welcome() {
   };
 
   if (step === 0 && std) {
-    // スタンダード: paper with its dots, the logo, めぶ (who greets the first-timers), the four promises with pixel icons, and keys
+    // スタンダード: paper with its dots, the logo, めぶ (who greets the first-timers), the four promises with pixel icons, and keys.
+    // On a short phone (the iPhone SE, its status bar 20 high) it sits closer, and it scrolls rather than run past the bottom.
     return (
-      <View style={{ flex: 1, backgroundColor: S.paper, paddingTop: insets.top + 44, paddingBottom: insets.bottom + 20, paddingHorizontal: 24 }}>
+      <View style={{ flex: 1, backgroundColor: S.paper }}>
         <TextureFill texture="dots-paper" />
+        <ScrollView bounces={false} showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + (short ? 24 : 44), paddingBottom: insets.bottom + 20, paddingHorizontal: 24 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }} accessible accessibilityRole="header" accessibilityLabel="Inchly">
           <LogoMark size={32} />
           <Txt style={{ fontFamily: bundledFace('groteskBold') ?? font.display, fontWeight: bundledFace('groteskBold') ? undefined : '800', fontSize: 30, lineHeight: 36, letterSpacing: -1.2, color: S.ink }}>inchly</Txt>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12, marginTop: 26 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12, marginTop: short ? 18 : 26 }}>
           <Txt size={28} w="800" lh={38} style={{ flex: 1 }}>少しずつ、毎日。</Txt>
           <Creature id="mebu" face="happy" px={3} />
         </View>
@@ -102,7 +106,7 @@ export default function Welcome() {
         <Txt size={14} tone="ink2" lh={23} style={{ marginTop: 8 }}>
           勉強した時間を記録して、積み上がりを目で見る。{'\n'}同じ目標の仲間と、同じ時間に机に向かう。
         </Txt>
-        <View style={{ gap: 14, marginTop: 26 }}>
+        <View style={{ gap: short ? 10 : 14, marginTop: short ? 18 : 26 }}>
           {([['clock', '測る', 'タイマーを止めると記録になる'], ['feed', '見える', '今日のバー、草、連続日数'], ['users', '一緒に', 'いま勉強中の仲間と始める'], ['cal', '次', 'ToDoと締切で、次にやることが決まる']] as const).map(([ic, a, b]) => (
             <View key={a} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={{ width: 40, height: 40, borderRadius: SR.tile, backgroundColor: S.card, boxShadow: ring(), alignItems: 'center', justifyContent: 'center' }}>
@@ -116,12 +120,13 @@ export default function Welcome() {
           ))}
         </View>
         <View style={{ flex: 1, minHeight: 20 }} />
-        <View style={{ gap: 14 }}>
+        <View style={{ gap: short ? 12 : 14 }}>
           <Btn kind="primary" wide label="Appleでサインイン" onPress={() => { setVia('apple'); setStep(1); }} />
           <Btn wide label="Googleでサインイン" onPress={() => { setVia('google'); setStep(1); }} />
           <Btn wide label="メールアドレスで続ける" onPress={() => { setVia('mail'); setStep(1); }} />
           <View style={{ alignSelf: 'center', marginTop: 2 }}><StdLink label="サンプルのアカウントで見る" onPress={() => finish(DEMO)} /></View>
         </View>
+        </ScrollView>
       </View>
     );
   }
@@ -248,7 +253,7 @@ export default function Welcome() {
                 {open === 'goal' ? <Opens><GoalPick value={goal} onChange={setGoal} /></Opens> : null}
               </Animated.View>
               <View>
-                <Label sub="あとで 設定 › 科目と色 から、数IA・古文のように細かく分けられます">勉強する科目</Label>
+                <Label sub={std ? 'あとで 設定 › 科目と色 から、\n数IA・古文のように細かく分けられます' : 'あとで 設定 › 科目と色 から、数IA・古文のように細かく分けられます'}>勉強する科目</Label>
                 <Txt size={13} tone="ink2">{SUBJ.map((x) => x.name).join('・')}</Txt>
               </View>
             </>

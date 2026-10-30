@@ -75,9 +75,14 @@ export type FriendsLook = {
   swipeInset?: number; swipeRadius?: number;
   /** the row lifted by a drag: an edge and shadow drawn over it, rounded (else a soft shadow under it) */
   liftShadow?: string; liftRadius?: number;
+  /** how far in from the list's sides that edge is drawn, and how much the lifted row grows (else 4, and 1.03) */
+  liftInset?: number; liftScale?: number;
 };
-/** スタンダード's, when its kit doesn't say: the grip in line 2, the swipe's red inset and rounded, the lifted row in the ink outline and the lime shadow. */
-const STD_ROW = { grip: S.line2, swipeInset: 3, swipeRadius: 12, liftShadow: LIFT, liftRadius: 12 };
+/**
+ * スタンダード's, when its kit doesn't say: the grip in line 2, the swipe's red inset and rounded, the lifted row
+ * in the ink outline and the lime shadow, 8 in from the card's sides so both stay inside it (it clips), not grown.
+ */
+const STD_ROW = { grip: S.line2, swipeInset: 3, swipeRadius: 12, liftShadow: LIFT, liftRadius: 14, liftInset: 8, liftScale: 1 };
 
 const hide = (f: Friend) => {
   setFriendHidden(f.h, true);
@@ -148,6 +153,7 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f
   const t = useT();
   const std = useStd();
   const dress = { ...(std ? STD_ROW : {}), ...look };
+  const grow = dress.liftScale ?? 1.03;
   const h = f.h;
   const start = useSharedValue(0);
   const swipe = useSharedValue(0);
@@ -203,7 +209,7 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f
   const place = useAnimatedStyle(() => {
     const lifted = dragging.value === h;
     const y = lifted ? dragY.value : move((slots.value[h] ?? 0) * ROW);
-    return { transform: [{ translateY: y }, { scale: move(lifted ? 1.03 : 1) }], zIndex: lifted ? 3 : 1 };
+    return { transform: [{ translateY: y }, { scale: move(lifted ? grow : 1) }], zIndex: lifted ? 3 : 1 };
   });
   const shadow = useAnimatedStyle(() => ({ opacity: micro(dragging.value === h ? 1 : 0) }));
   const slide = useAnimatedStyle(() => ({ transform: [{ translateX: swipe.value }] }));
@@ -251,7 +257,7 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f
       </GestureDetector>
       {/* lifted, the row's edge and shadow drawn over it (they'd be under its ground otherwise) */}
       {dress.liftShadow ? (
-        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 4, right: 4, top: 3, bottom: 3, borderRadius: dress.liftRadius ?? 0, boxShadow: dress.liftShadow }, shadow]} />
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: dress.liftInset ?? 4, right: dress.liftInset ?? 4, top: 3, bottom: 3, borderRadius: dress.liftRadius ?? 0, boxShadow: dress.liftShadow }, shadow]} />
       ) : null}
       {first ? null : <View pointerEvents="none" style={{ position: 'absolute', left: 61, right: 14, top: 0, height: hair, backgroundColor: look?.line ?? t.line }} />}
     </Animated.View>

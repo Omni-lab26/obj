@@ -7,6 +7,7 @@ import { useStore } from '../store';
 import { hair, useT } from '../theme';
 import { Btn, SubjTile, Txt } from './base';
 import { openSheet } from './Sheet';
+import { useStd } from './stdLook';
 
 // What was studied, not only which subject: a chart's column opened up —
 // each subject with what its records were about (the plan's memo or やること,
@@ -63,6 +64,7 @@ export function breakdownSheet(day: Date) {
   openSheet((close) => <DaySheet day={day} close={close} />);
 }
 function DaySheet({ day, close }: { day: Date; close: () => void }) {
+  const std = useStd(); // the ink face is a sheet's one decision; closing isn't one
   const sessions = useStore((s) => s.sessions);
   const running = useStore((s) => s.running);
   const list = contentsOf(sessions, dateKey(day));
@@ -74,7 +76,7 @@ function DaySheet({ day, close }: { day: Date; close: () => void }) {
       <Txt size={12.5} tone="ink3">{total ? `${jpHm(total)} · 何を勉強したか` : '記録なし'}</Txt>
       {total ? <Breakdown list={list} live={null} /> : null}
       {today && running ? <Txt size={11.5} tone="ink3" style={{ marginTop: 8 }}>勉強中の分は、記録すると入ります</Txt> : null}
-      <Btn kind="primary" label="閉じる" onPress={close} style={{ marginTop: 14 }} />
+      <Btn kind={std ? 'quiet' : 'primary'} label="閉じる" onPress={close} style={{ marginTop: 14 }} />
     </View>
   );
 }

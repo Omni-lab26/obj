@@ -63,7 +63,7 @@ export default function Messages() {
               </Press>
             );
           })}
-          {list.length ? null : <Empty title="まだメッセージはありません" sub="右上のペンから、フォローしている人やルームの人に送れます" />}
+          {list.length ? null : <Empty title="まだメッセージはありません" sub={std ? '右上のペンから、\nフォローしている人やルームの人に送れます' : '右上のペンから、フォローしている人やルームの人に送れます'} />}
         </ScrollView>
       </View>
     </Screen>

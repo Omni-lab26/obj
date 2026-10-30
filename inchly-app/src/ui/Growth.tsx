@@ -132,9 +132,9 @@ export function Growth() {
 
         {/* you vs. your past self */}
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Versus label="昨日より" up={g.vsYesterday >= 0} value={hm(g.vsYesterday)} />
-          <Versus label="先週より" up={g.vsLastWeek >= 0} value={`${Math.abs(g.vsLastWeek).toFixed(1)}h`} />
-          <Versus label="1日平均 · 先月より" up={g.avgNow >= g.avgThen} value={`${Math.round(Math.abs(g.avgNow - g.avgThen))}分`} />
+          <Versus label="昨日より" up={g.vsYesterday >= 0} flat={Math.round(g.vsYesterday) === 0} value={hm(g.vsYesterday)} />
+          <Versus label="先週より" up={g.vsLastWeek >= 0} flat={Math.abs(g.vsLastWeek) < 0.05} value={`${Math.abs(g.vsLastWeek).toFixed(1)}h`} />
+          <Versus label="1日平均 · 先月より" up={g.avgNow >= g.avgThen} flat={Math.round(Math.abs(g.avgNow - g.avgThen)) === 0} value={`${Math.round(Math.abs(g.avgNow - g.avgThen))}分`} />
         </View>
 
       </View>
@@ -251,12 +251,14 @@ function Meter({ p }: { p: number }) {
   }
 }
 
-function Versus({ label, up, value }: { label: string; up: boolean; value: string }) {
+function Versus({ label, up, flat, value }: { label: string; up: boolean; /** no change */ flat?: boolean; value: string }) {
   const t = useT();
+  // スタンダード: no change is neither up nor down (± in grey)
+  const even = useStd() && flat;
   return (
     <Card pad={10} style={{ flex: 1 }}>
       <Txt size={10.5} tone="ink3" numberOfLines={1}>{label}</Txt>
-      <Txt num size={16} w="700" lh={21} color={up ? t.greenInk : t.red} style={{ marginTop: 2 }}>{`${up ? '▲' : '▼'} ${value}`}</Txt>
+      <Txt num size={16} w="700" lh={21} color={even ? t.ink3 : up ? t.greenInk : t.red} style={{ marginTop: 2 }}>{`${even ? '±' : up ? '▲' : '▼'} ${value}`}</Txt>
     </Card>
   );
 }

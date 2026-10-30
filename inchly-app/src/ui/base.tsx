@@ -30,8 +30,11 @@ type TxtProps = TextProps & { size?: number; w?: '200' | '300' | '400' | '500' |
 // Figures are tabular so counters don't jitter; big ones are set a little tighter.
 export function Txt({ size = 14, w = '400', tone = 'ink', color, num, lh, style, ...rest }: TxtProps) {
   const t = useT();
+  // スタンダード: iOS's own line breaking (a last line of one lone character is avoided)
+  const std = useStd();
   return (
     <Text
+      lineBreakStrategyIOS={std ? 'standard' : undefined}
       {...rest}
       style={[
         { fontSize: size, color: color ?? t[tone], fontFamily: face(size), fontWeight: w, lineHeight: lh ?? Math.round(size * (num ? 1.2 : 1.5)) },
@@ -401,11 +404,16 @@ export function Card({ children, style, pad = 14 }: { children?: ReactNode; styl
   );
 }
 
-/** スタンダード's heading words: DotGothic16 at its own 16pt (smaller, it blurs). */
+/**
+ * スタンダード's heading words: DotGothic16 at its own 16pt (smaller, it blurs). Set at the face's own line height
+ * (iOS cuts the tops of a line set shorter), taking 1.25 of its size in the layout: the rest is given back by margins.
+ */
 export function PixHead({ children, size = 16, color = S.ink, lines = 1 }: { children: ReactNode; size?: number; color?: string; lines?: number }) {
   useT(); // the face arrives later: render again then
+  const natural = Math.ceil(size * 1.45);
+  const give = (natural - Math.round(size * 1.25)) / 2;
   return (
-    <Text numberOfLines={lines} style={{ fontFamily: bundledFace('pixel') ?? font.text, fontSize: size, lineHeight: Math.round(size * 1.25), letterSpacing: 0.3, color }}>{children}</Text>
+    <Text numberOfLines={lines} style={{ fontFamily: bundledFace('pixel') ?? font.text, fontSize: size, lineHeight: natural, marginVertical: -give, letterSpacing: 0.3, color }}>{children}</Text>
   );
 }
 /** スタンダード's section heading: a small square (its accent, sun unless said) and the words in DotGothic16. */

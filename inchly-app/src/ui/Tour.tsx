@@ -45,17 +45,24 @@ const measure = (id: string) => new Promise<Rect | null>((done) => {
   v.measureInWindow((x, y, w, h) => done(w > 0 && h > 0 ? { x, y, w, h } : null));
 });
 
-type Step = { at?: string[]; title: string; body: string };
+/** `lines`: スタンダード's body, broken by hand where it reads well (its bubble's words are 288 wide on every phone it's on). */
+type Step = { at?: string[]; title: string; body: string; lines?: string };
 /** In order; `at`: the places it may point at, the first one on screen wins (none: a bubble in the middle). */
 const STEPS: Step[] = [
-  { title: 'Inchly へようこそ', body: '使い方を少しだけ紹介します。あとで メニューの 設定 › 使い方をもう一度見る から、いつでも見られます。' },
-  { at: ['start'], title: '勉強はここから', body: '「勉強を開始」を押すと、すぐタイマーが始まります。時間割の予定があればその予定で、なければ自習で始まり、科目はあとから付けられます。' },
-  { at: ['bar'], title: '勉強中はこのバー', body: '進んでいる時間がここに出ます。押すとタイマーのカード、下に引くと止めて記録できます。' },
-  { at: ['tab-study'], title: '時間割と締切', body: '予定を入れておくと、その時刻に下のバーに出て、1タップで始められます。終えた予定には ✓ が付きます。' },
-  { at: ['tab-me'], title: 'グラフで振り返る', body: 'マイページで、この7日間とこれまでの勉強時間をグラフで見られます。棒を押すと、何を勉強したかの内訳も出ます。' },
-  { at: ['messages'], title: 'メッセージ', body: '右上の吹き出しから、仲間と1対1でやりとりできます。' },
-  { title: 'メニューは右にスワイプ', body: `ホームを右にスワイプすると、設定・テーマ・${BACKDROPS_OPEN ? '背景・' : ''}科目と色のメニューが出ます。` },
-  { title: '準備OK', body: 'さっそく下の「勉強を開始」から始めてみよう。' },
+  { title: 'Inchly へようこそ', body: '使い方を少しだけ紹介します。あとで メニューの 設定 › 使い方をもう一度見る から、いつでも見られます。',
+    lines: '使い方を少しだけ紹介します。\nあとで メニューの 設定 › 使い方を\nもう一度見る から、いつでも見られます。' },
+  { at: ['start'], title: '勉強はここから', body: '「勉強を開始」を押すと、すぐタイマーが始まります。時間割の予定があればその予定で、なければ自習で始まり、科目はあとから付けられます。',
+    lines: '「勉強を開始」を押すと、すぐタイマーが\n始まります。時間割の予定があれば\nその予定で、なければ自習で始まり、\n科目はあとから付けられます。' },
+  { at: ['bar'], title: '勉強中はこのバー', body: '進んでいる時間がここに出ます。押すとタイマーのカード、下に引くと止めて記録できます。',
+    lines: '進んでいる時間がここに出ます。\n押すとタイマーのカード、\n下に引くと止めて記録できます。' },
+  { at: ['tab-study'], title: '時間割と締切', body: '予定を入れておくと、その時刻に下のバーに出て、1タップで始められます。終えた予定には ✓ が付きます。',
+    lines: '予定を入れておくと、その時刻に\n下のバーに出て、1タップで始められます。\n終えた予定には ✓ が付きます。' },
+  { at: ['tab-me'], title: 'グラフで振り返る', body: 'マイページで、この7日間とこれまでの勉強時間をグラフで見られます。棒を押すと、何を勉強したかの内訳も出ます。',
+    lines: 'マイページで、この7日間とこれまでの\n勉強時間をグラフで見られます。\n棒を押すと、何を勉強したかの\n内訳も出ます。' },
+  { at: ['messages'], title: 'メッセージ', body: '右上の吹き出しから、仲間と1対1でやりとりできます。', lines: '右上の吹き出しから、仲間と1対1で\nやりとりできます。' },
+  { title: 'メニューは右にスワイプ', body: `ホームを右にスワイプすると、設定・テーマ・${BACKDROPS_OPEN ? '背景・' : ''}科目と色のメニューが出ます。`,
+    lines: `ホームを右にスワイプすると、\n設定・テーマ・${BACKDROPS_OPEN ? '背景・' : ''}科目と色の\nメニューが出ます。` },
+  { title: '準備OK', body: 'さっそく下の「勉強を開始」から始めてみよう。', lines: 'さっそく下の「勉強を開始」から\n始めてみよう。' },
 ];
 
 export function TourHost() {
@@ -141,7 +148,7 @@ function Bubble({ step, rect, n, i, next, skip }: { step: Step; rect: Rect | nul
               {pix ? <Creature id="mebu" face={pix} px={3} /> : null}
               <Txt size={16} w="800" lh={22} style={{ flex: 1 }} accessibilityRole="header">{step.title}</Txt>
             </View>
-            <Txt size={14} tone="ink2" lh={23}>{step.body}</Txt>
+            <Txt size={14} tone="ink2" lh={23}>{step.lines ?? step.body}</Txt>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 12 }}>
               <View style={{ flexDirection: 'row', gap: 5, flex: 1 }} accessible accessibilityLabel={`${i + 1} / ${n}`}>
                 {Array.from({ length: n }, (_, k) => <View key={k} style={{ width: 7, height: 7, backgroundColor: k === i ? S.ink : S.line2 }} />)}

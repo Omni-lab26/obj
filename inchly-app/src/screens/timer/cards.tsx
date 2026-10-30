@@ -28,6 +28,7 @@ import { glyphOf, SubjectGlyph } from '@/ui/SubjectGlyph';
 import { openSheet } from '@/ui/Sheet';
 import { TIME_FONTS, timeFontOf } from '@/ui/timeFonts';
 import { toast } from '@/ui/Toast';
+import { useStd } from '@/ui/stdLook';
 import { BackdropView } from '@/ui/backdrop/Backdrop';
 import { backdropAvoid, feedAt, FLOOR, holdBackdrop, isDarkBackdrop, useBackdrop } from '@/ui/backdrop/shared';
 import { WalkerTags } from '@/ui/backdrop/Tags';
@@ -365,6 +366,15 @@ function Deck({ height }: { height: number }) {
     if (now >= 0 && now + 1 !== shown) setTimeout(() => goTo(now + 1), 60);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards]);
+  // スタンダード: the cards narrow or widen with the room (記録まち comes or goes on a short page); the one you're on stays in the middle
+  const std = useStd();
+  const stepWas = useRef(step);
+  useEffect(() => {
+    if (stepWas.current === step) return;
+    stepWas.current = step;
+    if (std) goTo(shown, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   // where the centered card sits on the page, for the background to keep off it
   const row = useRef<ComponentRef<typeof View>>(null);
