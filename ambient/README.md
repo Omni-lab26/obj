@@ -34,13 +34,20 @@
    ```bash
    git clone -b claude/clever-goldberg-bsnbxb https://github.com/Omni-lab26/obj.git
    cd obj/ambient
-   npm install
-   npx expo start
+   npm run live
    ```
 
 4. 出てきた QR コードを iPhone はカメラ、Android は Expo Go で読み取る
 
-PC とスマホが別の Wi-Fi のときは `npx expo start --tunnel` を使ってください。
+`npm run live` は、最新の取り込み → 必要なら `npm install` → 背景の書き出し → Expo の起動までをまとめて行います。起動したままにしておくと、このブランチに新しい変更が届くたびに 20 秒以内に自動で取り込み、スマホのアプリもそのまま更新されます（パッケージが変わったときは入れ直して Expo を起動し直します）。手元でファイルを変更しているときは、自動の取り込みは止まります。
+
+| コマンド | 使いどころ |
+| --- | --- |
+| `npm run live` | PC とスマホが同じ Wi-Fi（WSL の中で動かしているときは自動でトンネル） |
+| `npm run live -- --tunnel` | 別のネットワークでもつなぐ（トンネル経由） |
+| `npm run live -- --lan` | WSL でも同じ Wi-Fi で直接つなぐ |
+| `npm run live -- --no-pull` | ブランチを追いかけない |
+| `npm run live -- --clear` | Metro のキャッシュを消してから起動 |
 
 ## ブラウザで背景だけ見る
 
