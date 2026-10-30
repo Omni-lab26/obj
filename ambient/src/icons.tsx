@@ -64,3 +64,12 @@ export function UndoIcon({ color, size = 18 }: IconProps) {
     </Svg>
   );
 }
+
+/** A cross: close. */
+export function CloseIcon({ color, size = 16 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <Path d="m3.5 3.5 9 9m0-9-9 9" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
+    </Svg>
+  );
+}

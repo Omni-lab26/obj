@@ -1,24 +1,19 @@
 import Slider from '@react-native-community/slider';
 import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import {
-  Animated,
-  Easing,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Animated, Easing, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { clockFonts } from './fonts';
-import { CheckIcon } from './icons';
+import { CloseIcon } from './icons';
 import { scenes } from './scenes';
 import { useSettings } from './settings';
+
+// Settings in the app's own manner rather than a system list: the scene stays behind
+// frosted glass, the type is plain and quiet, choices are soft glass tiles that light
+// up, and the fonts are shown as the digits themselves. It opens from the button at
+// the top right, and the close button takes that button's place.
 
 // The digital layer only acts on photo backgrounds; without any, its setting is hidden.
 const hasPhotos = scenes.some((s) => s.kind === 'photo');
@@ -34,34 +29,40 @@ type Props = {
 function palette(tone: 'dark' | 'light') {
   return tone === 'dark'
     ? {
-        sheet: 'rgba(28,28,30,0.74)',
-        group: 'rgba(255,255,255,0.08)',
-        label: '#ffffff',
-        secondary: 'rgba(235,235,245,0.6)',
-        separator: 'rgba(84,84,88,0.55)',
-        accent: '#0A84FF',
-        track: 'rgba(120,120,128,0.36)',
-        blur: 'systemChromeMaterialDark' as const,
+        veil: 'rgba(8,8,10,0.55)',
+        ink: '#ffffff',
+        soft: 'rgba(255,255,255,0.62)',
+        faint: 'rgba(255,255,255,0.32)',
+        tile: 'rgba(255,255,255,0.06)',
+        tileOn: 'rgba(255,255,255,0.16)',
+        edge: 'rgba(255,255,255,0.14)',
+        edgeOn: 'rgba(255,255,255,0.7)',
+        glass: 'dark' as const,
       }
     : {
-        sheet: 'rgba(242,242,247,0.82)',
-        group: 'rgba(255,255,255,0.9)',
-        label: '#000000',
-        secondary: 'rgba(60,60,67,0.6)',
-        separator: 'rgba(60,60,67,0.22)',
-        accent: '#007AFF',
-        track: 'rgba(120,120,128,0.2)',
-        blur: 'systemChromeMaterialLight' as const,
+        veil: 'rgba(250,250,248,0.55)',
+        ink: '#0b0b0e',
+        soft: 'rgba(11,11,14,0.6)',
+        faint: 'rgba(11,11,14,0.3)',
+        tile: 'rgba(255,255,255,0.45)',
+        tileOn: 'rgba(255,255,255,0.9)',
+        edge: 'rgba(11,11,14,0.1)',
+        edgeOn: 'rgba(11,11,14,0.65)',
+        glass: 'light' as const,
       };
 }
+type Colors = ReturnType<typeof palette>;
+
+const tick = () => {
+  if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
+};
 
 export function SettingsSheet({ open, onClose, tone, credit }: Props) {
   const { settings, update } = useSettings();
   const insets = useSafeAreaInsets();
-  const { height, width } = useWindowDimensions();
   const c = palette(tone);
   const [progress] = useState(() => new Animated.Value(0));
-  // The sheet stays mounted while it slides away after being closed.
+  // The page stays mounted while it fades away after being closed.
   const [closing, setClosing] = useState(false);
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
@@ -72,313 +73,305 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
 
   useEffect(() => {
     if (open) {
-      Animated.spring(progress, { toValue: 1, useNativeDriver: true, speed: 16, bounciness: 2 }).start();
+      Animated.timing(progress, { toValue: 1, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
     } else {
-      Animated.timing(progress, {
-        toValue: 0,
-        duration: 260,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }).start(({ finished }) => finished && setClosing(false));
+      Animated.timing(progress, { toValue: 0, duration: 220, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(
+        ({ finished }) => finished && setClosing(false)
+      );
     }
   }, [open, progress]);
 
-  // The slider stays uncontrolled while the sheet is open so dragging never fights props.
+  // The slider stays uncontrolled while the page is open so dragging never fights props.
   const initialDigital = useMemo(() => settings.digital, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const setClock = (patch: Partial<typeof settings.clock>) =>
+  const setClock = (patch: Partial<typeof settings.clock>) => {
+    tick();
     update((s) => ({ ...s, clock: { ...s.clock, ...patch } }));
+  };
 
-  const sheetHeight = Math.min(height * 0.78, 640);
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [sheetHeight + 40, 0] });
+  const rise = progress.interpolate({ inputRange: [0, 1], outputRange: [14, 0] });
+  const top = Math.max(insets.top, 12) + 10;
 
   return (
     <Modal visible={mounted} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
-      <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="設定を閉じる" />
-      </Animated.View>
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: progress }]}>
+        <BlurView intensity={60} tint={c.glass} style={StyleSheet.absoluteFill} />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: c.veil }]} />
 
-      <Animated.View
-        style={[
-          styles.sheet,
-          { height: sheetHeight, width: Math.min(width, 560), transform: [{ translateY }] },
-        ]}
-      >
-        <BlurView intensity={80} tint={c.blur} style={StyleSheet.absoluteFill} />
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: c.sheet }]} />
+        <Animated.View style={[styles.page, { transform: [{ translateY: rise }] }]}>
+          <ScrollView
+            contentContainerStyle={[styles.content, { paddingTop: top + 2, paddingBottom: insets.bottom + 36 }]}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={[styles.title, { color: c.ink }]}>設定</Text>
+            <Text style={[styles.lede, { color: c.soft }]}>画面のどこかを長押しすると、いつでも時計を出したり隠したりできます。</Text>
 
-        <View style={styles.grabber}>
-          <View style={[styles.grabberBar, { backgroundColor: c.secondary }]} />
-        </View>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: c.label }]}>設定</Text>
-          <Pressable onPress={onClose} hitSlop={12} style={styles.done} accessibilityRole="button">
-            <Text style={[styles.doneText, { color: c.accent }]}>完了</Text>
-          </Pressable>
-        </View>
-
-        <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 28 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <SectionTitle color={c.secondary}>時計</SectionTitle>
-          <Group color={c.group}>
-            <ToggleRow label="時計を表示" value={settings.clock.visible} onChange={(v) => setClock({ visible: v })} c={c} />
-            <ToggleRow label="日付" value={settings.clock.date} onChange={(v) => setClock({ date: v })} c={c} />
-            <ToggleRow label="秒（時計）" value={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
-            <ToggleRow label="24時間表示" value={settings.clock.hour24} onChange={(v) => setClock({ hour24: v })} c={c} last />
-          </Group>
-
-          <SectionTitle color={c.secondary}>フォント</SectionTitle>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fonts}>
-            {clockFonts.map((f) => {
-              const selected = settings.clock.font === f.id;
-              return (
-                <Pressable
-                  key={f.id}
-                  onPress={() => setClock({ font: f.id, visible: true })}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={`フォント ${f.label}`}
-                  style={({ pressed }) => [
-                    styles.fontCard,
-                    {
-                      backgroundColor: c.group,
-                      borderColor: selected ? c.accent : 'transparent',
-                      transform: [{ scale: pressed ? 0.96 : 1 }],
-                    },
-                  ]}
-                >
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      f.time,
-                      {
-                        fontSize: (f.time.fontSize ?? 96) * 0.36,
-                        letterSpacing: (f.time.letterSpacing ?? 0) * 0.36,
-                        color: c.label,
-                        includeFontPadding: false,
-                      },
-                    ]}
-                  >
-                    9:41
-                  </Text>
-                  <Text style={[styles.fontLabel, { color: selected ? c.accent : c.secondary }]}>{f.label}</Text>
-                  {selected && (
-                    <View style={[styles.badge, { backgroundColor: c.accent }]}>
-                      <CheckIcon color="#fff" size={10} />
-                    </View>
-                  )}
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-          <Footnote color={c.secondary}>画面のどこかを長押しすると、いつでも時計を出したり隠したりできます。</Footnote>
-
-          {hasPhotos ? (
-            <>
-              <View style={styles.sectionRow}>
-                <SectionTitle color={c.secondary}>デジタルレイヤー</SectionTitle>
-                <Text style={[styles.value, { color: c.secondary }]}>{Math.round(settings.digital * 100)}%</Text>
+            <Section title="表示" c={c}>
+              <View style={styles.tiles}>
+                <Toggle label="時計" note="中央に出す" on={settings.clock.visible} onChange={(v) => setClock({ visible: v })} c={c} />
+                <Toggle label="日付" note="時計の上に" on={settings.clock.date} onChange={(v) => setClock({ date: v })} c={c} />
+                <Toggle label="24時間" note="午後も13時から" on={settings.clock.hour24} onChange={(v) => setClock({ hour24: v })} c={c} />
+                <Toggle label="秒" note="時計だけ" on={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
               </View>
-              <Group color={c.group}>
-                <View style={styles.sliderRow}>
-                  <Text style={[styles.sliderEnd, { color: c.label }]}>素</Text>
+            </Section>
+
+            <Section title="フォント" c={c}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fonts}>
+                {clockFonts.map((f) => {
+                  const selected = settings.clock.font === f.id;
+                  return (
+                    <Pressable
+                      key={f.id}
+                      onPress={() => setClock({ font: f.id, visible: true })}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={`フォント ${f.label}`}
+                      style={({ pressed }) => [
+                        styles.font,
+                        { backgroundColor: selected ? c.tileOn : c.tile, borderColor: selected ? c.edgeOn : c.edge },
+                        { transform: [{ scale: pressed ? 0.96 : 1 }] },
+                      ]}
+                    >
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          f.time,
+                          {
+                            fontSize: (f.time.fontSize ?? 96) * 0.4,
+                            letterSpacing: (f.time.letterSpacing ?? 0) * 0.4,
+                            color: selected ? c.ink : c.soft,
+                            includeFontPadding: false,
+                          },
+                        ]}
+                      >
+                        12:34
+                      </Text>
+                      <Text style={[styles.fontLabel, { color: selected ? c.ink : c.faint }]}>{f.label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </Section>
+
+            {hasPhotos ? (
+              <Section title="デジタルレイヤー" value={`${Math.round(settings.digital * 100)}%`} c={c}>
+                <View style={[styles.slab, { backgroundColor: c.tile, borderColor: c.edge }]}>
+                  <Text style={[styles.end, { color: c.soft }]}>素</Text>
                   <Slider
                     style={styles.slider}
                     minimumValue={0}
                     maximumValue={1}
                     value={initialDigital}
                     onValueChange={(v) => update((s) => ({ ...s, digital: v }))}
-                    minimumTrackTintColor={c.accent}
-                    maximumTrackTintColor={c.track}
+                    minimumTrackTintColor={c.ink}
+                    maximumTrackTintColor={c.faint}
+                    thumbTintColor={c.ink}
                     accessibilityLabel="デジタルレイヤーの強さ"
                   />
-                  <Text style={[styles.sliderEnd, { color: c.label }]}>デジタル</Text>
+                  <Text style={[styles.end, { color: c.soft }]}>デジタル</Text>
                 </View>
-              </Group>
-              <Footnote color={c.secondary}>
-                写真の背景にかける加工の強さです。左端は元の写真そのまま、右に行くほど文字・網点・ドットなどのデジタル表現が強くなります。
-              </Footnote>
-            </>
-          ) : null}
-          {credit ? <Footnote color={c.secondary}>いまの背景の写真: {credit}</Footnote> : null}
-        </ScrollView>
+                <Text style={[styles.note, { color: c.soft }]}>
+                  写真の背景にかける加工の強さ。左端は元の写真そのまま、右に行くほど文字・網点・ドットなどのデジタル表現が強くなります。
+                </Text>
+              </Section>
+            ) : null}
+            {credit ? <Text style={[styles.note, styles.credit, { color: c.faint }]}>いまの背景の写真: {credit}</Text> : null}
+          </ScrollView>
+        </Animated.View>
+
+        {/* Where the settings button was. */}
+        <Pressable
+          onPress={onClose}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="設定を閉じる"
+          style={({ pressed }) => [
+            styles.close,
+            { top, right: Math.max(insets.right, 12) + 4, borderColor: c.edge, backgroundColor: c.tile },
+            { opacity: pressed ? 0.5 : 1, transform: [{ scale: pressed ? 0.92 : 1 }] },
+          ]}
+        >
+          <CloseIcon color={c.ink} />
+        </Pressable>
       </Animated.View>
     </Modal>
   );
 }
 
-type Colors = ReturnType<typeof palette>;
-
-function SectionTitle({ children, color }: { children: ReactNode; color: string }) {
-  return <Text style={[styles.section, { color }]}>{children}</Text>;
-}
-
-function Footnote({ children, color }: { children: ReactNode; color: string }) {
-  return <Text style={[styles.footnote, { color }]}>{children}</Text>;
-}
-
-function Group({ children, color }: { children: ReactNode; color: string }) {
-  return <View style={[styles.group, { backgroundColor: color }]}>{children}</View>;
-}
-
-function ToggleRow({
-  label,
-  value,
-  onChange,
-  c,
-  last,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-  c: Colors;
-  last?: boolean;
-}) {
+function Section({ title, value, c, children }: { title: string; value?: string; c: Colors; children: ReactNode }) {
   return (
-    <View style={styles.rowWrap}>
-      <View style={styles.row}>
-        <Text style={[styles.rowLabel, { color: c.label }]}>{label}</Text>
-        <Switch value={value} onValueChange={onChange} accessibilityLabel={label} />
+    <View style={styles.section}>
+      <View style={styles.sectionHead}>
+        <Text style={[styles.sectionTitle, { color: c.soft }]}>{title}</Text>
+        <View style={[styles.rule, { backgroundColor: c.edge }]} />
+        {value ? <Text style={[styles.sectionValue, { color: c.soft }]}>{value}</Text> : null}
       </View>
-      {!last && <View style={[styles.separator, { backgroundColor: c.separator }]} />}
+      {children}
     </View>
   );
 }
 
+/** A glass tile that lights up when on: a dot that fills, the label and a short note. */
+function Toggle({ label, note, on, onChange, c }: { label: string; note: string; on: boolean; onChange: (v: boolean) => void; c: Colors }) {
+  return (
+    <Pressable
+      onPress={() => onChange(!on)}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: on }}
+      accessibilityLabel={label}
+      style={({ pressed }) => [
+        styles.tile,
+        { backgroundColor: on ? c.tileOn : c.tile, borderColor: on ? c.edgeOn : c.edge },
+        { transform: [{ scale: pressed ? 0.97 : 1 }] },
+      ]}
+    >
+      <View style={[styles.dot, { borderColor: on ? c.ink : c.faint, backgroundColor: on ? c.ink : 'transparent' }]} />
+      <View style={styles.tileText}>
+        <Text style={[styles.tileLabel, { color: on ? c.ink : c.soft }]}>{label}</Text>
+        <Text style={[styles.tileNote, { color: c.faint }]} numberOfLines={1}>
+          {on ? note : 'オフ'}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  backdrop: {
-    backgroundColor: 'rgba(0,0,0,0.28)',
+  page: {
+    flex: 1,
   },
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
+  content: {
+    width: '100%',
+    maxWidth: 560,
     alignSelf: 'center',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    overflow: 'hidden',
-  },
-  grabber: {
-    alignItems: 'center',
-    paddingTop: 8,
-  },
-  grabberBar: {
-    width: 36,
-    height: 5,
-    borderRadius: 3,
-    opacity: 0.5,
-  },
-  header: {
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 22,
   },
   title: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 34,
+    lineHeight: 44,
+    fontWeight: '200',
     letterSpacing: 0,
+    // (Clear of the close button at the right.)
+    marginRight: 56,
   },
-  done: {
-    position: 'absolute',
-    right: 20,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-  },
-  doneText: {
-    fontSize: 17,
-    fontWeight: '600',
+  lede: {
+    marginTop: 6,
+    fontSize: 13,
+    lineHeight: 19,
     letterSpacing: 0,
+    marginRight: 40,
   },
   section: {
-    fontSize: 13,
-    letterSpacing: 0,
-    marginTop: 22,
-    marginBottom: 7,
-    marginLeft: 16,
+    marginTop: 30,
   },
-  sectionRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-  },
-  value: {
-    fontSize: 13,
-    marginBottom: 7,
-    marginRight: 16,
-    fontVariant: ['tabular-nums'],
-  },
-  footnote: {
-    fontSize: 12,
-    lineHeight: 17,
-    letterSpacing: 0,
-    marginTop: 8,
-    marginHorizontal: 16,
-  },
-  group: {
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  rowWrap: {
-    paddingLeft: 16,
-  },
-  row: {
-    minHeight: 46,
+  sectionHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingRight: 14,
+    gap: 10,
+    marginBottom: 12,
   },
-  rowLabel: {
-    fontSize: 16,
-    letterSpacing: 0,
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1.5,
   },
-  separator: {
+  rule: {
+    flex: 1,
     height: StyleSheet.hairlineWidth,
   },
-  fonts: {
+  sectionValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0,
+    fontVariant: ['tabular-nums'],
+  },
+  tiles: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
-    paddingHorizontal: 2,
-    paddingVertical: 2,
   },
-  fontCard: {
-    width: 104,
-    height: 90,
-    borderRadius: 16,
-    borderWidth: 2,
+  tile: {
+    flexGrow: 1,
+    flexBasis: '45%',
+    minHeight: 64,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
+    gap: 12,
   },
-  fontLabel: {
-    fontSize: 11,
+  dot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1.5,
+  },
+  tileText: {
+    flex: 1,
+  },
+  tileLabel: {
+    fontSize: 16,
     fontWeight: '500',
     letterSpacing: 0,
   },
-  badge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+  tileNote: {
+    marginTop: 2,
+    fontSize: 11,
+    letterSpacing: 0,
+  },
+  fonts: {
+    gap: 10,
+    paddingVertical: 2,
+  },
+  font: {
+    width: 112,
+    height: 96,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
   },
-  sliderRow: {
+  fontLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  slab: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    minHeight: 54,
-    gap: 8,
+    gap: 10,
+    minHeight: 58,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 16,
   },
   slider: {
     flex: 1,
     height: 40,
   },
-  sliderEnd: {
-    fontSize: 14,
+  end: {
+    fontSize: 13,
+    fontWeight: '500',
     letterSpacing: 0,
+  },
+  note: {
+    marginTop: 10,
+    fontSize: 12,
+    lineHeight: 18,
+    letterSpacing: 0,
+  },
+  credit: {
+    marginTop: 30,
+  },
+  close: {
+    position: 'absolute',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

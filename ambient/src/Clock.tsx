@@ -2,9 +2,18 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Reanimated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import Reanimated, {
+  makeMutable,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
 
 import { FaceBackdrop } from './FaceBackdrop';
+import { ResizeIcon } from './icons';
 import { clockFont } from './fonts';
 import type { Settings } from './settings';
 import { TimerSaves } from './TimerSaves';
@@ -54,20 +63,89 @@ type Props = {
   onSave: (i: number) => void;
   onLoad: (i: number) => void;
   onDelete: (i: number) => void;
-  /** Where the digits sit and how big (all modes), and the edit under way, if any. */
+  /** Where the digits sit and how big (all modes), and whether they are being edited. */
   face: Settings['face'];
-  edit: Edit;
+  edit: boolean;
   onFace: (face: Settings['face']) => void;
 };
 
-/** Editing the digits: dragging moves them, or makes them bigger and smaller. */
-export type Edit = 'move' | 'size' | null;
-type Place = { x: number; y: number; scale: number }; // px from the usual place
-
 const MARGIN = 12; // kept clear around the digits at the screen's edges
-// The edit tools at the top left (in App): the digits stay out from under them.
-const TOOLS = { width: 168, height: 54 };
+// The buttons in the top corners (in App: the pen on the left, settings on the
+// right): the digits stay out from under them.
+const TOOLS = { left: 136, right: 64, height: 54 };
 const MIN_SCALE = 0.35;
+const FRAME = 10; // the edit frame's reach past the block, sideways
+
+/** What the digits' place depends on: the screen, the block as laid out (its digits'
+ *  row, the widest of its other lines, and its height), the rulers' height, and how far
+ *  the scale may go from the one laid out. */
+type Limits = {
+  W: number;
+  H: number;
+  rowW: number;
+  rowH: number;
+  sideW: number;
+  bh: number;
+  cy0: number;
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+  need: number;
+  kMin: number;
+  kMax: number;
+};
+
+// Only the digits grow and shrink under a zoom; the label and hint keep their size
+// and move apart to make room. (Defined before the worklets that use them: a worklet takes in
+// what it refers to when it is defined.)
+function blockW(k: number, p: Limits) {
+  'worklet';
+  return Math.max(p.rowW * k, p.sideW);
+}
+function blockH(k: number, p: Limits) {
+  'worklet';
+  return p.bh + p.rowH * (k - 1);
+}
+
+/**
+ * Where the digits may sit (px from their usual place) at k times the laid-out
+ * size: the whole block on screen, clear of the corner buttons, with room for the
+ * timer's rulers above or below. A worklet, so a drag can use it on the UI thread.
+ */
+function clampPlace(x: number, y: number, k: number, p: Limits) {
+  'worklet';
+  const bw = blockW(k, p);
+  const bh = blockH(k, p);
+  const dx = Math.max(0, p.W / 2 - MARGIN - bw / 2);
+  const cx = Math.min(dx, Math.max(-dx, x));
+  const l = p.W / 2 + cx - bw / 2;
+  const underTools = l < Math.max(p.left, 12) + TOOLS.left || l + bw > p.W - Math.max(p.right, 12) - TOOLS.right;
+  const ceiling = underTools ? Math.max(p.top, 12) + TOOLS.height + 8 : p.top + MARGIN;
+  const top = ceiling + bh / 2 - p.cy0;
+  const bottom = p.H - p.bottom - MARGIN - bh / 2 - p.cy0;
+  if (top > bottom) return { x: cx, y: (top + bottom) / 2 };
+  let cy = Math.min(bottom, Math.max(top, y));
+  // Leave the timer's rulers room on one side or the other (in every mode, so the
+  // digits never jump on the way to the timer): no hanging in a middle too short
+  // for them either way.
+  const lowest = bottom - p.need; // rulers below fit while above this
+  const highest = p.top + MARGIN + bh / 2 - p.cy0 + p.need; // rulers above fit while below this
+  if (cy > lowest && cy < highest) {
+    const low = lowest >= top;
+    const high = highest <= bottom;
+    if (low && (!high || cy - lowest < highest - cy)) cy = lowest;
+    else if (high) cy = highest;
+  }
+  return { x: cx, y: Math.min(bottom, Math.max(top, cy)) };
+}
+
+/** The resize handle's offset from the block's centre: on the frame's right edge,
+ *  pulled in when that would be off screen. */
+function handleX(x: number, k: number, p: Limits) {
+  'worklet';
+  return Math.min(blockW(k, p) / 2 + FRAME, p.W - 22 - (p.W / 2 + x));
+}
 
 const MODES: Settings['mode'][] = ['clock', 'timer', 'stopwatch'];
 const MODE_NAMES = { clock: '時計', timer: 'タイマー', stopwatch: 'ストップウォッチ' } as const;
@@ -127,73 +205,81 @@ function makeFaceGesture(swipeX: SharedValue<number>, span: SharedValue<number>)
   };
 }
 
-// While editing, the digits' gestures give way to these (both stay attached, one
-// on and the other off: swapping one for the other on the same view can leave a
-// gesture stuck on the web): a drag moves them (or, in
-// size mode, pulls them bigger up and to the right and smaller down and to the left)
-// and two fingers pinch them bigger or smaller. Built once, like the face's.
-function makeEditGesture() {
-  const h = {
-    current: (): Place => ({ x: 0, y: 0, scale: 1 }),
-    kind: (): Edit => 'move',
-    change: (_p: Place) => {},
-    done: (_p: Place) => {},
-  };
-  const s = { active: 0, start: { x: 0, y: 0, scale: 1 }, tx: 0, ty: 0, pinch: 1, last: { x: 0, y: 0, scale: 1 } };
+// While editing, the digits' gestures give way to these (both stay attached, one on
+// and the other off: swapping one for the other on the same view can leave a gesture
+// stuck on the web). One finger moves the digits, or resizes them when it starts on
+// the handle at the frame's right; two fingers pinch them bigger or smaller. It all
+// runs on the UI thread as a transform, and only the result goes back to JS, once,
+// when the fingers lift: nothing re-renders while dragging.
+function makeEditGesture(px: SharedValue<number>, py: SharedValue<number>, zoom: SharedValue<number>, lim: SharedValue<Limits>, busy: SharedValue<number>) {
+  const h = { done: (_x: number, _y: number, _k: number) => {} };
+  const done = (x: number, y: number, k: number) => h.done(x, y, k);
+  // (Shared values, not plain objects: each callback gets its own copy of those.)
+  const panAt = makeMutable({ x: 0, y: 0, k: 1, hx: 1, resize: false, on: false });
+  const pinchAt = makeMutable({ k: 1, on: false });
   const begin = () => {
-    if (s.active++ > 0) return;
-    s.start = h.current();
-    s.last = s.start;
-    s.tx = 0;
-    s.ty = 0;
-    s.pinch = 1;
-  };
-  const emit = () => {
-    const size = h.kind() === 'size';
-    s.last = {
-      x: s.start.x + (size ? 0 : s.tx),
-      y: s.start.y + (size ? 0 : s.ty),
-      scale: s.start.scale * s.pinch * (size ? Math.exp((s.tx - s.ty) / 220) : 1),
-    };
-    h.change(s.last);
+    'worklet';
+    busy.set(busy.get() + 1);
   };
   const end = () => {
-    if (--s.active > 0) return;
-    s.active = 0;
-    h.done(s.last);
-  };
-  // Each gesture ends once, however it ends (onEnd can be skipped when it is cancelled).
-  const on = { pan: false, pinch: false };
-  const start = (k: keyof typeof on) => () => {
-    on[k] = true;
-    begin();
-  };
-  const finish = (k: keyof typeof on) => () => {
-    if (!on[k]) return;
-    on[k] = false;
-    end();
+    'worklet';
+    busy.set(Math.max(0, busy.get() - 1));
+    if (busy.get() === 0) runOnJS(done)(px.get(), py.get(), zoom.get());
   };
   const pan = Gesture.Pan()
     .enabled(false)
-    .runOnJS(true)
-    .minDistance(1)
     .maxPointers(1)
-    .onStart(start('pan'))
-    .onUpdate((e) => {
-      s.tx = e.translationX;
-      s.ty = e.translationY;
-      emit();
+    .minDistance(1)
+    .onBegin((e) => {
+      const p = lim.get();
+      const k = zoom.get();
+      const hx = handleX(px.get(), k, p);
+      const resize = Math.hypot(e.absoluteX - (p.W / 2 + px.get() + hx), e.absoluteY - (p.cy0 + py.get())) < 34;
+      panAt.set({ x: px.get(), y: py.get(), k, hx: Math.max(24, hx), resize, on: false });
     })
-    .onFinalize(finish('pan'));
+    .onStart(() => {
+      panAt.set({ ...panAt.get(), on: true });
+      begin();
+    })
+    .onUpdate((e) => {
+      const s = panAt.get();
+      const p = lim.get();
+      if (s.resize) {
+        const k = Math.min(p.kMax, Math.max(p.kMin, (s.k * (s.hx + e.translationX)) / s.hx));
+        const c = clampPlace(s.x, s.y, k, p);
+        zoom.set(k);
+        px.set(c.x);
+        py.set(c.y);
+      } else {
+        const c = clampPlace(s.x + e.translationX, s.y + e.translationY, zoom.get(), p);
+        px.set(c.x);
+        py.set(c.y);
+      }
+    })
+    .onFinalize(() => {
+      if (!panAt.get().on) return;
+      panAt.set({ ...panAt.get(), on: false });
+      end();
+    });
   const pinch = Gesture.Pinch()
     .enabled(false)
-    .runOnJS(true)
-    .onStart(start('pinch'))
-    .onUpdate((e) => {
-      s.pinch = e.scale;
-      emit();
+    .onStart(() => {
+      pinchAt.set({ k: zoom.get(), on: true });
+      begin();
     })
-    .onFinalize(finish('pinch'));
+    .onUpdate((e) => {
+      const p = lim.get();
+      const k = Math.min(p.kMax, Math.max(p.kMin, pinchAt.get().k * e.scale));
+      const c = clampPlace(px.get(), py.get(), k, p);
+      zoom.set(k);
+      px.set(c.x);
+      py.set(c.y);
+    })
+    .onFinalize(() => {
+      if (!pinchAt.get().on) return;
+      pinchAt.set({ k: 1, on: false });
+      end();
+    });
   return {
     gesture: Gesture.Simultaneous(pan, pinch),
     set(next: typeof h) {
@@ -303,8 +389,9 @@ export function Clock(props: Props) {
   // never show over another mode), and fade while the timer runs.
   const timerIdle = !timerRunning(timer) && !timerDone(timer);
   const setting = mode === 'timer' && timerIdle;
-  const showWheels = useSharedValue(timerIdle ? 1 : 0);
-  useEffect(() => showWheels.set(withTiming(timerIdle ? 1 : 0, { duration: 220 })), [timerIdle, showWheels]);
+  // (Out of the way, with the saves, while the digits are being edited.)
+  const showWheels = useSharedValue(timerIdle && !edit ? 1 : 0);
+  useEffect(() => showWheels.set(withTiming(timerIdle && !edit ? 1 : 0, { duration: 220 })), [timerIdle, edit, showWheels]);
   const wheelsX = useSharedValue(0);
   const wheelsY = useSharedValue(0);
   const wheelsStyle = useAnimatedStyle(() => ({
@@ -315,12 +402,33 @@ export function Clock(props: Props) {
   // so a running count never shifts sideways.
   const [digitPerPt, setDigitPerPt] = useState(0);
   const [colonPerPt, setColonPerPt] = useState(0);
-  // The current page's block (label, digits, hint) and the rulers' panel, as laid out.
-  const [block, setBlock] = useState({ w: 0, h: 0 });
+  // The widest of the current page's label and hint, as laid out.
+  const [side, setSide] = useState({ label: 0, hint: 0 });
+  // The current page's block (label, digits, hint) and the rulers' panel, as laid out,
+  // with the scale the block was laid out at.
+  const [block, setBlock] = useState({ w: 0, h: 0, scale: 1 });
   const [wheelsH, setWheelsH] = useState(0);
-  // Where an edit in progress has the digits (px), before it is kept.
-  const [live, setLive] = useState<Place | null>(null);
-  const [editGesture] = useState(makeEditGesture);
+  // The digits' place and a zoom on top of their laid-out size, on the UI thread:
+  // an edit moves these directly, and they follow the settings otherwise.
+  const px = useSharedValue(0);
+  const py = useSharedValue(0);
+  const zoom = useSharedValue(1);
+  const busy = useSharedValue(0);
+  const lim = useSharedValue<Limits>({ W: width, H: height, rowW: 0, rowH: 0, sideW: 0, bh: 0, cy0: 0, top: 0, bottom: 0, left: 0, right: 0, need: 170, kMin: 1, kMax: 1 });
+  const [editGesture] = useState(() => makeEditGesture(px, py, zoom, lim, busy));
+  const placeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: px.get() }, { translateY: py.get() }] }));
+  // Under a zoom the digits scale about their centre, and the label above and the hint
+  // below move out (or in) by as much as the digits' line grows (or shrinks).
+  const digitsStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() }] }));
+  const aboveStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (-lim.get().rowH * (zoom.get() - 1)) / 2 }] }));
+  const belowStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (lim.get().rowH * (zoom.get() - 1)) / 2 }] }));
+  // The edit frame hugs the block as it zooms; the handle sits on its right edge.
+  const frameStyle = useAnimatedStyle(() => {
+    const p = lim.get();
+    const k = zoom.get();
+    return { width: blockW(k, p) + 2 * FRAME, height: blockH(k, p) + 12 };
+  });
+  const handleStyle = useAnimatedStyle(() => ({ transform: [{ translateX: handleX(px.get(), zoom.get(), lim.get()) }] }));
   // The mode's name shows above the digits for a moment after a change, then fades
   // away (the line keeps its place, so the digits never jump).
   const [flash, setFlash] = useState<string | null>(null);
@@ -380,61 +488,60 @@ export function Clock(props: Props) {
   // The biggest scale at which every mode's digits still fit across the screen, and
   // their lines (with the label and hint, about 50 pt) fit top to bottom, the timer's
   // with its rulers too.
-  const tall = height - insets.top - insets.bottom - 2 * MARGIN - 50;
+  const tall = height - insets.top - insets.bottom - 2 * MARGIN;
+  const need = (wheelsH || 160) + 10;
   const fit = digitPerPt
     ? Math.min(
         ...MODES.map((m) => (width - 2 * MARGIN) / rowWidth(m, baseSize(m))),
-        ...MODES.map((m) => tall / (baseSize(m) * 1.08)),
-        (tall - 10 - (wheelsH || 160)) / (baseSize('timer') * 1.08)
+        ...MODES.map((m) => (tall - 50) / (baseSize(m) * 1.08)),
+        (tall - 50 - need) / (baseSize('timer') * 1.08)
       )
     : 1;
   const clampScale = (v: number) => Math.min(fit, Math.max(MIN_SCALE, v));
-  // The digits' usual centre (the layer centres them above an 8%-of-width pad), and
-  // how far they may move from it with their whole block still on screen.
-  const cy0 = (height - 0.08 * width) / 2;
-  const clampPlace = (x: number, y: number) => {
-    const dx = Math.max(0, width / 2 - MARGIN - block.w / 2);
-    const cx = Math.min(dx, Math.max(-dx, x));
-    const underTools = width / 2 + cx - block.w / 2 < Math.max(insets.left, 12) + TOOLS.width;
-    const ceiling = underTools ? Math.max(insets.top, 12) + TOOLS.height + 8 : insets.top + MARGIN;
-    const top = ceiling + block.h / 2 - cy0;
-    const bottom = height - insets.bottom - MARGIN - block.h / 2 - cy0;
-    if (top > bottom) return { x: cx, y: (top + bottom) / 2 };
-    let cy = Math.min(bottom, Math.max(top, y));
-    // Leave the timer's rulers room on one side or the other (in every mode, so the
-    // digits never jump on the way to the timer): no hanging in a middle too short
-    // for them either way.
-    const need = (wheelsH || 160) + 10;
-    const lowest = bottom - need; // rulers below fit while above this
-    const highest = insets.top + MARGIN + block.h / 2 - cy0 + need; // rulers above fit while below this
-    if (cy > lowest && cy < highest) {
-      const low = lowest >= top;
-      const high = highest <= bottom;
-      if (low && (!high || cy - lowest < highest - cy)) cy = lowest;
-      else if (high) cy = highest;
-    }
-    return { x: cx, y: Math.min(bottom, Math.max(top, cy)) };
-  };
-  const want = live ?? { x: placed.x * width, y: placed.y * height, scale: placed.scale };
-  const scale = clampScale(want.scale);
-  const at = clampPlace(want.x, want.y);
+  const scale = clampScale(placed.scale);
   const sizeFor = (m: Settings['mode']) => baseSize(m) * scale;
+  // The block at this scale: its digits' row (worked out), its other lines (as laid
+  // out), and its height (as laid out, adjusted if that was at another scale).
+  const rowW = digitPerPt ? rowWidth(mode, sizeFor(mode)) : block.w;
+  const rowH = sizeFor(mode) * 1.08;
+  const sideW = Math.max(side.label, side.hint);
+  const bh = block.h + baseSize(mode) * 1.08 * (scale - block.scale);
+  // The digits' usual centre (the layer centres them above an 8%-of-width pad).
+  const cy0 = (height - 0.08 * width) / 2;
+  const limits: Limits = {
+    W: width,
+    H: height,
+    rowW,
+    rowH,
+    sideW,
+    bh,
+    cy0,
+    top: insets.top,
+    bottom: insets.bottom,
+    left: insets.left,
+    right: insets.right,
+    need,
+    kMin: MIN_SCALE / scale,
+    kMax: fit / scale,
+  };
+  const at = clampPlace(placed.x * width, placed.y * height, 1, limits);
+  // The UI thread follows the settings (and the screen), except mid-edit.
+  useLayoutEffect(() => {
+    lim.set(limits);
+    if (busy.get()) return;
+    px.set(at.x);
+    py.set(at.y);
+    zoom.set(1);
+  });
   useEffect(() =>
     editGesture.set({
-      current: () => ({ ...at, scale }),
-      kind: () => edit,
-      change: (p) => setLive(p),
-      done: (p) => {
-        setLive(null);
-        const c = clampPlace(p.x, p.y);
-        onFace({ x: c.x / width, y: c.y / height, scale: clampScale(p.scale) });
-      },
+      done: (x, y, k) => onFace({ x: x / width, y: y / height, scale: clampScale(scale * k) }),
     })
   );
   // The rulers go under the digits, or over them when there is more room there; and
   // slide sideways as far as they must to stay on screen.
-  const blockTop = cy0 + at.y - block.h / 2;
-  const roomBelow = height - insets.bottom - MARGIN - (blockTop + block.h) - 10;
+  const blockTop = cy0 + at.y - bh / 2;
+  const roomBelow = height - insets.bottom - MARGIN - (blockTop + bh) - 10;
   const roomAbove = blockTop - insets.top - MARGIN - 10;
   const wheelsAbove = wheelsH > roomBelow && roomAbove > roomBelow;
   // Neither side quite big enough: the rulers stay on screen, over the digits' edge.
@@ -450,15 +557,28 @@ export function Clock(props: Props) {
     wheelsY.set(wheelsLift);
   }, [wheelsX, wheelsY, timerPage, wheelsShift, wheelsLift]);
 
-  const face = (m: Settings['mode'], f: Face, c: (typeof FACES)['dark'], label: string, labelOpacity: Animated.Value | number) => {
+  const face = (m: Settings['mode'], f: Face, c: (typeof FACES)['dark'], label: string, labelOpacity: Animated.Value | number, measure: boolean) => {
     const size = sizeFor(m);
     const cell = digitPerPt * size;
+    const measureLine = (key: 'label' | 'hint') =>
+      measure
+        ? (e: { nativeEvent: { layout: { width: number } } }) => {
+            const w = e.nativeEvent.layout.width;
+            if (Math.abs(w - side[key]) > 0.5) setSide((s) => ({ ...s, [key]: w }));
+          }
+        : undefined;
     return (
       <>
-        <Animated.Text style={[styles.date, { color: c.inkSoft, textShadowColor: c.halo, opacity: labelOpacity }]} numberOfLines={1}>
-          {label || '\u00a0'}
-        </Animated.Text>
-        <View style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }]}>
+        <Reanimated.View style={aboveStyle}>
+          <Animated.Text
+            style={[styles.date, { color: c.inkSoft, textShadowColor: c.halo, opacity: labelOpacity }]}
+            numberOfLines={1}
+            onLayout={measureLine('label')}
+          >
+            {label || '\u00a0'}
+          </Animated.Text>
+        </Reanimated.View>
+        <Reanimated.View style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, digitsStyle]}>
           {[...f.main].map((ch, i) => {
             const digit = ch >= '0' && ch <= '9';
             return (
@@ -488,11 +608,13 @@ export function Clock(props: Props) {
               {f.small}
             </Text>
           ) : null}
-        </View>
+        </Reanimated.View>
         {/* The hint's line stays even when empty, so the digits never move. */}
-        <Text style={[styles.hint, { color: c.inkSoft, textShadowColor: c.halo }]} numberOfLines={1}>
-          {f.hint || '\u00a0'}
-        </Text>
+        <Reanimated.View style={belowStyle}>
+          <Text style={[styles.hint, { color: c.inkSoft, textShadowColor: c.halo }]} numberOfLines={1} onLayout={measureLine('hint')}>
+            {f.hint || '\u00a0'}
+          </Text>
+        </Reanimated.View>
       </>
     );
   };
@@ -507,9 +629,9 @@ export function Clock(props: Props) {
       <>
         <FaceBackdrop tone={tone} />
         <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
-          {face(m, f, FACES.dark, label, labelOpacity)}
+          {face(m, f, FACES.dark, label, labelOpacity, current)}
         </Animated.View>
-        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(m, f, FACES.light, label, labelOpacity)}</Animated.View>
+        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(m, f, FACES.light, label, labelOpacity, false)}</Animated.View>
       </>
     );
   };
@@ -523,101 +645,111 @@ export function Clock(props: Props) {
 
   return (
     <View pointerEvents={clock.visible ? 'box-none' : 'none'} style={styles.layer}>
-      <Animated.View
-        pointerEvents="box-none"
-        style={[
-          styles.block,
-          {
-            opacity: shown,
-            transform: [
-              { translateX: at.x },
-              { translateY: at.y },
-              { scale: shown.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) },
-            ],
-          },
-        ]}
-      >
-        {/* A zero at 100 pt, measured once per font, gives every digit's width. */}
-        <Text
-          style={[font.time, styles.time, styles.measure, { fontSize: 100, lineHeight: 108, letterSpacing: 0 }]}
-          onLayout={(e) => {
-            const w = e.nativeEvent.layout.width / 100;
-            if (Math.abs(w - digitPerPt) > 0.001) setDigitPerPt(w);
-          }}
+      <Reanimated.View pointerEvents="box-none" style={[styles.block, placeStyle]}>
+        <Animated.View
+          pointerEvents="box-none"
+          style={[
+            styles.block,
+            {
+              opacity: shown,
+              transform: [{ scale: shown.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) }],
+            },
+          ]}
         >
-          0
-        </Text>
-        <Text
-          style={[font.time, styles.time, styles.measure, { fontSize: 100, lineHeight: 108, letterSpacing: 0 }]}
-          onLayout={(e) => {
-            const w = e.nativeEvent.layout.width / 100;
-            if (Math.abs(w - colonPerPt) > 0.001) setColonPerPt(w);
-          }}
-        >
-          :
-        </Text>
-        <View style={[styles.stage, { width }]}>
-          <GestureDetector gesture={editGesture.gesture}>
-            <View collapsable={false}>
-              <GestureDetector gesture={faceGesture.gesture}>
-                <Reanimated.View
-                  style={[styles.pages, { width }, rowStyle]}
-                  accessible
-                  accessibilityRole="button"
-                  accessibilityLabel={`${MODE_NAMES[mode]} ${current.main}`}
-                  accessibilityHint="左右にスワイプで時計・タイマー・ストップウォッチを切り替え"
-                >
-                  <View style={[styles.side, { left: -width, width }]}>{page(prev)}</View>
-                  <View
-                    style={styles.page}
-                    onLayout={(e) => {
-                      const { width: w, height: h } = e.nativeEvent.layout;
-                      if (Math.abs(w - block.w) > 0.5 || Math.abs(h - block.h) > 0.5) setBlock({ w, h });
-                    }}
-                  >
-                    {page(mode)}
-                    {/* While editing, a dashed frame shows what is being moved. */}
-                    {edit ? <View pointerEvents="none" style={[styles.frame, { borderColor: FACES[tone].inkSoft }]} /> : null}
-                  </View>
-                  <View style={[styles.side, { left: width, width }]}>{page(next)}</View>
-                </Reanimated.View>
-              </GestureDetector>
-            </View>
-          </GestureDetector>
-          {/* The timer's rulers stand outside the face's layout, so the digits never
-              move when they come and go. They stay mounted, just hidden, while the
-              timer runs, and slide with the timer's page when it is swiped. */}
-          <Reanimated.View
-            pointerEvents={setting && !edit ? 'box-none' : 'none'}
-            style={[styles.wheels, wheelsAbove ? styles.wheelsAbove : styles.wheelsBelow, wheelsStyle]}
+          {/* A zero at 100 pt, measured once per font, gives every digit's width. */}
+          <Text
+            style={[font.time, styles.time, styles.measure, { fontSize: 100, lineHeight: 108, letterSpacing: 0 }]}
             onLayout={(e) => {
-              const h = e.nativeEvent.layout.height;
-              if (Math.abs(h - wheelsH) > 0.5) setWheelsH(h);
+              const w = e.nativeEvent.layout.width / 100;
+              if (Math.abs(w - digitPerPt) > 0.001) setDigitPerPt(w);
             }}
           >
-            <TimeScrubber
-              seconds={Math.max(0, Math.round(timerDial(timer) / 1000))}
-              width={rulerWidth}
-              tone={tone}
-              ink={FACES[tone].ink}
-              inkSoft={FACES[tone].inkSoft}
-              onPreview={setPreview}
-              onChange={(sec) => onSetDuration(sec * 1000)}
-              footer={
-                <TimerSaves
-                  saves={saves}
-                  dial={timerDial(timer)}
-                  ink={FACES[tone].ink}
-                  inkSoft={FACES[tone].inkSoft}
-                  onSave={onSave}
-                  onLoad={onLoad}
-                  onDelete={onDelete}
-                />
-              }
-            />
-          </Reanimated.View>
-        </View>
-      </Animated.View>
+            0
+          </Text>
+          <Text
+            style={[font.time, styles.time, styles.measure, { fontSize: 100, lineHeight: 108, letterSpacing: 0 }]}
+            onLayout={(e) => {
+              const w = e.nativeEvent.layout.width / 100;
+              if (Math.abs(w - colonPerPt) > 0.001) setColonPerPt(w);
+            }}
+          >
+            :
+          </Text>
+          <View style={[styles.stage, { width }]}>
+            <GestureDetector gesture={editGesture.gesture}>
+              <View collapsable={false}>
+                <GestureDetector gesture={faceGesture.gesture}>
+                  <Reanimated.View
+                    style={[styles.pages, { width }, rowStyle]}
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={`${MODE_NAMES[mode]} ${current.main}`}
+                    accessibilityHint="左右にスワイプで時計・タイマー・ストップウォッチを切り替え"
+                  >
+                    <View style={[styles.side, { left: -width, width }]}>{page(prev)}</View>
+                    <View
+                      style={styles.page}
+                      onLayout={(e) => {
+                        const { width: w, height: h } = e.nativeEvent.layout;
+                        if (Math.abs(w - block.w) > 0.5 || Math.abs(h - block.h) > 0.5 || block.scale !== scale) setBlock({ w, h, scale });
+                      }}
+                    >
+                      {page(mode)}
+                      {/* While editing, a dashed frame shows what is being moved. */}
+                      {edit ? (
+                        <>
+                          <View pointerEvents="none" style={styles.centre}>
+                            <Reanimated.View style={[styles.frame, { borderColor: FACES[tone].inkSoft }, frameStyle]} />
+                          </View>
+                          {/* Drag this to resize (it answers through the edit gesture). */}
+                          <Reanimated.View pointerEvents="none" style={[styles.centre, handleStyle]}>
+                            <View style={[styles.handleDot, { backgroundColor: FACES[tone].ink }]}>
+                              <ResizeIcon color={tone === 'dark' ? '#0b0b0e' : '#ffffff'} size={16} />
+                            </View>
+                          </Reanimated.View>
+                        </>
+                      ) : null}
+                    </View>
+                    <View style={[styles.side, { left: width, width }]}>{page(next)}</View>
+                  </Reanimated.View>
+                </GestureDetector>
+              </View>
+            </GestureDetector>
+            {/* The timer's rulers stand outside the face's layout, so the digits never
+                move when they come and go. They stay mounted, just hidden, while the
+                timer runs, and slide with the timer's page when it is swiped. */}
+            <Reanimated.View
+              pointerEvents={setting && !edit ? 'box-none' : 'none'}
+              style={[styles.wheels, wheelsAbove ? styles.wheelsAbove : styles.wheelsBelow, wheelsStyle]}
+              onLayout={(e) => {
+                const h = e.nativeEvent.layout.height;
+                if (Math.abs(h - wheelsH) > 0.5) setWheelsH(h);
+              }}
+            >
+              <TimeScrubber
+                seconds={Math.max(0, Math.round(timerDial(timer) / 1000))}
+                width={rulerWidth}
+                tone={tone}
+                ink={FACES[tone].ink}
+                inkSoft={FACES[tone].inkSoft}
+                onPreview={setPreview}
+                onChange={(sec) => onSetDuration(sec * 1000)}
+                footer={
+                  <TimerSaves
+                    saves={saves}
+                    dial={timerDial(timer)}
+                    ink={FACES[tone].ink}
+                    inkSoft={FACES[tone].inkSoft}
+                    onSave={onSave}
+                    onLoad={onLoad}
+                    onDelete={onDelete}
+                  />
+                }
+              />
+            </Reanimated.View>
+          </View>
+        </Animated.View>
+      </Reanimated.View>
     </View>
   );
 }
@@ -693,15 +825,33 @@ const styles = StyleSheet.create({
     bottom: '100%',
     marginBottom: 10,
   },
+  // A point at the block's centre, for the frame and handle to hang on.
+  centre: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    width: 0,
+    height: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   frame: {
     position: 'absolute',
-    top: -6,
-    bottom: -6,
-    left: -10,
-    right: -10,
     borderWidth: 1.5,
     borderStyle: 'dashed',
     borderRadius: 14,
+  },
+  handleDot: {
+    position: 'absolute',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
   },
   measure: {
     position: 'absolute',
