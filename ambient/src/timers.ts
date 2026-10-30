@@ -12,7 +12,8 @@ export type Stopwatch = Settings['stopwatch'];
 
 /** Milliseconds left on the timer (0 when finished). */
 export function timerLeft(t: Timer, now: number): number {
-  return t.endAt != null ? Math.max(0, t.endAt - now) : t.left;
+  // Never more than it had when it started, even for a "now" read just before that.
+  return t.endAt != null ? Math.max(0, Math.min(t.left, t.endAt - now)) : t.left;
 }
 
 export function timerRunning(t: Timer): boolean {
@@ -42,7 +43,8 @@ export function setTimerDuration(duration: number): Timer {
 }
 
 export function stopwatchElapsed(s: Stopwatch, now: number): number {
-  return s.startAt != null ? s.elapsed + (now - s.startAt) : s.elapsed;
+  // A "now" read a moment before the start would count back past zero.
+  return s.startAt != null ? s.elapsed + Math.max(0, now - s.startAt) : s.elapsed;
 }
 
 export function toggleStopwatch(s: Stopwatch, now: number): Stopwatch {
@@ -53,11 +55,12 @@ export function resetStopwatch(): Stopwatch {
   return { startAt: null, elapsed: 0 };
 }
 
-/** "01:04:05": always hours, minutes and seconds, two digits each. */
-export function formatFixed(ms: number): string {
+/** "01:04:05": always hours, minutes and seconds, two digits each ("01:04" without seconds). */
+export function formatFixed(ms: number, seconds = true): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const two = (n: number) => String(n).padStart(2, '0');
-  return `${two(Math.floor(total / 3600))}:${two(Math.floor((total % 3600) / 60))}:${two(total % 60)}`;
+  const hm = `${two(Math.floor(total / 3600))}:${two(Math.floor((total % 3600) / 60))}`;
+  return seconds ? `${hm}:${two(total % 60)}` : hm;
 }
 
 /** "4:05", or "1:04:05" from an hour up. */

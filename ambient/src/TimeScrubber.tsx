@@ -9,7 +9,9 @@ import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
   withSpring,
+  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 
@@ -68,11 +70,21 @@ const ROW = 46;
 const DECELERATION = 0.998;
 const GLIDE = DECELERATION / (1 - DECELERATION) / 1000;
 const SLOW = 220; // px/s: slower than this, it lands on the nearest single tick
+const DETENT = 0.45; // how strongly a dragged ruler catches on each step (0 none, under 1)
 
 const clampTick = (v: number, n: number) => {
   'worklet';
   return Math.min(n - 1, Math.max(0, v));
 };
+
+// The phone's own clicks; in a browser, a short vibration where there is one.
+function buzz(strength: 1 | 2) {
+  if (Platform.OS === 'web') {
+    globalThis.navigator?.vibrate?.(strength === 2 ? 18 : 8);
+    return;
+  }
+  Haptics.impactAsync(strength === 2 ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+}
 
 const AnimatedInput = Animated.createAnimatedComponent(TextInput);
 
@@ -136,8 +148,12 @@ function makeRulerGesture(ruler: Ruler, offset: SharedValue<number>, busy: Share
       start.x = offset.get();
     })
     .onUpdate((e) => {
+      // Each step (an hour, a minute) has a slight catch: the ruler lingers over the
+      // step's long tick and hurries between, so the finger feels them go by.
+      const step = ruler.fling * ruler.gap;
+      const catchAt = (px: number) => px - (DETENT * step * Math.sin((2 * Math.PI * px) / step)) / (2 * Math.PI);
+      let v = start.x + catchAt(start.x + e.translationX) - catchAt(start.x);
       // Past either end the ruler gives a little, with resistance.
-      let v = start.x + e.translationX;
       const lo = -(ruler.count - 1) * ruler.gap;
       if (v > 0) v *= 0.3;
       if (v < lo) v = lo + (v - lo) * 0.3;
@@ -214,18 +230,24 @@ function RulerView({ ruler, value, width, ink, inkSoft, onPreview, onChange }: R
   );
   useEffect(() => g.follow(value), [g, value]);
 
-  const tick = (v: number, click: boolean) => {
+  // A buzz for every step that passes the mark (each hour, each minute), a firmer one
+  // every fifth minute, and the mark gives a little nod with it.
+  const nod = useSharedValue(0);
+  const tick = (v: number, click: 0 | 1 | 2) => {
     onPreview(v);
-    if (click && Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
+    if (click) buzz(click);
   };
   useAnimatedReaction(
     () => Math.round(-offset.get() / ruler.gap),
     (cur, prev) => {
       if (prev === null || cur === prev || !busy.get()) return;
-      const click = Math.floor(cur / ruler.fling) !== Math.floor(prev / ruler.fling);
-      runOnJS(tick)(clampTick(cur, ruler.count), click);
+      const at = clampTick(cur, ruler.count);
+      const step = Math.floor(cur / ruler.fling) !== Math.floor(prev / ruler.fling) && cur >= 0 && cur < ruler.count;
+      if (step) nod.set(withSequence(withTiming(1, { duration: 40 }), withTiming(0, { duration: 160 })));
+      runOnJS(tick)(at, step ? (ruler.major(at) === 2 ? 2 : 1) : 0);
     }
   );
+  const markStyle = useAnimatedStyle(() => ({ transform: [{ scaleY: 1 + 0.25 * nod.get() }, { scaleX: 1 + 0.4 * nod.get() }] }));
 
   const half = width / 2;
   const n = Math.ceil(half / ruler.gap) + 2;
@@ -235,7 +257,7 @@ function RulerView({ ruler, value, width, ink, inkSoft, onPreview, onChange }: R
     <GestureDetector gesture={g.gesture}>
       <View style={[styles.row, { width }]}>
         <View style={[styles.centre, { left: half }]}>{slots}</View>
-        <View pointerEvents="none" style={[styles.mark, { left: half - 1.25 }]} />
+        <Animated.View pointerEvents="none" style={[styles.mark, { left: half - 1.25 }, markStyle]} />
       </View>
     </GestureDetector>
   );

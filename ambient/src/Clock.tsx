@@ -110,13 +110,15 @@ type Face = { label: string; main: string; small: string; hint: string; dim: boo
 
 /** What the centre shows right now, in any of the three modes. */
 function faceFor(p: Props, now: number, preview: number | null): Face {
+  // The seconds setting holds for all three: without it, hours and minutes only.
+  const sec = p.clock.seconds;
   if (p.mode === 'stopwatch') {
     const e = stopwatchElapsed(p.stopwatch, now);
     const running = p.stopwatch.startAt != null;
     return {
       label: '',
-      main: formatFixed(e),
-      small: `.${Math.floor((e % 1000) / 100)}`,
+      main: formatFixed(e, sec),
+      small: sec ? `.${Math.floor((e % 1000) / 100)}` : '',
       hint: running ? '' : e > 0 ? 'タップで再開・長押しでリセット' : 'タップで開始',
       dim: false,
     };
@@ -124,17 +126,17 @@ function faceFor(p: Props, now: number, preview: number | null): Face {
   if (p.mode === 'timer') {
     // While a ruler turns, the digits follow it (but never over a running count).
     if (preview != null && !timerRunning(p.timer) && !timerDone(p.timer)) {
-      return { label: '', main: formatFixed(preview * 1000), small: '', hint: '', dim: false };
+      return { label: '', main: formatFixed(preview * 1000, sec), small: '', hint: '', dim: false };
     }
     const left = timerLeft(p.timer, now);
     if (timerDone(p.timer)) {
-      return { label: '時間です', main: formatFixed(0), small: '', hint: 'タップで閉じる・長押しでリセット', dim: Math.floor(now / 500) % 2 === 1 };
+      return { label: '時間です', main: formatFixed(0, sec), small: '', hint: 'タップで閉じる・長押しでリセット', dim: Math.floor(now / 500) % 2 === 1 };
     }
     const running = timerRunning(p.timer);
     return {
       label: '',
-      // Count down in whole seconds that change when a full second has passed.
-      main: formatFixed(left + 999),
+      // Count down in whole seconds (or minutes) that change once one has fully passed.
+      main: formatFixed(left + (sec ? 999 : 59_999), sec),
       small: '',
       hint: running
         ? ''
@@ -243,7 +245,7 @@ export function Clock(props: Props) {
   // grow or shrink as the count goes on.
   const room = Math.min(width / 390, height / 640, 1.6);
   const sizeFor = (m: Settings['mode']) => {
-    const longest = m === 'clock' ? 5 + (clock.seconds ? 1.1 : 0) : m === 'timer' ? 8 : 9.1;
+    const longest = m === 'clock' ? 5 + (clock.seconds ? 1.1 : 0) : !clock.seconds ? 5 : m === 'timer' ? 8 : 9.1;
     return (font.time.fontSize ?? 96) * room * Math.min(1, 5 / longest);
   };
 
