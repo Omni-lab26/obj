@@ -6,7 +6,7 @@ import Reanimated, { interpolate, runOnJS, useAnimatedStyle, useSharedValue, wit
 import { clockFont } from './fonts';
 import type { Settings } from './settings';
 import { TimeScrubber } from './TimeScrubber';
-import { formatFixed, stopwatchElapsed, timerDone, timerLeft, timerRunning } from './timers';
+import { formatFixed, stopwatchElapsed, timerDial, timerDone, timerLeft, timerRunning } from './timers';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -357,7 +357,7 @@ export function Clock(props: Props) {
               timer runs or another mode shows, and fade as the page is pulled away. */}
           <Reanimated.View pointerEvents={setting ? 'box-none' : 'none'} style={[styles.wheels, wheelsStyle]}>
             <TimeScrubber
-              seconds={Math.max(0, Math.round(timer.duration / 1000))}
+              seconds={Math.max(0, Math.round(timerDial(timer) / 1000))}
               width={Math.min(width * 0.88, 380)}
               tone={tone}
               ink={FACES[tone].ink}

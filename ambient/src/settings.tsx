@@ -13,8 +13,11 @@ export type Settings = {
   };
   /** What the centre shows. */
   mode: 'clock' | 'timer' | 'stopwatch';
-  /** Running while endAt is set; otherwise left is what remains (0 = finished). */
-  timer: { duration: number; endAt: number | null; left: number };
+  /**
+   * Running while endAt is set; otherwise left is what remains (0 = finished). dial
+   * is where the rulers stand: a reset clears the count but leaves them there.
+   */
+  timer: { duration: number; endAt: number | null; left: number; dial?: number };
   /** Running while startAt is set; elapsed is the time banked before it. */
   stopwatch: { startAt: number | null; elapsed: number };
   /** Digital layer: 0 = the raw picture (素), 1 = fully digital. */

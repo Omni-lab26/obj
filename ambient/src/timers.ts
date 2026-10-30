@@ -33,13 +33,18 @@ export function toggleTimer(t: Timer, now: number): Timer {
   return { ...t, endAt: now + t.left };
 }
 
-/** Hold: back to nothing, 00:00:00. */
-export function resetTimer(_t: Timer): Timer {
-  return { duration: 0, endAt: null, left: 0 };
+/** Hold: the count back to 00:00:00; the rulers stay where they were set. */
+export function resetTimer(t: Timer): Timer {
+  return { duration: 0, endAt: null, left: 0, dial: timerDial(t) };
 }
 
 export function setTimerDuration(duration: number): Timer {
-  return { duration, endAt: null, left: duration };
+  return { duration, endAt: null, left: duration, dial: duration };
+}
+
+/** Where the rulers stand (ms). */
+export function timerDial(t: Timer): number {
+  return t.dial ?? t.duration;
 }
 
 export function stopwatchElapsed(s: Stopwatch, now: number): number {
