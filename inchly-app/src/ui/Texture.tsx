@@ -2,7 +2,7 @@ import { Image, StyleSheet, View } from 'react-native';
 
 import type { Texture } from '../design';
 
-// The theme's texture (canvas weave, scan lines, pixels, polka dots), tiled
+// The theme's texture (canvas weave, scan lines, pixels, polka dots, the paper's faint dots), tiled
 // behind content. Absolutely placed and untouchable, so it never moves or
 // blocks anything.
 const TILES: Record<Texture, number> = {
@@ -15,6 +15,7 @@ const TILES: Record<Texture, number> = {
   'dots-pink': require('../../assets/textures/dots-pink.png'),
   'dots-brown': require('../../assets/textures/dots-brown.png'),
   'dots-blue': require('../../assets/textures/dots-blue.png'),
+  'dots-paper': require('../../assets/textures/dots-paper.png'),
   splat: require('../../assets/textures/splat.png'),
   warp: require('../../assets/textures/warp.png'),
   riso: require('../../assets/textures/riso.png'),

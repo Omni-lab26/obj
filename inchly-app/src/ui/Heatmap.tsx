@@ -13,12 +13,14 @@ import { fadeIn, fadeOut } from './motion';
 // GitHub-style grass. Columns are weeks, rows are days. Press (or press and
 // drag) on the grid to read the date and time of a day. When it appears (and
 // when its page comes back) each square flips over like a card, grey side
-// first, its green on the back — a wave from the top left.
+// first, its green on the back — a wave from the top left. `square`: square
+// cells on a faint edge and today in a 2pt ink frame (スタンダード's grass).
 
 const GUTTER = 18; // weekday labels
+const EDGE = 'inset 0px 0px 0px 1px rgba(23,18,31,0.1)'; // a square cell's faint edge
 const MONTH_H = 16; // month labels
 
-export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { weeks: number; gap?: number; legend?: boolean; labels?: boolean }) {
+export function Heatmap({ weeks, gap = 3, legend = true, labels = true, square }: { weeks: number; gap?: number; legend?: boolean; labels?: boolean; square?: boolean }) {
   const t = useT();
   const appear = useAppear(80, 1000, Easing.linear); // the squares flip over like cards, a wave from the top left
   const sessions = useStore((s) => s.sessions);
@@ -115,7 +117,9 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { week
                   const i = c * 7 + r;
                   return (
                     <Flip key={r} p={appear} at={((c + r * 0.6) / (weeks + 4)) * 0.8} color={t.grass[l]} blank={t.grass[0]}
-                      style={{ width: size, height: size, borderRadius: Math.min(4, size * 0.22), borderWidth: i === cells.length - 1 || hot === i ? 1.5 : 0, borderColor: t.ink }} />
+                      style={square
+                        ? { width: size, height: size, borderWidth: i === cells.length - 1 || hot === i ? 2 : 0, borderColor: t.ink, boxShadow: EDGE }
+                        : { width: size, height: size, borderRadius: Math.min(4, size * 0.22), borderWidth: i === cells.length - 1 || hot === i ? 1.5 : 0, borderColor: t.ink }} />
                   );
                 })}
               </View>
@@ -137,7 +141,7 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true }: { week
           <View />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
             <Txt size={11} tone="ink3">少</Txt>
-            {t.grass.map((c) => <View key={c} style={{ width: 10, height: 10, borderRadius: 2.5, backgroundColor: c }} />)}
+            {t.grass.map((c) => <View key={c} style={square ? { width: 11, height: 11, backgroundColor: c, boxShadow: EDGE } : { width: 10, height: 10, borderRadius: 2.5, backgroundColor: c }} />)}
             <Txt size={11} tone="ink3">多</Txt>
           </View>
         </View>

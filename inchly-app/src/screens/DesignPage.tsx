@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { type Backdrop, backdropOf, BACKDROPS, BACKDROPS_OPEN, BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_PEACH, STREAKS, THEMES, themeOf, ThemeId, themeShown, TIMERS, useDesign } from '@/design';
+import { type Backdrop, backdropOf, BACKDROPS, BACKDROPS_OPEN, BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_PEACH, STREAKS, THEMES, themeOf, ThemeId, themeShown, TIMERS, useDesign, usesPicks } from '@/design';
 import { setDesign } from '@/store';
 import { faceFor, focus, hair, lift, radius, useT } from '@/theme';
 import { haptic, Press, Txt } from '@/ui/base';
@@ -31,7 +31,8 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
   const d = useDesign();
   const insets = useSafeAreaInsets();
   const set = (patch: Partial<Design>) => { haptic.tap(); setDesign(patch); };
-  const standard = d.theme === 'standard';
+  // クラシック is drawn with your own picks (地の色・メインの色・角・タイマー); the other themes decide them
+  const picks = usesPicks(d.theme);
   // only the themes that are ready (design.ts THEMES_SHOWN); a few sit in one row, more go by family
   const shown = keys(THEMES).filter((k) => themeShown(k));
   const byFamily = shown.length > 3;
@@ -50,7 +51,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
         </View>
       </Section>
 
-      {standard ? (
+      {picks ? (
       <>
       {BACKDROPS_OPEN ? (
       <Section title="背景" sub="すべてのページとタイマーのうしろで動きます。カードはすりガラスに">
@@ -85,7 +86,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
         ) }))} />
       </Section>
       </>
-      ) : <Txt size={11.5} tone="ink3" style={{ paddingHorizontal: 20, paddingTop: 12 }}>{`${BACKDROPS_OPEN ? '背景（鯉の池など）・' : ''}地の色・メインの色・角・タイマーの色は、テーマで決まります（スタンダードを選ぶと自分で選べます）`}</Txt>}
+      ) : <Txt size={11.5} tone="ink3" style={{ paddingHorizontal: 20, paddingTop: 12 }}>{`${BACKDROPS_OPEN ? '背景（鯉の池など）・' : ''}地の色・メインの色・角・タイマーの色は、テーマで決まります（クラシックを選ぶと自分で選べます）`}</Txt>}
 
       <Section title="マイページのカード">
         <Options value={d.card} onChange={(card) => set({ card })} cols={3} items={keys(CARDS).map((k) => ({ k, label: CARDS[k].label, swatch: <MiniCard look={k} /> }))} />
@@ -95,7 +96,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
         <Options value={d.streak} onChange={(streak) => set({ streak })} cols={3} items={keys(STREAKS).map((k) => ({ k, label: STREAKS[k].label, swatch: <MiniStreak look={k} /> }))} />
       </Section>
 
-      {standard ? (
+      {picks ? (
       <Section title="タイマーの画面">
         <Options value={d.timer} onChange={(timer) => set({ timer })} cols={5} items={keys(TIMERS).map((k) => ({ k, label: TIMERS[k].label, swatch: (
           <View style={{ width: '100%', aspectRatio: 0.7, borderRadius: 10, backgroundColor: TIMERS[k].bg, alignItems: 'center', justifyContent: 'center' }}>

@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { type Backdrop, BACKDROPS, CARD_FILLS, type CardFill, FROSTS, themeId, themeOf, useDesign } from '../design';
+import { type Backdrop, BACKDROPS, CARD_FILLS, type CardFill, FROSTS, PICKS_THEME, themeOf, useDesign, usesPicks } from '../design';
 import { setDesign } from '../store';
 import { useT } from '../theme';
 import { FLOOR, GROUND } from './backdrop/shared';
@@ -28,8 +28,8 @@ export function backdropSheet() {
 function BackdropChoice({ close }: { close: () => void }) {
   const t = useT();
   const d = useDesign();
-  const standard = themeId(d.theme) === 'standard';
-  const cur = standard ? d.backdrop : 'none';
+  const picks = usesPicks(d.theme);
+  const cur = picks ? d.backdrop : 'none';
   return (
     <View style={{ gap: 12, paddingTop: 2 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -44,12 +44,12 @@ function BackdropChoice({ close }: { close: () => void }) {
         </View>
       </View>
       <Txt size={12.5} tone="ink3" style={{ textAlign: 'center' }}>
-        {standard ? 'すべてのページとタイマーのうしろで動きます' : `背景はスタンダードのテーマで使えます（いまは ${themeOf(d.theme).label}）。選ぶとスタンダードに戻ります`}
+        {picks ? 'すべてのページとタイマーのうしろで動きます' : `背景はクラシックのテーマで使えます（いまは ${themeOf(d.theme).label}）。選ぶとクラシックになります`}
       </Txt>
       {ORDER.map((id) => {
         const on = cur === id;
         return (
-          <Press key={id} onPress={() => { haptic.tap(); setDesign(standard ? { backdrop: id } : { backdrop: id, theme: 'standard' }); }} scale={0.98}
+          <Press key={id} onPress={() => { haptic.tap(); setDesign(picks ? { backdrop: id } : { backdrop: id, theme: PICKS_THEME }); }} scale={0.98}
             accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={BACKDROPS[id].label}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, borderRadius: 14, backgroundColor: '#fff', borderWidth: 1.5, borderColor: on ? '#161616' : 'transparent' }}>
             <BackdropSwatch id={id} />
@@ -112,7 +112,7 @@ export function BackdropSwatch({ id }: { id: Backdrop }) {
 /** 背景のぼかし: how much the pages frost the 背景 (the timer keeps it sharp). */
 export function FrostControl() {
   const d = useDesign();
-  const on = themeId(d.theme) === 'standard' && d.backdrop !== 'none';
+  const on = usesPicks(d.theme) && d.backdrop !== 'none';
   return (
     <View style={{ gap: 8, opacity: on ? 1 : 0.45 }} pointerEvents={on ? 'auto' : 'none'}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
@@ -128,7 +128,7 @@ export function FrostControl() {
 /** カードの背景: how solid the cards are over the 背景 — thin glass to near white. */
 export function CardFillControl() {
   const d = useDesign();
-  const on = themeId(d.theme) === 'standard' && d.backdrop !== 'none';
+  const on = usesPicks(d.theme) && d.backdrop !== 'none';
   return (
     <View style={{ gap: 8, opacity: on ? 1 : 0.45 }} pointerEvents={on ? 'auto' : 'none'}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>

@@ -7,9 +7,10 @@ import { T } from '@/themes/kit';
 import { font } from '@/theme';
 import { haptic } from '@/ui/base';
 import { M, micro } from '@/ui/motion';
+import { PixelArt } from '../standard/pixel';
 import { P, sit } from './look';
 
-// The pieces ピクセル箱 is built from: pixel art drawn from rows of letters,
+// The pieces ピクセル箱 is built from: pixel art drawn from rows of letters (../standard/pixel),
 // the pal (a small box creature that lives on the page), the dotted paper,
 // keys that sit on a hard shadow and sink when pressed, and the little
 // pixel-type labels.
@@ -17,25 +18,8 @@ import { P, sit } from './look';
 export const STEPS = Easing.steps(3);
 
 // ---------- pixel art ----------
-/** Draws rows like '..XXLL..' — one letter a pixel, '.' empty — in the colors given. Runs of a color are one rect. */
-export const PixelArt = memo(function PixelArt({ rows, px, colors }: { rows: string[]; px: number; colors: Record<string, string> }) {
-  const w = rows[0]?.length ?? 0;
-  const h = rows.length;
-  const rects: ReactNode[] = [];
-  rows.forEach((r, y) => {
-    let x = 0;
-    while (x < w) {
-      const ch = r[x];
-      const fill = colors[ch];
-      if (!fill) { x++; continue; }
-      let e = x;
-      while (e + 1 < w && r[e + 1] === ch) e++;
-      rects.push(<Rect key={`${x}.${y}`} x={x} y={y} width={e - x + 1} height={1} fill={fill} />);
-      x = e + 1;
-    }
-  });
-  return <Svg width={w * px} height={h * px} viewBox={`0 0 ${w} ${h}`}>{rects}</Svg>;
-});
+// Rows of letters to pixels: shared with スタンダード, which grew from this kit.
+export { PixelArt };
 
 // ---------- the pal ----------
 // A box with a lid, two eyes and small feet. 16 × 14.

@@ -2,9 +2,9 @@ import { useSyncExternalStore } from 'react';
 
 import type { AreaId } from './data';
 
-// The look you pick on the デザイン page. Still light only: you choose the
-// canvas, the main color (text and primary buttons), how round cards are, the
-// My Page card, the streak capsule and the timer's color. The store holds the
+// The look you pick on the デザイン page. Still light only: a theme, and with
+// クラシック your own canvas, main color (text and primary buttons), how round
+// cards are and the timer's color; the My Page card and the streak capsule. The store holds the
 // choice and calls applyDesign; theme.ts and useDesign() follow it. (No
 // React Native imports here, so the store and its tests can load it.)
 
@@ -51,7 +51,8 @@ export const TIMERS = {
  * screens. A theme changes only how things are drawn, never their size or
  * position: outlines are drawn as shadows (not borders, which would take room),
  * textures sit behind the content, and text keeps its size and line height.
- * 'standard' uses the 背景 / メインの色 / 角 picks below instead.
+ * 'classic' (the look スタンダード had until 2026-10) uses the 背景 / メインの色 /
+ * 角 / タイマー picks below instead.
  */
 export type ThemeFont = 'system' | 'mono' | 'pixel' | 'rounded' | 'serif' | 'grotesk' | 'condensed' | 'heavy' | 'cyber';
 /**
@@ -62,7 +63,7 @@ export type ThemeFont = 'system' | 'mono' | 'pixel' | 'rounded' | 'serif' | 'gro
  * selection box (select). Movement and opacity only, so nothing shifts.
  */
 export type Reaction = 'scale' | 'sink' | 'flicker' | 'squish' | 'step' | 'misprint' | 'bounce' | 'soft' | 'select';
-export type Texture = 'oil' | 'oil-dark' | 'scan' | 'scan-dark' | 'pixel' | 'pixel-dark' | 'dots-pink' | 'dots-brown' | 'dots-blue' | 'splat' | 'warp' | 'riso';
+export type Texture = 'oil' | 'oil-dark' | 'scan' | 'scan-dark' | 'pixel' | 'pixel-dark' | 'dots-pink' | 'dots-brown' | 'dots-blue' | 'dots-paper' | 'splat' | 'warp' | 'riso';
 export type ThemeDef = {
   label: string; family: 'standard' | 'digital' | '8bit' | 'kawaii' | 'oil' | 'app'; dark: boolean;
   colors?: { canvas: string; surface: string; sunken: string; line: string; line2: string; ink: string; ink2: string; ink3: string; onInk: string };
@@ -93,7 +94,26 @@ export const FAMILIES = [
 ] as const satisfies readonly { id: ThemeDef['family']; label: string; press: Reaction }[];
 const ring = (w: number, c: string) => `0px 0px 0px ${w}px ${c}`;
 export const THEMES = {
-  standard: { label: 'スタンダード', family: 'standard', dark: false, font: 'system' },
+  // スタンダード (src/themes/standard/): the introduction site's look — warm paper, ink drawn 2pt thick
+  // (cards rest on the outline alone; only what you press has the ink floor under it), a lime that
+  // means start and picked, the app's own greens for study and the grass, crimson for paused, coral
+  // only for unread dots, the app's subject colors. Every new and existing user starts here.
+  standard: {
+    label: 'スタンダード', family: 'app', dark: false, font: 'grotesk', texture: 'dots-paper', timer: '#17121F', press: 'scale',
+    colors: { canvas: '#F3EEE3', surface: '#FBF8F1', sunken: '#EBE4D4', line: '#D8CFBD', line2: '#C9BFAB', ink: '#17121F', ink2: '#2B2436', ink3: '#6C6477', onInk: '#FBF8F1' },
+    corners: { card: 22, inner: 14 }, shadow: [ring(2, '#17121F'), `${ring(2, '#17121F')}, 6px 6px 0px 0px #A8D81C`],
+    accents: {
+      tint: '#1FA35B', tintSoft: '#DDEFD9', green: '#1FA35B', greenInk: '#148246', greenSoft: '#DDEFD9',
+      amber: '#E58A00', amberSoft: '#F8E5C4', red: '#C8302A', redSoft: '#F6DCD3',
+      // no blue in this look: actions are ink (and lime to start)
+      blue: '#17121F', blueSoft: '#EBE4D4',
+      // the app's greens; only the empty square warmed to sit on paper
+      grass: ['#E6E0D2', '#B5EBC8', '#5ED18A', '#1FA35B', '#0F7F3C'],
+    },
+  },
+  // クラシック: the standard look before スタンダード took the site's (cool gray, white cards, hairlines,
+  // Liquid Glass bars), drawn by the base renderers with the 背景 / メインの色 / 角 / タイマー picks
+  classic: { label: 'クラシック', family: 'standard', dark: false, font: 'system' },
   // デジタル: monospaced type, square corners, scan lines
   lcd: {
     label: 'LCD', family: 'digital', dark: false, font: 'mono', texture: 'scan', timer: '#1F2A16',
@@ -208,6 +228,9 @@ export const THEMES = {
   },
 } satisfies Record<string, ThemeDef>;
 export type ThemeId = keyof typeof THEMES;
+/** The theme drawn with your own picks (地の色・メインの色・角・タイマー, and the 背景 while it's open). */
+export const PICKS_THEME: ThemeId = 'classic';
+export const usesPicks = (id: string) => themeId(id) === PICKS_THEME;
 /** Themes that were replaced, and what took their place. */
 const RENAMED: Record<string, ThemeId> = { pop: 'piix', popWhite: 'piix', popNight: 'piix' };
 export const themeId = (id: string): ThemeId => (id in THEMES ? (id as ThemeId) : RENAMED[id] ?? 'standard');
@@ -217,8 +240,8 @@ export const themeOf = (id: ThemeId): ThemeDef => THEMES[themeId(id)];
  * 背景: what moves behind every page (and the timer) — the koi pond, sharks in
  * a pale sea, people walking over a glass floor — or none (the plain ground,
  * and the timer in the subject's color). All of them pale, so the app stays
- * white. Only with the standard theme: the other themes have their own
- * ground. The cards over it are glass.
+ * white. Only with クラシック: the other themes have their own ground. The
+ * cards over it are glass.
  */
 export type Backdrop = 'none' | 'pond' | 'sea' | 'walk';
 export const BACKDROPS: Record<Backdrop, { label: string; dark: boolean }> = {
@@ -253,8 +276,8 @@ export const DEFAULT_DESIGN: Design = { theme: 'standard', bg: 'cool', ink: 'bla
  * way to choose one, and the choice saved before is kept for when it opens again.
  */
 export const BACKDROPS_OPEN = false;
-/** The backdrop in use: the one picked, with the standard theme (while 背景 is open); none otherwise. */
-export const backdropOf = (d: Design): Backdrop => (BACKDROPS_OPEN && themeId(d.theme) === 'standard' && d.backdrop in BACKDROPS ? d.backdrop : 'none');
+/** The backdrop in use: the one picked, with クラシック (while 背景 is open); none otherwise. */
+export const backdropOf = (d: Design): Backdrop => (BACKDROPS_OPEN && usesPicks(d.theme) && d.backdrop in BACKDROPS ? d.backdrop : 'none');
 
 let design: Design = DEFAULT_DESIGN;
 let version = 0;
@@ -266,11 +289,11 @@ export const designVersion = () => version;
 /** Theme switching is open (false hides it: everyone gets the standard look, and the saved choice is kept for later). */
 export const THEMES_OPEN = true;
 /**
- * The themes that can be picked for now: the standard look and サイバー. The
- * others come back once they're properly built; one picked before shows as
- * the standard look meanwhile, and the choice is kept for then.
+ * The themes that can be picked for now: スタンダード, クラシック (the look
+ * before it) and サイバー. The others come back once they're properly built;
+ * one picked before shows as スタンダード meanwhile, and the choice is kept for then.
  */
-export const THEMES_SHOWN: ThemeId[] = ['standard', 'cyber'];
+export const THEMES_SHOWN: ThemeId[] = ['standard', 'classic', 'cyber'];
 export const themeShown = (id: string) => THEMES_SHOWN.includes(themeId(id));
 
 /** Called by the store whenever its state changes: the design as saved, applied as it can be shown now. */

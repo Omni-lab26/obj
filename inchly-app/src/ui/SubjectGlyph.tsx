@@ -50,7 +50,7 @@ export function SubjectGlyph({ glyph, size, color, width = 1.8 }: { glyph: Glyph
       body = <>{p('M9.5 3.5h5M10.5 3.5v5.3L5.3 17.6A2 2 0 0 0 7 20.5h10a2 2 0 0 0 1.7-2.9l-5.2-8.8V3.5')}{p('M7.4 14.6h9.2')}<Circle cx={11} cy={17.3} r={0.9} fill={color} /><Circle cx={14} cy={16.6} r={0.7} fill={color} /></>;
       break;
     case 'atom':
-      body = <><Circle cx={12} cy={12} r={1.4} fill={color} />{[0, 60, 120].map((a) => <G key={a} rotation={a} origin="12, 12"><Ellipse cx={12} cy={12} rx={9} ry={3.6} {...line} /></G>)}</>;
+      body = <><Circle cx={12} cy={12} r={1.4} fill={color} />{[0, 60, 120].map((a) => <G key={a} transform={`rotate(${a} 12 12)`}><Ellipse cx={12} cy={12} rx={9} ry={3.6} {...line} /></G>)}</>;
       break;
     case 'leaf':
       body = <>{p('M5 19C5 10.5 10.5 5 19 5c0 8.5-5.5 14-14 14z')}{p('M5 19l9-9M10 14.2V11M12.6 11.4H15')}</>;

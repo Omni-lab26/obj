@@ -327,8 +327,9 @@ describe('migrate', () => {
 });
 
 describe('背景', () => {
-  it('goes with the standard theme only, and only while it is open', () => {
-    expect(backdropOf({ ...DEFAULT_DESIGN, backdrop: 'sea' })).toBe(BACKDROPS_OPEN ? 'sea' : 'none');
+  it('goes with クラシック only, and only while it is open', () => {
+    expect(backdropOf({ ...DEFAULT_DESIGN, theme: 'classic', backdrop: 'sea' })).toBe(BACKDROPS_OPEN ? 'sea' : 'none');
+    expect(backdropOf({ ...DEFAULT_DESIGN, backdrop: 'sea' })).toBe('none'); // スタンダード has its own ground
     expect(backdropOf({ ...DEFAULT_DESIGN, theme: 'terminal', backdrop: 'sea' })).toBe('none');
   });
 });
