@@ -32,10 +32,12 @@ function makeFieldGesture() {
 type Props = {
   value: DigitColor | null;
   onChange: (c: DigitColor) => void;
+  /** The colour under the finger as it moves, every move (null once it lifts). */
+  onLive?: (c: DigitColor | null) => void;
   height?: number;
 };
 
-export function ColorField({ value, onChange, height = 150 }: Props) {
+export function ColorField({ value, onChange, onLive, height = 150 }: Props) {
   const [width, setWidth] = useState(0);
   // The pick under the finger, ahead of what has been passed on.
   const [live, setLive] = useState<DigitColor | null>(null);
@@ -50,6 +52,7 @@ export function ColorField({ value, onChange, height = 150 }: Props) {
           l: Math.min(1, Math.max(0, 1 - y / height)),
         };
         setLive(end ? null : c);
+        onLive?.(end ? null : c);
         const now = Date.now();
         if (end || now - passed > PASS_MS) {
           setPassed(now);

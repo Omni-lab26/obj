@@ -7,8 +7,8 @@ import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ColorField } from './ColorField';
-import { colorHex } from './colors';
-import { clockFonts } from './fonts';
+import { colorHex, type DigitColor } from './colors';
+import { clockFont, clockFonts, type FontId } from './fonts';
 import { CloseIcon } from './icons';
 import { scenes } from './scenes';
 import { useSettings } from './settings';
@@ -164,25 +164,16 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
               </Card>
 
               <Card title="色" c={c}>
-                <View style={styles.colorTop}>
-                  <Pressable
-                    onPress={() => setClock({ color: null })}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: !digitColor }}
-                    accessibilityLabel="色を自動にする"
-                    style={({ pressed }) => [styles.auto, { backgroundColor: digitColor ? c.tile : c.ink, transform: [{ scale: pressed ? 0.96 : 1 }] }]}
-                  >
-                    <Text style={[styles.autoText, { color: digitColor ? c.ink : c.onInk }]}>自動</Text>
-                  </Pressable>
-                  <View style={[styles.swatch, { borderColor: c.faint, backgroundColor: digitColor ? colorHex(digitColor) : '#ffffff' }]}>
-                    {digitColor ? null : <View style={styles.swatchHalf} />}
-                  </View>
-                  <Text style={[styles.colorNote, { color: c.soft }]} numberOfLines={1}>
-                    {digitColor ? '下の面で選んだ色' : '背景に合わせて白か黒'}
-                  </Text>
-                </View>
-                {/* Across: hue. Down: from white through the colour to black. */}
-                <ColorField value={digitColor} onChange={(v) => update((s) => ({ ...s, clock: { ...s.clock, color: v } }))} />
+                <ColorPicker
+                  value={digitColor}
+                  onChange={(v) => update((s) => ({ ...s, clock: { ...s.clock, color: v } }))}
+                  onAuto={() => setClock({ color: null })}
+                  tone={tone}
+                  font={settings.clock.font}
+                  hour24={settings.clock.hour24}
+                  seconds={settings.clock.seconds}
+                  c={c}
+                />
               </Card>
 
               {hasPhotos ? (
@@ -239,6 +230,81 @@ function Card({ title, value, c, children }: { title: string; value?: string; c:
         {value ? <Text style={[styles.cardValue, { color: c.soft }]}>{value}</Text> : null}
       </View>
       {children}
+    </View>
+  );
+}
+
+/** The colour card's body: "自動", the time as it is now in the clock's font and in
+ *  the colour (following the finger while it picks), and the field of colours. The
+ *  picking lives here, so only this redraws as the finger moves. */
+function ColorPicker({
+  value,
+  onChange,
+  onAuto,
+  tone,
+  font,
+  hour24,
+  seconds,
+  c,
+}: {
+  value: DigitColor | null;
+  onChange: (v: DigitColor) => void;
+  onAuto: () => void;
+  tone: 'dark' | 'light';
+  font: FontId;
+  hour24: boolean;
+  seconds: boolean;
+  c: Colors;
+}) {
+  const [live, setLive] = useState<DigitColor | null>(null);
+  const shown = live ?? value;
+  // "Auto" is the clock's own: white over a dark scene, black over a light one.
+  const ink = shown ? colorHex(shown) : tone === 'dark' ? '#ffffff' : '#0b0b0e';
+  return (
+    <>
+      <View style={styles.colorTop}>
+        <Pressable
+          onPress={onAuto}
+          accessibilityRole="button"
+          accessibilityState={{ selected: !value }}
+          accessibilityLabel="色を自動にする"
+          style={({ pressed }) => [styles.auto, { backgroundColor: value ? c.tile : c.ink, transform: [{ scale: pressed ? 0.96 : 1 }] }]}
+        >
+          <Text style={[styles.autoText, { color: value ? c.ink : c.onInk }]}>自動</Text>
+        </Pressable>
+        <LiveTime color={ink} font={font} hour24={hour24} seconds={seconds} />
+      </View>
+      {/* Across: hue. Down: from white through the colour to black. */}
+      <ColorField value={value} onChange={onChange} onLive={setLive} />
+    </>
+  );
+}
+
+/** The time now, in the clock's font, ticking each second. */
+function LiveTime({ color, font, hour24, seconds }: { color: string; font: FontId; hour24: boolean; seconds: boolean }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const f = clockFont(font);
+  const size = (f.time.fontSize ?? 96) * 0.4;
+  const d = new Date(now);
+  const h = d.getHours();
+  const two = (n: number) => String(n).padStart(2, '0');
+  return (
+    <View style={styles.liveTime} accessible accessibilityLabel="いまの時刻（この色で）">
+      <Text
+        numberOfLines={1}
+        style={[f.time, { fontSize: size, lineHeight: size * 1.1, letterSpacing: (f.time.letterSpacing ?? 0) * 0.4, color, includeFontPadding: false }]}
+      >
+        {`${hour24 ? h : h % 12 || 12}:${two(d.getMinutes())}`}
+      </Text>
+      {seconds ? (
+        <Text style={[f.time, { fontSize: size * f.secondsScale, marginLeft: 3, marginBottom: size * 0.14, color, letterSpacing: 0, includeFontPadding: false }]}>
+          {two(d.getSeconds())}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -371,6 +437,12 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 12,
   },
+  liveTime: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
   auto: {
     height: 34,
     paddingHorizontal: 16,
@@ -381,28 +453,6 @@ const styles = StyleSheet.create({
   autoText: {
     fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 0,
-  },
-  swatch: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  // Half black, for "white or black".
-  swatchHalf: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: '50%',
-    backgroundColor: '#0b0b0e',
-  },
-  colorNote: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '700',
     letterSpacing: 0,
   },
   slab: {
