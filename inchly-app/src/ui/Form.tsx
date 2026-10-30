@@ -129,6 +129,26 @@ export function Choice<K extends string>({ options, value, onChange }: { options
 }
 
 /** スタンダード's chip: a small key on a 2pt floor; picked, it's lime and stays down. */
+/**
+ * スタンダード's switch (for the system green one): a small plate on its floor, lime when on, its knob
+ * paper going ink as it slides over (0.2s, ui/motion micro); as the record sheet's.
+ */
+export function StdSwitch({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label: string }) {
+  const v = useSharedValue(value ? 1 : 0);
+  useEffect(() => { v.set(micro(value ? 1 : 0)); }, [value, v]);
+  const lime = useAnimatedStyle(() => ({ opacity: v.value }));
+  const knob = useAnimatedStyle(() => ({ transform: [{ translateX: v.value * 20 }] }));
+  return (
+    <Pressable onPress={() => { haptic.tap(); onChange(!value); }} accessibilityRole="switch" accessibilityState={{ checked: value }} accessibilityLabel={label}
+      hitSlop={{ top: 9, bottom: 9, left: 6, right: 6 }} style={{ width: 46, height: 26, marginRight: 2, marginBottom: 3, borderRadius: 9, backgroundColor: S.paper2, boxShadow: `${ring()}, 0px 3px 0px 2px ${S.ink}` }}>
+      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderRadius: 9, backgroundColor: S.lime }, lime]} />
+      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 4, top: 4, width: 18, height: 18, borderRadius: 5, backgroundColor: S.card, boxShadow: ring(1.5) }, knob]}>
+        <Animated.View style={[{ flex: 1, borderRadius: 5, backgroundColor: S.ink }, lime]} />
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 export function StdChip({ label, on, onPress, role = 'radio', children, a11y }: { label?: string; on?: boolean; onPress: () => void; role?: 'radio' | 'button' | 'checkbox' | 'tab'; children?: ReactNode; a11y?: string }) {
   return (
     <StdKey onPress={onPress} label={a11y ?? label} kd={2} radius={SR.chip} fill={on ? S.lime : S.card} held={on} role={role}

@@ -16,6 +16,7 @@ import { Dialog } from '@/ui/Dialog';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
 import { move } from '@/ui/motion';
+import { useStd } from '@/ui/stdLook';
 import { TourSpot } from '@/ui/Tour';
 
 // The study bar, like a music app's mini player, always on the tab bar on every
@@ -71,10 +72,13 @@ function AskBody({ save, saveAll, memo, goOn }: { save: () => void; saveAll: () 
   const held = useStore((s) => s.held);
   const min = Math.max(1, Math.round(ss.elapsed / 60));
   const all = held.reduce((n, h) => n + Math.max(1, Math.round(h.sec / 60)), min);
+  const what = `${ss.subject.name} ${min}分${held.length ? `（ほかに記録まちが${held.length}つ）` : ''}`;
+  // スタンダード: a sentence a line, so no line breaks inside a word on a small phone
+  const std = useStd();
   return (
     <View style={{ gap: 10, paddingHorizontal: 20, paddingBottom: 20 }}>
       <Txt size={14} tone="ink2" style={{ marginBottom: 6 }}>
-        {`${ss.subject.name} ${min}分${held.length ? `（ほかに記録まちが${held.length}つ）` : ''}。バーを消すと時間は止まります。記録すると今日の合計に入ります`}
+        {std ? `${what}。\nバーを消すと時間は止まります。\n記録すると今日の合計に入ります。` : `${what}。バーを消すと時間は止まります。記録すると今日の合計に入ります`}
       </Txt>
       {ss.subject.id === FREE ? (
         // 自習: the subject and what it was are written on the record page

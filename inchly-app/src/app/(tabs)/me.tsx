@@ -73,8 +73,8 @@ export default function Me() {
           </View>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 12 }}>
-          <Btn kind="line" small={!std} label="プロフィールを編集" onPress={() => toast('プロフィールの編集はこれから作ります')} style={{ flex: 1 }} />
-          <Btn kind="line" small={!std} label="カードを共有" onPress={() => toast('カードの画像を保存しました')} style={{ flex: 1 }} />
+          <Btn kind="line" small={!std} tight label="プロフィールを編集" onPress={() => toast('プロフィールの編集はこれから作ります')} style={{ flex: 1 }} />
+          <Btn kind="line" small={!std} tight label="カードを共有" onPress={() => toast('カードの画像を保存しました')} style={{ flex: 1 }} />
         </View>
 
         <View style={{ paddingTop: 14, backgroundColor: t.backdrop !== 'none' ? t.surface : t.canvas }} onLayout={(e) => { tabsY.current = e.nativeEvent.layout.y + 14; }}>

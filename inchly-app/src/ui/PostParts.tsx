@@ -126,7 +126,7 @@ function Bookmark({ id }: { id: string }) {
     const now = toggleBookmark(id);
     if (now) {
       haptic.soft();
-      toast('ブックマークしました', 'メニューの「ブックマーク」から見られます');
+      toast('ブックマークしました', 'メニューの「ブックマーク」から見られます', undefined, { pix: 'tsuru', from: 'idle', face: 'happy' });
     } else haptic.tap();
   };
   return (

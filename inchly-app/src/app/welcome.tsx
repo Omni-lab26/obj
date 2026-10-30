@@ -15,7 +15,7 @@ import { Creature, LogoMark } from '@/themes/standard/pixel';
 import { ring, S, SR, useStd } from '@/ui/stdLook';
 import { TextureFill } from '@/ui/Texture';
 import { GoalPick, goalLabel, Opens, PickChip, SMOOTH, YearMonthPick } from '@/ui/DateTime';
-import { Choice, Field, Label } from '@/ui/Form';
+import { Choice, Field, Label, StdSwitch } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
 import { fadeIn } from '@/ui/motion';
 import { toast } from '@/ui/Toast';
@@ -265,7 +265,7 @@ export default function Welcome() {
                       <Txt size={14} w="500">{a}</Txt>
                       <Txt size={12} tone="ink3">{b}</Txt>
                     </View>
-                    <Switch value={notify[k]} onValueChange={(v) => { haptic.tap(); setNotify({ ...notify, [k]: v }); }} trackColor={{ true: t.green, false: t.line2 }} thumbColor="#fff" ios_backgroundColor={t.line2} accessibilityLabel={a} />
+                    {std ? <StdSwitch value={notify[k]} onChange={(v) => setNotify({ ...notify, [k]: v })} label={a} /> : <Switch value={notify[k]} onValueChange={(v) => { haptic.tap(); setNotify({ ...notify, [k]: v }); }} trackColor={{ true: t.green, false: t.line2 }} thumbColor="#fff" ios_backgroundColor={t.line2} accessibilityLabel={a} />}
                   </View>
                 ))}
               </View>

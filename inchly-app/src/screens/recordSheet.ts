@@ -68,7 +68,8 @@ export function useRecordSheet() {
     setTimeout(() => {
       router.back(); // back where you were: the timer stays as you left it
       const sub = [`+${exp} EXP`, ticket ? '7日連続！休み券を1枚もらいました' : '', share ? 'タイムラインにも投稿しました' : ''].filter(Boolean).join(' · ');
-      toast(levelUp ? `レベルアップ！ Lv.${levelUp}` : `${sj.name} ${m}分を記録しました`, levelUp ? `${sj.name} ${m}分を記録 · ${sub}` : sub);
+      // no moment card after the sheet (its stamp said it): スタンダード's toast brings ペンタ
+      toast(levelUp ? `レベルアップ！ Lv.${levelUp}` : `${sj.name} ${m}分を記録しました`, levelUp ? `${sj.name} ${m}分を記録 · ${sub}` : sub, undefined, { pix: 'penta', from: 'idle', face: 'happy' });
       celebrate({ kind: 'record', subject: sid, min: m, exp, level: levelUp, ticket, sheet: true });
     }, 1100); // long enough to see the stamp land
   };

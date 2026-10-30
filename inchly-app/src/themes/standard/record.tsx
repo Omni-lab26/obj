@@ -33,8 +33,10 @@ export function Record({ r }: { r: RecordSheet }) {
   const insets = useSafeAreaInsets();
   // the memo at 18pt, 17 where its line is too short for the question in one line (the iPhone SE)
   const memoSize = useWindowDimensions().width < 385 ? 17 : 18;
+  // today's total as the sheet opened: saved, the record is in the store's total, and the band would count it twice
+  const [before] = useState(r.before);
   if (r.empty) return <Empty />;
-  const { before, plan, free, subjects, pick, setPick, keepFree, what, setWhat, sj, min, adjust, start, end, note, setNote, share, setShare, phase, todayPart, left, tooLong, back, save } = r;
+  const { plan, free, subjects, pick, setPick, keepFree, what, setWhat, sj, min, adjust, start, end, note, setNote, share, setShare, phase, todayPart, left, tooLong, back, save } = r;
   const idle = phase === 'idle';
   return (
     <Screen>

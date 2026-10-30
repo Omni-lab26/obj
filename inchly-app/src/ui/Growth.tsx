@@ -53,7 +53,7 @@ export function useGrowth(sessions: Session[]) {
     const eta = new Date();
     eta.setDate(eta.getDate() + Math.ceil((next * 60 - totalMin) / Math.max(1, pace)));
     return {
-      total: totalMin / 60, curve, curves, next, prev, eta,
+      total: totalMin / 60, curve, curves, next, prev, eta, pace,
       vsYesterday: days[0] - days[1],
       vsLastWeek: (sum(0, 7) - sum(7, 14)) / 60,
       avgNow: sum(0, 30) / 30,
@@ -113,7 +113,10 @@ export function Growth() {
                 <Txt num size={14} w="800">{`あと${left.toFixed(1)}時間`}</Txt>
               </View>
               <Meter p={p} />
-              <Txt size={12} tone="ink3">{'このペースなら '}<Txt size={12} w="700">{`${g.eta.getMonth() + 1}月${g.eta.getDate()}日`}</Txt>{'に届きます'}</Txt>
+              {/* no study these two weeks: no date to say; one past this year says its year */}
+              {g.pace >= 1 ? (
+                <Txt size={12} tone="ink3">{'このペースなら '}<Txt size={12} w="700" num>{`${g.eta.getFullYear() !== new Date().getFullYear() ? `${g.eta.getFullYear()}年` : ''}${g.eta.getMonth() + 1}月${g.eta.getDate()}日`}</Txt>{'に届きます'}</Txt>
+              ) : <Txt size={12} tone="ink3">記録が増えると、届く日の目安が出ます</Txt>}
             </View>
           </Card>
         ) : (

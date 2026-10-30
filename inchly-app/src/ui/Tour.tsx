@@ -122,13 +122,15 @@ function Bubble({ step, rect, n, i, next, skip }: { step: Step; rect: Rect | nul
     // the ink outline and the lime shadow, its tail drawn in ink; めぶ says hello on the first step and is happy on the last
     const pix = i === 0 ? 'idle' : last ? 'happy' : null;
     const DIM = 'rgba(23,18,31,0.58)';
+    // the dim's outer corners are as round as its border is thick: thick enough that they stay past every corner of the screen
+    const BS = W + H;
     const tailX = tail - 10;
     return (
       <Animated.View entering={fadeIn()} exiting={fadeOut()} style={StyleSheet.absoluteFill} accessibilityViewIsModal>
         <Pressable style={StyleSheet.absoluteFill} onPress={next} accessibilityLabel="次へ">
           {rect ? (
             <>
-              <View style={{ position: 'absolute', left: r.x - B, top: r.y - B, width: r.w + B * 2, height: r.h + B * 2, borderWidth: B, borderRadius: B + R, borderColor: DIM }} />
+              <View style={{ position: 'absolute', left: r.x - BS, top: r.y - BS, width: r.w + BS * 2, height: r.h + BS * 2, borderWidth: BS, borderRadius: BS + R, borderColor: DIM }} />
               <View pointerEvents="none" style={{ position: 'absolute', left: r.x, top: r.y, width: r.w, height: r.h, borderRadius: R, boxShadow: `0px 0px 0px 2px ${S.card}` }} />
             </>
           ) : <View style={[StyleSheet.absoluteFill, { backgroundColor: DIM }]} />}

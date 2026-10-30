@@ -41,13 +41,16 @@ const SORTS: { v: FriendSort; title: string; sub: string }[] = [
 const hm = (m: number) => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, '0')}`;
 
 /** The order, in a card in the middle of the screen: pick one and it applies. */
+// スタンダード: the long one broken where it reads well (else its last word goes on alone on a small phone)
+const STD_SORTS = SORTS.map((x) => (x.v === 'mine' ? { ...x, sub: '右の ≡ をつかむか、行を長押しして\n上下にずらす' } : x));
 function SortChoice({ open, current, close }: { open: boolean; current: FriendSort; close: () => void }) {
+  const std = useStd();
   const [v, setV] = useState(current);
   useEffect(() => { if (open) setV(current); }, [open, current]); // eslint-disable-line react-hooks/set-state-in-effect
   return (
     <Dialog open={open} close={close} title="並び順">
       <View style={{ gap: 14, paddingHorizontal: 18, paddingBottom: 18, paddingTop: 4 }}>
-        <RadioCards<FriendSort> value={v} onChange={setV} options={SORTS} />
+        <RadioCards<FriendSort> value={v} onChange={setV} options={std ? STD_SORTS : SORTS} />
         <Btn kind="primary" wide label="この順にする" onPress={() => { setFriendSort(v); haptic.soft(); close(); }} />
       </View>
     </Dialog>

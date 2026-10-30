@@ -7,6 +7,9 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { onMoment } from '../moments';
 import { hair, lift, useT } from '../theme';
+import type { CreatureId, Face } from '../themes/standard/art';
+import { Dots } from '../themes/standard/parts';
+import { Creature } from '../themes/standard/pixel';
 import { haptic, Press, StdKey, Txt } from './base';
 import { Sticker } from './Sticker';
 import { Pane } from './Glass';
@@ -16,9 +19,11 @@ import { LIFT, S, useStd } from './stdLook';
 // Toast stack (bencho "notification stack"): newest in front, the two behind
 // peek out above it. Tapping the stack spreads it into a list; it collapses
 // again on its own. Flick one up and it's gone, like a phone's banner. Each
-// toast can carry one action ("一緒に始める", "元に戻す").
+// toast can carry one action ("一緒に始める", "元に戻す"), and, where no
+// moment card says it, one of スタンダード's creatures (only it draws them).
 type Action = { label: string; run: () => void };
-type Item = { id: number; title: string; sub?: string; action?: Action };
+type Who = { pix: CreatureId; from: Face; face: Face };
+type Item = { id: number; title: string; sub?: string; action?: Action; who?: Who };
 
 let seq = 0;
 let items: Item[] = [];
@@ -36,9 +41,9 @@ export function dismiss(id: number) {
   items = items.filter((x) => x.id !== id);
   emit();
 }
-export function toast(title: string, sub?: string, action?: Action) {
+export function toast(title: string, sub?: string, action?: Action, who?: Who) {
   const id = ++seq;
-  items = [{ id, title, sub, action }, ...items].slice(0, 4);
+  items = [{ id, title, sub, action, who }, ...items].slice(0, 4);
   emit();
   schedule(id, action ? 5200 : 3400);
   if (action) haptic.soft();
@@ -86,13 +91,12 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
       <GestureDetector gesture={flick}>
         <Animated.View style={a}>
           {std ? (
-            // スタンダード: paper with the ink outline and the lime shadow of what floats (it leaves 6 clear on the right); words only, the action a small key
+            // スタンダード: paper with the ink outline and the lime shadow of what floats (it leaves 6 clear on the right);
+            // the creature when it has one, the words (+N EXP in the green dot letters), the action a small key
             <Pressable onPress={onPress}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingLeft: 14, paddingRight: 12, marginRight: 6, borderRadius: 16, backgroundColor: S.card, boxShadow: LIFT }}>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Txt size={15} w="700" lh={20} numberOfLines={1}>{item.title}</Txt>
-                {item.sub ? <Txt size={12} lh={16} tone="ink2" numberOfLines={1}>{item.sub}</Txt> : null}
-              </View>
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingLeft: item.who ? 12 : 14, paddingRight: 12, marginRight: 6, borderRadius: 16, backgroundColor: S.card, boxShadow: LIFT }}>
+              {item.who ? <ToastWho who={item.who} /> : null}
+              <StdWords title={item.title} sub={item.sub} />
               {item.action ? (
                 <StdKey onPress={() => { item.action!.run(); dismiss(item.id); }} label={item.action.label} kd={3} style={{ minHeight: 32, marginBottom: 3 }} face={{ minHeight: 32, paddingHorizontal: 12 }}>
                   <Txt size={13} w="700" lh={17}>{item.action.label}</Txt>
@@ -120,6 +124,28 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
       </GestureDetector>
     </Animated.View>
   );
+}
+
+/** スタンダード's toast words: the title; '+N EXP' at the start of the line under it in the green dot letters, the rest after it. */
+function StdWords({ title, sub }: { title: string; sub?: string }) {
+  const m = sub?.match(/^(\+\d+ EXP)(?: · (.+))?$/);
+  const rest = m ? m[2] : sub;
+  return (
+    <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
+      <Txt size={15} w="700" lh={20} numberOfLines={1}>{title}</Txt>
+      {m ? <Dots size={12} lh={15} ls={0.5} color={S.runInk}>{m[1]}</Dots> : null}
+      {rest ? <Txt size={12} lh={16} tone="ink2" numberOfLines={1}>{rest}</Txt> : null}
+    </View>
+  );
+}
+/** The creature in a toast: its first face, the second one a moment after it's in (one short fade, as the moments do). */
+function ToastWho({ who }: { who: Who }) {
+  const [face, setFace] = useState(who.from);
+  useEffect(() => {
+    const id = setTimeout(() => setFace(who.face), 450);
+    return () => clearTimeout(id);
+  }, [who.face]);
+  return <Creature id={who.pix} face={face} px={2} />;
 }
 
 // A screen shown over everything (the timer) mounts its own host; only the newest shows the toasts.

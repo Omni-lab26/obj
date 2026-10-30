@@ -15,7 +15,7 @@ import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { backdropSheet, CardFillControl, FrostControl } from '@/ui/BackdropSheet';
 import { ThemeCard } from '@/screens/ThemeCard';
 import { NavBar, Screen } from '@/ui/Chrome';
-import { Choice, RadioCards } from '@/ui/Form';
+import { Choice, RadioCards, StdSwitch } from '@/ui/Form';
 import { openSheet } from '@/ui/Sheet';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
@@ -68,6 +68,8 @@ function Row({ label, sub, right, first }: { label: string; sub?: string; right?
 }
 function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
   const t = useT();
+  const std = useStd();
+  if (std) return <StdSwitch value={on} onChange={onChange} label={label} />;
   return <Switch value={on} onValueChange={(v) => { haptic.tap(); onChange(v); }} trackColor={{ true: t.green, false: t.line2 }} thumbColor="#fff" ios_backgroundColor={t.line2} accessibilityLabel={label} />;
 }
 

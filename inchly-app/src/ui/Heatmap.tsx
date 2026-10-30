@@ -14,7 +14,8 @@ import { fadeIn, fadeOut } from './motion';
 // drag) on the grid to read the date and time of a day. When it appears (and
 // when its page comes back) each square flips over like a card, grey side
 // first, its green on the back — a wave from the top left. `square`: square
-// cells on a faint edge and today in a 2pt ink frame (スタンダード's grass).
+// cells on a faint edge and today in a 2pt ink frame, the rows Monday to
+// Sunday with the days still to come this week left empty (スタンダード's grass).
 
 const GUTTER = 18; // weekday labels
 const EDGE = 'inset 0px 0px 0px 1px rgba(23,18,31,0.1)'; // a square cell's faint edge
@@ -25,7 +26,11 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true, square }
   const appear = useAppear(80, 1000, Easing.linear); // the squares flip over like cards, a wave from the top left
   const sessions = useStore((s) => s.sessions);
   const lastDay = useStore((s) => s.lastDay); // a new day redraws the grass
-  const cells = useMemo(() => grassOf(sessions, weeks), [sessions, weeks, lastDay]); // eslint-disable-line react-hooks/exhaustive-deps
+  const days = useMemo(() => grassOf(sessions, weeks), [sessions, weeks, lastDay]); // eslint-disable-line react-hooks/exhaustive-deps
+  // square: the weeks run Monday to Sunday, so the last column is this week and its days to come are empty (-1)
+  const ahead = square ? 6 - ((new Date().getDay() + 6) % 7) : 0;
+  const cells = ahead ? days.map((_, i) => (i + ahead < days.length ? days[i + ahead] : -1)) : days;
+  const today = cells.length - 1 - ahead;
   const [w, setW] = useState(0);
   const [hot, setHot] = useState<number | null>(null);
   const size = w ? (w - gap * (weeks - 1)) / weeks : 0;
@@ -61,12 +66,11 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true, square }
   );
 
   let tip: { text: string; x: number; y: number } | null = null;
-  if (hot !== null && size) {
-    const n = weeks * 7;
+  if (hot !== null && size && hot <= today) {
     const d = new Date();
-    d.setDate(d.getDate() - (n - 1 - hot));
+    d.setDate(d.getDate() - (today - hot));
     const l = cells[hot];
-    const m = l ? dayOf(sessions, n - 1 - hot).min : 0;
+    const m = l ? dayOf(sessions, today - hot).min : 0;
     const col = Math.floor(hot / 7), row = hot % 7;
     tip = {
       text: `${d.getMonth() + 1}月${d.getDate()}日 · ${m ? `${Math.floor(m / 60)}時間${pad(m % 60)}分` : '記録なし'}`,
@@ -78,7 +82,7 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true, square }
   // Axis labels, like GitHub: month names over the first column of each month, 月・水・金 on the left.
   const n = weeks * 7;
   const start = new Date();
-  start.setDate(start.getDate() - (n - 1));
+  start.setDate(start.getDate() - (n - 1 - ahead));
   const months: { x: number; label: string }[] = [];
   if (labels && size) {
     let prev = -1;
@@ -115,11 +119,12 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true, square }
               <View key={c} style={{ gap }}>
                 {cells.slice(c * 7, c * 7 + 7).map((l, r) => {
                   const i = c * 7 + r;
+                  if (l < 0) return <View key={r} style={{ width: size, height: size }} />;
                   return (
                     <Flip key={r} p={appear} at={((c + r * 0.6) / (weeks + 4)) * 0.8} color={t.grass[l]} blank={t.grass[0]}
                       style={square
-                        ? { width: size, height: size, borderWidth: i === cells.length - 1 || hot === i ? 2 : 0, borderColor: t.ink, boxShadow: EDGE }
-                        : { width: size, height: size, borderRadius: Math.min(4, size * 0.22), borderWidth: i === cells.length - 1 || hot === i ? 1.5 : 0, borderColor: t.ink }} />
+                        ? { width: size, height: size, borderWidth: i === today || hot === i ? 2 : 0, borderColor: t.ink, boxShadow: EDGE }
+                        : { width: size, height: size, borderRadius: Math.min(4, size * 0.22), borderWidth: i === today || hot === i ? 1.5 : 0, borderColor: t.ink }} />
                   );
                 })}
               </View>

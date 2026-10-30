@@ -225,7 +225,7 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
                   <View style={{ transform: [{ rotate: open === 'subject' ? '-90deg' : '90deg' }] }}><Icon name="chev" size={13} color={t.ink3} /></View>
                 </Press>
                 <View style={{ height: std ? 1.5 : hair, backgroundColor: t.line }} />
-                <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder="メモ（例：青チャート 例題41〜50）"
+                <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder={std ? 'メモ（例：例題41〜50）' : 'メモ（例：青チャート 例題41〜50）'}
                   placeholderTextColor={t.ink3} onFocus={typing} accessibilityLabel="メモ" returnKeyType="done"
                   style={[{ height: 34, paddingVertical: 0, paddingRight: 8, fontSize: 15, fontFamily: font.text, color: t.ink }, noOutline]} />
               </View>

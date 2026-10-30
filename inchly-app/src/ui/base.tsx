@@ -181,9 +181,10 @@ export function StdIcon({ name, color = S.ink, size = 20 }: { name: IconName; co
 
 // ---------- buttons ----------
 type BtnKind = 'primary' | 'go' | 'ghost' | 'quiet' | 'line' | 'tint';
-type BtnProps = { label: string; kind?: BtnKind; icon?: IconName; onPress?: () => void; small?: boolean; wide?: boolean; disabled?: boolean; loading?: boolean; done?: boolean; style?: StyleProp<ViewStyle> };
+type BtnProps = { label: string; kind?: BtnKind; icon?: IconName; onPress?: () => void; small?: boolean; wide?: boolean; disabled?: boolean; loading?: boolean; done?: boolean; style?: StyleProp<ViewStyle>;
+  /** スタンダード: less room beside the words (two keys side by side on a small phone) */ tight?: boolean };
 /** スタンダード's button: a key (an ink face on lime for the one decision, lime to start, card otherwise); `ghost` is words only. */
-function StdBtn({ label, kind = 'quiet', icon, onPress, small, wide, disabled, loading, done, style }: BtnProps) {
+function StdBtn({ label, kind = 'quiet', icon, onPress, small, wide, disabled, loading, done, style, tight }: BtnProps) {
   const h = small ? 32 : 44;
   const size = small ? 13 : 15;
   if (kind === 'ghost') {
@@ -204,7 +205,7 @@ function StdBtn({ label, kind = 'quiet', icon, onPress, small, wide, disabled, l
       hitSlop={small ? { top: 6, bottom: 6, left: 4, right: 4 } : undefined}
       // the floor reaches below the face: room for it, so nothing under the key covers it
       style={[{ minHeight: h, marginBottom: small ? 3 : KD }, wide && { alignSelf: 'stretch' }, style]}
-      face={{ minHeight: h, paddingHorizontal: small ? 12 : 18, gap: small ? 6 : 8 }}>
+      face={{ minHeight: h, paddingHorizontal: small || tight ? 12 : 18, gap: small ? 6 : 8 }}>
       {loading ? <ActivityIndicator color={fg} size="small" /> : null}
       {!loading && (icon || done) ? (done ? <Pix name="check" color={fg} /> : <StdIcon name={icon!} color={fg} size={small ? 13 : 16} />) : null}
       {!loading ? <KeyText size={size} color={fg}>{label}</KeyText> : null}
