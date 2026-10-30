@@ -27,9 +27,11 @@ export type Settings = {
   timerSaves: (number | null)[];
   /**
    * Where the digits sit and how big, the same for all three modes: x and y move them
-   * from their usual place by that share of the screen's width and height.
+   * from their usual place by that share of the screen's width and height. One for the
+   * phone upright, one for it on its side.
    */
   face: { x: number; y: number; scale: number };
+  faceWide: { x: number; y: number; scale: number };
   /** Digital layer: 0 = the raw picture (素), 1 = fully digital. */
   digital: number;
   /** Last scene shown, restored on launch. */
@@ -43,6 +45,7 @@ export const defaultSettings: Settings = {
   stopwatch: { startAt: null, elapsed: 0 },
   timerSaves: [null, null, null, null, null],
   face: { x: 0, y: 0, scale: 1 },
+  faceWide: { x: 0, y: 0, scale: 1 },
   digital: 0.65,
   scene: 'koi',
 };
@@ -68,6 +71,7 @@ function withDefaults(stored: Partial<Settings>): Settings {
     stopwatch: { ...defaultSettings.stopwatch, ...stored.stopwatch },
     timerSaves: defaultSettings.timerSaves.map((d, i) => stored.timerSaves?.[i] ?? d),
     face: { ...defaultSettings.face, ...stored.face },
+    faceWide: { ...defaultSettings.faceWide, ...stored.faceWide },
   };
 }
 

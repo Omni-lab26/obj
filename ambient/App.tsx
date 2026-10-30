@@ -4,7 +4,7 @@ import { useFonts } from 'expo-font';
 import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, AppState, Easing, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, AppState, Easing, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -211,9 +211,12 @@ function Player() {
     editing.current = true;
     showChrome();
   };
+  // The digits' place and size: one for the phone upright, one for it on its side.
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  const faceKey = screenW > screenH ? 'faceWide' : 'face';
   // Back to the middle at the usual size (the digits glide there).
   const resetFace = () => {
-    update((s) => ({ ...s, face: { x: 0, y: 0, scale: 1 } }));
+    update((s) => ({ ...s, [faceKey]: { x: 0, y: 0, scale: 1 } }));
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setToast({ text: '位置と大きさを元に戻しました', id: Date.now() });
   };
@@ -267,9 +270,9 @@ function Player() {
         onSave={saveTimer}
         onLoad={loadTimer}
         onDelete={deleteTimer}
-        face={settings.face}
+        face={settings[faceKey]}
         edit={settings.clock.visible && edit}
-        onFace={(face) => update((s) => ({ ...s, face }))}
+        onFace={(face) => update((s) => ({ ...s, [faceKey]: face }))}
       />
       <Toast toast={toast} tone={tone} />
 
@@ -359,7 +362,7 @@ function Player() {
           pointerEvents="none"
           style={[
             styles.editHint,
-            settings.face.y > 0 ? { top: Math.max(insets.top, 12) + 66 } : { bottom: Math.max(insets.bottom, 12) + 24 },
+            settings[faceKey].y > 0 ? { top: Math.max(insets.top, 12) + 66 } : { bottom: Math.max(insets.bottom, 12) + 24 },
           ]}
         >
           <Text style={[styles.editHintText, { color: ink, textShadowColor: dark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.95)' }]}>
