@@ -1,9 +1,10 @@
 import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { useFonts } from 'expo-font';
 import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, AppState, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, AppState, Easing, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Clock, Toast } from './src/Clock';
@@ -161,12 +162,11 @@ function Player() {
     update((s) =>
       s.mode === 'timer' ? { ...s, timer: resetTimer(s.timer) } : s.mode === 'stopwatch' ? { ...s, stopwatch: resetStopwatch() } : s
     );
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    setToast({ text: 'リセットしました', id: Date.now() });
   }, [update]);
   useTimerAlarm(settings.timer, update, () => setToast({ text: 'タイマーが終わりました', id: Date.now() }));
-  const setMode = (mode: typeof settings.mode) => {
-    update((s) => ({ ...s, mode, clock: { ...s.clock, visible: true } }));
-    showChrome();
-  };
+  const setMode = (mode: typeof settings.mode) => update((s) => ({ ...s, mode, clock: { ...s.clock, visible: true } }));
 
   const tone = measuredTone[shown.id] ?? shown.tone;
   const dark = tone === 'dark';
@@ -220,13 +220,6 @@ function Player() {
           },
         ]}
       >
-        <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight, styles.segShadow]}>
-          <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.segGlass, { borderColor: glassEdge }]}>
-            {MODES.map((m) => (
-              <Segment key={m.id} label={m.label} selected={settings.mode === m.id} ink={ink} dark={dark} onPress={() => setMode(m.id)} />
-            ))}
-          </BlurView>
-        </View>
         <View style={styles.dockRow}>
           <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight]}>
             <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.pill, { borderColor: glassEdge }]}>
@@ -285,30 +278,6 @@ function Player() {
   );
 }
 
-const MODES = [
-  { id: 'clock', label: '時計' },
-  { id: 'timer', label: 'タイマー' },
-  { id: 'stopwatch', label: 'ストップウォッチ' },
-] as const;
-
-function Segment({ label, selected, ink, dark, onPress }: { label: string; selected: boolean; ink: string; dark: boolean; onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={4}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      style={({ pressed }) => [
-        styles.segment,
-        selected && { backgroundColor: dark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.08)' },
-        { opacity: pressed ? 0.5 : 1 },
-      ]}
-    >
-      <Text style={[styles.segmentText, { color: ink, opacity: selected ? 1 : 0.62 }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 function NavButton({ direction, color, onPress, label }: { direction: 1 | -1; color: string; onPress: () => void; label: string }) {
   return (
     <Pressable
@@ -332,31 +301,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-  },
-  segShadow: {
-    marginBottom: 10,
-  },
-  segGlass: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 40,
-    paddingHorizontal: 4,
-    gap: 2,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-  },
-  segment: {
-    height: 32,
-    paddingHorizontal: 13,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0,
   },
   dockRow: {
     flexDirection: 'row',

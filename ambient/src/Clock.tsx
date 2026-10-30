@@ -118,7 +118,7 @@ function faceFor(p: Props, now: number, preview: number | null): Face {
   }
   if (p.mode === 'timer') {
     if (preview != null) {
-      return { label: '', main: formatDuration(preview * 60_000), small: '', hint: '', dim: false };
+      return { label: '', main: formatDuration(preview * 1000), small: '', hint: '', dim: false };
     }
     const left = timerLeft(p.timer, now);
     if (timerDone(p.timer)) {
@@ -148,7 +148,7 @@ function faceFor(p: Props, now: number, preview: number | null): Face {
 /** The centre clock, timer or stopwatch. Long-press anywhere else toggles it. */
 export function Clock(props: Props) {
   const { clock, mode, timer, stopwatch, tone, fadeMs = 520, onToggle, onReset, onSetDuration, onMode, onTouch, onHide } = props;
-  // The minute under the ruler's mark while it is being dragged or coasting.
+  // The length on the rulers while one is being dragged or coasting (seconds).
   const [preview, setPreview] = useState<number | null>(null);
   const fast = (mode === 'stopwatch' && stopwatch.startAt != null) || (mode === 'timer' && (timerRunning(timer) || timerDone(timer)));
   const now = useNow(fast);
@@ -208,6 +208,9 @@ export function Clock(props: Props) {
   const fit = Math.min(1, 5 / (f.main.length + (f.small ? 1.1 : 0)));
   const scale = Math.min(width / 390, 1.6) * fit;
   const size = (font.time.fontSize ?? 96) * scale;
+  // The line keeps the height of full-size digits, so nothing below it (the timer's
+  // rulers) moves when a longer reading shrinks them.
+  const lineHeight = (font.time.fontSize ?? 96) * Math.min(width / 390, 1.6) * 1.08;
   const interactive = mode !== 'clock';
   const label = flash ?? f.label;
 
@@ -217,9 +220,9 @@ export function Clock(props: Props) {
         style={[styles.date, { color: c.inkSoft, textShadowColor: c.halo, opacity: flash ? flashOpacity : 1 }]}
         numberOfLines={1}
       >
-        {label || ' '}
+        {label || '\u00a0'}
       </Animated.Text>
-      <View style={[styles.row, { opacity: f.dim ? 0.3 : 1 }]}>
+      <View style={[styles.row, { height: lineHeight, opacity: f.dim ? 0.3 : 1 }]}>
         <Text
           style={[
             font.time,
@@ -280,6 +283,7 @@ export function Clock(props: Props) {
           }}
         >
           <Pressable
+            style={styles.press}
             onPress={() => !swipe.swiped() && (interactive ? onToggle() : onTouch())}
             onLongPress={() => !swipe.swiped() && (interactive ? onReset() : onHide())}
             delayLongPress={500}
@@ -296,12 +300,13 @@ export function Clock(props: Props) {
         </Animated.View>
         {setting ? (
           <TimeScrubber
-            minutes={Math.max(1, Math.round(timer.duration / 60_000))}
+            key={width}
+            seconds={Math.max(1, Math.round(timer.duration / 1000))}
             width={Math.min(width * 0.82, 340)}
             ink={FACES[tone].ink}
             inkSoft={FACES[tone].inkSoft}
             onPreview={setPreview}
-            onChange={(m) => onSetDuration(m * 60_000)}
+            onChange={(sec) => onSetDuration(sec * 1000)}
           />
         ) : null}
       </Animated.View>
@@ -353,6 +358,11 @@ const styles = StyleSheet.create({
   face: {
     alignItems: 'center',
   },
+  // The whole width of the swipe area answers taps and holds, not just the digits.
+  press: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+  },
   faceOver: {
     position: 'absolute',
     top: 0,
@@ -371,6 +381,8 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 17,
+    // (A fixed line, so a Japanese label and an empty one take the same height.)
+    lineHeight: 23,
     fontWeight: '600',
     letterSpacing: 0,
     marginBottom: 2,
@@ -380,6 +392,7 @@ const styles = StyleSheet.create({
   hint: {
     marginTop: 6,
     fontSize: 13,
+    lineHeight: 18,
     fontWeight: '500',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
