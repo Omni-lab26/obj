@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, type TouchData } from 'react-native-gesture-handler';
 import Reanimated, {
   makeMutable,
   runOnJS,
@@ -76,10 +76,15 @@ const TOOLS = { left: 136, right: 64, height: 54 };
 const MIN_SCALE = 0.35;
 // The edit frame's reach past the digits' line, sideways and up and down.
 const FRAME = { x: 12, y: 10 };
-// How far the digits' line sits below the block's centre (the label's line above it
-// is a point taller than the hint's below).
-const ROW_SHIFT = (23 + 2 - (6 + 18)) / 2;
-
+// The lines above and below the digits are boxes of fixed height, whatever they hold
+// (a date, a mode's name, a hint, nothing): a text coming or going never moves the
+// digits.
+const LABEL = { height: 23, gap: 2 };
+const HINT = { height: 18, gap: 6 };
+const LABEL_LINE = LABEL.height + LABEL.gap; // the date's line above the digits, with its gap
+// The longest hint each mode shows, in characters, for room beside the digits that
+// doesn't change as hints come and go.
+const HINT_CHARS = { clock: 0, timer: 21, stopwatch: 15 } as const;
 /** What the digits' place depends on: the screen, the block as laid out (its digits'
  *  row, the widest of its other lines, and its height), the rulers' height, and how far
  *  the scale may go from the one laid out. */
@@ -89,6 +94,8 @@ type Limits = {
   rowW: number;
   rowH: number;
   sideW: number;
+  /** The date above the digits, when there is one: its width (0 when none). */
+  labelW: number;
   bh: number;
   cy0: number;
   top: number;
@@ -203,73 +210,78 @@ function makeFaceGesture(swipeX: SharedValue<number>, span: SharedValue<number>)
   };
 }
 
-// While editing, the digits' gestures give way to these (both stay attached, one on
+// While editing, the digits' gestures give way to this (both stay attached, one on
 // and the other off: swapping one for the other on the same view can leave a gesture
-// stuck on the web): one finger moves the digits, two pinch them bigger or smaller.
-// It all runs on the UI thread, and only the result goes back to JS, once, when the
-// fingers lift: nothing re-renders while dragging.
+// stuck on the web). It follows the fingers themselves: one moves the digits, two
+// also pinch them bigger or smaller, and a finger added or lifted mid-way just
+// carries on from there (so a drag can turn into a pinch without letting go). It all
+// runs on the UI thread, and only the result goes back to JS, once, when the last
+// finger lifts: nothing re-renders while editing.
 function makeEditGesture(px: SharedValue<number>, py: SharedValue<number>, zoom: SharedValue<number>, lim: SharedValue<Limits>, busy: SharedValue<number>) {
   const h = { done: (_x: number, _y: number, _k: number) => {} };
   const done = (x: number, y: number, k: number) => h.done(x, y, k);
-  // (Shared values, not plain objects: each callback gets its own copy of those.)
-  const panAt = makeMutable({ x: 0, y: 0, on: false });
-  const pinchAt = makeMutable({ k: 1, on: false });
-  const begin = () => {
+  // Where the fingers were when their number last changed, and the digits then.
+  // (A shared value, not a plain object: each callback gets its own copy of those.)
+  const at = makeMutable({ n: 0, x: 0, y: 0, k: 1, mx: 0, my: 0, d: 1 });
+  const fingers = (t: TouchData[]) => {
     'worklet';
-    busy.set(busy.get() + 1);
+    const n = Math.min(2, t.length);
+    const a = t[0];
+    const b = n === 2 ? t[1] : a;
+    return {
+      n,
+      mx: n ? (a.absoluteX + b.absoluteX) / 2 : 0,
+      my: n ? (a.absoluteY + b.absoluteY) / 2 : 0,
+      d: n === 2 ? Math.max(1, Math.hypot(a.absoluteX - b.absoluteX, a.absoluteY - b.absoluteY)) : 1,
+    };
   };
-  const end = () => {
+  const anchor = (t: TouchData[]) => {
     'worklet';
-    busy.set(Math.max(0, busy.get() - 1));
-    if (busy.get() === 0) runOnJS(done)(px.get(), py.get(), zoom.get());
+    const f = fingers(t);
+    at.set({ n: f.n, x: px.get(), y: py.get(), k: zoom.get(), mx: f.mx, my: f.my, d: f.d });
   };
-  const pan = Gesture.Pan()
+  const gesture = Gesture.Manual()
     .enabled(false)
-    .maxPointers(1)
-    .minDistance(1)
-    .onStart(() => {
-      panAt.set({ x: px.get(), y: py.get(), on: true });
-      begin();
+    .onTouchesDown((e, manager) => {
+      if (busy.get() === 0) {
+        busy.set(1);
+        manager.activate();
+      }
+      anchor(e.allTouches);
     })
-    .onUpdate((e) => {
-      const s = panAt.get();
-      const c = clampPlace(s.x + e.translationX, s.y + e.translationY, zoom.get(), lim.get());
-      px.set(c.x);
-      py.set(c.y);
-    })
-    .onFinalize(() => {
-      if (!panAt.get().on) return;
-      panAt.set({ ...panAt.get(), on: false });
-      end();
-    });
-  const pinch = Gesture.Pinch()
-    .enabled(false)
-    .onStart(() => {
-      pinchAt.set({ k: zoom.get(), on: true });
-      begin();
-    })
-    .onUpdate((e) => {
+    .onTouchesMove((e) => {
+      const s = at.get();
+      const f = fingers(e.allTouches);
+      if (f.n !== s.n) {
+        anchor(e.allTouches);
+        return;
+      }
       const p = lim.get();
-      const k = Math.min(p.kMax, Math.max(p.kMin, pinchAt.get().k * e.scale));
-      const c = clampPlace(px.get(), py.get(), k, p);
+      const k = f.n === 2 ? Math.min(p.kMax, Math.max(p.kMin, (s.k * f.d) / s.d)) : s.k;
+      const c = clampPlace(s.x + f.mx - s.mx, s.y + f.my - s.my, k, p);
       zoom.set(k);
       px.set(c.x);
       py.set(c.y);
     })
+    .onTouchesUp((e, manager) => {
+      const left = e.allTouches.filter((t) => !e.changedTouches.some((c) => c.id === t.id));
+      if (left.length === 0) manager.end();
+      else anchor(left);
+    })
+    .onTouchesCancelled((_e, manager) => manager.end())
     .onFinalize(() => {
-      if (!pinchAt.get().on) return;
-      pinchAt.set({ k: 1, on: false });
-      end();
+      if (busy.get() === 0) return;
+      busy.set(0);
+      runOnJS(done)(px.get(), py.get(), zoom.get());
     });
   return {
-    gesture: Gesture.Simultaneous(pan, pinch),
+    gesture,
     set(next: typeof h) {
       Object.assign(h, next);
     },
     // On only while the digits are being edited.
     enable(on: boolean) {
-      pan.enabled(on);
-      pinch.enabled(on);
+      gesture.enabled(on);
     },
   };
 }
@@ -385,7 +397,7 @@ export function Clock(props: Props) {
   const [colonPerPt, setColonPerPt] = useState(0);
   // The current page's lines as laid out: the widest of its label and hint, and its
   // digits' line (with the scale it was laid out at).
-  const [side, setSide] = useState({ label: 0, hint: 0 });
+  const [side, setSide] = useState({ label: 0 });
   const [row, setRow] = useState({ w: 0, scale: 1 });
   // The current page's block (label, digits, hint) and the rulers' panel, as laid out,
   // with the scale the block was laid out at.
@@ -397,7 +409,7 @@ export function Clock(props: Props) {
   const py = useSharedValue(0);
   const zoom = useSharedValue(1);
   const busy = useSharedValue(0);
-  const lim = useSharedValue<Limits>({ W: width, H: height, rowW: 0, rowH: 0, sideW: 0, bh: 0, cy0: 0, top: 0, bottom: 0, left: 0, right: 0, need: 170, kMin: 1, kMax: 1 });
+  const lim = useSharedValue<Limits>({ W: width, H: height, rowW: 0, rowH: 0, sideW: 0, labelW: 0, bh: 0, cy0: 0, top: 0, bottom: 0, left: 0, right: 0, need: 170, kMin: 1, kMax: 1 });
   const [editGesture] = useState(() => makeEditGesture(px, py, zoom, lim, busy));
   const placeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: px.get() }, { translateY: py.get() }] }));
   // Under a zoom the digits scale about their centre, and the label above and the hint
@@ -405,16 +417,18 @@ export function Clock(props: Props) {
   const digitsStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() }] }));
   const aboveStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (-lim.get().rowH * (zoom.get() - 1)) / 2 }] }));
   const belowStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (lim.get().rowH * (zoom.get() - 1)) / 2 }] }));
-  // The edit frame is drawn at the digits' laid-out size, and stretched with them
-  // while a pinch zooms them (a transform, not a new layout).
+  // The edit frame hangs on the digits' own box as laid out, and stretches with them
+  // while a pinch zooms them (a transform, not a new layout). It grows evenly about
+  // its middle: the digits grow about theirs, and the date above moves up by as much
+  // as the frame's bottom moves down.
   const frameStyle = useAnimatedStyle(() => {
     const p = lim.get();
     const k = zoom.get();
+    const line = p.labelW ? LABEL_LINE : 0;
+    const w0 = Math.max(p.rowW, p.labelW) + 2 * FRAME.x;
+    const h0 = p.rowH + line + 2 * FRAME.y;
     return {
-      transform: [
-        { scaleX: (p.rowW * k + 2 * FRAME.x) / (p.rowW + 2 * FRAME.x) },
-        { scaleY: (p.rowH * k + 2 * FRAME.y) / (p.rowH + 2 * FRAME.y) },
-      ],
+      transform: [{ scaleX: (Math.max(p.rowW * k, p.labelW) + 2 * FRAME.x) / w0 }, { scaleY: (h0 + p.rowH * (k - 1)) / h0 }],
     };
   });
   // The mode's name shows above the digits for a moment after a change, then fades
@@ -492,7 +506,8 @@ export function Clock(props: Props) {
   // out), and its height (as laid out, adjusted if that was at another scale).
   const rowW = row.w ? (row.w * scale) / row.scale : digitPerPt ? rowWidth(mode, sizeFor(mode)) : block.w;
   const rowH = sizeFor(mode) * 1.08;
-  const sideW = Math.max(side.label, side.hint);
+  const labelW = faceFor(props, now, preview).label ? side.label : 0;
+  const sideW = Math.max(labelW, HINT_CHARS[mode] * 13.2);
   const bh = block.h + baseSize(mode) * 1.08 * (scale - block.scale);
   // The digits' usual centre (the layer centres them above an 8%-of-width pad).
   const cy0 = (height - 0.08 * width) / 2;
@@ -502,6 +517,7 @@ export function Clock(props: Props) {
     rowW,
     rowH,
     sideW,
+    labelW,
     bh,
     cy0,
     top: insets.top,
@@ -548,68 +564,91 @@ export function Clock(props: Props) {
   const face = (m: Settings['mode'], f: Face, c: (typeof FACES)['dark'], label: string, labelOpacity: Animated.Value | number, measure: boolean) => {
     const size = sizeFor(m);
     const cell = digitPerPt * size;
-    const measureLine = (key: 'label' | 'hint') =>
-      measure
+    // The date's width (not a mode's name, which shows only for a moment).
+    const measureLabel =
+      measure && !flash
         ? (e: { nativeEvent: { layout: { width: number } } }) => {
             const w = e.nativeEvent.layout.width;
-            if (Math.abs(w - side[key]) > 0.5) setSide((s) => ({ ...s, [key]: w }));
+            if (Math.abs(w - side.label) > 0.5) setSide({ label: w });
           }
         : undefined;
     return (
       <>
-        <Reanimated.View style={aboveStyle}>
+        <Reanimated.View style={[styles.line, styles.labelLine, aboveStyle]}>
           <Animated.Text
             style={[styles.date, { color: c.inkSoft, textShadowColor: c.halo, opacity: labelOpacity }]}
             numberOfLines={1}
-            onLayout={measureLine('label')}
+            onLayout={measureLabel}
           >
             {label || '\u00a0'}
           </Animated.Text>
         </Reanimated.View>
-        <Reanimated.View
-          style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, digitsStyle]}
-          onLayout={
-            measure
-              ? (e) => {
-                  const w = e.nativeEvent.layout.width;
-                  if (Math.abs(w - row.w) > 0.5 || row.scale !== scale) setRow({ w, scale });
-                }
-              : undefined
-          }
-        >
-          {[...f.main].map((ch, i) => {
-            const digit = ch >= '0' && ch <= '9';
-            return (
-              <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
-                <Text style={[font.time, styles.time, { fontSize: size, lineHeight: size * 1.08, color: c.ink, textShadowColor: c.halo, letterSpacing: 0 }]}>
-                  {ch}
-                </Text>
-              </View>
-            );
-          })}
-          {f.small ? (
-            <Text
+        {/* The digits, in a box the edit frame hangs on (so it is always round them). */}
+        <View>
+          <Reanimated.View
+            style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, digitsStyle]}
+            onLayout={
+              measure
+                ? (e) => {
+                    const w = e.nativeEvent.layout.width;
+                    if (Math.abs(w - row.w) > 0.5 || row.scale !== scale) setRow({ w, scale });
+                  }
+                : undefined
+            }
+          >
+            {[...f.main].map((ch, i) => {
+              const digit = ch >= '0' && ch <= '9';
+              return (
+                <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
+                  <Text style={[font.time, styles.time, { fontSize: size, lineHeight: size * 1.08, color: c.ink, textShadowColor: c.halo, letterSpacing: 0 }]}>
+                    {ch}
+                  </Text>
+                </View>
+              );
+            })}
+            {f.small ? (
+              <Text
+                style={[
+                  font.time,
+                  styles.time,
+                  {
+                    fontSize: size * font.secondsScale,
+                    lineHeight: size * font.secondsScale * 1.1,
+                    color: c.inkSoft,
+                    textShadowColor: c.halo,
+                    letterSpacing: 0,
+                    marginLeft: size * 0.06,
+                    marginBottom: size * 0.16,
+                  },
+                ]}
+              >
+                {f.small}
+              </Text>
+            ) : null}
+          </Reanimated.View>
+          {measure && edit ? (
+            <Reanimated.View
+              pointerEvents="none"
               style={[
-                font.time,
-                styles.time,
+                styles.frame,
                 {
-                  fontSize: size * font.secondsScale,
-                  lineHeight: size * font.secondsScale * 1.1,
-                  color: c.inkSoft,
-                  textShadowColor: c.halo,
-                  letterSpacing: 0,
-                  marginLeft: size * 0.06,
-                  marginBottom: size * 0.16,
+                  // Round the digits, and the date above them when there is one (as
+                  // wide as that is, if wider).
+                  top: -FRAME.y - (labelW ? LABEL_LINE : 0),
+                  bottom: -FRAME.y,
+                  left: -FRAME.x - Math.max(0, (labelW - rowW) / 2),
+                  right: -FRAME.x - Math.max(0, (labelW - rowW) / 2),
+                  borderColor: c.inkSoft,
                 },
+                frameStyle,
               ]}
-            >
-              {f.small}
-            </Text>
+            />
           ) : null}
-        </Reanimated.View>
-        {/* The hint's line stays even when empty, so the digits never move. */}
-        <Reanimated.View style={belowStyle}>
-          <Text style={[styles.hint, { color: c.inkSoft, textShadowColor: c.halo }]} numberOfLines={1} onLayout={measureLine('hint')}>
+        </View>
+        {/* The hint's line stays even when empty, so the digits never move (and it
+            steps aside while editing, which its taps and holds have no part in). */}
+        <Reanimated.View style={[styles.line, styles.hintLine, belowStyle, { opacity: edit ? 0 : 1 }]}>
+          <Text style={[styles.hint, { color: c.inkSoft, textShadowColor: c.halo }]} numberOfLines={1}>
             {f.hint || '\u00a0'}
           </Text>
         </Reanimated.View>
@@ -693,20 +732,6 @@ export function Clock(props: Props) {
                       }}
                     >
                       {page(mode)}
-                      {/* While editing, a dashed frame shows what is being moved. */}
-                      {edit ? (
-                        <>
-                          <View pointerEvents="none" style={[styles.centre, styles.onRow]}>
-                            <Reanimated.View
-                              style={[
-                                styles.frame,
-                                { width: rowW + 2 * FRAME.x, height: rowH + 2 * FRAME.y, borderColor: FACES[tone].inkSoft },
-                                frameStyle,
-                              ]}
-                            />
-                          </View>
-                        </>
-                      ) : null}
                     </View>
                     <View style={[styles.side, { left: width, width }]}>{page(next)}</View>
                   </Reanimated.View>
@@ -823,19 +848,6 @@ const styles = StyleSheet.create({
     bottom: '100%',
     marginBottom: 10,
   },
-  // A point at the block's centre, for the frame and handle to hang on.
-  centre: {
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-    width: 0,
-    height: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  onRow: {
-    marginTop: ROW_SHIFT,
-  },
   frame: {
     position: 'absolute',
     borderWidth: 1.5,
@@ -863,20 +875,29 @@ const styles = StyleSheet.create({
     textShadowRadius: 22,
     includeFontPadding: false,
   },
+  line: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  labelLine: {
+    height: LABEL.height,
+    marginBottom: LABEL.gap,
+  },
+  hintLine: {
+    height: HINT.height,
+    marginTop: HINT.gap,
+  },
   date: {
     fontSize: 17,
-    // (A fixed line, so a Japanese label and an empty one take the same height.)
-    lineHeight: 23,
+    lineHeight: LABEL.height,
     fontWeight: '600',
     letterSpacing: 0,
-    marginBottom: 2,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
   hint: {
-    marginTop: 6,
     fontSize: 13,
-    lineHeight: 18,
+    lineHeight: HINT.height,
     fontWeight: '500',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
