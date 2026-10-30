@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from 'react';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import type { Moment, MomentKind } from '../moments';
+import type { RecordSheet } from '../screens/recordSheet';
 import type { CardLook } from '../screens/timer/cards';
 import type { Block, ExtraKind, Kind, TimerPart, Zone, Zones } from '../screens/layout';
 import type { IconName } from '../ui/Icon';
@@ -68,4 +69,10 @@ export type StudyBarKit = ComponentType<{ insets: EdgeInsets }>;
  */
 export type MomentKit = { [K in MomentKind]?: ComponentType<{ moment: Extract<Moment, { kind: K }>; done: () => void }> };
 
-export type ThemeKit = { home?: HomeKit; timer?: TimerKit; TabBar?: TabBarKit; StudyBar?: StudyBarKit; moments?: MomentKit };
+/**
+ * A theme's record sheet (app/record.tsx): the same sheet — what it knows and
+ * does is screens/recordSheet.ts — drawn its own way, the empty state too (r.empty).
+ */
+export type RecordKit = ComponentType<{ r: RecordSheet }>;
+
+export type ThemeKit = { home?: HomeKit; timer?: TimerKit; TabBar?: TabBarKit; StudyBar?: StudyBarKit; moments?: MomentKit; Record?: RecordKit };

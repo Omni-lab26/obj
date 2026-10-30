@@ -322,6 +322,8 @@ export const ICONS = {
   play: R('k... kk.. kkk. kkkk kkk. kk.. k...'),
   pause: R('kk..kk kk..kk kk..kk kk..kk kk..kk kk..kk kk..kk'),
   plus: R('...k... ...k... ...k... kkkkkkk ...k... ...k... ...k...'),
+  /** − (the record sheet's time; not in the mock's set, drawn as its page does) */
+  minus: R('....... ....... ....... kkkkkkk ....... ....... .......'),
   check: R('......k .....k. k...k.. .k.k... ..k....'),
   right: R('k... .k.. ..k. ...k ..k. .k.. k...'),
   left: R('...k ..k. .k.. k... .k.. ..k. ...k'),

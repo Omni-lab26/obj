@@ -4,6 +4,7 @@ import { applyDesign, BGS, CORNERS, DEFAULT_DESIGN, INKS, THEMES, THEMES_SHOWN, 
 import { focus, radius, useT } from '../../../theme';
 import { CREATURES, faceOf, greyed, ICONS, STICKERS, stickerRows } from '../art';
 import { OWN } from '../../own';
+import { mix, S } from '../look';
 
 // useT reads the palette through useSyncExternalStore; outside React, read it as a plain call would.
 // theme.ts takes only iOS's curve from ui/motion (Reanimated can't load here).
@@ -81,5 +82,18 @@ describe('pixel art', () => {
   it('keeps icons on their grid and greys a palette by its lightness', () => {
     for (const rows of Object.values(ICONS)) expect(new Set(rows.map((r) => r.length)).size).toBe(1);
     expect(greyed({ a: '#FFFFFF', b: '#000000', c: 'rgba(0,0,0,0.2)' })).toEqual({ a: '#ffffff', b: '#000000', c: 'rgba(0,0,0,0.2)' });
+  });
+});
+
+describe('the timer and the moments', () => {
+  it("mixes a subject's color into the paper as the mock's color-mix does", () => {
+    expect(mix('#000000', '#FFFFFF', 0.5)).toBe('#808080');
+    expect(mix(S.sun, S.card, 1)).toBe(S.sun.toLowerCase());
+    // the moment card's well: the accent at 34% on the card
+    expect(mix('#FFD23F', '#FBF8F1', 0.34)).toBe('#fcebb4');
+  });
+  it('has the − the record sheet needs, on its grid', () => {
+    expect(ICONS.minus).toHaveLength(7);
+    expect(ICONS.minus[3]).toBe('kkkkkkk');
   });
 });

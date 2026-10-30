@@ -9,7 +9,8 @@ export type Moment =
   | { kind: 'start'; subject: string }
   | { kind: 'todo'; exp: number; all: boolean }
   | { kind: 'target'; min: number }
-  | { kind: 'record'; subject: string; min: number; exp: number; level: number | null; ticket: boolean };
+  // sheet: recorded from the record sheet, which has made its own something of it (the えらい！ stamp)
+  | { kind: 'record'; subject: string; min: number; exp: number; level: number | null; ticket: boolean; sheet?: boolean };
 export type MomentKind = Moment['kind'];
 
 const listeners = new Set<(m: Moment) => void>();

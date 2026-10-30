@@ -95,6 +95,10 @@ export type CardLook = {
   Pager?: ComponentType<{ n: number; shown: number }>;
   /** the sessions waiting to be recorded, and まとめて記録 */
   Waiting?: ComponentType<{ held: Held[]; onPress: () => void }>;
+  /** the page is light with no 背景 (a dark status bar) */
+  light?: boolean;
+  /** the page's color while the card that adds a plan is in the middle */
+  addColor?: string;
 };
 export const CardLookContext = createContext<CardLook | null>(null);
 const useLook = () => useContext(CardLookContext);
@@ -123,6 +127,8 @@ const useTone = () => (isLight(useBackdrop()) ? ON_LIGHT : ON_DARK);
 
 export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
   const bg = useBackdrop();
+  const lightLook = !!useLook()?.light;
+  const light = isLight(bg) || (bg === 'none' && lightLook);
   const look = looking.use() && bg !== 'none';
   // the timer opens with its words, whatever it was left as
   useEffect(() => () => looking.set(false), []);
@@ -135,7 +141,7 @@ export function CardTimerPage({ zones }: { zones: Record<Zone, ReactNode> }) {
     <Animated.View pointerEvents={look ? 'none' : 'box-none'} style={[grow ? { flex: 1, alignSelf: 'stretch' } : null, fade]}>{n}</Animated.View>
   );
   return (
-    <TimerFrame light={isLight(bg)} zones={{ head: wrap(zones.head), center: wrap(zones.center, true), foot: wrap(zones.foot) }}
+    <TimerFrame light={light} zones={{ head: wrap(zones.head), center: wrap(zones.center, true), foot: wrap(zones.foot) }}
       wash={<Back bg={bg} look={look} />} over={look ? <Looking bg={bg} /> : null} />
   );
 }
@@ -333,7 +339,8 @@ function Deck({ height }: { height: number }) {
   }, [step, n]);
 
   // the page's color (with 科目の色): the centered card's, mixed as you slide between two
-  const colors = useMemo(() => [ADD_COLOR, ...cards.map((b) => subj(b.s).c)], [cards]);
+  const addColor = look?.addColor ?? ADD_COLOR;
+  const colors = useMemo(() => [addColor, ...cards.map((b) => subj(b.s).c)], [cards, addColor]);
   useAnimatedReaction(() => x.value, (v) => {
     washColor.value = colors.length > 1 ? interpolateColor(v, colors.map((_, i) => i * step), colors) : colors[0];
   }, [colors, step]);

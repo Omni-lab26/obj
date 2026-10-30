@@ -61,3 +61,11 @@ export const R = { card: 22, mid: 14, key: 12, chip: 9, bar: 20, tile: 10 };
 /** The page's side margin, and the room between blocks. */
 export const GUTTER = 16;
 export const GAP = 12;
+
+/** a mixed with b: `t` of a (both #rrggbb), as color-mix in the mock does it. */
+export function mix(a: string, b: string, t: number) {
+  const ch = (h: string, i: number) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
+  return `#${[0, 1, 2].map((i) => Math.round(ch(a, i) * t + ch(b, i) * (1 - t)).toString(16).padStart(2, '0')).join('')}`;
+}
+/** The sticker's shadow: a white rim, the ink outline, and a faint slanted shadow (never the floor's: it isn't pressable). */
+export const STICKER = `0px 0px 0px 3px #FFFFFF, 0px 0px 0px 5px ${S.ink}, 3px 4px 0px 5px rgba(23,18,31,0.22)`;

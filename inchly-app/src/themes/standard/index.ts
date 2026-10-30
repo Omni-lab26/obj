@@ -1,6 +1,9 @@
 import type { ThemeKit } from '../types';
 import { StudyBar, TabBar } from './bars';
 import { home } from './home';
+import { moments } from './moments';
+import { Record } from './record';
+import { card } from './timer';
 
 // スタンダード, drawn as its own app after the introduction site (the approved
 // mock: docs/app/mock/): warm paper with faint dots, ink drawn 2pt thick, a
@@ -9,9 +12,7 @@ import { home } from './home';
 // an ink floor, and pressed, only its face sinks. The standard layout and sizes
 // stay. Tokens for the screens it shares with every theme: design.ts THEMES.standard.
 //
-// Drawn here so far: the home (header, sections), the tab bar and the study bar.
-// Still the base renderers' (in this theme's tokens), to be added as kit slots:
-// timer: { card } — the deck's card look (src/screens/timer/cards.tsx CardLook, as サイバー's ./cyber/timer.tsx);
-// moments — start, ToDo, target, record (src/themes/types.ts MomentKit; ./art.ts has the creatures for them).
-const standard: ThemeKit = { home, TabBar, StudyBar };
+// Drawn here: the home (header, sections), the tab bar and the study bar, the
+// timer's cards (the deck stays the standard one), the moments, and the record sheet.
+const standard: ThemeKit = { home, timer: { card }, TabBar, StudyBar, moments, Record };
 export default standard;

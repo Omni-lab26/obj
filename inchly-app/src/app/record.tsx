@@ -1,14 +1,12 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
-import { FREE, hm, pad, PERSON_COLOR, subj } from '@/data';
-import { celebrate } from '@/moments';
-import { addPost, gradeOf, commitHeld, commitRecord, elapsedOf, getState, splitAtMidnight, togglePause, useStore, useSubjects } from '@/store';
-import { dateKey } from '@/lib/time';
+import { FREE, hm, pad, subj } from '@/data';
+import { RECORD_MAX, type RecordSheet, useRecordSheet } from '@/screens/recordSheet';
+import { useThemeKit } from '@/themes';
 import { hair, useT } from '@/theme';
 import { Empty, haptic, Press, SubjCoin, SubjTile, Txt } from '@/ui/base';
 import { ContentHints } from '@/ui/ContentHints';
@@ -16,7 +14,6 @@ import { NavBar, Screen } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
 import { fadeIn } from '@/ui/motion';
 import { Stamp } from '@/ui/Sticker';
-import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
 
 // "Record this study": opened by 終わる on the timer (the clock is paused), or
@@ -28,38 +25,24 @@ import { Pane } from '@/ui/Glass';
 // clock runs again. 自習 (started with no plan) has no subject yet: here you
 // can pick it, and write what you studied (the charts show it as contents) —
 // or not: recorded as 自習, it waits on the study page to be sorted.
+// What it knows and does: screens/recordSheet.ts; a theme may draw it its own way (ThemeKit.Record).
 
 const clock = (d: Date) => `${d.getHours()}:${pad(d.getMinutes())}`;
-const MAX = 140;
+const MAX = RECORD_MAX;
 const POST_BLUE = '#1D9BF0';
 
 export default function Record() {
+  const r = useRecordSheet();
+  const Own = useThemeKit().Record;
+  return Own ? <Own r={r} /> : <BaseRecord r={r} />;
+}
+
+function BaseRecord({ r }: { r: RecordSheet }) {
   const t = useT();
   const insets = useSafeAreaInsets();
-  const running = useStore((s) => s.running);
-  const before = useStore((s) => s.todayMin);
-  const { held: heldId } = useLocalSearchParams<{ held?: string }>();
-  const [h] = useState(() => getState().held.find((x) => x.id === heldId));
-  const livePlan = useStore((s) => s.planMin);
-  const plan = h ? h.planMin ?? null : livePlan;
-  const [own] = useState(() => h?.s ?? getState().subj);
-  // 自習: the subject is picked here, and what it was written
-  const free = own === FREE;
-  const subjects = useSubjects();
-  const [pick, setPick] = useState<string | null>(null);
-  const [what, setWhat] = useState('');
-  const sid = free ? pick ?? FREE : own;
-  const keepFree = free && pick === FREE;
-  const sj = subj(sid);
-  const [min, setMin] = useState(() => Math.max(1, Math.round((h ? h.sec : elapsedOf(getState())) / 60)));
-  const [end] = useState(() => (h ? new Date(h.end) : new Date()));
-  const start = new Date(end.getTime() - min * 60_000);
-  const [todoId] = useState(() => (h ? undefined : getState().studyTodo ?? undefined));
-  const [note, setNote] = useState('');
-  const [share, setShare] = useState(false);
-  const [phase, setPhase] = useState<'idle' | 'saving' | 'done'>('idle');
+  const { before, plan, free, subjects, pick, setPick, keepFree, what, setWhat, sj, min, adjust, start, end, note, setNote, share, setShare, phase, todayPart, left, tooLong, back, save } = r;
 
-  if (!h && !running && phase === 'idle') {
+  if (r.empty) {
     return (
       <Screen>
         <NavBar title="この勉強を記録" />
@@ -67,38 +50,6 @@ export default function Record() {
       </Screen>
     );
   }
-
-  // past midnight, the part before it goes to the day before
-  const todayPart = splitAtMidnight(min, end).filter((x) => x.date === dateKey(end)).reduce((n, x) => n + x.min, 0);
-  const left = MAX - note.length;
-  const tooLong = left < 0;
-  const adjust = (d: number) => { haptic.tap(); setMin((m) => Math.max(1, Math.min(600, m + d))); };
-  const back = () => { const c = getState(); if (!h && c.running && c.paused) togglePause(); router.back(); };
-
-  const save = () => {
-    if (tooLong) { haptic.warn(); return; }
-    setPhase('saving');
-    const text = note.trim();
-    // 自習 with no subject picked is recorded as 自習, to sort later (the study page's あとで仕分け)
-    // 自習のまま: kept as 自習 on purpose (not sorted later); nothing picked: 自習, waiting in あとで仕分け
-    const about = free ? { s: pick && pick !== FREE ? pick : FREE, what: what.trim() || undefined, kept: pick === FREE } : {};
-    const done = h ? commitHeld(h.id, { note: text || undefined, min, ...about }) : commitRecord({ todoId, note: text || undefined, min, ...about });
-    if (!done) { router.back(); return; }
-    const { min: m, ticket, exp, levelUp } = done;
-    if (share) {
-      const a = getState().account;
-      addPost({ n: a?.name ?? 'はる', h: a?.handle ?? 'haru_study', c: PERSON_COLOR['はる'], m: gradeOf(a ?? null) || '高3', mine: true, w: 'たった今',
-        t: text || `${sj.name}${free && what.trim() ? `（${what.trim()}）` : ''}を${m}分`, tags: [], u: 0, r: 0, rec: { s: sid, min: m, note: text || undefined } });
-    }
-    haptic.success();
-    setPhase('done');
-    setTimeout(() => {
-      router.back(); // back where you were: the timer stays as you left it
-      const sub = [`+${exp} EXP`, ticket ? '7日連続！休み券を1枚もらいました' : '', share ? 'タイムラインにも投稿しました' : ''].filter(Boolean).join(' · ');
-      toast(levelUp ? `レベルアップ！ Lv.${levelUp}` : `${sj.name} ${m}分を記録しました`, levelUp ? `${sj.name} ${m}分を記録 · ${sub}` : sub);
-      celebrate({ kind: 'record', subject: sid, min: m, exp, level: levelUp, ticket });
-    }, 1100); // long enough to see the stamp land
-  };
 
   return (
     <Screen bg={t.backdrop !== 'none' ? undefined : t.surface}>

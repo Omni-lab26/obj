@@ -41,20 +41,21 @@ type KeyProps = {
   /** the face's color: card (the usual), lime (start), ink (a sheet's one decision) */
   fill?: string;
   /** the floor's height */ kd?: number;
+  /** the floor's color: ink (an ink face stands on lime) */ under?: string;
   radius?: number; disabled?: boolean; role?: AccessibilityRole; state?: AccessibilityState; hitSlop?: Insets | number;
   /** the key's box: size, flex, margins */ style?: StyleProp<ViewStyle>;
   /** the face: padding and how what's on it lies */ face?: StyleProp<ViewStyle>;
   haptics?: boolean;
 };
 /** A key on an ink floor: pressed, the face sinks onto it. Disabled, the floor goes (no floor: not pressable). */
-export function Key({ onPress, label, children, fill = S.card, kd = KD, radius = R.key, disabled, role = 'button', state, hitSlop, style, face, haptics = true }: KeyProps) {
+export function Key({ onPress, label, children, fill = S.card, kd = KD, under = S.ink, radius = R.key, disabled, role = 'button', state, hitSlop, style, face, haptics = true }: KeyProps) {
   const s = useSink(kd - 1);
   return (
     <Pressable accessibilityRole={role} accessibilityLabel={label} accessibilityState={{ disabled, ...state }} disabled={disabled} hitSlop={hitSlop}
       onPressIn={s.down} onPressOut={s.up} onPress={() => { if (haptics) haptic.tap(); onPress?.(); }}
       style={style}>
       {/* the floor: the outline's width wider, kd lower (a shadow, drawn as a plate so it never depends on one) */}
-      {disabled ? null : <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: kd - 2, bottom: -kd - 2, borderRadius: radius + 2, backgroundColor: S.ink }} />}
+      {disabled ? null : <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: kd - 2, bottom: -kd - 2, borderRadius: radius + 2, backgroundColor: under }} />}
       <Animated.View style={[{ flex: 1, borderRadius: radius, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8,
         backgroundColor: disabled ? S.paper2 : fill, boxShadow: ring(2, disabled ? S.line2 : S.ink) }, face, s.style]}>
         {children}
@@ -140,7 +141,7 @@ export function Link({ label, onPress, size = 13 }: { label: string; onPress: ()
 
 // ---------- subjects and people ----------
 /** A subject: its color in a square with an ink edge, its picture drawn in ink. `next`: half strength (not yet). `none`: no plan (a dashed square, a calendar). */
-export function SubjSquare({ name, color, area, size = 40, next, none, live, paused }: { name?: string; color?: string; area?: AreaId; size?: number; next?: boolean; none?: boolean; live?: boolean; paused?: boolean }) {
+export function SubjSquare({ name, color, area, size = 40, next, none, live, paused, round }: { name?: string; color?: string; area?: AreaId; size?: number; next?: boolean; none?: boolean; live?: boolean; paused?: boolean; /** a coin (the record sheet) */ round?: boolean }) {
   if (none || !name || !color) {
     return (
       <View style={{ width: size, height: size, borderRadius: size * 0.25, borderWidth: 2, borderStyle: 'dashed', borderColor: 'rgba(23,18,31,0.4)', backgroundColor: S.card, alignItems: 'center', justifyContent: 'center' }}>
@@ -151,7 +152,7 @@ export function SubjSquare({ name, color, area, size = 40, next, none, live, pau
   const g = glyphOf(name, area);
   return (
     <View>
-      <View style={{ width: size, height: size, borderRadius: size * 0.25, backgroundColor: color, boxShadow: ring(), alignItems: 'center', justifyContent: 'center', opacity: next ? 0.5 : 1 }}>
+      <View style={{ width: size, height: size, borderRadius: size * (round ? 0.5 : 0.25), backgroundColor: color, boxShadow: ring(), alignItems: 'center', justifyContent: 'center', opacity: next ? 0.5 : 1 }}>
         {g ? <SubjectGlyph glyph={g} size={size * 0.62} color={S.ink} width={2} /> : <J size={size * 0.42} lh={size * 0.5} w="800">{[...name][0]}</J>}
       </View>
       {/* running: a green square at its corner (gone while paused) */}
