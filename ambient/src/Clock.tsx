@@ -381,15 +381,18 @@ function Reel({
 }) {
   const line = size * 1.08;
   const base = REEL_BASE[kind];
-  const style = useAnimatedStyle(() => ({ transform: [{ translateY: -reelPos(kind, at.get()) * line }] }));
-  // (The window is a little wider than the digit's cell, so no glyph is clipped at
-  // its sides.)
-  const pad = size * 0.12;
+  // The window reaches a little past the digit's line on every side (the line stays
+  // where it is), and the digits on the strip are spaced to match, so no glyph is
+  // clipped, however tall or wide its script draws it.
+  const pad = size * 0.25;
+  const vpad = size * 0.16;
+  const pitch = line + 2 * vpad;
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: -reelPos(kind, at.get()) * pitch }] }));
   return (
-    <View style={{ width: cell + 2 * pad, marginHorizontal: -pad, height: line, overflow: 'hidden' }}>
+    <View style={{ width: cell + 2 * pad, marginHorizontal: -pad, height: pitch, marginVertical: -vpad, overflow: 'hidden' }}>
       <Reanimated.View style={[styles.reel, style]}>
         {Array.from({ length: base + 1 }, (_, i) => (
-          <Text key={i} style={[textStyle, { height: line }]}>
+          <Text key={i} style={[textStyle, { height: line, marginVertical: vpad }]}>
             {num(String(i % base))}
           </Text>
         ))}
@@ -515,9 +518,11 @@ export function Clock(props: Props) {
     opacity: showWheels.get(),
     transform: [{ translateX: wheelsX.get() + ringOffset(MODES.indexOf('timer'), pos.get()) * span.get() }, { translateY: wheelsY.get() }],
   }));
-  // Digit width per point of font size, measured once per font: every digit takes it,
-  // so a running count never shifts sideways.
-  const [digitPerPt, setDigitPerPt] = useState(0);
+  // Digit width per point of font size, measured once per font and numeral system:
+  // the widest of its ten digits, which every digit's cell then takes, so a running
+  // count never shifts sideways or crowds (some scripts' digits differ a lot in width).
+  const [digitWidths, setDigitWidths] = useState<number[]>([]);
+  const digitPerPt = digitWidths.length === 10 ? Math.max(...digitWidths) : 0;
   const [colonPerPt, setColonPerPt] = useState(0);
   // The current page's lines as laid out: the widest of its label and hint, and its
   // digits' line (with the scale it was laid out at).
@@ -871,16 +876,25 @@ export function Clock(props: Props) {
             },
           ]}
         >
-          {/* A zero at 100 pt, measured once per font, gives every digit's width. */}
-          <Text
-            style={[font.time, styles.time, styles.measure, { fontSize: 100, lineHeight: 108, letterSpacing: 0 }]}
-            onLayout={(e) => {
-              const w = e.nativeEvent.layout.width / 100;
-              if (Math.abs(w - digitPerPt) > 0.001) setDigitPerPt(w);
-            }}
-          >
-            {num('0')}
-          </Text>
+          {/* Each digit at 100 pt, measured once per font and numeral system: the widest
+              gives every digit's cell. */}
+          {Array.from({ length: 10 }, (_, d) => (
+            <Text
+              key={d}
+              style={[font.time, styles.time, styles.measure, { fontSize: 100, lineHeight: 108, letterSpacing: 0 }]}
+              onLayout={(e) => {
+                const w = e.nativeEvent.layout.width / 100;
+                setDigitWidths((ws) => {
+                  if (Math.abs((ws[d] ?? -1) - w) < 0.001) return ws;
+                  const next = Array.from({ length: 10 }, (_, i) => ws[i] ?? 0);
+                  next[d] = w;
+                  return next;
+                });
+              }}
+            >
+              {num(String(d))}
+            </Text>
+          ))}
           <Text
             style={[font.time, styles.time, styles.measure, { fontSize: 100, lineHeight: 108, letterSpacing: 0 }]}
             onLayout={(e) => {

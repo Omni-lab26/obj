@@ -168,24 +168,15 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
                         ]}
                       >
                         {/* Small enough that every font's four digits fit the tile whole. */}
-                        <Text
-                          numberOfLines={1}
-                          ellipsizeMode="clip"
-                          adjustsFontSizeToFit
-                          minimumFontScale={0.6}
+                        <FitText
+                          text={numerals('12:34', settings.clock.numerals)}
+                          size={(f.time.fontSize ?? 96) * 0.27}
                           style={[
                             f.time,
-                            {
-                              fontSize: (f.time.fontSize ?? 96) * 0.27,
-                              letterSpacing: (f.time.letterSpacing ?? 0) * 0.27,
-                              color: selected ? c.onInk : c.ink,
-                              includeFontPadding: false,
-                            },
+                            { letterSpacing: (f.time.letterSpacing ?? 0) * 0.27, color: selected ? c.onInk : c.ink, includeFontPadding: false },
                           ]}
-                        >
-                          {numerals('12:34', settings.clock.numerals)}
-                        </Text>
-                        <Text style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]}>{en ? f.labelEn : f.label}</Text>
+                        />
+                        <FitText text={en ? f.labelEn : f.label} size={12} style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]} />
                       </Pressable>
                     );
                   })}
@@ -208,18 +199,12 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
                         accessibilityLabel={en ? n.en : n.ja}
                         style={({ pressed }) => [styles.font, { backgroundColor: selected ? c.ink : c.tile }, { transform: [{ scale: pressed ? 0.96 : 1 }] }]}
                       >
-                        <Text
-                          numberOfLines={1}
-                          ellipsizeMode="clip"
-                          adjustsFontSizeToFit
-                          minimumFontScale={0.6}
-                          style={[f.time, { fontSize: (f.time.fontSize ?? 96) * 0.27, letterSpacing: 0, color: selected ? c.onInk : c.ink, includeFontPadding: false }]}
-                        >
-                          {numerals('12:34', n.id)}
-                        </Text>
-                        <Text numberOfLines={1} style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]}>
-                          {en ? n.en : n.ja}
-                        </Text>
+                        <FitText
+                          text={numerals('12:34', n.id)}
+                          size={(f.time.fontSize ?? 96) * 0.27}
+                          style={[f.time, { letterSpacing: 0, color: selected ? c.onInk : c.ink, includeFontPadding: false }]}
+                        />
+                        <FitText text={en ? n.en : n.ja} size={12} style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]} />
                       </Pressable>
                     );
                   })}
@@ -353,6 +338,33 @@ function ColorPicker({
       {/* Across: hue. Down: from white through the colour to black. */}
       <ColorField value={value} onChange={onChange} onLive={setLive} />
     </>
+  );
+}
+
+/**
+ * One line of text at the given size, or smaller when that would not fit the width
+ * it has: some numeral systems draw their digits two or three times as wide as ours,
+ * and a cut-off "…" would hide just what the tile is there to show. (It measures the
+ * text once at full size, out of sight, and scales it to the room, with a little to
+ * spare for strokes that reach past their letter.)
+ */
+const FIT_PAD = 6;
+
+function FitText({ text, size, style }: { text: string; size: number; style: object }) {
+  const [room, setRoom] = useState(0);
+  const [natural, setNatural] = useState(0);
+  const k = room && natural ? Math.min(1, ((room - 2 * FIT_PAD) * 0.92) / natural) : 1;
+  return (
+    <View style={styles.fit} onLayout={(e) => setRoom(e.nativeEvent.layout.width)}>
+      <Text style={[style, { fontSize: size * k }]}>{text}</Text>
+      <View style={styles.fitHide} pointerEvents="none">
+        <View style={styles.fitMeasure}>
+          <Text style={[style, { fontSize: size }]} onLayout={(e) => setNatural(e.nativeEvent.layout.width)}>
+            {text}
+          </Text>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -502,6 +514,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+  },
+  fit: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    paddingHorizontal: FIT_PAD,
+  },
+  // The full-size copy: in a box of no height (so out of sight and taking no room),
+  // on a strip wide enough that nothing on it wraps.
+  fitHide: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 0,
+    overflow: 'hidden',
+  },
+  fitMeasure: {
+    width: 2000,
+    alignItems: 'flex-start',
   },
   fontLabel: {
     fontSize: 12,
