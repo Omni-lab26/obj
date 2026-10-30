@@ -5,6 +5,7 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, AppState, Easing, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Clock, Toast } from './src/Clock';
@@ -30,11 +31,13 @@ type Layer = { key: number; scene: Scene; opacity: Animated.Value };
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <SettingsProvider>
-        <Root />
-      </SettingsProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <SettingsProvider>
+          <Root />
+        </SettingsProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

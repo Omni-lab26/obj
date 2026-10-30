@@ -33,6 +33,14 @@ const meta: Omit<Scene, 'html' | 'kind'>[] = [
     tone: 'light',
   },
   {
+    id: 'blank',
+    title: 'Blank',
+    caption: '白紙',
+    hint: '何もない一枚の紙',
+    background: '#fafaf8',
+    tone: 'light',
+  },
+  {
     id: 'walkers',
     title: 'Passersby',
     caption: '通りすがり',

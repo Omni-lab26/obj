@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Blank</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #fafaf8; }
+  body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body>
+<script src="shared/host.js"></script>
+<script>
+// A blank sheet of paper: nothing moves, so nothing is drawn after the first frame.
+(() => {
+  Host.start({ frame() {}, resize() {}, tap() {} });
+})();
+</script>
+</body>
+</html>
