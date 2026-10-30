@@ -85,8 +85,10 @@ const FRAME = { x: 12, y: 10 };
 // digits.
 const LABEL = { height: 23, gap: 2 };
 const HINT = { height: 18, gap: 6 };
-const LABEL_LINE = LABEL.height + LABEL.gap;
-const LIMIT_RED = '#d7003a'; // 紅: the frame's colour when a pinch goes past the biggest size // the date's line above the digits, with its gap
+const LABEL_LINE = LABEL.height + LABEL.gap; // the date's line above the digits, with its gap
+const LIMIT_RED = '#d7003a'; // 紅: the frame's colour when a pinch goes past the biggest size
+// While editing, the digits are drawn up to this many times their size, to be shrunk.
+const BIG_MAX = 4;
 // About how wide the longest hint each mode shows is, in each language, for room
 // beside the digits that doesn't change as hints come and go.
 const HINT_W = { ja: { clock: 0, timer: 280, stopwatch: 200 }, en: { clock: 0, timer: 320, stopwatch: 200 } } as const;
@@ -549,19 +551,18 @@ export function Clock(props: Props) {
   const digitsStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() }] }));
   const aboveStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (-lim.get().rowH * (zoom.get() - 1)) / 2 }] }));
   const belowStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (lim.get().rowH * (zoom.get() - 1)) / 2 }] }));
-  // The edit frame hangs on the digits' own box as laid out, and stretches with them
-  // while a pinch zooms them (a transform, not a new layout). It grows evenly about
-  // its middle: the digits grow about theirs, and the date above moves up by as much
-  // as the frame's bottom moves down.
+  // The edit frame hangs on the digits' own box as laid out, and grows with them while
+  // a pinch zooms them: evenly about its middle (the digits grow about theirs, and the
+  // date above moves up by as much as the frame's bottom moves down). Its edges move,
+  // rather than the frame being stretched, so its dashes stay the same length and
+  // there are simply more of them round a bigger frame.
   const frameStyle = useAnimatedStyle(() => {
     const p = lim.get();
     const k = zoom.get();
     const line = p.labelW ? LABEL_LINE : 0;
-    const w0 = Math.max(p.rowW, p.labelW) + 2 * FRAME.x;
-    const h0 = p.rowH + line + 2 * FRAME.y;
-    return {
-      transform: [{ scaleX: (Math.max(p.rowW * k, p.labelW) + 2 * FRAME.x) / w0 }, { scaleY: (h0 + p.rowH * (k - 1)) / h0 }],
-    };
+    const grow = (p.rowH * (k - 1)) / 2;
+    const side = (Math.max(p.rowW * k, p.labelW) - p.rowW) / 2 + FRAME.x;
+    return { top: -FRAME.y - line - grow, bottom: -FRAME.y - grow, left: -side, right: -side };
   });
   // The mode's name shows above the digits for a moment after a change, then fades
   // away (the line keeps its place, so the digits never jump).
@@ -733,7 +734,13 @@ export function Clock(props: Props) {
     framed: boolean
   ) => {
     const size = sizeFor(m);
-    const cell = digitPerPt * size;
+    // While they are edited, the digits are drawn at the biggest size a pinch can take
+    // them to (within reason) and shown shrunk to their size: a pinch then only ever
+    // shrinks a sharp picture of them, where growing one drawn at their size would
+    // blur it. (In their box as laid out, so nothing else moves.)
+    const big = edit && framed && rowW ? Math.min(BIG_MAX, Math.max(1, limits.kMax)) : 1;
+    const drawn = size * big;
+    const cell = digitPerPt * drawn;
     // The date's width (not a mode's name, which shows only for a moment).
     const measureLabel =
       measure && !flash
@@ -756,7 +763,7 @@ export function Clock(props: Props) {
         {/* The digits, in a box the edit frame hangs on (so it is always round them). */}
         <View>
           <Reanimated.View
-            style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, digitsStyle]}
+            style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, big > 1 ? { width: rowW } : null, digitsStyle]}
             onLayout={
               measure
                 ? (e) => {
@@ -766,38 +773,52 @@ export function Clock(props: Props) {
                 : undefined
             }
           >
-            {[...f.main].map((ch, i) => {
-              const digit = ch >= '0' && ch <= '9';
-              const textStyle = [font.time, styles.time, { fontSize: size, lineHeight: size * 1.08, color: c.ink, letterSpacing: 0 }];
-              // The timer being set: reels that roll with the rulers (HH:MM:SS → kinds).
-              const kind = m === 'timer' && reeling && digit && cell ? [0, 1, -1, 2, 3, -1, 4, 5][i] : -1;
-              if (kind >= 0) {
-                return <Reel key={i} kind={kind} at={kind < 2 ? hoursAt : quartersAt} cell={cell} size={size} textStyle={textStyle} num={num} />;
+            <View
+              style={
+                big > 1
+                  ? [
+                      styles.row,
+                      styles.drawnBig,
+                      // As big as it is drawn, centred on the box and shrunk to fit it.
+                      { width: rowW * big, height: size * 1.08 * big, left: (rowW * (1 - big)) / 2, top: (size * 1.08 * (1 - big)) / 2 },
+                      { transform: [{ scale: 1 / big }] },
+                    ]
+                  : styles.row
               }
-              return (
-                <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
-                  <Text style={textStyle}>{num(ch)}</Text>
-                </View>
-              );
-            })}
-            {f.small ? (
-              <Text
-                style={[
-                  font.time,
-                  styles.time,
-                  {
-                    fontSize: size * font.secondsScale,
-                    lineHeight: size * font.secondsScale * 1.1,
-                    color: c.inkSoft,
-                    letterSpacing: 0,
-                    marginLeft: size * 0.06,
-                    marginBottom: size * 0.16,
-                  },
-                ]}
-              >
-                {num(f.small)}
-              </Text>
-            ) : null}
+            >
+              {[...f.main].map((ch, i) => {
+                const digit = ch >= '0' && ch <= '9';
+                const textStyle = [font.time, styles.time, { fontSize: drawn, lineHeight: drawn * 1.08, color: c.ink, letterSpacing: 0 }];
+                // The timer being set: reels that roll with the rulers (HH:MM:SS → kinds).
+                const kind = m === 'timer' && reeling && digit && cell ? [0, 1, -1, 2, 3, -1, 4, 5][i] : -1;
+                if (kind >= 0) {
+                  return <Reel key={i} kind={kind} at={kind < 2 ? hoursAt : quartersAt} cell={cell} size={drawn} textStyle={textStyle} num={num} />;
+                }
+                return (
+                  <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
+                    <Text style={textStyle}>{num(ch)}</Text>
+                  </View>
+                );
+              })}
+              {f.small ? (
+                <Text
+                  style={[
+                    font.time,
+                    styles.time,
+                    {
+                      fontSize: drawn * font.secondsScale,
+                      lineHeight: drawn * font.secondsScale * 1.1,
+                      color: c.inkSoft,
+                      letterSpacing: 0,
+                      marginLeft: drawn * 0.06,
+                      marginBottom: drawn * 0.16,
+                    },
+                  ]}
+                >
+                  {num(f.small)}
+                </Text>
+              ) : null}
+            </View>
           </Reanimated.View>
           {framed && edit
             ? // Round the digits, and the date above them when there is one (as wide
@@ -808,13 +829,7 @@ export function Clock(props: Props) {
                   pointerEvents="none"
                   style={[
                     styles.frame,
-                    {
-                      top: -FRAME.y - (labelW ? LABEL_LINE : 0),
-                      bottom: -FRAME.y,
-                      left: -FRAME.x - Math.max(0, (labelW - rowW) / 2),
-                      right: -FRAME.x - Math.max(0, (labelW - rowW) / 2),
-                      borderColor: color,
-                    },
+                    { borderColor: color },
                     i === 1 ? [styles.frameLimit, overStyle] : null,
                     frameStyle,
                   ]}
@@ -1060,6 +1075,10 @@ const styles = StyleSheet.create({
   },
   frameLimit: {
     borderWidth: 2,
+  },
+  drawnBig: {
+    position: 'absolute',
+    justifyContent: 'center',
   },
   frame: {
     position: 'absolute',
