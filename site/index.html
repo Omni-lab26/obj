@@ -1,598 +1,1492 @@
 <!doctype html>
-<html lang="ja" data-theme="paper">
+<html lang="ja">
 <head>
-<script>(()=>{const d=document.documentElement;d.classList.add('js');let t,c;try{t=localStorage.getItem('inchly-theme');c=localStorage.getItem('inchly-calm')}catch(e){}if(t!=='white'&&t!=='paper'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'white';d.dataset.theme=t;if(c==='1')d.classList.add('calm');addEventListener('load',()=>{if(!window.inchlySite)d.classList.remove('js')})})()</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Inchly（インチリー）｜勉強した時間が、毎日つみ上がる。</title>
-<meta name="description" content="Inchly（インチリー）は、勉強した時間をはかって、記録して、友だちと見せ合える iPhone のアプリです。やった日はマスが緑に、続けた日数は炎といっしょに数えます。小学生から受験生まで。近日公開。">
-<meta name="theme-color" content="#f3eee3">
-<script>(()=>{const m=document.querySelector('meta[name="theme-color"]'),c={white:'#ffffff',paper:'#f3eee3',dark:'#0e0c13'}[document.documentElement.dataset.theme];if(m&&c)m.content=c})()</script>
+<title>Inchly（インチリー）｜時間割は、6限で終わらない。</title>
+<meta name="description" content="Inchly（インチリー）は、放課後と夜の勉強の予定を1本の線にならべて、時間が来たら押すだけで勉強した時間を毎日つみ上げる iPhone のアプリです。友だちと見せ合えて、続けた日数は炎といっしょに数えます。小学生から受験生まで。近日公開。">
+<meta name="theme-color" content="#f6f1e6">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:site_name" content="Inchly">
-<meta property="og:title" content="Inchly（インチリー）｜勉強した時間が、毎日つみ上がる。">
-<meta property="og:description" content="時間をはかって、記録して、友だちと見せ合える。やった日はマスが緑に、続けた日数は炎といっしょに数える。iPhone の勉強アプリ、近日公開。">
+<meta property="og:title" content="Inchly（インチリー）｜時間割は、6限で終わらない。">
+<meta property="og:description" content="放課後と夜の予定を1本の線にならべる。時間が来たら押すだけで、勉強した時間が毎日つみ上がる。iPhone の勉強アプリ、近日公開。">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="img/favicon.png" type="image/png" sizes="64x64">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;600&family=M+PLUS+1:wght@400..900&family=Silkscreen&display=swap" rel="stylesheet">
-<!-- the pixel labels use only these characters (kana, ASCII and the kanji on the page): one small file instead of twenty slices -->
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&amp;text=%21%22%23%24%25%26%27%28%29%2A%2B%2C-.%2F0123456789%3A%3B%3C%3D%3E%3F%40ABCDEFGHIJKLMNOPQRSTUVWXYZ%5B%5C%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~%C2%B7%E2%80%94%E2%80%A6%E2%86%91%E2%86%92%E2%86%93%E3%80%80%E3%80%81%E3%80%82%E3%80%8C%E3%80%8D%E3%80%8E%E3%80%8F%E3%81%81%E3%81%82%E3%81%83%E3%81%84%E3%81%85%E3%81%86%E3%81%87%E3%81%88%E3%81%89%E3%81%8A%E3%81%8B%E3%81%8C%E3%81%8D%E3%81%8E%E3%81%8F%E3%81%90%E3%81%91%E3%81%92%E3%81%93%E3%81%94%E3%81%95%E3%81%96%E3%81%97%E3%81%98%E3%81%99%E3%81%9A%E3%81%9B%E3%81%9C%E3%81%9D%E3%81%9E%E3%81%9F%E3%81%A0%E3%81%A1%E3%81%A2%E3%81%A3%E3%81%A4%E3%81%A5%E3%81%A6%E3%81%A7%E3%81%A8%E3%81%A9%E3%81%AA%E3%81%AB%E3%81%AC%E3%81%AD%E3%81%AE%E3%81%AF%E3%81%B0%E3%81%B1%E3%81%B2%E3%81%B3%E3%81%B4%E3%81%B5%E3%81%B6%E3%81%B7%E3%81%B8%E3%81%B9%E3%81%BA%E3%81%BB%E3%81%BC%E3%81%BD%E3%81%BE%E3%81%BF%E3%82%80%E3%82%81%E3%82%82%E3%82%83%E3%82%84%E3%82%85%E3%82%86%E3%82%87%E3%82%88%E3%82%89%E3%82%8A%E3%82%8B%E3%82%8C%E3%82%8D%E3%82%8E%E3%82%8F%E3%82%90%E3%82%91%E3%82%92%E3%82%93%E3%82%94%E3%82%95%E3%82%96%E3%82%A1%E3%82%A2%E3%82%A3%E3%82%A4%E3%82%A5%E3%82%A6%E3%82%A7%E3%82%A8%E3%82%A9%E3%82%AA%E3%82%AB%E3%82%AC%E3%82%AD%E3%82%AE%E3%82%AF%E3%82%B0%E3%82%B1%E3%82%B2%E3%82%B3%E3%82%B4%E3%82%B5%E3%82%B6%E3%82%B7%E3%82%B8%E3%82%B9%E3%82%BA%E3%82%BB%E3%82%BC%E3%82%BD%E3%82%BE%E3%82%BF%E3%83%80%E3%83%81%E3%83%82%E3%83%83%E3%83%84%E3%83%85%E3%83%86%E3%83%87%E3%83%88%E3%83%89%E3%83%8A%E3%83%8B%E3%83%8C%E3%83%8D%E3%83%8E%E3%83%8F%E3%83%90%E3%83%91%E3%83%92%E3%83%93%E3%83%94%E3%83%95%E3%83%96%E3%83%97%E3%83%98%E3%83%99%E3%83%9A%E3%83%9B%E3%83%9C%E3%83%9D%E3%83%9E%E3%83%9F%E3%83%A0%E3%83%A1%E3%83%A2%E3%83%A3%E3%83%A4%E3%83%A5%E3%83%A6%E3%83%A7%E3%83%A8%E3%83%A9%E3%83%AA%E3%83%AB%E3%83%AC%E3%83%AD%E3%83%AE%E3%83%AF%E3%83%B0%E3%83%B1%E3%83%B2%E3%83%B3%E3%83%B4%E3%83%B5%E3%83%B6%E3%83%B7%E3%83%B8%E3%83%B9%E3%83%BA%E3%83%BB%E3%83%BC%E4%B8%96%E4%B8%AD%E4%BA%BA%E4%BB%8A%E4%BC%91%E4%BD%BF%E5%85%AC%E5%88%B8%E5%89%8D%E5%89%B2%E5%8B%89%E5%8B%95%E5%8C%96%E5%8F%8B%E5%8F%97%E5%8F%B0%E5%8F%B2%E5%90%91%E5%9B%BD%E5%9C%9F%E5%9C%B0%E5%A0%B1%E5%A4%A7%E5%A7%8B%E5%AD%A6%E5%AE%9A%E5%B0%8F%E5%B0%91%E5%BC%B7%E6%83%85%E6%88%90%E6%8A%BC%E6%8C%87%E6%95%B0%E6%96%B9%E6%97%A5%E6%99%82%E6%9C%88%E6%9C%A8%E6%9C%AA%E6%9C%AC%E6%AD%A2%E6%AD%B3%E6%B0%91%E6%B0%97%E6%B0%B4%E6%BA%80%E7%81%AB%E7%82%8E%E7%89%A9%E7%90%86%E7%94%9F%E7%94%BB%E7%95%8C%E7%99%BA%E7%9B%AE%E7%9F%A5%E7%A7%91%E7%B6%9A%E7%B7%91%E8%88%9E%E8%8B%B1%E8%A6%8B%E8%A8%98%E8%A8%AD%E8%AA%9E%E8%BF%91%E9%80%A3%E9%81%8B%E9%81%94%E9%87%91%E9%8C%B2%E9%96%8B%E9%96%93%E9%9B%86%E9%9D%A2%E9%A1%94%E9%A8%93%E9%B3%B4%EF%BC%81%EF%BC%88%EF%BC%89%EF%BC%8B%EF%BC%8D%EF%BC%9A%EF%BC%9F&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   DESIGN PLAN（c-day「放課後から夜まで」2版）
+   layout: このページは 10月29日（木）の放課後そのもの。上から下へ 15:30 → 23:00。
+           左の1本の線＝アプリの時間割の線（過ぎたら実線、これからは点線、いまに赤い点）。
+           区画は駅。見出しの頭はいつも時刻。地の色は時刻で段に変わる（昼→夕方→日の入り→宵→夜）。
+           押す所は1つだけ：17:00 の勉強バーの「勉強を開始」。
+           押すと灯りがつき、記録すると 18:35 の記録に赤ペンの丸、19:45 の塔に1段のる。
+   借りた部品: 塔と7日の塔と真上から（つみ上げ案）、はやおくりと読み方と「はじめ」の札（ものさし案）、
+           赤ペンの丸1つ（ノート案）。芯は1つ＝放課後から夜まで。
+   type:   見出しと本文 = Zen Maru Gothic（900 見出し／700 強調／500 本文）。
+           時刻だけ = 自作の 5×7 ピクセル数字（時計の字。住人と同じ四角でできている）。
+   color:  紙とインク＋ライムは主ボタンだけ。いまの赤（アプリの時間割の赤い点）。灯りの黄は勉強中だけ。
+           空の段 sky-0..5。締めの一面は夜ふけの紺。データの色は科目の色（緑は草のマスだけ）。
+   ===================================================================== */
+:root{
+  /* ink + paper (piixpal の骨組み) */
+  --ink:#1b1726; --ink-2:#3b3448; --muted:#564e61;
+  --paper:#f6f1e6; --card:#fffcf5; --line:#d6cab4;
+  /* 一点の主役：押す物 */
+  --lime:#c6f432; --lime-2:#a8d81c;
+  /* 時間の色 */
+  --now:#e3342e;            /* いま：赤い点 */
+  --now-ink:#b8211b;        /* いま：小さな赤い字（紙と夕方の地で 4.5:1 以上） */
+  --pen:#d42d24;            /* 赤ペン：記録した行の丸だけ */
+  --up:#127a43;             /* 増えた数（アプリと同じ役。グラフには使わない） */
+  --lamp:#ffd166;           /* 灯り：勉強中 */
+  --live:#2fc463;           /* 勉強中の小さな点（アプリと同じ役） */
+  /* 空の段（グラデーションにしない） */
+  --sky-0:#f6f1e6;          /* 15:30 昼 */
+  --sky-1:#f8dec2;          /* 17:00 夕方 */
+  --sky-2:#f0d0c9;          /* 18:35 日の入りのあと */
+  --sky-3:#dcd8eb;          /* 19:45 宵 */
+  --sky-4:#242b54;          /* 22:00 夜 */
+  --sky-5:#171b3a;          /* 23:00 夜ふけ（締めの一面） */
+  --night-ink:#f5f0e6; --night-muted:#bec1dd; --night-line:#4a5288;
+  /* 科目（アプリと同じ。データなので緑にしない） */
+  --s-en:#5856D6; --s-ma:#FF9500; --s-ja:#D9A300; --s-ph:#3B82F6; --s-ch:#17A2B8;
+  /* ロゴの5本の目盛り（画面の台の色） */
+  --b1:#E5484D; --b2:#F2C46D; --b3:#9AB8DB; --b4:#5B8DEF; --b5:#9D7BF5;
+  /* 草（アプリの5段。真上から見た塔だけに使う） */
+  --g0:#e4e5ea; --g1:#b4e9c6; --g2:#5fd28c; --g3:#21a35a; --g4:#127a43;
+  /* type roles */
+  --f-jp:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-app:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Noto Sans CJK JP",system-ui,sans-serif; /* アプリの画面の字（見本の中だけ） */
+  --fs-h1:clamp(34px, 4.3vw, 60px);
+  --fs-h2:clamp(26px, 2.9vw, 40px);
+  --fs-h3:19px;
+  --fs-lead:18px;
+  --fs-body:16.5px;
+  --fs-small:14px;
+  /* layout */
+  --wrap:min(1240px, 100% - 64px);
+  --line-x:152px;           /* 線の位置（列の中） */
+  --nav-h:64px;
+  --ease:cubic-bezier(.2,.8,.2,1);   /* 行きすぎない */
+  --focus:#3d47d6;
+  /* 塔：1マス＝5分。48マス＝4時間 */
+  --cell:8px; --head:64px; --wc:3px;
+  color-scheme:light;
+}
+
+/* ---------- base ---------- */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{overflow-x:clip;scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:calc(var(--nav-h) + 16px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:500 var(--fs-body)/1.8 var(--f-jp);letter-spacing:-.004em;
+  -webkit-font-smoothing:antialiased;line-break:strict}
+/* 文節で折り返す（Safari など auto-phrase の無いブラウザは、下の JS が .ph でまとめる） */
+h1,h2,h3,p,li,dd,dt,td,th,figcaption{word-break:auto-phrase}
+p,dd,li,figcaption{text-wrap:pretty}
+h1,h2,h3{margin:0;font-weight:900;letter-spacing:0;font-feature-settings:"palt" 1}
+p{margin:0}
+a{color:inherit}
+img{display:block;max-width:100%;height:auto}
+button{font-family:inherit;letter-spacing:inherit}
+.wrap{width:var(--wrap);margin-inline:auto}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.nb,.ph{display:inline-block}
+.tn{font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:8px}
+inch-pal{display:none}
+.skip{position:fixed;left:12px;top:-80px;z-index:100;display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:2px solid var(--ink);
+  border-radius:12px;background:var(--lime);color:var(--ink);font-weight:700;text-decoration:none}
+.skip:focus{top:12px}
+
+/* ---------- pixel clock digits (drawn by JS as SVG squares) ---------- */
+.pix{display:inline-flex;line-height:0;vertical-align:middle;--px:4px;color:inherit}
+.pix svg{display:block;height:calc(var(--px) * 7);width:calc(var(--px) * var(--w, 20));shape-rendering:crispEdges;overflow:visible}
+.pix path{fill:currentColor}
+
+/* ---------- buttons: the floor never moves ---------- */
+.btn{--bg:var(--card);--fg:var(--ink);--sh:var(--ink);
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 22px;
+  border:2px solid var(--ink);border-radius:12px;background:var(--bg);color:var(--fg);font:700 16.5px/1 var(--f-jp);letter-spacing:.01em;
+  text-decoration:none;cursor:pointer;white-space:nowrap;user-select:none;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 4px 0 0 var(--sh);transition:transform .2s var(--ease),box-shadow .2s var(--ease),background-color .2s}
+.btn svg{width:18px;height:18px;flex:none}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--sh);transition-duration:.05s}
+.btn-lime{--bg:var(--lime)}
+.btn-ghost{--bg:transparent;box-shadow:none}
+@media (hover:hover){
+  .btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 0 var(--sh)}
+  .btn-ghost:hover{transform:none;box-shadow:none;background:color-mix(in oklab,var(--ink) 7%,transparent)}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 0 var(--sh)}
+}
+
+/* ---------- nav ---------- */
+.nav{position:sticky;top:0;z-index:50;background:var(--navbg,var(--sky-0));color:var(--navfg,var(--ink));border-bottom:2px solid transparent}
+.nav.scrolled{border-bottom-color:var(--navline,var(--ink))}
+.nav[data-sky="1"]{--navbg:var(--sky-1)} .nav[data-sky="2"]{--navbg:var(--sky-2)} .nav[data-sky="3"]{--navbg:var(--sky-3)}
+.nav[data-sky="4"]{--navbg:var(--sky-4);--navfg:var(--night-ink);--navline:var(--night-line);--focus:var(--lamp)}
+.nav[data-sky="5"]{--navbg:var(--sky-5);--navfg:var(--night-ink);--navline:var(--night-line);--focus:var(--lamp)}
+.nav-in{display:flex;align-items:center;gap:18px;height:var(--nav-h)}
+.logo{display:inline-flex;align-items:center;gap:9px;min-height:44px;text-decoration:none;color:inherit;font:900 24px/1 var(--f-jp);letter-spacing:-.01em}
+.logo svg{width:30px;height:30px;flex:none;border-radius:7px}
+.nav[data-sky="4"] .logo svg,.nav[data-sky="5"] .logo svg{box-shadow:0 0 0 1.5px #8d93c4}
+/* the page's clock: only after the hero (the hero already says 15:30) */
+.clock{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 10px;border:2px solid currentColor;border-radius:10px;font-size:13px;font-weight:700;white-space:nowrap;visibility:hidden}
+.nav.past .clock{visibility:visible}
+html.studying .clock{display:none}
+.clock .pix{--px:3px}
+.clock-dot{width:9px;height:9px;border-radius:50%;background:var(--now);flex:none}
+/* while studying, the nav carries the study (it never sits on the text) */
+.chip{display:none;align-items:center;gap:8px;height:50px;padding:0 1px 0 12px;border:2px solid currentColor;border-radius:12px;white-space:nowrap;font-size:14px;font-weight:700}
+html.studying .chip{display:inline-flex}
+.chip-live{width:10px;height:10px;border-radius:50%;background:var(--live);flex:none}
+.chip .pix{--px:3px}
+.chip-btn{display:grid;place-items:center;width:44px;height:44px;border:2px solid var(--ink);border-radius:9px;background:var(--card);color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.chip-btn svg{width:18px;height:18px}
+.links{display:flex;gap:2px;margin-left:auto}
+.links a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:9px;font-size:15.5px;font-weight:700;text-decoration:none;white-space:nowrap}
+@media (hover:hover){.links a:hover{background:color-mix(in oklab,currentColor 9%,transparent)}}
+.soon-chip{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 15px;border-radius:999px;background:var(--navfg,var(--ink));color:var(--navbg,var(--sky-0));
+  font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap}
+.menu{display:none;position:relative}
+.menu summary{list-style:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:2px solid currentColor;border-radius:10px;
+  font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.menu summary::-webkit-details-marker{display:none}
+.menu-panel{position:absolute;right:0;top:calc(100% + 10px);width:min(300px,calc(100vw - 32px));padding:8px;background:var(--card);color:var(--ink);
+  border:2px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);--focus:#3d47d6}
+.menu-panel a{display:grid;grid-template-columns:52px 1fr;align-items:center;min-height:44px;padding:0 10px;border-radius:9px;text-decoration:none;font-weight:700;font-size:15px}
+.menu-panel a span{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.menu-panel a:hover{background:var(--sky-0)}
+
+/* ---------- legs: each section is a stretch of the day ---------- */
+.leg{position:relative;overflow-x:clip;background:var(--bg);color:var(--fg,var(--ink));--bg:var(--sky-0)}
+.leg[data-sky="1"]{--bg:var(--sky-1)}
+.leg[data-sky="2"]{--bg:var(--sky-2)}
+.leg[data-sky="3"]{--bg:var(--sky-3)}
+.leg[data-sky="4"]{--bg:var(--sky-4);--fg:var(--night-ink);--muted:var(--night-muted);--line:var(--night-line);--focus:var(--lamp);--stopbg:var(--sky-4)}
+.leg[data-sky="5"]{--bg:var(--sky-5);--fg:var(--night-ink);--muted:var(--night-muted);--line:var(--night-line);--focus:var(--lamp);--stopbg:var(--sky-5)}
+.leg-in{position:relative;padding-block:clamp(64px,8vw,100px)}
+/* the day-line: dotted (to come) under, solid (passed) over */
+.leg-in::before,.leg-in::after{content:"";position:absolute;left:calc(var(--line-x) - 1.5px);width:3px;pointer-events:none}
+.leg-in::before{top:var(--s-top,0px);bottom:var(--s-end,0px);
+  background:repeating-linear-gradient(to bottom,var(--fg,var(--ink)) 0 4px,transparent 4px 10px);opacity:.42}
+.leg-in::after{top:var(--s-top,0px);height:var(--solid,0px);background:var(--fg,var(--ink))}
+
+/* a station: time | stop | body */
+.station{display:grid;grid-template-columns:calc(var(--line-x) - 20px) 40px 1fr;align-items:start}
+.st-time{grid-column:1;justify-self:end;display:grid;justify-items:end;gap:10px;padding-top:6px;color:var(--fg,var(--ink))}
+.st-time .pix{--px:5px}
+.st-name{font-size:15px;font-weight:700;line-height:1.35;color:var(--muted);text-align:right;max-width:7.5em}
+.stop{grid-column:2;justify-self:center;position:relative;z-index:2;width:18px;height:18px;margin-top:14px;border-radius:50%;
+  background:var(--stopbg,var(--bg));border:3px solid var(--fg,var(--ink))}
+.stop.past{background:var(--fg,var(--ink))}
+.st-body{grid-column:3;min-width:0}
+.station.next{margin-top:clamp(72px,9vw,112px)}
+
+/* the moving "now" (one dot for the whole page) */
+#now{position:absolute;left:0;top:0;z-index:3;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--now);
+  box-shadow:0 0 0 4px var(--ring,var(--sky-0));pointer-events:none;will-change:transform}
+#now[data-sky="1"]{--ring:var(--sky-1)} #now[data-sky="2"]{--ring:var(--sky-2)} #now[data-sky="3"]{--ring:var(--sky-3)}
+#now[data-sky="4"]{--ring:var(--sky-4)} #now[data-sky="5"]{--ring:var(--sky-5)}
+html:not(.js) #now{display:none}
+
+/* two columns inside a station body */
+.st-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(32px,5vw,72px);align-items:start}
+.st-copy h2{font-size:var(--fs-h2);line-height:1.32;margin-bottom:20px}
+.st-copy p{max-width:34em;color:var(--fg,var(--ink))}
+.st-copy p + p{margin-top:12px}
+.fine{font-size:var(--fs-small);line-height:1.7;color:var(--muted);margin-top:14px}
+.st-visual{position:relative;min-width:0}
+
+/* ---------- app screens on stands (the logo's bars; they rise through the day 1 → 5) ---------- */
+.shot{margin:0;display:flex;align-items:flex-end;gap:20px;--pw:200px;--ph:14px}
+.stand{flex:none;display:flex;flex-direction:column;align-items:center;width:var(--pw)}
+.phone{position:relative;display:block;width:100%;margin:0;padding:6px;border:2px solid var(--ink);border-radius:30px;background:var(--ink);
+  cursor:zoom-in;font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;transition:transform .2s var(--ease)}
+.phone img{width:100%;border-radius:23px;background:#eceef1}
+.phone .lens{position:absolute;right:-8px;top:-8px;display:grid;place-items:center;width:32px;height:32px;border:2px solid var(--ink);border-radius:50%;background:var(--card);color:var(--ink)}
+.phone .lens svg{width:16px;height:16px}
+@media (hover:hover){.phone:hover{transform:translateY(-3px)}}
+.phone:focus-visible{outline-offset:5px;border-radius:30px}
+.plinth{width:62%;height:calc(var(--k,1) * var(--ph) + 2px);margin-top:-2px;border:2px solid var(--ink);border-bottom:0;background:var(--bc,var(--b1));
+  background-image:repeating-linear-gradient(to top,transparent 0 calc(var(--ph) - 1px),rgba(27,23,38,.22) calc(var(--ph) - 1px) var(--ph));
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset -6px 0 0 rgba(27,23,38,.14)}
+.floor{align-self:stretch;height:2px;margin:0 -12px;background:var(--fg,var(--ink))}
+.shot figcaption{flex:1 1 0;min-width:0;padding-bottom:4px;font-size:var(--fs-small);line-height:1.65;color:var(--muted)}
+.shot figcaption b{display:block;font-size:16px;color:var(--fg,var(--ink))}
+.shot.col{flex-direction:column;align-items:center;gap:10px}
+.shot.col figcaption{flex:none;width:var(--pw);text-align:center}
+.leg[data-sky="4"] .phone,.leg[data-sky="5"] .phone{border-color:var(--night-line)}
+.leg[data-sky="4"] .plinth{border-color:#0f1229}
+/* the enlarged screen */
+.zoom{padding:0;border:2px solid var(--ink);border-radius:18px;background:var(--paper);color:var(--ink);
+  max-width:calc(100vw - 32px);max-height:calc(100svh - 32px);box-shadow:0 6px 0 0 var(--ink);overflow:auto}
+.zoom::backdrop{background:rgba(23,18,31,.62)}
+.zoom-in{display:flex;align-items:flex-end;gap:28px;padding:20px}
+.zoom img{display:block;width:auto;height:calc(100svh - 76px);max-height:860px;aspect-ratio:786/1704;border:3px solid var(--ink);border-radius:28px;background:#eceef1}
+.zoom-side{width:230px;padding-bottom:4px}
+.zoom-t{font:900 var(--fs-h3)/1.4 var(--f-jp)}
+.zoom-d{margin-top:10px;font-size:var(--fs-small);line-height:1.7;color:var(--ink-2)}
+.zoom form{margin-top:20px}
+.zoom .btn{min-height:46px;font-size:15px}
+
+/* =================== HERO 15:30 =================== */
+.hero .leg-in{padding-top:clamp(28px,4vw,56px);padding-bottom:clamp(56px,6vw,80px)}
+.hero .st-time{color:var(--now)}
+.hero .stop{border-color:var(--now);background:var(--now);margin-top:17px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:56px;align-items:start}
+.kicker{display:flex;align-items:center;gap:10px;min-height:42px;font-size:16px;font-weight:700;margin-bottom:14px}
+.hero h1{font-size:var(--fs-h1);line-height:1.26;margin-bottom:22px}
+.hero .sub{font-size:var(--fs-lead);line-height:1.85;max-width:30em;margin-bottom:30px}
+.ctas{display:flex;flex-wrap:wrap;gap:14px 12px;margin-bottom:22px}
+.status{display:flex;flex-wrap:wrap;align-items:center;gap:0 18px;font-size:var(--fs-small);color:var(--muted);font-weight:700}
+.status a{display:inline-flex;align-items:center;min-height:44px;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+
+/* the school timetable (printed paper), and what comes after 6限 (the app) */
+.tt{margin:0;position:relative}
+.tt-paper{--pi:#6e6773;--pl:#cdc3b2;background:#fbf9f3;color:var(--pi);border:1px solid #b9ae9b;border-radius:0;padding:12px 16px 10px}
+.tt-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 2px 8px;font-weight:700;font-size:15px;letter-spacing:.06em}
+.tt-head small{font-size:13px;font-weight:700;letter-spacing:0}
+.tt-grid{display:grid;grid-template-columns:30px repeat(3,40px) minmax(0,1fr) 40px;font-size:15px;font-weight:500}
+.tt-grid > *{display:flex;align-items:center;justify-content:center;height:34px;border-bottom:1px solid var(--pl)}
+.tt-grid .d{font-weight:700;border-bottom-color:var(--pi)}
+.tt-grid .p{font-size:13px}
+.tt-grid .today{justify-content:flex-start;padding-left:14px;background:color-mix(in oklab,var(--sky-1) 50%,#fbf9f3)}
+.tt-grid .d.today{color:var(--ink);font-weight:900}
+.tt-grid .last{border-bottom:0}
+.tt-grid .fold{display:none}
+.tt-app{position:relative;margin-top:12px;background:#fff;color:#16151b;border:2px solid var(--ink);border-radius:16px;padding:10px 14px 6px;font-family:var(--f-app)}
+.tt-app-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 0 4px;font:900 14px/1.3 var(--f-jp);color:var(--ink)}
+.tt-app-head span{display:inline-flex;align-items:center;gap:7px}
+.tt-app-head svg{width:18px;height:18px;flex:none;border-radius:4px}
+.tt-app-head small{font-size:13px;font-weight:700;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:0;position:relative}
+.tl li{position:relative;display:grid;grid-template-columns:50px 22px minmax(0,1fr) auto;column-gap:8px;align-items:center;min-height:52px}
+.tl .tm{justify-self:end;text-align:right;font-size:15px;font-weight:700;line-height:1.25;font-variant-numeric:tabular-nums}
+.tl .tm small{display:block;font-size:13px;font-weight:500;color:#6e6a77}
+.tl .rail{position:relative;align-self:stretch;display:grid;place-items:center}
+.tl .rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:repeating-linear-gradient(to bottom,#b8b6bf 0 3px,transparent 3px 7px)}
+.tl li:last-child .rail::before{bottom:50%}
+.tl .rail i{position:relative;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #b8b6bf}
+.tl .nm{font-size:16px;font-weight:700;line-height:1.3}
+.tl .nm small{font-size:13px;font-weight:500;color:#6e6a77;margin-left:6px}
+.tl .nm span{display:block;font-size:14px;font-weight:500;color:#3b3946}
+.tl .ic{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:var(--c);color:#fff;font:800 12px/1 var(--f-app);letter-spacing:.04em}
+.tl .ic.pi{font-size:19px;font-weight:700}
+.tl li.now{min-height:32px}
+.tl li.now .tm{color:var(--now-ink);font-weight:900;font-family:var(--f-jp)}
+.tl li.now .rail::before{background:#8e8b96;top:0;bottom:50%}
+.tl li.now .rail::after{content:"";position:absolute;left:50%;top:50%;bottom:0;width:2px;margin-left:-1px;background:repeating-linear-gradient(to bottom,#b8b6bf 0 3px,transparent 3px 7px)}
+.tl li.now .rail i{width:12px;height:12px;background:var(--now);border:0}
+.tl li.now .rule{grid-column:3 / -1;height:2px;background:#f19a96;border-radius:1px}
+.tt figcaption{margin:12px 2px 0;font-size:var(--fs-small);font-weight:700;color:var(--muted)}
+
+/* =================== 17:00 timetable + timer: the room, the lamp, the one button =================== */
+.timer-cols{grid-template-areas:"copy room" "shot ctl"}
+.timer-cols > .st-copy{grid-area:copy}
+.timer-cols > .room-wrap{grid-area:room}
+.timer-cols > .ctl{grid-area:ctl}
+.timer-cols > .shot{grid-area:shot;align-self:end;--pw:170px}
+.room{position:relative;aspect-ratio:16 / 10;border:2px solid var(--ink);border-radius:18px;overflow:hidden;background:#f0cfa6}
+.room svg.art{position:absolute;inset:0;width:100%;height:100%;shape-rendering:crispEdges}
+.room .cone{opacity:0}
+.room .bulb{fill:#cfc3ad}
+.room .lit{opacity:0}
+html.studying .room .cone{opacity:.5;animation:lamp-on .3s steps(3,end) both}
+html.studying .room .lit{opacity:.55;animation:lamp-on .3s steps(3,end) both}
+html.studying .room .bulb{fill:var(--lamp)}
+@keyframes lamp-on{0%{opacity:0}100%{}}
+.room .stand-in{position:absolute;left:51%;bottom:22.5%;width:19%}
+.room .stand-in .rp{position:relative;border:2px solid var(--ink);border-radius:20px;padding:4px;background:var(--ink)}
+.room .stand-in img{border-radius:15px;width:100%}
+/* while studying, the phone on the desk shows the running time (not the idle 0:00) */
+.stand-live{position:absolute;inset:4px;border-radius:15px;display:grid;place-items:center;align-content:center;gap:7px;background:rgba(23,20,33,.9);opacity:0}
+.stand-live .pix{--px:3px;color:var(--lamp)}
+.stand-live i{width:8px;height:8px;border-radius:50%;background:var(--live)}
+html.studying .stand-live{opacity:1}
+.desk-top{position:absolute;left:0;right:0;bottom:22.5%;height:2px}
+/* the app's study bar, as the page's one control */
+.ctl{min-width:0}
+.appbar{position:relative;display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:14px;margin-top:22px;padding:12px 12px 16px 12px;
+  background:var(--card);border:2px solid var(--ink);border-radius:18px}
+.bar-tag{position:absolute;left:14px;top:-13px;padding:1px 9px 2px;border:2px solid var(--ink);border-radius:8px;background:var(--card);font-size:12px;font-weight:900;line-height:1.3}
+.bar-tile{position:relative;display:grid;place-items:center;width:48px;height:48px;border-radius:12px;background:var(--s-en);color:#fff;font-weight:900;font-size:21px;line-height:1}
+.bar-live{position:absolute;left:-4px;top:-4px;width:13px;height:13px;border-radius:50%;background:var(--live);border:2.5px solid var(--card);display:none}
+html.studying .bar-live{display:block}
+.bar-text{min-width:0;line-height:1.35}
+.bar-title{font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-title b{font-weight:900;margin-right:6px}
+.bar-sub{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;margin-top:3px;font-size:13.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar-sub .pix{--px:3px;color:var(--ink);opacity:.4}
+html.studying .bar-sub .pix{opacity:1}
+.bar-prog{position:absolute;left:74px;right:16px;bottom:7px;height:3px;border-radius:2px;background:color-mix(in oklab,var(--ink) 10%,transparent);overflow:hidden}
+.bar-prog i{display:block;height:100%;width:var(--p,0%);background:var(--s-en)}
+#go{min-width:9.6em}
+#go.rec{--bg:var(--card)}
+.msg{margin-top:14px;min-height:calc(2 * 1.7em);font-size:var(--fs-small);line-height:1.7;color:var(--ink-2);font-weight:700}
+.msg a{display:inline-flex;align-items:center;min-height:44px;margin-block:-10px;text-underline-offset:3px;text-decoration-thickness:2px}
+
+/* =================== 18:35 the record slip =================== */
+.rec-cols{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)}
+.rec-vis{display:flex;align-items:flex-start;gap:28px}
+.rec-vis .shot{--pw:170px}
+.slip{flex:1 1 auto;min-width:0;background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:16px 18px 10px}
+.slip h3{font-size:16px;margin-bottom:6px;display:flex;justify-content:space-between;gap:10px}
+.slip h3 small{font-size:13px;color:var(--muted);font-weight:700}
+.log{list-style:none;margin:0;padding:0}
+.log li{display:grid;grid-template-columns:44px 6px minmax(0,1fr) auto;align-items:center;column-gap:10px;min-height:62px;padding:8px 0;border-top:1.5px solid var(--line);font-size:15px;line-height:1.35}
+.log li:first-child{border-top:0}
+.log .lt{font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.log .lc{width:6px;height:34px;border-radius:3px;background:var(--c)}
+.log .lw b{display:block;font-weight:900}
+.log .lw small{display:block;font-size:13.5px;font-weight:500;color:var(--muted)}
+.log .ld{display:grid;justify-items:end;gap:4px;padding-right:10px;font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
+/* the one red-pen mark: a circle drawn once around what you just added */
+.add{position:relative;display:inline-block;padding:0 2px;font-style:normal;font-weight:900;color:var(--ink)}
+.add svg{position:absolute;left:-14px;right:-14px;top:-9px;bottom:-9px;width:calc(100% + 28px);height:calc(100% + 18px);overflow:visible;pointer-events:none;
+  fill:none;stroke:var(--pen);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.add svg path{stroke-width:2.6px;vector-effect:non-scaling-stroke;stroke-dasharray:inherit;stroke-dashoffset:inherit}
+.add.drawn svg{stroke-dashoffset:0;transition:stroke-dashoffset .5s cubic-bezier(.5,0,.3,1)}
+
+/* =================== 19:45 today's tower, the week, and how to read the home screen =================== */
+.day-cols{grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);grid-template-areas:"copy cards" "read cards"}
+.day-cols > .st-copy{grid-area:copy}
+.day-cols > .cards{grid-area:cards}
+.day-cols > .read{grid-area:read}
+.cards{display:grid;gap:18px}
+figure.card{margin:0}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:18px 20px 16px}
+.card-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 14px;font-size:15px;font-weight:900}
+.card-h small{font-size:13px;font-weight:700;color:var(--muted)}
+/* today's tower: 1 cell = 5 minutes; the box is sized for 4:00 plus the flame */
+.tw-row{display:flex;align-items:flex-end;gap:22px;margin-top:6px;border-bottom:2px solid var(--ink)}
+.axis{position:relative;width:52px;align-self:stretch;flex:none}
+.axis span{position:absolute;right:0;font-size:13px;font-weight:700;line-height:1.25;text-align:right;white-space:nowrap}
+.ax-goal{bottom:calc(36 * var(--cell) + 6px)}
+.ax-4h{bottom:calc(48 * var(--cell) - 8px);color:var(--muted)}
+.ax-unit{bottom:6px;color:var(--muted)}
+.ax-unit::before{content:"";display:block;width:22px;height:calc(var(--cell) + 2px);margin:0 0 4px auto;border:2px solid var(--muted)}
+.tower{position:relative;width:150px;height:calc(48 * var(--cell) + var(--head));flex:none}
+.goal{position:absolute;z-index:0;left:-62px;right:-12px;bottom:calc(36 * var(--cell) - 1px);border-top:2px dashed var(--ink);pointer-events:none}
+.tower.reached .goal{border-top-style:solid}
+.tick4{position:absolute;left:-20px;width:12px;bottom:calc(48 * var(--cell) - 1px);border-top:2px solid var(--muted)}
+.blk{position:absolute;z-index:1;left:0;right:0;bottom:calc(var(--b) * var(--cell) - 2px);height:calc(var(--h) * var(--cell) + 2px);
+  display:flex;align-items:center;padding:0 10px;overflow:hidden;background-color:var(--c);border:2px solid var(--ink);color:var(--on,var(--ink));
+  background-image:repeating-linear-gradient(to top,transparent 0 calc(var(--cell) - 1px),rgba(27,23,38,.13) calc(var(--cell) - 1px) var(--cell));
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.34),inset -7px 0 0 rgba(27,23,38,.14);font-size:13px;font-weight:700;line-height:1;white-space:nowrap}
+.blk.new{animation:drop .36s steps(4,end) both}
+@keyframes drop{from{transform:translateY(-36px);opacity:0}}
+.flame{position:absolute;z-index:2;left:50%;width:39px;height:54px;margin-left:-19px;bottom:calc(var(--top) * var(--cell) + 1px);image-rendering:pixelated;image-rendering:crisp-edges}
+html:not(.calm) .flame{transition:bottom .3s steps(3,end)}
+.panel{flex:1 1 0;min-width:0;padding-bottom:16px}
+.p-lab{font-size:var(--fs-small);font-weight:700;color:var(--muted)}
+.total{margin-top:2px;font-size:44px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.total small{font-size:18px;margin:0 4px 0 2px}
+.delta{margin-top:6px;font-size:var(--fs-small);font-weight:700;color:var(--up);font-variant-numeric:tabular-nums}
+.goal-left{margin-top:2px;font-size:var(--fs-small);font-weight:900;font-variant-numeric:tabular-nums}
+.goal-left.done{color:var(--up)}
+/* the week: from the side, or from above (= the grass) */
+.wk-total{font-size:28px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
+.wk-total small{font-size:var(--fs-small);margin-left:3px}
+.wk-delta{font-size:var(--fs-small);font-weight:700;color:var(--up)}
+.wk-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin-top:6px}
+.wk-top > .wk-sum{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:12px;background:var(--card);box-shadow:0 4px 0 0 var(--ink);overflow:hidden}
+.seg button{display:inline-flex;align-items:center;min-height:44px;padding:0 15px;border:0;background:none;font:700 15px/1 var(--f-jp);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button:focus-visible{outline-offset:-5px;border-radius:6px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);--focus:var(--lime)}
+.wk-chart{--ww:46px;position:relative;display:flex;justify-content:space-between;align-items:flex-end;height:calc(60 * var(--wc) + 24px);margin-top:16px;padding:0 4px;border-bottom:2px solid var(--ink)}
+.wk-goal{position:absolute;left:0;right:0;bottom:calc(36 * var(--wc));border-top:2px dashed var(--ink);z-index:2}
+.wk-goal span{position:absolute;right:0;bottom:4px;padding:0 0 0 6px;background:var(--card);font-size:13px;font-weight:700;line-height:1.2}
+.wk-t{position:relative;width:var(--ww);height:calc(var(--t) * var(--wc));display:flex;flex-direction:column-reverse;overflow:hidden}
+.wk-t > i{display:block;flex:none;height:calc(var(--h) * var(--wc) + 2px);margin-bottom:-2px;background:var(--c);border:2px solid var(--ink);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.34),inset -5px 0 0 rgba(27,23,38,.14)}
+.wk-t::after{content:"";position:absolute;inset:0;background:var(--lv);border:2px solid var(--ink);visibility:hidden}
+.wk-days{display:flex;justify-content:space-between;padding:6px 4px 0}
+.wk-days span{width:var(--ww,46px);text-align:center;font-size:13px;font-weight:700;color:var(--muted)}
+.wk-days span:last-child{color:var(--ink)}
+.week.top .wk-chart{height:calc(var(--ww) + 2px)}
+.week.top .wk-t{height:var(--ww)}
+.week.top .wk-t::after{visibility:visible}
+.week.top .wk-t:last-child::after{box-shadow:inset 0 0 0 3px var(--card),inset 0 0 0 5px var(--ink)}
+.week.top .wk-goal{display:none}
+html:not(.calm) .wk-t,html:not(.calm) .wk-chart{transition:height .42s steps(6,end)}
+html:not(.calm) .week.top .wk-t::after{transition:visibility 0s .42s}
+.wk-cap{margin-top:12px;min-height:calc(2 * 1.7em);font-size:var(--fs-small);line-height:1.7;color:var(--ink-2)}
+/* how to read the home screen: the tower is its tape, stood up */
+.read{display:flex;align-items:flex-end;gap:24px;margin-top:8px;--pw:150px;--k:3;--bc:var(--b3)}
+.read .stand{width:var(--pw)}
+.callout{position:absolute;left:5.5%;right:5.5%;top:56.4%;height:6.4%;border:3px solid var(--now);border-radius:8px;pointer-events:none}
+.read-body{flex:1 1 0;min-width:0}
+.read-h{font-size:var(--fs-h3);line-height:1.4}
+.read-p{margin-top:4px;font-size:var(--fs-small);line-height:1.7;color:var(--ink-2)}
+.howread{margin:12px 0 0;padding:0;border-top:2px solid var(--ink)}
+.howread div{display:grid;gap:2px;padding:9px 0 10px;border-bottom:1.5px solid var(--line)}
+.howread dt{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:900;line-height:1.4}
+.howread dd{margin:0;font-size:var(--fs-small);line-height:1.65;color:var(--ink-2)}
+.ico{flex:none;position:relative;width:36px;height:14px}
+.ico-tape{border:2px solid var(--ink);background:linear-gradient(to right,var(--s-en) 0 54%,var(--s-ma) 54% 77%,var(--s-ja) 77% 100%)}
+.ico-tick{border:2px solid var(--ink);border-radius:2px;background:var(--card) repeating-linear-gradient(to right,var(--ink) 0 2px,transparent 2px 7px) left top/100% 6px no-repeat}
+.ico-goal::before{content:"";position:absolute;left:17px;top:-4px;bottom:-2px;width:2px;background:var(--ink)}
+.ico-goal::after{content:"";position:absolute;left:4px;right:4px;top:6px;border-top:2px dashed var(--ink)}
+.facts{display:grid;gap:14px;margin-top:22px}
+.facts div{padding-left:16px;border-left:3px solid var(--fg,var(--ink))}
+.facts dt{font-weight:900;font-size:var(--fs-h3);line-height:1.4}
+.facts dd{margin:4px 0 0}
+
+/* =================== 22:00 the building at night =================== */
+.night-cols{display:flex;align-items:flex-end;gap:32px}
+.bldg-wrap{flex:1 1 auto;min-width:0;max-width:420px}
+.bldg{position:relative;padding:20px 18px 0;background:#2f376a;border:2px solid var(--night-line);border-bottom:0;border-radius:12px 12px 0 0;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.bldg::after{content:"";position:absolute;left:-14px;right:-14px;bottom:-2px;height:2px;background:var(--night-line)}
+.win{position:relative;display:grid;align-content:end;gap:1px;min-height:78px;padding:10px 12px 9px;border-radius:6px;background:#1b2046;
+  border:2px solid #121634;color:var(--night-muted);font-size:13.5px;line-height:1.35}
+.win b{font-size:15px;font-weight:900}
+.win.lit{background:var(--lamp);color:var(--ink);border-color:#e6b84c}
+.win.lit::before{content:"";position:absolute;left:10px;top:10px;width:24px;height:6px;border-radius:3px;background:var(--c,var(--ink))}
+.win.you{border-style:dashed;border-color:var(--night-muted)}
+.win.you.lit{border-style:solid;border-color:#e6b84c}
+.win .tm{font-variant-numeric:tabular-nums;font-weight:700}
+.bldg-sill{height:22px;background:#2f376a;border-inline:2px solid var(--night-line)}
+.hint{margin-top:14px;font-size:var(--fs-small);color:var(--muted);font-weight:700}
+.night-cols .shot{flex:none}
+.night-cols .shot figcaption{display:none}
+
+/* =================== 22:30 how: three steps, each marked with a small clock =================== */
+.how-cols{grid-template-columns:minmax(0,1fr) auto;align-items:end}
+.how-line{list-style:none;margin:8px 0 0;padding:0;position:relative;max-width:620px}
+.how-line li{position:relative;display:grid;grid-template-columns:22px 1fr;column-gap:16px;padding-bottom:22px}
+.how-line li:last-child{padding-bottom:0}
+.how-line li::before{content:"";grid-row:1 / span 3;width:22px;height:22px;margin-top:3px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Ccircle cx='11' cy='11' r='9.2' fill='none' stroke='%23ffd166' stroke-width='2.4'/%3E%3Cpath d='M11 5.6V11h4.2' fill='none' stroke='%23ffd166' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.how-line .when{font-size:var(--fs-small);font-weight:700;color:var(--lamp)}
+.how-line h3{font-size:21px;line-height:1.45}
+.how-line p{color:var(--muted);margin-top:2px}
+.how-cols .shot{--pw:190px;--k:5;--bc:var(--b5)}
+.how-cols .shot figcaption{display:none}
+
+/* =================== おうちの方へ: a printed sheet on the desk =================== */
+.sheet{background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:6px;padding:clamp(22px,3.4vw,44px);--muted:#564e61;--line:#d6cab4;--focus:#3d47d6;--fg:var(--ink)}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:14px;margin-bottom:22px;border-bottom:4px double var(--ink)}
+.sheet-head span{font-weight:900;font-size:17px}
+.sheet-head small{font-size:13px;color:var(--muted);font-weight:700}
+.sheet h2{font-size:var(--fs-h2);line-height:1.32;margin-bottom:14px}
+.sheet .lead{max-width:40em}
+.sheet-cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px 40px;align-items:start;margin-top:22px}
+.sets{margin:0;padding:0;border-top:2px solid var(--ink)}
+.set{display:grid;grid-template-columns:12.5em minmax(0,1fr);gap:6px 20px;align-items:baseline;padding:14px 0;border-bottom:1.5px solid var(--line)}
+.set dt{font-weight:900;line-height:1.5}
+.set dd{margin:0;font-size:15px;line-height:1.7}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+.opts li{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 12px;border:2px solid var(--line);border-radius:999px;font-size:14px;font-weight:700;line-height:1.2}
+.opts li.init{border-color:var(--ink);background:var(--ink);color:var(--card)}
+.opts li.init small{padding:3px 7px;border-radius:999px;background:var(--lime);color:var(--ink);font-size:12.5px;font-weight:900;line-height:1}
+.set dd p{margin-top:6px;font-size:14px;color:var(--ink-2)}
+.notes{display:grid;gap:14px}
+.note{padding:14px 16px;border:2px solid var(--ink);border-radius:12px}
+.note h3{font-size:17px;margin-bottom:4px}
+.note p{font-size:15px;line-height:1.75}
+
+/* =================== FOOTER 23:00 =================== */
+.foot .leg-in{padding-bottom:40px}
+.foot h2{font-size:clamp(34px,4.6vw,64px);line-height:1.22;margin-bottom:14px}
+.foot .after{font-size:var(--fs-lead);color:var(--muted);margin-bottom:30px}
+.soon{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0;border-top:2px solid var(--night-line)}
+.soon div{padding:16px 18px 18px 0}
+.soon div + div{padding-left:18px;border-left:2px solid var(--night-line)}
+.soon dt{font-size:13px;color:var(--lamp);font-weight:700;margin-bottom:4px}
+.soon dd{margin:0;font-size:15px;line-height:1.7}
+.back{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.back .btn{--bg:transparent;--fg:var(--night-ink);border-color:var(--night-ink);box-shadow:none;min-height:46px;font-size:15px}
+@media (hover:hover){.back .btn:hover{transform:none;box-shadow:none;background:color-mix(in oklab,var(--night-ink) 10%,transparent)}}
+/* the skyline: one tower a week since April; height = that week's study time */
+.sky{--room:150px;position:relative;height:calc(var(--room) + 30px);margin-top:40px}
+.sky-row{position:absolute;left:0;right:0;bottom:0;display:flex;gap:5px;align-items:flex-end;justify-content:space-between}
+.sky-t{position:relative;flex:1 1 0;min-width:0;max-width:40px;display:flex;flex-direction:column-reverse}
+.sky-t i{display:block;height:calc(var(--hr) / var(--hmax, 40) * var(--room));margin-bottom:-2px;background:var(--c);border:2px solid #0f1229;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.28),inset -4px 0 0 rgba(15,18,41,.2)}
+.sky-t i:first-child{margin-bottom:0}
+.sky-now{position:absolute;right:0;bottom:calc(100% + 6px);font-size:13px;font-weight:700;color:var(--night-ink);white-space:nowrap}
+.foot-bottom{background:#0f1229;color:var(--night-muted);padding:20px 0 calc(28px + env(safe-area-inset-bottom,0px));font-size:13.5px;line-height:1.75}
+.sky-cap{padding-bottom:16px;margin-bottom:16px;border-bottom:2px solid #262c55;color:var(--night-ink)}
+.fb-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px}
+.fb-name{display:flex;align-items:center;gap:10px;color:var(--night-ink);font-weight:900;font-size:20px}
+.fb-name small{font-size:13px;font-weight:700;color:var(--night-muted)}
+.fb-links{display:flex;flex-wrap:wrap;gap:2px 4px}
+.fb-links a,.fb-links button{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border-radius:8px;color:var(--night-ink);font:700 14px/1 var(--f-jp);text-decoration:none;background:none;border:0;cursor:pointer}
+.fb-links button[aria-pressed="true"]{background:var(--night-ink);color:var(--sky-5)}
+.foot-bottom :focus-visible{outline-color:var(--lamp)}
+.legal{margin-top:12px;max-width:64em}
+.legal p + p{margin-top:2px}
+
+/* =================== narrower =================== */
+@media (max-width:1100px){
+  :root{--line-x:124px;--fs-h1:clamp(34px,4.3vw,46px)}
+  .hero-grid{grid-template-columns:minmax(0,1fr) 380px;gap:36px}
+  .st-time .pix{--px:4px}
+  .st-name{font-size:14px}
+  .day-cols{grid-template-columns:1fr;grid-template-areas:"copy" "cards" "read"}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+}
+@media (max-width:900px){
+  .hero-grid{grid-template-columns:1fr}
+  .tt{max-width:460px}
+  .st-cols,.sheet-cols{grid-template-columns:1fr}
+  .timer-cols{grid-template-areas:"copy" "room" "ctl" "shot"}
+  .room-wrap{max-width:560px}
+  .how-cols .shot{display:none}
+  .cards{grid-template-columns:1fr;max-width:560px}
+  .soon{grid-template-columns:1fr 1fr}
+  .soon div:nth-child(3){padding-left:0;border-left:0}
+  .soon div:nth-child(n+3){border-top:2px solid var(--night-line)}
+}
+@media (max-width:760px){
+  :root{--wrap:calc(100% - max(16px,env(safe-area-inset-left,0px)) - max(16px,env(safe-area-inset-right,0px)));--line-x:11px;--nav-h:58px;--fs-body:16px;--fs-lead:16.5px;--cell:5px;--head:38px;--wc:2.6px}
+  .wrap{width:auto;margin-inline:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .leg-in::before,.leg-in::after{left:calc(max(16px,env(safe-area-inset-left,0px)) + var(--line-x) - 1.5px)}
+  .links,.soon-chip{display:none}
+  .menu{display:block;margin-left:auto}
+  .nav-in{gap:10px}
+  .logo{font-size:21px}
+  .logo svg{width:26px;height:26px}
+  .clock{padding:0 9px 0 8px;gap:6px}
+  .chip{padding-left:10px;gap:7px}
+  /* station: stop + time + name on one row, body below */
+  .station{grid-template-columns:22px 1fr;column-gap:12px}
+  .stop{grid-column:1;grid-row:1;margin-top:7px;width:16px;height:16px}
+  .st-time{grid-column:2;grid-row:1;justify-self:start;display:flex;align-items:center;gap:14px;padding-top:0;margin-bottom:14px}
+  .st-time .pix{--px:4px}
+  .st-name{font-size:15px;text-align:left;max-width:none}
+  .st-body{grid-column:2;grid-row:2}
+  .leg-in{padding-block:36px}
+  .station.next{margin-top:44px}
+  .st-copy h2{margin-bottom:12px}
+  body{line-height:1.75}
+  .facts dd{font-size:15px}
+  .facts{gap:12px;margin-top:18px}
+  .st-cols{gap:26px}
+  /* the hero: the date sits on the time's row, so the timetable's after-school part reaches the first view */
+  .hero .station{position:relative}
+  .kicker{position:absolute;left:150px;top:2px;min-height:28px;margin:0;font-size:14.5px}
+  .hero .st-time{margin-bottom:12px}
+  .hero .stop{margin-top:7px}
+  .hero .leg-in{padding-top:16px;padding-bottom:36px}
+  .hero h1{margin-bottom:12px}
+  .hero .sub{margin-bottom:18px;line-height:1.75}
+  .ctas{margin-bottom:4px}
+  .ctas .btn{min-height:50px;padding:0 18px;font-size:16px}
+  .hero-grid{gap:26px}
+  .tt-paper{padding:9px 10px 6px}
+  .tt-head{padding-bottom:4px;font-size:14px}
+  .tt-grid{grid-template-columns:24px repeat(3,34px) minmax(0,1fr) 34px;font-size:14px}
+  .tt-grid > *{height:30px}
+  .tt-grid .today{padding-left:12px}
+  .tt-grid .up{display:none}
+  .tt-grid .fold{display:flex;grid-column:1 / -1;justify-content:flex-start;padding-left:4px;height:26px;font-size:13px;letter-spacing:.04em}
+  .tt-app{margin-top:10px;padding:8px 12px 4px}
+  .tl li{grid-template-columns:46px 20px minmax(0,1fr) auto;min-height:46px}
+  .tl li.now{min-height:28px}
+  .tl .ic{width:34px;height:34px;border-radius:9px}
+  .tl .nm{font-size:15px}
+  .tl .nm span{font-size:13.5px}
+  /* screens: a small phone on its stand, the words beside it; press to see it big */
+  .shot,.rec-vis .shot,.timer-cols > .shot{--pw:96px;--ph:7px;gap:14px}
+  .shot.col{flex-direction:row;align-items:flex-end}
+  .shot.col figcaption{flex:1 1 0;width:auto;text-align:left}
+  .phone{padding:4px;border-radius:20px}
+  .phone img{border-radius:16px}
+  .phone .lens{right:-6px;top:-6px;width:30px;height:30px}
+  .room{aspect-ratio:16 / 10}
+  .room .stand-in{left:50%;width:20%}
+  .stand-live .pix{--px:2px}
+  .appbar{grid-template-columns:44px minmax(0,1fr);gap:12px;margin-top:0;padding:12px 12px 16px}
+  .bar-tile{width:44px;height:44px}
+  .appbar #go{grid-column:1 / -1;width:100%}
+  .bar-prog{left:16px}
+  .msg{margin-top:10px}
+  .rec-vis{flex-direction:column;align-items:stretch;gap:22px}
+  .rec-vis .shot{--k:2;--bc:var(--b2)}
+  .tw-row{gap:14px}
+  .axis{width:40px}
+  .goal{left:-48px;right:-8px}
+  .tick4{left:-12px;width:8px}
+  .tower{width:96px}
+  .blk{padding:0 6px;font-size:12.5px}
+  .flame{width:26px;height:36px;margin-left:-13px}
+  .total{font-size:32px}
+  .total small{font-size:14px;margin:0 3px 0 2px}
+  .card{padding:14px 14px 14px}
+  .wk-chart{--ww:32px;margin-top:14px}
+  :root{--wc:2.2px}
+  .wk-days span{width:32px}
+  .wk-total{font-size:24px}
+  .read{--pw:96px;--ph:7px;gap:14px;align-items:flex-start}
+  .read-h{font-size:17px}
+  .night-cols{gap:14px}
+  .night-cols .shot{--pw:84px}
+  .night-cols .shot .floor{margin:0 -6px}
+  .bldg{gap:8px;padding:12px 10px 0}
+  .win{min-height:66px;padding:8px 8px 7px;font-size:13px}
+  .win b{font-size:14px}
+  .hint{margin-top:10px}
+  .how-line h3{font-size:19px}
+  .sheet{padding:20px 16px 22px}
+  .sheet-head{margin-bottom:16px;padding-bottom:10px}
+  .sheet-head small{display:none}
+  .set{grid-template-columns:1fr;gap:8px;padding:12px 0}
+  .note{padding:0;border:0}
+  .notes{gap:16px}
+  .sheet-cols{margin-top:16px}
+  .foot h2{font-size:38px}
+  .soon{grid-template-columns:1fr}
+  .soon div,.soon div + div{display:grid;grid-template-columns:6.4em minmax(0,1fr);gap:10px;padding:10px 0;border-left:0;border-top:2px solid var(--night-line)}
+  .soon dt{margin:0;padding-top:2px}
+  .foot .after{margin-bottom:20px}
+  .back{margin-top:18px}
+  .soon div:first-child{border-top:0}
+  .sky{--room:96px;margin-top:28px}
+  .sky-row{gap:3px}
+  .fb-name{flex-direction:column;align-items:flex-start;gap:2px}
+  .zoom-in{flex-direction:column;align-items:center;gap:12px;padding:12px}
+  .zoom img{height:calc(100svh - 150px)}
+  .zoom-side{width:auto;align-self:stretch;display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:0 4px}
+  .zoom-d{display:none}
+  .zoom form{margin:0 0 0 auto}
+}
+@media (max-width:370px){
+  .clock .lbl{display:none}
+  .kicker{left:142px;font-size:13.5px}
+  .chip .chip-s{display:none}
+  .shot,.read,.rec-vis .shot,.timer-cols > .shot{--pw:88px}
+  .night-cols .shot{--pw:76px}
+}
+
+/* =================== less motion =================== */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .btn:hover,.btn:active,.phone:hover{transform:none}
+}
+html.calm{scroll-behavior:auto}
+html.calm *,html.calm *::before,html.calm *::after{animation:none!important;transition:none!important}
+</style>
 <script src="js/pix.js" defer></script>
-<script src="js/site.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">本文へ</a>
 
-<header class="nav" id="nav">
+<header class="nav" id="nav" data-sky="0">
   <div class="wrap nav-in">
-    <a class="logo" href="#top" aria-label="Inchly ホーム">
-      <svg class="logo-mark" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><rect class="bg" width="16" height="16" rx="3" fill="#17121f"/><rect x="1" y="10" width="2" height="3" fill="#E5484D"/><rect x="4" y="8" width="2" height="5" fill="#F2C46D"/><rect x="7" y="6" width="2" height="7" fill="#9AB8DB"/><rect x="10" y="4" width="2" height="9" fill="#5B8DEF"/><rect x="13" y="2" width="2" height="11" fill="#9D7BF5"/><rect class="sprout" x="13" y="0" width="2" height="1" fill="#c6f432"/></svg>
-      <span class="logo-word">inchly</span>
+    <a class="logo" href="#top" aria-label="Inchly（いちばん上へ）">
+      <svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><rect width="16" height="16" rx="3.5" fill="#1b1726"/><rect x="2" y="10" width="2" height="3" fill="#E5484D"/><rect x="4.5" y="8" width="2" height="5" fill="#F2C46D"/><rect x="7" y="6" width="2" height="7" fill="#9AB8DB"/><rect x="9.5" y="4" width="2" height="9" fill="#5B8DEF"/><rect x="12" y="2" width="2" height="11" fill="#9D7BF5"/></svg>
+      <span>inchly</span>
     </a>
-    <nav class="links" aria-label="サイト">
-      <a href="#f-plan">時間割</a>
-      <a href="#f-timer">タイマー</a>
-      <a href="#f-record">記録</a>
-      <a href="#together">友だち</a>
-      <a href="#screens">画面</a>
-      <a href="#safety">おうちの方へ</a>
+    <p class="clock" id="clock-box"><i class="clock-dot" aria-hidden="true"></i><span class="sr">このページの時刻</span><span class="pix" id="clock" data-pix="15:30"></span></p>
+    <div class="chip" id="chip"><i class="chip-live" aria-hidden="true"></i><span><b class="chip-s">英語</b> <span class="pix" id="chip-pix" data-pix="0:00"></span></span><button type="button" class="chip-btn" data-act="record" aria-label="記録する（見本）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.3 8.4 3.7 7l2.8 2.8 5.8-6.2 1.5 1.4-7.3 7.6z" fill="currentColor"/></svg></button></div>
+    <nav class="links" aria-label="ページの中">
+      <a href="#t1700">できること</a>
+      <a href="#how">使い方</a>
+      <a href="#parents">おうちの方へ</a>
     </nav>
-    <div class="theme" role="group" aria-label="テーマ">
-      <button type="button" data-set-theme="white" title="白" aria-label="白のテーマ" aria-pressed="false"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M3 0h2v1H3zM1 1h1v1H1zM6 1h1v1H6zM2 2h4v4H2zM0 3h1v2H0zM7 3h1v2H7zM1 6h1v1H1zM6 6h1v1H6zM3 7h2v1H3z"/></svg></button>
-      <button type="button" data-set-theme="paper" title="紙" aria-label="紙のテーマ" aria-pressed="false"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M1 0h6v1H1zM1 1h1v7H1zM6 1h1v5H6zM5 6h2v1H5zM2 7h4v1H2zM3 2h2v1H3zM3 4h2v1H3z"/></svg></button>
-      <button type="button" data-set-theme="dark" title="暗い" aria-label="暗いテーマ" aria-pressed="false"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M2 0h3v1H2zM1 1h3v1H1zM0 2h3v3H0zM0 5h4v1H0zM7 5h1v1H7zM1 6h6v1H1zM2 7h4v1H2zM6 1h1v1H6z"/></svg></button>
-    </div>
-    <a class="btn btn-ink btn-sm perch" href="#soon">近日公開</a>
+    <a class="soon-chip" href="#soon">近日公開</a>
+    <details class="menu" id="menu">
+      <summary>もくじ</summary>
+      <nav class="menu-panel" aria-label="もくじ">
+        <a href="#top"><span>15:30</span>はじめに</a>
+        <a href="#t1700"><span>17:00</span>時間割とタイマー</a>
+        <a href="#t1835"><span>18:35</span>記録</a>
+        <a href="#t1945"><span>19:45</span>続けた日数</a>
+        <a href="#t2200"><span>22:00</span>友だち</a>
+        <a href="#how"><span>22:30</span>使い方</a>
+        <a href="#parents"><span>別紙</span>おうちの方へ</a>
+        <a href="#soon"><span>23:00</span>近日公開</a>
+      </nav>
+    </details>
   </div>
-  <inch-pal kind="jiri" do="hang" at=".86" length="84"></inch-pal>
 </header>
 
 <main id="main">
 
-<section class="hero" id="top" aria-labelledby="hero-h">
-  <div class="hero-bg" aria-hidden="true"></div>
-  <div class="sparks" aria-hidden="true">
-    <i style="left:33.1%;top:17.6%;--s:4px;--c:var(--ink);--t:4.55s;--d:-0.36s"></i>
-    <i style="left:53.4%;top:36.9%;--s:5px;--c:var(--lime-2);--t:2.77s;--d:-2.54s"></i>
-    <i style="left:5.6%;top:43.0%;--s:6px;--c:var(--coral);--t:2.81s;--d:-0.45s"></i>
-    <i style="left:42.8%;top:78.4%;--s:4px;--c:var(--violet);--t:2.97s;--d:-1.12s"></i>
-    <i style="left:62.2%;top:89.3%;--s:5px;--c:var(--sky);--t:4.33s;--d:-1.98s"></i>
-    <i style="left:95.7%;top:8.2%;--s:6px;--c:var(--ink);--t:5.18s;--d:-1.45s"></i>
-    <i style="left:15.8%;top:14.6%;--s:4px;--c:var(--lime-2);--t:3.53s;--d:-4.08s"></i>
-    <i style="left:19.3%;top:56.3%;--s:5px;--c:var(--coral);--t:4.52s;--d:-1.86s"></i>
-    <i style="left:54.6%;top:9.7%;--s:6px;--c:var(--violet);--t:2.78s;--d:-1.03s"></i>
-    <i style="left:67.3%;top:42.5%;--s:4px;--c:var(--sky);--t:3.54s;--d:-2.93s"></i>
-    <i style="left:45.5%;top:31.0%;--s:5px;--c:var(--ink);--t:4.98s;--d:-3.49s"></i>
-    <i style="left:25.4%;top:55.7%;--s:6px;--c:var(--lime-2);--t:4.18s;--d:-4.38s"></i>
-    <i style="left:72.0%;top:29.9%;--s:4px;--c:var(--coral);--t:5.54s;--d:-0.59s"></i>
-    <i style="left:42.1%;top:72.1%;--s:5px;--c:var(--violet);--t:3.06s;--d:-2.44s"></i>
-    <i style="left:5.8%;top:64.1%;--s:6px;--c:var(--sky);--t:4.89s;--d:-2.87s"></i>
-    <i style="left:86.0%;top:32.2%;--s:4px;--c:var(--ink);--t:4.69s;--d:-2.97s"></i>
-  </div>
-  <div class="wrap">
-    <div class="ribbon-row reveal" style="--i:0">
-      <p class="ribbon" id="ribbon">iPhone の勉強アプリ · 近日公開</p>
-      <inch-pal kind="tsuru" do="hoist" on="#ribbon" at=".08" scale="2"></inch-pal>
-      <inch-pal kind="mebu" do="hoist" on="#ribbon" at=".92" scale="2"></inch-pal>
-    </div>
-
-    <div class="wordmark reveal" style="--i:1" role="img" aria-label="inchly（インチリー）">
-      <canvas id="mark" aria-hidden="true"></canvas>
-      <span class="wordmark-fb" aria-hidden="true">inchly</span>
-      <inch-pal kind="penta" do="crawl" on="#mark" at=".35" scale="4"></inch-pal>
-    </div>
-
-    <div class="hero-grid">
-      <div class="hero-copy">
-        <h1 class="lede reveal" style="--i:2" id="hero-h"><span class="l1" id="hero-l1">勉強した時間が、</span><br>毎日<em>つみ上がる</em>。<inch-pal kind="mebu" do="sit" on="#hero-l1" at=".84"></inch-pal></h1>
-        <p class="sub reveal" style="--i:3">時間をはかって、記録して、友だちと見せ合える。やった日はマスが緑に、続けた日数は炎といっしょに数える。小学生から受験生まで使える、iPhone のアプリです。</p>
-        <div class="ctas reveal" style="--i:4">
-          <a class="btn btn-lime perch" href="#screens">画面を見てみる <span aria-hidden="true">↓</span></a>
-          <a class="btn btn-ghost perch" href="#how">使い方 <span aria-hidden="true">↓</span></a>
-        </div>
-        <div class="hint reveal" style="--i:5">
-          <p><kbd>つつく</kbd> と反応する。<kbd>つかむ</kbd> と投げられる。<span class="if-hover">ボタンに近づくと、鶴が飛ぶ。</span><span class="if-touch">ボタンを押すと、鶴が飛ぶ。</span></p>
-          <div class="spawns">
-            <button type="button" class="spawn" data-spawn="pen">＋えんぴつ</button>
-            <button type="button" class="spawn" data-spawn="flame">＋ほのお</button>
-            <button type="button" class="spawn" data-spawn="eraser">＋けしごむ</button>
-            <button type="button" class="spawn" data-spawn="clear" hidden>かたづける</button>
-            <button type="button" class="spawn calm-btn" data-calm aria-pressed="false">動きを止める</button>
+<!-- ============ 15:30 放課後 ============ -->
+<section class="leg hero" id="top" data-sky="0" aria-labelledby="hero-h">
+  <div class="wrap leg-in">
+    <div class="station" data-t="15:30">
+      <div class="st-time"><span class="pix" data-pix="15:30"></span></div>
+      <span class="stop" aria-hidden="true"></span>
+      <div class="st-body">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <p class="kicker">10月29日（木）　放課後</p>
+            <h1 id="hero-h">時間割は、<br><span class="nb">6限で終わらない。</span></h1>
+            <p class="sub">放課後と夜の予定を、1本の線にならべる。<span class="nb">時間が来たら</span>押すだけで、勉強した時間が毎日つみ上がる。<span class="nb">iPhone の勉強アプリです。</span></p>
+            <div class="ctas">
+              <a class="btn btn-lime" href="#t1700">画面を見てみる <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 2h2v8.5l3-3 1.4 1.4L8 14.3 2.6 8.9 4 7.5l3 3z" fill="currentColor"/></svg></a>
+              <a class="btn btn-ghost" href="#how">使い方</a>
+            </div>
+            <p class="status"><span>[公開日]ごろ公開予定</span><a href="#parents">おうちの方へ</a></p>
           </div>
-        </div>
-        <p class="status reveal" style="--i:6"><i class="blip" aria-hidden="true"></i>公開予定：[公開日] · <a href="#safety">保護者の方へ <span aria-hidden="true">→</span></a></p>
-      </div>
 
-      <div class="hero-side reveal" style="--i:6">
-        <div class="window" id="hero-window">
-          <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>きょう.log</span></div>
-<pre><code><span class="c-c">// 1. 時間割から、始める</span>
-<span class="c-time">17:00</span> ▶&#xFE0E; <span class="c-subj">英語 長文読解</span>
-<span class="c-c">// 2. 止めたら、記録</span>
-<span class="c-time">17:39</span> ✓ <span class="c-subj">英語</span> <span class="c-num">39分</span>   <span class="c-num">+39 EXP</span>
-<span class="c-c">// 3. 草がのびる</span>
-今日 <span class="c-num">2時間45分</span>   <span class="c-num">▲1:17</span> 昨日より</code></pre>
-          <inch-pal kind="fusen" do="peek" at=".74"></inch-pal>
+          <figure class="tt" aria-label="学校の時間割の見本。木曜日は6限の体育まで。その下の赤い「いま」の線から先が Inchly の時間割：放課後の 17:00 英語 長文読解、19:00 数学 青チャート。">
+            <div class="tt-paper" aria-hidden="true">
+              <div class="tt-head"><span>学校の時間割</span><small>見本</small></div>
+              <div class="tt-grid">
+                <span></span><span class="d">月</span><span class="d">火</span><span class="d">水</span><span class="d today">木</span><span class="d">金</span>
+                <span class="fold">1〜4限　…</span>
+                <span class="p up">1</span><span class="up">国</span><span class="up">英</span><span class="up">数</span><span class="today up">理科</span><span class="up">社</span>
+                <span class="p up">2</span><span class="up">数</span><span class="up">社</span><span class="up">理</span><span class="today up">英語</span><span class="up">国</span>
+                <span class="p up">3</span><span class="up">英</span><span class="up">数</span><span class="up">国</span><span class="today up">国語</span><span class="up">英</span>
+                <span class="p up">4</span><span class="up">理</span><span class="up">国</span><span class="up">英</span><span class="today up">数学</span><span class="up">体</span>
+                <span class="p">5</span><span>社</span><span>音</span><span>美</span><span class="today">社会</span><span>数</span>
+                <span class="p last">6</span><span class="last">体</span><span class="last">理</span><span class="last">総合</span><span class="today last">体育</span><span class="last">理</span>
+              </div>
+            </div>
+            <div class="tt-app" aria-hidden="true">
+              <p class="tt-app-head"><span><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><rect width="16" height="16" rx="3.5" fill="#1b1726"/><rect x="2" y="10" width="2" height="3" fill="#E5484D"/><rect x="4.5" y="8" width="2" height="5" fill="#F2C46D"/><rect x="7" y="6" width="2" height="7" fill="#9AB8DB"/><rect x="9.5" y="4" width="2" height="9" fill="#5B8DEF"/><rect x="12" y="2" width="2" height="11" fill="#9D7BF5"/></svg>ここから Inchly</span><small>放課後</small></p>
+              <ol class="tl">
+                <li class="now"><span class="tm">いま</span><span class="rail"><i></i></span><span class="rule"></span></li>
+                <li><span class="tm">17:00<small>18:00</small></span><span class="rail"><i></i></span><span class="nm">英語<small>つぎ</small><span>長文読解</span></span><span class="ic" style="--c:var(--s-en)">ABC</span></li>
+                <li><span class="tm">19:00<small>20:00</small></span><span class="rail"><i></i></span><span class="nm">数学<span>青チャート</span></span><span class="ic pi" style="--c:var(--s-ma)">π</span></li>
+              </ol>
+            </div>
+            <figcaption>6限までは学校の時間割。放課後からは、Inchly に自分で入れる。</figcaption>
+          </figure>
         </div>
-        <p class="window-note">見本の記録です</p>
       </div>
     </div>
   </div>
 </section>
 
-<div class="ticker" id="ticker" aria-hidden="true">
-  <div class="ticker-track"><span>時間割から始める</span><span>止めたら記録</span><span>やった日は緑のマス</span><span>炎で数える連続記録</span><span>友だちがいま勉強中</span><span>バッジが集まる</span><span>小学生から受験生まで</span><span>iPhone で使える</span><span>もうすぐ公開</span><span>時間割から始める</span><span>止めたら記録</span><span>やった日は緑のマス</span><span>炎で数える連続記録</span><span>友だちがいま勉強中</span><span>バッジが集まる</span><span>小学生から受験生まで</span><span>iPhone で使える</span><span>もうすぐ公開</span></div>
-  <inch-pal kind="penta" do="crawl" edge="box" at=".2"></inch-pal>
-</div>
-
-<section class="sec" id="features" aria-labelledby="features-h">
-  <div class="wrap">
-    <header class="sec-head">
-      <div>
-        <p class="eyebrow reveal" style="--accent:var(--coral);--i:0">できること · 6つ</p>
-        <h2 class="reveal" style="--i:1" id="features-h">6つの道具。<br><span class="nb">それぞれ、</span><span class="nb">いい仕事をする。</span></h2>
-      </div>
-      <p class="reveal" style="--i:2">時間割、タイマー、記録、連続記録、バッジ、友だち。ひとつずつは小さいけれど、あわせると毎日が少しずつ前に進む。さわってみて。</p>
-    </header>
-
-    <div class="pals">
-      <div class="reveal" style="--i:3">
-        <article class="pal" id="f-plan" style="--accent:var(--lime)" aria-labelledby="f-plan-h">
-          <div class="habitat">
-            <div class="stops">
-              <button type="button" style="--sc:#5856D6"><b>17:00</b><i aria-hidden="true"></i><span>英語</span><small>長文読解</small></button>
-              <button type="button" style="--sc:#FF9500"><b>19:00</b><i aria-hidden="true"></i><span>数学</span><small>青チャート</small></button>
-              <button type="button" style="--sc:#D9A300"><b>21:00</b><i aria-hidden="true"></i><span>国語</span><small>古文単語</small></button>
+<!-- ============ 17:00 時間割とタイマー（押す所は、ここの1つだけ） ============ -->
+<section class="leg" data-sky="1" aria-labelledby="h1700">
+  <div class="wrap leg-in">
+    <article class="station" data-t="17:00" id="t1700">
+      <div class="st-time"><span class="pix" data-pix="17:00"></span><span class="st-name"><span class="nb">時間割と</span><span class="nb">タイマー</span></span></div>
+      <span class="stop" aria-hidden="true"></span>
+      <div class="st-body">
+        <div class="st-cols timer-cols">
+          <div class="st-copy">
+            <h2 id="h1700">お知らせが来たら、<br><span class="nb">押すだけ。</span></h2>
+            <p>時間割に入れた予定は、1日の1本の線にならぶ。終わったところは実線、これからは点線、いまの時刻に赤い点。このページの左の線も、同じ見方。</p>
+            <p>予定の時刻になると、お知らせが届く。下のバーの「勉強を開始」を1回押せば、もう始まっている。予定がないときは「自習」で始めて、あとで科目に仕分ける。</p>
+          </div>
+          <div class="st-visual room-wrap">
+            <div class="room" id="room">
+              <svg class="art" viewBox="0 0 160 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+                <rect width="160" height="120" fill="#f0cfa6"/>
+                <!-- window: the sky at five o'clock -->
+                <rect x="84" y="10" width="54" height="50" fill="#1b1726"/>
+                <rect x="86" y="12" width="50" height="14" fill="#f4a067"/>
+                <rect x="86" y="26" width="50" height="12" fill="#f7bd83"/>
+                <rect x="86" y="38" width="50" height="20" fill="#fbd8a6"/>
+                <rect x="86" y="46" width="9" height="12" fill="#a5687a"/><rect x="95" y="42" width="7" height="16" fill="#a5687a"/><rect x="102" y="49" width="12" height="9" fill="#a5687a"/>
+                <rect x="114" y="40" width="6" height="18" fill="#a5687a"/><rect x="120" y="47" width="16" height="11" fill="#a5687a"/>
+                <rect x="110" y="12" width="2" height="46" fill="#1b1726"/><rect x="86" y="34" width="50" height="2" fill="#1b1726"/>
+                <rect x="80" y="60" width="62" height="4" fill="#1b1726"/>
+                <!-- light falling on the desk (only while studying) -->
+                <polygon class="cone" points="45,45 57,45 98,92 18,92" fill="#ffd166"/>
+                <rect class="lit" x="20" y="92" width="76" height="3" fill="#fff3c4"/>
+                <!-- desk -->
+                <rect x="0" y="92" width="160" height="28" fill="#c98d5c"/>
+                <rect x="0" y="92" width="160" height="2" fill="#1b1726"/>
+                <rect x="0" y="104" width="160" height="1" fill="#a9703f"/>
+                <!-- lamp -->
+                <rect x="24" y="88" width="20" height="4" fill="#1b1726"/>
+                <rect x="32" y="80" width="3" height="8" fill="#1b1726"/>
+                <rect x="34" y="72" width="3" height="8" fill="#1b1726"/>
+                <rect x="36" y="64" width="3" height="8" fill="#1b1726"/>
+                <rect x="38" y="56" width="3" height="8" fill="#1b1726"/>
+                <rect x="40" y="48" width="3" height="8" fill="#1b1726"/>
+                <rect x="38" y="35" width="22" height="4" fill="#1b1726"/>
+                <rect x="41" y="39" width="20" height="4" fill="#1b1726"/>
+                <rect x="43" y="43" width="16" height="2" fill="#3b3448"/>
+                <rect class="bulb" x="46" y="45" width="10" height="2"/>
+                <!-- a notebook -->
+                <rect x="100" y="86" width="34" height="6" fill="#fffcf5"/><rect x="100" y="86" width="34" height="1" fill="#1b1726"/><rect x="100" y="91" width="34" height="1" fill="#1b1726"/><rect x="116" y="86" width="2" height="6" fill="#5856D6"/>
+              </svg>
+              <div class="stand-in"><div class="rp"><img src="img/timer-idle.webp" alt="机の上のスマホに、アプリのタイマーの画面。英語 長文読解、17:00から18:00、0:00。" width="786" height="1704" loading="lazy" decoding="async"><span class="stand-live" aria-hidden="true"><i></i><span class="pix" id="stand-pix" data-pix="0:00"></span></span></div></div>
+              <div class="desk-top" id="desk"></div>
             </div>
-            <inch-pal kind="jiri" do="perch" on="#f-plan .stops button" scale="3"></inch-pal>
-            <span class="h-tip" aria-hidden="true">ふれてみて</span>
+            <inch-pal id="jiri" kind="jiri" do="sit" on="#desk" edge="box" at=".93" scale="3"></inch-pal>
           </div>
-          <div class="pal-body">
-            <div class="pal-top"><h3 id="f-plan-h">時間割</h3><span class="pal-no">No.01 · ならべる</span></div>
-            <p>1日の予定を、1本の線にならべる。次の予定は、画面の下のバーにいつも出る。時間が来たら、お知らせも届く。</p>
-            <ul class="traits"><li>予定</li><li>締切まであと何日</li><li>ちょっとせっかち</li></ul>
-            <div class="snip"><code>次 · 17:00 <b>英語 長文読解</b></code><a class="snip-go" href="#s-study" aria-label="時間割の画面へ">画面 <span aria-hidden="true">↓</span></a></div>
-          </div>
-        </article>
-      </div>
-
-      <div class="reveal" style="--i:4">
-        <article class="pal" id="f-timer" style="--accent:var(--coral)" aria-labelledby="f-timer-h">
-          <div class="habitat">
-            <div class="h-timer">
-              <p class="h-time" id="ft-time" role="timer">00:00</p>
-              <button type="button" class="h-btn lime" id="ft-go" aria-label="はかる">▶&#xFE0E;</button>
+          <div class="ctl">
+            <div class="appbar" role="group" aria-label="勉強バーの見本">
+              <span class="bar-tag" aria-hidden="true">見本</span>
+              <span class="bar-tile" aria-hidden="true">A<i class="bar-live"></i></span>
+              <div class="bar-text">
+                <p class="bar-title"><b>英語</b>長文読解</p>
+                <p class="bar-sub"><span class="pix" id="ro-time" data-pix="0:00"></span><span id="ro-plan">予定 1時間　17:00〜18:00</span></p>
+              </div>
+              <button type="button" class="btn btn-lime" id="go" data-act="go" aria-describedby="msg"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg><span>勉強を開始</span></button>
+              <span class="bar-prog" aria-hidden="true"><i id="ro-fill"></i></span>
             </div>
-            <inch-pal kind="penta" do="crawl" on="#ft-time" scale="3"></inch-pal>
-            <span class="h-tip" aria-hidden="true">押してみて</span>
+            <p class="msg" id="msg">見本です。1秒で3分すすみます。<span class="nb">どこにも保存しません。</span></p>
           </div>
-          <div class="pal-body">
-            <div class="pal-top"><h3 id="f-timer-h">タイマー</h3><span class="pal-no">No.02 · はかる</span></div>
-            <p>押したら、もう始まっている。予定の時間をすぎても、止めるまではかる。<span class="nb">✓ を押せば、</span>そのまま今日の記録に。</p>
-            <ul class="traits"><li>ワンタップ</li><li>0時またぎもOK</li><li>せかさない</li></ul>
-            <div class="snip"><code>勉強中 · <b>英語 39:20</b></code><a class="snip-go" href="#s-timer" aria-label="タイマーの画面へ">画面 <span aria-hidden="true">↓</span></a></div>
-          </div>
-        </article>
+          <figure class="shot" style="--k:1;--bc:var(--b1)">
+            <div class="stand">
+              <button type="button" class="phone" aria-label="時間割の画面を大きく見る"><img src="img/study.webp" alt="アプリの時間割の画面。10月29日（木）の予定が1本の線にならぶ。6:30 国語 古文単語は完了、いまの時刻 7:32 に赤い線、17:00 英語 長文読解、19:00 数学 青チャート。下に締切：第4回 記述模試まであと10日。" width="786" height="1704" loading="lazy" decoding="async"><span class="lens" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="m10.4 10.4 3.4 3.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span></button>
+              <span class="plinth" aria-hidden="true"></span><span class="floor" aria-hidden="true"></span>
+            </div>
+            <figcaption><b>時間割の画面</b>模試や入試の日は「締切」に入れておくと、あと何日かと ToDo の進みが見える。</figcaption>
+          </figure>
+        </div>
       </div>
+    </article>
+  </div>
+</section>
 
-      <div class="reveal" style="--i:5">
-        <article class="pal" id="f-record" style="--accent:var(--violet)" aria-labelledby="f-record-h">
-          <div class="habitat">
-            <div class="mini-grass" role="group" aria-label="勉強した日のマス"><button type="button" data-level="3" aria-label="1週目の日曜日 濃さ3"></button><button type="button" data-level="3" aria-label="1週目の月曜日 濃さ3"></button><button type="button" data-level="3" aria-label="1週目の火曜日 濃さ3"></button><button type="button" data-level="1" aria-label="1週目の水曜日 濃さ1"></button><button type="button" data-level="0" aria-label="1週目の木曜日 濃さ0"></button><button type="button" data-level="3" aria-label="1週目の金曜日 濃さ3"></button><button type="button" data-level="4" aria-label="1週目の土曜日 濃さ4"></button><button type="button" data-level="3" aria-label="2週目の日曜日 濃さ3"></button><button type="button" data-level="4" aria-label="2週目の月曜日 濃さ4"></button><button type="button" data-level="0" aria-label="2週目の火曜日 濃さ0"></button><button type="button" data-level="1" aria-label="2週目の水曜日 濃さ1"></button><button type="button" data-level="0" aria-label="2週目の木曜日 濃さ0"></button><button type="button" data-level="4" aria-label="2週目の金曜日 濃さ4"></button><button type="button" data-level="1" aria-label="2週目の土曜日 濃さ1"></button><button type="button" data-level="3" aria-label="3週目の日曜日 濃さ3"></button><button type="button" data-level="1" aria-label="3週目の月曜日 濃さ1"></button><button type="button" data-level="0" aria-label="3週目の火曜日 濃さ0"></button><button type="button" data-level="3" aria-label="3週目の水曜日 濃さ3"></button><button type="button" data-level="2" aria-label="3週目の木曜日 濃さ2"></button><button type="button" data-level="2" aria-label="3週目の金曜日 濃さ2"></button><button type="button" data-level="3" aria-label="3週目の土曜日 濃さ3"></button><button type="button" data-level="1" aria-label="4週目の日曜日 濃さ1"></button><button type="button" data-level="0" aria-label="4週目の月曜日 濃さ0"></button><button type="button" data-level="1" aria-label="4週目の火曜日 濃さ1"></button><button type="button" data-level="2" aria-label="4週目の水曜日 濃さ2"></button><button type="button" data-level="0" aria-label="4週目の木曜日 濃さ0"></button><button type="button" data-level="4" aria-label="4週目の金曜日 濃さ4"></button><button type="button" data-level="0" aria-label="4週目の土曜日 濃さ0"></button><button type="button" data-level="2" aria-label="5週目の日曜日 濃さ2"></button><button type="button" data-level="3" aria-label="5週目の月曜日 濃さ3"></button><button type="button" data-level="3" aria-label="5週目の火曜日 濃さ3"></button><button type="button" data-level="2" aria-label="5週目の水曜日 濃さ2"></button><button type="button" data-level="1" aria-label="5週目の木曜日 濃さ1"></button><button type="button" data-level="3" aria-label="5週目の金曜日 濃さ3"></button><button type="button" data-level="1" aria-label="5週目の土曜日 濃さ1"></button><button type="button" data-level="2" aria-label="6週目の日曜日 濃さ2"></button><button type="button" data-level="0" aria-label="6週目の月曜日 濃さ0"></button><button type="button" data-level="3" aria-label="6週目の火曜日 濃さ3"></button><button type="button" data-level="4" aria-label="6週目の水曜日 濃さ4"></button><button type="button" data-level="3" aria-label="6週目の木曜日 濃さ3"></button><button type="button" data-level="1" aria-label="6週目の金曜日 濃さ1"></button><button type="button" data-level="4" aria-label="6週目の土曜日 濃さ4"></button><button type="button" data-level="1" aria-label="7週目の日曜日 濃さ1"></button><button type="button" data-level="1" aria-label="7週目の月曜日 濃さ1"></button><button type="button" data-level="2" aria-label="7週目の火曜日 濃さ2"></button><button type="button" data-level="3" aria-label="7週目の水曜日 濃さ3"></button><button type="button" data-level="1" aria-label="7週目の木曜日 濃さ1"></button><button type="button" data-level="3" aria-label="7週目の金曜日 濃さ3"></button><button type="button" data-level="3" aria-label="7週目の土曜日 濃さ3"></button><button type="button" data-level="2" aria-label="8週目の日曜日 濃さ2"></button><button type="button" data-level="2" aria-label="8週目の月曜日 濃さ2"></button><button type="button" data-level="1" aria-label="8週目の火曜日 濃さ1"></button><button type="button" data-level="1" aria-label="8週目の水曜日 濃さ1"></button><button type="button" data-level="3" aria-label="8週目の木曜日 濃さ3"></button><button type="button" data-level="2" aria-label="8週目の金曜日 濃さ2"></button><button type="button" data-level="2" aria-label="8週目の土曜日 濃さ2"></button><button type="button" data-level="2" aria-label="9週目の日曜日 濃さ2"></button><button type="button" data-level="2" aria-label="9週目の月曜日 濃さ2"></button><button type="button" data-level="2" aria-label="9週目の火曜日 濃さ2"></button><button type="button" data-level="3" aria-label="9週目の水曜日 濃さ3"></button><button type="button" data-level="3" aria-label="9週目の木曜日 濃さ3"></button><button type="button" data-level="3" aria-label="9週目の金曜日 濃さ3"></button><button type="button" data-level="1" aria-label="9週目の土曜日 濃さ1"></button><button type="button" data-level="3" aria-label="10週目の日曜日 濃さ3"></button><button type="button" data-level="4" aria-label="10週目の月曜日 濃さ4"></button><button type="button" data-level="2" aria-label="10週目の火曜日 濃さ2"></button><button type="button" data-level="3" aria-label="10週目の水曜日 濃さ3"></button><button type="button" data-level="3" aria-label="10週目の木曜日 濃さ3"></button><button type="button" data-level="2" aria-label="10週目の金曜日 濃さ2"></button><button type="button" data-level="3" aria-label="10週目の土曜日 濃さ3"></button><button type="button" data-level="2" aria-label="11週目の日曜日 濃さ2"></button><button type="button" data-level="3" aria-label="11週目の月曜日 濃さ3"></button><button type="button" data-level="2" aria-label="11週目の火曜日 濃さ2"></button><button type="button" data-level="4" aria-label="11週目の水曜日 濃さ4"></button><button type="button" data-level="2" aria-label="11週目の木曜日 濃さ2"></button><button type="button" data-level="2" aria-label="11週目の金曜日 濃さ2"></button><button type="button" data-level="2" aria-label="11週目の土曜日 濃さ2"></button><button type="button" data-level="1" aria-label="12週目の日曜日 濃さ1"></button><button type="button" data-level="4" aria-label="12週目の月曜日 濃さ4"></button><button type="button" data-level="2" aria-label="12週目の火曜日 濃さ2"></button><button type="button" data-level="3" aria-label="12週目の水曜日 濃さ3"></button><button type="button" data-level="3" aria-label="12週目の木曜日 濃さ3"></button><button type="button" data-level="2" aria-label="12週目の金曜日 濃さ2"></button><button type="button" data-level="3" class="today" aria-label="12週目の土曜日（今日） 濃さ3"></button></div>
-            <inch-pal kind="mebu" do="sit" on="#f-record .mini-grass" edge="box" at=".6" scale="3"></inch-pal>
-            <span class="h-tip" aria-hidden="true">マスを押す</span>
+<!-- ============ 18:35 記録 ============ -->
+<section class="leg" data-sky="2" aria-labelledby="h1835">
+  <div class="wrap leg-in">
+    <article class="station" data-t="18:35" id="t1835">
+      <div class="st-time"><span class="pix" data-pix="18:35"></span><span class="st-name">記録</span></div>
+      <span class="stop" aria-hidden="true"></span>
+      <div class="st-body">
+        <div class="st-cols rec-cols">
+          <div class="st-copy">
+            <h2 id="h1835">チェックを押して、<br><span class="nb">今日の記録に。</span></h2>
+            <p>終わったら、チェックのボタン。投稿を書くように、ひとことメモを残せる（140字まで）。時間は5分ずつ直せる。タイムラインにも出すかは、そのつど選ぶ。</p>
+            <p class="fine">0時をまたいだ勉強は、日ごとに分けて記録する。</p>
           </div>
-          <div class="pal-body">
-            <div class="pal-top"><h3 id="f-record-h">記録</h3><span class="pal-no">No.03 · のびる</span></div>
-            <p>勉強した日は、マスが緑に。<span class="nb">たくさん</span>やった日ほど、濃くなる。昨日との差も、すぐ分かる。</p>
-            <ul class="traits"><li>草</li><li>昨日との差</li><li>見られると照れる</li></ul>
-            <div class="snip"><code>今日 <b>2時間45分</b> ▲1:17</code><a class="snip-go" href="#s-home" aria-label="ホームの画面へ">画面 <span aria-hidden="true">↓</span></a></div>
+          <div class="st-visual rec-vis">
+            <div class="slip">
+              <h3>今日の記録 <small>見本</small></h3>
+              <ol class="log" id="log">
+                <li style="--c:var(--s-en)"><span class="lt">17:00</span><i class="lc" aria-hidden="true"></i><span class="lw"><b>英語</b><small>長文読解</small></span><span class="ld"><span>1時間35分</span><span id="add-slot"></span></span></li>
+                <li style="--c:var(--s-ja)"><span class="lt">6:30</span><i class="lc" aria-hidden="true"></i><span class="lw"><b>国語</b><small>古文単語</small></span><span class="ld"><span>30分</span></span></li>
+              </ol>
+            </div>
+            <figure class="shot col" style="--k:2;--bc:var(--b2)">
+              <div class="stand">
+                <button type="button" class="phone" aria-label="タイムラインの画面を大きく見る"><img src="img/timeline.webp" alt="アプリのタイムラインの画面。友だちの投稿に「勉強の記録」が付く。kaito：物理 名問の森 15〜18、1時間10分。" width="786" height="1704" loading="lazy" decoding="async"><span class="lens" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="m10.4 10.4 3.4 3.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span></button>
+                <span class="plinth" aria-hidden="true"></span><span class="floor" aria-hidden="true"></span>
+              </div>
+              <figcaption><b>タイムラインの画面</b>友だちの投稿に「勉強の記録」が付く。</figcaption>
+            </figure>
           </div>
-        </article>
+        </div>
       </div>
+    </article>
+  </div>
+</section>
 
-      <div class="reveal" style="--i:6">
-        <article class="pal" id="f-streak" style="--accent:var(--sun)" aria-labelledby="f-streak-h">
-          <div class="habitat">
-            <ol class="days" aria-label="今週の連続記録">
-              <li class="on"><i aria-hidden="true"></i><span>月</span><span class="sr">達成</span></li>
-              <li class="on"><i aria-hidden="true"></i><span>火</span><span class="sr">達成</span></li>
-              <li class="on"><i aria-hidden="true"></i><span>水</span><span class="sr">達成</span></li>
-              <li class="on today"><i aria-hidden="true"></i><span>木</span><span class="sr">達成（今日）</span></li>
-              <li><i aria-hidden="true"></i><span>金</span></li>
-              <li><i aria-hidden="true"></i><span>土</span></li>
-              <li><i aria-hidden="true"></i><span>日</span></li>
+<!-- ============ 19:45 続けた日数：今日の塔と7日の塔 ============ -->
+<section class="leg" data-sky="3" aria-labelledby="h1945">
+  <div class="wrap leg-in">
+    <article class="station" data-t="19:45" id="t1945">
+      <div class="st-time"><span class="pix" data-pix="19:45"></span><span class="st-name">続けた日数</span></div>
+      <span class="stop" aria-hidden="true"></span>
+      <div class="st-body">
+        <div class="st-cols day-cols">
+          <div class="st-copy">
+            <h2 id="h1945">続けた日が、<br>目に見える。</h2>
+            <p>数学が終わって、今日は2時間45分。1回の勉強が、科目の色のブロックになって<span class="nb">つみ上がる。</span></p>
+            <dl class="facts">
+              <div><dt>連続記録</dt><dd>続けた日数を、炎といっしょに数える。7日続けるごとに休み券が1枚（3枚まで）。休んだ日に自動で使われて、連続が切れない。</dd></div>
+              <div><dt>バッジとレベル</dt><dd>100時間、7日連続。目標に届くと、バッジがもらえる。<span class="nb">勉強1分で 1 EXP。</span>レベルも上がる。</dd></div>
+            </dl>
+          </div>
+
+          <div class="cards">
+            <div class="card" role="group" aria-labelledby="tw-h">
+              <p class="card-h"><span id="tw-h">今日の勉強</span><small>見本　1マス＝5分　色は科目</small></p>
+              <div class="tw-row">
+                <div class="axis" aria-hidden="true"><span class="ax-goal">目標<br>3時間</span><span class="ax-4h">4時間</span><span class="ax-unit">5分</span></div>
+                <div class="tower" id="tower" style="--top:33" aria-hidden="true">
+                  <div class="goal"></div>
+                  <div class="tick4"></div>
+                  <div id="blocks"></div>
+                  <canvas class="flame" id="flame" width="39" height="54"></canvas>
+                </div>
+                <div class="panel" id="panel" tabindex="-1">
+                  <p class="total" id="total"><span>2</span><small>時間</small><span>45</span><small>分</small></p>
+                  <p class="delta"><span id="delta">▲1:17</span> 昨日より</p>
+                  <p class="goal-left" id="goal-left">目標まで 0:15</p>
+                </div>
+              </div>
+            </div>
+
+            <figure class="card week" id="week" role="group" aria-labelledby="wk-h">
+              <p class="card-h"><span id="wk-h">この7日間</span><small>1本が1日</small></p>
+              <div class="wk-top">
+                <div class="wk-sum"><span class="wk-total"><span id="wk-total">20.0</span><small>時間</small></span><span class="wk-delta" id="wk-delta">▲2.2時間 先週より</span></div>
+                <div class="seg" role="group" aria-label="見る向き">
+                  <button type="button" data-view="side" aria-pressed="true">横から</button>
+                  <button type="button" data-view="top" aria-pressed="false">真上から</button>
+                </div>
+              </div>
+              <div class="wk-chart" id="wk-chart" role="img" aria-label="この7日間の見本。金 3時間25分、土 2時間45分、日 5時間、月 2時間10分、火 2時間30分、水 1時間25分、今日 2時間45分。1日の目標は3時間。">
+                <div class="wk-goal"><span>目標 3時間</span></div>
+                <div class="wk-t" style="--t:41;--lv:var(--g4)"><i style="--h:18;--c:var(--s-ma)"></i><i style="--h:23;--c:var(--s-ma)"></i></div>
+                <div class="wk-t" style="--t:33;--lv:var(--g3)"><i style="--h:12;--c:var(--s-en)"></i><i style="--h:10;--c:var(--s-ma)"></i><i style="--h:11;--c:var(--s-ma)"></i></div>
+                <div class="wk-t" style="--t:60;--lv:var(--g4)"><i style="--h:18;--c:var(--s-en)"></i><i style="--h:18;--c:var(--s-en)"></i><i style="--h:12;--c:var(--s-ma)"></i><i style="--h:12;--c:var(--s-ma)"></i></div>
+                <div class="wk-t" style="--t:26;--lv:var(--g2)"><i style="--h:15;--c:var(--s-en)"></i><i style="--h:11;--c:var(--s-ma)"></i></div>
+                <div class="wk-t" style="--t:30;--lv:var(--g3)"><i style="--h:16;--c:var(--s-en)"></i><i style="--h:14;--c:var(--s-ma)"></i></div>
+                <div class="wk-t" style="--t:17;--lv:var(--g2)"><i style="--h:5;--c:var(--s-ma)"></i><i style="--h:12;--c:var(--s-ch)"></i></div>
+                <div class="wk-t" id="wk-today" style="--t:33;--lv:var(--g3)"><i style="--h:6;--c:var(--s-ja)"></i><i style="--h:19;--c:var(--s-en)"></i><i style="--h:8;--c:var(--s-ma)"></i></div>
+              </div>
+              <div class="wk-days" aria-hidden="true"><span>金</span><span>土</span><span>日</span><span>月</span><span>火</span><span>水</span><span>今日</span></div>
+              <figcaption class="wk-cap" id="wk-cap" aria-live="polite">色は科目、高さは時間。</figcaption>
+            </figure>
+          </div>
+
+          <div class="read">
+            <div class="stand">
+              <button type="button" class="phone" aria-label="ホームの画面を大きく見る"><img src="img/home-2.webp" alt="アプリのホームの画面。今日の勉強は2時間45分。英語・数学・国語の色のテープに、0から4時間の目盛りと「目標 3h」の印。下にバッジ 7 / 11。" width="786" height="1704" loading="lazy" decoding="async"><span class="callout" aria-hidden="true"></span><span class="lens" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="m10.4 10.4 3.4 3.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span></button>
+              <span class="plinth" aria-hidden="true"></span><span class="floor" aria-hidden="true"></span>
+            </div>
+            <div class="read-body">
+              <h3 class="read-h">読み方</h3>
+              <p class="read-p">塔は、ホームの「今日の勉強」の<span class="nb">テープ（赤い枠）を</span>立てたもの。</p>
+              <dl class="howread">
+                <div><dt><i class="ico ico-tape" aria-hidden="true"></i>色のテープ</dt><dd>科目ごとの時間。<span class="nb tn">英語 <span id="lg-en">1:35</span>、</span><span class="nb tn">数学 0:40、</span><span class="nb tn">国語 0:30。</span></dd></div>
+                <div><dt><i class="ico ico-tick" aria-hidden="true"></i>0〜4h の目盛り</dt><dd>1時間ごとに長い線。</dd></div>
+                <div><dt><i class="ico ico-goal" aria-hidden="true"></i>目標 3h の線</dt><dd>1日の目標。<span class="nb tn">「目標まで 0:15」</span>も出る。</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 22:00 友だち / 22:30 使い方 / おうちの方へ ============ -->
+<section class="leg" data-sky="4" aria-label="22:00 から：友だち、使い方、おうちの方へ">
+  <div class="wrap leg-in">
+    <article class="station" data-t="22:00" id="t2200" aria-labelledby="h2200">
+      <div class="st-time"><span class="pix" data-pix="22:00"></span><span class="st-name">友だち</span></div>
+      <span class="stop" aria-hidden="true"></span>
+      <div class="st-body">
+        <div class="st-cols">
+          <div class="st-copy">
+            <h2 id="h2200">ひとりの夜も、<br><span class="nb">だれかが机に向かう。</span></h2>
+            <p>いま勉強中の友だちが、科目と時間といっしょに並ぶ。だれかが始めたら、「一緒に始める」をひと押し。<span class="nb">同じ志望校の人で</span>しぼったり、グループで集まったりもできる。</p>
+            <p class="fine">勉強中を見せる相手は、設定で決められる。</p>
+          </div>
+          <div class="st-visual night-cols">
+            <div class="bldg-wrap">
+              <div class="bldg" role="list" aria-label="いま勉強中（見本）">
+                <div class="win lit" role="listitem" style="--c:var(--s-en)"><b>mio</b><span class="tm">英語 4:11</span></div>
+                <div class="win" aria-hidden="true"></div>
+                <div class="win lit" role="listitem" style="--c:var(--s-ph)"><b>kaito</b><span class="tm">物理 3:12</span></div>
+                <div class="win lit" role="listitem" style="--c:var(--s-ch)"><b>ゆなっぴ</b><span class="tm">化学 2:36</span></div>
+                <div class="win you" role="listitem" id="win-you"><b>あなた</b><span class="tm" id="win-you-t">まだ暗い</span></div>
+                <div class="win lit" role="listitem" style="--c:var(--s-ma)"><b>そら</b><span class="tm">数学 2:00</span></div>
+              </div>
+              <div class="bldg-sill" aria-hidden="true"></div>
+              <p class="hint" id="win-hint"><a href="#t1700">17:00 の「勉強を開始」</a>を押すと、<span class="nb">あなたの窓にも</span>灯りがつく。</p>
+            </div>
+            <figure class="shot" style="--k:4;--bc:var(--b4)">
+              <div class="stand">
+                <button type="button" class="phone" aria-label="みんなの画面を大きく見る"><img src="img/community.webp" alt="アプリの「みんな」の画面。いま勉強中の人が、名前・科目・時間といっしょに並ぶ。あなた 国語 39分、mio 英語、そら 数学など12人。" width="786" height="1704" loading="lazy" decoding="async"><span class="lens" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="m10.4 10.4 3.4 3.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span></button>
+                <span class="plinth" aria-hidden="true"></span><span class="floor" aria-hidden="true"></span>
+              </div>
+              <figcaption><b>みんなの画面</b>いま勉強中の人と、ランキングとグループ。</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="station next" data-t="22:30" id="how" aria-labelledby="h2230">
+      <div class="st-time"><span class="pix" data-pix="22:30"></span><span class="st-name">使い方</span></div>
+      <span class="stop" aria-hidden="true"></span>
+      <div class="st-body">
+        <div class="st-cols how-cols">
+          <div class="st-copy">
+            <h2 id="h2230">入れるのは予定だけ。<br><span class="nb">あとは押すだけ。</span></h2>
+            <ol class="how-line">
+              <li><span class="when">今夜</span><h3>あしたの時間割に入れる。</h3><p>日にちと時間と科目を入れておく。</p></li>
+              <li><span class="when">あした 17:00</span><h3>「勉強を開始」を押す。</h3><p>お知らせが来たら、下のバーから1回。</p></li>
+              <li><span class="when">終わったら</span><h3>チェックで記録。</h3><p>ひとことは書かなくてもいい。時間はそのまま今日の記録に。</p></li>
             </ol>
-            <inch-pal kind="bo" do="bounce" on="#f-streak .days" scale="3"></inch-pal>
-            <span class="h-tip" aria-hidden="true">つついて</span>
           </div>
-          <div class="pal-body">
-            <div class="pal-top"><h3 id="f-streak-h">連続記録</h3><span class="pal-no">No.04 · つづく</span></div>
-            <p>続けた日数を、炎といっしょに数える。7日続けると休み券がもらえて、1日休んでも切れない。</p>
-            <ul class="traits"><li>連続日数</li><li>休み券</li><li>消えるのがこわい</li></ul>
-            <div class="snip"><code><b>23日連続</b> · 休み券 2枚</code><a class="snip-go" href="#s-home" aria-label="ホームの画面へ">画面 <span aria-hidden="true">↓</span></a></div>
-          </div>
-        </article>
-      </div>
-
-      <div class="reveal" style="--i:7">
-        <article class="pal" id="f-badge" style="--accent:var(--sky)" aria-labelledby="f-badge-h">
-          <div class="habitat">
-            <img class="h-badges" src="img/part-badges.webp" alt="アプリのバッジ：100時間、300時間、500時間、7日連続、21日連続。7 / 11 達成。" width="726" height="252" loading="lazy" decoding="async">
-            <inch-pal kind="tsuru" do="perch" on="#f-badge .h-badges" scale="2"></inch-pal>
-            <span class="h-tip" aria-hidden="true">ながめる</span>
-          </div>
-          <div class="pal-body">
-            <div class="pal-top"><h3 id="f-badge-h">バッジ</h3><span class="pal-no">No.05 · あつめる</span></div>
-            <p>100時間、7日連続。目標に届くと、バッジがもらえる。勉強するほど、レベルも上がる。</p>
-            <ul class="traits"><li>バッジ</li><li>レベル</li><li>EXP</li></ul>
-            <div class="snip"><code><b>LV.25</b> · バッジ 7 / 11</code><a class="snip-go" href="#s-me" aria-label="マイページの画面へ">画面 <span aria-hidden="true">↓</span></a></div>
-          </div>
-        </article>
-      </div>
-
-      <div class="reveal" style="--i:8">
-        <article class="pal" id="f-friends" style="--accent:var(--mint)" aria-labelledby="f-friends-h">
-          <div class="habitat">
-            <ul class="h-people" aria-label="いま勉強中の友だち（見本）">
-              <li style="--c:#5856D6"><i class="mp" aria-hidden="true"></i><span>英語 4:11</span></li>
-              <li style="--c:#3B82F6"><i class="mp" aria-hidden="true"></i><span>物理 3:12</span></li>
-              <li style="--c:#10B981"><i class="mp" aria-hidden="true"></i><span>化学 2:36</span></li>
-              <li style="--c:#FF9500"><i class="mp" aria-hidden="true"></i><span>数学 2:00</span></li>
-            </ul>
-            <button type="button" class="h-btn lime" id="ff-together">一緒に始める</button>
-            <span class="h-tip" aria-hidden="true">押してみて</span>
-          </div>
-          <div class="pal-body">
-            <div class="pal-top"><h3 id="f-friends-h">友だち</h3><span class="pal-no">No.06 · ならぶ</span></div>
-            <p>いま勉強中の友だちが、科目と時間といっしょに並ぶ。友だちが始めたら、「一緒に始める」をひと押し。</p>
-            <ul class="traits"><li>いま勉強中</li><li>一緒に始める</li><li>グループ</li></ul>
-            <div class="snip"><code><b>mio</b> · 英語を勉強中 · 4:11</code><a class="snip-go" href="#s-community" aria-label="友だちの画面へ">画面 <span aria-hidden="true">↓</span></a></div>
-          </div>
-        </article>
-      </div>
-    </div>
-
-    <p class="note reveal" style="--i:9">カードの中の名前と数字は見本です。</p>
-    <div class="more reveal" style="--i:10"><a class="btn" href="#screens">アプリの画面を見る <span aria-hidden="true">↓</span></a></div>
-  </div>
-</section>
-
-<section class="sec" id="subjects" aria-labelledby="subjects-h">
-  <div class="wrap">
-    <header class="sec-head">
-      <div>
-        <p class="eyebrow reveal" style="--accent:var(--sun);--i:0">科目 · 12の顔</p>
-        <h2 class="reveal" style="--i:1" id="subjects-h">科目ごとに、<br>小さな顔。</h2>
-      </div>
-      <p class="reveal" style="--i:2">英語は吹き出し、数学はπ、化学はフラスコ。アプリでは科目に絵がつく。ここではドット絵にして、動かしてみた。カーソルを動かしたり、さわったりしてみて。</p>
-    </header>
-
-    <div class="bigstage reveal" style="--i:3">
-      <div class="bs-grid">
-        <inch-face name="en" size="200"></inch-face>
-        <inch-face name="ma" size="200"></inch-face>
-        <inch-face name="ch" size="200"></inch-face>
-      </div>
-      <div class="bs-bar">
-        <span class="bs-label">大きな顔 · 指やカーソルのほうを向く</span>
-        <div class="seg bs-modes" data-face-look role="group" aria-label="顔の描き方">
-          <button type="button" data-look="square" aria-pressed="true">ドット</button>
-          <button type="button" data-look="round" aria-pressed="false">まる</button>
-          <button type="button" data-look="dot" aria-pressed="false">てん</button>
+          <figure class="shot">
+            <div class="stand">
+              <button type="button" class="phone" aria-label="勉強中のタイマーの画面を大きく見る"><img src="img/timer-live.webp" alt="アプリのタイマーの画面。国語 古文単語を勉強中で、39:59、のこり20分1秒。下に一時停止のボタンとチェック。" width="786" height="1704" loading="lazy" decoding="async"><span class="lens" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="m10.4 10.4 3.4 3.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span></button>
+              <span class="plinth" aria-hidden="true"></span><span class="floor" aria-hidden="true"></span>
+            </div>
+            <figcaption><b>勉強中のタイマーの画面</b></figcaption>
+          </figure>
         </div>
       </div>
-    </div>
+    </article>
 
-    <div class="shelf reveal" style="--i:4">
-      <button type="button" class="shelf-cell"><inch-face name="en" scale="5"></inch-face><span>英語</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="ma" scale="5"></inch-face><span>数学</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="ja" scale="5"></inch-face><span>国語</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="ph" scale="5"></inch-face><span>物理</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="ch" scale="5"></inch-face><span>化学</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="bi" scale="5"></inch-face><span>生物</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="es" scale="5"></inch-face><span>地学</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="wh" scale="5"></inch-face><span>世界史</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="jh" scale="5"></inch-face><span>日本史</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="ge" scale="5"></inch-face><span>地理</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="ci" scale="5"></inch-face><span>公民</span></button>
-      <button type="button" class="shelf-cell"><inch-face name="it" scale="5"></inch-face><span>情報</span></button>
-    </div>
-    <p class="note reveal" style="--i:5">アプリの科目の絵は線画です。ここではドット絵にしています。</p>
-  </div>
-</section>
-
-<section class="sec" id="together" aria-labelledby="together-h">
-  <div class="wrap">
-    <header class="sec-head">
-      <div>
-        <p class="eyebrow reveal" style="--accent:var(--sky);--i:0">友だち · いま勉強中</p>
-        <h2 class="reveal" style="--i:1" id="together-h">ひとりの夜も、<br>だれかが机に向かう。</h2>
-      </div>
-      <p class="reveal" style="--i:2">アプリでは、いま勉強中の人が科目と時間といっしょに並ぶ。ここにいるのは、見本の小さな人たち。ならべたり、ぶらぶらさせたり、あつめたりしてみて。</p>
-    </header>
-
-    <div class="crowd-stage reveal" style="--i:3">
-      <inch-crowd id="crowd" mode="form" text="がんばろ"></inch-crowd>
-      <div class="bs-bar">
-        <span class="bs-label">みんなの舞台 · 見本</span>
-        <div class="seg bs-modes" data-crowd role="group" aria-label="みんなの動き">
-          <button type="button" data-mode="form" aria-pressed="true">ならぶ</button>
-          <button type="button" data-mode="wander" aria-pressed="false">ぶらぶら</button>
-          <button type="button" data-mode="swarm" aria-pressed="false">あつまる</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="more reveal" style="--i:4"><a class="btn" href="#s-community">友だちの画面を見る <span aria-hidden="true">↓</span></a></div>
-  </div>
-</section>
-
-<section class="sec" id="play" aria-labelledby="play-h">
-  <div class="wrap">
-    <header class="sec-head">
-      <div>
-        <p class="eyebrow reveal" style="--accent:var(--coral);--i:0">がんばると · 気づく</p>
-        <h2 class="reveal" style="--i:1" id="play-h">がんばると、<br>ちゃんと気づく。</h2>
-      </div>
-      <p class="reveal" style="--i:2">始めると、目ざましが鳴る。記録すると、経験値がふえる。友だちが始めると、鶴が知らせる。7日続けると、券が出る。押してみて。</p>
-    </header>
-
-    <div class="play-grid">
-      <div class="play-card reveal" id="p-start" style="--i:3">
-        <p class="readout"></p>
-        <div class="p-act"><button type="button" class="btn btn-lime">勉強を開始</button></div>
-        <inch-pal kind="jiri" do="perch" on="#p-start .btn" scale="3"></inch-pal>
-        <small>ジリ · 押すと鳴る</small>
-      </div>
-      <div class="play-card reveal" id="p-record" style="--i:4">
-        <div class="p-act">
-          <span class="pop" aria-hidden="true">+39 EXP</span>
-          <button type="button" class="btn">✓ 記録する</button>
-        </div>
-        <span class="sr" role="status"></span>
-        <inch-pal kind="penta" do="crawl" on="#p-record .btn" edge="box" scale="3"></inch-pal>
-        <small>EXP · 記録でふえる</small>
-      </div>
-      <div class="play-card reveal" id="p-todo" style="--i:5">
-        <label class="pcap"><input type="checkbox"> <span>今日の ToDo、ぜんぶ終わり</span></label>
-        <inch-pal kind="mebu" do="sit" on="#p-todo .pcap" edge="box" at=".86" scale="3"></inch-pal>
-        <small>めぶ · チェックして</small>
-      </div>
-      <div class="play-card reveal" id="p-together" style="--i:6">
-        <div class="p-act"><button type="button" class="btn">一緒に始める</button></div>
-        <inch-pal kind="tsuru" do="perch" on="#p-together .btn" scale="3"></inch-pal>
-        <small>つる · 知らせを運ぶ</small>
-      </div>
-      <div class="play-card wide reveal" id="p-streak" style="--i:7">
-        <div class="p-week">
-          <div class="days" role="group" aria-label="1週間のマス">
-            <button type="button" aria-pressed="false">月</button>
-            <button type="button" aria-pressed="false">火</button>
-            <button type="button" aria-pressed="false">水</button>
-            <button type="button" aria-pressed="false">木</button>
-            <button type="button" aria-pressed="false">金</button>
-            <button type="button" aria-pressed="false">土</button>
-            <button type="button" aria-pressed="false">日</button>
-          </div>
-          <p class="ticket"><span>休み券 +1</span></p>
-        </div>
-        <inch-pal kind="bo" do="bounce" on="#p-streak .days" scale="3"></inch-pal>
-        <small>ボッ · 7日そろえて</small>
-      </div>
-    </div>
-    <p class="note reveal" style="--i:8">動きは見本です。</p>
-  </div>
-</section>
-
-<section class="sec" id="screens" aria-labelledby="screens-h">
-  <div class="wrap">
-    <header class="sec-head">
-      <div>
-        <p class="eyebrow reveal" style="--accent:var(--lime);--i:0">本物の画面 · 開発中</p>
-        <h2 class="reveal" style="--i:1" id="screens-h">アプリは、<br>こんな見た目。</h2>
-      </div>
-      <p class="reveal" style="--i:2">ホーム、タイマー、時間割、友だち、マイページ、タイムライン。開発中の画面なので、名前と数字は見本です。</p>
-    </header>
-
-    <div class="screens reveal" style="--i:3" tabindex="0" role="region" aria-label="アプリの画面">
-      <figure class="shot" id="s-home">
-        <div class="phone"><img src="img/home.webp" alt="ホーム画面。勉強した日の草のマス、23日連続の炎、いま勉強中の友だち。" width="786" height="1704" loading="lazy" decoding="async"></div>
-        <figcaption>ホーム</figcaption>
-      </figure>
-      <figure class="shot" id="s-timer">
-        <div class="phone"><img src="img/timer-live.webp" alt="タイマー画面。国語 古文単語を勉強中で、39:59 を計測しているところ。" width="786" height="1704" loading="lazy" decoding="async"></div>
-        <figcaption>タイマー</figcaption>
-      </figure>
-      <figure class="shot" id="s-study">
-        <div class="phone"><img src="img/study.webp" alt="時間割の画面。木曜日の予定が1本の線にならび、下に締切までの日数。" width="786" height="1704" loading="lazy" decoding="async"></div>
-        <figcaption>時間割</figcaption>
-      </figure>
-      <figure class="shot" id="s-community">
-        <div class="phone"><img src="img/community.webp" alt="友だちの画面。いま勉強中の人が、科目と時間といっしょに並ぶ。" width="786" height="1704" loading="lazy" decoding="async"></div>
-        <figcaption>友だち</figcaption>
-      </figure>
-      <figure class="shot" id="s-me">
-        <div class="phone"><img src="img/me.webp" alt="マイページ。レベル、合計時間、連続日数と、この7日の勉強時間のグラフ。" width="786" height="1704" loading="lazy" decoding="async"></div>
-        <figcaption>マイページ</figcaption>
-      </figure>
-      <figure class="shot" id="s-timeline">
-        <div class="phone"><img src="img/timeline.webp" alt="タイムライン。友だちの勉強の記録と、ひとことが並ぶ。" width="786" height="1704" loading="lazy" decoding="async"></div>
-        <figcaption>タイムライン</figcaption>
-      </figure>
-    </div>
-
-    <div class="looks reveal" style="--i:4">
-      <div class="looks-copy">
-        <h3>見た目は、ふたつから選べる。</h3>
-        <p>ふだんは明るいスタンダード。気分を変えたい夜は、ネオンの街みたいなサイバー。</p>
-        <div class="seg" data-looks role="group" aria-label="見た目">
-          <button type="button" data-look="standard" aria-pressed="true">スタンダード</button>
-          <button type="button" data-look="cyber" aria-pressed="false">サイバー</button>
-        </div>
-      </div>
-      <div class="looks-stage">
-        <div class="phone"><img id="looks-img" src="img/home.webp" alt="スタンダードの見た目のホーム画面" width="786" height="1704" loading="lazy" decoding="async"></div>
-      </div>
-    </div>
-    <p class="note reveal" style="--i:5">開発中の画面です。名前と数字は見本です。</p>
-  </div>
-</section>
-
-<section class="sec" id="how" aria-labelledby="how-h">
-  <div class="wrap">
-    <header class="sec-head">
-      <div>
-        <p class="eyebrow reveal" style="--accent:var(--sky);--i:0">使い方 · 3つ</p>
-        <h2 class="reveal" style="--i:1" id="how-h">入れるのは予定だけ。<br>あとは押すだけ。</h2>
-      </div>
-      <p class="reveal" style="--i:2">時間割に予定を入れておく。時間が来たら押す。終わったら ✓。それだけで、毎日の勉強が記録になる。</p>
-    </header>
-
-    <div class="how">
-      <ol class="steps">
-        <li class="step reveal" style="--i:3"><h3>時間割に入れる。</h3><p>日にちと時間と科目を入れておく。次の予定は、画面の下のバーにいつも出る。</p></li>
-        <li class="step reveal" style="--i:4"><h3>「勉強を開始」を押す。</h3><p>押したら、もう始まっている。止めるまで、ちゃんとはかる。</p></li>
-        <li class="step reveal" style="--i:5"><h3>✓ で記録。</h3><p>どこまでやったかを一言。書かなくても、時間はそのまま今日の記録に。</p></li>
-      </ol>
-
-      <div class="sandbox reveal" style="--i:6" id="sandbox">
-        <div class="sb-stage" id="sb-stage">
-          <div class="sb-read">
-            <p class="sb-time" id="sb-time" role="timer">00:00</p>
-            <div class="sb-gauge" aria-hidden="true"><i id="sb-bar"></i></div>
-            <p class="sb-left" id="sb-left" aria-hidden="true">−60:00</p>
-          </div>
-          <inch-pal kind="penta" do="crawl" on="#sb-time" scale="3"></inch-pal>
-        </div>
-        <div class="sb-controls">
-          <div class="field"><span>科目</span>
-            <div class="seg" data-sb-subject role="group" aria-label="科目">
-              <button type="button" data-subject="英語" aria-pressed="true">英語</button>
-              <button type="button" data-subject="数学" aria-pressed="false">数学</button>
-              <button type="button" data-subject="国語" aria-pressed="false">国語</button>
-              <button type="button" data-subject="物理" aria-pressed="false">物理</button>
+    <div class="station next">
+      <span class="stop" aria-hidden="true" style="visibility:hidden"></span>
+      <div class="st-body">
+        <section class="sheet" id="parents" aria-labelledby="hp">
+          <div class="sheet-head"><span>おうちの方へ</span><small>保護者の方に読んでほしいこと</small></div>
+          <h2 id="hp">見せる相手は、<br>自分で決める。</h2>
+          <p class="lead">はじめは、勉強中の表示（ニックネーム・科目・時間）は全員に、メッセージはグループのメンバーまでに届きます。どちらも設定で、いつでも変えられます。</p>
+          <div class="sheet-cols">
+            <dl class="sets" aria-label="設定と、はじめの状態">
+              <div class="set"><dt>勉強中を見せる相手</dt><dd><ul class="opts"><li class="init"><small>はじめ</small>全員</li><li>フォロワーだけ</li><li>見せない</li></ul></dd></div>
+              <div class="set"><dt>順位を見せる</dt><dd><ul class="opts"><li class="init"><small>はじめ</small>ランキングに出す</li><li>出さない</li></ul><p>出さなくても、自分の順位は見られます。</p></dd></div>
+              <div class="set"><dt>メッセージを受け取る相手</dt><dd><ul class="opts"><li>フォロー中の人</li><li class="init"><small>はじめ</small>グループのメンバーまで</li><li>全員</li></ul></dd></div>
+              <div class="set"><dt>ブロック・通報</dt><dd>名前を押すと、どこからでもできます。ブロックした人は出てきません。</dd></div>
+            </dl>
+            <div class="notes">
+              <div class="note"><h3>13歳未満のとき</h3><p>はじめに、保護者の同意を得ているかをたずねます。「保護者の同意を得ています」にチェックしないと、先へ進めません。</p></div>
+              <div class="note"><h3>記録のゆくえ</h3><p>記録は、<span class="nb">この iPhone の中に</span>保存されます。圏外でも記録できます。勉強中の表示（ニックネーム・科目・時間）と順位は、設定で決めた範囲の人に見えます。設定から、書き出しや、アカウントとデータの削除ができます。</p></div>
             </div>
           </div>
-          <label class="field" for="sb-goal"><span><output id="sb-goal-out" for="sb-goal">目標 60分</output></span><input type="range" id="sb-goal" min="15" max="120" step="15" value="60" aria-label="目標の時間" aria-valuetext="60分"></label>
-          <div class="sb-go-row">
-            <button type="button" id="sb-go" class="btn btn-lime">勉強を開始</button>
-            <small>このページの中だけの見本（どこにも保存しない）</small>
-          </div>
-        </div>
-        <div class="sb-logbox">
-          <pre class="sb-log" id="sb-log" aria-live="polite"><span class="c-c">// ここに今日の記録がたまる</span></pre>
-          <button type="button" class="copy" id="sb-clear">けす</button>
-        </div>
+        </section>
       </div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="safety" aria-labelledby="safety-h">
-  <div class="wrap">
-    <header class="sec-head">
-      <div>
-        <p class="eyebrow reveal" style="--accent:var(--violet);--i:0">おうちの方へ</p>
-        <h2 class="reveal" style="--i:1" id="safety-h">見せる相手は、<br>自分で決める。</h2>
-      </div>
-      <p class="reveal" style="--i:2">はじめは、勉強中（ニックネーム・科目・時間）は全員に、メッセージはグループのメンバーまで。どちらも設定で、いつでも変えられる。</p>
-    </header>
-
-    <div class="api">
-      <div class="table-wrap reveal" style="--i:3">
-        <table role="table">
-          <caption>設定 · 6つ</caption>
-          <thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">設定</th><th role="columnheader" scope="col">できること</th><th role="columnheader" scope="col">はじめは</th></tr></thead>
-          <tbody role="rowgroup">
-            <tr role="row"><th role="rowheader" scope="row"><span class="key">勉強中を見せる相手</span></th><td role="cell" data-label="できること">全員／フォロワーだけ／見せない</td><td role="cell" data-label="はじめは">全員</td></tr>
-            <tr role="row"><th role="rowheader" scope="row"><span class="key">順位を見せる</span></th><td role="cell" data-label="できること">ランキングに出す／出さない（出さなくても自分の順位は見られる）</td><td role="cell" data-label="はじめは">出す</td></tr>
-            <tr role="row"><th role="rowheader" scope="row"><span class="key">メッセージを受け取る相手</span></th><td role="cell" data-label="できること">フォロー中の人／グループのメンバーまで／全員</td><td role="cell" data-label="はじめは">グループのメンバーまで</td></tr>
-            <tr role="row"><th role="rowheader" scope="row"><span class="key">ブロック・通報</span></th><td role="cell" data-label="できること">名前を押すと、どこからでもできる。ブロックした人は出てこない</td><td role="cell" data-label="はじめは">—</td></tr>
-            <tr role="row"><th role="rowheader" scope="row"><span class="key">13歳未満</span></th><td role="cell" data-label="できること">保護者の同意を得ているか、はじめにたずねる</td><td role="cell" data-label="はじめは">—</td></tr>
-            <tr role="row"><th role="rowheader" scope="row"><span class="key">記録の保存</span></th><td role="cell" data-label="できること">この iPhone の中に保存。圏外でも記録できる</td><td role="cell" data-label="はじめは">—</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="side">
-        <div class="panel reveal" style="--i:4">
-          <h3>13歳未満の人へ</h3>
-          <p>はじめに、<ruby>保護者<rt>ほごしゃ</rt></ruby>の<ruby>同意<rt>どうい</rt></ruby>を得ているかをたずねます。「保護者の同意を得ています」にチェックしないと、先へ進めません。</p>
-        </div>
-        <div class="panel reveal" style="--i:5">
-          <h3>記録のゆくえ</h3>
-          <p>記録は、この iPhone の中に保存されます。勉強中の表示（ニックネーム・科目・時間）と順位は、設定で決めた範囲の人に見えます。設定から、書き出しや、アカウントとデータの削除ができます。</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="soon" aria-labelledby="soon-h">
-  <div class="wrap">
-    <header class="sec-head">
-      <div>
-        <p class="eyebrow reveal" style="--accent:var(--lime);--i:0">近日公開</p>
-        <h2 class="reveal" style="--i:1" id="soon-h">もうすぐ、<br>あなたの iPhone に。</h2>
-      </div>
-      <p class="reveal" style="--i:2">iPhone 向けに、[公開日]ごろ公開する予定。値段はまだ決めていない。決まったら、このページで知らせる。</p>
-    </header>
-
-    <div class="ways">
-      <div class="way reveal" style="--accent:var(--lime);--i:3"><span class="tag">iPhone</span><h3>iPhone で使える</h3><p>まずは iPhone から。日本語で使えます。</p></div>
-      <div class="way reveal" style="--accent:var(--sky);--i:4"><span class="tag">だれでも</span><h3>小学生から大人まで</h3><p>小学生も、中学生も、高校生も、資格の勉強をしている大人も。13歳未満の人は、保護者の同意を得てから。</p></div>
-      <div class="way reveal" style="--accent:var(--sun);--i:5"><span class="tag">ねだん</span><h3>まだ決めていない</h3><p>値段と、広告を出すかどうかは、決まったらこのページで知らせます。</p></div>
-      <div class="way reveal" style="--accent:var(--violet);--i:6"><span class="tag tag-dark">ANDROID</span><h3>Android は</h3><p>[Android版の予定]</p></div>
-    </div>
-
-    <div class="facts">
-      <div class="fact reveal" style="--i:7"><b>1タップ</b><span>で勉強が始まる</span></div>
-      <div class="fact reveal" style="--i:8"><b>0時</b><span>をまたいでも、ちゃんと分けて記録</span></div>
-      <div class="fact reveal" style="--i:9"><b>7日</b><span>続けると、休み券が1枚</span></div>
-      <div class="fact reveal" style="--i:10"><b>13歳</b><span>未満は、<span class="nb">はじめに</span>保護者の同意をたずねる</span></div>
-    </div>
-
-    <div class="more reveal" style="--i:11">
-      <a class="btn btn-lime" href="#top">いちばん上へ <span aria-hidden="true">↑</span></a>
-      <a class="btn" href="#safety">おうちの方へ <span aria-hidden="true">↑</span></a>
     </div>
   </div>
 </section>
 
 </main>
 
-<footer class="foot" id="foot" aria-labelledby="foot-h">
-  <div class="foot-grass" aria-hidden="true"></div>
-  <div class="wrap foot-in">
-    <div class="foot-cta">
-      <h2 class="reveal" style="--i:0" id="foot-h">今夜も、<br><span class="lime">少しずつ前へ。</span></h2>
-      <div class="reveal" style="--i:1"><a class="btn btn-lime perch" href="#soon">近日公開 <span aria-hidden="true">↑</span></a></div>
+<!-- ============ 23:00 夜ふけ ============ -->
+<footer class="leg foot" data-sky="5" id="soon" aria-labelledby="hf">
+  <div class="wrap leg-in">
+    <div class="station" data-t="23:00">
+      <div class="st-time"><span class="pix" data-pix="23:00"></span><span class="st-name">近日公開</span></div>
+      <span class="stop" aria-hidden="true"></span>
+      <div class="st-body">
+        <h2 id="hf">今夜も、<br>少しずつ前へ。</h2>
+        <p class="after">あしたの放課後も、時間割はつづく。</p>
+        <dl class="soon">
+          <div><dt>公開の予定</dt><dd>iPhone 向けに、[公開日]ごろ公開する予定です。</dd></div>
+          <div><dt>だれが使える</dt><dd>日本語で使えます。小学生から大人まで。13歳未満の人は、保護者の同意を得てから。</dd></div>
+          <div><dt>ねだん</dt><dd>値段と、広告を出すかどうかは、決まったらこのページで知らせます。</dd></div>
+          <div><dt>Android</dt><dd>[Android版の予定]</dd></div>
+        </dl>
+        <div class="back"><a class="btn" href="#top">15:30 にもどる</a></div>
+        <div class="sky" aria-hidden="true"><div class="sky-row" id="sky"></div></div>
+      </div>
     </div>
-    <div class="foot-bottom">
-      <p class="foot-name"><a class="foot-logo" href="#top" aria-label="inchly（いちばん上へ）">inchly</a><span class="foot-read">インチリー</span></p>
-      <nav aria-label="フッター">
-        <a href="#features">できること</a>
-        <a href="#how">使い方</a>
-        <a href="#safety">おうちの方へ</a>
-        <a href="#soon">近日公開</a>
-        <button type="button" class="foot-calm" data-calm aria-pressed="false">動きを止める</button>
-      </nav>
-      <span class="foot-small">INCH BY INCH · 少しずつ前へ</span>
-    </div>
-    <p class="foot-legal">お問い合わせ：[連絡先]　·　プライバシーポリシーと利用規約は、公開までに用意します。　·　画面は開発中のものです。出てくる名前や記録は見本です。　·　iPhone は、米国および他の国々で登録された Apple Inc. の商標です。iPhone 商標は、アイホン株式会社のライセンスにもとづき使用されています。　·　© [年] [運営者名]</p>
   </div>
-  <inch-pal kind="bo" do="bounce" scale="5"></inch-pal>
+  <div class="foot-bottom">
+    <div class="wrap">
+      <p class="sky-cap">上の町は、1週間を1本の塔にして、4月から26週ならべた見本。<span class="nb">ぜんぶで664時間。</span><span class="nb">右はしが今週の20時間。</span></p>
+      <div class="fb-row">
+        <p class="fb-name">inchly <small>インチリー。名前は inch by inch（少しずつ）から。</small></p>
+        <nav class="fb-links" aria-label="フッター">
+          <a href="#t1700">できること</a><a href="#how">使い方</a><a href="#parents">おうちの方へ</a>
+          <button type="button" id="calm" aria-pressed="false">動きを止める</button>
+        </nav>
+      </div>
+      <div class="legal">
+        <p>お問い合わせ：[連絡先]</p>
+        <p>プライバシーポリシーと利用規約は、公開までに用意します。画面は開発中のものです。出てくる名前や記録は見本です。</p>
+        <p>iPhone は、米国および他の国々で登録された Apple Inc. の商標です。iPhone 商標は、アイホン株式会社のライセンスにもとづき使用されています。</p>
+        <p>© [年] [運営者名]</p>
+      </div>
+    </div>
+  </div>
 </footer>
 
-<!-- the crane visits every .perch -->
-<inch-pal kind="tsuru" do="perch" on=".perch"></inch-pal>
+<span id="now" aria-hidden="true"></span>
+<p class="sr" id="live" aria-live="polite"></p>
 
-<div id="toasts" class="toasts" aria-live="polite"></div>
-<div id="ruler" aria-hidden="true"></div>
+<dialog class="zoom" id="zoom" aria-labelledby="zoom-t">
+  <div class="zoom-in">
+    <img id="zoom-img" alt="" width="786" height="1704">
+    <div class="zoom-side">
+      <p class="zoom-t" id="zoom-t"></p>
+      <p class="zoom-d" id="zoom-d"></p>
+      <form method="dialog"><button type="submit" class="btn">閉じる</button></form>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  'use strict';
+  const D = document, root = D.documentElement;
+  root.classList.add('js');
+  const $ = id => D.getElementById(id);
+  const RM = matchMedia('(prefers-reduced-motion: reduce)');
+  const still = () => RM.matches || root.classList.contains('calm');
+
+  /* ---------- 5×7 pixel digits: the page's clock face ---------- */
+  const G = {
+    '0':['.###.','#...#','#...#','#...#','#...#','#...#','.###.'],
+    '1':['..#..','.##..','..#..','..#..','..#..','..#..','.###.'],
+    '2':['.###.','#...#','....#','...#.','..#..','.#...','#####'],
+    '3':['.###.','#...#','....#','..##.','....#','#...#','.###.'],
+    '4':['...#.','..##.','.#.#.','#..#.','#####','...#.','...#.'],
+    '5':['#####','#....','####.','....#','....#','#...#','.###.'],
+    '6':['..##.','.#...','#....','####.','#...#','#...#','.###.'],
+    '7':['#####','....#','...#.','..#..','.#...','.#...','.#...'],
+    '8':['.###.','#...#','#...#','.###.','#...#','#...#','.###.'],
+    '9':['.###.','#...#','#...#','.####','....#','...#.','.##..'],
+    ':':['.','.','#','.','.','#','.']
+  };
+  const NS = 'http://www.w3.org/2000/svg';
+  function pix(el, str, label) {
+    if (!el || el._s === str) return;
+    el._s = str;
+    let x = 0, d = '';
+    for (const ch of String(str)) {
+      const g = G[ch]; if (!g) continue;
+      for (let r = 0; r < 7; r++) for (let c = 0; c < g[r].length; c++) if (g[r][c] === '#') d += `M${x + c} ${r}h1v1h-1z`;
+      x += g[0].length + 1;
+    }
+    const w = Math.max(1, x - 1);
+    let svg = el.querySelector('svg');
+    if (!svg) { svg = D.createElementNS(NS, 'svg'); svg.setAttribute('aria-hidden', 'true'); svg.appendChild(D.createElementNS(NS, 'path')); el.appendChild(svg); }
+    svg.setAttribute('viewBox', `0 0 ${w} 7`);
+    svg.style.setProperty('--w', w);
+    svg.firstChild.setAttribute('d', d);
+    el.setAttribute('role', 'img'); el.setAttribute('aria-label', label || str);
+  }
+  D.querySelectorAll('.pix[data-pix]').forEach(el => pix(el, el.dataset.pix));
+
+  /* ---------- 日本語の改行（Safari など word-break:auto-phrase が無いブラウザだけ） ----------
+     Intl.Segmenter で語に分け、ひらがな・句読点・閉じかっこは前の語に、数字のあとの漢字は数字に、
+     漢字どうし・カタカナどうしはまとめて、文節に近いまとまり（.ph）にする。まとまりの中では折り返さない。 */
+  const SEGR = !(window.CSS && CSS.supports && CSS.supports('word-break', 'auto-phrase')) && window.Intl && Intl.Segmenter ? new Intl.Segmenter('ja', { granularity: 'word' }) : null;
+  const PH_SEL = 'h1,h2,h3,.sub,.st-copy p,.fine,.facts dd,.read-p,.howread dd,.how-line p,.lead,.set dd p,.note p,.soon dd,.after,.legal p,.hint,.msg,.wk-cap,.sky-cap,.shot figcaption,.tt figcaption,.set dd';
+  const cc = ch => /\s/.test(ch) ? 'S' : /[ぁ-ゟ]/.test(ch) ? 'H' : /[゠-ヿｦ-ﾟ]/.test(ch) ? 'T' : /[一-鿿々〆]/.test(ch) ? 'K'
+    : /[0-9０-９]/.test(ch) ? 'D' : /[「『（(［\[【〈《]/.test(ch) ? 'O' : /[、。，．」』）)］\]】〉》！？!?：:；;％%〜~…・]/.test(ch) ? 'P' : 'L';
+  function joins(prev, t) {
+    const a = cc(prev.slice(-1)), b = cc(t[0]);
+    if (a === 'S' || b === 'S') return false;
+    if (b === 'P' || a === 'O') return true;
+    if (b === 'H') return !/[、。！？!?]$/.test(prev);
+    if (b === 'K') return a === 'K' || a === 'D';
+    if (b === 'T') return a === 'T';
+    if (b === 'D') return a === 'D' || a === 'L' || /[:：.／/]$/.test(prev);
+    if (b === 'L') return a === 'L' || a === 'D';
+    return false;
+  }
+  function phrase(el0) {
+    if (!SEGR) return;
+    const els = el0.matches && el0.matches(PH_SEL) ? [el0] : [...el0.querySelectorAll(PH_SEL)];
+    els.forEach(el => {
+      const texts = [], w = D.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest('.nb,.sr,.ph,svg,button,.opts') || /flex|grid/.test(getComputedStyle(n.parentElement).display) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+      while (w.nextNode()) texts.push(w.currentNode);
+      texts.forEach(tn => {
+        const s = tn.nodeValue; if (!/[぀-ヿ一-鿿]/.test(s)) return;
+        const out = [];
+        for (const { segment: t } of SEGR.segment(s)) {
+          const p = out[out.length - 1];
+          if (/^\s+$/.test(t)) out.push({ sp: t });
+          else if (typeof p === 'string' && joins(p, t)) out[out.length - 1] = p + t;
+          else out.push(t);
+        }
+        const frag = D.createDocumentFragment();
+        out.forEach(p => { if (typeof p !== 'string') { frag.appendChild(D.createTextNode(p.sp)); return; } const sp = D.createElement('span'); sp.className = 'ph'; sp.textContent = p; frag.appendChild(sp); });
+        tn.replaceWith(frag);
+      });
+    });
+  }
+  phrase(D.body);
+
+  /* ---------- the day: scroll moves the clock from 15:30 to 23:00 ---------- */
+  const nav = $('nav'), clockEl = $('clock'), nowEl = $('now'), hero = $('top');
+  const legs = [...D.querySelectorAll('.leg')];
+  const stations = [...D.querySelectorAll('.station[data-t]')];
+  const toMin = s => { const [h, m] = s.split(':').map(Number); return h * 60 + m; };
+  const fmt = m => { m = Math.floor(m); return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`; };
+  let stops = [], legBox = [], navH = 64, maxScroll = 0, R = 0, lastMin = -1, lastSky = '', lastNavSky = '', heroEnd = 0;
+  function measure() {
+    const sy = scrollY;
+    navH = nav.getBoundingClientRect().height;
+    R = Math.round(innerHeight * .46);
+    maxScroll = Math.max(0, D.documentElement.scrollHeight - innerHeight);
+    heroEnd = hero.getBoundingClientRect().bottom + sy;
+    stops = stations.map(st => {
+      const dot = st.querySelector('.stop'), b = dot.getBoundingClientRect();
+      return { st, dot, t: toMin(st.dataset.t), y: b.top + b.height / 2 + sy, x: b.left + b.width / 2 + scrollX };
+    });
+    legBox = legs.map(l => { const inr = l.querySelector('.leg-in'), b = inr.getBoundingClientRect(); return { l, inr, top: b.top + sy, h: b.height, sky: l.dataset.sky }; });
+    /* the line starts at 15:30 and ends at 23:00 */
+    const first = stops[0], last = stops[stops.length - 1];
+    const L0 = legBox[0], LN = legBox[legBox.length - 1];
+    L0.inr.style.setProperty('--s-top', (first.y - L0.top) + 'px'); L0.sTop = first.y - L0.top;
+    LN.inr.style.setProperty('--s-end', (LN.top + LN.h - last.y) + 'px'); LN.sEnd = LN.top + LN.h - last.y;
+    let prev = 0;
+    stops.forEach((s, i) => { s.s = i === 0 ? 0 : Math.max(prev + 1, Math.min(s.y - R, maxScroll)); prev = s.s; });
+    if (stops.length > 1 && stops[stops.length - 1].s > maxScroll) stops[stops.length - 1].s = maxScroll;
+    update(true);
+  }
+  function timeAt(sy) {
+    if (sy <= stops[0].s) return { t: stops[0].t, y: stops[0].y };
+    for (let i = 0; i < stops.length - 1; i++) {
+      const a = stops[i], b = stops[i + 1];
+      if (sy <= b.s) {
+        const dw = Math.min(28, (b.s - a.s) / 4);
+        const f = Math.max(0, Math.min(1, (sy - a.s - (i ? dw : 0)) / Math.max(1, b.s - a.s - dw - (i ? dw : 0))));
+        return { t: a.t + f * (b.t - a.t), y: a.y + f * (b.y - a.y) };
+      }
+    }
+    const z = stops[stops.length - 1]; return { t: z.t, y: z.y };
+  }
+  function update(force) {
+    if (!stops.length) return;
+    const sy = scrollY, p = timeAt(sy);
+    legBox.forEach(L => {
+      const start = L.top + (L.sTop || 0), end = L.top + L.h - (L.sEnd || 0);
+      const v = Math.max(0, Math.min(end, p.y) - start);
+      if (L._v !== v) { L._v = v; L.inr.style.setProperty('--solid', v + 'px'); }
+    });
+    stops.forEach(s => s.dot.classList.toggle('past', s.t <= p.t + .01));
+    nowEl.style.transform = `translate(${stops[0].x}px, ${p.y}px)`;
+    const inLeg = legBox.find(L => p.y >= L.top && p.y < L.top + L.h) || legBox[legBox.length - 1];
+    if (inLeg.sky !== lastSky) { lastSky = inLeg.sky; nowEl.dataset.sky = lastSky; }
+    const m = Math.floor(p.t);
+    if (m !== lastMin || force) {
+      const crossed = lastMin >= 0 && lastMin < 1020 && m >= 1020;
+      lastMin = m; pix(clockEl, fmt(m));
+      if (crossed) ring();
+    }
+    /* the nav takes the light of what is under it; its clock shows only after the hero */
+    const navLeg = legBox.find(L => sy + navH >= L.top && sy + navH < L.top + L.h + 1) || legBox[0];
+    let ns = navLeg.sky;
+    if (navLeg === legBox[0] && sy + navH < legBox[0].top) ns = '0';
+    if (ns !== lastNavSky) { lastNavSky = ns; nav.dataset.sky = ns; }
+    nav.classList.toggle('scrolled', sy > 4);
+    nav.classList.toggle('past', sy + navH >= heroEnd - 1);
+  }
+  let raf = 0;
+  addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; update(); }); }, { passive: true });
+  let rT = 0;
+  const remeasure = () => { clearTimeout(rT); rT = setTimeout(measure, 60); };
+  addEventListener('resize', remeasure);
+  addEventListener('load', measure);
+  D.querySelectorAll('img').forEach(im => { if (!im.complete) im.addEventListener('load', remeasure, { once: true }); });
+  if ('ResizeObserver' in window) new ResizeObserver(remeasure).observe($('main'));
+  if (D.fonts && D.fonts.ready) D.fonts.ready.then(remeasure);
+
+  /* =====================================================================
+     The one control. 17:00 英語 長文読解. The sample runs fast:
+     1 second = 3 minutes. Recording adds to 18:35 and stacks on 19:45.
+     ===================================================================== */
+  const RATE = 3, GOAL = 180, CAP = 240, YESTERDAY = 88, STEP = 5;
+  const SUBJ = {
+    ja: { n: '国語', c: 'var(--s-ja)' },
+    en: { n: '英語', c: 'var(--s-en)', on: '#fff' },
+    ma: { n: '数学', c: 'var(--s-ma)' }
+  };
+  /* today, as on the home screen: 国語 0:30（6:30）、英語 1:35（17:00）、数学 0:40（19:00）= 2:45 */
+  const BASE = [['ja', 30], ['en', 95], ['ma', 40]];
+  let added = [], session = null, tick = 0, capped = false, lastNew = -1;
+  const sum = () => BASE.reduce((a, b) => a + b[1], 0) + added.reduce((a, b) => a + b, 0);
+  const jp = m => m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ? (m % 60) + '分' : ''}` : `${m}分`;
+  const go = $('go'), msg = $('msg'), live = $('live');
+  const ICON_PLAY = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg>';
+  const ICON_CHECK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.3 8.4 3.7 7l2.8 2.8 5.8-6.2 1.5 1.4-7.3 7.6z" fill="currentColor"/></svg>';
+  const ICON_BACK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3v4h4M3.6 6.6A5.2 5.2 0 1 1 3 9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+  function renderCtl() {
+    const m = session ? session.min : 0;
+    pix($('ro-time'), fmt(m), `${m}分`);
+    pix($('stand-pix'), fmt(m), `${m}分`);
+    pix($('chip-pix'), fmt(m), `${m}分`);
+    $('ro-plan').textContent = !session ? '予定 1時間　17:00〜18:00' : m < 60 ? `予定 1時間　のこり ${60 - m}分` : '予定クリア　延長中';
+    $('ro-fill').style.setProperty('--p', Math.min(100, m / .6) + '%');
+    root.classList.toggle('studying', !!session);
+    go.classList.toggle('btn-lime', !session && !capped);
+    go.classList.toggle('rec', !!session);
+    go.innerHTML = capped ? ICON_BACK + '<span>見本にもどす</span>' : session ? ICON_CHECK + '<span>記録する</span>' : ICON_PLAY + '<span>勉強を開始</span>';
+    const you = $('win-you');
+    you.classList.toggle('lit', !!session);
+    if (session) { you.style.setProperty('--c', SUBJ.en.c); $('win-you-t').textContent = `英語 ${fmt(m)}`; }
+    else $('win-you-t').textContent = 'まだ暗い';
+  }
+  function setMsg(html) { msg.innerHTML = html; phrase(msg); }
+
+  /* today's tower */
+  const tower = $('tower'), blocksEl = $('blocks');
+  function block(s, min, b, isNew) {
+    const d = D.createElement('div'), S = SUBJ[s];
+    d.className = 'blk' + (isNew ? ' new' : '');
+    d.style.cssText = `--b:${b};--h:${min / STEP};--c:${S.c}` + (S.on ? `;--on:${S.on}` : '');
+    const px = min / STEP * parseFloat(getComputedStyle(tower).getPropertyValue('--cell') || 8);
+    if (px >= 17) d.textContent = `${S.n} ${min}分`;
+    return d;
+  }
+  function renderTower() {
+    const total = sum();
+    blocksEl.textContent = '';
+    let b = 0;
+    BASE.forEach(([s, m]) => { blocksEl.appendChild(block(s, m, b)); b += m / STEP; });
+    added.forEach((m, i) => { blocksEl.appendChild(block('en', m, b, i === lastNew && !still())); b += m / STEP; });
+    lastNew = -1;
+    tower.style.setProperty('--top', String(total / STEP));
+    tower.classList.toggle('reached', total >= GOAL);
+    $('total').innerHTML = `<span>${Math.floor(total / 60)}</span><small>時間</small><span>${String(total % 60).padStart(2, '0')}</span><small>分</small>`;
+    $('delta').textContent = '▲' + fmt(total - YESTERDAY);
+    const gl = $('goal-left');
+    gl.textContent = total >= GOAL ? '目標の3時間に、届いた' : `目標まで ${fmt(GOAL - total)}`;
+    gl.classList.toggle('done', total >= GOAL);
+    $('lg-en').textContent = fmt(95 + added.reduce((a, c) => a + c, 0));
+    /* the week's last tower is today */
+    const wt = $('wk-today'), extra = added.reduce((a, c) => a + c, 0);
+    wt.style.setProperty('--t', String(total / STEP));
+    wt.style.setProperty('--lv', total >= 180 ? 'var(--g4)' : 'var(--g3)');
+    let x = wt.querySelector('i.x');
+    if (extra) { if (!x) { x = D.createElement('i'); x.className = 'x'; x.style.setProperty('--c', 'var(--s-en)'); wt.appendChild(x); } x.style.setProperty('--h', String(extra / STEP)); }
+    else if (x) x.remove();
+    const wk = 20 + extra / 60;
+    $('wk-total').textContent = wk.toFixed(1);
+    $('wk-delta').textContent = `▲${(wk - 17.8).toFixed(1)}時間 先週より`;
+    flame();
+  }
+  /* the 18:35 row: one red-pen circle around what you added */
+  function renderLog(draw) {
+    const slot = $('add-slot'), extra = added.reduce((a, c) => a + c, 0);
+    if (!extra) { slot.innerHTML = ''; return; }
+    slot.innerHTML = `<em class="add">＋${jp(extra)}<svg viewBox="0 0 120 56" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path pathLength="1" d="M92 9C70 2 30 3 13 16C1 26 4 42 26 49C52 56 94 53 111 39C121 30 115 15 96 9C83 5 64 5 52 7"/></svg></em>`;
+    const em = slot.firstChild;
+    if (!draw || still()) em.classList.add('drawn');
+    else requestAnimationFrame(() => requestAnimationFrame(() => em.classList.add('drawn')));
+  }
+
+  function start() {
+    if (session || capped) return;
+    session = { min: 0 };
+    ring();
+    renderCtl();
+    setMsg('勉強中（1秒で3分すすむ見本）。<span class="nb">「記録する」で、</span><a href="#t1835">18:35 の記録</a>と <a href="#t1945">19:45 の塔</a>に入る。');
+    live.textContent = '英語 長文読解を始めました。';
+    clearInterval(tick);
+    tick = setInterval(() => {
+      session.min += 1;
+      if (sum() + session.min >= CAP) { record(true); return; }
+      renderCtl();
+    }, 1000 / RATE);
+  }
+  function record(auto) {
+    if (!session) return;
+    clearInterval(tick);
+    const before = sum(), m = Math.min(CAP - before, Math.max(5, Math.round(session.min / 5) * 5));   /* the app edits in 5-minute steps */
+    session = null;
+    added.push(m); lastNew = added.length - 1;
+    if (auto || sum() >= CAP) capped = true;
+    renderCtl(); renderTower(); renderLog(true);
+    const reached = before < GOAL && sum() >= GOAL;
+    let t = `記録しました：<span class="nb">英語 ${jp(m)}。</span><a href="#t1945">19:45 の塔</a>に<span class="nb">1段のった。</span>`;
+    if (reached) t += '<span class="nb">目標の3時間に、届いた。</span>';
+    if (capped) t += '<span class="nb">見本はここまで。</span>';
+    setMsg(t);
+    live.textContent = `英語 ${jp(m)}を記録しました。今日は${jp(sum())}。` + (reached ? '目標の3時間に、届きました。' : '') + (capped ? '見本はここまでです。' : '');
+    if (reached) flame('flare');
+  }
+  function restart() {
+    clearInterval(tick); session = null; added = []; capped = false;
+    renderCtl(); renderTower(); renderLog(false);
+    setMsg('見本です。1秒で3分すすみます。<span class="nb">どこにも保存しません。</span>');
+    live.textContent = '見本の1日にもどしました。';
+  }
+  D.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('[data-act]');
+    if (!b) return;
+    if (b.dataset.act === 'go') { if (capped) restart(); else if (session) record(false); else start(); }
+    else if (b.dataset.act === 'record') {
+      record(false);
+      /* the nav's button goes away with the study: keep the keyboard near the tower's numbers */
+      $('panel').focus({ preventScroll: true });
+    }
+  });
+
+  /* the flame on top of the tower (pix.js draws it; it only sways slowly, as in the app) */
+  let flameT = 0, flameI = 0, flameFlare = 0;
+  function flame(mode) {
+    const cv = $('flame');
+    if (!cv || !window.InchPix || !InchPix.drawFrame) return;
+    if (mode === 'flare') flameFlare = 6;
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const name = flameFlare > 0 ? 'happy:' + (flameI % 2) : 'idle:' + (flameI % 4 === 3 ? 2 : 0);
+    InchPix.drawFrame(ctx, 'bo', name, 0, 0, 3);
+  }
+  function flameLoop() {
+    clearTimeout(flameT);
+    if (still() || D.hidden) { flame(); return; }
+    flameT = setTimeout(() => { flameI++; if (flameFlare > 0) flameFlare--; flame(); flameLoop(); }, 700);
+  }
+
+  /* the week: from the side, then from above (the grass) */
+  const week = $('week'), wkCap = $('wk-cap');
+  const CAPS = {
+    side: '色は科目、高さは時間。',
+    top: '真上から見ると、1日が1マスの<span class="nb">「勉強した日」。</span>長くやった日ほど、<span class="nb">濃い緑。</span><span class="nb">枠が今日。</span>'
+  };
+  week.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    const v = b.dataset.view;
+    week.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    week.classList.toggle('top', v === 'top');
+    wkCap.innerHTML = CAPS[v]; phrase(wkCap);
+  }));
+
+  /* the screens: press one to see it big (focus comes back to it; Esc closes) */
+  const zoom = $('zoom');
+  if (zoom && typeof zoom.showModal === 'function') {
+    let opener = null;
+    D.querySelectorAll('.phone').forEach(btn => btn.addEventListener('click', () => {
+      const img = btn.querySelector('img');
+      $('zoom-img').src = img.currentSrc || img.src;
+      $('zoom-img').alt = img.alt;
+      $('zoom-t').textContent = btn.getAttribute('aria-label').replace('を大きく見る', '');
+      $('zoom-d').textContent = img.alt.replace(/^[^。]*。/, '');
+      opener = btn;
+      zoom.showModal();
+    }));
+    zoom.addEventListener('click', e => { if (e.target === zoom) zoom.close(); });
+    zoom.addEventListener('close', () => { if (opener) opener.focus({ preventScroll: true }); });
+  } else {
+    D.querySelectorAll('.phone').forEach(b => { b.disabled = true; b.style.cursor = 'default'; b.querySelector('.lens') && b.querySelector('.lens').remove(); });
+  }
+
+  /* the skyline: one tower a week since April (26 weeks, as on the マイページ card: SINCE 04/26).
+     They add up to the 664 hours on that card; the last two are 17.8 hours (先週) and 20.0 hours (今週). */
+  const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  (function skyline() {
+    const sky = $('sky'), rs = rng(664), cols = ['var(--s-en)', 'var(--s-ma)', 'var(--s-ja)', 'var(--s-ph)', 'var(--s-ch)'];
+    const WEEKS = 26, YEAR = 664, LAST = [17.8, 20];
+    const raw = [];
+    for (let k = 0; k < WEEKS - LAST.length; k++) raw.push(9 + rs() * 5 + ([4, 10, 22].includes(k) ? 5 : 0) + (k >= 13 && k <= 17 ? 4 : 0));
+    const f = (YEAR - LAST[0] - LAST[1]) / raw.reduce((a, b) => a + b, 0);
+    const hrs = raw.map(v => v * f).concat(LAST);
+    sky.style.setProperty('--hmax', Math.max(...hrs).toFixed(2));
+    const frag = D.createDocumentFragment();
+    hrs.forEach((hours, k) => {
+      const t = D.createElement('div'); t.className = 'sky-t';
+      let left = hours; const n = hours > 22 ? 3 : 2;
+      for (let j = 0; j < n; j++) {
+        const i = D.createElement('i');
+        const h = j === n - 1 ? left : Math.max(3, left * (.28 + rs() * .22));
+        left -= h;
+        i.style.setProperty('--hr', h.toFixed(2));
+        i.style.setProperty('--c', cols[Math.floor(rs() * cols.length)]);
+        t.appendChild(i);
+      }
+      if (k === WEEKS - 1) { const s = D.createElement('span'); s.className = 'sky-now'; s.textContent = '今週'; t.appendChild(s); }
+      frag.appendChild(t);
+    });
+    sky.appendChild(frag);
+  })();
+
+  /* ---------- residents: the clock rings at 17:00 and when you start ---------- */
+  function ring() { const j = $('jiri'); if (j && j.poke) try { j.poke('note'); } catch (e) {} }
+
+  /* ---------- small things ---------- */
+  const menu = $('menu');
+  menu.addEventListener('click', e => { if (e.target.closest('a')) menu.open = false; });
+  D.addEventListener('click', e => { if (menu.open && !menu.contains(e.target)) menu.open = false; });
+  D.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.open) { menu.open = false; menu.querySelector('summary').focus(); } });
+  const calm = $('calm');
+  const setCalm = on => { root.classList.toggle('calm', on); calm.setAttribute('aria-pressed', on ? 'true' : 'false'); calm.textContent = on ? '動きを戻す' : '動きを止める'; flameLoop(); };
+  try { if (localStorage.getItem('inchly-c-day-calm') === '1') setCalm(true); } catch (e) {}
+  calm.addEventListener('click', () => { const on = !root.classList.contains('calm'); setCalm(on); try { localStorage.setItem('inchly-c-day-calm', on ? '1' : '0'); } catch (e) {} });
+  D.addEventListener('visibilitychange', flameLoop);
+
+  renderCtl(); renderTower();
+  addEventListener('DOMContentLoaded', () => { flame(); flameLoop(); });
+  measure();
+})();
+</script>
 </body>
 </html>
