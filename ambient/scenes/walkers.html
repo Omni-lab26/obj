@@ -48,10 +48,10 @@
     hipZ: 3.1,
     torsoZ: 6.2,
     rAnkle: 0.28,
-    rKnee: 0.31,
+    rKnee: 0.3,
     rHip: 0.31,
-    rTorso0: 0.5,
-    rTorso1: 0.65,
+    rTorso0: 0.42,
+    rTorso1: 0.5,
     stepT: 0.758,
     stance: 1.045,
     heelOff: 0.4, // the heel takes this long (s) to come up before toe-off
@@ -62,22 +62,22 @@
     toeSwing: 0.3,
     toeUp: 0.2,
     clearance: 0.05,
-    blur0: 0.18,
-    blurK: 0.24,
+    blur0: 0.12,
+    blurK: 0.26,
     ink0: 0.96,
-    inkK: 0.17,
+    inkK: 0.1,
     inkMin: 0.08,
-    torsoInk: 0.02,
+    torsoInk: 0.22,
     torsoBase: 0, // the body's haze starts this far (L) above the hips
     torsoLean: 2, // how far (L) the top of the body is ahead of the pelvis
     sway: 0.07, // the pelvis shifts this far (L) toward the foot carrying the weight
     soleInk: 1, // ink of a sole flat on the glass
     blurMax: 3, // the blur stops growing above this (L)
-    torsoBlur: 1, // the body's blur relative to the legs'
+    torsoBlur: 0.8, // the body's blur relative to the legs'
     vpX: 0.44,
     vpY: -0.2,
     hipShift: 2.25, // how far (L) a hip at the bottom edge leans toward the vanishing point
-    pitch: 2.5, // dot pitch in CSS px for 89 px soles
+    pitch: 2.5, // dot row spacing in CSS px for 89 px soles
     solid0: 0.93,
     solid1: 0.99,
     boxW: 1.33,
@@ -167,8 +167,7 @@
   let fieldTex = null;
   let fieldW = 0;
   let fieldH = 0;
-  let screenTex = null;
-  let screenK = 0;
+  let toneTex = null;
   const fl = {};
   const dl = {};
   const sl = {};
@@ -324,11 +323,12 @@ void main() {
   vec2 uv;
   float d = shape(p, z, uv);
   float blur = blurAt(z);
-  // Where a sole presses on the glass the ink is solid, with a rim of dots; a foot
-  // in the air is softer and a little paler.
-  float contact = (1.0 - smoothstep(0.0, 0.12, z)) * (1.0 - v5.w);
-  float ink = max(inkAt(z), contact) * (1.0 - 0.08 * v5.w);
-  blur = max(blur, max(contact * 0.06, v5.w * 0.08) * uL);
+  // Where a sole presses on the glass the ink is solid, with a rim of dots (the arch,
+  // a few millimetres up, still prints nearly solid); a shoe in the air stays dark
+  // and only softens as it rises.
+  float contact = (1.0 - smoothstep(0.01, 0.13, z)) * (1.0 - v5.w);
+  float ink = max(max(inkAt(z), contact), (0.97 - 0.3 * z) * vInk);
+  blur = max(blur, max(contact * 0.035, v5.w * 0.08) * uL);
   float c = 1.0 - smoothstep(-blur, blur, d);
   gl_FragColor = vec4(vec3(1.0 - ink * c), 1.0);
 }`;
@@ -390,21 +390,32 @@ void main() { gl_Position = vec4(a, 0.0, 1.0); }`;
 precision highp float;
 uniform sampler2D uField;
 uniform vec2 uRes;
-uniform sampler2D uScreen;
-uniform float uTile;  // the screen's repeat in device px
+uniform sampler2D uTone;  // the spot threshold that prints a given area (toneTexture())
+uniform float uStep;  // half the distance between dot centres along x or y (device px)
 uniform vec2 uSolid;
 uniform vec3 uPaper;
 uniform vec3 uInk;
 uniform float uRaw;
+const float PI = 3.14159265;
 void main() {
   float v = 1.0 - texture2D(uField, gl_FragCoord.xy / uRes).r;
   if (uRaw > 0.5) { gl_FragColor = vec4(mix(uPaper, uInk, v), 1.0); return; }
   // (Below 3/255 is rounding in the 8-bit field, not ink.)
   v = max(0.0, v - 0.012) / 0.988;
-  // Each pixel of a dot fills in at its turn (see screenTexture()), so the printed
-  // area is exactly v and a highlight dot shrinks to a single grey pixel.
-  vec4 s = texture2D(uScreen, (mod(floor(gl_FragCoord.xy), uTile) + 0.5) / uTile);
-  float cov = clamp((v - s.r) / max(s.g, 0.004), 0.0, 1.0);
+  // Light washes print as paler, larger dots, as in the recording, whose blur spreads
+  // each dot's ink: below 0.4 a dot's tone falls with v while its area keeps the ink.
+  float tone = pow(clamp(v / 0.4, 0.0, 1.0), 0.9);
+  float area = clamp(v / max(tone, 0.03), 0.0, 1.0);
+  // Euclidean dots on a 45° screen: round dots, a checkerboard at 50 %, round holes.
+  vec2 g = gl_FragCoord.xy;
+  float a = (g.x + g.y) * PI / uStep;
+  float b = (g.x - g.y) * PI / uStep;
+  float spot = 0.5 + 0.25 * (cos(a) + cos(b));
+  float t = texture2D(uTone, vec2(area * (255.0 / 256.0) + 0.5 / 256.0, 0.5)).r;
+  // Anti-aliased over a pixel: the spot's slope here (at least its rise over half a
+  // pixel at a dot's centre, where the slope itself is zero).
+  float slope = max(0.25 * PI * 1.41421356 / uStep * length(vec2(sin(a), sin(b))), PI * PI / (8.0 * uStep * uStep));
+  float cov = clamp((spot - t) / slope + 0.5, 0.0, 1.0) * tone;
   cov = max(cov, smoothstep(uSolid.x, uSolid.y, v));
   gl_FragColor = vec4(mix(uPaper, uInk, cov), 1.0);
 }`;
@@ -437,7 +448,7 @@ void main() {
     const so = link(PART_VS, SOLE_FS, attribs, ['uView', 'uScale', 'uL', 'uPaper', 'uInk']);
     soleProg = so.p;
     Object.assign(sl, so.loc);
-    const d = link(DOT_VS, DOT_FS, ['a'], ['uField', 'uRes', 'uScreen', 'uTile', 'uSolid', 'uPaper', 'uInk', 'uRaw']);
+    const d = link(DOT_VS, DOT_FS, ['a'], ['uField', 'uRes', 'uTone', 'uStep', 'uSolid', 'uPaper', 'uInk', 'uRaw']);
     dotProg = d.p;
     Object.assign(dl, d.loc);
     quadBuf = gl.createBuffer();
@@ -448,40 +459,34 @@ void main() {
     fieldW = 0;
     fbo = null;
     fieldTex = null;
-    screenK = 0;
-    screenTex = null;
+    toneTex = toneTexture();
   }
 
-  // The dot screen: Euclidean dots on a 45° lattice whose dots sit k device px apart
-  // along each axis (k·√2 along the diagonal), so the pattern repeats every 2k px.
-  // Within a dot the pixels fill in from the centre out, in order of the spot
-  // function; for each pixel the texture holds the share of the dot filled before it
-  // starts (r) and the share of pixels that start with it (g), so that pixels at the
-  // same distance grow together and the dot stays round.
-  function screenTexture(k) {
-    const n = 2 * k;
-    const spot = [];
-    for (let y = 0; y < n; y++) {
-      for (let x = 0; x < n; x++) spot.push(0.5 + 0.25 * (Math.cos(((x + y) * Math.PI) / k) + Math.cos(((x - y) * Math.PI) / k)));
+  // The dot screen's tone curve: for each printed area (0..1, 256 steps) the level of
+  // the spot function above which a pixel is inked, found by sorting the spot over
+  // one cell of the screen.
+  function toneTexture() {
+    const n = 128;
+    const spot = new Float32Array(n * n);
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) spot[i * n + j] = 0.5 + 0.25 * (Math.cos(((i + 0.5) * 2 * Math.PI) / n) + Math.cos(((j + 0.5) * 2 * Math.PI) / n));
     }
-    // A tile holds two dots, and every spot value comes up equally often in each.
-    const N = (n * n) / 2;
-    const data = new Uint8Array(n * n * 4);
-    spot.forEach((v, i) => {
-      const before = spot.filter((o) => o > v + 1e-6).length / 2;
-      const along = spot.filter((o) => Math.abs(o - v) <= 1e-6).length / 2;
-      data[i * 4] = Math.round((before / N) * 255);
-      data[i * 4 + 1] = Math.round((along / N) * 255);
-    });
-    if (screenTex) gl.deleteTexture(screenTex);
-    screenTex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, screenTex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, n, n, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    spot.sort();
+    const data = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) {
+      const area = i / 255;
+      // Area 0 needs a level above every spot; area 1 one below every spot.
+      const t = area <= 0 ? 1 : area >= 1 ? 0 : spot[Math.floor((1 - area) * (n * n - 1))];
+      data[i] = Math.round(clamp(t, 0, 1) * 255);
+    }
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, 256, 1, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    screenK = k;
+    return tex;
   }
 
   function ensureField() {
@@ -590,14 +595,12 @@ void main() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, glCanvas.width, glCanvas.height);
     gl.useProgram(dotProg);
-    // The dot pitch scales with the soles, in whole device px, but never gets so fine
-    // that a dot has fewer than 18 pixels to grow in.
-    const k = Math.max(3, Math.round((((P.pitch * L) / 89) * glEntry.dpr) / Math.SQRT2));
+    // The dot rows are P.pitch CSS px apart, as in the recording, and further apart
+    // with larger soles (P.pitch is for 89 px soles).
     gl.activeTexture(gl.TEXTURE1);
-    if (k !== screenK) screenTexture(k);
-    gl.bindTexture(gl.TEXTURE_2D, screenTex);
-    gl.uniform1i(dl.uScreen, 1);
-    gl.uniform1f(dl.uTile, 2 * k);
+    gl.bindTexture(gl.TEXTURE_2D, toneTex);
+    gl.uniform1i(dl.uTone, 1);
+    gl.uniform1f(dl.uStep, (Math.max((P.pitch * L) / 89, P.pitch) / 2) * glEntry.dpr);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, fieldTex);
     gl.uniform1i(dl.uField, 0);
@@ -1086,7 +1089,7 @@ void main() {
       standToe: rand(0.1, 0.2),
       shoe: SOLO ? 'sneaker' : SHOE_MIX[Math.floor(rand(0, SHOE_MIX.length))],
       shoeLen: SOLO ? 1 : rand(0.9, 1.05),
-      shoeWide: SOLO ? 1 : rand(0.94, 1.06),
+      shoeWide: SOLO ? 1.04 : rand(0.98, 1.08),
       seed: rand(0, 100),
       age: 0,
       hipZ: null,
@@ -1098,8 +1101,9 @@ void main() {
       box: null,
       ink: null,
       feetAt: null,
+      labelX: 0,
       labelY: null,
-      labelBelow: false,
+      labelAt: 0,
       labelWait: 0,
     };
     // Quicker steps come with longer strides: strollers and people in a hurry.
@@ -1447,10 +1451,10 @@ void main() {
   // 0 smooth leather, 1 sneaker, 2 runner, 3 boot; amount is how much lighter grooves
   // print.
   const SHOES = {
-    sneaker: { joints: [[0.155, 0, 0.135], [0.42, -0.01, 0.12], [0.7, 0.022, 0.183], [0.87, 0.04, 0.125]], arch: 0.035, style: 1, amount: 0.16 },
-    runner: { joints: [[0.15, 0, 0.13], [0.42, -0.02, 0.108], [0.7, 0.025, 0.18], [0.87, 0.04, 0.12]], arch: 0.05, style: 2, amount: 0.14 },
-    dress: { joints: [[0.14, 0, 0.12], [0.42, -0.02, 0.092], [0.7, 0.02, 0.168], [0.9, 0.045, 0.085]], arch: 0.03, style: 0, amount: 0 },
-    boot: { joints: [[0.16, 0, 0.145], [0.42, -0.01, 0.14], [0.69, 0.02, 0.19], [0.86, 0.03, 0.14]], arch: 0.03, style: 3, amount: 0.15 },
+    sneaker: { joints: [[0.155, 0, 0.135], [0.42, -0.025, 0.105], [0.7, 0.022, 0.183], [0.87, 0.04, 0.125]], arch: 0.035, style: 1, amount: 0.16 },
+    runner: { joints: [[0.15, 0, 0.13], [0.42, -0.03, 0.095], [0.7, 0.025, 0.18], [0.87, 0.04, 0.12]], arch: 0.05, style: 2, amount: 0.14 },
+    dress: { joints: [[0.14, 0, 0.12], [0.42, -0.03, 0.08], [0.7, 0.02, 0.168], [0.9, 0.045, 0.085]], arch: 0.03, style: 0, amount: 0 },
+    boot: { joints: [[0.16, 0, 0.145], [0.42, -0.02, 0.125], [0.69, 0.02, 0.19], [0.86, 0.03, 0.14]], arch: 0.03, style: 3, amount: 0.15 },
   };
   const SHOE_MIX = ['sneaker', 'sneaker', 'sneaker', 'runner', 'runner', 'dress', 'dress', 'boot'];
 
@@ -1468,7 +1472,7 @@ void main() {
     ]);
     const radii = shoe.joints.map((j) => j[2] * len * w.shoeWide);
     // Soles blur a little less than legs as they lift, so a raised shoe still reads.
-    chain(pts, radii, P.soleInk / P.ink0, 0.7 + 0.3 * fp.air, {
+    chain(pts, radii, P.soleInk / P.ink0, 0.45 + 0.15 * fp.air, {
       style: shoe.style,
       amount: shoe.amount,
       air: fp.air,
@@ -1517,7 +1521,7 @@ void main() {
   function clearance(x0, y0, x1, y1) {
     let best = Infinity;
     for (const [ax, ay, bx, by, r] of walkers.flatMap((o) => o.ink || [])) {
-      for (const u of [0, 0.5, 1]) {
+      for (const u of [0, 0.25, 0.5, 0.75, 1]) {
         for (const v of [0, 0.5, 1]) {
           const px = lerp(x0, x1, u);
           const py = lerp(y0, y1, v);
@@ -1553,23 +1557,30 @@ void main() {
     let name = w.tag.name;
     if (w.glitchAt >= 0) name = name.slice(0, w.glitchAt) + w.glitchChar + name.slice(w.glitchAt + 1);
     const adv = fs * 0.667;
-    const bx = x0;
-    // The name sits over the box's top-left corner, unless shoes or legs are there:
-    // it is printed in multiply and would vanish into them. Then it moves under the
-    // box (the legs lean the other way, toward the vanishing point).
+    // The name sits over the box's top-left corner, as in the recording, unless a
+    // shoe or a dark leg is there: printed in multiply, it would vanish into it. Then
+    // it tries the top-right corner and under the box, and failing those takes the
+    // spot with the most room; it moves there after a moment, gliding.
     const width = (name.length + 1 + w.number.length) * adv;
-    const above = y0 - fs * 0.55;
-    const below = y1 + fs * 1.2;
-    const room = (y) => clearance(bx, y - fs * 0.8, bx + width, y + fs * 0.2);
-    const ra = room(above);
-    const want = ra < 0 && room(below) > ra;
-    w.labelWait = want !== !!w.labelBelow ? (w.labelWait || 0) + dt : 0;
+    const spots = [
+      [0, y0 - fs * 0.55],
+      [x1 - x0 - width, y0 - fs * 0.55],
+      [0, y1 + fs * 1.2],
+      [x1 - x0 - width, y1 + fs * 1.2],
+    ];
+    const room = spots.map(([dx, y]) => clearance(x0 + dx, y - fs * 0.8, x0 + dx + width, y + fs * 0.2));
+    let want = room.findIndex((r) => r > -0.15 * L);
+    if (want < 0) want = room.indexOf(Math.max(...room));
+    w.labelWait = want !== w.labelAt ? w.labelWait + dt : 0;
     if (w.labelWait > 0.3 || w.labelY == null) {
-      w.labelBelow = want;
+      w.labelAt = want;
       w.labelWait = 0;
     }
-    const to = w.labelBelow ? below - y0 : above - y0;
-    w.labelY = w.labelY == null ? to : lerp(w.labelY, to, 1 - Math.exp(-dt * 12));
+    const [toX, toY] = spots[w.labelAt];
+    const k = 1 - Math.exp(-dt * 12);
+    w.labelX = w.labelY == null ? toX : lerp(w.labelX, toX, k);
+    w.labelY = w.labelY == null ? toY - y0 : lerp(w.labelY, toY - y0, k);
+    const bx = x0 + w.labelX;
     const by = y0 + w.labelY;
     ui.font = `700 ${fs}px ${hudBold}`;
     ui.textBaseline = 'alphabetic';
@@ -1592,9 +1603,9 @@ void main() {
     if (SOLO) return 1;
     if (LINEUP) return Object.keys(SHOES).length;
     // About three walkers in view per 180 square sole lengths, as in the reference;
-    // about half of those alive are off screen at any time.
+    // about a third of those alive are off screen at any time.
     const area = (Host.w * Host.h) / (L * L);
-    return clamp(Math.round((area / 180) * 6), 4, 10);
+    return clamp(Math.round((area / 180) * 4.8), 3, 9);
   }
 
   function resize() {
