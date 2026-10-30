@@ -14,11 +14,9 @@ import { scenes, type Scene } from './src/scenes';
 import { SettingsProvider, useSettings } from './src/settings';
 import { SettingsSheet } from './src/SettingsSheet';
 import {
-  durationLabel,
   resetStopwatch,
   resetTimer,
   setTimerDuration,
-  TIMER_PRESETS,
   toggleStopwatch,
   toggleTimer,
   useTimerAlarm,
@@ -204,6 +202,10 @@ function Player() {
         fadeMs={FADE_MS}
         onToggle={toggleCount}
         onReset={resetCount}
+        onSetDuration={(ms) => update((s) => ({ ...s, timer: setTimerDuration(ms) }))}
+        onMode={setMode}
+        onTouch={showChrome}
+        onHide={toggleClock}
       />
       <Toast toast={toast} tone={tone} />
 
@@ -225,25 +227,6 @@ function Player() {
             ))}
           </BlurView>
         </View>
-        {settings.mode === 'timer' && (
-          <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight, styles.segShadow]}>
-            <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.segGlass, { borderColor: glassEdge }]}>
-              {TIMER_PRESETS.map((ms) => (
-                <Segment
-                  key={ms}
-                  label={durationLabel(ms)}
-                  selected={settings.timer.duration === ms}
-                  ink={ink}
-                  dark={dark}
-                  onPress={() => {
-                    update((s) => ({ ...s, timer: setTimerDuration(ms) }));
-                    showChrome();
-                  }}
-                />
-              ))}
-            </BlurView>
-          </View>
-        )}
         <View style={styles.dockRow}>
           <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight]}>
             <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.pill, { borderColor: glassEdge }]}>

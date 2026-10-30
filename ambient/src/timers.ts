@@ -6,7 +6,6 @@ import type { Settings } from './settings';
 // Timer and stopwatch keep wall-clock timestamps rather than counting ticks, so they
 // stay right while the app is in the background and survive a restart.
 
-export const TIMER_PRESETS = [1, 3, 5, 10, 25].map((m) => m * 60_000);
 
 export type Timer = Settings['timer'];
 export type Stopwatch = Settings['stopwatch'];
