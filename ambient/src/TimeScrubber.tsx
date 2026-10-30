@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -15,6 +14,8 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+
+import { FaceBackdrop } from './FaceBackdrop';
 
 // Two rulers under fixed red marks: hours above (0-23), minutes and seconds below (an
 // hour in 15-second ticks). Each has two ends, where it gives a little and springs
@@ -217,10 +218,17 @@ type RulerProps = {
   inkSoft: string;
   onPreview: (v: number | null) => void;
   onChange: (v: number) => void;
+  /** Kept at the tick under the mark, fractions and all, on the UI thread. */
+  position?: SharedValue<number>;
 };
 
-function RulerView({ ruler, value, width, ink, inkSoft, onPreview, onChange }: RulerProps) {
+function RulerView({ ruler, value, width, ink, inkSoft, onPreview, onChange, position }: RulerProps) {
   const offset = useSharedValue(-value * ruler.gap);
+  // Where the ruler is, as it moves (the timer's digits roll with it).
+  useAnimatedReaction(
+    () => -offset.get() / ruler.gap,
+    (v) => position?.set(Math.min(ruler.count - 1, Math.max(0, v)))
+  );
   const busy = useSharedValue(false);
   const grab = useSharedValue(0);
   const [g] = useState(() => makeRulerGesture(ruler, offset, busy, grab));
@@ -279,21 +287,23 @@ type Props = {
   onPreview: (seconds: number | null) => void;
   /** Once it has settled. */
   onChange: (seconds: number) => void;
-  /** Shown under the rulers, on the same glass. */
+  /** Shown under the rulers, on the same veil. */
   footer?: ReactNode;
+  /** Where each ruler is as it moves, in ticks (hours; quarter minutes). */
+  hoursAt?: SharedValue<number>;
+  quartersAt?: SharedValue<number>;
 };
 
 /** The timer's rulers: hours above, minutes and seconds below. */
-export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, onChange, footer }: Props) {
+export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, onChange, footer, hoursAt, quartersAt }: Props) {
   const h = Math.floor(seconds / 3600) % 24;
   const q = Math.round((seconds % 3600) / 15) % 240;
   const total = (hh: number, qq: number) => hh * 3600 + qq * 15;
-  const dark = tone === 'dark';
   const inner = width - 52;
   return (
     <View style={[styles.panel, { width }]} accessibilityRole="adjustable" accessibilityLabel="タイマーの時間">
-      <BlurView intensity={dark ? 30 : 50} tint={dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: dark ? 'rgba(0,0,0,0.32)' : 'rgba(255,255,255,0.55)' }]} />
+      {/* The same veil as behind the digits: a blur that melts into the scene, no card. */}
+      <FaceBackdrop tone={tone} spread={{ x: 64, y: 56 }} />
       {[0, 1].map((r) => (
         <View key={r} style={styles.line}>
           <Text style={[styles.caption, { color: inkSoft }]}>{r === 0 ? '時間' : '分'}</Text>
@@ -306,6 +316,7 @@ export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, on
               inkSoft={inkSoft}
               onPreview={(v) => onPreview(v == null ? null : total(v, q))}
               onChange={(v) => onChange(total(v, q))}
+              position={hoursAt}
             />
           ) : (
             <RulerView
@@ -316,6 +327,7 @@ export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, on
               inkSoft={inkSoft}
               onPreview={(v) => onPreview(v == null ? null : total(h, v))}
               onChange={(v) => onChange(total(h, v))}
+              position={quartersAt}
             />
           )}
         </View>
@@ -327,8 +339,6 @@ export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, on
 
 const styles = StyleSheet.create({
   panel: {
-    borderRadius: 18,
-    overflow: 'hidden',
     paddingVertical: 6,
   },
   line: {

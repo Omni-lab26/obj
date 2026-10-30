@@ -42,8 +42,10 @@ function Fade({ color, opacity }: { color: string; opacity: number }) {
 
 const webMask = `radial-gradient(closest-side, ${FADE.map((f) => `rgba(0,0,0,${f.alpha.toFixed(3)}) ${f.at * 100}%`).join(', ')})`;
 
-export function FaceBackdrop({ tone }: { tone: 'dark' | 'light' }) {
+/** spread: how far past its parent's box, each side, the veil reaches. */
+export function FaceBackdrop({ tone, spread = SPREAD }: { tone: 'dark' | 'light'; spread?: { x: number; y: number } }) {
   const dark = tone === 'dark';
+  const box = { position: 'absolute' as const, top: -spread.y, bottom: -spread.y, left: -spread.x, right: -spread.x };
   if (Platform.OS === 'web') {
     const filter = dark ? 'blur(12px) brightness(0.78)' : 'blur(12px) brightness(1.12)';
     const css = {
@@ -53,31 +55,23 @@ export function FaceBackdrop({ tone }: { tone: 'dark' | 'light' }) {
       maskImage: webMask,
       WebkitMaskImage: webMask,
     };
-    return <View pointerEvents="none" style={[styles.box, css as object]} />;
+    return <View pointerEvents="none" style={[box, css as object]} />;
   }
   if (Platform.OS === 'ios') {
     return (
-      <MaskedView pointerEvents="none" style={styles.box} maskElement={<Fade color="#000" opacity={1} />}>
+      <MaskedView pointerEvents="none" style={box} maskElement={<Fade color="#000" opacity={1} />}>
         <BlurView intensity={30} tint={dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
         <View style={[StyleSheet.absoluteFill, { backgroundColor: dark ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.2)' }]} />
       </MaskedView>
     );
   }
   return (
-    <View pointerEvents="none" style={styles.box}>
+    <View pointerEvents="none" style={box}>
       <Fade color={dark ? '#000000' : '#ffffff'} opacity={dark ? 0.45 : 0.6} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  // Round the whole block and well past it on every side, so the fade has room to go
-  // gently.
-  box: {
-    position: 'absolute',
-    top: -64,
-    bottom: -64,
-    left: -96,
-    right: -96,
-  },
-});
+// Round the whole clock and well past it on every side, so the fade has room to go
+// gently.
+const SPREAD = { x: 96, y: 64 };

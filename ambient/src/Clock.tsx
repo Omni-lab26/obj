@@ -328,6 +328,63 @@ function makeEditGesture(
   };
 }
 
+// While the timer is being set, its digits are reels, like a slot machine's: each
+// rolls round with the rulers on the UI thread, from the digit at one tick to the
+// digit at the next (forwards, through the ones between, and backwards when the
+// ruler goes back), so the count turns over smoothly instead of jumping. Kinds, in
+// HH:MM:SS order: hours tens and ones (on the hour ruler), then minutes tens and
+// ones, seconds tens and ones (on the quarter-minute ruler).
+const REEL_BASE = [10, 10, 10, 10, 6, 10]; // the seconds' tens go 0-5
+const REEL_MAX = [23, 23, 239, 239, 239, 239]; // the last tick of each ruler
+function reelDigit(kind: number, n: number) {
+  'worklet';
+  if (kind === 0) return Math.floor(n / 10);
+  if (kind === 1) return n % 10;
+  const min = Math.floor(n / 4);
+  const sec = (n % 4) * 15;
+  if (kind === 2) return Math.floor(min / 10);
+  if (kind === 3) return min % 10;
+  if (kind === 4) return Math.floor(sec / 10);
+  return sec % 10;
+}
+/** Where reel `kind` stands (in digits down its strip) with its ruler at tick x. */
+function reelPos(kind: number, x: number) {
+  'worklet';
+  const max = REEL_MAX[kind];
+  const base = REEL_BASE[kind];
+  const c = Math.min(max, Math.max(0, x));
+  const n0 = Math.floor(c);
+  const n1 = Math.min(max, n0 + 1);
+  const f = c - n0;
+  const a = reelDigit(kind, n0);
+  const d = (reelDigit(kind, n1) - a + base) % base;
+  // Eased, so a reel rests on its digit and rolls on between ticks.
+  const p = a + d * f * f * (3 - 2 * f);
+  return p >= base ? p - base : p;
+}
+
+/** One reel: its digits in a strip (with the first again at the end, to roll round
+ *  on), seen through a window one digit tall. */
+function Reel({ kind, at, cell, size, textStyle }: { kind: number; at: SharedValue<number>; cell: number; size: number; textStyle: object }) {
+  const line = size * 1.08;
+  const base = REEL_BASE[kind];
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: -reelPos(kind, at.get()) * line }] }));
+  // (The window is a little wider than the digit's cell, so no glyph is clipped at
+  // its sides.)
+  const pad = size * 0.12;
+  return (
+    <View style={{ width: cell + 2 * pad, marginHorizontal: -pad, height: line, overflow: 'hidden' }}>
+      <Reanimated.View style={[styles.reel, style]}>
+        {Array.from({ length: base + 1 }, (_, i) => (
+          <Text key={i} style={[textStyle, { height: line }]}>
+            {i % base}
+          </Text>
+        ))}
+      </Reanimated.View>
+    </View>
+  );
+}
+
 const FACES = {
   // (What keeps them legible over a busy scene is the one soft veil behind the whole
   // block, FaceBackdrop: no glow round each digit, which a phone clips to the digit's
@@ -425,6 +482,12 @@ export function Clock(props: Props) {
   // never show over another mode), and fade while the timer runs.
   const timerIdle = !timerRunning(timer) && !timerDone(timer);
   const setting = mode === 'timer' && timerIdle;
+  // Where the rulers are as they move (ticks), for the timer's reels; and whether the
+  // reels show (the timer being set, not part-run and paused).
+  const dial = timerDial(timer);
+  const hoursAt = useSharedValue(Math.floor(dial / 3_600_000) % 24);
+  const quartersAt = useSharedValue(Math.round((dial % 3_600_000) / 15_000) % 240);
+  const reeling = timerIdle && (preview != null || timer.left === timer.duration);
   // (Out of the way, with the saves, while the digits are being edited.)
   const showWheels = useSharedValue(timerIdle && !edit ? 1 : 0);
   useEffect(() => showWheels.set(withTiming(timerIdle && !edit ? 1 : 0, { duration: 220 })), [timerIdle, edit, showWheels]);
@@ -480,7 +543,11 @@ export function Clock(props: Props) {
   // The mode's name shows above the digits for a moment after a change, then fades
   // away (the line keeps its place, so the digits never jump).
   const [flash, setFlash] = useState<string | null>(null);
-  const [flashOpacity] = useState(() => new Animated.Value(0));
+  // The current page's label line always takes its opacity from this (switching a
+  // view from an animated opacity to a plain 1 can leave it stuck at 0 on a phone,
+  // which hid the date); the other pages', from one that stays at 1.
+  const [flashOpacity] = useState(() => new Animated.Value(1));
+  const [still] = useState(() => new Animated.Value(1));
   const [lastMode, setLastMode] = useState(mode);
   if (mode !== lastMode) {
     setLastMode(mode);
@@ -493,7 +560,12 @@ export function Clock(props: Props) {
       Animated.delay(1800),
       Animated.timing(flashOpacity, { toValue: 0, duration: 500, easing: Easing.in(Easing.quad), useNativeDriver: true }),
     ]);
-    anim.start(({ finished }) => finished && setFlash(null));
+    anim.start(({ finished }) => {
+      if (!finished) return;
+      // The name has gone: back to the page's own label (the date), faded in.
+      setFlash(null);
+      Animated.timing(flashOpacity, { toValue: 1, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+    });
     return () => anim.stop();
   }, [flash, flashOpacity]);
 
@@ -673,11 +745,15 @@ export function Clock(props: Props) {
           >
             {[...f.main].map((ch, i) => {
               const digit = ch >= '0' && ch <= '9';
+              const textStyle = [font.time, styles.time, { fontSize: size, lineHeight: size * 1.08, color: c.ink, letterSpacing: 0 }];
+              // The timer being set: reels that roll with the rulers (HH:MM:SS → kinds).
+              const kind = m === 'timer' && reeling && digit && cell ? [0, 1, -1, 2, 3, -1, 4, 5][i] : -1;
+              if (kind >= 0) {
+                return <Reel key={i} kind={kind} at={kind < 2 ? hoursAt : quartersAt} cell={cell} size={size} textStyle={textStyle} />;
+              }
               return (
                 <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
-                  <Text style={[font.time, styles.time, { fontSize: size, lineHeight: size * 1.08, color: c.ink, letterSpacing: 0 }]}>
-                    {ch}
-                  </Text>
+                  <Text style={textStyle}>{ch}</Text>
                 </View>
               );
             })}
@@ -748,7 +824,7 @@ export function Clock(props: Props) {
     const current = m === mode;
     const f = faceFor({ ...props, mode: m }, now, m === 'timer' ? preview : null);
     const label = current ? (flash ?? f.label) : MODE_NAMES[m];
-    const labelOpacity = current && flash ? flashOpacity : 1;
+    const labelOpacity = current ? flashOpacity : still;
     return (
       <>
         <FaceBackdrop tone={veil} />
@@ -843,6 +919,8 @@ export function Clock(props: Props) {
                 inkSoft={FACES[tone].inkSoft}
                 onPreview={setPreview}
                 onChange={(sec) => onSetDuration(sec * 1000)}
+                hoursAt={hoursAt}
+                quartersAt={quartersAt}
                 footer={
                   <TimerSaves
                     saves={saves}
@@ -920,6 +998,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   page: {
+    alignItems: 'center',
+  },
+  reel: {
     alignItems: 'center',
   },
   slotHere: {

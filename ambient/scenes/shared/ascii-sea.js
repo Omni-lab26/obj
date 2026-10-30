@@ -94,6 +94,8 @@
 
     // ── world ──────────────────────────────────────────────────────────
     const fish = [];
+    // Test hook: with #probe in the URL a test can read where the fish are.
+    if (/[#&]probe/.test(location.hash)) window.__seaFish = fish;
     const pellets = [];
     const ripples = [];
     const particles = [];
@@ -187,7 +189,8 @@
         else if (edge === 2) y = -m;
         else y = H.h + m;
       }
-      const heading = Math.atan2(H.h / 2 - y, H.w / 2 - x) + rand(-0.6, 0.6);
+      // Heading in towards some point of their own, not all for the middle.
+      const heading = Math.atan2(rand(0.15, 0.85) * H.h - y, rand(0.15, 0.85) * H.w - x) + rand(-0.4, 0.4);
       const f = {
         sp,
         depth,
@@ -239,11 +242,68 @@
       }
     }
 
+    // The middle of the screen, where the clock usually sits: fish pass through it but
+    // don't gather there.
+    const clockZone = () => ({ x: H.w / 2, y: H.h * 0.46, rx: H.w * 0.3, ry: H.h * 0.16 });
+
+    // Somewhere to swim to, picked as the best of a few tries: far from the other fish
+    // and where they are heading, and out of the middle. Plain random points pile the
+    // school up in the middle over time; this spreads it round the pond.
     function pickTarget(f) {
-      const mx = H.w * 0.12;
-      const my = H.h * 0.1;
-      f.target = { x: rand(-mx, H.w + mx), y: rand(-my, H.h + my) };
+      // (Inside the edges a little, so the school stays in view.)
+      const mx = -H.w * 0.06;
+      const my = -H.h * 0.06;
+      const z = clockZone();
+      let best = null;
+      let bestScore = -Infinity;
+      for (let k = 0; k < 8; k++) {
+        const c = { x: rand(-mx, H.w + mx), y: rand(-my, H.h + my) };
+        let near = Math.max(H.w, H.h);
+        for (const o of fish) {
+          if (o === f) continue;
+          near = Math.min(near, Math.hypot(c.x - o.x, c.y - o.y));
+          if (o.target) near = Math.min(near, Math.hypot(c.x - o.target.x, c.y - o.target.y));
+        }
+        const inZone = Math.hypot((c.x - z.x) / z.rx, (c.y - z.y) / z.ry);
+        const score = near * (inZone < 1 ? 0.2 + 0.8 * inZone * inZone : 1);
+        if (score > bestScore) {
+          bestScore = score;
+          best = c;
+        }
+      }
+      f.target = best;
       f.targetT = rand(5, 11);
+    }
+
+    // Which way to lean to keep clear: away from fish closer than a body and a half
+    // or so, and (a little) out of the middle. Zero when there is room all round.
+    function keepClear(f, hungry) {
+      let sx = 0;
+      let sy = 0;
+      for (const o of fish) {
+        if (o === f) continue;
+        const dx = f.x - o.x;
+        const dy = f.y - o.y;
+        const d = Math.hypot(dx, dy);
+        const r = (f.L + o.L) * 0.6;
+        if (d > 0.001 && d < r) {
+          const w = 1 - d / r;
+          sx += (dx / d) * w * w * 2.2;
+          sy += (dy / d) * w * w * 2.2;
+        }
+      }
+      if (!hungry) {
+        const z = clockZone();
+        const ex = (f.x - z.x) / z.rx;
+        const ey = (f.y - z.y) / z.ry;
+        const e = Math.hypot(ex, ey);
+        if (e < 1) {
+          const w = (1 - e) * 1.5;
+          sx += (ex / (e || 1)) * w;
+          sy += (ey / (e || 1)) * w;
+        }
+      }
+      return { x: sx, y: sy };
     }
 
     function steer(f, dt, t) {
@@ -264,7 +324,11 @@
       if (!hungry && (f.targetT <= 0 || Math.hypot(goal.x - f.x, goal.y - f.y) < f.L * 0.5)) pickTarget(f);
       goal = hungry ? goal : f.target;
 
-      const want = Math.atan2(goal.y - f.y, goal.x - f.x);
+      // Towards the goal, leaning away from crowding (more lightly when food is about).
+      const gd = Math.hypot(goal.x - f.x, goal.y - f.y) || 1;
+      const clear = keepClear(f, hungry);
+      const lean = hungry ? 0.35 : 1;
+      const want = Math.atan2((goal.y - f.y) / gd + clear.y * lean, (goal.x - f.x) / gd + clear.x * lean);
       const turnRate = (hungry ? 2.4 : 0.9) * f.sp.agility;
       const wobble =
         (Math.sin(t * 0.37 + f.seed) * 0.6 + Math.sin(t * 0.83 + f.seed * 1.7) * 0.4) * 0.35 * f.sp.agility;
