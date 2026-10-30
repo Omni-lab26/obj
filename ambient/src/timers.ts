@@ -33,9 +33,9 @@ export function toggleTimer(t: Timer, now: number): Timer {
   return { ...t, endAt: now + t.left };
 }
 
-/** Hold: the count back to 00:00:00; the rulers stay where they were set. */
-export function resetTimer(t: Timer): Timer {
-  return { duration: 0, endAt: null, left: 0, dial: timerDial(t) };
+/** Hold: back to nothing, 00:00:00, rulers and all. */
+export function resetTimer(_t: Timer): Timer {
+  return { duration: 0, endAt: null, left: 0, dial: 0 };
 }
 
 export function setTimerDuration(duration: number): Timer {
@@ -60,12 +60,11 @@ export function resetStopwatch(): Stopwatch {
   return { startAt: null, elapsed: 0 };
 }
 
-/** "01:04:05": always hours, minutes and seconds, two digits each ("01:04" without seconds). */
-export function formatFixed(ms: number, seconds = true): string {
+/** "01:04:05": always hours, minutes and seconds, two digits each. */
+export function formatFixed(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const two = (n: number) => String(n).padStart(2, '0');
-  const hm = `${two(Math.floor(total / 3600))}:${two(Math.floor((total % 3600) / 60))}`;
-  return seconds ? `${hm}:${two(total % 60)}` : hm;
+  return `${two(Math.floor(total / 3600))}:${two(Math.floor((total % 3600) / 60))}:${two(total % 60)}`;
 }
 
 /** "4:05", or "1:04:05" from an hour up. */

@@ -8,17 +8,19 @@ import { Animated, AppState, Easing, Platform, Pressable, StyleSheet, Text, View
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Clock, Toast } from './src/Clock';
+import { Clock, Toast, type Edit } from './src/Clock';
 import { fontAssets } from './src/fonts';
-import { ChevronIcon, SlidersIcon } from './src/icons';
+import { CheckIcon, ChevronIcon, PenIcon, ResizeIcon, SlidersIcon, UndoIcon } from './src/icons';
 import { SceneView } from './src/SceneView';
 import { scenes, type Scene } from './src/scenes';
 import { SettingsProvider, useSettings } from './src/settings';
 import { SettingsSheet } from './src/SettingsSheet';
 import {
   resetStopwatch,
+  formatDuration,
   resetTimer,
   setTimerDuration,
+  timerDial,
   toggleStopwatch,
   toggleTimer,
   useTimerAlarm,
@@ -74,8 +76,16 @@ function Player() {
   const [chrome] = useState(() => new Animated.Value(1));
   const [chromeOn, setChromeOn] = useState(true);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // Moving or resizing the digits (the pen and the arrows at the top left); the
+  // controls stay up until it is done.
+  const [edit, setEdit] = useState<Edit>(null);
+  const editing = useRef<Edit>(null);
+  useEffect(() => {
+    editing.current = edit;
+  });
 
   const hideChrome = useCallback(() => {
+    if (editing.current) return;
     setChromeOn(false);
     Animated.timing(chrome, {
       toValue: 0,
@@ -169,6 +179,45 @@ function Player() {
     setToast({ text: 'リセットしました', id: Date.now() });
   }, [update]);
   useTimerAlarm(settings.timer, update, () => setToast({ text: 'タイマーが終わりました', id: Date.now() }));
+  // ── timer saves: five slots under the rulers ──────────────────────────────
+  const tick = () => {
+    if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
+  };
+  const saveTimer = (i: number) => {
+    const ms = timerDial(settings.timer);
+    if (ms <= 0) {
+      setToast({ text: '目盛りで時間を合わせてから保存してください', id: Date.now() });
+      return;
+    }
+    update((s) => ({ ...s, timerSaves: s.timerSaves.map((v, j) => (j === i ? ms : v)) }));
+    tick();
+    setToast({ text: `${formatDuration(ms)} を保存しました・長押しで削除`, id: Date.now() });
+  };
+  const loadTimer = (i: number) => {
+    const ms = settings.timerSaves[i];
+    if (ms == null) return;
+    update((s) => ({ ...s, timer: setTimerDuration(ms) }));
+    tick();
+  };
+  const deleteTimer = (i: number) => {
+    update((s) => ({ ...s, timerSaves: s.timerSaves.map((v, j) => (j === i ? null : v)) }));
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    setToast({ text: '保存を削除しました', id: Date.now() });
+  };
+
+  // ── editing the digits' place and size ────────────────────────────────────
+  const toggleEdit = (kind: Exclude<Edit, null>) => {
+    const next = edit === kind ? null : kind;
+    setEdit(next);
+    editing.current = next;
+    showChrome();
+  };
+  const endEdit = () => {
+    setEdit(null);
+    editing.current = null;
+    showChrome();
+  };
+
   const setMode = (mode: typeof settings.mode) => update((s) => ({ ...s, mode, clock: { ...s.clock, visible: true } }));
 
   const tone = measuredTone[shown.id] ?? shown.tone;
@@ -209,16 +258,24 @@ function Player() {
         onMode={setMode}
         onTouch={showChrome}
         onHide={toggleClock}
+        saves={settings.timerSaves}
+        onSave={saveTimer}
+        onLoad={loadTimer}
+        onDelete={deleteTimer}
+        face={settings.face}
+        edit={settings.clock.visible ? edit : null}
+        onFace={(face) => update((s) => ({ ...s, face }))}
       />
       <Toast toast={toast} tone={tone} />
 
       <Animated.View
-        pointerEvents={chromeOn ? 'box-none' : 'none'}
+        // (Out of the way while the digits are being moved.)
+        pointerEvents={chromeOn && !edit ? 'box-none' : 'none'}
         style={[
           styles.dock,
           {
             bottom: Math.max(insets.bottom, 12) + 14,
-            opacity: chrome,
+            opacity: edit ? 0 : chrome,
             transform: [{ translateY: chrome.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
           },
         ]}
@@ -268,12 +325,51 @@ function Player() {
         </View>
       </Animated.View>
 
+      {/* Top left: the pen moves the digits, the arrows resize them (all modes). */}
+      {settings.clock.visible ? (
+        <Animated.View
+          pointerEvents={chromeOn || edit ? 'box-none' : 'none'}
+          style={[styles.tools, { top: Math.max(insets.top, 12) + 10, left: Math.max(insets.left, 12) + 4, opacity: edit ? 1 : chrome }]}
+        >
+          <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight, styles.toolsShadow]}>
+            <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.toolsGlass, { borderColor: glassEdge }]}>
+              <ToolButton label="数字の位置を変える" active={edit === 'move'} color={ink} onPress={() => toggleEdit('move')}>
+                <PenIcon color={ink} />
+              </ToolButton>
+              <ToolButton label="数字の大きさを変える" active={edit === 'size'} color={ink} onPress={() => toggleEdit('size')}>
+                <ResizeIcon color={ink} />
+              </ToolButton>
+              {edit ? (
+                <>
+                  <ToolButton label="元の位置と大きさに戻す" color={ink} onPress={() => update((s) => ({ ...s, face: { x: 0, y: 0, scale: 1 } }))}>
+                    <UndoIcon color={ink} />
+                  </ToolButton>
+                  <ToolButton label="完了" color={ink} onPress={endEdit}>
+                    <CheckIcon color={ink} size={16} />
+                  </ToolButton>
+                </>
+              ) : null}
+            </BlurView>
+          </View>
+          {edit ? (
+            <View pointerEvents="none">
+              <Text style={[styles.toolsHint, { color: ink, textShadowColor: dark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.95)' }]}>
+                {edit === 'move' ? '数字をドラッグして好きな位置へ' : '上・右へドラッグで拡大、下・左で縮小'}
+                {'\n'}
+                <Text style={{ color: inkSoft }}>2本指でつまんでも大きさを変えられます</Text>
+              </Text>
+            </View>
+          ) : null}
+        </Animated.View>
+      ) : null}
+
       <SettingsSheet
         open={settingsOpen}
         tone={tone}
         credit={scene.credit}
         onClose={() => {
           setSettingsOpen(false);
+          setEdit(null);
           showChrome();
         }}
       />
@@ -291,6 +387,25 @@ function NavButton({ direction, color, onPress, label }: { direction: 1 | -1; co
       style={({ pressed }) => [styles.nav, { opacity: pressed ? 0.45 : 1, transform: [{ scale: pressed ? 0.92 : 1 }] }]}
     >
       <ChevronIcon direction={direction} color={color} />
+    </Pressable>
+  );
+}
+
+function ToolButton({ label, active, color, onPress, children }: { label: string; active?: boolean; color: string; onPress: () => void; children: React.ReactNode }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={4}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: !!active }}
+      style={({ pressed }) => [
+        styles.tool,
+        active ? { backgroundColor: color === '#ffffff' ? 'rgba(255,255,255,0.22)' : 'rgba(17,17,20,0.12)' } : null,
+        { opacity: pressed ? 0.45 : 1, transform: [{ scale: pressed ? 0.92 : 1 }] },
+      ]}
+    >
+      {children}
     </Pressable>
   );
 }
@@ -375,6 +490,39 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 11,
     letterSpacing: 0,
+  },
+  tools: {
+    position: 'absolute',
+    alignItems: 'flex-start',
+  },
+  toolsShadow: {
+    borderRadius: 22,
+  },
+  toolsGlass: {
+    flexDirection: 'row',
+    height: 44,
+    paddingHorizontal: 3,
+    alignItems: 'center',
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
+  tool: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toolsHint: {
+    marginTop: 8,
+    marginLeft: 4,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '600',
+    letterSpacing: 0,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   dots: {
     flexDirection: 'row',

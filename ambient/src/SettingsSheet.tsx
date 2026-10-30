@@ -125,7 +125,7 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
           <Group color={c.group}>
             <ToggleRow label="時計を表示" value={settings.clock.visible} onChange={(v) => setClock({ visible: v })} c={c} />
             <ToggleRow label="日付" value={settings.clock.date} onChange={(v) => setClock({ date: v })} c={c} />
-            <ToggleRow label="秒" value={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
+            <ToggleRow label="秒（時計）" value={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
             <ToggleRow label="24時間表示" value={settings.clock.hour24} onChange={(v) => setClock({ hour24: v })} c={c} last />
           </Group>
 

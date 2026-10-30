@@ -1,9 +1,10 @@
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  makeMutable,
   runOnJS,
   useAnimatedProps,
   useAnimatedReaction,
@@ -139,20 +140,24 @@ function makeRulerGesture(ruler: Ruler, offset: SharedValue<number>, busy: Share
   let landing: number | null = null;
   const commit = (v: number) => h.commit(v);
   const rest = () => h.rest();
-  const start = { x: 0 };
+  // Where the drag began. A shared value, not a plain object: each gesture callback
+  // runs on the UI thread with its own copy of what it captured, so a plain object
+  // set in onBegin would still read 0 in onUpdate.
+  const start = makeMutable(0);
   const pan = Gesture.Pan()
     .minDistance(2)
     .onBegin(() => {
       busy.set(true);
       grab.set(grab.get() + 1);
-      start.x = offset.get();
+      start.set(offset.get());
     })
     .onUpdate((e) => {
       // Each step (an hour, a minute) has a slight catch: the ruler lingers over the
       // step's long tick and hurries between, so the finger feels them go by.
       const step = ruler.fling * ruler.gap;
       const catchAt = (px: number) => px - (DETENT * step * Math.sin((2 * Math.PI * px) / step)) / (2 * Math.PI);
-      let v = start.x + catchAt(start.x + e.translationX) - catchAt(start.x);
+      const s0 = start.get();
+      let v = s0 + catchAt(s0 + e.translationX) - catchAt(s0);
       // Past either end the ruler gives a little, with resistance.
       const lo = -(ruler.count - 1) * ruler.gap;
       if (v > 0) v *= 0.3;
@@ -274,10 +279,12 @@ type Props = {
   onPreview: (seconds: number | null) => void;
   /** Once it has settled. */
   onChange: (seconds: number) => void;
+  /** Shown under the rulers, on the same glass. */
+  footer?: ReactNode;
 };
 
 /** The timer's rulers: hours above, minutes and seconds below. */
-export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, onChange }: Props) {
+export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, onChange, footer }: Props) {
   const h = Math.floor(seconds / 3600) % 24;
   const q = Math.round((seconds % 3600) / 15) % 240;
   const total = (hh: number, qq: number) => hh * 3600 + qq * 15;
@@ -313,6 +320,7 @@ export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, on
           )}
         </View>
       ))}
+      {footer}
     </View>
   );
 }

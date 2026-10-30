@@ -15,11 +15,18 @@ export type Settings = {
   mode: 'clock' | 'timer' | 'stopwatch';
   /**
    * Running while endAt is set; otherwise left is what remains (0 = finished). dial
-   * is where the rulers stand: a reset clears the count but leaves them there.
+   * is where the rulers stand (the duration, when missing).
    */
   timer: { duration: number; endAt: number | null; left: number; dial?: number };
   /** Running while startAt is set; elapsed is the time banked before it. */
   stopwatch: { startAt: number | null; elapsed: number };
+  /** Up to five timer lengths kept for later (ms; null = an empty slot). */
+  timerSaves: (number | null)[];
+  /**
+   * Where the digits sit and how big, the same for all three modes: x and y move them
+   * from their usual place by that share of the screen's width and height.
+   */
+  face: { x: number; y: number; scale: number };
   /** Digital layer: 0 = the raw picture (素), 1 = fully digital. */
   digital: number;
   /** Last scene shown, restored on launch. */
@@ -31,6 +38,8 @@ export const defaultSettings: Settings = {
   mode: 'clock',
   timer: { duration: 5 * 60_000, endAt: null, left: 5 * 60_000 },
   stopwatch: { startAt: null, elapsed: 0 },
+  timerSaves: [null, null, null, null, null],
+  face: { x: 0, y: 0, scale: 1 },
   digital: 0.65,
   scene: 'koi',
 };
@@ -54,6 +63,8 @@ function withDefaults(stored: Partial<Settings>): Settings {
     clock: { ...defaultSettings.clock, ...stored.clock },
     timer: { ...defaultSettings.timer, ...stored.timer },
     stopwatch: { ...defaultSettings.stopwatch, ...stored.stopwatch },
+    timerSaves: defaultSettings.timerSaves.map((d, i) => stored.timerSaves?.[i] ?? d),
+    face: { ...defaultSettings.face, ...stored.face },
   };
 }
 
