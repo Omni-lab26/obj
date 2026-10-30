@@ -211,6 +211,12 @@ function Player() {
     editing.current = true;
     showChrome();
   };
+  // Back to the middle at the usual size (the digits glide there).
+  const resetFace = () => {
+    update((s) => ({ ...s, face: { x: 0, y: 0, scale: 1 } }));
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    setToast({ text: '位置と大きさを元に戻しました', id: Date.now() });
+  };
   const endEdit = () => {
     setEdit(false);
     editing.current = false;
@@ -320,9 +326,15 @@ function Player() {
             <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.toolsGlass, { borderColor: glassEdge }]}>
               {edit ? (
                 <>
-                  <ToolButton label="元の位置と大きさに戻す" color={ink} onPress={() => update((s) => ({ ...s, face: { x: 0, y: 0, scale: 1 } }))}>
-                    <UndoIcon color={ink} />
-                  </ToolButton>
+                  <Pressable
+                    onPress={resetFace}
+                    accessibilityRole="button"
+                    accessibilityLabel="位置と大きさをリセット"
+                    style={({ pressed }) => [styles.resetButton, { opacity: pressed ? 0.5 : 1 }]}
+                  >
+                    <UndoIcon color={ink} size={15} />
+                    <Text style={[styles.doneText, { color: ink }]}>リセット</Text>
+                  </Pressable>
                   <Pressable
                     onPress={endEdit}
                     accessibilityRole="button"
@@ -515,6 +527,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+  },
+  resetButton: {
+    height: 32,
+    paddingLeft: 10,
+    paddingRight: 12,
+    marginLeft: 3,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   doneButton: {
     height: 32,

@@ -2,9 +2,12 @@ import Slider from '@react-native-community/slider';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Animated, Easing, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ColorField } from './ColorField';
+import { colorHex } from './colors';
 import { clockFonts } from './fonts';
 import { CloseIcon } from './icons';
 import { scenes } from './scenes';
@@ -84,6 +87,7 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
   // The slider stays uncontrolled while the page is open so dragging never fights props.
   const initialDigital = useMemo(() => settings.digital, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const digitColor = settings.clock.color;
   const setClock = (patch: Partial<typeof settings.clock>) => {
     tick();
     update((s) => ({ ...s, clock: { ...s.clock, ...patch } }));
@@ -94,110 +98,135 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
 
   return (
     <Modal visible={mounted} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: progress }]}>
-        <BlurView intensity={60} tint={c.glass} style={StyleSheet.absoluteFill} />
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: c.veil }]} />
+      {/* (A modal is its own window: gestures in it need their own root.) */}
+      <GestureHandlerRootView style={styles.root}>
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: progress }]}>
+          <BlurView intensity={60} tint={c.glass} style={StyleSheet.absoluteFill} />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: c.veil }]} />
 
-        <Animated.View style={[styles.page, { transform: [{ translateY: rise }] }]}>
-          <ScrollView
-            contentContainerStyle={[styles.content, { paddingTop: top + 2, paddingBottom: insets.bottom + 36 }]}
-            showsVerticalScrollIndicator={false}
-          >
-            <Text style={[styles.title, { color: c.ink }]}>設定</Text>
+          <Animated.View style={[styles.page, { transform: [{ translateY: rise }] }]}>
+            <ScrollView
+              contentContainerStyle={[styles.content, { paddingTop: top + 2, paddingBottom: insets.bottom + 36 }]}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text style={[styles.title, { color: c.ink }]}>設定</Text>
 
-            <Card title="表示" c={c}>
-              <View style={styles.tiles}>
-                <Toggle label="時計" note="中央に出す" on={settings.clock.visible} onChange={(v) => setClock({ visible: v })} c={c} />
-                <Toggle label="日付" note="時計の上に" on={settings.clock.date} onChange={(v) => setClock({ date: v })} c={c} />
-                <Toggle label="24時間" note="午後も13時から" on={settings.clock.hour24} onChange={(v) => setClock({ hour24: v })} c={c} />
-                <Toggle label="秒" note="時計だけ" on={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
-              </View>
-              <Text style={[styles.note, { color: c.faint }]}>画面のどこかを長押しすると、いつでも時計を出したり隠したりできます。</Text>
-            </Card>
+              <Card title="表示" c={c}>
+                <View style={styles.tiles}>
+                  <Toggle label="時計" note="中央に出す" on={settings.clock.visible} onChange={(v) => setClock({ visible: v })} c={c} />
+                  <Toggle label="日付" note="時計の上に" on={settings.clock.date} onChange={(v) => setClock({ date: v })} c={c} />
+                  <Toggle label="24時間" note="午後も13時から" on={settings.clock.hour24} onChange={(v) => setClock({ hour24: v })} c={c} />
+                  <Toggle label="秒" note="時計だけ" on={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
+                </View>
+                <Text style={[styles.note, { color: c.faint }]}>画面のどこかを長押しすると、いつでも時計を出したり隠したりできます。</Text>
+              </Card>
 
-            <Card title="フォント" c={c}>
-              <View style={styles.fonts}>
-                {clockFonts.map((f) => {
-                  const selected = settings.clock.font === f.id;
-                  return (
-                    <Pressable
-                      key={f.id}
-                      onPress={() => setClock({ font: f.id, visible: true })}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      accessibilityLabel={`フォント ${f.label}`}
-                      style={({ pressed }) => [
-                        styles.font,
-                        { backgroundColor: selected ? c.ink : c.tile },
-                        { transform: [{ scale: pressed ? 0.96 : 1 }] },
-                      ]}
-                    >
-                      {/* Small enough that every font's four digits fit the tile whole. */}
-                      <Text
-                        numberOfLines={1}
-                        ellipsizeMode="clip"
-                        adjustsFontSizeToFit
-                        minimumFontScale={0.6}
-                        style={[
-                          f.time,
-                          {
-                            fontSize: (f.time.fontSize ?? 96) * 0.27,
-                            letterSpacing: (f.time.letterSpacing ?? 0) * 0.27,
-                            color: selected ? c.onInk : c.ink,
-                            includeFontPadding: false,
-                          },
+              <Card title="フォント" c={c}>
+                <View style={styles.fonts}>
+                  {clockFonts.map((f) => {
+                    const selected = settings.clock.font === f.id;
+                    return (
+                      <Pressable
+                        key={f.id}
+                        onPress={() => setClock({ font: f.id, visible: true })}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected }}
+                        accessibilityLabel={`フォント ${f.label}`}
+                        style={({ pressed }) => [
+                          styles.font,
+                          { backgroundColor: selected ? c.ink : c.tile },
+                          { transform: [{ scale: pressed ? 0.96 : 1 }] },
                         ]}
                       >
-                        12:34
-                      </Text>
-                      <Text style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]}>{f.label}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </Card>
-
-            {hasPhotos ? (
-              <Card title="デジタルレイヤー" value={`${Math.round(settings.digital * 100)}%`} c={c}>
-                <View style={[styles.slab, { backgroundColor: c.tile }]}>
-                  <Text style={[styles.end, { color: c.ink }]}>素</Text>
-                  <Slider
-                    style={styles.slider}
-                    minimumValue={0}
-                    maximumValue={1}
-                    value={initialDigital}
-                    onValueChange={(v) => update((s) => ({ ...s, digital: v }))}
-                    minimumTrackTintColor={c.ink}
-                    maximumTrackTintColor={c.track}
-                    thumbTintColor={c.ink}
-                    accessibilityLabel="デジタルレイヤーの強さ"
-                  />
-                  <Text style={[styles.end, { color: c.ink }]}>デジタル</Text>
+                        {/* Small enough that every font's four digits fit the tile whole. */}
+                        <Text
+                          numberOfLines={1}
+                          ellipsizeMode="clip"
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.6}
+                          style={[
+                            f.time,
+                            {
+                              fontSize: (f.time.fontSize ?? 96) * 0.27,
+                              letterSpacing: (f.time.letterSpacing ?? 0) * 0.27,
+                              color: selected ? c.onInk : c.ink,
+                              includeFontPadding: false,
+                            },
+                          ]}
+                        >
+                          12:34
+                        </Text>
+                        <Text style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]}>{f.label}</Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
-                <Text style={[styles.note, { color: c.faint }]}>
-                  写真の背景にかける加工の強さ。左端は元の写真そのまま、右に行くほど文字・網点・ドットなどのデジタル表現が強くなります。
-                </Text>
               </Card>
-            ) : null}
-            {credit ? <Text style={[styles.note, styles.credit, { color: c.soft }]}>いまの背景の写真: {credit}</Text> : null}
-          </ScrollView>
-        </Animated.View>
 
-        {/* Where the settings button was. */}
-        <Pressable
-          onPress={onClose}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="設定を閉じる"
-          style={({ pressed }) => [
-            styles.close,
-            { top, right: Math.max(insets.right, 12) + 4, backgroundColor: c.card },
-            { opacity: pressed ? 0.5 : 1, transform: [{ scale: pressed ? 0.92 : 1 }] },
-          ]}
-        >
-          <CloseIcon color={c.ink} />
-        </Pressable>
-      </Animated.View>
+              <Card title="色" c={c}>
+                <View style={styles.colorTop}>
+                  <Pressable
+                    onPress={() => setClock({ color: null })}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: !digitColor }}
+                    accessibilityLabel="色を自動にする"
+                    style={({ pressed }) => [styles.auto, { backgroundColor: digitColor ? c.tile : c.ink, transform: [{ scale: pressed ? 0.96 : 1 }] }]}
+                  >
+                    <Text style={[styles.autoText, { color: digitColor ? c.ink : c.onInk }]}>自動</Text>
+                  </Pressable>
+                  <View style={[styles.swatch, { borderColor: c.faint, backgroundColor: digitColor ? colorHex(digitColor) : '#ffffff' }]}>
+                    {digitColor ? null : <View style={styles.swatchHalf} />}
+                  </View>
+                  <Text style={[styles.colorNote, { color: c.soft }]} numberOfLines={1}>
+                    {digitColor ? '下の面で選んだ色' : '背景に合わせて白か黒'}
+                  </Text>
+                </View>
+                {/* Across: hue. Down: from white through the colour to black. */}
+                <ColorField value={digitColor} onChange={(v) => update((s) => ({ ...s, clock: { ...s.clock, color: v } }))} />
+              </Card>
+
+              {hasPhotos ? (
+                <Card title="デジタルレイヤー" value={`${Math.round(settings.digital * 100)}%`} c={c}>
+                  <View style={[styles.slab, { backgroundColor: c.tile }]}>
+                    <Text style={[styles.end, { color: c.ink }]}>素</Text>
+                    <Slider
+                      style={styles.slider}
+                      minimumValue={0}
+                      maximumValue={1}
+                      value={initialDigital}
+                      onValueChange={(v) => update((s) => ({ ...s, digital: v }))}
+                      minimumTrackTintColor={c.ink}
+                      maximumTrackTintColor={c.track}
+                      thumbTintColor={c.ink}
+                      accessibilityLabel="デジタルレイヤーの強さ"
+                    />
+                    <Text style={[styles.end, { color: c.ink }]}>デジタル</Text>
+                  </View>
+                  <Text style={[styles.note, { color: c.faint }]}>
+                    写真の背景にかける加工の強さ。左端は元の写真そのまま、右に行くほど文字・網点・ドットなどのデジタル表現が強くなります。
+                  </Text>
+                </Card>
+              ) : null}
+              {credit ? <Text style={[styles.note, styles.credit, { color: c.soft }]}>いまの背景の写真: {credit}</Text> : null}
+            </ScrollView>
+          </Animated.View>
+
+          {/* Where the settings button was. */}
+          <Pressable
+            onPress={onClose}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="設定を閉じる"
+            style={({ pressed }) => [
+              styles.close,
+              { top, right: Math.max(insets.right, 12) + 4, backgroundColor: c.card },
+              { opacity: pressed ? 0.5 : 1, transform: [{ scale: pressed ? 0.92 : 1 }] },
+            ]}
+          >
+            <CloseIcon color={c.ink} />
+          </Pressable>
+        </Animated.View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
@@ -237,6 +266,9 @@ function Toggle({ label, note, on, onChange, c }: { label: string; note: string;
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
   page: {
     flex: 1,
   },
@@ -331,6 +363,46 @@ const styles = StyleSheet.create({
   fontLabel: {
     fontSize: 12,
     fontWeight: '800',
+    letterSpacing: 0,
+  },
+  colorTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  auto: {
+    height: 34,
+    paddingHorizontal: 16,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  autoText: {
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0,
+  },
+  swatch: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  // Half black, for "white or black".
+  swatchHalf: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: '50%',
+    backgroundColor: '#0b0b0e',
+  },
+  colorNote: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
     letterSpacing: 0,
   },
   slab: {

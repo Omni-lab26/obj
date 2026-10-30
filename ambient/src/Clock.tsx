@@ -1,8 +1,10 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector, type TouchData } from 'react-native-gesture-handler';
 import Reanimated, {
+  cancelAnimation,
+  Easing as Ease,
   makeMutable,
   runOnJS,
   useAnimatedStyle,
@@ -12,6 +14,7 @@ import Reanimated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
+import { colorHex, luminance, withAlpha } from './colors';
 import { FaceBackdrop } from './FaceBackdrop';
 import { clockFont } from './fonts';
 import type { Settings } from './settings';
@@ -72,7 +75,7 @@ const MARGIN = 12; // kept clear above and below the digits at the screen's edge
 const EDGE = 6; // kept clear beside the edit frame at the screen's sides
 // The buttons in the top corners (in App: the pen on the left, settings on the
 // right): the digits stay out from under them.
-const TOOLS = { left: 136, right: 64, height: 54 };
+const TOOLS = { left: 186, right: 64, height: 54 };
 const MIN_SCALE = 0.35;
 // The edit frame's reach past the digits' line, sideways and up and down.
 const FRAME = { x: 12, y: 10 };
@@ -155,36 +158,50 @@ function clampPlace(x: number, y: number, k: number, p: Limits) {
 const MODES: Settings['mode'][] = ['clock', 'timer', 'stopwatch'];
 const MODE_NAMES = { clock: '時計', timer: 'タイマー', stopwatch: 'ストップウォッチ' } as const;
 
+/** Where the page in this slot sits, in page widths from the middle of the screen,
+ *  with the row at `pos`: the three modes go round and round, so each is never more
+ *  than a page and a half away. */
+function ringOffset(slot: number, pos: number) {
+  'worklet';
+  const d = (slot - pos) % MODES.length;
+  return ((d + MODES.length * 1.5) % MODES.length) - MODES.length / 2;
+}
+
 // The digits' gestures, built once (the face re-renders ten times a second while
 // counting, and a rebuilt gesture would drop a hold in progress); they call whatever
 // handlers were set last. A sideways swipe moves the modes like pages on an iPhone:
-// the face follows the finger one to one with the next mode coming in beside it, and
-// on release it either carries on to that page or settles back, on a spring with no
-// bounce. A hold and a tap race the swipe; whichever is recognised first wins.
-function makeFaceGesture(swipeX: SharedValue<number>, span: SharedValue<number>) {
-  const h = { step: (_dir: number) => {}, hold: () => {}, tap: () => {} };
-  const step = (dir: number) => h.step(dir);
+// the row follows the finger one to one, and on release it carries on to the next
+// page or settles back, on a spring with no bounce. Where the row is lives on the UI
+// thread as a page position that only ever counts on (0, 1, 2, 3 … round the three
+// modes), so a swipe caught mid-glide carries on from where the row is, and the mode
+// it lands on is worked out from that, never from a mode that hasn't caught up yet.
+// A hold and a tap race the swipe; whichever is recognised first wins.
+function makeFaceGesture(pos: SharedValue<number>, span: SharedValue<number>) {
+  const h = { land: (_page: number) => {}, hold: () => {}, tap: () => {} };
+  const land = (page: number) => h.land(page);
   const settle = { stiffness: 340, damping: 37, mass: 1, overshootClamping: true };
+  // (A shared value, not a plain object: each callback gets its own copy of those.)
+  const from = makeMutable(0);
   const pan = Gesture.Pan()
     .activeOffsetX([-10, 10])
     .failOffsetY([-16, 16])
+    .onStart(() => {
+      cancelAnimation(pos);
+      from.set(pos.get());
+    })
     .onUpdate((e) => {
-      swipeX.set(e.translationX);
+      pos.set(from.get() - e.translationX / span.get());
     })
     .onEnd((e) => {
       const w = span.get();
-      // Where a flick would carry it, as a page view decides.
-      const ahead = e.translationX + e.velocityX * 0.15;
-      if (Math.abs(ahead) < w * 0.5 && Math.abs(e.velocityX) < 500) {
-        swipeX.set(withSpring(0, { ...settle, velocity: e.velocityX }));
-        return;
-      }
-      const dir = ahead < 0 ? 1 : -1;
-      swipeX.set(
-        withSpring(-dir * w, { ...settle, velocity: e.velocityX }, (done) => {
-          if (done) runOnJS(step)(dir);
-        })
-      );
+      const v = -e.velocityX / w; // pages a second
+      // The page it started nearest, and where a flick would carry it from here.
+      const base = Math.round(from.get());
+      const ahead = pos.get() + v * 0.15 - base;
+      let page = base + (ahead > 0.5 ? 1 : ahead < -0.5 ? -1 : 0);
+      if (Math.abs(e.velocityX) > 500) page = base + (v > 0 ? 1 : -1);
+      pos.set(withSpring(page, { ...settle, velocity: v }));
+      runOnJS(land)(page);
     });
   const hold = Gesture.LongPress()
     .minDuration(500)
@@ -208,6 +225,14 @@ function makeFaceGesture(swipeX: SharedValue<number>, span: SharedValue<number>)
       tap.enabled(on);
     },
   };
+}
+
+/** One mode's page in the row, placed round the ring on the UI thread. The current
+ *  mode's page is laid out in the flow (it gives the row its height); the others sit
+ *  over it, centred, wherever the ring puts them. */
+function PageSlot({ slot, pos, width, here, children }: { slot: number; pos: SharedValue<number>; width: number; here: boolean; children: ReactNode }) {
+  const style = useAnimatedStyle(() => ({ transform: [{ translateX: ringOffset(slot, pos.get()) * width }] }));
+  return <Reanimated.View style={[here ? styles.slotHere : styles.slotAway, { width }, style]}>{children}</Reanimated.View>;
 }
 
 // While editing, the digits' gestures give way to this, on a layer over the whole
@@ -358,26 +383,25 @@ export function Clock(props: Props) {
   // crossfaded with the scene, so neither the digits nor their halo flash in the
   // wrong colour over the outgoing background.
   const [toneMix] = useState(() => new Animated.Value(tone === 'light' ? 1 : 0));
-  // The modes sit side by side like pages; swipeX is how far the row is pulled.
-  const swipeX = useSharedValue(0);
+  // The modes sit round a ring like pages; pos is where the row is (0 clock, 1 timer,
+  // 2 stopwatch, then round again).
+  const pos = useSharedValue(MODES.indexOf(mode));
   const span = useSharedValue(width);
   useEffect(() => span.set(width), [span, width]);
   // A hold resets the timer or stopwatch (or hides the clock); a tap starts, pauses
   // or shows the controls (see makeFaceGesture).
   const interactive = mode !== 'clock';
-  const [faceGesture] = useState(() => makeFaceGesture(swipeX, span));
+  const [faceGesture] = useState(() => makeFaceGesture(pos, span));
   useEffect(() =>
     faceGesture.set({
-      step: (dir) => onMode(MODES[(MODES.indexOf(mode) + dir + MODES.length) % MODES.length]),
+      land: (page) => {
+        const next = MODES[((page % MODES.length) + MODES.length) % MODES.length];
+        if (next !== mode) onMode(next);
+      },
       hold: interactive ? onReset : onHide,
       tap: interactive ? onToggle : onTouch,
     })
   );
-  // The new page is now the middle one: the row snaps back under it in the same frame.
-  useLayoutEffect(() => {
-    swipeX.set(0);
-  }, [mode, swipeX]);
-  const rowStyle = useAnimatedStyle(() => ({ transform: [{ translateX: swipeX.get() }] }));
   // The rulers belong to the timer's page: they slide in and out with it (so they
   // never show over another mode), and fade while the timer runs.
   const timerIdle = !timerRunning(timer) && !timerDone(timer);
@@ -389,7 +413,7 @@ export function Clock(props: Props) {
   const wheelsY = useSharedValue(0);
   const wheelsStyle = useAnimatedStyle(() => ({
     opacity: showWheels.get(),
-    transform: [{ translateX: wheelsX.get() + swipeX.get() }, { translateY: wheelsY.get() }],
+    transform: [{ translateX: wheelsX.get() + ringOffset(MODES.indexOf('timer'), pos.get()) * span.get() }, { translateY: wheelsY.get() }],
   }));
   // Digit width per point of font size, measured once per font: every digit takes it,
   // so a running count never shifts sideways.
@@ -529,17 +553,35 @@ export function Clock(props: Props) {
     kMax: fit / scale,
   };
   const at = clampPlace(placed.x * width, placed.y * height, 1, limits);
-  // The UI thread follows the settings (and the screen), except mid-edit.
+  // The UI thread follows the settings (and the screen), except mid-edit. What the
+  // fingers just left is taken as it is; any other change (a reset, a turn of the
+  // screen, another mode's size) glides there.
+  const shownAt = useRef<{ x: number; y: number; scale: number; byHand: boolean } | null>(null);
   useLayoutEffect(() => {
     lim.set(limits);
     if (busy.get()) return;
-    px.set(at.x);
-    py.set(at.y);
-    zoom.set(1);
+    const was = shownAt.current;
+    shownAt.current = { x: at.x, y: at.y, scale, byHand: false };
+    if (was && Math.abs(was.x - at.x) < 0.5 && Math.abs(was.y - at.y) < 0.5 && Math.abs(was.scale - scale) < 1e-3) return;
+    if (!was || was.byHand) {
+      px.set(at.x);
+      py.set(at.y);
+      zoom.set(1);
+      return;
+    }
+    const glide = { duration: 320, easing: Ease.out(Ease.cubic) };
+    px.set(withTiming(at.x, glide));
+    py.set(withTiming(at.y, glide));
+    // The digits are laid out at the new size already: start them at the old one.
+    zoom.set(was.scale / scale);
+    zoom.set(withTiming(1, glide));
   });
   useEffect(() =>
     editGesture.set({
-      done: (x, y, k) => onFace({ x: x / width, y: y / height, scale: clampScale(scale * k) }),
+      done: (x, y, k) => {
+        if (shownAt.current) shownAt.current.byHand = true;
+        onFace({ x: x / width, y: y / height, scale: clampScale(scale * k) });
+      },
     })
   );
   // The rulers go under the digits, or over them when there is more room there; and
@@ -554,12 +596,11 @@ export function Clock(props: Props) {
   const rulerLeft = width / 2 + at.x - rulerWidth / 2;
   const wheelsShift =
     rulerLeft < MARGIN ? MARGIN - rulerLeft : rulerLeft + rulerWidth > width - MARGIN ? width - MARGIN - rulerLeft - rulerWidth : 0;
-  // Under the timer's page, wherever that is in the row (here, or a page either side).
-  const timerPage = mode === 'timer' ? 0 : MODES[(MODES.indexOf(mode) + 1) % MODES.length] === 'timer' ? width : -width;
+  // (Under the timer's page, wherever the ring has that: see wheelsStyle.)
   useLayoutEffect(() => {
-    wheelsX.set(timerPage + wheelsShift);
+    wheelsX.set(wheelsShift);
     wheelsY.set(wheelsLift);
-  }, [wheelsX, wheelsY, timerPage, wheelsShift, wheelsLift]);
+  }, [wheelsX, wheelsY, wheelsShift, wheelsLift]);
 
   const face = (
     m: Settings['mode'],
@@ -664,25 +705,34 @@ export function Clock(props: Props) {
     );
   };
 
-  // One page per mode: this one, and its neighbours either side (round and round).
+  // A colour chosen in settings takes over from the scene's, on both faces. The halo
+  // stays the scene's, unless the colour is as dark as a dark scene (or as light as a
+  // light one): then it turns over, to set the digits off.
+  const custom = clock.color ? colorHex(clock.color) : null;
+  const inks = custom
+    ? {
+        dark: { ink: custom, inkSoft: withAlpha(custom, 0.82), halo: luminance(custom) < 0.08 ? FACES.light.halo : FACES.dark.halo },
+        light: { ink: custom, inkSoft: withAlpha(custom, 0.82), halo: luminance(custom) > 0.6 ? FACES.dark.halo : FACES.light.halo },
+      }
+    : FACES;
+
+  // One page per mode, round a ring. The pages that aren't showing carry their mode's
+  // name, so it is there as soon as one slides in, and stays a moment once it lands.
   const page = (m: Settings['mode']) => {
     const current = m === mode;
     const f = faceFor({ ...props, mode: m }, now, m === 'timer' ? preview : null);
-    const label = current ? (flash ?? f.label) : f.label;
+    const label = current ? (flash ?? f.label) : MODE_NAMES[m];
     const labelOpacity = current && flash ? flashOpacity : 1;
     return (
       <>
         <FaceBackdrop tone={tone} />
         <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
-          {face(m, f, FACES.dark, label, labelOpacity, current, current)}
+          {face(m, f, inks.dark, label, labelOpacity, current, current)}
         </Animated.View>
-        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(m, f, FACES.light, label, labelOpacity, false, current)}</Animated.View>
+        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(m, f, inks.light, label, labelOpacity, false, current)}</Animated.View>
       </>
     );
   };
-  const i = MODES.indexOf(mode);
-  const prev = MODES[(i + MODES.length - 1) % MODES.length];
-  const next = MODES[(i + 1) % MODES.length];
   const current = faceFor(props, now, preview);
   // (Set before the detectors render, which is when they read their gestures.)
   faceGesture.enable(!edit);
@@ -723,23 +773,29 @@ export function Clock(props: Props) {
           <View style={[styles.stage, { width }]}>
             <GestureDetector gesture={faceGesture.gesture}>
               <Reanimated.View
-                style={[styles.pages, { width }, rowStyle]}
+                style={[styles.pages, { width }]}
                 accessible
                 accessibilityRole="button"
                 accessibilityLabel={`${MODE_NAMES[mode]} ${current.main}`}
                 accessibilityHint="左右にスワイプで時計・タイマー・ストップウォッチを切り替え"
               >
-                <View style={[styles.side, { left: -width, width }]}>{page(prev)}</View>
-                <View
-                  style={styles.page}
-                  onLayout={(e) => {
-                    const { width: w, height: h } = e.nativeEvent.layout;
-                    if (Math.abs(w - block.w) > 0.5 || Math.abs(h - block.h) > 0.5 || block.scale !== scale) setBlock({ w, h, scale });
-                  }}
-                >
-                  {page(mode)}
-                </View>
-                <View style={[styles.side, { left: width, width }]}>{page(next)}</View>
+                {MODES.map((m, slot) => (
+                  <PageSlot key={m} slot={slot} pos={pos} width={width} here={m === mode}>
+                    <View
+                      style={styles.page}
+                      onLayout={
+                        m === mode
+                          ? (e) => {
+                              const { width: w, height: h } = e.nativeEvent.layout;
+                              if (Math.abs(w - block.w) > 0.5 || Math.abs(h - block.h) > 0.5 || block.scale !== scale) setBlock({ w, h, scale });
+                            }
+                          : undefined
+                      }
+                    >
+                      {page(m)}
+                    </View>
+                  </PageSlot>
+                ))}
               </Reanimated.View>
             </GestureDetector>
             {/* The timer's rulers stand outside the face's layout, so the digits never
@@ -840,10 +896,16 @@ const styles = StyleSheet.create({
   page: {
     alignItems: 'center',
   },
-  side: {
+  slotHere: {
+    alignItems: 'center',
+  },
+  slotAway: {
     position: 'absolute',
     top: 0,
+    bottom: 0,
+    left: 0,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   wheels: {
     position: 'absolute',

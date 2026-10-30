@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import type { DigitColor } from './colors';
 import type { FontId } from './fonts';
 
 export type Settings = {
@@ -10,6 +11,8 @@ export type Settings = {
     seconds: boolean;
     date: boolean;
     hour24: boolean;
+    /** The digits' colour; null follows the scene (white on dark, black on light). */
+    color: DigitColor | null;
   };
   /** What the centre shows. */
   mode: 'clock' | 'timer' | 'stopwatch';
@@ -34,7 +37,7 @@ export type Settings = {
 };
 
 export const defaultSettings: Settings = {
-  clock: { visible: true, font: 'system', seconds: false, date: true, hour24: true },
+  clock: { visible: true, font: 'system', seconds: false, date: true, hour24: true, color: null },
   mode: 'clock',
   timer: { duration: 5 * 60_000, endAt: null, left: 5 * 60_000 },
   stopwatch: { startAt: null, elapsed: 0 },
