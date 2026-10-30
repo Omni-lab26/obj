@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { PanResponder, View } from 'react-native';
 
 import { hair, useT } from '../theme';
-import { haptic, Press, Txt } from './base';
+import { haptic, Press, StdKey, Txt } from './base';
 import { Icon, IconName } from './Icon';
 import { Rolling } from './Rolling';
+import { Pix } from '../themes/standard/pixel';
+import { ring, S, SR, useStd } from './stdLook';
 
 // bencho "rolling counter": a number between a minus and a plus whose digits
 // roll like an odometer. Tap to step, hold to speed up, or drag the number
@@ -12,6 +14,7 @@ import { Rolling } from './Rolling';
 const DRAG_PX = 16; // finger travel per step
 export function Counter({ value, min, max, onChange, unit, label }: { value: number; min: number; max: number; onChange: (v: number) => void; unit?: string; label: string }) {
   const t = useT();
+  const std = useStd();
   const v = useRef(value);
   const cb = useRef({ onChange, min, max });
   useEffect(() => { v.current = value; }, [value]);
@@ -64,7 +67,13 @@ export function Counter({ value, min, max, onChange, unit, label }: { value: num
     });
   });
 
-  const btn = (d: number, icon: IconName, disabled: boolean) => (
+  const btn = (d: number, icon: IconName, disabled: boolean) => std ? (
+    // スタンダード: small keys on an ink floor (none once the end is reached)
+    <StdKey haptics={false} onPressIn={() => !disabled && hold(d)} onPressOut={stop} disabled={disabled} radius={10} kd={3}
+      label={d > 0 ? `${label}を増やす` : `${label}を減らす`} style={{ width: 42, height: 42, marginBottom: 3 }} face={{ width: 42, height: 42 }}>
+      <Pix name={d > 0 ? 'plus' : 'minus'} color={disabled ? S.ink3 : S.ink} />
+    </StdKey>
+  ) : (
     <Press haptics={false} onPressIn={() => !disabled && hold(d)} onPressOut={stop} disabled={disabled} scale={0.92}
       accessibilityLabel={d > 0 ? `${label}を増やす` : `${label}を減らす`}
       style={{ width: 40, height: 46, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
@@ -72,7 +81,9 @@ export function Counter({ value, min, max, onChange, unit, label }: { value: num
     </Press>
   );
   return (
-    <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', padding: 5, borderRadius: 16, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line }}
+    <View style={[{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', padding: 5, borderRadius: 16, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line },
+      // スタンダード: a card with the ink outline; room under the keys' floors
+      std && { paddingHorizontal: 8, paddingTop: 8, paddingBottom: 6, borderRadius: SR.mid, borderWidth: 0, backgroundColor: S.card, boxShadow: ring() }]}
       accessibilityRole="adjustable" accessibilityLabel={label} accessibilityValue={{ min, max, now: value, text: `${value}${unit ?? ''}` }}
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       onAccessibilityAction={(e) => step(e.nativeEvent.actionName === 'increment' ? 1 : -1)}>

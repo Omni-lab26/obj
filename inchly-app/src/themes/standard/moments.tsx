@@ -5,13 +5,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { subj } from '@/data';
 import type { Moment } from '@/moments';
-import { T } from '@/themes/kit';
 import type { MomentKit } from '@/themes/types';
 import { dismiss, micro, present } from '@/ui/motion';
 import { TextureFill } from '@/ui/Texture';
 import type { CreatureId, Face } from './art';
 import { LIFT, mix, ring, S } from './look';
-import { J, Num } from './parts';
+import { Dots, J, Num } from './parts';
 import { Creature } from './pixel';
 
 // スタンダード's moments, after the mock (docs/app/mock/moments.html): a paper
@@ -75,7 +74,7 @@ function Card({ done, ms, accent, who, from, to, title, figure, sub, ticket, lab
           <Creature id={who} face={face} px={who === 'penta' ? 5 : 4} />
         </View>
         <View style={{ alignItems: 'center', gap: 7, paddingTop: 14, paddingHorizontal: 18, paddingBottom: 18 }}>
-          <T f="pixel" size={16} lh={20} ls={0.3} style={{ textAlign: 'center' }}>{title}</T>
+          <Dots size={16} lh={20} up={1} ls={0.3} style={{ textAlign: 'center' }}>{title}</Dots>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' }}>{figure}</View>
           {sub ? <J size={12.5} lh={18} color={S.ink2} style={{ textAlign: 'center' }}>{sub}</J> : null}
           {ticket ? (

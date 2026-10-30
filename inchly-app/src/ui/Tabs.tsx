@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { LayoutChangeEvent, Pressable, ScrollView, View, ViewStyle } from 'react-native';
+import { LayoutChangeEvent, Pressable, ScrollView, Text, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
-import { hair, useT } from '../theme';
+import { font, hair, useT } from '../theme';
 import { haptic, Txt } from './base';
 import { move } from './motion';
+import { ring, S, SR, useStd } from './stdLook';
 
 type Opt<K extends string> = { v: K; label: string };
 type Box = { x: number; w: number };
@@ -32,7 +33,38 @@ function useIndicator(index: number, boxes: Box[]) {
  * On a pale track by default; `small` drops the track (for use inside cards).
  */
 /** `fit`: each segment as wide as its label (for many labels of different lengths), else all the same width. */
-export function Segmented<K extends string>({ options, value, onChange, style, small, fit }: { options: Opt<K>[]; value: K; onChange: (v: K) => void; style?: ViewStyle; small?: boolean; fit?: boolean }) {
+type SegProps<K extends string> = { options: Opt<K>[]; value: K; onChange: (v: K) => void; style?: ViewStyle; small?: boolean; fit?: boolean };
+/**
+ * スタンダード's switch: one plate on an ink floor, the parts split by ink
+ * lines, the picked one lime. `small`: 32 high on a 2pt floor (44 to the finger).
+ */
+function StdSegmented<K extends string>({ options, value, onChange, style, small, fit }: SegProps<K>) {
+  const h = small ? 32 : 44;
+  const kd = small ? 2 : 3;
+  return (
+    <View style={[{ flexDirection: 'row', marginBottom: kd }, small && { alignSelf: 'flex-start' }, style]} accessibilityRole="tablist">
+      <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: kd - 2, bottom: -kd - 2, borderRadius: SR.key + 2, backgroundColor: S.ink }} />
+      <View style={[{ flexDirection: 'row', borderRadius: SR.key, backgroundColor: S.card, boxShadow: ring(), overflow: 'hidden' }, !small && { flex: 1 }]}>
+        {options.map((o, i) => {
+          const on = o.v === value;
+          return (
+            <Pressable key={o.v} onPress={() => { if (!on) { haptic.tap(); onChange(o.v); } }}
+              accessibilityRole="tab" accessibilityState={{ selected: on }} hitSlop={small ? { top: 6, bottom: 6 } : undefined}
+              style={({ pressed }) => [{ height: h, alignItems: 'center', justifyContent: 'center', paddingHorizontal: small ? 8 : 10, backgroundColor: on ? S.lime : pressed ? S.paper2 : 'transparent' },
+                small ? { minWidth: 44 } : fit ? { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' } : { flex: 1 },
+                i > 0 && { borderLeftWidth: 2, borderLeftColor: S.ink }]}>
+              <Text numberOfLines={1} style={{ fontSize: small ? 13 : 14, lineHeight: small ? 17 : 18, fontWeight: on ? '700' : '600', color: on ? S.ink : S.ink2, fontFamily: font.text }}>{o.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+export function Segmented<K extends string>(props: SegProps<K>) {
+  return useStd() ? <StdSegmented {...props} /> : <BaseSegmented {...props} />;
+}
+function BaseSegmented<K extends string>({ options, value, onChange, style, small, fit }: SegProps<K>) {
   const t = useT();
   const [boxes, setBoxes] = useState<Box[]>([]);
   const index = options.findIndex((o) => o.v === value);
@@ -60,7 +92,28 @@ export function Segmented<K extends string>({ options, value, onChange, style, s
 }
 
 /** Underline tabs for switching sections of a screen, centered. Scrolls if labels overflow. */
-export function UnderTabs<K extends string>({ options, value, onChange }: { options: Opt<K>[]; value: K; onChange: (v: K) => void }) {
+type UnderProps<K extends string> = { options: Opt<K>[]; value: K; onChange: (v: K) => void };
+/** スタンダード's page tabs: as wide as the page, each a share of it; the picked one bold with a 3pt ink line under it. */
+function StdUnderTabs<K extends string>({ options, value, onChange }: UnderProps<K>) {
+  return (
+    <View style={{ flexDirection: 'row', gap: 4, marginHorizontal: 16, borderBottomWidth: 2, borderBottomColor: S.line }} accessibilityRole="tablist">
+      {options.map((o) => {
+        const on = o.v === value;
+        return (
+          <Pressable key={o.v} onPress={() => { if (!on) { haptic.tap(); onChange(o.v); } }} accessibilityRole="tab" accessibilityState={{ selected: on }}
+            style={{ flex: 1, minWidth: 0, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
+            <Text numberOfLines={1} style={{ fontSize: 15, lineHeight: 19, fontWeight: on ? '700' : '600', color: on ? S.ink : S.ink3, fontFamily: font.text }}>{o.label}</Text>
+            {on ? <View pointerEvents="none" style={{ position: 'absolute', left: '18%', right: '18%', bottom: -2, height: 3, backgroundColor: S.ink }} /> : null}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+export function UnderTabs<K extends string>(props: UnderProps<K>) {
+  return useStd() ? <StdUnderTabs {...props} /> : <BaseUnderTabs {...props} />;
+}
+function BaseUnderTabs<K extends string>({ options, value, onChange }: UnderProps<K>) {
   const t = useT();
   const [boxes, setBoxes] = useState<Box[]>([]);
   const index = options.findIndex((o) => o.v === value);

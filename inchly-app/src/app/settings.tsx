@@ -9,6 +9,8 @@ import { recordsCsv } from '@/lib/csv';
 import { gradeNow, OTHER_GRADES, SCHOOL } from '@/lib/grade';
 import { DmFrom, gradeOf, getState, setGrade, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
+import { Pix } from '@/themes/standard/pixel';
+import { ring, S, useStd } from '@/ui/stdLook';
 import { Btn, haptic, Press, Txt } from '@/ui/base';
 import { backdropSheet, CardFillControl, FrostControl } from '@/ui/BackdropSheet';
 import { ThemeCard } from '@/screens/ThemeCard';
@@ -21,9 +23,10 @@ import { Pane } from '@/ui/Glass';
 // Settings: who sees you, who can message you, which notices, and your data.
 function Section({ title, foot, children }: { title: string; foot?: string; children: ReactNode }) {
   const t = useT();
+  const std = useStd();
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 22 }}>
-      <Txt size={12} w="600" tone="ink2" style={{ paddingHorizontal: 4, paddingBottom: 8 }}>{title}</Txt>
+      <Txt size={std ? 13 : 12} w={std ? '700' : '600'} tone="ink2" style={{ paddingHorizontal: 4, paddingBottom: 8 }}>{title}</Txt>
       <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, paddingHorizontal: 14 }, lift(t)]}><Pane radius={radius.card} />{children}</View>
       {foot ? <Txt size={11.5} tone="ink3" lh={17} style={{ paddingHorizontal: 4, paddingTop: 6 }}>{foot}</Txt> : null}
     </View>
@@ -52,8 +55,9 @@ function GradeForm({ close }: { close: () => void }) {
 
 function Row({ label, sub, right, first }: { label: string; sub?: string; right?: ReactNode; first?: boolean }) {
   const t = useT();
+  const std = useStd();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10, borderTopWidth: first ? 0 : hair, borderTopColor: t.line }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10, borderTopWidth: first ? 0 : std ? 1.5 : hair, borderTopColor: t.line }}>
       <View style={{ flex: 1 }}>
         <Txt size={14} w="500">{label}</Txt>
         {sub ? <Txt size={12} tone="ink3">{sub}</Txt> : null}
@@ -71,6 +75,10 @@ const ago = (ms: number) => (ms < 60_000 ? 'たった今' : `${Math.floor(ms / 6
 
 export default function Settings() {
   const t = useT();
+  const std = useStd();
+  // スタンダード: the rows' lines 1.5pt, and their arrows the pixel one
+  const line = std ? 1.5 : hair;
+  const chev = std ? <Pix name="right" color={S.ink3} /> : <Txt size={16} tone="ink3">›</Txt>;
   const insets = useSafeAreaInsets();
   const now = useNow(30_000);
   const s = useStore((x) => x);
@@ -93,7 +101,7 @@ export default function Settings() {
         <Txt size={13.5} tone="ink2" lh={21} style={{ marginTop: 6 }}>
           記録、ToDo、締切、フォロー、グループへの参加がすべて消えます。元には戻せません。先にデータを書き出しておくこともできます。
         </Txt>
-        <Btn kind="primary" wide label="削除する" style={{ marginTop: 18, backgroundColor: t.red }} onPress={() => {
+        <Btn kind="primary" wide label="削除する" style={std ? { marginTop: 18 } : { marginTop: 18, backgroundColor: t.red }} onPress={() => {
           close();
           wipe();
           router.replace('/welcome');
@@ -146,22 +154,22 @@ export default function Settings() {
           {/* the themes, to try one on the spot (it was on マイページ) */}
           <ThemeCard bare />
           <Press onPress={() => router.push('/design')} scale={0.99} accessibilityRole="button" accessibilityLabel="デザインを変える"
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10, borderTopWidth: line, borderTopColor: t.line }}>
             <View style={{ flex: 1 }}>
               <Txt size={14} w="500">デザイン</Txt>
               <Txt size={12} tone="ink3">{BACKDROPS_OPEN ? 'テーマ・背景・メインの色・角・カード・タイマー' : 'テーマ・メインの色・角・カード・タイマー'}</Txt>
             </View>
-            <Txt size={16} tone="ink3">›</Txt>
+            {chev}
           </Press>
           {BACKDROPS_OPEN ? <>
           <Press onPress={backdropSheet} scale={0.99} accessibilityRole="button" accessibilityLabel={`背景を変える（いまは ${BACKDROPS[backdropOf(s.design)].label}）`}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10, borderTopWidth: line, borderTopColor: t.line }}>
             <View style={{ flex: 1 }}>
               <Txt size={14} w="500">背景</Txt>
               <Txt size={12} tone="ink3">すべてのページとタイマーのうしろで動くもの（スタンダードのテーマのとき）</Txt>
             </View>
             <Txt size={13} tone="ink3">{BACKDROPS[backdropOf(s.design)].label}</Txt>
-            <Txt size={16} tone="ink3">›</Txt>
+            {chev}
           </Press>
           <View style={{ paddingTop: 10, paddingBottom: 14, gap: 16, borderTopWidth: hair, borderTopColor: t.line }}><FrostControl /><CardFillControl /></View>
           </> : null}
@@ -171,13 +179,14 @@ export default function Settings() {
           <Press onPress={() => router.push('/subjects')} scale={0.99} accessibilityRole="button" accessibilityLabel="科目と色を編集"
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 10 }}>
             <View style={{ flexDirection: 'row' }}>
-              {s.subjects.filter((x) => !x.hidden).slice(0, 6).map((x, i) => <View key={x.id} style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: x.c, marginLeft: i ? -5 : 0, borderWidth: 1.5, borderColor: t.surface }} />)}
+              {s.subjects.filter((x) => !x.hidden).slice(0, 6).map((x, i) => <View key={x.id} style={[{ width: 16, height: 16, borderRadius: 8, backgroundColor: x.c, marginLeft: i ? -5 : 0, borderWidth: 1.5, borderColor: t.surface },
+                std && { width: 14, height: 14, borderRadius: 3, borderWidth: 0, marginLeft: i ? 4 : 0, boxShadow: ring(1.5) }]} />)}
             </View>
             <View style={{ flex: 1 }}>
               <Txt size={14} w="500">科目と色</Txt>
               <Txt size={12} tone="ink3" numberOfLines={1}>{s.subjects.filter((x) => !x.hidden).map((x) => x.name).join('・')}</Txt>
             </View>
-            <Txt size={16} tone="ink3">›</Txt>
+            {chev}
           </Press>
         </Section>
 
@@ -186,7 +195,7 @@ export default function Settings() {
           <Press onPress={() => { haptic.tap(); setState({ tourDone: false }); if (router.canGoBack()) router.back(); else router.replace('/'); }} scale={0.99} accessibilityRole="button" accessibilityLabel="使い方をもう一度見る"
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10 }}>
             <Txt size={14} w="500" style={{ flex: 1 }}>使い方をもう一度見る</Txt>
-            <Txt size={16} tone="ink3">›</Txt>
+            {chev}
           </Press>
         </Section>
 
@@ -205,9 +214,9 @@ export default function Settings() {
         <Section title="データ" foot="記録はこの端末に保存されています。圏外でも記録できます。サーバーとの同期はまだありません。機種変更の前に書き出しておいてください。">
           <Row first label="この端末に保存" sub={s.savedAt ? `最後に保存 ${ago(now - s.savedAt)}` : 'まだ保存していません'} />
           <Row label="記録を書き出す（CSV）" sub={`${s.sessions.length}件 · メールやファイルに保存できます`} right={<Btn small kind="line" label="書き出す" onPress={exportCsv} />} />
-          <View style={{ borderTopWidth: hair, borderTopColor: t.line, paddingVertical: 12 }}>
+          <View style={{ borderTopWidth: line, borderTopColor: t.line, paddingVertical: 12 }}>
             <Press onPress={del} hitSlop={6} accessibilityRole="button" style={{ height: 40, alignItems: 'center', justifyContent: 'center' }}>
-              <Txt size={14} w="600" color={t.red}>アカウントとデータを削除</Txt>
+              <Txt size={14} w={std ? '700' : '600'} color={std ? S.pause : t.red}>アカウントとデータを削除</Txt>
             </Press>
           </View>
         </Section>

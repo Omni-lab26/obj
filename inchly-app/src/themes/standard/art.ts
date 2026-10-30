@@ -336,5 +336,11 @@ export const ICONS = {
   sort: R('..k...... .kkk..... kkkkk.... ..k...... ..k...k.. ..k...k.. ....kkkkk .....kkk. ......k..'),
   /** the friends list's grip (≡) */
   grip: R('kkkkkkkk ........ ........ kkkkkkkk ........ ........ kkkkkkkk'),
+  /** a plan that can't be moved (the order sheet) */
+  lock: R('..kkkkkk.. .k......k. .k......k. kkkkkkkkkk k........k k...kk...k k...kk...k k........k kkkkkkkkkk'),
+  /** the menu's (docs/app/mock/menu.html) */
+  book: R('.kkkk..kkkk. k....kk....k k.kk.kk.kk.k k....kk....k k.kk.kk.kk.k k....kk....k k.kk.kk.kk.k k....kk....k kkkkkkkkkkkk .....kk.....'),
+  bookmark: R('kkkkkkkkkk k........k k........k k........k k........k k........k k........k k........k k...kk...k k..k..k..k k.k....k.k kk......kk'),
+  sun: R('.....kk..... .k...kk...k. ..k......k.. ....kkkk.... ...k....k... kk.k....k.kk kk.k....k.kk ...k....k... ....kkkk.... ..k......k.. .k...kk...k. .....kk.....'),
 };
 export type IconId = keyof typeof ICONS;

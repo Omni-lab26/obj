@@ -8,12 +8,14 @@ import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-nativ
 import { dayOf } from '../lib/history';
 import { Session, useStore, useStreak } from '../store';
 import { lift, useT } from '../theme';
-import { Card, haptic, Press, Txt } from './base';
+import { Card, haptic, Press, StdHead, Txt } from './base';
 import { move, timed } from './motion';
 import { Rolling } from './Rolling';
 import { useReplay } from './appear';
 import { DECK_H, GraphDeck } from './GraphDeck';
 import { Sticker, StickerName } from './Sticker';
+import { PixSticker } from '../themes/standard/pixel';
+import { ring, S, useStd } from './stdLook';
 
 // "You are growing": the week and the running total in a deck (its
 // 足 — a point a day, a week or a month — set by a little vertical slider), the
@@ -64,6 +66,7 @@ const hm = (m: number) => `${Math.floor(Math.abs(m) / 60)}:${String(Math.round(M
 
 export function Growth() {
   const t = useT();
+  const std = useStd();
   const sessions = useStore((s) => s.sessions);
   const g = useGrowth(sessions);
   const [shown, setShown] = useState(false);
@@ -79,10 +82,12 @@ export function Growth() {
       <GraphDeck last={<>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <View style={{ flex: 1, minWidth: 0 }}>
+            {std ? <StdHead title="これまでの勉強時間" /> : (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />
               <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>これまでの勉強時間</Txt>
             </View>
+            )}
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginTop: 4 }}>
               <Rolling value={shown ? g.total.toFixed(1) : '000.0'} size={34} weight="700" />
               <Txt size={13} w="600" tone="ink3" style={{ marginBottom: 6 }}>時間</Txt>
@@ -98,6 +103,20 @@ export function Growth() {
 
       <View style={{ paddingHorizontal: 16, gap: 10 }}>
         {/* the next milestone, and when you'll reach it at this pace */}
+        {std ? (
+          // スタンダード: the badge to come as a grey sticker beside its ink meter
+          <Card pad={0} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 16 }}>
+            <PixSticker name="trophy" locked />
+            <View style={{ flex: 1, minWidth: 0, gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+                <Txt size={14} w="700" numberOfLines={1} style={{ flex: 1 }}>{`次のバッジ · ${g.next}時間`}</Txt>
+                <Txt num size={14} w="800">{`あと${left.toFixed(1)}時間`}</Txt>
+              </View>
+              <Meter p={p} />
+              <Txt size={12} tone="ink3">{'このペースなら '}<Txt size={12} w="700">{`${g.eta.getMonth() + 1}月${g.eta.getDate()}日`}</Txt>{'に届きます'}</Txt>
+            </View>
+          </Card>
+        ) : (
         <Card pad={14} style={{ gap: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
             <Txt size={13} w="600" style={{ flex: 1 }}>{`次のバッジ · ${g.next}時間`}</Txt>
@@ -106,6 +125,7 @@ export function Growth() {
           <Meter p={p} />
           <Txt size={11} tone="ink3">{`このペースなら ${g.eta.getMonth() + 1}月${g.eta.getDate()}日に届きます`}</Txt>
         </Card>
+        )}
 
         {/* you vs. your past self */}
         <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -123,6 +143,7 @@ const STOP = 20; // the slider's room per 足
 /** The 足 of the running total, as a short vertical slider in the card's corner: slide it (or tap a label) for 日・週・月. */
 function FrameSlider({ value, onChange }: { value: Frame; onChange: (f: Frame) => void }) {
   const t = useT();
+  const std = useStd();
   const at = FRAMES.findIndex((f) => f.id === value);
   const y = useSharedValue(at * STOP);
   useEffect(() => { y.set(move(at * STOP)); }, [at, y]);
@@ -139,8 +160,9 @@ function FrameSlider({ value, onChange }: { value: Frame; onChange: (f: Frame) =
       <View accessible accessibilityRole="adjustable" accessibilityLabel={`グラフの足 ${FRAMES[at].label}`}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={(e) => set(at + (e.nativeEvent.actionName === 'increment' ? 1 : -1))}
-        style={{ width: 34, padding: 2, borderRadius: 12, backgroundColor: t.sunken }}>
-        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 2, right: 2, top: 2, height: STOP, borderRadius: 10, backgroundColor: t.surface, ...lift(t) }, lens]} />
+        style={[{ width: 34, padding: 2, borderRadius: 12, backgroundColor: t.sunken }, std && { backgroundColor: S.card, boxShadow: ring(1.5) }]}>
+        {/* スタンダード: the picked 足 in lime (what's picked), on the card's color */}
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 2, right: 2, top: 2, height: STOP, borderRadius: 10, backgroundColor: t.surface, ...lift(t) }, std && { borderRadius: 9, backgroundColor: S.lime, boxShadow: ring(1.5) }, lens]} />
         {FRAMES.map((f, i) => (
           <Press key={f.id} onPress={() => set(i)} haptics={false} scale={0.9} hitSlop={{ left: 6, right: 6 }} accessibilityLabel={`${f.label}足`}
             style={{ height: STOP, alignItems: 'center', justifyContent: 'center' }}>
@@ -208,16 +230,22 @@ function Climb({ curve, next, prev, from }: { curve: number[]; next: number; pre
 
 function Meter({ p }: { p: number }) {
   const t = useT();
+  const std = useStd();
   const v = useSharedValue(0);
   const replay = useReplay();
   useEffect(() => { v.value = 0; v.value = withDelay(400, timed(Math.max(0, Math.min(1, p)), 500)); }, [p, v, replay]);
   // fills by scaling from the left, not by its width (no layout each frame)
   const a = useAnimatedStyle(() => ({ transform: [{ scaleX: v.value }] }));
-  return (
-    <View style={{ height: 6, borderRadius: 3, backgroundColor: t.sunken, overflow: 'hidden' }}>
-      <Animated.View style={[{ width: '100%', height: 6, borderRadius: 3, backgroundColor: t.ink, transformOrigin: 'left' }, a]} />
+  // スタンダード: square, 8 tall, on paper 2 inside a thin ink outline (on a view of its own, so the clipping doesn't take it)
+  if (std) return <View style={{ boxShadow: ring(1.5) }}>{bar()}</View>;
+  return bar();
+  function bar() {
+    return (
+    <View style={[{ height: 6, borderRadius: 3, backgroundColor: t.sunken, overflow: 'hidden' }, std && { height: 8, borderRadius: 0 }]}>
+      <Animated.View style={[{ width: '100%', height: 6, borderRadius: 3, backgroundColor: t.ink, transformOrigin: 'left' }, std && { height: 8, borderRadius: 0 }, a]} />
     </View>
-  );
+    );
+  }
 }
 
 function Versus({ label, up, value }: { label: string; up: boolean; value: string }) {

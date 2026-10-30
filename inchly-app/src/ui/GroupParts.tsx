@@ -7,6 +7,7 @@ import { AVATAR, PHOTO } from '@/photos';
 import { Avatar } from '@/ui/base';
 import { hair, useT } from '@/theme';
 import { timed } from '@/ui/motion';
+import { ring, S, useStd } from '@/ui/stdLook';
 
 // Pieces shared by the community, group and plan-event screens.
 
@@ -18,7 +19,14 @@ export const takePendingGroupTab = () => { const t = pendingTab; pendingTab = nu
 export const colorOf = (n: string) => PERSON_COLOR[n] ?? '#8C8F95';
 
 /** Four-dot colour mark used as a group's icon. */
-export function GroupMark({ colors, size = 40, members, icon }: { colors: string[]; size?: number; members?: string[]; icon?: keyof typeof PHOTO }) {
+export function GroupMark(props: { colors: string[]; size?: number; members?: string[]; icon?: keyof typeof PHOTO }) {
+  const std = useStd();
+  const size = props.size ?? 40;
+  // スタンダード: the same mark with an ink edge (drawn outside, on a view of its own so the clipping doesn't take it)
+  if (std) return <View style={{ width: size, height: size, borderRadius: size * 0.28, boxShadow: ring(), flexShrink: 0 }}><BaseGroupMark {...props} /></View>;
+  return <BaseGroupMark {...props} />;
+}
+function BaseGroupMark({ colors, size = 40, members, icon }: { colors: string[]; size?: number; members?: string[]; icon?: keyof typeof PHOTO }) {
   const t = useT();
   const r = size * 0.28;
   // a cover photo, or the first four members' icons, like a real group chat
@@ -53,6 +61,9 @@ export function GroupMark({ colors, size = 40, members, icon }: { colors: string
 /** Small green dot for "live" counts (still: nothing on the page pulses). */
 export function LiveDot({ size = 7, color }: { size?: number; color?: string }) {
   const t = useT();
+  const std = useStd();
+  // スタンダード: a square with a thin ink edge
+  if (std) return <View style={{ width: size + 2, height: size + 2, backgroundColor: color ?? S.run, boxShadow: ring(1.5) }} />;
   return <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color ?? t.green }} />;
 }
 

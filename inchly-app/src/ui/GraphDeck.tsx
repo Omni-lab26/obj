@@ -9,11 +9,12 @@ import { dayOf } from '../lib/history';
 import { useStore } from '../store';
 import { lift, radius, useT } from '../theme';
 import { cascade, useAppear } from './appear';
-import { haptic, Press, SubjTile, Txt } from './base';
+import { haptic, Press, StdHead, SubjTile, Txt } from './base';
 import { move } from './motion';
 import { breakdownSheet } from './Breakdown';
 import { useSeries } from './series';
 import { Pane } from './Glass';
+import { ring, S, useStd } from './stdLook';
 
 // The graph card on My Page's 成長 page, as a deck: swipe it sideways for a
 // different graph — this week first, then the running total (the card My
@@ -29,6 +30,7 @@ export const DECK_H = 312;
 
 export function GraphDeck({ last }: { last: ReactNode }) {
   const t = useT();
+  const std = useStd();
   const [w, setW] = useState(0);
   const h = DECK_H;
   const cardW = Math.max(0, w - 32);
@@ -74,8 +76,9 @@ export function GraphDeck({ last }: { last: ReactNode }) {
     <View onLayout={(e) => setW(e.nativeEvent.layout.width)}>
       {cardW ? (
         <>
+          {/* スタンダード: the cards' 2pt outline is drawn outside them, so the clipping window leaves room above and below */}
           <GestureDetector gesture={pan}>
-            <View style={{ overflow: 'hidden', paddingBottom: 6 }} accessible accessibilityRole="adjustable"
+            <View style={[{ overflow: 'hidden', paddingBottom: 6 }, std && { paddingTop: 4, marginTop: -4, paddingBottom: 8 }]} accessible accessibilityRole="adjustable"
               accessibilityLabel={`グラフ ${shown + 1}/${PAGES}。左右にスワイプで切り替え`}
               accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
               onAccessibilityAction={(e) => go(e.nativeEvent.actionName === 'increment' ? 1 : -1)}>
@@ -96,23 +99,30 @@ export function GraphDeck({ last }: { last: ReactNode }) {
 
 function Dot({ i, x, step }: { i: number; x: SharedValue<number>; step: number }) {
   const t = useT();
+  const std = useStd();
   const a = useAnimatedStyle(() => {
     const d = Math.min(1, Math.abs(-x.value / step - i));
     return { width: 6 + 12 * (1 - d), opacity: 0.25 + 0.75 * (1 - d) };
   });
-  return <Animated.View style={[{ height: 6, borderRadius: 3, backgroundColor: t.ink }, a]} />;
+  return <Animated.View style={[{ height: 6, borderRadius: std ? 0 : 3, backgroundColor: t.ink }, a]} />;
 }
 
 /** The head every card shares: a label, one big number, how it compares. */
 function Head({ label, aside, value, unit, delta, up = true, size = 34 }: { label: string; aside?: string; value: string; unit?: string; delta?: string; up?: boolean; size?: number }) {
   const t = useT();
+  const std = useStd();
   return (
     <View>
+      {std ? (
+        // スタンダード: the heading with its square, in DotGothic16
+        <StdHead title={label} right={aside ? <Txt size={12} w="600" tone="ink3" num>{aside}</Txt> : null} />
+      ) : (
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />
         <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>{label}</Txt>
         {aside ? <Txt size={11} tone="ink3">{aside}</Txt> : null}
       </View>
+      )}
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginTop: 4 }}>
         <Txt num size={size} w="700" lh={Math.round(size * 1.2)} style={size < 34 ? { marginBottom: Math.round((34 - size) * 0.35) } : null}>{value}</Txt>
         {unit ? <Txt size={13} w="600" tone="ink3" style={{ marginBottom: 6 }}>{unit}</Txt> : null}
@@ -131,6 +141,7 @@ function Head({ label, aside, value, unit, delta, up = true, size = 34 }: { labe
 /** 1: the last seven days, stacked by subject, against the daily goal. Tap a bar for that day; tap it again to let go. */
 function WeekPage({ w, h }: { w: number; h: number }) {
   const t = useT();
+  const std = useStd();
   const sessions = useStore((s) => s.sessions);
   const goal = useStore((s) => s.goalMin);
   const series = useSeries(useStore((s) => s.chart.detail));
@@ -165,6 +176,7 @@ function WeekPage({ w, h }: { w: number; h: number }) {
             const op = sel === null ? (i === 6 ? 1 : 0.8) : i === sel ? 1 : 0.22;
             return (
               <Grow key={i} i={i} p={appear} style={{ position: 'absolute', left: i * (bw + gap), top: 0, width: bw, height: ch }}>
+                {std ? <StdStack parts={used.map((s) => ({ c: s.c, h: ((x.parts[s.key] ?? 0) / top) * ch }))} w={bw} h={ch} op={sel === null ? (i === 6 ? 1 : 0.82) : i === sel ? 1 : 0.25} /> : (
                 <Svg width={bw} height={ch}>
                   {used.map((s) => {
                     const bh = ((x.parts[s.key] ?? 0) / top) * ch;
@@ -172,11 +184,12 @@ function WeekPage({ w, h }: { w: number; h: number }) {
                     return bh > 0 ? <Rect key={s.key} x={0} y={y} width={bw} height={Math.max(0, bh - 1.5)} rx={3} fill={s.c} opacity={op} /> : null;
                   })}
                 </Svg>
+                )}
               </Grow>
             );
           })}
           <Svg width={w} height={ch} style={{ position: 'absolute' }} pointerEvents="none">
-            <Line x1={0} x2={w} y1={gy} y2={gy} stroke={t.amber} strokeWidth={1} strokeDasharray="3 4" />
+            <Line x1={0} x2={w} y1={gy} y2={gy} stroke={std ? S.ink : t.amber} strokeWidth={std ? 1.5 : 1} strokeDasharray="3 4" />
           </Svg>
         </View>
         {/* the bars are buttons: a whole column, so a short day is as easy to tap as a long one */}
@@ -223,7 +236,7 @@ function WeekPage({ w, h }: { w: number; h: number }) {
             </View>
           ))}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <View style={{ width: 10, height: 0, borderTopWidth: 1, borderStyle: 'dashed', borderColor: t.amber }} />
+            <View style={{ width: std ? 12 : 10, height: 0, borderTopWidth: std ? 1.5 : 1, borderStyle: 'dashed', borderColor: std ? S.ink : t.amber }} />
             <Txt size={11} tone="ink3">目標</Txt>
           </View>
         </View>
@@ -235,6 +248,23 @@ function WeekPage({ w, h }: { w: number; h: number }) {
 const hmc = (m: number) => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, '0')}`;
 /** '2時間35分' / '45分' */
 const jpHm = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}時間${Math.round(m % 60) ? `${Math.round(m % 60)}分` : ''}` : `${Math.round(m)}分`);
+
+/**
+ * スタンダード's bar: the subjects stacked in their colors (a little faded but today's),
+ * an ink line between them and a thin ink outline around the whole, square cornered.
+ */
+function StdStack({ parts, w, h, op }: { parts: { c: string; h: number }[]; w: number; h: number; op: number }) {
+  const list = parts.filter((p) => p.h > 0);
+  const total = list.reduce((a, p) => a + p.h, 0);
+  if (!total) return null;
+  return (
+    <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: total, boxShadow: ring(1.5), backgroundColor: S.card }}>
+      {[...list].reverse().map((p, k) => (
+        <View key={k} style={{ height: p.h, backgroundColor: p.c, opacity: op, borderTopWidth: k ? 1.5 : 0, borderTopColor: S.ink }} />
+      ))}
+    </View>
+  );
+}
 
 /** A bar that grows up from the floor on its turn (day i of 7). */
 function Grow({ i, p, style, children }: { i: number; p: SharedValue<number>; style: ViewStyle; children: ReactNode }) {

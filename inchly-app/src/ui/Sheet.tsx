@@ -7,7 +7,9 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useT } from '../theme';
+import { TextureFill } from './Texture';
 import { dismiss, M, move, present, timed } from './motion';
+import { LIFT, ring, S, SR, useStd } from './stdLook';
 
 // Bottom sheet. openSheet(close => <Content/>) from anywhere; drag the grabber
 // (or the top of the sheet) down to dismiss, or tap the scrim. A screen shown
@@ -18,6 +20,8 @@ type Opts = { grouped?: boolean; center?: boolean; corner?: number };
 type Host = { open: (r: Render, o: Opts) => void; close: () => void };
 const hosts: Host[] = [];
 const top = () => hosts[hosts.length - 1];
+/** スタンダード: what's behind a sheet is only dimmed, in ink. */
+const SCRIM = 'rgba(23,18,31,0.38)';
 
 /**
  * grouped: the sheet's ground is the page gray, for white grouped cards inside (like a calendar's new-event sheet).
@@ -32,6 +36,7 @@ export function closeSheet() {
 
 export function SheetHost() {
   const t = useT();
+  const std = useStd();
   const insets = useSafeAreaInsets();
   const [render, setRender] = useState<Render | null>(null);
   const [grouped, setGrouped] = useState(false);
@@ -87,6 +92,27 @@ export function SheetHost() {
   // the centered pane fades in from a touch smaller, settling without going past
   const pa = useAnimatedStyle(() => ({ opacity: pop.value, transform: [{ scale: 0.98 + pop.value * 0.02 }] }));
   if (!render) return null;
+  if (center && std) {
+    // スタンダード: the page only dimmed (no blur); the pane is paper with the ink outline and the lime shadow of what floats
+    return (
+      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: SCRIM }, ka]}>
+          <Pressable style={{ flex: 1 }} onPress={close} accessibilityLabel="閉じる" />
+        </Animated.View>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} pointerEvents="box-none"
+          style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', paddingTop: insets.top + 14, paddingBottom: insets.bottom + 20, paddingLeft: 14, paddingRight: 20 }]}>
+          <Animated.View accessibilityViewIsModal style={[{ width: '100%', maxWidth: 440, maxHeight: '100%', borderRadius: SR.card, backgroundColor: grouped ? S.paper : S.card, boxShadow: LIFT }, pa]}>
+            <View style={{ flexShrink: 1, borderRadius: SR.card, overflow: 'hidden' }}>
+              {grouped ? <TextureFill texture="dots-paper" /> : null}
+              <ScrollView bounces={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ padding: 16 }}>
+                {render(close)}
+              </ScrollView>
+            </View>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </View>
+    );
+  }
   if (center) {
     return (
       <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
@@ -113,14 +139,17 @@ export function SheetHost() {
   }
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: t.scrim }, ka]}>
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: std ? SCRIM : t.scrim }, ka]}>
         <Pressable style={{ flex: 1 }} onPress={close} accessibilityLabel="閉じる" />
       </Animated.View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '90%' }} pointerEvents="box-none">
         <Animated.View
           onLayout={(e) => { height.set(e.nativeEvent.layout.height); }}
-          style={[{ backgroundColor: t.backdrop !== 'none' ? (t.dark ? 'rgba(16,22,30,0.62)' : 'rgba(246,247,249,0.66)') : grouped ? t.canvas : t.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28 }, sa]}
+          style={[{ backgroundColor: t.backdrop !== 'none' ? (t.dark ? 'rgba(16,22,30,0.62)' : 'rgba(246,247,249,0.66)') : grouped ? t.canvas : t.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28 },
+            // スタンダード: the card's paper (grouped: the page's, dotted) under a 2pt ink edge
+            std && { backgroundColor: grouped ? S.paper : S.card, borderTopLeftRadius: SR.card, borderTopRightRadius: SR.card, boxShadow: ring() }, sa]}
           accessibilityViewIsModal>
+          {std && grouped ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderTopLeftRadius: SR.card, borderTopRightRadius: SR.card, overflow: 'hidden' }]}><TextureFill texture="dots-paper" /></View> : null}
           {t.backdrop !== 'none' ? (
             <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderTopLeftRadius: 28, borderTopRightRadius: 28, overflow: 'hidden', zIndex: -1 }]}>
               <BlurView intensity={Platform.OS === 'web' ? 40 : 70} tint={t.dark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
@@ -128,7 +157,7 @@ export function SheetHost() {
           ) : null}
           <GestureDetector gesture={pan}>
             <View style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>
-              <View style={{ width: 38, height: 5, borderRadius: 3, backgroundColor: t.line2 }} />
+              <View style={{ width: std ? 40 : 38, height: 5, borderRadius: 3, backgroundColor: std ? 'rgba(23,18,31,0.25)' : t.line2 }} />
             </View>
           </GestureDetector>
           <ScrollView bounces={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 20 }}>

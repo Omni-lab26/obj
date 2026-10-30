@@ -5,7 +5,7 @@ import Animated from 'react-native-reanimated';
 import { ROOM } from '@/data';
 import { useStore } from '@/store';
 import { useT } from '@/theme';
-import { Empty, Press } from '@/ui/base';
+import { Empty, Press, StdKey } from '@/ui/base';
 import { Screen, SearchBtn, TopBar, useBarsTop, useTabPad } from '@/ui/Chrome';
 import { Icon } from '@/ui/Icon';
 import { fadeIn } from '@/ui/motion';
@@ -13,6 +13,8 @@ import { composeSheet, PostRow } from '@/ui/PostParts';
 import { UnderTabs } from '@/ui/Tabs';
 import { Pane } from '@/ui/Glass';
 import { RefreshScroll } from '@/ui/Loader';
+import { Pix } from '@/themes/standard/pixel';
+import { S, useStd } from '@/ui/stdLook';
 
 type Feed = 'all' | 'following';
 
@@ -20,6 +22,7 @@ type Feed = 'all' | 'following';
 // records ride along with posts, so "I did 70 minutes of physics" reads as news.
 export default function Timeline() {
   const t = useT();
+  const std = useStd();
   const barsTop = useBarsTop();
   const pad = useTabPad();
   const [feed, setFeed] = useState<Feed>('all');
@@ -34,7 +37,7 @@ export default function Timeline() {
     <Screen>
       <TopBar title="タイムライン" right={<SearchBtn />} />
       <UnderTabs value={feed} onChange={go} options={[{ v: 'all', label: 'おすすめ' }, { v: 'following', label: 'フォロー中' }]} />
-      <View style={{ flex: 1, backgroundColor: t.surface }}>
+      <View style={{ flex: 1, backgroundColor: std ? S.card : t.surface }}>
       <Pane radius={0} />
       <RefreshScroll ref={scroll} style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: pad + 40 }}>
         <Animated.View key={feed} entering={fadeIn()}>
@@ -47,11 +50,18 @@ export default function Timeline() {
       </RefreshScroll>
       </View>
       {/* write: a round button above the tab bar and the study bar, where the thumb already is */}
+      {std ? (
+        // スタンダード: a round key on an ink floor (room above the bar for the floor)
+        <StdKey onPress={composeSheet} label="投稿する" radius={28} style={{ position: 'absolute', right: 20, bottom: barsTop + 18, width: 56, height: 56 }} face={{ width: 56, height: 56 }}>
+          <Pix name="plus" px={3} />
+        </StdKey>
+      ) : (
       <Press onPress={composeSheet} scale={0.9} accessibilityLabel="投稿する"
         style={{ position: 'absolute', right: 20, bottom: barsTop + 12, width: 54, height: 54, borderRadius: 27, backgroundColor: t.ink,
           alignItems: 'center', justifyContent: 'center', boxShadow: '0px 6px 18px rgba(18,20,23,0.28)' }}>
         <Icon name="plus" size={24} color={t.onInk} width={2.4} />
       </Press>
+      )}
     </Screen>
   );
 }

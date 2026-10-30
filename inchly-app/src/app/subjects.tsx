@@ -5,7 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AREAS, AreaId, guessArea, OTHER_COLORS, PRESETS, shadeFor, Subject } from '@/data';
 import { addSubject, deleteSubject, moveSubject, recordsOf, removeSubject, updateSubject, useStore } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
-import { Btn, haptic, Press, SubjCoin, Txt } from '@/ui/base';
+import { Btn, haptic, Press, StdIcon, SubjCoin, Txt } from '@/ui/base';
+import { StdChip } from '@/ui/Form';
+import { Pix } from '@/themes/standard/pixel';
+import { ring, S, useStd } from '@/ui/stdLook';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { Choice, Field, Label } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
@@ -32,11 +35,12 @@ export default function Subjects() {
   const names = new Set(subjects.map((x) => x.name));
   const presets = PRESETS.filter((p) => !names.has(p.name));
   const [editing, setEditing] = useState(false);
+  const std = useStd();
   return (
     <Screen>
       <NavBar title="科目と色" right={(
         <Press onPress={() => { haptic.tap(); setEditing(!editing); }} hitSlop={8} accessibilityLabel={editing ? '編集を終える' : '科目を削除する'} style={{ paddingHorizontal: 10, height: 38, justifyContent: 'center' }}>
-          <Txt size={15.5} w={editing ? '700' : '500'} color={t.blue}>{editing ? '完了' : '編集'}</Txt>
+          <Txt size={15.5} w={editing || std ? '700' : '500'} color={t.blue}>{editing ? '完了' : '編集'}</Txt>
         </Press>
       )} />
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
@@ -50,14 +54,14 @@ export default function Subjects() {
           return (
             <View key={a.id} style={{ paddingHorizontal: 16, paddingTop: 18 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 4, paddingBottom: 8 }}>
-                <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: areaC[a.id] }} />
+                <View style={[{ width: 8, height: 8, borderRadius: 2, backgroundColor: areaC[a.id] }, std && { borderRadius: 0, boxShadow: ring(1.5) }]} />
                 <Txt size={12} w="700" tone="ink2">{a.name}</Txt>
               </View>
               <View style={[{ backgroundColor: t.surface, borderRadius: radius.card }, lift(t)]}>
                 <Pane radius={radius.card} />
                 {list.map((x, i) => (
                   <Press key={x.id} onPress={() => (editing ? askDelete(x) : subjectSheet(x))} scale={0.99} accessibilityLabel={editing ? `${x.name}を削除` : `${x.name}。編集`}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 14, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: std ? 56 : 50, paddingHorizontal: 14, borderTopWidth: i ? (std ? 1.5 : hair) : 0, borderTopColor: t.line }}>
                     {editing ? (
                       <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: RED, alignItems: 'center', justifyContent: 'center' }}>
                         <Icon name="minus" size={13} color="#fff" width={2.6} />
@@ -65,7 +69,7 @@ export default function Subjects() {
                     ) : null}
                     <SubjCoin name={x.name} color={x.c} area={x.area} size={28} />
                     <Txt size={15} w="600" style={{ flex: 1 }}>{x.name}</Txt>
-                    {editing ? null : <Icon name="chev" size={13} color={t.ink3} />}
+                    {editing ? null : std ? <StdIcon name="chev" color={S.ink3} /> : <Icon name="chev" size={13} color={t.ink3} />}
                   </Press>
                 ))}
               </View>
@@ -74,14 +78,20 @@ export default function Subjects() {
         })}
 
         <View style={{ paddingHorizontal: 16, paddingTop: 18 }}>
-          <Btn kind="primary" wide icon="plus" label="科目を追加" onPress={() => subjectSheet()} />
+          {/* スタンダード: a plain key (the ink one is a sheet's decision) */}
+          <Btn kind={std ? 'quiet' : 'primary'} wide icon="plus" label="科目を追加" onPress={() => subjectSheet()} />
         </View>
 
         {presets.length ? (
           <View style={{ paddingHorizontal: 20, paddingTop: 22, gap: 10 }}>
             <Txt size={12} w="700" tone="ink2">よくある分け方（押すと追加）</Txt>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {presets.map((p) => (
+              {presets.map((p) => std ? (
+                <StdChip key={p.name} role="button" a11y={`${p.name}を追加`} label={p.name}
+                  onPress={() => { addSubject(p); haptic.tap(); toast(`「${p.name}」を追加しました`, `${AREAS.find((a) => a.id === p.area)?.name}に入れました`); }}>
+                  <Pix name="plus" px={1} />
+                </StdChip>
+              ) : (
                 <Press key={p.name} onPress={() => { addSubject(p); haptic.tap(); toast(`「${p.name}」を追加しました`, `${AREAS.find((a) => a.id === p.area)?.name}に入れました`); }}
                   scale={0.94} accessibilityLabel={`${p.name}を追加`}
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 32, paddingHorizontal: 12, borderRadius: 16, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line2 }}>

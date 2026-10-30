@@ -8,7 +8,7 @@ import { ChatMsg, GEvent, Group, hms, subj } from '@/data';
 import { PHOTO } from '@/photos';
 import { elapsedOf, getState, startStudy, updateGroup, useStore } from '@/store';
 import { font, hair, lift, noOutline, radius, useT } from '@/theme';
-import { Avatar, AvatarStack, Btn, Empty, haptic, IconBtn, Press, Txt } from '@/ui/base';
+import { Avatar, AvatarStack, Btn, Empty, haptic, IconBtn, Press, StdKey, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { personSheet } from '@/ui/Editors';
 import { Bar, LiveDot, PeoplePill, takePendingGroupTab } from '@/ui/GroupParts';
@@ -18,6 +18,8 @@ import { Stamp, STAMPS, Sticker, StickerName } from '@/ui/Sticker';
 import { UnderTabs } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
+import { StdChip } from '@/ui/Form';
+import { ring, S, SR, useStd } from '@/ui/stdLook';
 
 type Tab = 'chat' | 'events' | 'shared';
 const ME = 'あなた';
@@ -41,6 +43,7 @@ export default function GroupScreen() {
 // ---------- chat ----------
 function Chat({ g }: { g: Group }) {
   const t = useT();
+  const std = useStd();
   const insets = useSafeAreaInsets();
   const running = useStore((s) => s.running);
   const subjId = useStore((s) => s.subj);
@@ -127,10 +130,13 @@ function Chat({ g }: { g: Group }) {
         {g.msgs.map((m, i) => <Msg key={i} m={m} i={i} g={g} onJoin={join} />)}
       </ScrollView>
       {/* dock: quick study actions above the composer */}
-      <View style={{ backgroundColor: t.surface, borderTopWidth: hair, borderTopColor: t.line, paddingBottom: Math.max(insets.bottom, 8) }}>
+      <View style={[{ backgroundColor: t.surface, borderTopWidth: hair, borderTopColor: t.line, paddingBottom: Math.max(insets.bottom, 8) }, std && { backgroundColor: S.card, borderTopWidth: 2, borderTopColor: S.ink }]}>
         <Pane radius={0} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={{ gap: 6, paddingHorizontal: 12, paddingTop: 8 }}>
-          {QA.map((a) => (
+        {/* スタンダード: chips on a 2pt floor; the row leaves room under them (a scroller clips what's outside it) */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="always" contentContainerStyle={[{ gap: 6, paddingHorizontal: 12, paddingTop: 8 }, std && { gap: 8, paddingTop: 10, paddingBottom: 4 }]}>
+          {QA.map((a) => std ? (
+            <StdChip key={a.q} role="button" label={a.label} onPress={() => quick(a.q)}><Sticker name={a.s} size={22} /></StdChip>
+          ) : (
             <Press key={a.q} onPress={() => quick(a.q)} scale={0.94}
               hitSlop={{ top: 6, bottom: 6 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 3, height: 32, paddingLeft: 3, paddingRight: 11, borderRadius: 16, backgroundColor: t.surface, borderWidth: hair, borderColor: t.line2 }}>
               <Sticker name={a.s} size={26} />
@@ -144,11 +150,18 @@ function Chat({ g }: { g: Group }) {
             <Sticker name="heart" size={30} tilt={tray ? 0 : -10} />
           </Press>
           <TextInput ref={input} onFocus={() => setTray(false)} value={text} onChangeText={setText} placeholder="メッセージ" placeholderTextColor={t.ink3} onSubmitEditing={send} returnKeyType="send" accessibilityLabel="メッセージ"
-            style={[{ flex: 1, height: 40, borderRadius: 20, paddingHorizontal: 14, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line2, color: t.ink, fontSize: 15, fontFamily: font.text }, noOutline]} />
+            style={[{ flex: 1, height: 40, borderRadius: 20, paddingHorizontal: 14, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line2, color: t.ink, fontSize: 15, fontFamily: font.text },
+              std && { borderRadius: SR.key, borderWidth: 0, backgroundColor: S.card, boxShadow: ring(1.5) }, noOutline]} />
+          {std ? (
+            <StdKey onPress={send} disabled={!text.trim()} label="送信" fill={S.ink} under={S.limeDeep} kd={3} style={{ width: 44, height: 40, marginBottom: 3 }} face={{ width: 44, height: 40 }}>
+              <Icon name="send" size={16} color={text.trim() ? S.onInk : S.ink3} />
+            </StdKey>
+          ) : (
           <Press onPress={send} disabled={!text.trim()} scale={0.88} accessibilityLabel="送信"
             style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: text.trim() ? t.ink : t.sunken }}>
             <Icon name="send" size={16} color={text.trim() ? t.onInk : t.ink3} />
           </Press>
+          )}
         </View>
         {tray ? (
           <Animated.View entering={fadeIn()} style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8, paddingTop: 10 }}>
@@ -168,18 +181,26 @@ function Chat({ g }: { g: Group }) {
 
 function Msg({ m, i, g, onJoin }: { m: ChatMsg; i: number; g: Group; onJoin: (w: string) => void }) {
   const t = useT();
+  const std = useStd();
   const blocked = useStore((x) => x.blocked);
   const enter = fadeIn();
   if (m.kind === 'sys') {
     return (
-      <Animated.View entering={enter} style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: m.join ? 3 : 4, paddingLeft: 10, paddingRight: m.join ? 3 : 10, borderRadius: 16, backgroundColor: t.dark ? t.sunken : 'rgba(15,23,42,0.05)' }}>
-        {m.join ? <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: t.green }} /> : null}
+      <Animated.View entering={enter} style={[{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: m.join ? 3 : 4, paddingLeft: 10, paddingRight: m.join ? 3 : 10, borderRadius: 16, backgroundColor: t.dark ? t.sunken : 'rgba(15,23,42,0.05)' },
+        // スタンダード: a tag (paper 2, a faint edge); room under the key's floor
+        std && { borderRadius: 9, backgroundColor: S.paper2, boxShadow: ring(1.5, 'rgba(23,18,31,0.16)'), paddingVertical: m.join ? 5 : 4, paddingRight: m.join ? 5 : 10 }]}>
+        {m.join ? <View style={[{ width: 5, height: 5, borderRadius: 3, backgroundColor: t.green }, std && { width: 8, height: 8, borderRadius: 0, boxShadow: ring(1.5) }]} /> : null}
         <Txt size={11.5} tone="ink2">{m.t}</Txt>
-        {m.join ? (
+        {m.join ? (std ? (
+          // スタンダード: starting together is lime (start)
+          <StdKey onPress={() => onJoin(m.join!)} label="一緒に始める" fill={S.lime} kd={2} radius={9} haptics={false} hitSlop={8} style={{ minHeight: 26, marginBottom: 2 }} face={{ minHeight: 26, paddingHorizontal: 10 }}>
+            <Txt size={11.5} w="700" lh={15}>一緒に始める</Txt>
+          </StdKey>
+        ) : (
           <Press onPress={() => onJoin(m.join!)} scale={0.92} haptics={false} hitSlop={8} style={{ height: 26, paddingHorizontal: 10, borderRadius: 13, backgroundColor: t.ink, justifyContent: 'center' }}>
             <Txt size={11.5} w="600" color={t.onInk}>一緒に始める</Txt>
           </Press>
-        ) : null}
+        )) : null}
       </Animated.View>
     );
   }

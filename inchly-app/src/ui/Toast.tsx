@@ -6,10 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { hair, lift, useT } from '../theme';
-import { haptic, Press, Txt } from './base';
+import { haptic, Press, StdKey, Txt } from './base';
 import { Sticker } from './Sticker';
 import { Pane } from './Glass';
 import { dismiss as away, fadeOut, M, micro, move, present } from './motion';
+import { LIFT, S, useStd } from './stdLook';
 
 // Toast stack (bencho "notification stack"): newest in front, the two behind
 // peek out above it. Tapping the stack spreads it into a list; it collapses
@@ -50,6 +51,7 @@ const GAP = 66;
 
 function ToastCard({ item, index, spread, onPress }: { item: Item; index: number; spread: boolean; onPress: () => void }) {
   const t = useT();
+  const std = useStd();
   const y = useSharedValue(-60);
   const s = useSharedValue(0.96);
   const o = useSharedValue(0);
@@ -82,6 +84,21 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
     <Animated.View exiting={fadeOut()} style={{ position: 'absolute', left: 0, right: 0, zIndex: 10 - index }}>
       <GestureDetector gesture={flick}>
         <Animated.View style={a}>
+          {std ? (
+            // スタンダード: paper with the ink outline and the lime shadow of what floats (it leaves 6 clear on the right); words only, the action a small key
+            <Pressable onPress={onPress}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingLeft: 14, paddingRight: 12, marginRight: 6, borderRadius: 16, backgroundColor: S.card, boxShadow: LIFT }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Txt size={15} w="700" lh={20} numberOfLines={1}>{item.title}</Txt>
+                {item.sub ? <Txt size={12} lh={16} tone="ink2" numberOfLines={1}>{item.sub}</Txt> : null}
+              </View>
+              {item.action ? (
+                <StdKey onPress={() => { item.action!.run(); dismiss(item.id); }} label={item.action.label} kd={3} style={{ minHeight: 32, marginBottom: 3 }} face={{ minHeight: 32, paddingHorizontal: 12 }}>
+                  <Txt size={13} w="700" lh={17}>{item.action.label}</Txt>
+                </StdKey>
+              ) : null}
+            </Pressable>
+          ) : (
           <Pressable onPress={onPress}
             style={[{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingLeft: 8, paddingRight: item.action ? 8 : 14, borderRadius: 20,
               backgroundColor: t.surface, borderWidth: t.dark ? hair : 0, borderColor: t.line2 }, t.dark ? { boxShadow: '0px 8px 24px rgba(0,0,0,0.5)' } : lift(t, 2)]}>
@@ -97,6 +114,7 @@ function ToastCard({ item, index, spread, onPress }: { item: Item; index: number
               </Press>
             ) : null}
           </Pressable>
+          )}
         </Animated.View>
       </GestureDetector>
     </Animated.View>

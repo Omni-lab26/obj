@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NOTIFS, Notif, PERSON_COLOR, ROOM } from '@/data';
 import { getState, setState, startStudy, toggleFollow, toggleIn, useStore } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
-import { Avatar, Btn, Empty, haptic, IconBtn, Txt } from '@/ui/base';
+import { Avatar, Btn, Empty, haptic, IconBtn, IconPlate, Txt } from '@/ui/base';
 import { allowed, NavBar, Screen } from '@/ui/Chrome';
 import { IconName } from '@/ui/Icon';
 import { Sticker, StickerName } from '@/ui/Sticker';
@@ -14,16 +14,23 @@ import { SwipeRow } from '@/ui/SwipeRow';
 import { Segmented } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
+import { PixSticker } from '@/themes/standard/pixel';
+import type { StickerId } from '@/themes/standard/art';
+import { ring, RING_SOFT, S, useStd } from '@/ui/stdLook';
 
 type Filter = 'all' | 'imp' | 'study';
 
 // Each kind of notice wears a pop sticker instead of a line icon.
 const STICKER: Partial<Record<IconName, StickerName>> = { flag: 'flag', bulb: 'bulb', cal: 'cal', target: 'target', clock: 'pencil', userPlus: 'pencil', users: 'heart' };
 
+// スタンダード: the notices that have a pixel sticker wear it (the others keep their pop one)
+const PIX: Partial<Record<IconName, StickerId>> = { flag: 'flag', cal: 'cal' };
+
 const markRead = (id: number) => setState((s) => (s.notifRead.includes(id) ? {} : { notifRead: [...s.notifRead, id] }));
 
 function Row({ n, unread, joined, onJoin }: { n: Notif; unread: boolean; joined: boolean; onJoin: () => void }) {
   const t = useT();
+  const std = useStd();
   const following = useStore((s) => (n.follow ? s.following.includes(n.follow) : false));
   // follow notices name the handle; study notices name the person
   const who = n.join ?? (n.follow ? ROOM.find((p) => p.h === n.follow)?.n : undefined);
@@ -39,29 +46,41 @@ function Row({ n, unread, joined, onJoin }: { n: Notif; unread: boolean; joined:
         // about a person: show the person, with a sticker for what happened
         <View style={{ width: 36, height: 36 }}>
           <Avatar name={who} color={PERSON_COLOR[who] ?? t.ink3} size={34} />
-          <Sticker name={STICKER[n.icon] ?? 'pencil'} size={22} tilt={-8} style={{ position: 'absolute', right: -8, bottom: -7 }} />
+          {std ? (n.join ? <View style={{ position: 'absolute', right: -3, bottom: -1, width: 9, height: 9, backgroundColor: S.run, boxShadow: ring(1.5) }} /> : null)
+            : <Sticker name={STICKER[n.icon] ?? 'pencil'} size={22} tilt={-8} style={{ position: 'absolute', right: -8, bottom: -7 }} />}
         </View>
+      ) : std && PIX[n.icon] ? (
+        <View style={{ width: 40, alignItems: 'center', paddingTop: 2 }}><PixSticker name={PIX[n.icon]!} tilt={n.id % 2 ? -6 : 6} /></View>
       ) : (
         <Sticker name={STICKER[n.icon] ?? 'bell'} size={40} tilt={n.id % 2 ? -6 : 5} style={{ margin: -2 }} />
       )}
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Txt size={13.5} w={unread ? '600' : '500'} lh={19} style={{ flex: 1 }}>{n.title}</Txt>
-          {unread ? <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: t.blue, alignSelf: 'flex-start', marginTop: 6 }} /> : null}
+          {unread ? <View style={[{ width: 7, height: 7, borderRadius: 4, backgroundColor: t.blue, alignSelf: 'flex-start', marginTop: 6 }, std && { width: 8, height: 8, borderRadius: 0, backgroundColor: S.unread, boxShadow: ring(1.5) }]} /> : null}
         </View>
         {n.kind === 'imp' ? (
+          std ? (
+            // スタンダード: a tag (paper 2, a faint edge) with the deadline color's square
+            <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 5, minHeight: 22, paddingHorizontal: 8, borderRadius: 7, backgroundColor: S.paper2, boxShadow: RING_SOFT }}>
+              <View style={{ width: 7, height: 7, backgroundColor: S.due, boxShadow: ring(1.5) }} />
+              <Txt size={11} w="700" color="#A65F00" lh={14}>大事</Txt>
+            </View>
+          ) : (
           <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, height: 18, paddingHorizontal: 6, borderRadius: 5, backgroundColor: t.amberSoft }}>
             <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: t.amber }} />
             <Txt size={10.5} w="700" tone="amber" lh={13}>大事</Txt>
           </View>
+          )
         ) : null}
         <Txt size={11.5} tone="ink3" lh={16} style={{ marginTop: 2 }}>{n.sub} · {n.time}</Txt>
         {n.cta || n.join || n.follow ? (
           <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
-            {n.join ? <Btn small kind="primary" icon="play" label={joined ? '勉強中' : '一緒に始める'} disabled={joined} onPress={onJoin} /> : null}
-            {n.cta ? <Btn small kind="tint" label={n.cta} onPress={cta} /> : null}
+            {/* スタンダード: starting is lime (start); the rest are plain keys */}
+            {n.join ? <Btn small kind={std ? 'go' : 'primary'} icon="play" label={joined ? '勉強中' : '一緒に始める'} disabled={joined} onPress={onJoin} /> : null}
+            {n.cta ? <Btn small kind={std && n.id === 6 ? 'go' : 'tint'} label={n.cta} onPress={cta} /> : null}
             {n.follow ? (
-              <Btn small kind={following ? 'quiet' : 'primary'} label={following ? 'フォロー中' : 'フォローを返す'}
+              <Btn small kind={following || std ? 'quiet' : 'primary'} label={following ? 'フォロー中' : 'フォローを返す'}
                 onPress={() => { toggleFollow(n.follow!); markRead(n.id); }} />
             ) : null}
           </View>
@@ -73,6 +92,7 @@ function Row({ n, unread, joined, onJoin }: { n: Notif; unread: boolean; joined:
 
 export default function Notifications() {
   const t = useT();
+  const std = useStd();
   const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<Filter>('all');
   const [joined, setJoined] = useState<number[]>([]);
@@ -108,8 +128,10 @@ export default function Notifications() {
     <Screen>
       <NavBar title="お知らせ" right={
         <View style={{ flexDirection: 'row' }}>
-          <IconBtn name="check" label="すべて既読にする" onPress={readAll} />
-          <IconBtn name="gear" label="お知らせの設定" onPress={() => router.push('/settings')} />
+          <IconPlate>
+            <IconBtn name="check" label="すべて既読にする" onPress={readAll} />
+            <IconBtn name="gear" label="お知らせの設定" onPress={() => router.push('/settings')} />
+          </IconPlate>
         </View>
       } />
       <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 4 }}>
@@ -119,12 +141,12 @@ export default function Notifications() {
         {list.length === 0 ? <Empty title={emptyTitle} sub="仲間が勉強を始めると、ここに届きます" /> : null}
         {days.map((d) => (
           <View key={d}>
-            <Txt size={12} w="600" tone="ink2" style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 8 }}>{d}</Txt>
+            <Txt size={std ? 13 : 12} w={std ? '700' : '600'} tone="ink2" style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 8 }}>{d}</Txt>
             <View style={[{ marginHorizontal: 16, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
               <Pane radius={radius.card} />
               <View style={{ borderRadius: radius.card, overflow: 'hidden' }}>
                 {list.filter((n) => n.day === d).map((n, i) => (
-                  <View key={n.id} style={{ borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
+                  <View key={n.id} style={{ borderTopWidth: i ? (std ? 1.5 : hair) : 0, borderTopColor: t.line }}>
                     <SwipeRow bg={t.surface} onRead={() => { markRead(n.id); toast('既読にしました'); }} onDelete={() => remove(n.id)}>
                       <Row n={n} unread={!read.includes(n.id)} joined={joined.includes(n.id)} onJoin={() => join(n)} />
                     </SwipeRow>

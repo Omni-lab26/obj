@@ -8,13 +8,15 @@ import { pickPlanIcon } from '../lib/planIcon';
 import { Block, toClock, toMin } from '../lib/timetable';
 import { addDeadline, addSubject, dropFavorite, dropIcon, type Fav, keepIcon, removeBlock, saveBlock, useStore, useSubjects } from '../store';
 import { font, hair, noOutline, useT } from '../theme';
-import { haptic, Press, SubjTile, Txt } from './base';
+import { haptic, Press, StdKey, SubjTile, Txt } from './base';
 import { ContentHints } from './ContentHints';
 import { DatePick, Opens, PickChip, SMOOTH, TimePick } from './DateTime';
 import { Icon } from './Icon';
 import { PlanArt } from './PlanArt';
 import { openSheet } from './Sheet';
 import { toast } from './Toast';
+import { Pix } from '../themes/standard/pixel';
+import { ring, S, SR, useStd } from './stdLook';
 
 // Adding to the timetable, or a deadline (each its own sheet): やめる, what this
 // is and 追加 along the top, then only what a plan needs, top to bottom: its icon
@@ -56,6 +58,7 @@ const DAY = 24 * 60;
 
 function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => void; date?: Date; existing?: Block; kind: Kind; noDay?: boolean }) {
   const t = useT();
+  const std = useStd();
   const subjects = useSubjects();
   const today = day0(new Date());
   const kind: Kind = existing ? 'plan' : kind0;
@@ -141,6 +144,21 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
   return (
     <View style={{ gap: 16, paddingTop: 2 }}>
       {/* やめる · what this is · 追加, as text buttons the way iOS lays a new event out */}
+      {std ? (
+        // スタンダード: やめる in words, the title, and the sheet's one decision as a small ink key (on lime)
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 }}>
+          <Press onPress={close} scale={0.94} hitSlop={8} accessibilityLabel="やめる" style={{ minWidth: 64, minHeight: 44, justifyContent: 'center' }}>
+            <Txt size={15} w="700">やめる</Txt>
+          </Press>
+          <Txt size={17} w="800" accessibilityRole="header" numberOfLines={1} style={{ flex: 1, textAlign: 'center' }}>{plan ? (existing ? '予定を編集' : '予定を追加') : '締切を追加'}</Txt>
+          <View style={{ minWidth: 64, alignItems: 'flex-end' }}>
+            <StdKey onPress={save} label={existing ? '保存する' : '追加する'} fill={S.ink} under={S.limeDeep} kd={3} hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+              style={{ minHeight: 34, marginBottom: 3 }} face={{ minHeight: 34, paddingHorizontal: 14 }}>
+              <Txt size={14} w="700" lh={18} color={S.onInk}>{existing ? '保存' : '追加'}</Txt>
+            </StdKey>
+          </View>
+        </View>
+      ) : (
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 40 }}>
         <Press onPress={close} scale={0.94} hitSlop={8} accessibilityLabel="やめる" style={{ minWidth: 64 }}>
           <Txt size={16} color={accent}>やめる</Txt>
@@ -150,6 +168,7 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
           <Txt size={16} w="600" color={accent}>{existing ? '保存' : '追加'}</Txt>
         </Press>
       </View>
+      )}
 
       {/* よく使う: the plans kept with ♡, a tap fills the form in */}
       {plan && !existing && favs.length ? (
@@ -160,7 +179,8 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
               return (
                 <Press key={f.id} onPress={() => takeFav(f)} onLongPress={() => { haptic.firm(); dropFavorite(f.id); toast('よく使う予定から外しました', `${sj.name} · ${f.t}`); }} scale={0.96}
                   accessibilityLabel={`よく使う予定：${sj.name} ${f.t}${f.start ? ` ${f.start}から` : ''}。押すと入ります`} accessibilityHint="長押しで外せます"
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 6, paddingRight: 14, height: 52, borderRadius: 12, backgroundColor: t.surface, maxWidth: 240 }}>
+                  style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 6, paddingRight: 14, height: 52, borderRadius: 12, backgroundColor: t.surface, maxWidth: 240 },
+                    std && { marginVertical: 3, marginHorizontal: 2, backgroundColor: S.card, boxShadow: ring(1.5) }]}>
                   <PlanArt icon={f.icon} name={sj.name} color={sj.c} size={40} radius={8} />
                   <View style={{ minWidth: 0, flexShrink: 1 }}>
                     <Txt size={14} w="600" numberOfLines={1}>{f.t || sj.name}</Txt>
@@ -181,12 +201,20 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingLeft: 14, paddingRight: 6, paddingVertical: 12 }}>
               <Press onPress={() => toggle('subject')} scale={0.94} accessibilityLabel={name.trim() ? `アイコン（教科）：${name.trim()}。変える` : 'アイコン（教科）を選ぶ'} accessibilityState={{ expanded: open === 'subject' }}>
                 {name.trim() || icon ? (
+                  std ? (
+                    // スタンダード: the subject's square in ink (a photo edged in ink); open, a lime ring around it
+                    <View style={{ margin: 3, borderRadius: 13, boxShadow: open === 'subject' ? `0px 0px 0px 2px ${S.ink}, 0px 0px 0px 5px ${S.lime}, 0px 0px 0px 7px ${S.ink}` : ring() }}>
+                      {icon ? <PlanArt icon={icon} name={name.trim() || '？'} color={color} size={56} radius={13} /> : <SubjTile name={name.trim() || '？'} color={color} size={56} radius={13} />}
+                    </View>
+                  ) : (
                   <View style={{ borderRadius: 16, borderWidth: 2, borderColor: open === 'subject' ? t.blue : 'transparent', padding: 1.5 }}>
                     <PlanArt icon={icon} name={name.trim() || '？'} color={color} size={58} radius={13} />
                   </View>
+                  )
                 ) : (
-                  <View style={{ width: 63, height: 63, borderRadius: 15, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line2, alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="plus" size={20} color={t.ink2} />
+                  <View style={[{ width: 63, height: 63, borderRadius: 15, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line2, alignItems: 'center', justifyContent: 'center' },
+                    std && { borderWidth: 2, borderColor: 'rgba(23,18,31,0.4)', backgroundColor: S.card }]}>
+                    {std ? <Pix name="plus" px={3} /> : <Icon name="plus" size={20} color={t.ink2} />}
                   </View>
                 )}
               </Press>
@@ -196,7 +224,7 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
                   <Txt size={18} w="700" tone={name.trim() ? 'ink' : 'ink3'} numberOfLines={1} style={{ flexShrink: 1 }}>{name.trim() || '教科'}</Txt>
                   <View style={{ transform: [{ rotate: open === 'subject' ? '-90deg' : '90deg' }] }}><Icon name="chev" size={13} color={t.ink3} /></View>
                 </Press>
-                <View style={{ height: hair, backgroundColor: t.line }} />
+                <View style={{ height: std ? 1.5 : hair, backgroundColor: t.line }} />
                 <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder="メモ（例：青チャート 例題41〜50）"
                   placeholderTextColor={t.ink3} onFocus={typing} accessibilityLabel="メモ" returnKeyType="done"
                   style={[{ height: 34, paddingVertical: 0, paddingRight: 8, fontSize: 15, fontFamily: font.text, color: t.ink }, noOutline]} />
@@ -289,8 +317,8 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
                     {/* ×: takes off the end, else the start */}
                     <Press onPress={() => { haptic.tap(); if (len) setLen(0); else setStartAt(null); setOpen(null); }} hitSlop={10} scale={0.9}
                       accessibilityLabel={len ? '終わる時刻を消す' : '始める時刻を消す'}
-                      style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-                      <Icon name="x" size={11} color={t.ink3} />
+                      style={[{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }, std && { width: 26, height: 26, borderRadius: 7, backgroundColor: S.paper2 }]}>
+                      {std ? <Pix name="x" px={1} /> : <Icon name="x" size={11} color={t.ink3} />}
                     </Press>
                   </>
                 )}
@@ -313,7 +341,7 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 16, paddingRight: 10, minHeight: 56 }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Txt size={16}>締切日</Txt>
-                  <Txt num size={12} color={daysLeft <= 3 ? DEADLINE_RED : t.ink3}>{daysLeft <= 0 ? '今日' : `あと${daysLeft}日`}</Txt>
+                  <Txt num size={12} w={std && daysLeft <= 3 ? '700' : '400'} color={daysLeft <= 3 ? (std ? '#A65F00' : DEADLINE_RED) : t.ink3}>{daysLeft <= 0 ? '今日' : `あと${daysLeft}日`}</Txt>
                 </View>
                 <PickChip label={chipDate(d)} on={open === 'date'} onPress={() => toggle('date')} a11y="日付を変える" />
               </View>
@@ -333,14 +361,19 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
       </Field>
       )}
 
-      {existing ? (
+      {existing ? (std ? (
+        // スタンダード: a key whose words are crimson (taking something away)
+        <StdKey onPress={() => { removeBlock(existing.id); haptic.warn(); close(); toast('予定を削除しました'); }} label="この予定を削除" style={{ minHeight: 48, marginBottom: 4 }} face={{ minHeight: 48 }}>
+          <Txt size={15} w="700" color={S.pause}>予定を削除</Txt>
+        </StdKey>
+      ) : (
         <Group>
           <Press onPress={() => { removeBlock(existing.id); haptic.warn(); close(); toast('予定を削除しました'); }} accessibilityLabel="この予定を削除"
             style={{ height: 48, alignItems: 'center', justifyContent: 'center' }}>
             <Txt size={16} color={DEADLINE_RED}>予定を削除</Txt>
           </Press>
         </Group>
-      ) : null}
+      )) : null}
     </View>
   );
 }
@@ -348,6 +381,10 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
 /** The coming week as a row of days (今日 first), one tap each; the last cell opens the calendar (and shows a later day picked there). */
 function WeekRow({ d, today, calendar, onPick, onCalendar }: { d: Date; today: Date; calendar: boolean; onPick: (x: Date) => void; onCalendar: () => void }) {
   const t = useT();
+  const std = useStd();
+  // スタンダード: the picked day lime with an ink edge (what's picked), its words in ink
+  const pick = std ? { backgroundColor: S.lime, boxShadow: ring() } : { backgroundColor: t.ink };
+  const onFg = std ? S.ink : t.onInk;
   const week = Array.from({ length: 7 }, (_, i) => new Date(today.getFullYear(), today.getMonth(), today.getDate() + i));
   const later = !week.some((x) => x.getTime() === d.getTime());
   const cell = { flex: 1, height: 54, borderRadius: 12, alignItems: 'center' as const, justifyContent: 'center' as const, gap: 1 };
@@ -357,20 +394,20 @@ function WeekRow({ d, today, calendar, onPick, onCalendar }: { d: Date; today: D
         const on = x.getTime() === d.getTime();
         return (
           <Press key={i} onPress={() => onPick(x)} scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`${i === 0 ? '今日 ' : ''}${shortDate(x)}`}
-            style={[cell, { backgroundColor: on ? t.ink : 'transparent' }]}>
-            <Txt size={10.5} w="600" lh={13} color={on ? t.onInk : i === 0 ? t.blue : mondayIndex(x) >= 5 ? t.ink2 : t.ink3}>{i === 0 ? '今日' : DOW[mondayIndex(x)]}</Txt>
-            <Txt num size={17} w={on ? '700' : '600'} lh={21} color={on ? t.onInk : t.ink}>{String(x.getDate())}</Txt>
+            style={[cell, on ? pick : { backgroundColor: 'transparent' }, std && { borderRadius: 10 }]}>
+            <Txt size={10.5} w={std && i === 0 ? '800' : '600'} lh={13} color={on ? onFg : i === 0 ? t.blue : mondayIndex(x) >= 5 ? t.ink2 : t.ink3}>{i === 0 ? '今日' : DOW[mondayIndex(x)]}</Txt>
+            <Txt num size={17} w={on ? '700' : '600'} lh={21} color={on ? onFg : t.ink}>{String(x.getDate())}</Txt>
           </Press>
         );
       })}
       <Press onPress={onCalendar} scale={0.92} accessibilityLabel={later ? `${shortDate(d)}。カレンダーで変える` : 'もっと先の日をカレンダーで選ぶ'} accessibilityState={{ expanded: calendar }}
-        style={[cell, { backgroundColor: later ? t.ink : t.sunken }]}>
+        style={[cell, later ? pick : { backgroundColor: t.sunken }, std && { borderRadius: 10 }, std && !later && calendar && { backgroundColor: S.lime, boxShadow: ring() }]}>
         {later ? (
           <>
-            <Txt size={10.5} w="600" lh={13} color={t.onInk}>{`${d.getMonth() + 1}月`}</Txt>
-            <Txt num size={17} w="700" lh={21} color={t.onInk}>{String(d.getDate())}</Txt>
+            <Txt size={10.5} w="600" lh={13} color={onFg}>{`${d.getMonth() + 1}月`}</Txt>
+            <Txt num size={17} w="700" lh={21} color={onFg}>{String(d.getDate())}</Txt>
           </>
-        ) : <Icon name="cal" size={18} color={calendar ? t.blue : t.ink2} />}
+        ) : std ? <Pix name="cal" /> : <Icon name="cal" size={18} color={calendar ? t.blue : t.ink2} />}
       </Press>
     </View>
   );
@@ -423,6 +460,15 @@ function NewSubject({ onAdd }: { onAdd: (x: { name: string; c: string }) => void
 /** A card on the frosted pane: near-white, square-ish, a hairline edge, no shadow. */
 function Group({ children }: { children: React.ReactNode }) {
   const t = useT();
+  const std = useStd();
+  // スタンダード: a card with the 2pt ink outline (on the outer view: the inner one clips its rows)
+  if (std) {
+    return (
+      <Animated.View layout={SMOOTH} style={{ borderRadius: SR.mid, backgroundColor: S.card, boxShadow: ring() }}>
+        <View style={{ borderRadius: SR.mid, overflow: 'hidden' }}>{children}</View>
+      </Animated.View>
+    );
+  }
   return (
     <Animated.View layout={SMOOTH} style={{ backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)', borderRadius: 10, overflow: 'hidden' }}>
       {children}
@@ -431,9 +477,10 @@ function Group({ children }: { children: React.ReactNode }) {
 }
 /** A part of the form: its name (if the row doesn't say it), small and grey as over a group in iOS's Settings, then its card. */
 function Field({ label, children }: { label?: string; children: React.ReactNode }) {
+  const std = useStd();
   return (
     <Animated.View layout={SMOOTH} style={{ gap: 6 }}>
-      {label ? <Txt size={13} tone="ink3" style={{ paddingLeft: 16 }}>{label}</Txt> : null}
+      {label ? <Txt size={13} w={std ? '700' : '400'} tone={std ? 'ink2' : 'ink3'} style={{ paddingLeft: std ? 4 : 16 }}>{label}</Txt> : null}
       {children}
     </Animated.View>
   );

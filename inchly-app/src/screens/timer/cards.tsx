@@ -99,6 +99,8 @@ export type CardLook = {
   light?: boolean;
   /** the page's color while the card that adds a plan is in the middle */
   addColor?: string;
+  /** a session in まとめて記録: its color, name and minutes, and メモを書く when it can be written up alone */
+  HeldRow?: ComponentType<{ color: string; name: string; min: number; action?: string; onPress?: () => void }>;
 };
 export const CardLookContext = createContext<CardLook | null>(null);
 const useLook = () => useContext(CardLookContext);
@@ -753,6 +755,7 @@ function Waiting({ held, tone, onPress }: { held: Held[]; tone: Tone; onPress: (
 
 /** A card's ··· (end, record or go on with it, or edit it), and まとめて記録: everything waiting, and the one under way. */
 function MenuDialog({ menu, close, record, begin }: { menu: Menu; close: () => void; record: (h: Held) => void; begin: (b: Block) => void }) {
+  const Row = useLook()?.HeldRow ?? HeldLine;
   // keep what it said while it closes
   const [last, setLast] = useState<Menu>(menu);
   if (menu && menu !== last) setLast(menu);
@@ -798,7 +801,7 @@ function MenuDialog({ menu, close, record, begin }: { menu: Menu; close: () => v
     </Dialog>
   );
 }
-function Row({ color, name, min, action, onPress }: { color: string; name: string; min: number; action?: string; onPress?: () => void }) {
+function HeldLine({ color, name, min, action, onPress }: { color: string; name: string; min: number; action?: string; onPress?: () => void }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 36 }}>
       <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color }} />

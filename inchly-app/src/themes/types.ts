@@ -28,6 +28,9 @@ export type HomeKit = {
   arrange?: (base: Block[]) => Block[];
   /** The small handle on the left edge that opens the デザイン page (placed by the theme). */
   DesignHandle?: ComponentType<{ onPress: () => void }>;
+  /** The menu home slides aside for (its props as screens/SideMenu's), and home's edge while it's aside (a boxShadow). */
+  Menu?: ComponentType<{ close: () => void; leave: () => void }>;
+  asideEdge?: string;
 };
 
 export type TimerKit = {

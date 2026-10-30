@@ -7,12 +7,13 @@ import { dayOf } from '../lib/history';
 import { Session, useStore } from '../store';
 import { hair, lift, radius, type, useT } from '../theme';
 import { useReplay } from './appear';
-import { haptic, Txt } from './base';
+import { haptic, StdHead, Txt } from './base';
 import { micro, timed } from './motion';
 import { Rolling } from './Rolling';
 import { SeriesSet, useSeries } from './series';
 import { Segmented } from './Tabs';
 import { Pane } from './Glass';
+import { ring, S, useStd } from './stdLook';
 
 // bencho "stacked bars": twenty days (or weeks) of study as stacked bars by
 // subject. Run a finger along them: one column is ringed, the rest fade, and a
@@ -51,6 +52,7 @@ const hmLabel = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ?
  * baseline up, the shortfall below it from the baseline down.
  */
 function Seg({ h, bottom, color, delay, dim, below }: { h: number; bottom: number; color: string; delay: number; dim: boolean; below?: boolean }) {
+  const std = useStd();
   const g = useSharedValue(0);
   const o = useSharedValue(1);
   const replay = useReplay();
@@ -65,11 +67,14 @@ function Seg({ h, bottom, color, delay, dim, below }: { h: number; bottom: numbe
     opacity: o.value,
     transform: below ? [{ scaleY: g.value }] : [{ translateY: rise * (1 - g.value) }, { scaleY: g.value }],
   }));
-  return <Animated.View style={[{ position: 'absolute', left: 0, right: 0, height: h, bottom, borderRadius: 2.5, backgroundColor: color, transformOrigin: below ? 'top' : 'bottom' }, a]} />;
+  return <Animated.View style={[{ position: 'absolute', left: 0, right: 0, height: h, bottom, borderRadius: 2.5, backgroundColor: color, transformOrigin: below ? 'top' : 'bottom' },
+    // スタンダード: square pieces, each edged in thin ink
+    std && h > 0 && { borderRadius: 0, boxShadow: ring(1) }, a]} />;
 }
 
 export function StackedBars() {
   const t = useT();
+  const std = useStd();
   const [mode, setMode] = useState<Mode>('day');
   const sessions = useStore((s) => s.sessions);
   const series = useSeries(useStore((s) => s.chart.detail));
@@ -139,19 +144,19 @@ export function StackedBars() {
       <Pane radius={radius.card} />
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
         <View style={{ flex: 1 }}>
-          <Txt size={12} w="500" tone="ink2" lh={16}>{mode === 'day' ? '勉強時間 · 直近20日' : '勉強時間 · 直近20週'}</Txt>
+          {std ? <StdHead title={mode === 'day' ? '勉強時間 · 直近20日' : '勉強時間 · 直近20週'} /> : <Txt size={12} w="500" tone="ink2" lh={16}>{mode === 'day' ? '勉強時間 · 直近20日' : '勉強時間 · 直近20週'}</Txt>}
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginTop: 2 }}>
             <Rolling value={total.toFixed(1)} size={type.figure + 2} weight="700" />
             <Txt size={12} w="600" tone="ink3" style={{ marginBottom: 4 }}>時間</Txt>
           </View>
         </View>
-        <Segmented small value={mode} onChange={(m) => { setHot(null); setMode(m); }} options={[{ v: 'day', label: '日' }, { v: 'week', label: '週' }]} style={{ width: 76 }} />
+        <Segmented small value={mode} onChange={(m) => { setHot(null); setMode(m); }} options={[{ v: 'day', label: '日' }, { v: 'week', label: '週' }]} style={std ? undefined : { width: 76 }} />
       </View>
 
       <View style={{ height: PLOT }} onLayout={(e) => setW(e.nativeEvent.layout.width)} {...pan.panHandlers}
         accessible accessibilityLabel={`${mode === 'day' ? '直近20日' : '直近20週'}の勉強時間。合計${total.toFixed(1)}時間`}>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <View style={{ position: 'absolute', left: 0, right: 0, top: BASE, height: 1, backgroundColor: t.line2 }} />
+          <View style={[{ position: 'absolute', left: 0, right: 0, top: BASE, height: 1, backgroundColor: t.line2 }, std && { height: 1.5, backgroundColor: S.ink }]} />
           {colW
             ? cols.map((col, i) => {
                 let acc = 0;
@@ -205,15 +210,15 @@ export function StackedBars() {
         <Txt size={10} tone="ink3" num lh={12}>{cols[N - 1].label}</Txt>
       </View>
       {/* legend, storage-style */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4, paddingTop: 10, borderTopWidth: hair, borderTopColor: t.line }} pointerEvents="none">
+      <View style={[{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4, paddingTop: 10, borderTopWidth: hair, borderTopColor: t.line }, std && { borderTopWidth: 1.5, rowGap: 6 }]} pointerEvents="none">
         {series.list.filter((x, k) => cols.some((c) => c.parts[k] > 0)).map((x) => (
           <View key={x.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: x.c }} />
+            <View style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: x.c }, std && { width: 8, height: 8, borderRadius: 0, boxShadow: ring(1.5) }]} />
             <Txt size={11} tone="ink2" lh={14}>{x.name}</Txt>
           </View>
         ))}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.red }} />
+          <View style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.red }, std && { width: 8, height: 8, borderRadius: 0, boxShadow: ring(1.5) }]} />
           <Txt size={11} tone="ink2" lh={14}>目標に足りない分</Txt>
         </View>
       </View>

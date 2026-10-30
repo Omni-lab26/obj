@@ -14,6 +14,8 @@ import { UnderTabs } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
 import { RefreshScroll } from '@/ui/Loader';
+import { S, useStd } from '@/ui/stdLook';
+import { TextureFill } from '@/ui/Texture';
 import { replayCharts } from '@/ui/appear';
 
 type Tab = 'growth' | 'log' | 'charts' | 'posts';
@@ -33,6 +35,7 @@ function Count({ n, label, onPress }: { n: string; label: string; onPress: () =>
 // tabs stick under the top bar. Who you follow / who follows you open from the counts.
 export default function Me() {
   const t = useT();
+  const std = useStd();
   const pad = useTabPad();
   const a = useStore((s) => s.account);
   const following = useStore((s) => s.following);
@@ -62,7 +65,7 @@ export default function Me() {
         <HoloCard lv={level.lv} name={a?.name ?? 'はる'} handle={a?.handle ?? 'haru_study'} goal={a?.aim ? `${a.aim} 志望` : gradeOf(a ?? null)} since="04/26"
           stats={[{ v: shown ? String(Math.floor(g.total)) : '000', from: '000', label: '時間 / 1年' }, { v: shown ? String(streak) : '00', from: '00', label: '日連続' }, { v: shown ? '57' : '00', from: '00', label: '位 / 今週' }]} />
         <View style={{ paddingHorizontal: 20, paddingTop: 14 }}>
-          <Txt size={13} tone="ink2" lh={20}>{a?.via === 'demo' || !a ? '高3。数学は青チャート2周目。朝型にしたい（今は夜型）。' : `${gradeOf(a)}。`}</Txt>
+          <Txt size={std ? 14 : 13} tone="ink2" lh={std ? 22 : 20}>{a?.via === 'demo' || !a ? `高3。数学は青チャート2周目。朝型にしたい${std ? '\n' : ''}（今は夜型）。` : `${gradeOf(a)}。`}</Txt>
           <View style={{ flexDirection: 'row', gap: 18, paddingTop: 8 }}>
             <Count n={String(mine.length)} label="投稿" onPress={() => go('posts')} />
             <Count n={String(following.length + 125)} label="フォロー" onPress={() => router.push('/follows?tab=following')} />
@@ -76,9 +79,20 @@ export default function Me() {
 
         <View style={{ paddingTop: 14, backgroundColor: t.backdrop !== 'none' ? t.surface : t.canvas }} onLayout={(e) => { tabsY.current = e.nativeEvent.layout.y + 14; }}>
           <Pane radius={0} />
+          {std ? <TextureFill texture="dots-paper" /> : null}
           <UnderTabs value={tab} onChange={go} options={[{ v: 'growth', label: '成長' }, { v: 'log', label: '記録' }, { v: 'charts', label: 'グラフ' }, { v: 'posts', label: '投稿' }]} />
         </View>
-        {tab === 'growth' ? <Growth /> : tab === 'log' ? <LogPage /> : tab === 'charts' ? <ChartsPage /> : (
+        {tab === 'growth' ? <Growth /> : tab === 'log' ? <LogPage /> : tab === 'charts' ? <ChartsPage /> : std ? (
+          // スタンダード: the posts on the card's paper, an ink line under them, then the key on the page
+          <View>
+            <View style={{ backgroundColor: S.card, borderBottomWidth: 2, borderBottomColor: S.ink }}>
+              {mine.length ? mine.map((p, i) => <PostRow key={p.id} p={p} first={i === 0} />) : <Empty title="まだ投稿していません" sub="今日の記録をつけて投稿できます" />}
+            </View>
+            <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
+              <Btn wide icon="plus" label="投稿する" onPress={composeSheet} />
+            </View>
+          </View>
+        ) : (
           <View style={{ backgroundColor: t.surface }}>
             <Pane radius={0} />
             {mine.length ? mine.map((p, i) => <PostRow key={p.id} p={p} first={i === 0} />) : <Empty title="まだ投稿していません" sub="今日の記録をつけて投稿できます" />}

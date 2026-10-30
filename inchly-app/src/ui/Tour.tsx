@@ -8,8 +8,12 @@ import { BACKDROPS_OPEN } from '../design';
 import { setState, useStore } from '../store';
 import { useT } from '../theme';
 import { backdropClock, backdropHeld } from './backdrop/shared';
-import { haptic, Press, Txt } from './base';
+import Svg, { Path } from 'react-native-svg';
+
+import { Creature } from '../themes/standard/pixel';
+import { haptic, Press, StdKey, Txt } from './base';
 import { fadeIn, fadeOut } from './motion';
+import { LIFT, S, useStd } from './stdLook';
 
 // The first-run tour: a few speech bubbles, each pointing at the thing it
 // explains (the study bar's 勉強を開始, the bar while studying, the middle tab,
@@ -94,6 +98,7 @@ export function TourHost() {
 const PAD = 6;
 function Bubble({ step, rect, n, i, next, skip }: { step: Step; rect: Rect | null; n: number; i: number; next: () => void; skip: () => void }) {
   const t = useT();
+  const std = useStd();
   const { width: W, height: H } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   // the hole around the place (none: the whole screen dimmed)
@@ -112,6 +117,64 @@ function Bubble({ step, rect, n, i, next, skip }: { step: Step; rect: Rect | nul
     ? { left: bx, top: H * 0.36 }
     : below ? { left: bx, top: r.y + r.h + 14 } : { left: bx, bottom: H - r.y + 14 };
   const last = i === n - 1;
+  if (std) {
+    // スタンダード (the mock's tour): the dim in ink, the hole edged in the card's color; the bubble is paper with
+    // the ink outline and the lime shadow, its tail drawn in ink; めぶ says hello on the first step and is happy on the last
+    const pix = i === 0 ? 'idle' : last ? 'happy' : null;
+    const DIM = 'rgba(23,18,31,0.58)';
+    const tailX = tail - 10;
+    return (
+      <Animated.View entering={fadeIn()} exiting={fadeOut()} style={StyleSheet.absoluteFill} accessibilityViewIsModal>
+        <Pressable style={StyleSheet.absoluteFill} onPress={next} accessibilityLabel="次へ">
+          {rect ? (
+            <>
+              <View style={{ position: 'absolute', left: r.x - B, top: r.y - B, width: r.w + B * 2, height: r.h + B * 2, borderWidth: B, borderRadius: B + R, borderColor: DIM }} />
+              <View pointerEvents="none" style={{ position: 'absolute', left: r.x, top: r.y, width: r.w, height: r.h, borderRadius: R, boxShadow: `0px 0px 0px 2px ${S.card}` }} />
+            </>
+          ) : <View style={[StyleSheet.absoluteFill, { backgroundColor: DIM }]} />}
+        </Pressable>
+        <View style={[{ position: 'absolute', width: BW }, pos, rect ? (below ? { top: r.y + r.h + 16 } : { bottom: H - r.y + 16 }) : null]} accessibilityLiveRegion="polite">
+          <View style={{ backgroundColor: S.card, borderRadius: 18, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 14, gap: 6, boxShadow: LIFT }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              {pix ? <Creature id="mebu" face={pix} px={3} /> : null}
+              <Txt size={16} w="800" lh={22} style={{ flex: 1 }} accessibilityRole="header">{step.title}</Txt>
+            </View>
+            <Txt size={14} tone="ink2" lh={23}>{step.body}</Txt>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 12 }}>
+              <View style={{ flexDirection: 'row', gap: 5, flex: 1 }} accessible accessibilityLabel={`${i + 1} / ${n}`}>
+                {Array.from({ length: n }, (_, k) => <View key={k} style={{ width: 7, height: 7, backgroundColor: k === i ? S.ink : S.line2 }} />)}
+              </View>
+              {last ? null : (
+                <Pressable onPress={skip} hitSlop={10} accessibilityRole="button" accessibilityLabel="使い方をスキップ" style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 }}>
+                  <Txt size={14} w="600" tone="ink3">スキップ</Txt>
+                </Pressable>
+              )}
+              <StdKey onPress={next} label={last ? '使い方を終わる' : '次へ'} kd={3} style={{ minHeight: 32, marginBottom: 3 }} face={{ minHeight: 32, paddingHorizontal: 12 }}>
+                <Txt size={13} w="700" lh={17}>{last ? 'はじめる' : '次へ'}</Txt>
+              </StdKey>
+            </View>
+          </View>
+          {/* the tail: paper filled, edged in ink, over the bubble's outline */}
+          {rect ? (
+            <Svg width={20} height={11} viewBox="0 0 20 11" style={{ position: 'absolute', left: tailX, ...(below ? { top: -10 } : { bottom: -10 }) }}>
+              {below ? (
+                <>
+                  <Path d="M0 11L10 1l10 10z" fill={S.card} />
+                  <Path d="M0 11L10 1l10 10" fill="none" stroke={S.ink} strokeWidth={2} />
+                </>
+              ) : (
+                <>
+                  <Path d="M0 0l10 10L20 0z" fill={S.card} />
+                  <Path d="M0 0l10 10L20 0" fill="none" stroke={S.ink} strokeWidth={2} />
+                </>
+              )}
+            </Svg>
+          ) : null}
+        </View>
+        <View style={{ height: insets.bottom }} />
+      </Animated.View>
+    );
+  }
   return (
     <Animated.View entering={fadeIn()} exiting={fadeOut()} style={StyleSheet.absoluteFill} accessibilityViewIsModal>
       {/* the dim around the place (a tap anywhere goes on) */}

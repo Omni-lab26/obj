@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent, PanResponder, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { cancelAnimation, makeMutable, useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
@@ -22,7 +22,8 @@ import { Rolling } from '@/ui/Rolling';
 import { TourSpot } from '@/ui/Tour';
 import type { StickerId } from './art';
 import { GAP, GUTTER, R, ring, S } from './look';
-import { Aux, B, Card, Dot, J, Key, Link, Person, Plate, PlateBtn, SecHead, Tag } from './parts';
+import { Aux, B, Card, Dot, Dots, J, Key, Link, Person, Plate, PlateBtn, SecHead, Tag } from './parts';
+import { Menu } from './menu';
 import { Creature, LogoMark, Pix, PixSticker } from './pixel';
 
 // スタンダード's home, after the mock (docs/app/mock/home.html, home-live.html,
@@ -149,7 +150,7 @@ function Day({ d }: { d: WeekDay }) {
         ...(d.future && !d.today ? { borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(23,18,31,0.38)' } : { boxShadow: ring(d.today && !d.studied ? 2 : 1.5) }) }}>
         {d.studied ? <Pix name="check" px={1.5} /> : d.rest ? <J size={10} w="700" lh={12}>休</J> : null}
       </View>
-      <T f="pixel" size={11} lh={12} color={d.today ? S.ink : S.ink3}>{d.label}</T>
+      <Dots size={11} lh={12} color={d.today ? S.ink : S.ink3}>{d.label}</Dots>
     </View>
   );
 }
@@ -160,8 +161,11 @@ function FriendsPanel({ children }: { children: ReactNode }) {
   return <View style={{ backgroundColor: S.card, borderRadius: R.card, boxShadow: ring(), paddingTop: 14, paddingBottom: 6, overflow: 'hidden' }}>{children}</View>;
 }
 function FriendsHead({ sort, onSort, onAll }: { sort: string; onSort: () => void; onAll: () => void }) {
+  // over the rows: the order chip's floor reaches 2 into the first row, whose ground would cover it;
+  // and under the heading, the card's ground over the line of whichever row is at the top
   return (
-    <View style={{ paddingHorizontal: 16, paddingBottom: 2 }}>
+    <View style={{ paddingHorizontal: 16, paddingBottom: 2, zIndex: 2 }}>
+      <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, bottom: -2, height: 2, backgroundColor: S.card }} />
       <SecHead title="いま勉強中の友達" accent={S.run} right={
         <>
           <Key label={`並び順 ${sort}`} onPress={onSort} kd={2} radius={R.chip} style={{ height: 32 }} face={{ paddingLeft: 8, paddingRight: 6, gap: 3 }} hitSlop={{ top: 6, bottom: 6 }}>
@@ -178,7 +182,10 @@ function FriendRow({ f }: { f: Friend }) {
   const up = f.diff >= 0;
   return (
     <>
-      <Person name={f.n} color={f.c} />
+      {/* the line over each row: 1.5pt across the card's inside, as the cards' own lines (the list's hairline is left clear); the heading covers the top one's */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 16, right: -24, height: 1.5, backgroundColor: S.line }} />
+      {/* the row starts 14 in: 2 more, to sit under the heading's square */}
+      <View style={{ marginLeft: 2 }}><Person name={f.n} color={f.c} /></View>
       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
         <J size={15} w="700" lh={19} numberOfLines={1}>{f.n}</J>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -210,7 +217,8 @@ function Spark({ week, color }: { week: number[]; color: string }) {
     </View>
   );
 }
-const FRIENDS: FriendsLook = { Panel: FriendsPanel, Head: FriendsHead, Row: FriendRow, ground: S.card, line: S.line };
+// the rows draw their own 1.5pt line (FriendRow), so the list's hairline is clear
+const FRIENDS: FriendsLook = { Panel: FriendsPanel, Head: FriendsHead, Row: FriendRow, ground: S.card, line: 'transparent' };
 const Peers = () => <Friends look={FRIENDS} />;
 
 // ---------- today ----------
@@ -372,20 +380,31 @@ function Tape({ minutes, goal, parts }: { minutes: number; goal: number; parts: 
 // ---------- badges ----------
 /** The badges as stickers on the paper, earned first (a little tilted); the rest grey with what's left. Scroll sideways. */
 function Badges() {
-  const g = useGrowth(useStore((s) => s.sessions));
+  const sessions = useStore((s) => s.sessions);
+  const g = useGrowth(sessions);
   const streak = useStreak();
+  // the best day (minutes), and the sessions begun before 9:00
+  const { best, mornings } = useMemo(() => {
+    const day = new Map<string, number>();
+    let am = 0;
+    for (const x of sessions) {
+      day.set(x.date, (day.get(x.date) ?? 0) + x.min);
+      if (parseInt(x.at, 10) < 9) am += 1;
+    }
+    return { best: Math.max(0, ...day.values()), mornings: am };
+  }, [sessions]);
   const list: { s: StickerId; label: string; got: boolean; left?: string }[] = [
     ...[100, 300, 500, 700, 1000].map((m) => ({ s: 'trophy' as StickerId, label: `${m}時間`, got: g.total >= m, left: `あと${Math.ceil(m - g.total)}時間` })),
     ...[7, 21, 30, 100].map((d) => ({ s: 'flame' as StickerId, label: `${d}日連続`, got: streak >= d, left: `あと${d - streak}日` })),
-    { s: 'star', label: '1日5時間', got: true },
-    { s: 'sun', label: '朝勉10回', got: true },
+    { s: 'star', label: '1日5時間', got: best >= 300, left: `あと${Math.ceil((300 - best) / 60)}時間` },
+    { s: 'sun', label: '朝勉10回', got: mornings >= 10, left: `あと${10 - mornings}回` },
   ];
   list.sort((a, b) => Number(b.got) - Number(a.got));
   const got = list.filter((x) => x.got).length;
   return (
     <Card style={{ gap: 8 }}>
       <SecHead title="バッジ" accent={S.sun} right={<Aux><B>{got}</B>{` / ${list.length}`}</Aux>} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -16 }} contentContainerStyle={{ gap: 14, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 2 }}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -16 }} contentContainerStyle={{ gap: 14, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 6 }}
         accessibilityLabel="バッジ（横にスクロールできます）">
         {list.map((b) => (
           <View key={b.label} style={{ width: 76, alignItems: 'center', gap: 6 }} accessible accessibilityLabel={b.got ? `${b.label} 達成` : `${b.label} ${b.left}`}>
@@ -402,4 +421,5 @@ function Badges() {
 const sections: HomeKit['sections'] = { grass: Grass, streak: Streak, peers: Peers, today: Today, badges: Badges };
 /** Each section brings its own card. */
 const Frame = ({ children }: { block: SectionProps['block']; index: number; children: ReactNode }) => <>{children}</>;
-export const home: HomeKit = { Page, Header, Frame, sections };
+// the menu home slides aside for, and home's edge then: the 2pt ink outline (the mock's peek), no soft shadow
+export const home: HomeKit = { Page, Header, Frame, sections, Menu, asideEdge: ring() };

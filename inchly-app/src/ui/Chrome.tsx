@@ -8,6 +8,7 @@ import { Notif, NOTIFS, ROOM } from '../data';
 import { State, useStore } from '../store';
 import { hair, useT } from '../theme';
 import { IconBtn, Txt } from './base';
+import { useStd } from './stdLook';
 import { BackdropView } from './backdrop/Backdrop';
 import { TextureFill } from './Texture';
 
@@ -112,11 +113,14 @@ export function BellBtn({ filled }: { filled?: boolean }) {
 /** Pushed-screen header: back, centered title, optional right action. */
 export function NavBar({ title, right, color, border, onBack }: { title: string; right?: ReactNode; color?: string; border?: boolean; onBack?: () => void }) {
   const t = useT();
+  const std = useStd();
   return (
-    <View style={{ height: 48, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, borderBottomWidth: border ? hair : 0, borderBottomColor: t.line }}>
+    <View style={[{ height: 48, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, borderBottomWidth: border ? hair : 0, borderBottomColor: t.line },
+      // スタンダード: the back key and the right plate stand on floors; room for them under the bar, the page's side margin
+      std && { height: 56, paddingHorizontal: 16, paddingBottom: 4, borderBottomWidth: border ? 2 : 0 }]}>
       <IconBtn name="back" label="戻る" color={color} onPress={onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/')))} />
-      <View style={{ position: 'absolute', left: 60, right: 60, alignItems: 'center' }} pointerEvents="none">
-        <Txt size={15.5} w="600" color={color} numberOfLines={1}>{title}</Txt>
+      <View style={[{ position: 'absolute', left: 60, right: 60, alignItems: 'center' }, std && { left: 76, right: 76, top: 0, bottom: 4, justifyContent: 'center' }]} pointerEvents="none">
+        <Txt size={15.5} w={std ? '700' : '600'} color={color} numberOfLines={1}>{title}</Txt>
       </View>
       <View style={{ flex: 1 }} />
       {right}

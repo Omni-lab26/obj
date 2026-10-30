@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PEOPLE } from '@/data';
 import { toggleFollow, useStore } from '@/store';
 import { hair, useT } from '@/theme';
-import { Avatar, haptic, Press, Txt } from '@/ui/base';
+import { Avatar, Btn, haptic, Press, Txt } from '@/ui/base';
+import { useStd } from '@/ui/stdLook';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { personSheet } from '@/ui/Editors';
 import { UnderTabs } from '@/ui/Tabs';
@@ -16,7 +17,10 @@ type Tab = 'following' | 'followers';
 
 function FollowBtn({ h, back }: { h: string; back?: boolean }) {
   const t = useT();
+  const std = useStd();
   const on = useStore((s) => s.following.includes(h));
+  // スタンダード: a small key
+  if (std) return <Btn small label={on ? 'フォロー中' : back ? 'フォローを返す' : 'フォロー'} onPress={() => { haptic.soft(); toggleFollow(h); }} />;
   return (
     <Press onPress={() => { haptic.soft(); toggleFollow(h); }} scale={0.95} accessibilityRole="button" accessibilityState={{ selected: on }}
       hitSlop={{ top: 7, bottom: 7 }} style={{ height: 30, paddingHorizontal: 12, borderRadius: 15, justifyContent: 'center', backgroundColor: on ? t.surface : t.ink, borderWidth: hair, borderColor: on ? t.line2 : t.ink }}>
@@ -28,6 +32,7 @@ function FollowBtn({ h, back }: { h: string; back?: boolean }) {
 // Who you follow and who follows you, opened from the counts on My Page.
 export default function Follows() {
   const t = useT();
+  const std = useStd();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ tab?: Tab }>();
   const [tab, setTab] = useState<Tab>(params.tab === 'followers' ? 'followers' : 'following');
@@ -45,7 +50,7 @@ export default function Follows() {
         {list.map((p, i) => (
           <Press key={p.h} onPress={() => personSheet(p.n, p.c)} scale={0.99}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10 }}>
-            {i ? <View style={{ position: 'absolute', top: 0, left: 68, right: 0, height: hair, backgroundColor: t.line }} /> : null}
+            {i ? <View style={{ position: 'absolute', top: 0, left: 68, right: 0, height: std ? 1.5 : hair, backgroundColor: t.line }} /> : null}
             <Avatar name={p.n} color={p.c} size={40} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <Txt size={14} w="700">{p.n}</Txt>

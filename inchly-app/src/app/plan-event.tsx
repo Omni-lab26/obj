@@ -14,6 +14,7 @@ import { DatePick, Opens, PickChip, SMOOTH, TimePick } from '@/ui/DateTime';
 import { setPendingGroupTab } from '@/ui/GroupParts';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
+import { S, useStd } from '@/ui/stdLook';
 
 const WD = ['日', '月', '火', '水', '木', '金', '土'];
 type Kind = 'もくもく自習' | '時間チャレンジ' | '振り返り会';
@@ -22,6 +23,7 @@ type Who = 'all' | 'invited';
 
 export default function PlanEvent() {
   const t = useT();
+  const std = useStd();
   const insets = useSafeAreaInsets();
   const { g: gid = 'g1' } = useLocalSearchParams<{ g?: string }>();
   const members = useStore((s) => (s.groups.find((x) => x.id === gid) ?? s.groups[0]).m);
@@ -104,7 +106,9 @@ export default function PlanEvent() {
           </View>
         </ScrollView>
 
-        <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: Math.max(insets.bottom, 12), backgroundColor: t.canvas, borderTopWidth: hair, borderTopColor: t.line, gap: 10 }}>
+        <View style={[{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: Math.max(insets.bottom, 12), backgroundColor: t.canvas, borderTopWidth: hair, borderTopColor: t.line, gap: 10 },
+          // スタンダード: an ink line over the footer; room for the key's floor
+          std && { borderTopWidth: 2, borderTopColor: S.ink, gap: 12 }]}>
           <Txt size={12} tone="ink2" numberOfLines={1}>
             <Txt size={12} w="700">{`${d.getMonth() + 1}月${d.getDate()}日（${WD[d.getDay()]}）${time}`}</Txt>
             {`  · ${kind} · ${cap}人まで`}

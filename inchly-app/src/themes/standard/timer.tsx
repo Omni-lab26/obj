@@ -22,6 +22,7 @@ import { toast } from '@/ui/Toast';
 import type { IconId } from './art';
 import { R, ring, S } from './look';
 import { Dot, J, Key, Num } from './parts';
+import { orderSheet } from './order';
 import { Pix } from './pixel';
 
 // スタンダード's timer cards (TimerKit.card), after the mock (docs/app/mock/timer.html):
@@ -64,17 +65,18 @@ function StandardCard({ b, w, state, plan, over, held, begin, record, more, cent
   const lift = useSharedValue(centered ? 1 : 0);
   useEffect(() => { lift.set(micro(centered ? 1 : 0)); }, [centered, lift]);
   const lit = useAnimatedStyle(() => ({ opacity: lift.value }));
+  const [artH, setArtH] = useState(0);
   return (
     <View style={{ flex: 1 }}>
       <Animated.View pointerEvents="none" style={[{ position: 'absolute', ...LIFT_AT, borderRadius: R.card, backgroundColor: S.limeDeep }, lit]} />
       <View style={{ position: 'absolute', ...IN, borderRadius: R.card, backgroundColor: S.card, boxShadow: ring(), padding: pad, gap: Math.round(12 * k), justifyContent: 'space-between' }}>
-        {/* the picture */}
-        <View style={{ flex: 1, minHeight: 110, maxHeight: cw - 2 * pad, borderRadius: R.mid, overflow: 'hidden', backgroundColor: sj.c }}>
+        {/* the picture: what the rest leaves, up to a square (on a short card it gives way, so nothing under it is cut) */}
+        <View onLayout={(e) => setArtH(Math.round(e.nativeEvent.layout.height))} style={{ flex: 1, minHeight: 56, maxHeight: cw - 2 * pad, borderRadius: R.mid, overflow: 'hidden', backgroundColor: sj.c }}>
           {b.icon ? (
             <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
               <PlanArt icon={b.icon} name={sj.name} color={sj.c} size={Math.round(cw - 2 * pad)} radius={0} />
             </View>
-          ) : <SubjectArt name={sj.name} area={sj.area} k={k} w={cw - 2 * pad} />}
+          ) : <SubjectArt name={sj.name} area={sj.area} k={k} w={cw - 2 * pad} h={artH} />}
           <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: R.mid, boxShadow: `inset ${ring()}` }]} />
           <StateChip state={state} over={over} span={span} heldMin={heldMin} k={k} />
         </View>
@@ -114,16 +116,21 @@ function StandardCard({ b, w, state, plan, over, held, begin, record, more, cent
   );
 }
 
-/** The subject's color with the paper's dots, its drawing in ink at the top right, its name in the card's color outlined in ink. */
-function SubjectArt({ name, area, k, w }: { name: string; area?: Parameters<typeof glyphOf>[1]; k: number; w: number }) {
+/**
+ * The subject's color with the paper's dots, its drawing in ink at the top right, its name in the card's
+ * color outlined in ink. Short (a small phone, cards waiting to be recorded), the drawing keeps inside it
+ * and the name, said again just under the picture, is left out rather than run into the chip.
+ */
+function SubjectArt({ name, area, k, w, h }: { name: string; area?: Parameters<typeof glyphOf>[1]; k: number; w: number; h: number }) {
   const g = glyphOf(name, area);
-  const size = Math.round(w * 0.36);
+  const size = Math.round(Math.min(w * 0.36, h - 28));
   const fs = Math.round(Math.max(36, 46 * k));
+  const named = h >= 12 + 26 + 10 + fs * 1.1 + 12;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <TextureFill texture="dots-paper" opacity={0.9} />
-      {g ? <View style={{ position: 'absolute', right: 14, top: 14, opacity: 0.82 }}><SubjectGlyph glyph={g} size={size} color={S.ink} width={1.6} /></View> : null}
-      <Outlined text={name} size={fs} style={{ position: 'absolute', left: 16, bottom: 12, right: 16 }} />
+      {g && h && size >= 24 ? <View style={{ position: 'absolute', right: 14, top: 14, opacity: 0.82 }}><SubjectGlyph glyph={g} size={size} color={S.ink} width={1.6} /></View> : null}
+      {named ? <Outlined text={name} size={fs} style={{ position: 'absolute', left: 16, bottom: 12, right: 16 }} /> : null}
     </View>
   );
 }
@@ -131,12 +138,14 @@ function SubjectArt({ name, area, k, w }: { name: string; area?: Parameters<type
 const AROUND: [number, number][] = [[-2, 0], [2, 0], [0, -2], [0, 2], [-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]];
 /** Big words in the card's color with an ink outline (the outline drawn as eight ink copies under them). */
 function Outlined({ text, size, style }: { text: string; size: number; style?: object }) {
+  // set roomier than it looks (iOS cuts the top of Japanese set at 1.1), the extra given back below
+  const lh = Math.ceil(size * 1.3);
   const t = (color: string, dx = 0, dy = 0, key?: string) => (
-    <Text key={key} numberOfLines={1} style={[{ fontSize: size, lineHeight: Math.round(size * 1.1), fontWeight: '800', letterSpacing: -size * 0.03, color },
+    <Text key={key} numberOfLines={1} style={[{ fontSize: size, lineHeight: lh, fontWeight: '800', letterSpacing: -size * 0.03, color },
       dx || dy ? { position: 'absolute', left: dx, top: dy } : null]}>{text}</Text>
   );
   return (
-    <View style={style}>
+    <View style={[style, { marginBottom: -(lh - Math.round(size * 1.1)) / 2 }]}>
       {AROUND.map(([dx, dy], i) => t(S.ink, dx, dy, String(i)))}
       {t(S.card)}
     </View>
@@ -320,8 +329,9 @@ function Small({ label, a11y, icon, onPress, quiet }: { label: string; a11y?: st
   );
 }
 
-/** The heading: 今日の時間割 › (opens the timetable) and the day; 並べ替え as a small key. */
-function Head({ date, canSort, onOpen, onSort }: { date: Date; shown: number; count: number; canSort: boolean; onOpen: () => void; onSort: () => void }) {
+/** The heading: 今日の時間割 › (opens the timetable) and the day; 並べ替え as a small key (the order in スタンダード's own sheet). */
+function Head({ date, canSort, onOpen }: { date: Date; shown: number; count: number; canSort: boolean; onOpen: () => void; onSort: () => void }) {
+  const onSort = () => { haptic.tap(); orderSheet(); };
   return (
     <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 20, paddingTop: 4, paddingBottom: 10 }}>
       <Pressable onPress={() => { haptic.tap(); onOpen(); }} accessibilityRole="link" accessibilityLabel={`今日の時間割を開く。${date.getMonth() + 1}月${date.getDate()}日`} style={{ flex: 1, minWidth: 0, minHeight: 44, justifyContent: 'center' }}>
@@ -398,4 +408,20 @@ function Ad() {
   );
 }
 
-export const card: CardLook = { Face: StandardCard, Add: AddCard, corner: 0, Shade, Wash, Ad, Top, Head, Pager, Waiting, light: true, addColor: S.paper2 };
+/** A session in まとめて記録: its color as a square with an ink edge, the name, the minutes, and メモを書く as a text link. */
+function HeldRow({ color, name, min, action, onPress }: { color: string; name: string; min: number; action?: string; onPress?: () => void }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 40 }}>
+      <Dot c={color} size={10} />
+      <J size={15} w="700" lh={20} style={{ flex: 1, minWidth: 0 }} numberOfLines={1}>{name}</J>
+      <J size={14} w="600" lh={18} num color={S.ink2}>{`${min}分`}</J>
+      {action && onPress ? (
+        <Pressable onPress={() => { haptic.tap(); onPress(); }} hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }} accessibilityRole="button" accessibilityLabel={`${name}に${action}`}>
+          {({ pressed }) => <J size={13} w="700" lh={18} style={{ textDecorationLine: 'underline', opacity: pressed ? 0.6 : 1 }}>{action}</J>}
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+export const card: CardLook = { Face: StandardCard, Add: AddCard, corner: 0, Shade, Wash, Ad, Top, Head, Pager, Waiting, HeldRow, light: true, addColor: S.paper2 };

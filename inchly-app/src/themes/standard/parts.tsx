@@ -23,9 +23,22 @@ type TextProps = Parameters<typeof T>[0];
 export function J(props: TextProps) {
   return <T {...props} style={[props.style, { fontFamily: (props.size ?? 14) >= 20 ? font.display : font.text }]} />;
 }
+// The two bundled faces are set at their own line height, so iOS and the web place the glyphs
+// alike (iOS trims a line set shorter than the face from the top, which cuts the glyphs' tops);
+// `lh` is the room they take in the layout, the rest given back by margins.
+const keep = (natural: number, lh: number | undefined, up = 0) => {
+  const give = lh != null ? (natural - lh) / 2 : 0;
+  return give || up ? { marginTop: -give - up, marginBottom: -give + up } : null;
+};
 /** Figures 20pt and up: Bricolage Grotesque, tabular. */
-export function Num(props: TextProps) {
-  return <T f="groteskBold" num ls={-(props.size ?? 24) * 0.02} {...props} />;
+export function Num({ lh, style, ...props }: TextProps) {
+  const size = props.size ?? 24;
+  return <T f="groteskBold" num ls={-size * 0.02} {...props} lh={Math.ceil(size * 1.2)} style={[keep(Math.ceil(size * 1.2), lh), style]} />;
+}
+/** DotGothic16 (headings, small labels). `up`: moved up by (its glyphs sit a little low in their line). */
+export function Dots({ lh, up, style, ...props }: TextProps & { up?: number }) {
+  const size = props.size ?? 16;
+  return <T f="pixel" {...props} lh={Math.ceil(size * 1.45)} style={[keep(Math.ceil(size * 1.45), lh, up), style]} />;
 }
 
 // ---------- pressing ----------
@@ -99,7 +112,7 @@ export function SecHead({ title, accent = S.sun, right, id }: { title: string; a
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 28 }} nativeID={id}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 }} accessible accessibilityRole="header" accessibilityLabel={title}>
         <View style={{ width: 8, height: 8, backgroundColor: accent, boxShadow: ring() }} />
-        <T f="pixel" size={16} lh={20} ls={0.3} numberOfLines={1}>{title}</T>
+        <Dots size={16} lh={20} up={1} ls={0.3} numberOfLines={1}>{title}</Dots>
       </View>
       {right ? <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 6 }}>{right}</View> : null}
     </View>

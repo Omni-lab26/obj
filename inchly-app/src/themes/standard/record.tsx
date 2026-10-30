@@ -1,20 +1,20 @@
 import { router } from 'expo-router';
-import { ReactNode, useEffect } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
 import { FREE, hm, pad, subj } from '@/data';
+import { pastContents } from '@/lib/contents';
 import { RECORD_MAX, type RecordSheet } from '@/screens/recordSheet';
-import { T } from '@/themes/kit';
+import { useStore } from '@/store';
 import { haptic } from '@/ui/base';
 import { Screen } from '@/ui/Chrome';
-import { ContentHints } from '@/ui/ContentHints';
 import { fadeIn, micro } from '@/ui/motion';
 import type { IconId } from './art';
 import { R, ring, S, STICKER } from './look';
-import { Card, Dot, J, Key, SubjSquare, useSink } from './parts';
+import { Card, Dot, Dots, J, Key, SubjSquare, useSink } from './parts';
 import { Creature, Pix, PixSticker } from './pixel';
 
 // スタンダード's record sheet, after the mock (docs/app/mock/record.html): the
@@ -31,6 +31,8 @@ const DOWN = '#C8302A';
 
 export function Record({ r }: { r: RecordSheet }) {
   const insets = useSafeAreaInsets();
+  // the memo at 18pt, 17 where its line is too short for the question in one line (the iPhone SE)
+  const memoSize = useWindowDimensions().width < 385 ? 17 : 18;
   if (r.empty) return <Empty />;
   const { before, plan, free, subjects, pick, setPick, keepFree, what, setWhat, sj, min, adjust, start, end, note, setNote, share, setShare, phase, todayPart, left, tooLong, back, save } = r;
   const idle = phase === 'idle';
@@ -66,7 +68,7 @@ export function Record({ r }: { r: RecordSheet }) {
                   accessibilityLabel="勉強した内容" returnKeyType="done"
                   style={{ height: 44, paddingHorizontal: 12, borderRadius: 10, backgroundColor: S.paper2, boxShadow: ring(1.5, 'rgba(23,18,31,0.16)'), fontSize: 16, color: S.ink, outlineStyle: 'none' } as object} />
                 {/* what you've written before, so it's written the same way (and adds up as one) */}
-                <ContentHints s={pick && pick !== FREE ? pick : null} typed={what} onPick={setWhat} />
+                <Hints s={pick && pick !== FREE ? pick : null} typed={what} onPick={setWhat} />
               </View>
             ) : null}
             <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -78,13 +80,13 @@ export function Record({ r }: { r: RecordSheet }) {
                 </View>
                 {/* the memo, straight on the paper */}
                 <TextInput value={note} onChangeText={setNote} multiline editable={idle} placeholder="どこまでやった？ どうだった？" placeholderTextColor={S.ink3}
-                  accessibilityLabel="メモ" style={{ minHeight: 78, fontSize: 18, lineHeight: 26, color: idle ? S.ink : S.ink2, textAlignVertical: 'top', padding: 0, marginTop: -4, outlineStyle: 'none' } as object} />
+                  accessibilityLabel="メモ" style={{ minHeight: 78, fontSize: memoSize, lineHeight: 26, color: idle ? S.ink : S.ink2, textAlignVertical: 'top', padding: 0, marginTop: -4, outlineStyle: 'none' } as object} />
                 {/* what's attached: words, not pressable */}
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', rowGap: 2 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><Dot c={sj.c} /><Meta>{sj.name}</Meta></View>
-                  <Sep /><Meta>{`${clock(start)}〜${start.getDate() !== end.getDate() ? '翌' : ''}${clock(end)}`}</Meta>
-                  {plan ? <><Sep /><Meta>{min > plan ? `予定の${plan}分をこえて` : `予定の${plan}分の中で`}</Meta></> : null}
-                </View>
+                <MetaLine items={[
+                  <View key="s" style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><Dot c={sj.c} /><Meta>{sj.name}</Meta></View>,
+                  <Meta key="t">{`${clock(start)}〜${start.getDate() !== end.getDate() ? '翌' : ''}${clock(end)}`}</Meta>,
+                  ...(plan ? [<Meta key="p">{min > plan ? `予定の${plan}分をこえて` : `予定の${plan}分の中で`}</Meta>] : []),
+                ]} />
                 {/* the time, by 5 minutes: the one thing here with a floor */}
                 <Stepper min={min} adjust={adjust} disabled={!idle} />
                 <ShareSwitch on={share} onPress={() => { if (!idle) return; haptic.tap(); setShare((v) => !v); }} />
@@ -109,7 +111,58 @@ export function Record({ r }: { r: RecordSheet }) {
 }
 
 const Meta = ({ children }: { children: ReactNode }) => <J size={12.5} w="600" lh={19} num color={S.ink2}>{children}</J>;
-const Sep = () => <J size={12.5} lh={19} color={S.ink3} style={{ marginHorizontal: 6 }}>·</J>;
+/**
+ * The attached words in a line, a · between them. Where the line is too short
+ * the words go on in the next line, and no · is left at the end of a line or
+ * at the start of one: the lines are laid out from the words' measured widths.
+ */
+const SEP_W = 16;
+function MetaLine({ items }: { items: ReactNode[] }) {
+  const [box, setBox] = useState(0);
+  const [ws, setWs] = useState<number[]>([]);
+  const measured = (i: number, w: number) => setWs((t) => (t[i] === w ? t : Object.assign([...t], { [i]: w })));
+  const sep = <View style={{ width: SEP_W, alignItems: 'center' }}><J size={12.5} lh={19} color={S.ink3}>·</J></View>;
+  // which words go in which line (all in one until they're measured)
+  const lines: number[][] = [];
+  const ready = !!box && items.every((_, i) => ws[i] != null);
+  if (ready) {
+    let x = Infinity;
+    items.forEach((_, i) => {
+      if (lines.length && x + SEP_W + ws[i] <= box) { lines[lines.length - 1].push(i); x += SEP_W + ws[i]; } else { lines.push([i]); x = ws[i]; }
+    });
+  } else lines.push(items.map((_, i) => i));
+  return (
+    <View onLayout={(e) => setBox(Math.floor(e.nativeEvent.layout.width))} style={{ gap: 2, opacity: ready ? 1 : 0 }}>
+      {lines.map((line) => (
+        <View key={line[0]} style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {line.map((i, j) => (
+            <View key={i} style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {j ? sep : null}
+              <View onLayout={(e) => measured(i, Math.ceil(e.nativeEvent.layout.width))}>{items[i]}</View>
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** What you've written before (lib/contents), as chips that wrap in the card: a tap puts it in, so it's written the same way. */
+function Hints({ s, typed, onPick }: { s: string | null; typed: string; onPick: (text: string) => void }) {
+  const sessions = useStore((x) => x.sessions);
+  const timetable = useStore((x) => x.timetable);
+  const list = useMemo(() => pastContents(sessions, timetable, s, typed), [sessions, timetable, s, typed]);
+  if (!list.length) return null;
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, rowGap: 10, paddingBottom: 4 }} accessibilityLabel="前に書いた内容">
+      {list.map((w) => (
+        <Key key={w} label={`${w}を入れる`} onPress={() => onPick(w)} kd={2} radius={R.chip} style={{ height: 32, maxWidth: '100%' }} face={{ paddingHorizontal: 12 }} hitSlop={{ top: 6, bottom: 6 }}>
+          <J size={13} w="500" lh={16} color={S.ink2} numberOfLines={1}>{w}</J>
+        </Key>
+      ))}
+    </View>
+  );
+}
 
 /** − 39分 ＋ on one plate standing on its floor; only the − / ＋ icon sinks when pressed. */
 function Stepper({ min, adjust, disabled }: { min: number; adjust: (d: number) => void; disabled: boolean }) {
@@ -197,7 +250,7 @@ function Stamp() {
       <Animated.View style={[{ alignItems: 'center' }, a]} accessible accessibilityLabel="えらい！">
         <PixSticker name="star" px={8} />
         <View style={{ marginTop: -26, paddingTop: 7, paddingBottom: 8, paddingHorizontal: 14, borderRadius: 12, backgroundColor: S.sun, boxShadow: STICKER, transform: [{ rotate: '-5deg' }] }}>
-          <T f="pixel" size={32} lh={34} ls={0.6}>えらい！</T>
+          <Dots size={32} lh={34} up={1} ls={0.6}>えらい！</Dots>
         </View>
       </Animated.View>
     </Animated.View>
@@ -215,11 +268,12 @@ function Empty() {
         <J size={15} w="700" lh={20} style={{ flex: 1, textAlign: 'center', marginRight: 44 }} accessibilityRole="header">この勉強を記録</J>
       </View>
       <View style={{ paddingHorizontal: 16, marginTop: 28 }}>
-        <Card style={{ alignItems: 'center', gap: 10, paddingTop: 32, paddingBottom: 28, paddingHorizontal: 20 }}>
+        {/* the empty box of the mock: a dashed edge on the paper (nothing rests here) */}
+        <View style={{ alignItems: 'center', gap: 10, paddingTop: 32, paddingBottom: 28, paddingHorizontal: 20, borderRadius: R.mid, borderWidth: 2, borderStyle: 'dashed', borderColor: 'rgba(23,18,31,0.32)' }}>
           <Creature id="mebu" face="sleep" px={4} />
           <J size={15} w="700" lh={20}>記録する勉強がありません</J>
           <J size={12} lh={17} color={S.ink3} style={{ textAlign: 'center' }}>タイマーで勉強を始めると、ここで記録できます</J>
-        </Card>
+        </View>
       </View>
     </Screen>
   );

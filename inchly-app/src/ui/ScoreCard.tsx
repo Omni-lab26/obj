@@ -10,6 +10,8 @@ import { haptic, Txt } from './base';
 import { fadeIn, move } from './motion';
 import { Rolling } from './Rolling';
 import { Pane } from './Glass';
+import { useStd } from './stdLook';
+import { Segmented } from './Tabs';
 
 // A value card with a line you can scrub and a time-window switch.
 // Here: weekly mock-test deviation scores.
@@ -57,6 +59,7 @@ function smoothPath(pts: [number, number][]) {
 export function ScoreCard() {
   const replay = useReplay();
   const t = useT();
+  const std = useStd();
   const [data] = useState(series);
   const [win, setWin] = useState<Win>('3m');
   const W = WINS.find((x) => x.v === win)!;
@@ -112,8 +115,8 @@ export function ScoreCard() {
       <Pane radius={radius.card} />
       <View style={{ paddingTop: 14, paddingHorizontal: 14, paddingBottom: 12, borderRadius: radius.card, backgroundColor: t.backdrop !== 'none' ? 'transparent' : t.surface }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />
-          <Txt size={12} w="500" tone="ink2" style={{ flex: 1 }}>全統記述模試 · 偏差値</Txt>
+          {std ? null : <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.ink }} />}
+          <Txt size={std ? 13 : 12} w={std ? '600' : '500'} tone="ink2" style={{ flex: 1 }}>全統記述模試 · 偏差値</Txt>
           <Txt size={11} tone="ink3">{hot === null ? '最新' : weekLabel(pts.length - 1 - idx)}</Txt>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 4 }}>
@@ -138,7 +141,7 @@ export function ScoreCard() {
                 </Defs>
                 {grid.map((g) => <Line key={g.v} x1={0} x2={w - AXIS + 2} y1={g.y} y2={g.y} stroke={t.line2} strokeWidth={0.75} strokeDasharray="2 4" />)}
                 <Path d={`${path}L${xy[xy.length - 1][0]} ${PLOT_H}L${xy[0][0]} ${PLOT_H}Z`} fill="url(#pullArea)" />
-                <Path d={path} fill="none" stroke={t.ink} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+                <Path d={path} fill="none" stroke={t.ink} strokeWidth={std ? 2 : 1.75} strokeLinecap="round" strokeLinejoin="round" />
                 {hot !== null ? <Line x1={xy[idx][0]} x2={xy[idx][0]} y1={0} y2={PLOT_H} stroke={t.ink} strokeWidth={0.75} strokeDasharray="2 3" opacity={0.5} /> : null}
               </Svg>
               {grid.map((g) => (
@@ -162,6 +165,8 @@ export function ScoreCard() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginRight: AXIS }} pointerEvents="none">
           {[pts.length - 1, Math.floor((pts.length - 1) / 2), 0].map((b) => <Txt key={b} size={10} lh={12} tone="ink3">{weekLabel(b)}</Txt>)}
         </View>
+        {/* スタンダード: the window as the switch plate (the picked one lime) */}
+        {std ? <Segmented value={win} onChange={(v) => { setHot(null); setWin(v); }} options={WINS.map((x) => ({ v: x.v, label: x.label }))} style={{ marginTop: 14 }} /> : (
         <View style={{ flexDirection: 'row', height: 28, marginTop: 12, padding: 2, borderRadius: 14, backgroundColor: t.sunken }} onLayout={(e) => setBoxW(e.nativeEvent.layout.width - 4)} accessibilityRole="tablist">
           {boxW ? <Animated.View style={[{ position: 'absolute', left: 2, top: 2, width: boxW / 3, height: 24, borderRadius: 12, backgroundColor: t.surface, boxShadow: '0px 1px 2px rgba(15,23,42,0.12)' }, pill]} /> : null}
           {WINS.map((x) => (
@@ -171,6 +176,7 @@ export function ScoreCard() {
             </Pressable>
           ))}
         </View>
+        )}
       </View>
     </View>
   );

@@ -7,8 +7,9 @@ import Animated from 'react-native-reanimated';
 import { dateKey, parseKey } from '../lib/time';
 import { hair, useT } from '../theme';
 import { fadeIn, fadeOut, layout } from './motion';
-import { Press, Txt } from './base';
+import { Press, StdKey, Txt } from './base';
 import { Stepper } from './Form';
+import { S, SR, useStd } from './stdLook';
 
 // Every date, time and length in the app is picked the way the phone picks
 // them: on iPhone, the calendar and the wheels from iOS itself, opening right
@@ -37,9 +38,10 @@ function WebField({ type, value, onChange, min, max, step }: { type: 'date' | 't
 /** What opens under a row: fades in, and the rows below make room smoothly. */
 export function Opens({ children }: { children: ReactNode }) {
   const t = useT();
+  const std = useStd();
   return (
     <Animated.View entering={fadeIn()} exiting={fadeOut()} layout={SMOOTH}
-      style={{ borderTopWidth: hair, borderTopColor: t.line, alignItems: IOS ? 'center' : 'stretch' }}>
+      style={{ borderTopWidth: std ? 1.5 : hair, borderTopColor: t.line, alignItems: IOS ? 'center' : 'stretch' }}>
       {children}
     </Animated.View>
   );
@@ -119,6 +121,16 @@ export function GoalPick({ value, onChange }: { value: number; onChange: (min: n
 /** The chip on the right of a row that opens a picker; blue while open, as on iOS. The keyboard goes away as it opens, so the wheels aren't hidden behind it. */
 export function PickChip({ label, on, onPress, a11y }: { label: string; on?: boolean; onPress?: () => void; a11y: string }) {
   const t = useT();
+  const std = useStd();
+  // スタンダード: a chip on a 2pt floor; open (its picker showing), it's lime and stays down
+  if (std) {
+    return (
+      <StdKey onPress={() => { Keyboard.dismiss(); onPress?.(); }} disabled={!onPress} label={a11y} kd={2} radius={SR.chip} fill={on ? S.lime : S.card} held={on} state={{ expanded: !!on }}
+        style={{ minHeight: 36, marginBottom: 2 }} face={{ minHeight: 36, paddingHorizontal: 12 }}>
+        <Txt num size={16} w="600" lh={20}>{label}</Txt>
+      </StdKey>
+    );
+  }
   return (
     <Press onPress={() => { Keyboard.dismiss(); onPress?.(); }} disabled={!onPress} scale={0.95} accessibilityLabel={a11y} accessibilityState={{ expanded: !!on }}
       style={{ height: 34, paddingHorizontal: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: t.sunken }}>

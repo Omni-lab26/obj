@@ -7,17 +7,20 @@ import { subj, Subject } from '@/data';
 import { dayOf, minutesIn } from '@/lib/history';
 import { Session, useStore, useSubjects } from '@/store';
 import { hair, useT } from '@/theme';
-import { Card, Press, SectionHead, SubjCoin, Txt } from '@/ui/base';
+import { Card, Press, SectionHead, StdHead, StdIcon, StdKey, SubjCoin, SubjTile, Txt } from '@/ui/base';
 import { sessionSheet } from '@/ui/Editors';
 import { Heatmap } from '@/ui/Heatmap';
 import { Icon } from '@/ui/Icon';
 import { timed } from '@/ui/motion';
 import { ScoreCard } from '@/ui/ScoreCard';
 import { StackedBars } from '@/ui/StackedBars';
+import { Pix } from '@/themes/standard/pixel';
+import { ring, S, useStd } from '@/ui/stdLook';
 
 /** One subject, like a token row in a wallet: coin, name and pace, hours (last 7 days) on the right. */
 function SubjRow({ s, week, i }: { s: Subject; week: number; i: number }) {
   const t = useT();
+  const std = useStd();
   const goal = s.goal ?? 0;
   const p = goal ? Math.min(100, Math.round((week / goal) * 100)) : 100;
   const low = p < 80;
@@ -25,6 +28,28 @@ function SubjRow({ s, week, i }: { s: Subject; week: number; i: number }) {
   useEffect(() => { w.value = withDelay(i * 50, timed(p, 500)); }, [p, i, w]);
   // grown by scaling from the left, not by its width (no layout each frame)
   const a = useAnimatedStyle(() => ({ transform: [{ scaleX: w.value / 100 }] }));
+  if (std) {
+    // スタンダード: the subject's square, and its bar in its own color (never green: green is the grass and the clock running) in a thin ink outline
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 72, paddingVertical: 10, borderTopWidth: i ? 1.5 : 0, borderTopColor: S.line }}>
+        <SubjTile name={s.name} color={s.c} area={s.area} size={36} radius={9} />
+        <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+            <Txt size={15} w="700" style={{ flex: 1 }} numberOfLines={1}>{s.name}</Txt>
+            <Txt num size={15} w="700">{week.toFixed(1)}<Txt size={12} tone="ink3" num>{goal ? ` / ${goal}h` : ' 時間'}</Txt></Txt>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ flex: 1, boxShadow: ring(1.5) }}>
+              <View style={{ height: 6, backgroundColor: S.paper2, overflow: 'hidden' }}>
+                <Animated.View style={[{ width: '100%', height: 6, backgroundColor: s.c, transformOrigin: 'left' }, a]} />
+              </View>
+            </View>
+            <Txt size={12} w="700" num color={low ? '#A65F00' : S.up} style={{ minWidth: 66, textAlign: 'right' }}>{!goal ? '' : low ? `あと${(goal - week).toFixed(1)}時間` : `${p}%`}</Txt>
+          </View>
+        </View>
+      </View>
+    );
+  }
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14 }}>
       {i ? <View style={{ position: 'absolute', top: 0, left: 52, right: 0, height: hair, backgroundColor: t.line }} /> : null}
@@ -49,7 +74,24 @@ function SubjRow({ s, week, i }: { s: Subject; week: number; i: number }) {
 /** One record: when, what, how long. Tap to fix it. */
 function SessionRow({ x, first }: { x: Session; first: boolean }) {
   const t = useT();
+  const std = useStd();
   const sj = subj(x.s);
+  if (std) {
+    // スタンダード: the subject's color as a short upright line, the time, the minutes; rows split by a 1.5pt line
+    return (
+      <Press onPress={() => sessionSheet(x)} scale={0.99} accessibilityLabel={`${x.at} ${sj.name} ${x.min}分。直す`}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60, paddingVertical: 8, borderTopWidth: first ? 0 : 1.5, borderTopColor: S.line }}>
+        <Txt num size={13} tone="ink3" style={{ width: 40 }}>{x.at}</Txt>
+        <View style={{ width: 4, alignSelf: 'stretch', marginVertical: 4, backgroundColor: sj.c, boxShadow: ring(1) }} />
+        <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
+          <Txt size={15} w="700" lh={20} numberOfLines={1}>{sj.name}{x.manual ? <Txt size={11} tone="ink3">{'  手で追加'}</Txt> : null}</Txt>
+          {x.note ? <Txt size={12} tone="ink2" lh={16} numberOfLines={1}>{x.note}</Txt> : null}
+        </View>
+        <Txt num size={15} w="700">{x.min}<Txt size={11} tone="ink3">分</Txt></Txt>
+        <StdIcon name="chev" color={S.ink3} />
+      </Press>
+    );
+  }
   return (
     <Press onPress={() => sessionSheet(x)} scale={0.99} accessibilityLabel={`${x.at} ${sj.name} ${x.min}分。直す`}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14 }}>
@@ -68,10 +110,36 @@ function SessionRow({ x, first }: { x: Session; first: boolean }) {
 
 function TodayLog() {
   const t = useT();
+  const std = useStd();
   const sessions = useStore((s) => s.sessions);
   const lastDay = useStore((s) => s.lastDay);
   const today = sessions.filter((x) => x.date === lastDay);
   const total = today.reduce((a, x) => a + x.min, 0);
+  if (std) {
+    return (
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, gap: 10 }}>
+        <StdHead title="今日の記録" accent={S.run} right={(
+          <StdKey onPress={() => sessionSheet()} label="記録を手で追加" kd={3} hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }} style={{ minHeight: 32, marginBottom: 3 }} face={{ minHeight: 32, paddingHorizontal: 12, gap: 6 }}>
+            <Pix name="plus" />
+            <Txt size={13} w="700" lh={17}>手で追加</Txt>
+          </StdKey>
+        )} />
+        <Card pad={0} style={{ paddingHorizontal: 16, paddingVertical: 2 }}>
+          {today.length ? today.map((x, i) => <SessionRow key={x.id} x={x} first={i === 0} />) : (
+            <View style={{ minHeight: 56, alignItems: 'center', justifyContent: 'center' }}>
+              <Txt size={13} tone="ink3">まだ記録がありません</Txt>
+            </View>
+          )}
+          {today.length ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 40, borderTopWidth: 1.5, borderTopColor: S.line }}>
+              <Txt size={12} tone="ink3" style={{ flex: 1 }}>{`${today.length}回 · 押すと直せます`}</Txt>
+              <Txt num size={12} w="700">{`${Math.floor(total / 60)}時間${total % 60}分`}</Txt>
+            </View>
+          ) : null}
+        </Card>
+      </View>
+    );
+  }
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', paddingHorizontal: 4, marginBottom: 8 }}>
@@ -103,6 +171,7 @@ function TodayLog() {
 // can be fixed, and the half-year grass). グラフ: how it adds up (days and weeks,
 // subjects against their goals, the mock-test line).
 export function LogPage() {
+  const std = useStd();
   const sessions = useStore((s) => s.sessions);
   return (
     <View>
@@ -114,10 +183,10 @@ export function LogPage() {
 
       <View style={sec}>
         <View style={{ paddingHorizontal: 4 }}>
-          <SectionHead title="この半年" aux={`${Math.round(minutesIn(sessions, 182) / 60)}時間`} />
+          <SectionHead title="この半年" accent={S.run} aux={`${Math.round(minutesIn(sessions, 182) / 60)}時間`} />
         </View>
         <Card>
-          <Heatmap weeks={26} gap={3} />
+          <Heatmap weeks={26} gap={3} square={std} />
         </Card>
       </View>
     </View>
@@ -125,6 +194,7 @@ export function LogPage() {
 }
 
 export function ChartsPage() {
+  const std = useStd();
   const subjects = useSubjects();
   const sessions = useStore((x) => x.sessions);
   // hours per subject over the last 7 days
@@ -141,16 +211,16 @@ export function ChartsPage() {
 
       <View style={sec}>
         <View style={{ paddingHorizontal: 4 }}>
-          <SectionHead title="この7日間の科目" aux="科目と色を編集" onAux={() => router.push('/subjects')} />
+          <SectionHead title="この7日間の科目" accent={S.sky} aux="科目と色を編集" onAux={() => router.push('/subjects')} />
         </View>
-        <Card pad={0} style={{ paddingVertical: 4 }}>
+        <Card pad={0} style={[{ paddingVertical: 4 }, std && { paddingHorizontal: 16 }]}>
           {subjects.map((s, i) => <SubjRow key={s.id} s={s} week={hoursBy[s.id] ?? 0} i={i} />)}
         </Card>
       </View>
 
       <View style={sec}>
         <View style={{ paddingHorizontal: 4 }}>
-          <SectionHead title="模試の偏差値" aux="最終更新 10月14日" />
+          <SectionHead title="模試の偏差値" accent={S.coral} aux="最終更新 10月14日" />
         </View>
         <ScoreCard />
       </View>

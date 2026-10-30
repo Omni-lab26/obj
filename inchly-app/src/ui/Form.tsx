@@ -3,11 +3,12 @@ import { Pressable, TextInput, TextInputProps, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { font, hair, noOutline, radius, useT } from '../theme';
-import { haptic, Press, Txt } from './base';
+import { haptic, Press, StdKey, Txt } from './base';
 import { Pane } from './Glass';
 import { Icon } from './Icon';
 import { Counter } from './Counter';
 import { micro } from './motion';
+import { ring, S, SR, useStd } from './stdLook';
 
 // ---------- floating-label field ----------
 // The label sits inside the box and lifts into the top border on focus
@@ -16,6 +17,7 @@ export function Field({
   label, value, onChangeText, error, max, multiline, helper, onBlur, autoFocus, inputRef, bg, ...rest
 }: { label: string; value: string; onChangeText: (s: string) => void; error?: string; max?: number; multiline?: boolean; helper?: string; bg?: string; inputRef?: React.RefObject<React.ComponentRef<typeof TextInput> | null> } & Omit<TextInputProps, 'value' | 'onChangeText'>) {
   const t = useT();
+  const std = useStd();
   const [focus, setFocus] = useState(false);
   const up = focus || value.length > 0;
   const p = useSharedValue(up ? 1 : 0);
@@ -33,7 +35,9 @@ export function Field({
   const surface = bg ?? t.surface;
   return (
     <View>
-      <View style={{ minHeight: h, borderRadius: radius.inner, borderWidth: focus || error ? 1.25 : hair, borderColor: border, backgroundColor: surface }}>
+      <View style={[{ minHeight: h, borderRadius: radius.inner, borderWidth: focus || error ? 1.25 : hair, borderColor: border, backgroundColor: surface },
+        // スタンダード: the card's color, a thin ink outline, the full 2pt one while you type (the crimson-red one for an error)
+        std && { borderRadius: SR.key, borderWidth: 0, backgroundColor: bg ?? S.card, boxShadow: ring(focus || error ? 2 : 1.5, error ? S.down : S.ink) }]}>
         <TextInput
           ref={inputRef}
           {...rest}
@@ -46,8 +50,8 @@ export function Field({
           placeholderTextColor={t.ink3}
           style={[{ flex: 1, minHeight: h, paddingHorizontal: 14, paddingTop: multiline ? 20 : 12, paddingBottom: multiline ? 10 : 0, fontSize: 16, color: t.ink, fontFamily: font.text, textAlignVertical: multiline ? 'top' : 'center' }, noOutline]}
         />
-        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 10, top: 0, paddingHorizontal: 4, backgroundColor: up ? surface : 'transparent', transformOrigin: 'left center' }, la]}>
-          <Txt size={14} tone={error ? 'red' : focus ? 'ink' : 'ink3'} w={up ? '500' : '400'}>{label}</Txt>
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 10, top: 0, paddingHorizontal: 4, backgroundColor: up ? (std ? bg ?? S.card : surface) : 'transparent', transformOrigin: 'left center' }, la]}>
+          <Txt size={14} tone={error ? 'red' : focus ? 'ink' : std && up ? 'ink2' : 'ink3'} w={up ? (std ? '700' : '500') : '400'}>{label}</Txt>
         </Animated.View>
       </View>
       {error || helper || max ? (
@@ -68,14 +72,17 @@ export function Stepper({ value, min, max, onChange, unit, label = '数' }: { va
 // ---------- radio cards ----------
 export function RadioCards<K extends string>({ options, value, onChange }: { options: { v: K; title: string; sub: string }[]; value: K; onChange: (v: K) => void }) {
   const t = useT();
+  const std = useStd();
   return (
-    <View style={{ gap: 8 }} accessibilityRole="radiogroup">
+    <View style={{ gap: std ? 10 : 8 }} accessibilityRole="radiogroup">
       {options.map((o) => {
         const on = o.v === value;
         return (
           <Press key={o.v} onPress={() => onChange(o.v)} scale={0.985} accessibilityRole="radio" accessibilityState={{ checked: on }}
-            style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 11, paddingHorizontal: 12, borderRadius: radius.inner, backgroundColor: t.surface,
-              borderWidth: on ? 1.25 : hair, borderColor: on ? t.ink : t.line2 }}>
+            style={[{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 11, paddingHorizontal: 12, borderRadius: radius.inner, backgroundColor: t.surface,
+              borderWidth: on ? 1.25 : hair, borderColor: on ? t.ink : t.line2 },
+              // スタンダード: the card with a thin ink outline; the picked one outlined in full and lime behind its words
+              std && { borderWidth: 0, borderRadius: SR.mid, backgroundColor: on ? S.lime : S.card, boxShadow: ring(on ? 2 : 1.5) }]}>
             <Pane radius={radius.inner} small />
             <Dot on={on} />
             <View style={{ flex: 1 }}>
@@ -103,6 +110,9 @@ function Dot({ on }: { on: boolean }) {
 // ---------- chips (single choice) ----------
 export function Choice<K extends string>({ options, value, onChange }: { options: { v: K; label: string }[]; value: K; onChange: (v: K) => void }) {
   const t = useT();
+  const std = useStd();
+  // スタンダード: chips on a 2pt floor; the picked one lime, down on its floor
+  if (std) return <StdChips options={options} value={value} onChange={onChange} />;
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       {options.map((o) => {
@@ -118,10 +128,30 @@ export function Choice<K extends string>({ options, value, onChange }: { options
   );
 }
 
+/** スタンダード's chip: a small key on a 2pt floor; picked, it's lime and stays down. */
+export function StdChip({ label, on, onPress, role = 'radio', children, a11y }: { label?: string; on?: boolean; onPress: () => void; role?: 'radio' | 'button' | 'checkbox' | 'tab'; children?: ReactNode; a11y?: string }) {
+  return (
+    <StdKey onPress={onPress} label={a11y ?? label} kd={2} radius={SR.chip} fill={on ? S.lime : S.card} held={on} role={role}
+      state={role === 'tab' ? { selected: !!on } : role === 'button' ? undefined : { checked: !!on }} hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
+      style={{ minHeight: 32, marginBottom: 2 }} face={{ minHeight: 32, paddingHorizontal: 12, gap: 6 }}>
+      {children}
+      {label ? <Txt size={13} w={on ? '700' : '600'} lh={17} color={S.ink} numberOfLines={1}>{label}</Txt> : null}
+    </StdKey>
+  );
+}
+function StdChips<K extends string>({ options, value, onChange }: { options: { v: K; label: string }[]; value: K; onChange: (v: K) => void }) {
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, columnGap: 8 }} accessibilityRole="radiogroup">
+      {options.map((o) => <StdChip key={o.v} label={o.label} on={o.v === value} onPress={() => onChange(o.v)} />)}
+    </View>
+  );
+}
+
 export function Label({ children, sub }: { children: ReactNode; sub?: string }) {
+  const std = useStd();
   return (
     <View style={{ marginBottom: 8 }}>
-      <Txt size={13.5} w="600">{children}</Txt>
+      <Txt size={13.5} w={std ? '700' : '600'}>{children}</Txt>
       {sub ? <Txt size={11} tone="ink3">{sub}</Txt> : null}
     </View>
   );
@@ -129,10 +159,13 @@ export function Label({ children, sub }: { children: ReactNode; sub?: string }) 
 
 export function Checkbox({ on, onPress, label }: { on: boolean; onPress: () => void; label: string }) {
   const t = useT();
+  const std = useStd();
   return (
     <Pressable onPress={onPress} hitSlop={8} accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={label}
-      style={{ width: 22, height: 22, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.ink : 'transparent', borderWidth: on ? 0 : 1.25, borderColor: t.ink3 }}>
-      {on ? <Icon name="check" size={13} color={t.onInk} width={2.6} /> : null}
+      style={[{ width: 22, height: 22, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.ink : 'transparent', borderWidth: on ? 0 : 1.25, borderColor: t.ink3 },
+        // スタンダード: an ink square, lime once checked
+        std && { borderWidth: 0, backgroundColor: on ? S.lime : S.card, boxShadow: ring() }]}>
+      {on ? <Icon name="check" size={13} color={std ? S.ink : t.onInk} width={2.6} /> : null}
     </Pressable>
   );
 }

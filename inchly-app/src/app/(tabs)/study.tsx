@@ -1,13 +1,19 @@
+import { Image } from 'expo-image';
 import { type ReactNode, useState } from 'react';
-import { ScrollView, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { FREE, subj } from '@/data';
 import { Deadlines } from '@/screens/home/standard';
+import { iconUri } from '@/lib/planIcon';
 import { blocksOn, endOf, slotsOf, toMin, type Block, type Slot } from '@/lib/timetable';
 import { dateKey, jpDate, mondayIndex } from '@/lib/time';
+import { useDeadlines } from '@/screens/model';
 import { doneOn, keepFree, type Session, sortFree, useNow, useStore, useSubjects } from '@/store';
-import { hair, noOutline, type, useT } from '@/theme';
-import { Card, haptic, Press, SubjTile, Txt } from '@/ui/base';
+import { Creature, Pix, PixSticker } from '@/themes/standard/pixel';
+import { bundledFace, font, hair, noOutline, type, useT } from '@/theme';
+import { Card, haptic, PixHead, Press, StdHead, StdKey, SubjTile, Txt } from '@/ui/base';
+import { deadlineActions, deadlineSheet } from '@/ui/Editors';
+import { ring, S, SR, useStd } from '@/ui/stdLook';
 import { Screen, useTabPad } from '@/ui/Chrome';
 import { ContentHints } from '@/ui/ContentHints';
 import { blockSheet } from '@/ui/Editors';
@@ -28,7 +34,9 @@ const DOW = ['月', '火', '水', '木', '金', '土', '日'];
 
 export default function Study() {
   const t = useT();
+  const std = useStd();
   const pad = useTabPad();
+  if (std) return <StdStudy pad={pad} />;
   return (
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: pad }}>
@@ -54,6 +62,7 @@ export default function Study() {
  */
 function Timetable() {
   const t = useT();
+  const std = useStd();
   const now = useNow(30_000);
   const d = new Date(now);
   const key = dateKey(d);
@@ -78,6 +87,7 @@ function Timetable() {
     }),
     ...sessions.filter((x) => x.s === FREE && !x.kept && x.date === key).map((x) => ({ kind: 'free' as const, x, at: toMin(x.at) - x.min })),
   ].sort((a, b) => a.at - b.at) : [];
+  if (std) return <StdTimetable day={day} setDay={setDay} today={today} isToday={isToday} stops={stops} rows={rows} now={clockOf(d.getHours() * 60 + d.getMinutes())} />;
   return (
     <>
       <View style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 8, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
@@ -363,6 +373,9 @@ function sortSheet(x: Session) {
 /** One 自習 record: what it was (optional), then a tap on its subject saves it. */
 function SortForm({ x, close }: { x: Session; close: () => void }) {
   const t = useT();
+  const std = useStd();
+  // スタンダード: the boxes are cards with the ink outline; やめる and the other words in ink
+  const box = std ? { backgroundColor: S.card, boxShadow: ring() } : { backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)' };
   const subjects = useSubjects();
   const [what, setWhat] = useState(x.what ?? '');
   const put = (id: string) => {
@@ -375,17 +388,17 @@ function SortForm({ x, close }: { x: Session; close: () => void }) {
     <View style={{ gap: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 40 }}>
         <Press onPress={close} scale={0.94} hitSlop={8} accessibilityLabel="やめる" style={{ minWidth: 64 }}>
-          <Txt size={16} color={t.blue}>やめる</Txt>
+          <Txt size={std ? 15 : 16} w={std ? '700' : '400'} color={t.blue}>やめる</Txt>
         </Press>
         <Txt size={16} w="600" accessibilityRole="header" style={{ flex: 1, textAlign: 'center' }}>仕分ける</Txt>
         <View style={{ minWidth: 64 }} />
       </View>
       <Txt size={13} tone="ink2" style={{ textAlign: 'center' }}>{`${md(x.date)} ${span(x)} · 自習 ${x.min}分`}</Txt>
       <TextInput value={what} onChangeText={(v) => setWhat(v.slice(0, 30))} placeholder="内容（例：相対性理論）" placeholderTextColor={t.ink3} accessibilityLabel="勉強した内容"
-        style={[{ height: 44, paddingHorizontal: 14, borderRadius: 10, backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)', fontSize: 16, color: t.ink }, noOutline]} />
+        style={[{ height: 44, paddingHorizontal: 14, borderRadius: 10, backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)', fontSize: 16, color: t.ink }, std && { height: 48, borderRadius: SR.key, backgroundColor: S.card, boxShadow: ring(1.5) }, noOutline]} />
       <ContentHints s={null} typed={what} onPick={setWhat} />
       <Txt size={12.5} tone="ink3" style={{ paddingLeft: 4 }}>科目を押すと仕分けられます</Txt>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', borderRadius: 10, paddingVertical: 6, backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)' }} accessibilityRole="radiogroup">
+      <View style={[{ flexDirection: 'row', flexWrap: 'wrap', borderRadius: 10, paddingVertical: 6 }, box, std && { borderRadius: SR.mid, paddingVertical: 8 }]} accessibilityRole="radiogroup">
         {subjects.map((s) => (
           <Press key={s.id} onPress={() => put(s.id)} scale={0.92} accessibilityLabel={`${s.name}に仕分ける`}
             style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
@@ -396,10 +409,292 @@ function SortForm({ x, close }: { x: Session; close: () => void }) {
       </View>
       {/* several subjects at once, or not worth sorting: it stays 自習 and leaves the list */}
       <Press onPress={() => { haptic.tap(); keepFree(x.id, what); close(); toast('自習のままにしました', 'グラフでは「自習」として残ります'); }} scale={0.97} accessibilityLabel="自習のままにする"
-        style={{ height: 46, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: t.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.9)' }}>
-        <Txt size={15} w="600" color={t.blue}>自習のままにする</Txt>
+        style={[{ height: 46, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }, box, std && { height: 52, borderRadius: SR.mid }]}>
+        <Txt size={15} w={std ? '700' : '600'} color={t.blue}>自習のままにする</Txt>
         <Txt size={11} tone="ink3">いくつかの科目をまとめてやったときなど</Txt>
       </Press>
+    </View>
+  );
+}
+
+// ---------- スタンダード (docs/app/mock/study.html) ----------
+// The same page drawn the site's way: headings with their square and a small
+// ＋ 追加 key, the weekdays on one plate (the picked day lime), the day as a
+// route map — stations in the subject's color, the line solid behind you and
+// dotted ahead, now a crimson square and rule — and the deadlines with stickers.
+function StdStudy({ pad }: { pad: number }) {
+  return (
+    <Screen>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: pad, gap: 20 }}>
+        {/* no page name (the tab bar says where you are): just today's date */}
+        <Txt size={15} w="700" lh={22} accessibilityRole="header" style={{ paddingHorizontal: 2 }}>{jpDate(new Date())}</Txt>
+        <Timetable />
+        <StdDeadlines />
+      </ScrollView>
+    </Screen>
+  );
+}
+
+/** ＋ 追加: a small key by a heading. */
+function AddKey({ a11y, onPress }: { a11y: string; onPress: () => void }) {
+  return (
+    <StdKey onPress={onPress} label={a11y} kd={3} hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }} style={{ minHeight: 32, marginBottom: 3 }} face={{ minHeight: 32, paddingHorizontal: 12, gap: 6 }}>
+      <Pix name="plus" />
+      <Txt size={13} w="700" lh={17}>追加</Txt>
+    </StdKey>
+  );
+}
+
+/** The weekdays on one plate on an ink floor: the picked day lime, today in bold. */
+function StdWeek({ day, today, onPick }: { day: number; today: number; onPick: (i: number) => void }) {
+  return (
+    <View style={{ flexDirection: 'row', marginBottom: 3 }} accessibilityRole="tablist">
+      <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: 1, bottom: -5, borderRadius: SR.key + 2, backgroundColor: S.ink }} />
+      <View style={{ flex: 1, flexDirection: 'row', borderRadius: SR.key, backgroundColor: S.card, boxShadow: ring(), overflow: 'hidden' }}>
+        {DOW.map((w, i) => {
+          const on = i === day;
+          return (
+            <Pressable key={w} onPress={() => { if (!on) { haptic.tap(); onPick(i); } }} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={`${w}曜日${i === today ? '（今日）' : ''}`}
+              style={({ pressed }) => [{ flex: 1, height: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? S.lime : pressed ? S.paper2 : 'transparent' }, i > 0 && { borderLeftWidth: 2, borderLeftColor: S.ink }]}>
+              <Text style={{ fontSize: 14, lineHeight: 18, fontFamily: font.text, fontWeight: i === today || on ? '800' : '600', color: i === today || on ? S.ink : S.ink2 }}>{w}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+/** A plan's picture: its photo, or its subject's color with the picture drawn in ink. No edge (the caller gives it one). */
+function StdArt({ b, size, r }: { b: Block; size: number; r: number }) {
+  const sj = subj(b.s);
+  if (b.icon) return <Image source={{ uri: iconUri(b.icon) }} style={{ width: size, height: size, borderRadius: r }} contentFit="cover" transition={150} accessibilityIgnoresInvertColors />;
+  return <SubjTile name={sj.name} color={sj.c} size={size} radius={r} />;
+}
+
+type Row = Slot | { block: Block; state: 'plain' };
+function StdTimetable({ day, setDay, today, isToday, stops, rows, now }: { day: number; setDay: (i: number) => void; today: number; isToday: boolean; stops: Stop[]; rows: Row[]; now: string }) {
+  const empty = !rows.length && !stops.length;
+  return (
+    <View style={{ gap: 10 }}>
+      <StdHead title="時間割" accent={S.sky} right={<AddKey a11y="時間割に予定を追加" onPress={() => planCalendar()} />} />
+      <StdWeek day={day} today={today} onPick={setDay} />
+      {empty ? (
+        // nothing that day: a dashed box, めぶ asleep in it; a tap adds a plan
+        <Pressable onPress={() => { haptic.tap(); planCalendar(); }} accessibilityRole="button" accessibilityLabel="時間割に予定を追加"
+          style={({ pressed }) => ({ alignItems: 'center', gap: 8, paddingVertical: 20, paddingHorizontal: 16, borderRadius: SR.mid, borderWidth: 2, borderStyle: 'dashed', borderColor: 'rgba(23,18,31,0.32)', backgroundColor: pressed ? S.paper2 : S.card })}>
+          <Creature id="mebu" face="sleep" />
+          <Txt size={15} w="700" lh={21} style={{ textAlign: 'center' }}>{isToday ? '今日の時間割はまだありません' : `${DOW[day]}曜日の時間割はまだありません`}</Txt>
+          <Txt size={13} tone="ink2" lh={20} style={{ textAlign: 'center' }}>「追加」で日と始める時刻と科目を決めておくと、1タップで始められます。次の予定の時刻に知らせます</Txt>
+        </Pressable>
+      ) : (
+        <Card pad={0}>
+          {isToday ? (
+            <View style={{ paddingVertical: 8 }}>
+              {stops.map((st, i) => <StdStopRow key={st.kind === 'free' ? st.x.id : st.b.id} st={st} first={i === 0} />)}
+              <StdNowRow at={now} first={!stops.length} last={!rows.length} />
+              {rows.map(({ block: b, state }, i) => <StdAheadRow key={b.id} b={b} live={state === 'now'} next={state === 'next'} last={i === rows.length - 1} />)}
+            </View>
+          ) : (
+            <View style={{ paddingVertical: 2, paddingHorizontal: 12 }}>
+              {rows.map(({ block: b }, i) => <StdPlainRow key={b.id} b={b} first={!i} />)}
+            </View>
+          )}
+        </Card>
+      )}
+    </View>
+  );
+}
+
+const ROW = { flexDirection: 'row' as const, alignItems: 'center' as const, paddingHorizontal: 12 };
+/** The line in one row: from the top to the node and from the node to the bottom, solid (behind) or dotted (ahead), drawn behind the node. */
+function StdRail({ first, last, ahead, behind, children }: { first?: boolean; last?: boolean; ahead?: boolean; /** this minute: solid above, dotted below */ behind?: boolean; children?: ReactNode }) {
+  const piece = (top: boolean) => ahead && !(behind && top) ? (
+    <View style={{ position: 'absolute', left: RAIL_W / 2 - 1, width: 2, ...(top ? { top: 0, bottom: '50%' } : { top: '50%', bottom: 0 }), overflow: 'hidden', gap: 3, paddingTop: top ? 0 : 3 }}>
+      {Array.from({ length: 24 }, (_, k) => <View key={k} style={{ width: 2, height: 2, backgroundColor: S.ink3 }} />)}
+    </View>
+  ) : <View style={{ position: 'absolute', left: RAIL_W / 2 - 1, width: 2, backgroundColor: S.ink, ...(top ? { top: 0, bottom: '50%' } : { top: '50%', bottom: 0 }) }} />;
+  return (
+    <View style={{ width: RAIL_W, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' }}>
+      {first ? null : piece(true)}
+      {last ? null : piece(false)}
+      {children}
+    </View>
+  );
+}
+function StdTime({ children }: { children: ReactNode }) {
+  return <View style={{ width: TIME_W, alignItems: 'flex-end', justifyContent: 'center', paddingRight: 6 }}>{children}</View>;
+}
+/** A tag by a plan's name: つぎ (paper, a thin ink edge, DotGothic16) or NOW (crimson). */
+function StdTag({ now }: { now?: boolean }) {
+  useT(); // the faces arrive later: render again then
+  return now ? (
+    <View style={{ minHeight: 18, paddingHorizontal: 6, justifyContent: 'center', borderRadius: 6, backgroundColor: S.pause, boxShadow: ring(1.5) }}>
+      <Text style={{ fontFamily: bundledFace('label') ?? font.text, fontSize: 10, lineHeight: 12, letterSpacing: 0.6, color: '#FFFFFF' }}>NOW</Text>
+    </View>
+  ) : (
+    <View style={{ minHeight: 20, paddingHorizontal: 6, justifyContent: 'center', borderRadius: 7, backgroundColor: S.card, boxShadow: ring(1.5) }}>
+      <PixHead size={11}>つぎ</PixHead>
+    </View>
+  );
+}
+function StdTimes({ b }: { b: Block }) {
+  if (!b.start) return <Clock size={10.5} w="600" tone="ink3">時刻なし</Clock>;
+  return (
+    <>
+      <Clock size={13} w="700" lh={16}>{b.start}</Clock>
+      {b.min ? <Clock size={11} tone="ink3" lh={14}>{endOf(b)}</Clock> : <Txt size={11} tone="ink3" lh={14} numberOfLines={1}>から</Txt>}
+    </>
+  );
+}
+/** Behind you: done (its picture small on the line with an ink ✓), its time gone by (faded, ×), or a 自習 to sort. */
+function StdStopRow({ st, first }: { st: Stop; first: boolean }) {
+  if (st.kind === 'free') {
+    const x = st.x, at = clockOf(Math.max(0, st.at));
+    return (
+      <Press onPress={() => sortSheet(x)} scale={0.99} accessibilityLabel={`${at}から自習 ${x.min}分${x.what ? ` ${x.what}` : ''}。科目を付けて仕分ける`} style={[ROW, { minHeight: 44 }]}>
+        <StdTime><Clock size={12} w="500" tone="ink3">{at}</Clock></StdTime>
+        <StdRail first={first}>
+          <View style={{ padding: 3, backgroundColor: S.card }}><View style={{ width: 12, height: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: S.ink3, backgroundColor: S.card }} /></View>
+        </StdRail>
+        <Txt size={13} tone="ink2" numberOfLines={1} style={{ flex: 1, minWidth: 0, paddingLeft: 6 }}>
+          <Txt size={13} w="700">{`自習 ${x.min}分`}</Txt>{x.what || x.note ? ` · ${x.what || x.note}` : ''}
+        </Txt>
+        <Text style={{ fontSize: 13, lineHeight: 18, fontWeight: '700', color: S.ink, fontFamily: font.text, textDecorationLine: 'underline' }}>仕分ける</Text>
+      </Press>
+    );
+  }
+  const b = st.b, sj = subj(b.s), plan = b.min ?? 0;
+  return (
+    <Press onPress={() => blockSheet(b)} scale={0.99}
+      accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。${st.finished ? `終わった${st.min ? ` ${st.min}分${plan ? `（予定${plan}分）` : ''}` : ''}` : 'やらずに時間が過ぎた'}。編集`}
+      style={[ROW, { minHeight: 44 }]}>
+      <StdTime><Clock size={12} w="500" tone="ink3">{b.start ?? '—'}</Clock></StdTime>
+      <StdRail first={first}>
+        <View style={{ padding: 2, borderRadius: 8, backgroundColor: S.card }}>
+          <View style={{ opacity: st.finished ? 1 : 0.35 }}><StdArt b={b} size={22} r={6} /></View>
+          <View style={{ position: 'absolute', right: -5, bottom: -5, width: 13, height: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: st.finished ? S.ink : S.ink3, boxShadow: ring(2, S.card) }}>
+            <Icon name={st.finished ? 'check' : 'x'} size={9} color={S.onInk} width={3} />
+          </View>
+        </View>
+      </StdRail>
+      <Txt size={13} tone={st.finished ? 'ink2' : 'ink3'} numberOfLines={1} style={{ flex: 1, minWidth: 0, paddingLeft: 6, paddingRight: 8 }}>
+        <Txt size={13} w="700" tone={st.finished ? 'ink' : 'ink3'} style={st.finished ? null : { textDecorationLine: 'line-through' }}>{sj.name}</Txt>
+        {b.note || b.t ? ` · ${b.note || b.t}` : ''}
+      </Txt>
+      {st.finished ? <StdMeter min={st.min} plan={plan} color={sj.c} /> : (
+        <View style={{ minHeight: 20, paddingHorizontal: 7, justifyContent: 'center', borderRadius: 7, backgroundColor: S.paper2, boxShadow: ring(1.5, 'rgba(23,18,31,0.16)') }}>
+          <Txt size={11} w="600" tone="ink3" lh={14}>やらなかった</Txt>
+        </View>
+      )}
+    </Press>
+  );
+}
+/** How long it was studied against its plan: a small bar in the subject's color (the overtime orange), and the minutes. */
+function StdMeter({ min, plan, color }: { min: number; plan: number; color: string }) {
+  if (!min) return <Txt size={11} w="700" tone="ink2">完了</Txt>;
+  const done = plan ? Math.min(1, min / plan) : 1;
+  const extra = plan && min > plan ? Math.min(0.4, (min - plan) / plan) : 0;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+      <View style={{ width: 40, height: 6, backgroundColor: S.paper2, boxShadow: ring(1.5), flexDirection: 'row', overflow: 'hidden' }}>
+        <View style={{ flex: done, backgroundColor: color }} />
+        {extra ? <View style={{ flex: extra, backgroundColor: S.over }} /> : null}
+        {done < 1 ? <View style={{ flex: 1 - done }} /> : null}
+      </View>
+      <Txt num size={11} w="700" tone="ink2">{`${min}分`}</Txt>
+    </View>
+  );
+}
+/** This minute: a crimson square on the line and a crimson rule across the day. */
+function StdNowRow({ at, first, last }: { at: string; first: boolean; last: boolean }) {
+  return (
+    <View style={[ROW, { minHeight: 26 }]} accessible accessibilityLabel={`いま ${at}`}>
+      <StdTime><Clock size={12} w="800" color={S.pause}>{at}</Clock></StdTime>
+      <StdRail first={first} last={last} ahead behind><View style={{ width: 10, height: 10, backgroundColor: S.pause, boxShadow: ring(2, S.card) }} /></StdRail>
+      <View style={{ flex: 1, marginLeft: 6, height: 2, backgroundColor: S.pause }} />
+    </View>
+  );
+}
+/** The plan under way (paper 2 behind it, its picture on the line in a still lime ring, NOW) and the ones to come (a station in its color; the picture on the right). */
+function StdAheadRow({ b, live, next, last }: { b: Block; live: boolean; next: boolean; last: boolean }) {
+  const sj = subj(b.s);
+  return (
+    <Press onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}${live ? '。いまの予定' : next ? '。つぎの予定' : ''}。編集`}
+      // the live row's ground is inset and its padding takes up the inset, so its columns stay on the grid
+      style={[ROW, { minHeight: live ? 66 : 74 }, live ? { marginHorizontal: 6, marginVertical: 2, paddingHorizontal: 6, borderRadius: 14, backgroundColor: S.paper2 } : null]}>
+      <StdTime><StdTimes b={b} /></StdTime>
+      <StdRail ahead last={last}>
+        {live ? (
+          <View style={{ padding: 3, borderRadius: 11, backgroundColor: S.paper2 }}>
+            <View style={{ borderRadius: 8, boxShadow: `0px 0px 0px 2px ${S.ink}, 0px 0px 0px 5px ${S.lime}, 0px 0px 0px 7px ${S.ink}` }}><StdArt b={b} size={28} r={8} /></View>
+          </View>
+        ) : <View style={{ width: 12, height: 12, backgroundColor: sj.c, boxShadow: `0px 0px 0px 2px ${S.ink}, 0px 0px 0px 4px ${S.card}` }} />}
+      </StdRail>
+      <View style={{ flex: 1, minWidth: 0, paddingLeft: live ? 10 : 6, paddingRight: 8, gap: 2 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+          <Txt size={15} w="700" lh={20} numberOfLines={1} style={{ flexShrink: 1 }}>{sj.name}</Txt>
+          {live ? <StdTag now /> : next ? <StdTag /> : null}
+        </View>
+        {b.note || b.t ? <Txt size={12} tone="ink2" lh={17} numberOfLines={1}>{b.note || b.t}</Txt> : null}
+      </View>
+      {live ? null : <View style={{ borderRadius: 10, boxShadow: ring() }}><StdArt b={b} size={42} r={10} /></View>}
+    </Press>
+  );
+}
+/** Another weekday: its plans as plain rows (the time, the picture, the subject and its memo). */
+function StdPlainRow({ b, first }: { b: Block; first: boolean }) {
+  const sj = subj(b.s);
+  return (
+    <Press onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。編集`}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 62, paddingVertical: 8, borderTopWidth: first ? 0 : 1.5, borderTopColor: S.line }}>
+      <View style={{ width: TIME_W, alignItems: 'flex-end', justifyContent: 'center' }}><StdTimes b={b} /></View>
+      <View style={{ borderRadius: 10, boxShadow: ring() }}><StdArt b={b} size={40} r={10} /></View>
+      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+        <Txt size={15} w="700" lh={20} numberOfLines={1}>{sj.name}</Txt>
+        {b.note || b.t ? <Txt size={12} tone="ink2" lh={17} numberOfLines={1}>{b.note || b.t}</Txt> : null}
+      </View>
+    </Press>
+  );
+}
+
+/** The deadlines: a sticker each (a flag within 21 days, then a calendar, then a trophy; tilted in turn), the days left and the ToDos done. */
+function StdDeadlines() {
+  const deadlines = useDeadlines();
+  return (
+    <View style={{ gap: 10 }}>
+      <StdHead title="締切" accent={S.coral} sub="ToDoの進み具合" right={<AddKey a11y="締切を追加" onPress={deadlineSheet} />} />
+      <Card pad={0} style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
+        {deadlines.length ? null : (
+          <Pressable onPress={() => { haptic.tap(); deadlineSheet(); }} accessibilityRole="button" style={{ minHeight: 56, alignItems: 'center', justifyContent: 'center' }}>
+            <Txt size={13} tone="ink3">模試や申込の日を入れておきましょう</Txt>
+          </Pressable>
+        )}
+        {deadlines.map((d, i) => {
+          const soon = d.days <= 21;
+          return (
+            <Press key={d.id} onPress={() => deadlineActions(d.id, d.t)} scale={0.99} accessibilityLabel={`${d.t} あと${d.days}日`}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60, paddingVertical: 8, borderTopWidth: i ? 1.5 : 0, borderTopColor: S.line }}>
+              <View style={{ width: 40, alignItems: 'center' }}><PixSticker name={soon ? 'flag' : i === 1 ? 'cal' : 'trophy'} tilt={i % 2 ? 6 : -6} /></View>
+              <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                <Txt size={15} w="700" lh={20} numberOfLines={1}>{d.t}</Txt>
+                <Txt size={12} tone="ink3" lh={16} numberOfLines={1}>{`${d.mo}月${d.day}日 · ${d.note ?? (d.total ? `ToDo ${d.done}/${d.total}` : 'ToDoなし')}`}</Txt>
+              </View>
+              <View style={{ alignItems: 'flex-end', gap: 5 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
+                  <Txt num size={17} w="700" lh={20} color={soon ? '#A65F00' : S.ink}>{d.days}</Txt>
+                  <Txt size={11} w="500" tone="ink3" lh={14}>日</Txt>
+                </View>
+                {d.total ? (
+                  <View style={{ flexDirection: 'row', gap: 4 }}>
+                    {Array.from({ length: Math.min(d.total, 8) }, (_, k) => <View key={k} style={{ width: 8, height: 8, backgroundColor: k < d.done ? S.ink : 'transparent', boxShadow: ring(1.5) }} />)}
+                  </View>
+                ) : null}
+              </View>
+            </Press>
+          );
+        })}
+      </Card>
     </View>
   );
 }

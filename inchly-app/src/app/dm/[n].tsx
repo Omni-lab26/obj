@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ROOM } from '@/data';
 import { type DmMsg, readDm, sendDm, useStore } from '@/store';
 import { font, hair, lift, noOutline, useT } from '@/theme';
-import { Avatar, haptic, Press, Txt } from '@/ui/base';
+import { Avatar, haptic, Press, StdKey, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { clockAt, dayLabel, sameDay } from '@/ui/DmParts';
 import { personSheet } from '@/ui/Editors';
@@ -15,6 +15,7 @@ import { Icon } from '@/ui/Icon';
 import { fadeIn } from '@/ui/motion';
 import { Stamp, STAMPS, Sticker } from '@/ui/Sticker';
 import { Pane } from '@/ui/Glass';
+import { ring, S, SR, useStd } from '@/ui/stdLook';
 
 // A conversation with one person: the days' messages (yours on the right in
 // ink, theirs on the left in white), each with its time beside it, and the
@@ -23,6 +24,7 @@ import { Pane } from '@/ui/Glass';
 
 export default function DmScreen() {
   const t = useT();
+  const std = useStd();
   const insets = useSafeAreaInsets();
   const { n } = useLocalSearchParams<{ n: string }>();
   const dm = useStore((s) => s.dms.find((x) => x.n === n));
@@ -69,7 +71,8 @@ export default function DmScreen() {
             return (
               <Fragment key={m.id}>
                 {newDay ? (
-                  <View style={{ alignSelf: 'center', paddingHorizontal: 10, height: 22, borderRadius: 11, justifyContent: 'center', marginTop: i ? 14 : 0, marginBottom: 6, backgroundColor: t.dark ? t.sunken : 'rgba(15,23,42,0.05)' }}>
+                  <View style={[{ alignSelf: 'center', paddingHorizontal: 10, height: 22, borderRadius: 11, justifyContent: 'center', marginTop: i ? 14 : 0, marginBottom: 6, backgroundColor: t.dark ? t.sunken : 'rgba(15,23,42,0.05)' },
+                    std && { height: 24, borderRadius: 7, backgroundColor: S.paper2, boxShadow: ring(1.5, 'rgba(23,18,31,0.16)') }]}>
                     <Txt size={11} w="600" tone="ink2">{dayLabel(m.at)}</Txt>
                   </View>
                 ) : null}
@@ -83,7 +86,7 @@ export default function DmScreen() {
             <Txt size={12.5} tone="ink3" style={{ textAlign: 'center' }}>{`${n}をブロック中です。設定 › ブロック中の人 から解除できます`}</Txt>
           </View>
         ) : (
-          <View style={{ backgroundColor: t.surface, borderTopWidth: hair, borderTopColor: t.line, paddingBottom: Math.max(insets.bottom, 8) }}>
+          <View style={[{ backgroundColor: t.surface, borderTopWidth: hair, borderTopColor: t.line, paddingBottom: Math.max(insets.bottom, 8) }, std && { backgroundColor: S.card, borderTopWidth: 2, borderTopColor: S.ink }]}>
             <Pane radius={0} />
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 12, paddingTop: 8 }}>
               <Press onPress={() => { haptic.tap(); setTray((x) => !x); }} haptics={false} scale={0.86} accessibilityLabel={tray ? 'スタンプを閉じる' : 'スタンプ'} accessibilityState={{ expanded: tray }}
@@ -91,11 +94,20 @@ export default function DmScreen() {
                 <Sticker name="heart" size={30} tilt={tray ? 0 : -10} />
               </Press>
               <TextInput value={text} onChangeText={setText} onFocus={() => setTray(false)} placeholder="メッセージ" placeholderTextColor={t.ink3} multiline accessibilityLabel="メッセージ"
-                style={[{ flex: 1, minHeight: 40, maxHeight: 120, borderRadius: 20, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 10, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line2, color: t.ink, fontSize: 15, lineHeight: 20, fontFamily: font.text }, noOutline]} />
+                style={[{ flex: 1, minHeight: 40, maxHeight: 120, borderRadius: 20, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 10, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line2, color: t.ink, fontSize: 15, lineHeight: 20, fontFamily: font.text },
+                  // スタンダード: the card's color in a thin ink outline
+                  std && { borderRadius: SR.key, borderWidth: 0, backgroundColor: S.card, boxShadow: ring(1.5) }, noOutline]} />
+              {std ? (
+                // スタンダード: send is the one decision here, an ink key on lime (no floor while there's nothing to send)
+                <StdKey onPress={send} disabled={!text.trim()} label="送信" fill={S.ink} under={S.limeDeep} kd={3} radius={SR.key} style={{ width: 44, height: 40, marginBottom: 3 }} face={{ width: 44, height: 40 }}>
+                  <Icon name="send" size={16} color={text.trim() ? S.onInk : S.ink3} />
+                </StdKey>
+              ) : (
               <Press onPress={send} disabled={!text.trim()} scale={0.88} accessibilityLabel="送信"
                 style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: text.trim() ? t.ink : t.sunken }}>
                 <Icon name="send" size={16} color={text.trim() ? t.onInk : t.ink3} />
               </Press>
+              )}
             </View>
             {tray ? (
               <Animated.View entering={fadeIn()} style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8, paddingTop: 10 }}>
@@ -118,9 +130,10 @@ export default function DmScreen() {
 /** One message: yours on the right in ink, theirs on the left in white; the time small beside it, at the bottom. */
 function Bubble({ m, n, color, gap }: { m: DmMsg; n: string; color: string; gap: number }) {
   const t = useT();
+  const std = useStd();
   const time = <Txt num size={10.5} tone="ink3" style={{ marginBottom: 2 }}>{clockAt(m.at)}</Txt>;
   const body = m.stamp ? <Stamp id={m.stamp} size={100} /> : (
-    <View style={[{ paddingHorizontal: 13, paddingVertical: 8, borderRadius: 18, maxWidth: 260, backgroundColor: m.me ? t.ink : t.surface }, m.me ? null : lift(t)]}>
+    <View style={[{ paddingHorizontal: 13, paddingVertical: 8, borderRadius: 18, maxWidth: 260, backgroundColor: m.me ? t.ink : t.surface }, m.me ? null : lift(t), std && { borderRadius: 16, marginHorizontal: 2 }]}>
       <Txt size={15} lh={21} color={m.me ? t.onInk : t.ink} selectable>{m.t}</Txt>
     </View>
   );

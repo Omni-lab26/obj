@@ -13,6 +13,7 @@ import { Field, Label, RadioCards, Stepper } from '@/ui/Form';
 import { Icon, IconName } from '@/ui/Icon';
 import { micro } from '@/ui/motion';
 import { toast } from '@/ui/Toast';
+import { ring, S, useStd } from '@/ui/stdLook';
 
 const THEMES: { v: string; icon: IconName }[] = [
   { v: '志望校', icon: 'flag' }, { v: '科目', icon: 'book' }, { v: '朝活・夜活', icon: 'sun' },
@@ -24,6 +25,7 @@ const nameError = (x: string) => (!x.trim() ? '名前がまだです' : x.trim()
 
 export default function CreateGroup() {
   const t = useT();
+  const std = useStd();
   const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
@@ -88,7 +90,8 @@ export default function CreateGroup() {
           </View>
         </ScrollView>
         {/* sticky summary + action */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: Math.max(insets.bottom, 12), backgroundColor: t.canvas, borderTopWidth: hair, borderTopColor: t.line, gap: 10 }}>
+        <View style={[{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: Math.max(insets.bottom, 12), backgroundColor: t.canvas, borderTopWidth: hair, borderTopColor: t.line, gap: 10 },
+          std && { borderTopWidth: 2, borderTopColor: S.ink, gap: 12 }]}>
           <Txt size={12} tone="ink2" numberOfLines={1}>
             <Txt size={12} w="700" tone={name.trim() ? 'ink' : 'ink3'}>{name.trim() || '名前未入力'}</Txt>
             {`  · ${theme} · ${join} · 定員${cap}人`}
@@ -102,6 +105,7 @@ export default function CreateGroup() {
 
 function ThemeTile({ label, icon, on, dim, onPress }: { label: string; icon: IconName; on: boolean; dim: boolean; onPress: () => void }) {
   const t = useT();
+  const std = useStd();
   const s = useSharedValue(on ? 1.03 : 1);
   const o = useSharedValue(1);
   useEffect(() => {
@@ -112,10 +116,12 @@ function ThemeTile({ label, icon, on, dim, onPress }: { label: string; icon: Ico
   return (
     <Animated.View style={[{ width: '31.8%' }, a]}>
       <Press onPress={onPress} scale={0.95} accessibilityRole="radio" accessibilityState={{ checked: on }}
-        style={{ height: 64, borderRadius: radius.inner, alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: on ? t.ink : t.surface,
-          borderWidth: hair, borderColor: on ? t.ink : t.line2 }}>
-        <Icon name={icon} size={19} color={on ? t.onInk : t.ink} />
-        <Txt size={12} w="600" color={on ? t.onInk : t.ink}>{label}</Txt>
+        style={[{ height: 64, borderRadius: radius.inner, alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: on ? t.ink : t.surface,
+          borderWidth: hair, borderColor: on ? t.ink : t.line2 },
+          // スタンダード: the card's color in a thin ink outline; the picked one lime in the full outline
+          std && { borderWidth: 0, backgroundColor: on ? S.lime : S.card, boxShadow: ring(on ? 2 : 1.5) }]}>
+        <Icon name={icon} size={19} color={on && !std ? t.onInk : t.ink} width={std ? 2 : undefined} />
+        <Txt size={12} w={std && on ? '700' : '600'} color={on && !std ? t.onInk : t.ink}>{label}</Txt>
       </Press>
     </Animated.View>
   );

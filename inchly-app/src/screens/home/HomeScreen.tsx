@@ -39,6 +39,7 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
   const Header = kit.Header ?? StandardHeader;
   const Frame = kit.Frame ?? StandardFrame;
   const Handle = kit.DesignHandle;
+  const Menu = kit.Menu ?? SideMenu;
   const { width } = useWindowDimensions();
   const menuW = Math.round(width * MENU_SHARE);
   const w = useSharedValue(menuW);
@@ -91,11 +92,11 @@ export function HomeScreen({ kit = {} }: { kit?: HomeKit }) {
     <View style={{ flex: 1, backgroundColor: t.canvas }}>
       {shown ? (
         <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, width: menuW }, menu]}>
-          <SideMenu close={close} leave={leave} />
+          <Menu close={close} leave={leave} />
         </Animated.View>
       ) : null}
       <GestureDetector gesture={bringIn}>
-        <Animated.View style={[{ flex: 1, overflow: 'hidden', boxShadow: '-6px 0px 30px rgba(0,0,0,0.14)' }, homeAway]} collapsable={false}
+        <Animated.View style={[{ flex: 1, overflow: 'hidden', boxShadow: kit.asideEdge ?? '-6px 0px 30px rgba(0,0,0,0.14)' }, homeAway]} collapsable={false}
           accessibilityActions={[{ name: 'menu', label: 'メニューを開く' }]} onAccessibilityAction={(e) => { if (e.nativeEvent.actionName === 'menu') open(); }}>
           <Page header={<Header />}>
             {blocks.map((b, i) => (
