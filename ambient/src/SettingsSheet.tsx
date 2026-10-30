@@ -11,7 +11,8 @@ import { colorHex, type DigitColor } from './colors';
 import { clockFont, clockFonts, type FontId } from './fonts';
 import { CloseIcon } from './icons';
 import { scenes } from './scenes';
-import { useSettings } from './settings';
+import { LANGS, NUMERALS, numerals, type NumeralId } from './i18n';
+import { useSettings, useT } from './settings';
 
 // Settings in the app's own manner rather than a system list: the scene stays behind
 // frosted glass, each group is a card, a choice that is on is filled with ink, and the
@@ -89,6 +90,8 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
   // The slider stays uncontrolled while the page is open so dragging never fights props.
   const initialDigital = useMemo(() => settings.digital, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const t = useT();
+  const en = settings.lang === 'en';
   const digitColor = settings.clock.color;
   const setClock = (patch: Partial<typeof settings.clock>) => {
     tick();
@@ -111,19 +114,43 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
               contentContainerStyle={[styles.content, { paddingTop: top + 2, paddingBottom: insets.bottom + 36 }]}
               showsVerticalScrollIndicator={false}
             >
-              <Text style={[styles.title, { color: c.ink }]}>設定</Text>
+              <Text style={[styles.title, { color: c.ink }]}>{t.settings}</Text>
 
-              <Card title="表示" c={c}>
+              {/* In both languages, so it can be found in either. */}
+              <Card title="言語 · Language" c={c}>
                 <View style={styles.tiles}>
-                  <Toggle label="時計" note="中央に出す" on={settings.clock.visible} onChange={(v) => setClock({ visible: v })} c={c} />
-                  <Toggle label="日付" note="時計の上に" on={settings.clock.date} onChange={(v) => setClock({ date: v })} c={c} />
-                  <Toggle label="24時間" note="午後も13時から" on={settings.clock.hour24} onChange={(v) => setClock({ hour24: v })} c={c} />
-                  <Toggle label="秒" note="時計だけ" on={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
+                  {LANGS.map((l) => {
+                    const on = settings.lang === l.id;
+                    return (
+                      <Pressable
+                        key={l.id}
+                        onPress={() => {
+                          tick();
+                          update((s) => ({ ...s, lang: l.id }));
+                        }}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: on }}
+                        accessibilityLabel={l.label}
+                        style={({ pressed }) => [styles.lang, { backgroundColor: on ? c.ink : c.tile, transform: [{ scale: pressed ? 0.97 : 1 }] }]}
+                      >
+                        <Text style={[styles.langText, { color: on ? c.onInk : c.ink }]}>{l.label}</Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
-                <Text style={[styles.note, { color: c.faint }]}>画面のどこかを長押しすると、いつでも時計を出したり隠したりできます。</Text>
               </Card>
 
-              <Card title="フォント" c={c}>
+              <Card title={t.display} c={c}>
+                <View style={styles.tiles}>
+                  <Toggle label={t.showClock} note={t.showClockNote} off={t.off} on={settings.clock.visible} onChange={(v) => setClock({ visible: v })} c={c} />
+                  <Toggle label={t.showDate} note={t.showDateNote} off={t.off} on={settings.clock.date} onChange={(v) => setClock({ date: v })} c={c} />
+                  <Toggle label={t.hour24} note={t.hour24Note} off={t.off} on={settings.clock.hour24} onChange={(v) => setClock({ hour24: v })} c={c} />
+                  <Toggle label={t.seconds} note={t.secondsNote} off={t.off} on={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
+                </View>
+                <Text style={[styles.note, { color: c.faint }]}>{t.longPressNote}</Text>
+              </Card>
+
+              <Card title={t.font} c={c}>
                 <View style={styles.fonts}>
                   {clockFonts.map((f) => {
                     const selected = settings.clock.font === f.id;
@@ -133,7 +160,7 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
                         onPress={() => setClock({ font: f.id, visible: true })}
                         accessibilityRole="button"
                         accessibilityState={{ selected }}
-                        accessibilityLabel={`フォント ${f.label}`}
+                        accessibilityLabel={t.fontNamed(en ? f.labelEn : f.label)}
                         style={({ pressed }) => [
                           styles.font,
                           { backgroundColor: selected ? c.ink : c.tile },
@@ -156,16 +183,50 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
                             },
                           ]}
                         >
-                          12:34
+                          {numerals('12:34', settings.clock.numerals)}
                         </Text>
-                        <Text style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]}>{f.label}</Text>
+                        <Text style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]}>{en ? f.labelEn : f.label}</Text>
                       </Pressable>
                     );
                   })}
                 </View>
               </Card>
 
-              <Card title="色" c={c}>
+              {/* The numeral systems an iPhone's Lock Screen offers, each shown as the
+                  time in the font chosen above. */}
+              <Card title={t.numerals} c={c}>
+                <View style={styles.fonts}>
+                  {NUMERALS.map((n) => {
+                    const selected = settings.clock.numerals === n.id;
+                    const f = clockFont(settings.clock.font);
+                    return (
+                      <Pressable
+                        key={n.id}
+                        onPress={() => setClock({ numerals: n.id, visible: true })}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected }}
+                        accessibilityLabel={en ? n.en : n.ja}
+                        style={({ pressed }) => [styles.font, { backgroundColor: selected ? c.ink : c.tile }, { transform: [{ scale: pressed ? 0.96 : 1 }] }]}
+                      >
+                        <Text
+                          numberOfLines={1}
+                          ellipsizeMode="clip"
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.6}
+                          style={[f.time, { fontSize: (f.time.fontSize ?? 96) * 0.27, letterSpacing: 0, color: selected ? c.onInk : c.ink, includeFontPadding: false }]}
+                        >
+                          {numerals('12:34', n.id)}
+                        </Text>
+                        <Text numberOfLines={1} style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]}>
+                          {en ? n.en : n.ja}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </Card>
+
+              <Card title={t.colour} c={c}>
                 <ColorPicker
                   value={digitColor}
                   onChange={(v) => update((s) => ({ ...s, clock: { ...s.clock, color: v } }))}
@@ -174,14 +235,15 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
                   font={settings.clock.font}
                   hour24={settings.clock.hour24}
                   seconds={settings.clock.seconds}
+                  numeralsId={settings.clock.numerals}
                   c={c}
                 />
               </Card>
 
               {hasPhotos ? (
-                <Card title="デジタルレイヤー" value={`${Math.round(settings.digital * 100)}%`} c={c}>
+                <Card title={t.digital} value={`${Math.round(settings.digital * 100)}%`} c={c}>
                   <View style={[styles.slab, { backgroundColor: c.tile }]}>
-                    <Text style={[styles.end, { color: c.ink }]}>素</Text>
+                    <Text style={[styles.end, { color: c.ink }]}>{t.digitalRaw}</Text>
                     <Slider
                       style={styles.slider}
                       minimumValue={0}
@@ -191,27 +253,25 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
                       minimumTrackTintColor={c.ink}
                       maximumTrackTintColor={c.track}
                       thumbTintColor={c.ink}
-                      accessibilityLabel="デジタルレイヤーの強さ"
+                      accessibilityLabel={t.digitalStrength}
                     />
-                    <Text style={[styles.end, { color: c.ink }]}>デジタル</Text>
+                    <Text style={[styles.end, { color: c.ink }]}>{t.digitalFull}</Text>
                   </View>
-                  <Text style={[styles.note, { color: c.faint }]}>
-                    写真の背景にかける加工の強さ。左端は元の写真そのまま、右に行くほど文字・網点・ドットなどのデジタル表現が強くなります。
-                  </Text>
+                  <Text style={[styles.note, { color: c.faint }]}>{t.digitalNote}</Text>
                 </Card>
               ) : null}
-              <Card title="使い方" c={c}>
+              <Card title={t.howTo} c={c}>
                 <Pressable
                   onPress={onShowTips}
                   accessibilityRole="button"
-                  accessibilityLabel="使い方を見る"
+                  accessibilityLabel={t.showHowTo}
                   style={({ pressed }) => [styles.howto, { backgroundColor: c.tile, transform: [{ scale: pressed ? 0.97 : 1 }] }]}
                 >
-                  <Text style={[styles.howtoText, { color: c.ink }]}>使い方を見る</Text>
-                  <Text style={[styles.howtoNote, { color: c.faint }]}>ボタンや操作を吹き出しで案内します</Text>
+                  <Text style={[styles.howtoText, { color: c.ink }]}>{t.showHowTo}</Text>
+                  <Text style={[styles.howtoNote, { color: c.faint }]}>{t.showHowToNote}</Text>
                 </Pressable>
               </Card>
-              {credit ? <Text style={[styles.note, styles.credit, { color: c.soft }]}>いまの背景の写真: {credit}</Text> : null}
+              {credit ? <Text style={[styles.note, styles.credit, { color: c.soft }]}>{t.photoCredit(credit)}</Text> : null}
             </ScrollView>
           </Animated.View>
 
@@ -220,7 +280,7 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
             onPress={onClose}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="設定を閉じる"
+            accessibilityLabel={t.closeSettings}
             style={({ pressed }) => [
               styles.close,
               { top, right: Math.max(insets.right, 12) + 4, backgroundColor: c.card },
@@ -258,6 +318,7 @@ function ColorPicker({
   font,
   hour24,
   seconds,
+  numeralsId,
   c,
 }: {
   value: DigitColor | null;
@@ -267,8 +328,10 @@ function ColorPicker({
   font: FontId;
   hour24: boolean;
   seconds: boolean;
+  numeralsId: NumeralId;
   c: Colors;
 }) {
+  const t = useT();
   const [live, setLive] = useState<DigitColor | null>(null);
   const shown = live ?? value;
   // "Auto" is the clock's own: white over a dark scene, black over a light one.
@@ -280,12 +343,12 @@ function ColorPicker({
           onPress={onAuto}
           accessibilityRole="button"
           accessibilityState={{ selected: !value }}
-          accessibilityLabel="色を自動にする"
+          accessibilityLabel={t.autoColour}
           style={({ pressed }) => [styles.auto, { backgroundColor: value ? c.tile : c.ink, transform: [{ scale: pressed ? 0.96 : 1 }] }]}
         >
-          <Text style={[styles.autoText, { color: value ? c.ink : c.onInk }]}>自動</Text>
+          <Text style={[styles.autoText, { color: value ? c.ink : c.onInk }]}>{t.auto}</Text>
         </Pressable>
-        <LiveTime color={ink} font={font} hour24={hour24} seconds={seconds} />
+        <LiveTime color={ink} font={font} hour24={hour24} seconds={seconds} numeralsId={numeralsId} />
       </View>
       {/* Across: hue. Down: from white through the colour to black. */}
       <ColorField value={value} onChange={onChange} onLive={setLive} />
@@ -294,7 +357,8 @@ function ColorPicker({
 }
 
 /** The time now, in the clock's font, ticking each second. */
-function LiveTime({ color, font, hour24, seconds }: { color: string; font: FontId; hour24: boolean; seconds: boolean }) {
+function LiveTime({ color, font, hour24, seconds, numeralsId }: { color: string; font: FontId; hour24: boolean; seconds: boolean; numeralsId: NumeralId }) {
+  const words = useT();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -306,16 +370,16 @@ function LiveTime({ color, font, hour24, seconds }: { color: string; font: FontI
   const h = d.getHours();
   const two = (n: number) => String(n).padStart(2, '0');
   return (
-    <View style={styles.liveTime} accessible accessibilityLabel="いまの時刻（この色で）">
+    <View style={styles.liveTime} accessible accessibilityLabel={words.timeNowInColour}>
       <Text
         numberOfLines={1}
         style={[f.time, { fontSize: size, lineHeight: size * 1.1, letterSpacing: (f.time.letterSpacing ?? 0) * 0.4, color, includeFontPadding: false }]}
       >
-        {`${hour24 ? h : h % 12 || 12}:${two(d.getMinutes())}`}
+        {numerals(`${hour24 ? h : h % 12 || 12}:${two(d.getMinutes())}`, numeralsId)}
       </Text>
       {seconds ? (
         <Text style={[f.time, { fontSize: size * f.secondsScale, marginLeft: 3, marginBottom: size * 0.14, color, letterSpacing: 0, includeFontPadding: false }]}>
-          {two(d.getSeconds())}
+          {numerals(two(d.getSeconds()), numeralsId)}
         </Text>
       ) : null}
     </View>
@@ -323,7 +387,7 @@ function LiveTime({ color, font, hour24, seconds }: { color: string; font: FontI
 }
 
 /** A tile that fills with ink when on: a dot, the label and a short note. */
-function Toggle({ label, note, on, onChange, c }: { label: string; note: string; on: boolean; onChange: (v: boolean) => void; c: Colors }) {
+function Toggle({ label, note, off, on, onChange, c }: { label: string; note: string; off: string; on: boolean; onChange: (v: boolean) => void; c: Colors }) {
   const fg = on ? c.onInk : c.ink;
   return (
     <Pressable
@@ -337,7 +401,7 @@ function Toggle({ label, note, on, onChange, c }: { label: string; note: string;
       <View style={styles.tileText}>
         <Text style={[styles.tileLabel, { color: fg }]}>{label}</Text>
         <Text style={[styles.tileNote, { color: on ? c.onInk : c.faint, opacity: on ? 0.7 : 1 }]} numberOfLines={1}>
-          {on ? note : 'オフ'}
+          {on ? note : off}
         </Text>
       </View>
     </Pressable>
@@ -449,6 +513,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: 12,
+  },
+  lang: {
+    flexGrow: 1,
+    flexBasis: '45%',
+    height: 50,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  langText: {
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0,
   },
   howto: {
     minHeight: 56,

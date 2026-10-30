@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 
+import { useT } from './settings';
 import { formatDuration } from './timers';
 
 type Props = {
@@ -44,6 +45,7 @@ function makeSlotGesture(down: SharedValue<number>) {
 
 function Slot({ i, ms, on, ink, inkSoft, onSave, onLoad, onDelete }: { i: number; ms: number | null; on: boolean } & Omit<Props, 'saves' | 'dial'>) {
   const down = useSharedValue(0);
+  const t = useT();
   const [g] = useState(() => makeSlotGesture(down));
   useEffect(() =>
     g.set({
@@ -63,8 +65,8 @@ function Slot({ i, ms, on, ink, inkSoft, onSave, onLoad, onDelete }: { i: number
       <Animated.View
         accessible
         accessibilityRole="button"
-        accessibilityLabel={ms == null ? `保存 ${i + 1}: 空き` : `保存 ${i + 1}: ${formatDuration(ms)}`}
-        accessibilityHint={ms == null ? 'いまの時間を保存' : 'この時間にする・長押しで削除'}
+        accessibilityLabel={ms == null ? t.saveEmpty(i + 1) : t.saveFull(i + 1, formatDuration(ms))}
+        accessibilityHint={ms == null ? t.saveHintEmpty : t.saveHintFull}
         style={[
           styles.slot,
           ms == null ? [styles.empty, { borderColor: inkSoft }] : { backgroundColor: on ? ink : 'rgba(127,127,127,0.16)' },

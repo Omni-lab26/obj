@@ -76,11 +76,6 @@ export function formatDuration(ms: number): string {
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
 }
 
-/** "5分", "1時間30分" — how long the timer is set for. */
-export function durationLabel(ms: number): string {
-  const min = Math.round(ms / 60_000);
-  return min >= 60 ? `${Math.floor(min / 60)}時間${min % 60 ? `${min % 60}分` : ''}` : `${min}分`;
-}
 
 /**
  * Finishes the timer when its time comes: marks it done and buzzes. A timer that ran

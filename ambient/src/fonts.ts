@@ -11,8 +11,9 @@ export type FontId = 'system' | 'serif' | 'rounded' | 'grotesk' | 'condensed' | 
 
 export type ClockFont = {
   id: FontId;
-  /** Shown under the preview in settings. */
+  /** Shown under the preview in settings (in Japanese, and English). */
   label: string;
+  labelEn: string;
   /** Style for the big time digits. fontSize is for a 390pt-wide screen. */
   time: TextStyle;
   /** Seconds are drawn at this fraction of the time size. */
@@ -34,48 +35,56 @@ export const clockFonts: ClockFont[] = [
   {
     id: 'system',
     label: '標準',
+    labelEn: 'Standard',
     time: { fontSize: 96, fontWeight: '200', letterSpacing: -2, fontVariant: ['tabular-nums'] },
     secondsScale: 0.34,
   },
   {
     id: 'serif',
     label: 'セリフ',
+    labelEn: 'Serif',
     time: { fontFamily: 'InstrumentSerif_400Regular', fontSize: 118, letterSpacing: -2 },
     secondsScale: 0.32,
   },
   {
     id: 'rounded',
     label: 'まる',
+    labelEn: 'Rounded',
     time: { fontFamily: 'Nunito_300Light', fontSize: 96, letterSpacing: -2 },
     secondsScale: 0.34,
   },
   {
     id: 'grotesk',
     label: 'グロテスク',
+    labelEn: 'Grotesk',
     time: { fontFamily: 'SpaceGrotesk_300Light', fontSize: 94, letterSpacing: -4 },
     secondsScale: 0.34,
   },
   {
     id: 'condensed',
     label: 'コンデンス',
+    labelEn: 'Condensed',
     time: { fontFamily: 'BebasNeue_400Regular', fontSize: 140, letterSpacing: 0 },
     secondsScale: 0.3,
   },
   {
     id: 'mono',
     label: 'モノ',
+    labelEn: 'Mono',
     time: { fontFamily: 'JetBrainsMono_200ExtraLight', fontSize: 84, letterSpacing: -4 },
     secondsScale: 0.36,
   },
   {
     id: 'dot',
     label: 'ドット',
+    labelEn: 'Dot',
     time: { fontFamily: 'Doto_800ExtraBold', fontSize: 100, letterSpacing: -2 },
     secondsScale: 0.36,
   },
   {
     id: 'terminal',
     label: 'ターミナル',
+    labelEn: 'Terminal',
     time: { fontFamily: 'VT323_400Regular', fontSize: 132, letterSpacing: -2 },
     secondsScale: 0.34,
   },

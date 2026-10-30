@@ -16,6 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { FaceBackdrop } from './FaceBackdrop';
+import { useT } from './settings';
 
 // Two rulers under fixed red marks: hours above (0-23), minutes and seconds below (an
 // hour in 15-second ticks). Each has two ends, where it gives a little and springs
@@ -300,13 +301,14 @@ export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, on
   const q = Math.round((seconds % 3600) / 15) % 240;
   const total = (hh: number, qq: number) => hh * 3600 + qq * 15;
   const inner = width - 52;
+  const t = useT();
   return (
-    <View style={[styles.panel, { width }]} accessibilityRole="adjustable" accessibilityLabel="タイマーの時間">
+    <View style={[styles.panel, { width }]} accessibilityRole="adjustable" accessibilityLabel={t.timerLength}>
       {/* The same veil as behind the digits: a blur that melts into the scene, no card. */}
       <FaceBackdrop tone={tone} spread={{ x: 64, y: 56 }} />
       {[0, 1].map((r) => (
         <View key={r} style={styles.line}>
-          <Text style={[styles.caption, { color: inkSoft }]}>{r === 0 ? '時間' : '分'}</Text>
+          <Text style={[styles.caption, { color: inkSoft }]}>{r === 0 ? t.hours : t.minutes}</Text>
           {r === 0 ? (
             <RulerView
               ruler={HOURS}

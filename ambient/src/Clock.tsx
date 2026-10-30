@@ -18,12 +18,12 @@ import Reanimated, {
 import { colorHex, luminance, withAlpha } from './colors';
 import { FaceBackdrop } from './FaceBackdrop';
 import { clockFont } from './fonts';
-import type { Settings } from './settings';
+import { numerals, type Strings } from './i18n';
+import { useSettings, useT, type Settings } from './settings';
 import { TimerSaves } from './TimerSaves';
 import { TimeScrubber } from './TimeScrubber';
 import { formatFixed, stopwatchElapsed, timerDial, timerDone, timerLeft, timerRunning } from './timers';
 
-const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
 /** Current time in ms: on every second boundary, or ten times a second when fast. */
 function useNow(fast: boolean) {
@@ -87,9 +87,9 @@ const LABEL = { height: 23, gap: 2 };
 const HINT = { height: 18, gap: 6 };
 const LABEL_LINE = LABEL.height + LABEL.gap;
 const LIMIT_RED = '#d7003a'; // 紅: the frame's colour when a pinch goes past the biggest size // the date's line above the digits, with its gap
-// The longest hint each mode shows, in characters, for room beside the digits that
-// doesn't change as hints come and go.
-const HINT_CHARS = { clock: 0, timer: 21, stopwatch: 15 } as const;
+// About how wide the longest hint each mode shows is, in each language, for room
+// beside the digits that doesn't change as hints come and go.
+const HINT_W = { ja: { clock: 0, timer: 280, stopwatch: 200 }, en: { clock: 0, timer: 320, stopwatch: 200 } } as const;
 /** What the digits' place depends on: the screen, the block as laid out (its digits'
  *  row, the widest of its other lines, and its height), and how far the scale may go
  *  from the one laid out. */
@@ -155,7 +155,6 @@ function buzzLimit() {
   }
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
 }
-const MODE_NAMES = { clock: '時計', timer: 'タイマー', stopwatch: 'ストップウォッチ' } as const;
 
 /** Where the page in this slot sits, in page widths from the middle of the screen,
  *  with the row at `pos`: the three modes go round and round, so each is never more
@@ -365,7 +364,21 @@ function reelPos(kind: number, x: number) {
 
 /** One reel: its digits in a strip (with the first again at the end, to roll round
  *  on), seen through a window one digit tall. */
-function Reel({ kind, at, cell, size, textStyle }: { kind: number; at: SharedValue<number>; cell: number; size: number; textStyle: object }) {
+function Reel({
+  kind,
+  at,
+  cell,
+  size,
+  textStyle,
+  num,
+}: {
+  kind: number;
+  at: SharedValue<number>;
+  cell: number;
+  size: number;
+  textStyle: object;
+  num: (text: string) => string;
+}) {
   const line = size * 1.08;
   const base = REEL_BASE[kind];
   const style = useAnimatedStyle(() => ({ transform: [{ translateY: -reelPos(kind, at.get()) * line }] }));
@@ -377,7 +390,7 @@ function Reel({ kind, at, cell, size, textStyle }: { kind: number; at: SharedVal
       <Reanimated.View style={[styles.reel, style]}>
         {Array.from({ length: base + 1 }, (_, i) => (
           <Text key={i} style={[textStyle, { height: line }]}>
-            {i % base}
+            {num(String(i % base))}
           </Text>
         ))}
       </Reanimated.View>
@@ -396,7 +409,7 @@ const FACES = {
 type Face = { label: string; main: string; small: string; hint: string; dim: boolean };
 
 /** What the centre shows right now, in any of the three modes. */
-function faceFor(p: Props, now: number, preview: number | null): Face {
+function faceFor(p: Props, now: number, preview: number | null, t: Strings): Face {
   if (p.mode === 'stopwatch') {
     const e = stopwatchElapsed(p.stopwatch, now);
     const running = p.stopwatch.startAt != null;
@@ -404,7 +417,7 @@ function faceFor(p: Props, now: number, preview: number | null): Face {
       label: '',
       main: formatFixed(e),
       small: `.${Math.floor((e % 1000) / 100)}`,
-      hint: running ? '' : e > 0 ? 'タップで再開・長押しでリセット' : 'タップで開始',
+      hint: running ? '' : e > 0 ? t.tapToResume : t.tapToStart,
       dim: false,
     };
   }
@@ -415,7 +428,7 @@ function faceFor(p: Props, now: number, preview: number | null): Face {
     }
     const left = timerLeft(p.timer, now);
     if (timerDone(p.timer)) {
-      return { label: '時間です', main: formatFixed(0), small: '', hint: 'タップで閉じる・長押しでリセット', dim: Math.floor(now / 500) % 2 === 1 };
+      return { label: t.timeUp, main: formatFixed(0), small: '', hint: t.tapToCloseOrReset, dim: Math.floor(now / 500) % 2 === 1 };
     }
     const running = timerRunning(p.timer);
     return {
@@ -426,17 +439,17 @@ function faceFor(p: Props, now: number, preview: number | null): Face {
       hint: running
         ? ''
         : p.timer.duration <= 0
-          ? '目盛りで時間を合わせて、数字をタップで開始'
+          ? t.setWithRulers
           : left < p.timer.duration
-            ? 'タップで再開・長押しでリセット'
-            : 'タップで開始・長押しでリセット',
+            ? t.tapToResume
+            : t.tapToStartOrReset,
       dim: false,
     };
   }
   const d = new Date(now);
   const h = d.getHours();
   return {
-    label: p.clock.date ? `${d.getMonth() + 1}月${d.getDate()}日 ${WEEKDAYS[d.getDay()]}曜日` : '',
+    label: p.clock.date ? t.date(d) : '',
     main: `${p.clock.hour24 ? h : h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')}`,
     small: p.clock.seconds ? String(d.getSeconds()).padStart(2, '0') : '',
     hint: '',
@@ -449,6 +462,11 @@ export function Clock(props: Props) {
   const { clock, mode, timer, stopwatch, tone, fadeMs = 520, onToggle, onReset, onSetDuration, onMode, onTouch, onHide } = props;
   const { saves, onSave, onLoad, onDelete, face: placed, edit, onFace } = props;
   const insets = useSafeAreaInsets();
+  const t = useT();
+  const lang = useSettings().settings.lang;
+  const modeNames = { clock: t.modeClock, timer: t.modeTimer, stopwatch: t.modeStopwatch };
+  // Digits in the numeral system chosen in settings.
+  const num = (text: string) => numerals(text, clock.numerals);
   // The length on the rulers while one is being dragged or gliding (seconds).
   const [preview, setPreview] = useState<number | null>(null);
   const fast = (mode === 'stopwatch' && stopwatch.startAt != null) || (mode === 'timer' && (timerRunning(timer) || timerDone(timer)));
@@ -551,7 +569,7 @@ export function Clock(props: Props) {
   const [lastMode, setLastMode] = useState(mode);
   if (mode !== lastMode) {
     setLastMode(mode);
-    setFlash(MODE_NAMES[mode]);
+    setFlash(modeNames[mode]);
   }
   useEffect(() => {
     if (!flash) return;
@@ -621,8 +639,8 @@ export function Clock(props: Props) {
   // out), and its height (as laid out, adjusted if that was at another scale).
   const rowW = row.w ? (row.w * scale) / row.scale : digitPerPt ? rowWidth(mode, sizeFor(mode)) : block.w;
   const rowH = sizeFor(mode) * 1.08;
-  const labelW = faceFor(props, now, preview).label ? side.label : 0;
-  const sideW = Math.max(labelW, HINT_CHARS[mode] * 13.2);
+  const labelW = faceFor(props, now, preview, t).label ? side.label : 0;
+  const sideW = Math.max(labelW, HINT_W[lang][mode]);
   const bh = block.h + baseSize(mode) * 1.08 * (scale - block.scale);
   // The digits' usual centre (the layer centres them above an 8%-of-width pad).
   const cy0 = (height - 0.08 * width) / 2;
@@ -727,7 +745,7 @@ export function Clock(props: Props) {
             numberOfLines={1}
             onLayout={measureLabel}
           >
-            {label || '\u00a0'}
+            {num(label) || '\u00a0'}
           </Animated.Text>
         </Reanimated.View>
         {/* The digits, in a box the edit frame hangs on (so it is always round them). */}
@@ -749,11 +767,11 @@ export function Clock(props: Props) {
               // The timer being set: reels that roll with the rulers (HH:MM:SS → kinds).
               const kind = m === 'timer' && reeling && digit && cell ? [0, 1, -1, 2, 3, -1, 4, 5][i] : -1;
               if (kind >= 0) {
-                return <Reel key={i} kind={kind} at={kind < 2 ? hoursAt : quartersAt} cell={cell} size={size} textStyle={textStyle} />;
+                return <Reel key={i} kind={kind} at={kind < 2 ? hoursAt : quartersAt} cell={cell} size={size} textStyle={textStyle} num={num} />;
               }
               return (
                 <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
-                  <Text style={textStyle}>{ch}</Text>
+                  <Text style={textStyle}>{num(ch)}</Text>
                 </View>
               );
             })}
@@ -772,7 +790,7 @@ export function Clock(props: Props) {
                   },
                 ]}
               >
-                {f.small}
+                {num(f.small)}
               </Text>
             ) : null}
           </Reanimated.View>
@@ -822,8 +840,8 @@ export function Clock(props: Props) {
   // name, so it is there as soon as one slides in, and stays a moment once it lands.
   const page = (m: Settings['mode']) => {
     const current = m === mode;
-    const f = faceFor({ ...props, mode: m }, now, m === 'timer' ? preview : null);
-    const label = current ? (flash ?? f.label) : MODE_NAMES[m];
+    const f = faceFor({ ...props, mode: m }, now, m === 'timer' ? preview : null, t);
+    const label = current ? (flash ?? f.label) : modeNames[m];
     const labelOpacity = current ? flashOpacity : still;
     return (
       <>
@@ -835,7 +853,7 @@ export function Clock(props: Props) {
       </>
     );
   };
-  const current = faceFor(props, now, preview);
+  const current = faceFor(props, now, preview, t);
   // (Set before the detectors render, which is when they read their gestures.)
   faceGesture.enable(!edit);
   editGesture.enable(!!edit);
@@ -861,7 +879,7 @@ export function Clock(props: Props) {
               if (Math.abs(w - digitPerPt) > 0.001) setDigitPerPt(w);
             }}
           >
-            0
+            {num('0')}
           </Text>
           <Text
             style={[font.time, styles.time, styles.measure, { fontSize: 100, lineHeight: 108, letterSpacing: 0 }]}
@@ -878,8 +896,8 @@ export function Clock(props: Props) {
                 style={[styles.pages, { width }]}
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel={`${MODE_NAMES[mode]} ${current.main}`}
-                accessibilityHint="左右にスワイプで時計・タイマー・ストップウォッチを切り替え"
+                accessibilityLabel={`${modeNames[mode]} ${current.main}`}
+                accessibilityHint={t.swipeHint}
               >
                 {MODES.map((m, slot) => (
                   <PageSlot key={m} slot={slot} pos={pos} width={width} here={m === mode}>

@@ -13,7 +13,7 @@ import { fontAssets } from './src/fonts';
 import { ChevronIcon, PenIcon, SlidersIcon, UndoIcon } from './src/icons';
 import { SceneView } from './src/SceneView';
 import { scenes, type Scene } from './src/scenes';
-import { SettingsProvider, useSettings } from './src/settings';
+import { SettingsProvider, useSettings, useT } from './src/settings';
 import { SettingsSheet } from './src/SettingsSheet';
 import { Tips } from './src/Tips';
 import {
@@ -55,6 +55,7 @@ function Player() {
   useKeepAwake();
   const insets = useSafeAreaInsets();
   const { settings, update } = useSettings();
+  const t = useT();
   const [fontsReady] = useFonts(fontAssets);
   const startIndex = Math.max(0, scenes.findIndex((s) => s.id === settings.scene));
   const [index, setIndex] = useState(startIndex);
@@ -165,8 +166,8 @@ function Player() {
   const toggleClock = useCallback(() => {
     const visible = !clockVisible;
     update((s) => ({ ...s, clock: { ...s.clock, visible } }));
-    setToast({ text: visible ? '時計を表示しました' : '時計を隠しました・長押しで戻せます', id: Date.now() });
-  }, [clockVisible, update]);
+    setToast({ text: visible ? t.clockShown : t.clockHidden, id: Date.now() });
+  }, [clockVisible, update, t]);
 
   const shown = scenes.find((s) => s.id === shownId) ?? scene;
   // ── timer and stopwatch: tap the digits to start/pause, hold to reset ──────
@@ -185,9 +186,9 @@ function Player() {
       s.mode === 'timer' ? { ...s, timer: resetTimer(s.timer) } : s.mode === 'stopwatch' ? { ...s, stopwatch: resetStopwatch() } : s
     );
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    setToast({ text: 'リセットしました', id: Date.now() });
-  }, [update]);
-  useTimerAlarm(settings.timer, update, () => setToast({ text: 'タイマーが終わりました', id: Date.now() }));
+    setToast({ text: t.reset, id: Date.now() });
+  }, [update, t]);
+  useTimerAlarm(settings.timer, update, () => setToast({ text: t.timerDone, id: Date.now() }));
   // ── timer saves: five slots under the rulers ──────────────────────────────
   const tick = () => {
     if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
@@ -195,12 +196,12 @@ function Player() {
   const saveTimer = (i: number) => {
     const ms = timerDial(settings.timer);
     if (ms <= 0) {
-      setToast({ text: '目盛りで時間を合わせてから保存してください', id: Date.now() });
+      setToast({ text: t.setBeforeSaving, id: Date.now() });
       return;
     }
     update((s) => ({ ...s, timerSaves: s.timerSaves.map((v, j) => (j === i ? ms : v)) }));
     tick();
-    setToast({ text: `${formatDuration(ms)} を保存しました・長押しで削除`, id: Date.now() });
+    setToast({ text: t.saved(formatDuration(ms)), id: Date.now() });
   };
   const loadTimer = (i: number) => {
     const ms = settings.timerSaves[i];
@@ -211,7 +212,7 @@ function Player() {
   const deleteTimer = (i: number) => {
     update((s) => ({ ...s, timerSaves: s.timerSaves.map((v, j) => (j === i ? null : v)) }));
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    setToast({ text: '保存を削除しました', id: Date.now() });
+    setToast({ text: t.saveDeleted, id: Date.now() });
   };
 
   // ── editing the digits' place and size ────────────────────────────────────
@@ -227,7 +228,7 @@ function Player() {
   const resetFace = () => {
     update((s) => ({ ...s, [faceKey]: { x: 0, y: 0, scale: 1 } }));
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    setToast({ text: '位置と大きさを元に戻しました', id: Date.now() });
+    setToast({ text: t.faceReset, id: Date.now() });
   };
   const closeTips = () => {
     setTips(false);
@@ -311,20 +312,20 @@ function Player() {
         <View style={styles.dockRow}>
           <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight]}>
             <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.pill, { borderColor: glassEdge }]}>
-              <NavButton direction={-1} color={ink} onPress={() => go(-1)} label="前の背景" />
+              <NavButton direction={-1} color={ink} onPress={() => go(-1)} label={t.prevScene} />
               <View style={styles.label}>
                 <Text style={[styles.title, { color: ink }]} numberOfLines={1}>
                   {scene.title}
                   <Text style={[styles.caption, { color: inkSoft }]}>
                     {'  '}
-                    {scene.caption}
+                    {settings.lang === 'en' ? (scene.captionEn ?? scene.caption) : scene.caption}
                   </Text>
                 </Text>
                 <Text style={[styles.hint, { color: inkSoft }]} numberOfLines={1}>
-                  {scene.hint}
+                  {settings.lang === 'en' ? (scene.hintEn ?? scene.hint) : scene.hint}
                 </Text>
               </View>
-              <NavButton direction={1} color={ink} onPress={() => go(1)} label="次の背景" />
+              <NavButton direction={1} color={ink} onPress={() => go(1)} label={t.nextScene} />
             </BlurView>
           </View>
         </View>
@@ -352,23 +353,23 @@ function Player() {
                   <Pressable
                     onPress={resetFace}
                     accessibilityRole="button"
-                    accessibilityLabel="位置と大きさをリセット"
+                    accessibilityLabel={t.resetFace}
                     style={({ pressed }) => [styles.resetButton, { opacity: pressed ? 0.5 : 1 }]}
                   >
                     <UndoIcon color={ink} size={15} />
-                    <Text style={[styles.doneText, { color: ink }]}>リセット</Text>
+                    <Text style={[styles.doneText, { color: ink }]}>{t.resetShort}</Text>
                   </Pressable>
                   <Pressable
                     onPress={endEdit}
                     accessibilityRole="button"
-                    accessibilityLabel="完了"
+                    accessibilityLabel={t.done}
                     style={({ pressed }) => [styles.doneButton, { backgroundColor: ink, opacity: pressed ? 0.6 : 1 }]}
                   >
-                    <Text style={[styles.doneText, { color: dark ? '#0b0b0e' : '#ffffff' }]}>完了</Text>
+                    <Text style={[styles.doneText, { color: dark ? '#0b0b0e' : '#ffffff' }]}>{t.done}</Text>
                   </Pressable>
                 </>
               ) : (
-                <ToolButton label="数字の位置と大きさを変える" color={ink} onPress={startEdit}>
+                <ToolButton label={t.editFace} color={ink} onPress={startEdit}>
                   <PenIcon color={ink} />
                 </ToolButton>
               )}
@@ -386,7 +387,7 @@ function Player() {
           ]}
         >
           <Text style={[styles.editHintText, { color: ink, textShadowColor: dark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.95)' }]}>
-            1本指で移動・2本指でつまんで大きさ
+            {t.editHint}
           </Text>
         </View>
       ) : null}
@@ -399,7 +400,7 @@ function Player() {
         <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight, styles.toolsShadow]}>
           <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.cornerGlass, { borderColor: glassEdge }]}>
             <ToolButton
-              label="設定"
+              label={t.settings}
               color={ink}
               onPress={() => {
                 setSettingsOpen(true);

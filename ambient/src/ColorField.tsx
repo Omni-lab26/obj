@@ -4,6 +4,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { colorHex, type DigitColor } from './colors';
+import { useT } from './settings';
 
 // A field of every colour: hue across, and down it from white through the pure hue
 // to black. Touch or drag anywhere to pick; the ring shows where. The ring follows the
@@ -43,6 +44,7 @@ export function ColorField({ value, onChange, onLive, height = 150 }: Props) {
   const [live, setLive] = useState<DigitColor | null>(null);
   const [passed, setPassed] = useState(0);
   const [g] = useState(makeFieldGesture);
+  const t = useT();
   useEffect(() =>
     g.set({
       pick: (x, y, end) => {
@@ -69,7 +71,7 @@ export function ColorField({ value, onChange, onLive, height = 150 }: Props) {
         onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
         accessible
         accessibilityRole="adjustable"
-        accessibilityLabel="数字の色"
+        accessibilityLabel={t.colourField}
       >
         <Svg width="100%" height="100%">
           <Defs>

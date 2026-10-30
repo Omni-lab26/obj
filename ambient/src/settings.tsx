@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 
 import type { DigitColor } from './colors';
 import type { FontId } from './fonts';
+import { deviceLang, STRINGS, type Lang, type NumeralId } from './i18n';
 
 export type Settings = {
   clock: {
@@ -13,6 +14,8 @@ export type Settings = {
     hour24: boolean;
     /** The digits' colour; null follows the scene (white on dark, black on light). */
     color: DigitColor | null;
+    /** The numeral system the digits are drawn in. */
+    numerals: NumeralId;
   };
   /** What the centre shows. */
   mode: 'clock' | 'timer' | 'stopwatch';
@@ -32,6 +35,8 @@ export type Settings = {
    */
   face: { x: number; y: number; scale: number };
   faceWide: { x: number; y: number; scale: number };
+  /** The language of everything shown (the phone's own, to begin with). */
+  lang: Lang;
   /** The first-time bubbles that explain the buttons have been seen. */
   tipsSeen: boolean;
   /** Digital layer: 0 = the raw picture (素), 1 = fully digital. */
@@ -41,13 +46,14 @@ export type Settings = {
 };
 
 export const defaultSettings: Settings = {
-  clock: { visible: true, font: 'system', seconds: false, date: true, hour24: true, color: null },
+  clock: { visible: true, font: 'system', seconds: false, date: true, hour24: true, color: null, numerals: 'latn' },
   mode: 'clock',
   timer: { duration: 5 * 60_000, endAt: null, left: 5 * 60_000 },
   stopwatch: { startAt: null, elapsed: 0 },
   timerSaves: [null, null, null, null, null],
   face: { x: 0, y: 0, scale: 1 },
   faceWide: { x: 0, y: 0, scale: 1 },
+  lang: deviceLang(),
   tipsSeen: false,
   digital: 0.65,
   scene: 'koi',
@@ -107,4 +113,9 @@ export function useSettings(): SettingsContextValue {
   const ctx = useContext(SettingsContext);
   if (!ctx) throw new Error('useSettings must be used inside SettingsProvider');
   return ctx;
+}
+
+/** The words to show, in the language chosen in settings. */
+export function useT() {
+  return STRINGS[useSettings().settings.lang] ?? STRINGS.ja;
 }

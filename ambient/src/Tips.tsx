@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from './settings';
+
 // The first time the app opens, speech bubbles point, one after another, at what
 // matters: the digits (swipe between the clock, timer and stopwatch; tap and hold),
 // the pen (move and resize the digits), settings, and the background switcher. A tap
@@ -15,17 +17,10 @@ type Props = {
   onClose: () => void;
 };
 
-type Step = { title: string; body: string };
-
-const STEPS: Step[] = [
-  { title: '数字を左右にスワイプ', body: '時計・タイマー・ストップウォッチを切り替え。タイマーとストップウォッチは数字をタップで開始、長押しでリセット' },
-  { title: '数字の位置と大きさ', body: 'ペンを押して、1本指で移動・2本指でつまんで大きさ' },
-  { title: '設定', body: 'フォント・色・日付・秒など' },
-  { title: '背景を切り替え', body: '‹ › で前後の背景へ。画面のどこかを長押しすると時計を隠す・出す' },
-];
-
 export function Tips({ open, tone, face, onClose }: Props) {
   const insets = useSafeAreaInsets();
+  const words = useT();
+  const STEPS = words.tips;
   const { width, height } = useWindowDimensions();
   const [shown] = useState(() => new Animated.Value(0));
   const [mounted, setMounted] = useState(open);
@@ -78,7 +73,7 @@ export function Tips({ open, tone, face, onClose }: Props) {
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, { opacity: shown }]}>
-      <Pressable style={[StyleSheet.absoluteFill, styles.scrim]} onPress={next} accessibilityRole="button" accessibilityLabel={last ? '使い方を閉じる' : '次の説明へ'} />
+      <Pressable style={[StyleSheet.absoluteFill, styles.scrim]} onPress={next} accessibilityRole="button" accessibilityLabel={last ? words.tipsClose : words.tipsNextLabel} />
       <Animated.View
         pointerEvents="none"
         style={[
@@ -92,7 +87,7 @@ export function Tips({ open, tone, face, onClose }: Props) {
         <Text style={[styles.title, { color: ink }]}>{STEPS[step].title}</Text>
         <Text style={[styles.body, { color: ink }]}>{STEPS[step].body}</Text>
         <Text style={[styles.count, { color: ink }]}>
-          {step + 1} / {STEPS.length}・{last ? 'タップで閉じる' : 'タップで次へ'}
+          {step + 1} / {STEPS.length}・{last ? words.tipsLast : words.tipsNext}
         </Text>
       </Animated.View>
       {last ? null : (
@@ -100,11 +95,11 @@ export function Tips({ open, tone, face, onClose }: Props) {
           onPress={onClose}
           hitSlop={10}
           accessibilityRole="button"
-          accessibilityLabel="使い方をスキップ"
+          accessibilityLabel={words.skipTips}
           // (Top middle, between the pen and settings: clear of every bubble.)
           style={({ pressed }) => [styles.skip, { top: barTop + 4, backgroundColor: paper, opacity: pressed ? 0.7 : 0.92 }]}
         >
-          <Text style={[styles.skipText, { color: ink }]}>スキップ</Text>
+          <Text style={[styles.skipText, { color: ink }]}>{words.skip}</Text>
         </Pressable>
       )}
     </Animated.View>
