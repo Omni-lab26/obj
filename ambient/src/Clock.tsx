@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Reanimated, { interpolate, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import Reanimated, { interpolate, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 
 import { clockFont } from './fonts';
 import type { Settings } from './settings';
 import { TimeScrubber } from './TimeScrubber';
-import { formatDuration, stopwatchElapsed, timerDone, timerLeft, timerRunning } from './timers';
+import { formatFixed, stopwatchElapsed, timerDone, timerLeft, timerRunning } from './timers';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -53,32 +53,32 @@ const MODE_NAMES = { clock: '時計', timer: 'タイマー', stopwatch: 'スト�
 
 // The digits' gestures, built once (the face re-renders ten times a second while
 // counting, and a rebuilt gesture would drop a hold in progress); they call whatever
-// handlers were set last. A sideways swipe slides the face out and the next mode in,
-// round and round; a hold and a tap race it, and whichever is recognised first wins.
+// handlers were set last. A sideways swipe moves the modes like pages on an iPhone:
+// the face follows the finger one to one with the next mode coming in beside it, and
+// on release it either carries on to that page or settles back, on a spring with no
+// bounce. A hold and a tap race the swipe; whichever is recognised first wins.
 function makeFaceGesture(swipeX: SharedValue<number>, span: SharedValue<number>) {
   const h = { step: (_dir: number) => {}, hold: () => {}, tap: () => {} };
   const step = (dir: number) => h.step(dir);
+  const settle = { stiffness: 340, damping: 37, mass: 1, overshootClamping: true };
   const pan = Gesture.Pan()
-    .activeOffsetX([-12, 12])
+    .activeOffsetX([-10, 10])
     .failOffsetY([-16, 16])
     .onUpdate((e) => {
-      swipeX.set(e.translationX * 0.7);
+      swipeX.set(e.translationX);
     })
     .onEnd((e) => {
       const w = span.get();
-      const far = Math.abs(e.translationX) > w * 0.18 || Math.abs(e.velocityX) > 450;
-      if (!far) {
-        swipeX.set(withSpring(0, { velocity: e.velocityX, stiffness: 260, damping: 24 }));
+      // Where a flick would carry it, as a page view decides.
+      const ahead = e.translationX + e.velocityX * 0.15;
+      if (Math.abs(ahead) < w * 0.5 && Math.abs(e.velocityX) < 500) {
+        swipeX.set(withSpring(0, { ...settle, velocity: e.velocityX }));
         return;
       }
-      const dir = e.translationX < 0 ? 1 : -1;
-      const out = -dir * w * 0.45;
+      const dir = ahead < 0 ? 1 : -1;
       swipeX.set(
-        withTiming(out, { duration: 130 }, (done) => {
-          if (!done) return;
-          runOnJS(step)(dir);
-          swipeX.set(-out);
-          swipeX.set(withDelay(30, withSpring(0, { stiffness: 210, damping: 24 })));
+        withSpring(-dir * w, { ...settle, velocity: e.velocityX }, (done) => {
+          if (done) runOnJS(step)(dir);
         })
       );
     });
@@ -115,27 +115,34 @@ function faceFor(p: Props, now: number, preview: number | null): Face {
     const running = p.stopwatch.startAt != null;
     return {
       label: '',
-      main: formatDuration(e),
-      small: e < 3_600_000 ? `.${Math.floor((e % 1000) / 100)}` : '',
+      main: formatFixed(e),
+      small: `.${Math.floor((e % 1000) / 100)}`,
       hint: running ? '' : e > 0 ? 'タップで再開・長押しでリセット' : 'タップで開始',
       dim: false,
     };
   }
   if (p.mode === 'timer') {
-    if (preview != null) {
-      return { label: '', main: formatDuration(preview * 1000), small: '', hint: '', dim: false };
+    // While a ruler turns, the digits follow it (but never over a running count).
+    if (preview != null && !timerRunning(p.timer) && !timerDone(p.timer)) {
+      return { label: '', main: formatFixed(preview * 1000), small: '', hint: '', dim: false };
     }
     const left = timerLeft(p.timer, now);
     if (timerDone(p.timer)) {
-      return { label: '時間です', main: formatDuration(0), small: '', hint: 'タップで閉じる', dim: Math.floor(now / 500) % 2 === 1 };
+      return { label: '時間です', main: formatFixed(0), small: '', hint: 'タップで閉じる・長押しでリセット', dim: Math.floor(now / 500) % 2 === 1 };
     }
     const running = timerRunning(p.timer);
     return {
       label: '',
       // Count down in whole seconds that change when a full second has passed.
-      main: formatDuration(left + 999),
+      main: formatFixed(left + 999),
       small: '',
-      hint: running ? '' : left < p.timer.duration ? 'タップで再開・長押しでリセット' : '目盛りを上下に回して、数字をタップで開始',
+      hint: running
+        ? ''
+        : p.timer.duration <= 0
+          ? '目盛りで時間を合わせて、数字をタップで開始'
+          : left < p.timer.duration
+            ? 'タップで再開・長押しでリセット'
+            : 'タップで開始・長押しでリセット',
       dim: false,
     };
   }
@@ -153,7 +160,7 @@ function faceFor(p: Props, now: number, preview: number | null): Face {
 /** The centre clock, timer or stopwatch. Long-press anywhere else toggles it. */
 export function Clock(props: Props) {
   const { clock, mode, timer, stopwatch, tone, fadeMs = 520, onToggle, onReset, onSetDuration, onMode, onTouch, onHide } = props;
-  // The length on the rulers while one is being dragged or coasting (seconds).
+  // The length on the rulers while one is being dragged or gliding (seconds).
   const [preview, setPreview] = useState<number | null>(null);
   const fast = (mode === 'stopwatch' && stopwatch.startAt != null) || (mode === 'timer' && (timerRunning(timer) || timerDone(timer)));
   const now = useNow(fast);
@@ -163,15 +170,13 @@ export function Clock(props: Props) {
   // crossfaded with the scene, so neither the digits nor their halo flash in the
   // wrong colour over the outgoing background.
   const [toneMix] = useState(() => new Animated.Value(tone === 'light' ? 1 : 0));
-  // Sideways swipe across the digits: the face follows the finger on the UI thread,
-  // and a long or quick enough swipe slides it out and the next mode in, round and
-  // round (no first or last).
+  // The modes sit side by side like pages; swipeX is how far the row is pulled.
   const swipeX = useSharedValue(0);
+  const span = useSharedValue(width);
+  useEffect(() => span.set(width), [span, width]);
   // A hold resets the timer or stopwatch (or hides the clock); a tap starts, pauses
   // or shows the controls (see makeFaceGesture).
   const interactive = mode !== 'clock';
-  const span = useSharedValue(width);
-  useEffect(() => span.set(width), [span, width]);
   const [faceGesture] = useState(() => makeFaceGesture(swipeX, span));
   useEffect(() =>
     faceGesture.set({
@@ -180,16 +185,20 @@ export function Clock(props: Props) {
       tap: interactive ? onToggle : onTouch,
     })
   );
-  const gesture = faceGesture.gesture;
-  const swipeStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(Math.abs(swipeX.get()), [0, width * 0.45], [1, 0], 'clamp'),
-    transform: [{ translateX: swipeX.get() }],
+  // The new page is now the middle one: the row snaps back under it in the same frame.
+  useLayoutEffect(() => {
+    swipeX.set(0);
+  }, [mode, swipeX]);
+  const rowStyle = useAnimatedStyle(() => ({ transform: [{ translateX: swipeX.get() }] }));
+  const setting = mode === 'timer' && !timerRunning(timer) && !timerDone(timer);
+  const showWheels = useSharedValue(setting ? 1 : 0);
+  useEffect(() => showWheels.set(withTiming(setting ? 1 : 0, { duration: 220 })), [setting, showWheels]);
+  const wheelsStyle = useAnimatedStyle(() => ({
+    opacity: showWheels.get() * interpolate(Math.abs(swipeX.get()), [0, span.get() * 0.4], [1, 0], 'clamp'),
   }));
-  // Every digit takes the width of the widest, so a running count never shifts sideways.
-  const [digitWidth, setDigitWidth] = useState(0);
-  // The whole reading's width, for standing the timer's wheels either side of it.
-  const [digitsWidth, setDigitsWidth] = useState(0);
-  const lying = width > height;
+  // Digit width per point of font size, measured once per font: every digit takes it,
+  // so a running count never shifts sideways.
+  const [digitPerPt, setDigitPerPt] = useState(0);
   // The mode's name shows above the digits for a moment after a change, then fades
   // away (the line keeps its place, so the digits never jump).
   const [flash, setFlash] = useState<string | null>(null);
@@ -228,72 +237,82 @@ export function Clock(props: Props) {
     }).start();
   }, [tone, toneMix, fadeMs]);
 
-  const f = faceFor(props, now, preview);
-  const setting = mode === 'timer' && !timerRunning(timer) && !timerDone(timer);
   const font = clockFont(clock.font);
-  // Scale with the screen, but stop growing on tablets; longer readings (seconds,
-  // hours) get smaller digits so the line never turns long and thin.
-  const fit = Math.min(1, 5 / (f.main.length + (f.small ? 1.1 : 0)));
-  // Lying down, the height decides, so the digits and the timer's wheels still fit.
+  // Scale with the screen (lying down, the height decides), but stop growing on
+  // tablets. Each mode has one fixed size for its longest reading, so the digits never
+  // grow or shrink as the count goes on.
   const room = Math.min(width / 390, height / 640, 1.6);
-  const scale = room * fit;
-  const size = (font.time.fontSize ?? 96) * scale;
-  // The line keeps the height of full-size digits, so nothing below it (the timer's
-  // rulers) moves when a longer reading shrinks them.
-  const lineHeight = (font.time.fontSize ?? 96) * room * 1.08;
-  const label = flash ?? f.label;
+  const sizeFor = (m: Settings['mode']) => {
+    const longest = m === 'clock' ? 5 + (clock.seconds ? 1.1 : 0) : m === 'timer' ? 8 : 9.1;
+    return (font.time.fontSize ?? 96) * room * Math.min(1, 5 / longest);
+  };
 
-  const face = (c: (typeof FACES)['dark']) => (
-    <>
-      <Animated.Text
-        style={[styles.date, { color: c.inkSoft, textShadowColor: c.halo, opacity: flash ? flashOpacity : 1 }]}
-        numberOfLines={1}
-      >
-        {label || '\u00a0'}
-      </Animated.Text>
-      <View
-        style={[styles.row, { height: lineHeight, opacity: f.dim ? 0.3 : 1 }]}
-        onLayout={(e) => {
-          const w = Math.round(e.nativeEvent.layout.width);
-          if (w !== digitsWidth) setDigitsWidth(w);
-        }}
-      >
-        {[...f.main].map((ch, i) => {
-          const digit = ch >= '0' && ch <= '9';
-          return (
-            <View key={i} style={digit && digitWidth ? { width: digitWidth, alignItems: 'center' } : null}>
-              <Text style={[font.time, styles.time, { fontSize: size, lineHeight: size * 1.08, color: c.ink, textShadowColor: c.halo, letterSpacing: 0 }]}>
-                {ch}
-              </Text>
-            </View>
-          );
-        })}
-        {f.small ? (
-          <Text
-            style={[
-              font.time,
-              styles.time,
-              {
-                fontSize: size * font.secondsScale,
-                lineHeight: size * font.secondsScale * 1.1,
-                color: c.inkSoft,
-                textShadowColor: c.halo,
-                letterSpacing: 0,
-                marginLeft: size * 0.06,
-                marginBottom: size * 0.16,
-              },
-            ]}
-          >
-            {f.small}
-          </Text>
-        ) : null}
-      </View>
-      {/* The hint's line stays even when empty, so the digits never move. */}
-      <Text style={[styles.hint, { color: c.inkSoft, textShadowColor: c.halo }]} numberOfLines={1}>
-        {f.hint || '\u00a0'}
-      </Text>
-    </>
-  );
+  const face = (m: Settings['mode'], f: Face, c: (typeof FACES)['dark'], label: string, labelOpacity: Animated.Value | number) => {
+    const size = sizeFor(m);
+    const cell = digitPerPt * size;
+    return (
+      <>
+        <Animated.Text style={[styles.date, { color: c.inkSoft, textShadowColor: c.halo, opacity: labelOpacity }]} numberOfLines={1}>
+          {label || '\u00a0'}
+        </Animated.Text>
+        <View style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }]}>
+          {[...f.main].map((ch, i) => {
+            const digit = ch >= '0' && ch <= '9';
+            return (
+              <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
+                <Text style={[font.time, styles.time, { fontSize: size, lineHeight: size * 1.08, color: c.ink, textShadowColor: c.halo, letterSpacing: 0 }]}>
+                  {ch}
+                </Text>
+              </View>
+            );
+          })}
+          {f.small ? (
+            <Text
+              style={[
+                font.time,
+                styles.time,
+                {
+                  fontSize: size * font.secondsScale,
+                  lineHeight: size * font.secondsScale * 1.1,
+                  color: c.inkSoft,
+                  textShadowColor: c.halo,
+                  letterSpacing: 0,
+                  marginLeft: size * 0.06,
+                  marginBottom: size * 0.16,
+                },
+              ]}
+            >
+              {f.small}
+            </Text>
+          ) : null}
+        </View>
+        {/* The hint's line stays even when empty, so the digits never move. */}
+        <Text style={[styles.hint, { color: c.inkSoft, textShadowColor: c.halo }]} numberOfLines={1}>
+          {f.hint || '\u00a0'}
+        </Text>
+      </>
+    );
+  };
+
+  // One page per mode: this one, and its neighbours either side (round and round).
+  const page = (m: Settings['mode']) => {
+    const current = m === mode;
+    const f = faceFor({ ...props, mode: m }, now, m === 'timer' ? preview : null);
+    const label = current ? (flash ?? f.label) : f.label;
+    const labelOpacity = current && flash ? flashOpacity : 1;
+    return (
+      <>
+        <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
+          {face(m, f, FACES.dark, label, labelOpacity)}
+        </Animated.View>
+        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(m, f, FACES.light, label, labelOpacity)}</Animated.View>
+      </>
+    );
+  };
+  const i = MODES.indexOf(mode);
+  const prev = MODES[(i + MODES.length - 1) % MODES.length];
+  const next = MODES[(i + 1) % MODES.length];
+  const current = faceFor(props, now, preview);
 
   return (
     <View pointerEvents={clock.visible ? 'box-none' : 'none'} style={styles.layer}>
@@ -307,49 +326,44 @@ export function Clock(props: Props) {
           },
         ]}
       >
-        {/* A zero, measured once per size and font, sets every digit's width. */}
+        {/* A zero at 100 pt, measured once per font, gives every digit's width. */}
         <Text
-          style={[font.time, styles.time, styles.measure, { fontSize: size, lineHeight: size * 1.08, letterSpacing: 0 }]}
+          style={[font.time, styles.time, styles.measure, { fontSize: 100, lineHeight: 108, letterSpacing: 0 }]}
           onLayout={(e) => {
-            const w = Math.ceil(e.nativeEvent.layout.width);
-            if (w !== digitWidth) setDigitWidth(w);
+            const w = e.nativeEvent.layout.width / 100;
+            if (Math.abs(w - digitPerPt) > 0.001) setDigitPerPt(w);
           }}
         >
           0
         </Text>
-        <View style={styles.stage}>
-        <GestureDetector gesture={gesture}>
-          <Reanimated.View
-            style={[styles.swipe, { minWidth: Math.min(width * 0.9, 420) }, swipeStyle]}
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel={`${MODE_NAMES[mode]} ${f.main}`}
-            accessibilityHint="左右にスワイプで時計・タイマー・ストップウォッチを切り替え"
-          >
-            <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
-              {face(FACES.dark)}
-            </Animated.View>
-            <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(FACES.light)}</Animated.View>
+        <View style={[styles.stage, { width }]}>
+          <GestureDetector gesture={faceGesture.gesture}>
+            <Reanimated.View
+              style={[styles.pages, { width }, rowStyle]}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`${MODE_NAMES[mode]} ${current.main}`}
+              accessibilityHint="左右にスワイプで時計・タイマー・ストップウォッチを切り替え"
+            >
+              <View style={[styles.side, { left: -width, width }]}>{page(prev)}</View>
+              <View style={styles.page}>{page(mode)}</View>
+              <View style={[styles.side, { left: width, width }]}>{page(next)}</View>
+            </Reanimated.View>
+          </GestureDetector>
+          {/* The timer's rulers stand outside the face's layout, so the digits never
+              move when they come and go. They stay mounted, just hidden, while the
+              timer runs or another mode shows, and fade as the page is pulled away. */}
+          <Reanimated.View pointerEvents={setting ? 'box-none' : 'none'} style={[styles.wheels, wheelsStyle]}>
+            <TimeScrubber
+              seconds={Math.max(0, Math.round(timer.duration / 1000))}
+              width={Math.min(width * 0.88, 380)}
+              tone={tone}
+              ink={FACES[tone].ink}
+              inkSoft={FACES[tone].inkSoft}
+              onPreview={setPreview}
+              onChange={(sec) => onSetDuration(sec * 1000)}
+            />
           </Reanimated.View>
-        </GestureDetector>
-        {/* The wheels stand outside the face's layout, so the digits never move when
-            they come and go: under the digits when the screen stands up, either side
-            of them (hours left, minutes right) when it lies down. They stay mounted,
-            just hidden, while the timer runs or another mode shows. */}
-        <View
-          pointerEvents={setting ? 'box-none' : 'none'}
-          style={[lying ? styles.wheelsSides : styles.wheelsBelow, { opacity: setting ? 1 : 0 }]}
-        >
-          <TimeScrubber
-            seconds={Math.max(1, Math.round(timer.duration / 1000))}
-            tone={tone}
-            ink={FACES[tone].ink}
-            inkSoft={FACES[tone].inkSoft}
-            spread={lying ? Math.min(width - 2 * 104 - 48, Math.max(digitsWidth + 40, 300)) : 14}
-            onPreview={setPreview}
-            onChange={(sec) => onSetDuration(sec * 1000)}
-          />
-        </View>
         </View>
       </Animated.View>
     </View>
@@ -401,22 +415,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   // The whole width of the swipe area answers taps and holds, not just the digits.
-  swipe: {
-    alignItems: 'center',
-  },
   stage: {
     alignItems: 'center',
   },
-  wheelsBelow: {
-    position: 'absolute',
-    top: '100%',
-    marginTop: 8,
+  pages: {
     alignItems: 'center',
   },
-  wheelsSides: {
+  page: {
+    alignItems: 'center',
+  },
+  side: {
     position: 'absolute',
-    top: '50%',
-    marginTop: -106,
+    top: 0,
+    alignItems: 'center',
+  },
+  wheels: {
+    position: 'absolute',
+    top: '100%',
+    marginTop: 10,
     alignItems: 'center',
   },
   measure: {

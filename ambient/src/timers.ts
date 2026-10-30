@@ -19,19 +19,22 @@ export function timerRunning(t: Timer): boolean {
   return t.endAt != null;
 }
 
+/** Ran out (as opposed to empty: nothing set). */
 export function timerDone(t: Timer): boolean {
-  return t.endAt == null && t.left <= 0;
+  return t.endAt == null && t.left <= 0 && t.duration > 0;
 }
 
 /** Tap: start, pause, resume, or (once finished) set it back to its full time. */
 export function toggleTimer(t: Timer, now: number): Timer {
   if (t.endAt != null) return { ...t, endAt: null, left: Math.max(0, t.endAt - now) };
+  if (t.duration <= 0) return t;
   if (t.left <= 0) return { ...t, left: t.duration };
   return { ...t, endAt: now + t.left };
 }
 
-export function resetTimer(t: Timer): Timer {
-  return { ...t, endAt: null, left: t.duration };
+/** Hold: back to nothing, 00:00:00. */
+export function resetTimer(_t: Timer): Timer {
+  return { duration: 0, endAt: null, left: 0 };
 }
 
 export function setTimerDuration(duration: number): Timer {
@@ -48,6 +51,13 @@ export function toggleStopwatch(s: Stopwatch, now: number): Stopwatch {
 
 export function resetStopwatch(): Stopwatch {
   return { startAt: null, elapsed: 0 };
+}
+
+/** "01:04:05": always hours, minutes and seconds, two digits each. */
+export function formatFixed(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const two = (n: number) => String(n).padStart(2, '0');
+  return `${two(Math.floor(total / 3600))}:${two(Math.floor((total % 3600) / 60))}:${two(total % 60)}`;
 }
 
 /** "4:05", or "1:04:05" from an hour up. */
