@@ -11,9 +11,9 @@ import { scenes } from './scenes';
 import { useSettings } from './settings';
 
 // Settings in the app's own manner rather than a system list: the scene stays behind
-// frosted glass, the type is plain and quiet, choices are soft glass tiles that light
-// up, and the fonts are shown as the digits themselves. It opens from the button at
-// the top right, and the close button takes that button's place.
+// frosted glass, each group is a card, a choice that is on is filled with ink, and the
+// fonts are shown as the digits themselves. It opens from the button at the top
+// right, and the close button takes that button's place.
 
 // The digital layer only acts on photo backgrounds; without any, its setting is hidden.
 const hasPhotos = scenes.some((s) => s.kind === 'photo');
@@ -29,25 +29,25 @@ type Props = {
 function palette(tone: 'dark' | 'light') {
   return tone === 'dark'
     ? {
-        veil: 'rgba(8,8,10,0.55)',
+        veil: 'rgba(8,8,10,0.5)',
         ink: '#ffffff',
-        soft: 'rgba(255,255,255,0.62)',
-        faint: 'rgba(255,255,255,0.32)',
-        tile: 'rgba(255,255,255,0.06)',
-        tileOn: 'rgba(255,255,255,0.16)',
-        edge: 'rgba(255,255,255,0.14)',
-        edgeOn: 'rgba(255,255,255,0.7)',
+        onInk: '#0b0b0e',
+        soft: 'rgba(255,255,255,0.72)',
+        faint: 'rgba(255,255,255,0.45)',
+        card: 'rgba(30,30,34,0.72)',
+        tile: 'rgba(255,255,255,0.08)',
+        track: 'rgba(255,255,255,0.25)',
         glass: 'dark' as const,
       }
     : {
-        veil: 'rgba(250,250,248,0.55)',
+        veil: 'rgba(250,250,248,0.45)',
         ink: '#0b0b0e',
-        soft: 'rgba(11,11,14,0.6)',
-        faint: 'rgba(11,11,14,0.3)',
-        tile: 'rgba(255,255,255,0.45)',
-        tileOn: 'rgba(255,255,255,0.9)',
-        edge: 'rgba(11,11,14,0.1)',
-        edgeOn: 'rgba(11,11,14,0.65)',
+        onInk: '#ffffff',
+        soft: 'rgba(11,11,14,0.7)',
+        faint: 'rgba(11,11,14,0.45)',
+        card: 'rgba(255,255,255,0.82)',
+        tile: 'rgba(11,11,14,0.06)',
+        track: 'rgba(11,11,14,0.2)',
         glass: 'light' as const,
       };
 }
@@ -104,18 +104,18 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
             showsVerticalScrollIndicator={false}
           >
             <Text style={[styles.title, { color: c.ink }]}>設定</Text>
-            <Text style={[styles.lede, { color: c.soft }]}>画面のどこかを長押しすると、いつでも時計を出したり隠したりできます。</Text>
 
-            <Section title="表示" c={c}>
+            <Card title="表示" c={c}>
               <View style={styles.tiles}>
                 <Toggle label="時計" note="中央に出す" on={settings.clock.visible} onChange={(v) => setClock({ visible: v })} c={c} />
                 <Toggle label="日付" note="時計の上に" on={settings.clock.date} onChange={(v) => setClock({ date: v })} c={c} />
                 <Toggle label="24時間" note="午後も13時から" on={settings.clock.hour24} onChange={(v) => setClock({ hour24: v })} c={c} />
                 <Toggle label="秒" note="時計だけ" on={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
               </View>
-            </Section>
+              <Text style={[styles.note, { color: c.faint }]}>画面のどこかを長押しすると、いつでも時計を出したり隠したりできます。</Text>
+            </Card>
 
-            <Section title="フォント" c={c}>
+            <Card title="フォント" c={c}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fonts}>
                 {clockFonts.map((f) => {
                   const selected = settings.clock.font === f.id;
@@ -128,7 +128,7 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
                       accessibilityLabel={`フォント ${f.label}`}
                       style={({ pressed }) => [
                         styles.font,
-                        { backgroundColor: selected ? c.tileOn : c.tile, borderColor: selected ? c.edgeOn : c.edge },
+                        { backgroundColor: selected ? c.ink : c.tile },
                         { transform: [{ scale: pressed ? 0.96 : 1 }] },
                       ]}
                     >
@@ -139,24 +139,24 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
                           {
                             fontSize: (f.time.fontSize ?? 96) * 0.4,
                             letterSpacing: (f.time.letterSpacing ?? 0) * 0.4,
-                            color: selected ? c.ink : c.soft,
+                            color: selected ? c.onInk : c.ink,
                             includeFontPadding: false,
                           },
                         ]}
                       >
                         12:34
                       </Text>
-                      <Text style={[styles.fontLabel, { color: selected ? c.ink : c.faint }]}>{f.label}</Text>
+                      <Text style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]}>{f.label}</Text>
                     </Pressable>
                   );
                 })}
               </ScrollView>
-            </Section>
+            </Card>
 
             {hasPhotos ? (
-              <Section title="デジタルレイヤー" value={`${Math.round(settings.digital * 100)}%`} c={c}>
-                <View style={[styles.slab, { backgroundColor: c.tile, borderColor: c.edge }]}>
-                  <Text style={[styles.end, { color: c.soft }]}>素</Text>
+              <Card title="デジタルレイヤー" value={`${Math.round(settings.digital * 100)}%`} c={c}>
+                <View style={[styles.slab, { backgroundColor: c.tile }]}>
+                  <Text style={[styles.end, { color: c.ink }]}>素</Text>
                   <Slider
                     style={styles.slider}
                     minimumValue={0}
@@ -164,18 +164,18 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
                     value={initialDigital}
                     onValueChange={(v) => update((s) => ({ ...s, digital: v }))}
                     minimumTrackTintColor={c.ink}
-                    maximumTrackTintColor={c.faint}
+                    maximumTrackTintColor={c.track}
                     thumbTintColor={c.ink}
                     accessibilityLabel="デジタルレイヤーの強さ"
                   />
-                  <Text style={[styles.end, { color: c.soft }]}>デジタル</Text>
+                  <Text style={[styles.end, { color: c.ink }]}>デジタル</Text>
                 </View>
-                <Text style={[styles.note, { color: c.soft }]}>
+                <Text style={[styles.note, { color: c.faint }]}>
                   写真の背景にかける加工の強さ。左端は元の写真そのまま、右に行くほど文字・網点・ドットなどのデジタル表現が強くなります。
                 </Text>
-              </Section>
+              </Card>
             ) : null}
-            {credit ? <Text style={[styles.note, styles.credit, { color: c.faint }]}>いまの背景の写真: {credit}</Text> : null}
+            {credit ? <Text style={[styles.note, styles.credit, { color: c.soft }]}>いまの背景の写真: {credit}</Text> : null}
           </ScrollView>
         </Animated.View>
 
@@ -187,7 +187,7 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
           accessibilityLabel="設定を閉じる"
           style={({ pressed }) => [
             styles.close,
-            { top, right: Math.max(insets.right, 12) + 4, borderColor: c.edge, backgroundColor: c.tile },
+            { top, right: Math.max(insets.right, 12) + 4, backgroundColor: c.card },
             { opacity: pressed ? 0.5 : 1, transform: [{ scale: pressed ? 0.92 : 1 }] },
           ]}
         >
@@ -198,37 +198,33 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
   );
 }
 
-function Section({ title, value, c, children }: { title: string; value?: string; c: Colors; children: ReactNode }) {
+function Card({ title, value, c, children }: { title: string; value?: string; c: Colors; children: ReactNode }) {
   return (
-    <View style={styles.section}>
-      <View style={styles.sectionHead}>
-        <Text style={[styles.sectionTitle, { color: c.soft }]}>{title}</Text>
-        <View style={[styles.rule, { backgroundColor: c.edge }]} />
-        {value ? <Text style={[styles.sectionValue, { color: c.soft }]}>{value}</Text> : null}
+    <View style={[styles.card, { backgroundColor: c.card }]}>
+      <View style={styles.cardHead}>
+        <Text style={[styles.cardTitle, { color: c.ink }]}>{title}</Text>
+        {value ? <Text style={[styles.cardValue, { color: c.soft }]}>{value}</Text> : null}
       </View>
       {children}
     </View>
   );
 }
 
-/** A glass tile that lights up when on: a dot that fills, the label and a short note. */
+/** A tile that fills with ink when on: a dot, the label and a short note. */
 function Toggle({ label, note, on, onChange, c }: { label: string; note: string; on: boolean; onChange: (v: boolean) => void; c: Colors }) {
+  const fg = on ? c.onInk : c.ink;
   return (
     <Pressable
       onPress={() => onChange(!on)}
       accessibilityRole="switch"
       accessibilityState={{ checked: on }}
       accessibilityLabel={label}
-      style={({ pressed }) => [
-        styles.tile,
-        { backgroundColor: on ? c.tileOn : c.tile, borderColor: on ? c.edgeOn : c.edge },
-        { transform: [{ scale: pressed ? 0.97 : 1 }] },
-      ]}
+      style={({ pressed }) => [styles.tile, { backgroundColor: on ? c.ink : c.tile }, { transform: [{ scale: pressed ? 0.97 : 1 }] }]}
     >
-      <View style={[styles.dot, { borderColor: on ? c.ink : c.faint, backgroundColor: on ? c.ink : 'transparent' }]} />
+      <View style={[styles.dot, { borderColor: on ? c.onInk : c.faint, backgroundColor: on ? c.onInk : 'transparent' }]} />
       <View style={styles.tileText}>
-        <Text style={[styles.tileLabel, { color: on ? c.ink : c.soft }]}>{label}</Text>
-        <Text style={[styles.tileNote, { color: c.faint }]} numberOfLines={1}>
+        <Text style={[styles.tileLabel, { color: fg }]}>{label}</Text>
+        <Text style={[styles.tileNote, { color: on ? c.onInk : c.faint, opacity: on ? 0.7 : 1 }]} numberOfLines={1}>
           {on ? note : 'オフ'}
         </Text>
       </View>
@@ -247,55 +243,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
   },
   title: {
-    fontSize: 34,
-    lineHeight: 44,
-    fontWeight: '200',
+    fontSize: 32,
+    lineHeight: 42,
+    fontWeight: '800',
     letterSpacing: 0,
+    marginBottom: 6,
     // (Clear of the close button at the right.)
     marginRight: 56,
   },
-  lede: {
-    marginTop: 6,
-    fontSize: 13,
-    lineHeight: 19,
-    letterSpacing: 0,
-    marginRight: 40,
+  card: {
+    marginTop: 14,
+    borderRadius: 24,
+    padding: 16,
   },
-  section: {
-    marginTop: 30,
-  },
-  sectionHead: {
+  cardHead: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1.5,
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0,
   },
-  rule: {
-    flex: 1,
-    height: StyleSheet.hairlineWidth,
-  },
-  sectionValue: {
-    fontSize: 12,
-    fontWeight: '600',
+  cardValue: {
+    fontSize: 14,
+    fontWeight: '700',
     letterSpacing: 0,
     fontVariant: ['tabular-nums'],
   },
   tiles: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   tile: {
     flexGrow: 1,
     flexBasis: '45%',
-    minHeight: 64,
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 62,
+    borderRadius: 16,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -305,46 +292,44 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    borderWidth: 1.5,
+    borderWidth: 2,
   },
   tileText: {
     flex: 1,
   },
   tileLabel: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '800',
     letterSpacing: 0,
   },
   tileNote: {
     marginTop: 2,
     fontSize: 11,
+    fontWeight: '600',
     letterSpacing: 0,
   },
   fonts: {
-    gap: 10,
-    paddingVertical: 2,
+    gap: 8,
   },
   font: {
-    width: 112,
-    height: 96,
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
+    width: 108,
+    height: 92,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
   fontLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0,
   },
   slab: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    minHeight: 58,
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 56,
+    borderRadius: 16,
     paddingHorizontal: 16,
   },
   slider: {
@@ -353,24 +338,25 @@ const styles = StyleSheet.create({
   },
   end: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '800',
     letterSpacing: 0,
   },
   note: {
-    marginTop: 10,
+    marginTop: 12,
     fontSize: 12,
     lineHeight: 18,
+    fontWeight: '600',
     letterSpacing: 0,
   },
   credit: {
-    marginTop: 30,
+    marginTop: 18,
+    marginHorizontal: 6,
   },
   close: {
     position: 'absolute',
     width: 44,
     height: 44,
     borderRadius: 22,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
   },

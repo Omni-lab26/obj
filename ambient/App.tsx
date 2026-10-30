@@ -10,7 +10,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 
 import { Clock, Toast } from './src/Clock';
 import { fontAssets } from './src/fonts';
-import { CheckIcon, ChevronIcon, PenIcon, SlidersIcon, UndoIcon } from './src/icons';
+import { ChevronIcon, PenIcon, SlidersIcon, UndoIcon } from './src/icons';
 import { SceneView } from './src/SceneView';
 import { scenes, type Scene } from './src/scenes';
 import { SettingsProvider, useSettings } from './src/settings';
@@ -318,19 +318,25 @@ function Player() {
         >
           <View style={[styles.shadow, dark ? styles.shadowDark : styles.shadowLight, styles.toolsShadow]}>
             <BlurView intensity={dark ? 40 : 60} tint={glassTint} style={[styles.toolsGlass, { borderColor: glassEdge }]}>
-              <ToolButton label="数字の位置と大きさを変える" active={edit} color={ink} onPress={edit ? endEdit : startEdit}>
-                <PenIcon color={ink} />
-              </ToolButton>
               {edit ? (
                 <>
                   <ToolButton label="元の位置と大きさに戻す" color={ink} onPress={() => update((s) => ({ ...s, face: { x: 0, y: 0, scale: 1 } }))}>
                     <UndoIcon color={ink} />
                   </ToolButton>
-                  <ToolButton label="完了" color={ink} onPress={endEdit}>
-                    <CheckIcon color={ink} size={16} />
-                  </ToolButton>
+                  <Pressable
+                    onPress={endEdit}
+                    accessibilityRole="button"
+                    accessibilityLabel="完了"
+                    style={({ pressed }) => [styles.doneButton, { backgroundColor: ink, opacity: pressed ? 0.6 : 1 }]}
+                  >
+                    <Text style={[styles.doneText, { color: dark ? '#0b0b0e' : '#ffffff' }]}>完了</Text>
+                  </Pressable>
                 </>
-              ) : null}
+              ) : (
+                <ToolButton label="数字の位置と大きさを変える" color={ink} onPress={startEdit}>
+                  <PenIcon color={ink} />
+                </ToolButton>
+              )}
             </BlurView>
           </View>
         </Animated.View>
@@ -345,10 +351,7 @@ function Player() {
           ]}
         >
           <Text style={[styles.editHintText, { color: ink, textShadowColor: dark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.95)' }]}>
-            ドラッグで移動・右の丸をドラッグで大きさ
-          </Text>
-          <Text style={[styles.editHintText, styles.editHintSub, { color: inkSoft, textShadowColor: dark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.95)' }]}>
-            2本指でつまんでも変えられます
+            指でドラッグして移動・右上の丸を引いて大きさ
           </Text>
         </View>
       ) : null}
@@ -513,9 +516,18 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
-  editHintSub: {
-    fontSize: 12,
-    fontWeight: '500',
+  doneButton: {
+    height: 32,
+    paddingHorizontal: 14,
+    marginHorizontal: 3,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doneText: {
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0,
   },
   toolsShadow: {
     borderRadius: 22,
