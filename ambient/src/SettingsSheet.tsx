@@ -27,6 +27,8 @@ type Props = {
   tone: 'dark' | 'light';
   /** Credit of the photo behind the sheet, when the current background is a photo. */
   credit?: string;
+  /** Show the first-time bubbles that explain the buttons again. */
+  onShowTips: () => void;
 };
 
 function palette(tone: 'dark' | 'light') {
@@ -60,7 +62,7 @@ const tick = () => {
   if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
 };
 
-export function SettingsSheet({ open, onClose, tone, credit }: Props) {
+export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props) {
   const { settings, update } = useSettings();
   const insets = useSafeAreaInsets();
   const c = palette(tone);
@@ -198,6 +200,17 @@ export function SettingsSheet({ open, onClose, tone, credit }: Props) {
                   </Text>
                 </Card>
               ) : null}
+              <Card title="使い方" c={c}>
+                <Pressable
+                  onPress={onShowTips}
+                  accessibilityRole="button"
+                  accessibilityLabel="使い方を見る"
+                  style={({ pressed }) => [styles.howto, { backgroundColor: c.tile, transform: [{ scale: pressed ? 0.97 : 1 }] }]}
+                >
+                  <Text style={[styles.howtoText, { color: c.ink }]}>使い方を見る</Text>
+                  <Text style={[styles.howtoNote, { color: c.faint }]}>ボタンや操作を吹き出しで案内します</Text>
+                </Pressable>
+              </Card>
               {credit ? <Text style={[styles.note, styles.credit, { color: c.soft }]}>いまの背景の写真: {credit}</Text> : null}
             </ScrollView>
           </Animated.View>
@@ -436,6 +449,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: 12,
+  },
+  howto: {
+    minHeight: 56,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+  },
+  howtoText: {
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0,
+  },
+  howtoNote: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0,
   },
   liveTime: {
     flex: 1,

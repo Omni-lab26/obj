@@ -15,6 +15,7 @@ import { SceneView } from './src/SceneView';
 import { scenes, type Scene } from './src/scenes';
 import { SettingsProvider, useSettings } from './src/settings';
 import { SettingsSheet } from './src/SettingsSheet';
+import { Tips } from './src/Tips';
 import {
   resetStopwatch,
   formatDuration,
@@ -84,8 +85,16 @@ function Player() {
     editing.current = edit;
   });
 
+  // The first-time bubbles, until they have been seen once (settings can show them again).
+  const [tips, setTips] = useState(!settings.tipsSeen);
+  const tipsUp = useRef(tips);
+  useEffect(() => {
+    tipsUp.current = tips;
+  });
+
   const hideChrome = useCallback(() => {
-    if (editing.current) return;
+    // (The controls stay up while being edited, or explained.)
+    if (editing.current || tipsUp.current) return;
     setChromeOn(false);
     Animated.timing(chrome, {
       toValue: 0,
@@ -219,6 +228,17 @@ function Player() {
     update((s) => ({ ...s, [faceKey]: { x: 0, y: 0, scale: 1 } }));
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setToast({ text: '位置と大きさを元に戻しました', id: Date.now() });
+  };
+  const closeTips = () => {
+    setTips(false);
+    tipsUp.current = false;
+    update((s) => ({ ...s, tipsSeen: true }));
+    showChrome();
+  };
+  const showTips = () => {
+    setTips(true);
+    tipsUp.current = true;
+    showChrome();
   };
   const endEdit = () => {
     setEdit(false);
@@ -392,8 +412,14 @@ function Player() {
         </View>
       </Animated.View>
 
+      <Tips open={tips && !settingsOpen} tone={tone} face={settings[faceKey]} onClose={closeTips} />
+
       <SettingsSheet
         open={settingsOpen}
+        onShowTips={() => {
+          setSettingsOpen(false);
+          showTips();
+        }}
         tone={tone}
         credit={scene.credit}
         onClose={() => {

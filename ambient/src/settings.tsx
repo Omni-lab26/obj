@@ -32,6 +32,8 @@ export type Settings = {
    */
   face: { x: number; y: number; scale: number };
   faceWide: { x: number; y: number; scale: number };
+  /** The first-time bubbles that explain the buttons have been seen. */
+  tipsSeen: boolean;
   /** Digital layer: 0 = the raw picture (素), 1 = fully digital. */
   digital: number;
   /** Last scene shown, restored on launch. */
@@ -46,6 +48,7 @@ export const defaultSettings: Settings = {
   timerSaves: [null, null, null, null, null],
   face: { x: 0, y: 0, scale: 1 },
   faceWide: { x: 0, y: 0, scale: 1 },
+  tipsSeen: false,
   digital: 0.65,
   scene: 'koi',
 };
