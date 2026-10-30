@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { ComponentRef, useEffect, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 
 import { hms, PERSON_COLOR, RANK, ROOM, subj } from '@/data';
@@ -161,7 +161,7 @@ function RoomSearch({ close, pick }: { close: () => void; pick: (v: string) => v
                 <Txt size={13.5} w="600">{p.n}</Txt>
                 <Txt size={11.5} tone="ink3" numberOfLines={1}>{`@${p.h} · ${p.g}`}</Txt>
               </View>
-              <Btn small kind={on ? 'quiet' : 'primary'} label={on ? 'フォロー中' : 'フォロー'} onPress={() => { haptic.soft(); toggleFollow(p.h); }} />
+              <Btn small kind={on || std ? 'quiet' : 'primary'} label={on ? 'フォロー中' : 'フォロー'} onPress={() => { haptic.soft(); toggleFollow(p.h); }} />
             </View>
           );
         })}
@@ -228,6 +228,7 @@ const RANK_BY: Record<'w' | 'm' | 't', { rank: number; delta: string; me: number
 function Rank() {
   const t = useT();
   const std = useStd();
+  const narrow = useWindowDimensions().width < 390;
   const [p, setP] = useState<'w' | 'm' | 't'>('w');
   const weekH = useStore((s) => minutesIn(s.sessions, 7)) / 60;
   const todayH = useStore((s) => s.todayMin) / 60;
@@ -247,7 +248,8 @@ function Rank() {
             <Rolling value={String(r.rank)} size={type.hero} weight="700" />
             <Txt size={13} w="600" tone="ink3" style={{ marginBottom: 5 }}>位</Txt>
           </View>
-          <Txt size={11} w="600" tone="greenInk">{`▲ ${r.delta}`}</Txt>
+          {/* スタンダード on a narrow phone: the two halves on two lines (one line would leave a lone た) */}
+          <Txt size={11} w="600" tone="greenInk">{std && narrow ? `▲ ${r.delta.replace(' · ', '\n')}` : `▲ ${r.delta}`}</Txt>
         </View>
         <Dist pos={Math.round(14 - (r.rank - 57) / 12)} />
       </Card>

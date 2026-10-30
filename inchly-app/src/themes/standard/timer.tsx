@@ -10,7 +10,6 @@ import { type CardFaceProps, type CardLook, clock } from '@/screens/timer/cards'
 import { elapsedOf, type Held, sameFav, setDesign, toggleFavorite, togglePause, useStore } from '@/store';
 import { T } from '@/themes/kit';
 import { haptic } from '@/ui/base';
-import { Icon } from '@/ui/Icon';
 import { micro, move } from '@/ui/motion';
 import { PlanArt } from '@/ui/PlanArt';
 import { planSheet } from '@/ui/PlanSheets';
@@ -396,7 +395,7 @@ function Ad() {
     <View accessibilityLabel="広告" style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingLeft: 10, paddingRight: 12,
       borderRadius: R.mid, backgroundColor: S.card, boxShadow: ring() }}>
       <View style={{ width: 44, height: 44, borderRadius: R.tile, backgroundColor: S.paper2, boxShadow: ring(1.5), alignItems: 'center', justifyContent: 'center' }}>
-        <Icon name="book" size={22} color={S.ink} />
+        <Pix name="book" />
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <T size={10} w="700" lh={13} color={S.ink3} ls={1.2}>広告</T>

@@ -96,7 +96,7 @@ export default function DmScreen() {
               <TextInput value={text} onChangeText={setText} onFocus={() => setTray(false)} placeholder="メッセージ" placeholderTextColor={t.ink3} multiline accessibilityLabel="メッセージ"
                 style={[{ flex: 1, minHeight: 40, maxHeight: 120, borderRadius: 20, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 10, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line2, color: t.ink, fontSize: 15, lineHeight: 20, fontFamily: font.text },
                   // スタンダード: the card's color in a thin ink outline
-                  std && { borderRadius: SR.key, borderWidth: 0, backgroundColor: S.card, boxShadow: ring(1.5) }, noOutline]} />
+                  std && { minWidth: 0, borderRadius: SR.key, borderWidth: 0, backgroundColor: S.card, boxShadow: ring(1.5) }, noOutline]} />
               {std ? (
                 // スタンダード: send is the one decision here, an ink key on lime (no floor while there's nothing to send)
                 <StdKey onPress={send} disabled={!text.trim()} label="送信" fill={S.ink} under={S.limeDeep} kd={3} radius={SR.key} style={{ width: 44, height: 40, marginBottom: 3 }} face={{ width: 44, height: 40 }}>

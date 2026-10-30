@@ -167,7 +167,8 @@ function WeekPage({ w, h }: { w: number; h: number }) {
   const label = (i: number) => (i === 6 ? '今日' : WD[days[i].date.getDay()]);
   return (
     <View style={{ flex: 1 }}>
-      <Head label="この7日間" aside={`1日の目標 ${goal / 60}時間`} value={(total / 60).toFixed(1)} unit="時間" up={d >= 0} delta={`${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}時間`} />
+      {/* スタンダード: nothing to compare yet (the first week), no ▲ 0.0 */}
+      <Head label="この7日間" aside={`1日の目標 ${goal / 60}時間`} value={(total / 60).toFixed(1)} unit="時間" up={d >= 0} delta={std && !total && !prev ? undefined : `${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}時間`} />
       <View style={{ marginTop: 12 }}>
         {/* each day's bar grows up from the floor in turn */}
         <View style={{ width: w, height: ch }}>

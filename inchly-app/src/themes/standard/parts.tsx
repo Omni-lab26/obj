@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { AccessibilityRole, AccessibilityState, Image, Insets, Pressable, StyleProp, View, ViewStyle } from 'react-native';
+import { ReactNode, useRef } from 'react';
+import { AccessibilityRole, AccessibilityState, GestureResponderEvent, Image, Insets, Pressable, StyleProp, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import type { AreaId } from '@/data';
@@ -48,6 +48,22 @@ export function useSink(depth: number) {
   const style = useAnimatedStyle(() => ({ transform: [{ translateY: depth * p.value }] }));
   return { style, down: () => p.set(press(1)), up: () => p.set(release(0)) };
 }
+/**
+ * A tap, and only a tap: a finger that travelled 12pt or more (pulling the study bar down, a swipe
+ * that starts and ends on it) doesn't press it — as the base Press has it. `down` runs as the finger lands.
+ */
+export function useTap(onPress: () => void, down?: () => void) {
+  const at = useRef<{ x: number; y: number } | null>(null);
+  return {
+    onPressIn: (e: GestureResponderEvent) => { at.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY }; down?.(); },
+    onPress: (e: GestureResponderEvent) => {
+      const s0 = at.current;
+      at.current = null;
+      if (s0 && Math.hypot(e.nativeEvent.pageX - s0.x, e.nativeEvent.pageY - s0.y) >= 12) return;
+      onPress();
+    },
+  };
+}
 
 type KeyProps = {
   onPress?: () => void; label: string; children: ReactNode;
@@ -63,9 +79,10 @@ type KeyProps = {
 /** A key on an ink floor: pressed, the face sinks onto it. Disabled, the floor goes (no floor: not pressable). */
 export function Key({ onPress, label, children, fill = S.card, kd = KD, under = S.ink, radius = R.key, disabled, role = 'button', state, hitSlop, style, face, haptics = true }: KeyProps) {
   const s = useSink(kd - 1);
+  const tap = useTap(() => { if (haptics) haptic.tap(); onPress?.(); }, s.down);
   return (
     <Pressable accessibilityRole={role} accessibilityLabel={label} accessibilityState={{ disabled, ...state }} disabled={disabled} hitSlop={hitSlop}
-      onPressIn={s.down} onPressOut={s.up} onPress={() => { if (haptics) haptic.tap(); onPress?.(); }}
+      onPressIn={tap.onPressIn} onPressOut={s.up} onPress={tap.onPress}
       style={style}>
       {/* the floor: the outline's width wider, kd lower (a shadow, drawn as a plate so it never depends on one) */}
       {disabled ? null : <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: kd - 2, bottom: -kd - 2, borderRadius: radius + 2, backgroundColor: under }} />}
@@ -90,8 +107,9 @@ export function Plate({ children }: { children: ReactNode }) {
 /** One button on the plate: only its icon sinks. `dot`: unread. */
 export function PlateBtn({ icon, label, dot, onPress, first }: { icon: 'search' | 'bell' | 'chat' | 'gear'; label: string; dot?: boolean; onPress: () => void; first?: boolean }) {
   const s = useSink(2);
+  const tap = useTap(() => { haptic.tap(); onPress(); }, s.down);
   return (
-    <Pressable onPress={() => { haptic.tap(); onPress(); }} onPressIn={s.down} onPressOut={s.up} accessibilityRole="button" accessibilityLabel={dot ? `${label}（未読あり）` : label}
+    <Pressable onPress={tap.onPress} onPressIn={tap.onPressIn} onPressOut={s.up} accessibilityRole="button" accessibilityLabel={dot ? `${label}（未読あり）` : label}
       hitSlop={{ top: 2, bottom: 2 }} style={{ width: 44, height: 40, alignItems: 'center', justifyContent: 'center' }}>
       {first ? null : <View pointerEvents="none" style={{ position: 'absolute', left: -1, top: 9, bottom: 9, width: 2, backgroundColor: S.line }} />}
       <Animated.View style={s.style}><Pix name={icon} /></Animated.View>

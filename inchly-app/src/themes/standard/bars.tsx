@@ -15,7 +15,7 @@ import { micro } from '@/ui/motion';
 import { TourSpot } from '@/ui/Tour';
 import type { IconId } from './art';
 import { floor, KD, R, ring, S } from './look';
-import { J, Key, SubjSquare, useSink } from './parts';
+import { J, Key, SubjSquare, useSink, useTap } from './parts';
 import { Pix } from './pixel';
 
 // スタンダード's two bars at the bottom, after the mock: opaque paper with the
@@ -52,11 +52,12 @@ export function TabBar({ items, running, paused, mins, insets }: TabBarProps) {
 /** One tab: its icon on a plate that turns lime (fading, 0.2s) when it's the one you're on; pressed, the plate sinks 2. */
 function Tab({ it, pip, paused, label }: { it: TabItem; pip: boolean; paused: boolean; label: string }) {
   const s = useSink(2);
+  const tap = useTap(() => { haptic.tap(); it.onPress(); }, s.down);
   const on = useSharedValue(it.focused ? 1 : 0);
   useEffect(() => { on.set(micro(it.focused ? 1 : 0)); }, [it.focused, on]);
   const lit = useAnimatedStyle(() => ({ opacity: on.value }));
   return (
-    <Pressable onPress={() => { haptic.tap(); it.onPress(); }} onPressIn={s.down} onPressOut={s.up}
+    <Pressable onPress={tap.onPress} onPressIn={tap.onPressIn} onPressOut={s.up}
       accessibilityRole="tab" accessibilityState={{ selected: it.focused }} accessibilityLabel={label}
       style={{ flex: 1, height: TAB_BAR_H, alignItems: 'center', justifyContent: 'center' }}>
       <Animated.View style={[{ width: 54, height: 40, alignItems: 'center', justifyContent: 'center' }, s.style]}>
@@ -96,8 +97,10 @@ function Shell({ children, sink }: { children: ReactNode; sink: ReturnType<typeo
 }
 /** The bar's main part: what's on it, and tap for the timer. */
 function Main({ label, sink, children }: { label: string; sink: ReturnType<typeof useSink>; children: ReactNode }) {
+  // pulled down (to stop and record), it isn't a tap: the timer doesn't open under the question
+  const tap = useTap(() => { haptic.tap(); go.timer(); }, sink.down);
   return (
-    <Pressable onPress={() => { haptic.tap(); go.timer(); }} onPressIn={sink.down} onPressOut={sink.up} accessibilityRole="button" accessibilityLabel={label}
+    <Pressable onPress={tap.onPress} onPressIn={tap.onPressIn} onPressOut={sink.up} accessibilityRole="button" accessibilityLabel={label}
       style={{ flex: 1, minWidth: 0, height: STUDY_BAR_H, flexDirection: 'row', alignItems: 'center', gap: 11 }}>
       {children}
     </Pressable>
@@ -185,8 +188,9 @@ function BarTime({ color, rest }: { color: string; rest: string }) {
 function PauseBtn({ paused }: { paused: boolean }) {
   const g = useSharedValue(0);
   const ground = useAnimatedStyle(() => ({ opacity: g.value }));
+  const tap = useTap(() => { haptic.soft(); togglePause(); }, () => g.set(micro(1)));
   return (
-    <Pressable onPress={() => { haptic.soft(); togglePause(); }} onPressIn={() => g.set(micro(1))} onPressOut={() => g.set(micro(0))}
+    <Pressable onPress={tap.onPress} onPressIn={tap.onPressIn} onPressOut={() => g.set(micro(0))}
       accessibilityRole="button" accessibilityLabel={paused ? '再開' : '一時停止'} hitSlop={6}
       style={{ width: 44, height: 44, marginRight: 2, alignItems: 'center', justifyContent: 'center' }}>
       <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, borderRadius: 12, backgroundColor: 'rgba(23,18,31,0.08)' }, ground]} />

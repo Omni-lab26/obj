@@ -6,11 +6,10 @@ import { AREAS, AreaId, guessArea, OTHER_COLORS, PRESETS, shadeFor, Subject } fr
 import { addSubject, deleteSubject, moveSubject, recordsOf, removeSubject, updateSubject, useStore } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
 import { Btn, haptic, Press, StdIcon, SubjCoin, Txt } from '@/ui/base';
-import { StdChip } from '@/ui/Form';
 import { Pix } from '@/themes/standard/pixel';
 import { ring, S, useStd } from '@/ui/stdLook';
 import { NavBar, Screen } from '@/ui/Chrome';
-import { Choice, Field, Label } from '@/ui/Form';
+import { Choice, Field, Label, StdChip } from '@/ui/Form';
 import { Icon } from '@/ui/Icon';
 import { areaColors } from '@/ui/series';
 import { openSheet } from '@/ui/Sheet';

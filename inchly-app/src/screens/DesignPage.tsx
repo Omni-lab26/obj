@@ -8,7 +8,9 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { type Backdrop, backdropOf, BACKDROPS, BACKDROPS_OPEN, BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_PEACH, STREAKS, THEMES, themeOf, ThemeId, themeShown, TIMERS, useDesign, usesPicks } from '@/design';
 import { setDesign } from '@/store';
 import { faceFor, focus, hair, lift, radius, useT } from '@/theme';
-import { haptic, Press, Txt } from '@/ui/base';
+import { haptic, Press, StdKey, Txt } from '@/ui/base';
+import { Creature, LogoMark, Pix } from '@/themes/standard/pixel';
+import { isStd, ring, S, SR, useStd } from '@/ui/stdLook';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { BackdropSwatch, CardFillControl, FrostControl } from '@/ui/BackdropSheet';
 import { Wordmark } from '@/ui/Brand';
@@ -33,6 +35,8 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
   const set = (patch: Partial<Design>) => { haptic.tap(); setDesign(patch); };
   // クラシック is drawn with your own picks (地の色・メインの色・角・タイマー); the other themes decide them
   const picks = usesPicks(d.theme);
+  // スタンダード draws its own My Page card and streak (ボッ): those picks don't apply to it
+  const std = isStd(d.theme);
   // only the themes that are ready (design.ts THEMES_SHOWN); a few sit in one row, more go by family
   const shown = keys(THEMES).filter((k) => themeShown(k));
   const byFamily = shown.length > 3;
@@ -86,8 +90,10 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
         ) }))} />
       </Section>
       </>
-      ) : <Txt size={11.5} tone="ink3" style={{ paddingHorizontal: 20, paddingTop: 12 }}>{`${BACKDROPS_OPEN ? '背景（鯉の池など）・' : ''}地の色・メインの色・角・タイマーの色は、テーマで決まります（クラシックを選ぶと自分で選べます）`}</Txt>}
+      ) : <Txt size={std ? 12 : 11.5} tone="ink3" lh={std ? 18 : undefined} style={{ paddingHorizontal: 20, paddingTop: 12 }}>{`${BACKDROPS_OPEN ? '背景（鯉の池など）・' : ''}地の色・メインの色・角・タイマーの色${std ? '、マイページのカードと連続記録の見た目' : ''}は、テーマで決まります（クラシックを選ぶと自分で選べます）`}</Txt>}
 
+      {std ? null : (
+      <>
       <Section title="マイページのカード">
         <Options value={d.card} onChange={(card) => set({ card })} cols={3} items={keys(CARDS).map((k) => ({ k, label: CARDS[k].label, swatch: <MiniCard look={k} /> }))} />
       </Section>
@@ -95,6 +101,8 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
       <Section title="連続記録のカプセル">
         <Options value={d.streak} onChange={(streak) => set({ streak })} cols={3} items={keys(STREAKS).map((k) => ({ k, label: STREAKS[k].label, swatch: <MiniStreak look={k} /> }))} />
       </Section>
+      </>
+      )}
 
       {picks ? (
       <Section title="タイマーの画面">
@@ -113,7 +121,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
     <Screen>
       <NavBar title="デザイン" onBack={onClose} right={
         <Press onPress={() => { setDesign(DEFAULT_DESIGN); haptic.soft(); toast('はじめのデザインに戻しました'); }} hitSlop={8} scale={0.94} accessibilityRole="button">
-          <Txt size={13} w="600" tone="ink2">元に戻す</Txt>
+          <Txt size={13} w={std ? '700' : '600'} tone="ink2">元に戻す</Txt>
         </Press>
       } />
       {swipeBack ? <GestureDetector gesture={back}>{page}</GestureDetector> : page}
@@ -125,11 +133,12 @@ const keys = <T extends object>(o: T) => Object.keys(o) as (keyof T)[];
 const BACKDROP_ORDER: Backdrop[] = ['pond', 'sea', 'walk', 'none'];
 
 function Section({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
+  const std = useStd();
   return (
-    <View style={{ paddingHorizontal: 16, paddingTop: 22, gap: 10 }}>
+    <View style={{ paddingHorizontal: 16, paddingTop: 22, gap: std ? 12 : 10 }}>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 4 }}>
         {/* on a narrow phone the note wraps, never the title */}
-        <Txt size={14} w="700" style={{ flexShrink: 0 }}>{title}</Txt>
+        <Txt size={std ? 15 : 14} w="700" style={{ flexShrink: 0 }}>{title}</Txt>
         {sub ? <Txt size={11.5} tone="ink3" style={{ flex: 1 }}>{sub}</Txt> : null}
       </View>
       {children}
@@ -140,14 +149,15 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
 /** A row of choices, each a picture of the result with its name under it. */
 function Options<K extends string | number | symbol>({ value, onChange, items, cols }: { value: K; onChange: (k: K) => void; items: { k: K; label: string; swatch: ReactNode }[]; cols: number }) {
   const t = useT();
+  const std = useStd();
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
       {items.map((x) => {
         const on = x.k === value;
         return (
           <Press key={String(x.k)} onPress={() => onChange(x.k)} haptics={false} scale={0.95} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={x.label}
-            style={{ width: `${(100 - (cols - 1) * 2.4) / cols}%`, padding: cols > 3 ? 4 : 6, gap: 6, borderRadius: radius.inner + 4, alignItems: 'center',
-              backgroundColor: t.surface, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line }}>
+            style={[{ width: `${(100 - (cols - 1) * 2.4) / cols}%`, padding: cols > 3 ? 4 : 6, gap: 6, borderRadius: radius.inner + 4, alignItems: 'center',
+              backgroundColor: t.surface, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line }, std && PICK(on)]}>
             <Pane radius={radius.inner + 4} small />
             {x.swatch}
             <Txt size={cols > 3 ? 10 : 11} w={on ? '700' : '500'} tone={on ? 'ink' : 'ink2'} numberOfLines={1} style={{ letterSpacing: cols > 3 ? -0.3 : 0 }}>{x.label}</Txt>
@@ -159,15 +169,18 @@ function Options<K extends string | number | symbol>({ value, onChange, items, c
 }
 
 /** A theme as a small picture: its canvas and texture, a card in its outline and corners, and text in its face. */
+/** スタンダード: a choice is the card's color in a thin ink outline; the picked one lime, in the full outline. */
+const PICK = (on: boolean) => ({ borderWidth: 0, borderRadius: SR.mid, backgroundColor: on ? S.lime : S.card, boxShadow: ring(on ? 2 : 1.5) });
 export function ThemeTile({ id, on, onPress, width = '31.5%' }: { id: ThemeId; on: boolean; onPress: () => void; width?: number | `${number}%` }) {
   const t = useT();
+  const std = useStd();
   const th = themeOf(id);
   const c = th.colors ?? { canvas: '#F4F5F8', surface: '#FFFFFF', ink: '#121417', ink3: '#848A96', sunken: '#EFF1F5' };
   const r = th.corners ?? { card: 16, inner: 12 };
   return (
     <Press onPress={onPress} haptics={false} scale={0.96} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`テーマ ${th.label}`}
-      style={{ width, padding: 5, gap: 6, borderRadius: radius.inner + 4, backgroundColor: t.surface, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line, alignItems: 'center' }}>
-      <View style={{ width: '100%', aspectRatio: 0.82, borderRadius: radius.inner, backgroundColor: c.canvas, overflow: 'hidden', padding: 7, gap: 6 }}>
+      style={[{ width, padding: 5, gap: 6, borderRadius: radius.inner + 4, backgroundColor: t.surface, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line, alignItems: 'center' }, std && PICK(on)]}>
+      <View style={[{ width: '100%', aspectRatio: 0.82, borderRadius: radius.inner, backgroundColor: c.canvas, overflow: 'hidden', padding: 7, gap: 6 }, std && { borderRadius: SR.mid - 5 }]}>
         <TextureFill texture={th.texture ?? null} />
         <View style={{ backgroundColor: c.surface, borderRadius: Math.min(r.card, 12), padding: 6, gap: 2, boxShadow: th.shadow?.[0] ?? '0px 0px 0px 0.5px rgba(15,23,42,0.08)' }}>
           <Txt size={8} color={c.ink3} style={{ fontFamily: faceFor(th.font, 8) }}>今日の勉強</Txt>
@@ -222,6 +235,39 @@ function MiniStreak({ look }: { look: keyof typeof STREAKS }) {
 function Preview() {
   const t = useT();
   const d = useDesign();
+  const std = useStd();
+  // スタンダード: its own look in small — a card with a lime key to start and a plain one, the study card (paper, the lime shadow), the timer
+  if (std) {
+    return (
+      <View style={{ marginLeft: 16, marginRight: 16, marginTop: 6, borderRadius: SR.card, backgroundColor: S.paper2, boxShadow: ring(), padding: 12, gap: 12 }}>
+        <TextureFill texture="dots-paper" radius={SR.card} />
+        <View style={{ backgroundColor: S.card, borderRadius: SR.mid, padding: 12, gap: 8, boxShadow: ring(), marginRight: 2 }}>
+          <Txt size={11} tone="ink2">今日の勉強</Txt>
+          <Txt num size={24} w="700">3<Txt size={11} tone="ink3">時間 </Txt>24<Txt size={11} tone="ink3">分</Txt></Txt>
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 3 }} pointerEvents="none">
+            <StdKey fill={S.lime} kd={3} style={{ flex: 1, minHeight: 30 }} face={{ minHeight: 30, gap: 6 }} haptics={false}><Pix name="play" /><Txt size={12} w="700">始める</Txt></StdKey>
+            <StdKey kd={3} style={{ flex: 1, minHeight: 30 }} face={{ minHeight: 30 }} haptics={false}><Txt size={12} w="700">ToDo</Txt></StdKey>
+          </View>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', paddingRight: 6, paddingBottom: 4 }}>
+          {/* the streak is ボッ in this theme */}
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, height: 40, paddingHorizontal: 10, borderRadius: SR.key, backgroundColor: S.card, boxShadow: ring() }}>
+            <Creature id="bo" px={2} />
+            <Txt num size={15} w="800" lh={18}>23</Txt>
+          </View>
+          <View style={{ width: '34%', aspectRatio: 85.6 / 53.98, borderRadius: 8, backgroundColor: S.card, boxShadow: `${ring()}, 4px 4px 0px 0px ${S.limeDeep}`, padding: 7, gap: 6 }}>
+            <LogoMark size={12} />
+            <View style={{ flexDirection: 'row', gap: 3 }}>
+              {[0, 1, 2].map((i) => <View key={i} style={{ width: 14, height: 6, backgroundColor: S.paper2, boxShadow: ring(1) }} />)}
+            </View>
+          </View>
+          <View style={{ width: 34, height: 48, borderRadius: 8, backgroundColor: focus.bg, alignItems: 'center', justifyContent: 'center', boxShadow: ring() }}>
+            <Txt num size={8} w="700" color={focus.ink}>39:14</Txt>
+          </View>
+        </View>
+      </View>
+    );
+  }
   return (
     <View style={{ marginHorizontal: 16, marginTop: 6, borderRadius: radius.card + 6, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line2, padding: 12, gap: 10 }}>
       <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, padding: 12, gap: 8 }, lift(t)]}>

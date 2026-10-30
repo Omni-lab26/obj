@@ -7,6 +7,7 @@ import { setDesign } from '@/store';
 import { useT } from '@/theme';
 import { Card, haptic, Press, Txt } from '@/ui/base';
 import { Icon } from '@/ui/Icon';
+import { useStd } from '@/ui/stdLook';
 
 // In 設定 · 見た目: the themes in a row to try one on the spot, and the way to
 // the デザイン page for the rest (colors, corners, the cards).
@@ -17,6 +18,7 @@ const IDS = (Object.keys(THEMES) as ThemeId[]).filter((id) => themeShown(id));
 /** bare: without its own card (inside a settings group). */
 export function ThemeCard({ bare }: { bare?: boolean }) {
   const t = useT();
+  const std = useStd();
   const d = useDesign();
   const body = (
     <>
@@ -25,11 +27,13 @@ export function ThemeCard({ bare }: { bare?: boolean }) {
         <Txt size={11.5} tone="ink3" style={{ flex: 1 }} numberOfLines={1}>{`いまは ${themeOf(d.theme).label}`}</Txt>
         <Press onPress={go.design} hitSlop={8} scale={0.94} accessibilityRole="button" accessibilityLabel="デザインをすべて見る"
           style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-          <Txt size={12.5} w="600" color={t.blue}>デザイン</Txt>
-          <Icon name="chev" size={11} color={t.blue} />
+          <Txt size={12.5} w={std ? '700' : '600'} color={t.blue}>デザイン</Txt>
+          <Icon name="chev" size={11} color={t.blue} width={std ? 2 : undefined} />
         </Press>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: bare ? 0 : 12, paddingTop: 10 }} accessibilityRole="radiogroup">
+      {/* スタンダード: the tiles' outline is drawn outside them; the scroller (which clips) leaves room for it, the row still lined up */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={std ? { marginHorizontal: -4 } : undefined}
+        contentContainerStyle={[{ gap: 8, paddingHorizontal: bare ? 0 : 12, paddingTop: 10 }, std && { gap: 10, paddingHorizontal: (bare ? 0 : 12) + 4, paddingTop: 12, paddingBottom: 4 }]} accessibilityRole="radiogroup">
         {IDS.map((id) => <ThemeTile key={id} id={id} width={92} on={d.theme === id} onPress={() => { haptic.tap(); setDesign({ theme: id }); }} />)}
       </ScrollView>
     </>

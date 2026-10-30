@@ -70,10 +70,21 @@ export function LiveDot({ size = 7, color }: { size?: number; color?: string }) 
 /** Thin progress bar (green fill on a sunken track). */
 export function Bar({ pct, h = 5 }: { pct: number; h?: number }) {
   const t = useT();
+  const std = useStd();
   const w = useSharedValue(0);
   useEffect(() => { w.value = timed(Math.max(0, Math.min(100, pct)), 500); }, [pct, w]);
   // grown by scaling from the left, not by its width (no layout each frame)
   const a = useAnimatedStyle(() => ({ transform: [{ scaleX: w.value / 100 }] }));
+  // スタンダード: no green in a chart: ink on paper 2, square, in a thin ink outline (on a view of its own, so the clipping doesn't take it)
+  if (std) {
+    return (
+      <View style={{ boxShadow: ring(1.5) }}>
+        <View style={{ height: h + 2, backgroundColor: S.paper2, overflow: 'hidden' }}>
+          <Animated.View style={[{ width: '100%', height: h + 2, backgroundColor: S.ink, transformOrigin: 'left' }, a]} />
+        </View>
+      </View>
+    );
+  }
   return (
     <View style={{ height: h, borderRadius: h / 2, backgroundColor: t.sunken, overflow: 'hidden' }}>
       <Animated.View style={[{ width: '100%', height: h, borderRadius: h / 2, backgroundColor: t.green, transformOrigin: 'left' }, a]} />

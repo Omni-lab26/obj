@@ -213,7 +213,7 @@ function StdCard({ name, handle, goal, since, stats, lv }: Props) {
             {w ? (
               <Svg width={w * 1.5} height={H}>
                 <Defs>
-                  <LinearGradient id={`band${uid}`} x1="0" y1="0.2" x2="1" y2="0.8">
+                  <LinearGradient id={`band${uid}`} x1="0" y1="0.45" x2="1" y2="0.55">
                     <Stop offset="0.3" stopColor="#FFFFFF" stopOpacity="0" />
                     <Stop offset="0.36" stopColor="#FFFFFF" stopOpacity="0.55" />
                     <Stop offset="0.42" stopColor={S.sky} stopOpacity="0.14" />

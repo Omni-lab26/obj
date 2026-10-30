@@ -7,6 +7,7 @@ import { addDays, dateKey, daysUntil as untilDate, jpDate, parseKey } from '../l
 import { Block } from '../lib/timetable';
 import { addSession, addTodo, block, getState, moveTodo, removeDeadline, removeSession, removeTodo, Session, Todo, toggleFollow, updateSession, updateTodo, useStore, useSubjects } from '../store';
 import { hair, useT } from '../theme';
+import { ring, S, SR, useStd } from './stdLook';
 import { Avatar, Btn, haptic, Txt } from './base';
 import { DatePick, DurationPick, Opens, PickChip, SMOOTH } from './DateTime';
 import { openDm } from './DmParts';
@@ -28,6 +29,7 @@ export function sessionSheet(existing?: Session) {
 }
 function SessionForm({ close, existing }: { close: () => void; existing?: Session }) {
   const t = useT();
+  const std = useStd();
   const subjOpts = useSubjOpts();
   const [s, setS] = useState(existing?.s ?? getState().subj);
   const [min, setMin] = useState(existing?.min ?? 30);
@@ -52,13 +54,14 @@ function SessionForm({ close, existing }: { close: () => void; existing?: Sessio
         <Choice value={s} onChange={setS} options={subjOpts} />
       </View>
       {/* when and how long, picked as on an iPhone, right under their row */}
-      <Animated.View layout={SMOOTH} style={{ borderRadius: 16, backgroundColor: t.sunken, overflow: 'hidden' }}>
+      {/* スタンダード: a card with the ink outline (on this view; the rows inside don't reach its edge) */}
+      <Animated.View layout={SMOOTH} style={[{ borderRadius: 16, backgroundColor: t.sunken, overflow: 'hidden' }, std && { borderRadius: SR.mid, backgroundColor: S.card, boxShadow: ring(), overflow: 'visible' }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 14 }}>
           <Txt size={15.5} style={{ flex: 1 }}>いつ</Txt>
           <PickChip on={open === 'date'} onPress={() => toggle('date')} label={date === today ? '今日' : date === yesterday ? '昨日' : jpDate(parseKey(date), false)} a11y="勉強した日を変える" />
         </View>
         {open === 'date' ? <Opens><DatePick value={parseKey(date)} max={new Date()} onChange={(x) => setDate(dateKey(x))} onDone={() => setOpen(null)} /></Opens> : null}
-        <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 14, borderTopWidth: hair, borderTopColor: t.line }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 14, borderTopWidth: std ? 1.5 : hair, borderTopColor: t.line }}>
           <Txt size={15.5} style={{ flex: 1 }}>勉強した時間</Txt>
           <PickChip on={open === 'len'} onPress={() => toggle('len')} label={min >= 60 ? `${Math.floor(min / 60)}時間${min % 60 ? `${min % 60}分` : ''}` : `${min}分`} a11y="勉強した時間を変える" />
         </View>

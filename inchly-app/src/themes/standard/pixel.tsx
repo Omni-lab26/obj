@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react';
-import { StyleProp, View, ViewStyle } from 'react-native';
+import { PixelRatio, StyleProp, View, ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import Svg, { Path, Rect } from 'react-native-svg';
 
@@ -18,7 +18,10 @@ import { S } from './look';
  * rows sit in (centered across, standing on its floor), so faces of a
  * creature that differ in size stay in place.
  */
-export const PixelArt = memo(function PixelArt({ rows, px, colors, w, h }: { rows: Rows; px: number; colors: Palette; w?: number; h?: number }) {
+export const PixelArt = memo(function PixelArt({ rows, px: asked, colors, w, h }: { rows: Rows; px: number; colors: Palette; w?: number; h?: number }) {
+  // a pixel a whole number of the screen's pixels (1.5pt is 4.5 on a 3x iPhone: its edges would blur), never bigger than asked
+  const scale = PixelRatio.get();
+  const px = Math.max(1, Math.floor(asked * scale + 0.01)) / scale;
   const rw = Math.max(0, ...rows.map((r) => r.length));
   const W = w ?? rw, H = h ?? rows.length;
   const ox = Math.floor((W - rw) / 2), oy = H - rows.length;

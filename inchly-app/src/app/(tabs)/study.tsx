@@ -12,11 +12,10 @@ import { doneOn, keepFree, type Session, sortFree, useNow, useStore, useSubjects
 import { Creature, Pix, PixSticker } from '@/themes/standard/pixel';
 import { bundledFace, font, hair, noOutline, type, useT } from '@/theme';
 import { Card, haptic, PixHead, Press, StdHead, StdKey, SubjTile, Txt } from '@/ui/base';
-import { deadlineActions, deadlineSheet } from '@/ui/Editors';
 import { ring, S, SR, useStd } from '@/ui/stdLook';
 import { Screen, useTabPad } from '@/ui/Chrome';
 import { ContentHints } from '@/ui/ContentHints';
-import { blockSheet } from '@/ui/Editors';
+import { blockSheet, deadlineActions, deadlineSheet } from '@/ui/Editors';
 import { planCalendar } from '@/ui/PlanSheets';
 import { openSheet } from '@/ui/Sheet';
 import { toast } from '@/ui/Toast';
@@ -485,7 +484,8 @@ function StdTimetable({ day, setDay, today, isToday, stops, rows, now }: { day: 
           style={({ pressed }) => ({ alignItems: 'center', gap: 8, paddingVertical: 20, paddingHorizontal: 16, borderRadius: SR.mid, borderWidth: 2, borderStyle: 'dashed', borderColor: 'rgba(23,18,31,0.32)', backgroundColor: pressed ? S.paper2 : S.card })}>
           <Creature id="mebu" face="sleep" />
           <Txt size={15} w="700" lh={21} style={{ textAlign: 'center' }}>{isToday ? '今日の時間割はまだありません' : `${DOW[day]}曜日の時間割はまだありません`}</Txt>
-          <Txt size={13} tone="ink2" lh={20} style={{ textAlign: 'center' }}>「追加」で日と始める時刻と科目を決めておくと、1タップで始められます。次の予定の時刻に知らせます</Txt>
+          {/* broken where the phrases end (a Japanese line would otherwise split a word: 1タ／ップ) */}
+          <Txt size={13} tone="ink2" lh={20} style={{ textAlign: 'center' }}>{'「追加」で日と始める時刻と科目を決めておくと、\n1タップで始められます。\n次の予定の時刻に知らせます'}</Txt>
         </Pressable>
       ) : (
         <Card pad={0}>

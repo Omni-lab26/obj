@@ -151,7 +151,8 @@ function Chat({ g }: { g: Group }) {
           </Press>
           <TextInput ref={input} onFocus={() => setTray(false)} value={text} onChangeText={setText} placeholder="メッセージ" placeholderTextColor={t.ink3} onSubmitEditing={send} returnKeyType="send" accessibilityLabel="メッセージ"
             style={[{ flex: 1, height: 40, borderRadius: 20, paddingHorizontal: 14, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line2, color: t.ink, fontSize: 15, fontFamily: font.text },
-              std && { borderRadius: SR.key, borderWidth: 0, backgroundColor: S.card, boxShadow: ring(1.5) }, noOutline]} />
+              // スタンダード: the card's color in a thin ink outline; it may shrink below a browser field's own width (the send key stays on screen)
+              std && { minWidth: 0, borderRadius: SR.key, borderWidth: 0, backgroundColor: S.card, boxShadow: ring(1.5) }, noOutline]} />
           {std ? (
             <StdKey onPress={send} disabled={!text.trim()} label="送信" fill={S.ink} under={S.limeDeep} kd={3} style={{ width: 44, height: 40, marginBottom: 3 }} face={{ width: 44, height: 40 }}>
               <Icon name="send" size={16} color={text.trim() ? S.onInk : S.ink3} />
@@ -229,6 +230,7 @@ function Msg({ m, i, g, onJoin }: { m: ChatMsg; i: number; g: Group; onJoin: (w:
 
 function Card({ m, i, g }: { m: Extract<ChatMsg, { kind: 'card' }>; i: number; g: Group }) {
   const t = useT();
+  const std = useStd();
   const todayMin = useStore((s) => s.todayMin);
   const subjId = useStore((s) => s.subj);
   const set = (fn: (c: typeof m) => typeof m) => updateGroup(g.id, (x) => ({ ...x, msgs: x.msgs.map((y, k) => (k === i && y.kind === 'card' ? fn(y) : y)) }));
@@ -244,7 +246,8 @@ function Card({ m, i, g }: { m: Extract<ChatMsg, { kind: 'card' }>; i: number; g
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <PeoplePill names={joined} ring={t.sunken} />
-          <Btn small kind={mine ? 'quiet' : 'primary'} label={mine ? '参加中' : '参加する'} onPress={() => set((c) => ({ ...c, joined: mine ? joined.filter((n) => n !== ME) : [...joined, ME] }))} />
+          {/* スタンダード: plain keys (the ink one is a sheet's decision); joined, it says so with a check */}
+          <Btn small kind={mine || std ? 'quiet' : 'primary'} icon={std && mine ? 'check' : undefined} label={mine ? '参加中' : '参加する'} onPress={() => set((c) => ({ ...c, joined: mine ? joined.filter((n) => n !== ME) : [...joined, ME] }))} />
         </View>
       </View>
     );
@@ -267,6 +270,7 @@ function Card({ m, i, g }: { m: Extract<ChatMsg, { kind: 'card' }>; i: number; g
 
 // ---------- events ----------
 function Events({ g }: { g: Group }) {
+  const std = useStd();
   // Clear the "just planned" highlight once it has been seen.
   useEffect(() => () => { if (g.events.some((e) => e.fresh)) updateGroup(g.id, (x) => ({ ...x, events: x.events.map((e) => ({ ...e, fresh: false })) })); }, [g.id, g.events]);
   const toggle = (e: GEvent) => {
@@ -281,7 +285,7 @@ function Events({ g }: { g: Group }) {
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={{ padding: 16, paddingBottom: 14 }}>
-        <Btn kind="primary" wide icon="plus" label="イベントを企画する" onPress={() => router.push({ pathname: '/plan-event', params: { g: g.id } })} />
+        <Btn kind={std ? 'quiet' : 'primary'} wide icon="plus" label="イベントを企画する" onPress={() => router.push({ pathname: '/plan-event', params: { g: g.id } })} />
       </View>
       {g.events.length ? g.events.map((e) => <EventRow key={e.id} e={e} onToggle={() => toggle(e)} />) : (
         <Empty title="予定されているイベントはありません" sub="もくもく会や時間チャレンジを企画してみましょう" />
@@ -292,6 +296,7 @@ function Events({ g }: { g: Group }) {
 
 function EventRow({ e, onToggle }: { e: GEvent; onToggle: () => void }) {
   const t = useT();
+  const std = useStd();
   const glow = useSharedValue(e.fresh ? 1 : 0);
   // a new one is lit for a moment, then the light fades (no longer than any move: MOTION.md)
   useEffect(() => { if (e.fresh) glow.value = withDelay(900, timed(0, 600)); }, [e.fresh, glow]);
@@ -320,7 +325,7 @@ function EventRow({ e, onToggle }: { e: GEvent; onToggle: () => void }) {
         ) : null}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
           {names.length ? <PeoplePill names={names} ring={t.sunken} /> : <Txt size={11.5} tone="ink3">まだ誰も参加していません</Txt>}
-          <Btn small kind={e.me ? 'quiet' : 'primary'} label={e.me ? '参加中' : '参加する'} onPress={onToggle} />
+          <Btn small kind={e.me || std ? 'quiet' : 'primary'} icon={std && e.me ? 'check' : undefined} label={e.me ? '参加中' : '参加する'} onPress={onToggle} />
         </View>
       </View>
     </Animated.View>

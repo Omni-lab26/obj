@@ -16,6 +16,7 @@ import { openSheet } from '@/ui/Sheet';
 import { Segmented } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
+import { useStd } from '@/ui/stdLook';
 
 type Kind = 'uni' | 'user';
 const RECENT = ['東京大学 理科一類', '青チャート 数III', 'もくもく会'];
@@ -110,6 +111,7 @@ function Tray({ picked, onGo }: { picked: string[]; onGo: () => void }) {
 
 export default function Search() {
   const t = useT();
+  const std = useStd();
   const insets = useSafeAreaInsets();
   const [kind, setKind] = useState<Kind>('uni');
   const [text, setText] = useState('');
@@ -186,7 +188,7 @@ export default function Search() {
                 <Txt size={13.5} w="600">{p.n}</Txt>
                 <Txt size={11} tone="ink3" numberOfLines={1}>@{p.h} · {p.g} · 今週 {(p.t / 400).toFixed(1)}時間</Txt>
               </View>
-              <Btn small kind={on ? 'quiet' : 'primary'} label={on ? 'フォロー中' : 'フォロー'} onPress={() => toggleFollow(p.h)} />
+              <Btn small kind={on || std ? 'quiet' : 'primary'} label={on ? 'フォロー中' : 'フォロー'} onPress={() => toggleFollow(p.h)} />
             </View>
           );
         })}

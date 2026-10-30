@@ -53,7 +53,11 @@ function Order({ close }: { close: () => void }) {
           </Key>
         </View>
       </View>
-      <J size={12.5} lh={19} color={S.ink3} style={{ paddingHorizontal: 2 }}>≡ を押したまま上下に動かすと、タイマーのカードがその順に並びます。終わった予定と勉強中の予定は動かせません</J>
+      {/* two short lines, so neither ends in one lone character on a small phone */}
+      <View style={{ gap: 2, paddingHorizontal: 2 }}>
+        <J size={12.5} lh={18} color={S.ink3}>≡ をつかんで上下に動かすと、カードの順番が変わります</J>
+        <J size={12.5} lh={18} color={S.ink3}>終わった予定と勉強中の予定は動かせません</J>
+      </View>
       {/* the rows are clear on the card, the lines between them under them (a row held covers them as it passes) */}
       <View style={{ backgroundColor: S.card, borderRadius: R.card, boxShadow: ring() }}>
         {list.slice(1).map((b, i) => (
