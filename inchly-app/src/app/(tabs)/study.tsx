@@ -15,12 +15,14 @@ import { Card, haptic, PixHead, Press, StdHead, StdKey, SubjTile, Txt } from '@/
 import { ring, S, SR, useStd } from '@/ui/stdLook';
 import { Screen, useTabPad } from '@/ui/Chrome';
 import { ContentHints } from '@/ui/ContentHints';
+import { askDeletePlan, DeletePlanHost } from '@/ui/DeletePlan';
 import { blockSheet, deadlineActions, deadlineSheet } from '@/ui/Editors';
 import { planCalendar } from '@/ui/PlanSheets';
 import { openSheet } from '@/ui/Sheet';
 import { toast } from '@/ui/Toast';
 import { Icon } from '@/ui/Icon';
 import { PlanArt } from '@/ui/PlanArt';
+import { RevealRow } from '@/ui/RevealRow';
 import { SubjectMark, subjectKind } from '@/ui/Loader';
 
 // The middle tab: the plan — the timetable and the deadlines. Each row is the
@@ -38,6 +40,7 @@ export default function Study() {
   if (std) return <StdStudy pad={pad} />;
   return (
     <Screen>
+      <DeletePlanHost />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: pad }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4, flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
           {/* no page name (the tab bar says where you are): just today's date */}
@@ -106,7 +109,7 @@ function Timetable() {
       </View>
       <Card style={{ marginHorizontal: 16 }} pad={0}>
         {isToday && (stops.length || rows.length) ? <TodayLine stops={stops} rows={rows} now={clockOf(d.getHours() * 60 + d.getMinutes())} /> : rows.map(({ block: b, state }, i) => (
-          <PlanRow key={b.id} b={b} live={state === 'now'} next={state === 'next'} first={!i} />
+          <Slide key={b.id} b={b}><PlanRow b={b} live={state === 'now'} next={state === 'next'} first={!i} /></Slide>
         ))}
         {!rows.length && !stops.length ? (
           <Press onPress={() => planCalendar()} style={{ paddingVertical: 18, paddingHorizontal: 16, alignItems: 'center', gap: 4 }}>
@@ -120,6 +123,15 @@ function Timetable() {
 }
 
 type Stop = { kind: 'plan'; b: Block; at: number; finished: boolean; min: number } | { kind: 'free'; x: Session; at: number };
+/** A plan's row slides right to show 削除 (消しますか？ before it goes). */
+function Slide({ b, children }: { b: Block; children: ReactNode }) {
+  return <RevealRow label={subj(b.s).name} onDelete={(back) => askDeletePlan(b, back)}>{children}</RevealRow>;
+}
+/** The same, for VoiceOver: a 削除 action on the row. */
+const delA11y = (b: Block) => ({
+  accessibilityActions: [{ name: 'delete', label: '削除' }],
+  onAccessibilityAction: (e: { nativeEvent: { actionName: string } }) => { if (e.nativeEvent.actionName === 'delete') askDeletePlan(b, () => {}); },
+});
 const clockOf = (m: number) => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
 
 // Today as one line through the day, like a route map (MOTION.md aside, nothing here moves):
@@ -146,10 +158,11 @@ function TodayLine({ stops, rows, now }: { stops: Stop[]; rows: (Slot | { block:
   const n = stops.length + 1 + rows.length;
   return (
     <View style={{ paddingVertical: 8 }}>
-      {stops.map((st, i) => <StopRow key={st.kind === 'free' ? st.x.id : st.b.id} st={st} first={i === 0} last={false} />)}
+      {stops.map((st, i) => st.kind === 'free' ? <StopRow key={st.x.id} st={st} first={i === 0} last={false} />
+        : <Slide key={st.b.id} b={st.b}><StopRow st={st} first={i === 0} last={false} /></Slide>)}
       <NowMark at={now} first={!stops.length} last={!rows.length} />
       {rows.map(({ block: b, state }, i) => (
-        <AheadRow key={b.id} b={b} live={state === 'now'} next={state === 'next'} last={stops.length + 1 + i === n - 1} />
+        <Slide key={b.id} b={b}><AheadRow b={b} live={state === 'now'} next={state === 'next'} last={stops.length + 1 + i === n - 1} /></Slide>
       ))}
     </View>
   );
@@ -230,7 +243,7 @@ function StopRow({ st, first, last }: { st: Stop; first: boolean; last: boolean 
   }
   const b = st.b, sj = subj(b.s), plan = b.min ?? 0;
   return (
-    <Press onPress={() => blockSheet(b)} scale={0.99}
+    <Press onPress={() => blockSheet(b)} scale={0.99} {...delA11y(b)}
       accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。${st.finished ? `終わった${st.min ? ` ${st.min}分${plan ? `（予定${plan}分）` : ''}` : ''}` : 'やらずに時間が過ぎた'}。編集`}
       style={[rowStyle, { minHeight: 40 }]}>
       <TimeCol><Clock size={12} tone="ink3">{b.start ?? '—'}</Clock></TimeCol>
@@ -282,7 +295,7 @@ function AheadRow({ b, live, next, last }: { b: Block; live: boolean; next: bool
   // the plan under way turns its mark while you're studying it (not while paused)
   const studying = useStore((s) => live && s.running && !s.paused && (s.planBlock === b.id || s.subj === b.s));
   return (
-    <Press onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}${live ? '。いまの予定' : next ? '。つぎの予定' : ''}。編集`}
+    <Press onPress={() => blockSheet(b)} scale={0.99} {...delA11y(b)} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}${live ? '。いまの予定' : next ? '。つぎの予定' : ''}。編集`}
       // the live row's gray ground is inset, and its padding takes up the inset, so its columns stay on the grid
       style={[rowStyle, { minHeight: 64 }, live ? { marginHorizontal: 6, paddingHorizontal: PAD - 6, borderRadius: 12, backgroundColor: t.sunken } : null]}>
       <TimeCol><Times b={b} /></TimeCol>
@@ -329,7 +342,7 @@ function PlanRow({ b, live, next, first }: { b: Block; live: boolean; next: bool
   const t = useT();
   const sj = subj(b.s);
   return (
-    <Press onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。編集`}
+    <Press onPress={() => blockSheet(b)} scale={0.99} {...delA11y(b)} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。編集`}
       style={[rowStyle, { gap: 10, paddingVertical: 10, borderTopWidth: first ? 0 : hair, borderTopColor: t.line, backgroundColor: live ? t.sunken : 'transparent' }]}>
       <TimeCol><Times b={b} /></TimeCol>
       {/* the plan's icon: its photo, or its subject's picture */}
@@ -424,6 +437,7 @@ function SortForm({ x, close }: { x: Session; close: () => void }) {
 function StdStudy({ pad }: { pad: number }) {
   return (
     <Screen>
+      <DeletePlanHost />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: pad, gap: 20 }}>
         {/* no page name (the tab bar says where you are): just today's date */}
         <Txt size={15} w="700" lh={22} accessibilityRole="header" style={{ paddingHorizontal: 2 }}>{jpDate(new Date())}</Txt>
@@ -491,13 +505,14 @@ function StdTimetable({ day, setDay, today, isToday, stops, rows, now }: { day: 
         <Card pad={0}>
           {isToday ? (
             <View style={{ paddingVertical: 8 }}>
-              {stops.map((st, i) => <StdStopRow key={st.kind === 'free' ? st.x.id : st.b.id} st={st} first={i === 0} />)}
+              {stops.map((st, i) => st.kind === 'free' ? <StdStopRow key={st.x.id} st={st} first={i === 0} />
+                : <Slide key={st.b.id} b={st.b}><StdStopRow st={st} first={i === 0} /></Slide>)}
               <StdNowRow at={now} first={!stops.length} last={!rows.length} />
-              {rows.map(({ block: b, state }, i) => <StdAheadRow key={b.id} b={b} live={state === 'now'} next={state === 'next'} last={i === rows.length - 1} />)}
+              {rows.map(({ block: b, state }, i) => <Slide key={b.id} b={b}><StdAheadRow b={b} live={state === 'now'} next={state === 'next'} last={i === rows.length - 1} /></Slide>)}
             </View>
           ) : (
             <View style={{ paddingVertical: 2, paddingHorizontal: 12 }}>
-              {rows.map(({ block: b }, i) => <StdPlainRow key={b.id} b={b} first={!i} />)}
+              {rows.map(({ block: b }, i) => <Slide key={b.id} b={b}><StdPlainRow b={b} first={!i} /></Slide>)}
             </View>
           )}
         </Card>
@@ -566,7 +581,7 @@ function StdStopRow({ st, first }: { st: Stop; first: boolean }) {
   }
   const b = st.b, sj = subj(b.s), plan = b.min ?? 0;
   return (
-    <Press onPress={() => blockSheet(b)} scale={0.99}
+    <Press onPress={() => blockSheet(b)} scale={0.99} {...delA11y(b)}
       accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。${st.finished ? `終わった${st.min ? ` ${st.min}分${plan ? `（予定${plan}分）` : ''}` : ''}` : 'やらずに時間が過ぎた'}。編集`}
       style={[ROW, { minHeight: 44 }]}>
       <StdTime><Clock size={12} w="500" tone="ink3">{b.start ?? '—'}</Clock></StdTime>
@@ -620,7 +635,7 @@ function StdNowRow({ at, first, last }: { at: string; first: boolean; last: bool
 function StdAheadRow({ b, live, next, last }: { b: Block; live: boolean; next: boolean; last: boolean }) {
   const sj = subj(b.s);
   return (
-    <Press onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}${live ? '。いまの予定' : next ? '。つぎの予定' : ''}。編集`}
+    <Press onPress={() => blockSheet(b)} scale={0.99} {...delA11y(b)} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}${live ? '。いまの予定' : next ? '。つぎの予定' : ''}。編集`}
       // the live row's ground is inset and its padding takes up the inset, so its columns stay on the grid
       style={[ROW, { minHeight: live ? 66 : 74 }, live ? { marginHorizontal: 6, marginVertical: 2, paddingHorizontal: 6, borderRadius: 14, backgroundColor: S.paper2 } : null]}>
       <StdTime><StdTimes b={b} /></StdTime>
@@ -646,7 +661,7 @@ function StdAheadRow({ b, live, next, last }: { b: Block; live: boolean; next: b
 function StdPlainRow({ b, first }: { b: Block; first: boolean }) {
   const sj = subj(b.s);
   return (
-    <Press onPress={() => blockSheet(b)} scale={0.99} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。編集`}
+    <Press onPress={() => blockSheet(b)} scale={0.99} {...delA11y(b)} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。編集`}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 62, paddingVertical: 8, borderTopWidth: first ? 0 : 1.5, borderTopColor: S.line }}>
       <View style={{ width: TIME_W, alignItems: 'flex-end', justifyContent: 'center' }}><StdTimes b={b} /></View>
       <View style={{ borderRadius: 10, boxShadow: ring() }}><StdArt b={b} size={40} r={10} /></View>
