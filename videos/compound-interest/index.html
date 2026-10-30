@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>複利のしくみ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=block" rel="stylesheet">
+<style>
+  :root { --bg: #0E141B; }
+  html, body { margin: 0; height: 100%; background: var(--bg); }
+  body { display: grid; place-items: center; }
+  canvas { width: 100vw; max-width: calc(100vh * 16 / 9); aspect-ratio: 16 / 9; display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+// 複利のしくみ: 80 s explainer, 1920x1080.
+// window.renderAt(t) draws any moment from t alone; ?t= freezes a frame.
+// window.renderAudio() synthesizes the soundtrack from the same timeline.
+const W = 1920, H = 1080, FPS = 30, DUR = 80;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const FONT = '"Noto Sans JP", "IPAPGothic", sans-serif';
+
+const C = {
+  bg: '#0E141B', bg2: '#16202B', ink: '#F3F5F7', sub: '#A3B0BD', dim: '#5E6B78',
+  grid: '#223040', principal: '#3A4A5C', simple: '#6FA0DA', comp: '#3DDC97', gold: '#F5C04A',
+};
+
+// ---------- numbers (all figures in the film are computed here) ----------
+const R = 0.05, P = 100;                       // 100万円, 年5%
+const simpleAt = y => P * (1 + R * y);
+const compAt = y => P * Math.pow(1 + R, y);
+const MONTHLY = 3, YEARS = 30;                 // 毎月3万円 × 30年
+const TSUMI_PRINCIPAL = MONTHLY * 12 * YEARS;  // 1080万
+const TSUMI_TOTAL = MONTHLY * (Math.pow(1 + R / 12, YEARS * 12) - 1) / (R / 12); // ≈2497万
+const doubling = pct => Math.log(2) / Math.log(1 + pct / 100);
+
+// ---------- helpers ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const eOut = x => 1 - Math.pow(1 - x, 3);
+const eInOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const eBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+const yen = (v, d = 0) => v.toLocaleString('ja-JP', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+function font(size, weight = 700) { ctx.font = `${weight} ${size}px ${FONT}`; }
+
+// text that fades and rises in over 0.5 s from time a
+function textIn(str, x, y, t, a, { size = 56, weight = 700, color = C.ink, align = 'left', dur = 0.5 } = {}) {
+  const p = seg(t, a, a + dur);
+  if (p <= 0) return;
+  ctx.save();
+  ctx.globalAlpha *= eOut(p);
+  font(size, weight);
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(str, x, y + (1 - eOut(p)) * 24);
+  ctx.restore();
+}
+
+// rich line: [[text, color, weight?, size?], ...] drawn left to right, aligned as a whole
+function richIn(parts, x, y, t, a, { size = 56, align = 'left', dur = 0.5 } = {}) {
+  const p = seg(t, a, a + dur);
+  if (p <= 0) return;
+  ctx.save();
+  ctx.globalAlpha *= eOut(p);
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  let total = 0;
+  const widths = parts.map(([s, , w = 700, sz = size]) => { font(sz, w); const m = ctx.measureText(s).width; total += m; return m; });
+  let cx = align === 'center' ? x - total / 2 : align === 'right' ? x - total : x;
+  parts.forEach(([s, col, w = 700, sz = size], i) => {
+    font(sz, w); ctx.fillStyle = col; ctx.fillText(s, cx, y + (1 - eOut(p)) * 24); cx += widths[i];
+  });
+  ctx.restore();
+}
+
+function rrect(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function pill(str, x, y, color, t, a) {
+  const p = seg(t, a, a + 0.4);
+  if (p <= 0) return 0;
+  ctx.save();
+  ctx.globalAlpha *= eOut(p);
+  font(34, 900);
+  const w = ctx.measureText(str).width + 48;
+  rrect(x, y - 44, w, 60, 30);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.fillStyle = C.bg; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+  ctx.fillText(str, x + 24, y);
+  ctx.restore();
+  return w;
+}
+
+// scene header: colored tag + title, top-left
+function header(tag, color, title, t, a) {
+  const w = pill(tag, 120, 170, color, t, a) || (font(34, 900), ctx.measureText(tag).width + 48);
+  textIn(title, 120 + w + 28, 172, t, a + 0.15, { size: 52, weight: 900 });
+}
+
+// ---------- background, chapter strip, progress ----------
+function background(t) {
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(W * 0.5, H * 0.35, 80, W * 0.5, H * 0.5, W * 0.75);
+  g.addColorStop(0, '#18232F'); g.addColorStop(1, C.bg);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // slow drifting dot grid
+  ctx.fillStyle = 'rgba(255,255,255,0.035)';
+  const off = (t * 6) % 60;
+  for (let y = -60; y < H + 60; y += 60) for (let x = -60; x < W + 60; x += 60) {
+    ctx.beginPath(); ctx.arc(x + off, y + off * 0.5, 2, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function progress(t) {
+  const a = clamp(seg(t, 0.2, 1.0)) * (1 - seg(t, DUR - 0.8, DUR));
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.fillStyle = C.grid; ctx.fillRect(0, H - 8, W, 8);
+  ctx.fillStyle = C.comp; ctx.fillRect(0, H - 8, W * (t / DUR), 8);
+  ctx.restore();
+}
+
+// ---------- shared bar chart (scenes 単利 / 複利) ----------
+const BAR = { x0: 250, dx: 128, w: 78, base: 930, top: 330, vmax: 180, n: 10 };
+const by = v => BAR.base - (v / BAR.vmax) * (BAR.base - BAR.top);
+const bx = k => BAR.x0 + k * BAR.dx;
+
+function chartFrame(t, a) {
+  const p = eOut(seg(t, a, a + 0.6));
+  if (p <= 0) return;
+  ctx.save();
+  ctx.globalAlpha *= p;
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 2;
+  font(24, 400); ctx.fillStyle = C.dim; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let v = 0; v <= 150; v += 50) {
+    ctx.beginPath(); ctx.moveTo(BAR.x0 - 60, by(v)); ctx.lineTo(bx(BAR.n) + 60, by(v)); ctx.stroke();
+    ctx.fillText(v + '万', BAR.x0 - 72, by(v));
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  font(26, 700); ctx.fillStyle = C.sub;
+  for (let k = 0; k <= BAR.n; k++) ctx.fillText(k + '年', bx(k), BAR.base + 46);
+  ctx.restore();
+}
+
+// chips: list of values stacked on top of the principal
+function stack(k, chips, chipColor, t, appearAt, { ghost = false } = {}) {
+  const lt = t - appearAt;
+  if (lt < 0) return;
+  const x = bx(k) - BAR.w / 2;
+  ctx.save();
+  // principal + earlier chips fade in fast
+  ctx.globalAlpha *= eOut(clamp(lt / 0.2));
+  if (ghost) {
+    const top = by(P + chips.reduce((s, v) => s + v, 0));
+    ctx.setLineDash([8, 7]); ctx.strokeStyle = C.simple; ctx.lineWidth = 2.5; ctx.globalAlpha *= 0.75;
+    ctx.strokeRect(x, top, BAR.w, BAR.base - top);
+    ctx.restore();
+    return;
+  }
+  rrect(x, by(P), BAR.w, BAR.base - by(P), 6); ctx.fillStyle = C.principal; ctx.fill();
+  let acc = P;
+  chips.forEach((v, i) => {
+    const last = i === chips.length - 1;
+    const dp = last ? clamp(lt / 0.35) : 1;
+    const drop = last ? (1 - eBack(dp)) * -70 : 0;
+    const y1 = by(acc + v), y0 = by(acc);
+    ctx.save();
+    if (last) ctx.globalAlpha *= clamp(dp * 3);
+    rrect(x, y1 + 1.5 + drop, BAR.w, y0 - y1 - 3, 4);
+    ctx.fillStyle = chipColor; ctx.fill();
+    ctx.restore();
+    acc += v;
+  });
+  // value label
+  const lp = eOut(clamp((lt - 0.2) / 0.3));
+  ctx.globalAlpha *= lp;
+  font(26, 900); ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(yen(acc, acc % 1 ? 1 : 0), bx(k), by(acc) - 16);
+  ctx.restore();
+}
+
+// ---------- scene timing (shared by picture and sound) ----------
+const S = {
+  hook: [0, 7], title: [7, 10.5], simple: [10.5, 23], comp: [23, 37],
+  line: [37, 51], rule: [51, 62], tsumi: [62, 73], end: [73, 80],
+};
+const SIMPLE_BAR_T = k => 12.0 + 0.6 * k;
+const COMP_BAR_T = k => 24.6 + 0.62 * k;
+const LINE_DRAW = [38.6, 45.0];
+const RULE_ROW_T = i => 55.6 + 0.7 * i;
+const TSUMI_FILL = [64.6, 68.6];
+const END_ROW_T = i => 74.6 + 0.9 * i;
+
+function sceneAlpha(t, [a, b]) {
+  if (t < a || t > b) return 0;
+  const fin = a === 0 ? 1 : eOut(seg(t, a, a + 0.5));
+  const fout = b === DUR ? 1 - seg(t, b - 0.6, b) : 1 - eInOut(seg(t, b - 0.45, b));
+  return fin * fout;
+}
+
+// ---------- scenes ----------
+function sceneHook(t) {
+  richIn([['同じ ', C.ink], ['100万円', C.gold, 900], [' を、', C.ink], ['年5%', C.gold, 900], [' で ', C.ink], ['30年', C.gold, 900], [' 置いておくと…', C.ink]],
+    W / 2, 260, t, 0.3, { size: 64, align: 'center' });
+  const cards = [
+    { x: W / 2 - 420, label: '受け取り方 A', col: C.simple, to: simpleAt(30) },
+    { x: W / 2 + 420, label: '受け取り方 B', col: C.comp, to: compAt(30) },
+  ];
+  cards.forEach((c, i) => {
+    const a = 1.4 + i * 0.25;
+    const p = eOut(seg(t, a, a + 0.5));
+    if (p <= 0) return;
+    ctx.save();
+    ctx.globalAlpha *= p;
+    const cy = 560 + (1 - p) * 30;
+    rrect(c.x - 340, cy - 190, 680, 380, 28);
+    ctx.fillStyle = C.bg2; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = c.col; ctx.globalAlpha *= 0.9; ctx.stroke();
+    ctx.globalAlpha = p * sceneAlpha(t, S.hook);
+    font(36, 700); ctx.fillStyle = c.col; ctx.textAlign = 'center';
+    ctx.fillText(c.label, c.x, cy - 100);
+    const cp = eInOut(seg(t, 2.0, 4.2));
+    const v = lerp(P, c.to, cp);
+    font(150, 900); ctx.fillStyle = C.ink;
+    const num = yen(Math.round(v));
+    const nw = ctx.measureText(num).width;
+    font(56, 900); const uw = ctx.measureText('万円').width;
+    font(150, 900); ctx.textAlign = 'left';
+    ctx.fillText(num, c.x - (nw + uw) / 2, cy + 70);
+    font(56, 900); ctx.fillText('万円', c.x - (nw + uw) / 2 + nw + 6, cy + 70);
+    ctx.restore();
+  });
+  richIn([['差は ', C.ink], [`${yen(Math.round(compAt(30) - simpleAt(30)))}万円`, C.comp, 900], ['。この差は、どこから？', C.ink]],
+    W / 2, 900, t, 4.7, { size: 60, align: 'center' });
+  textIn('※ 数値は計算上の例です（税金・手数料は考えません）', W / 2, 1010, t, 1.4, { size: 24, weight: 400, color: C.dim, align: 'center' });
+}
+
+function sceneTitle(t) {
+  const lt = t - S.title[0];
+  textIn('複利のしくみ', W / 2, 520, lt, 0.2, { size: 150, weight: 900, align: 'center', dur: 0.6 });
+  const u = eInOut(seg(lt, 0.6, 1.3));
+  ctx.save();
+  ctx.fillStyle = C.comp;
+  rrect(W / 2 - 440, 570, 880 * u, 12, 6); ctx.fill();
+  ctx.restore();
+  richIn([['利息に、', C.ink], ['利息がつく。', C.comp, 900]], W / 2, 700, lt, 1.2, { size: 64, align: 'center' });
+}
+
+function sceneSimple(t) {
+  header('単利', C.simple, '利息は、最初の元本にだけつく', t, S.simple[0] + 0.1);
+  chartFrame(t, S.simple[0] + 0.5);
+  for (let k = 0; k <= BAR.n; k++) {
+    stack(k, Array.from({ length: k }, () => P * R), C.simple, t, SIMPLE_BAR_T(k));
+  }
+  legend(t, S.simple[0] + 0.8, [[C.principal, '元本 100万円'], [C.simple, '利息 毎年5万円']]);
+  richIn([['毎年 ', C.ink], ['+5万円', C.simple, 900], ['。増え方は ずっと同じ。', C.ink]], W / 2, 1030, t, 18.9, { size: 44, align: 'center' });
+}
+
+function legend(t, a, items) {
+  const p = eOut(seg(t, a, a + 0.5));
+  if (p <= 0) return;
+  ctx.save();
+  ctx.globalAlpha *= p;
+  let x = 1240;
+  font(28, 700); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  items.forEach(([col, label]) => {
+    rrect(x, 254, 28, 28, 5); ctx.fillStyle = col; ctx.fill();
+    if (col === 'ghost') { ctx.setLineDash([6, 5]); ctx.strokeStyle = C.simple; ctx.lineWidth = 2.5; ctx.stroke(); ctx.setLineDash([]); }
+    ctx.fillStyle = C.sub; ctx.fillText(label, x + 40, 268);
+    x += 40 + ctx.measureText(label).width + 44;
+  });
+  ctx.restore();
+}
+
+function sceneComp(t) {
+  header('複利', C.comp, '増えた利息も、元本に加わる', t, S.comp[0] + 0.1);
+  chartFrame(t, S.comp[0] + 0.5);
+  for (let k = 0; k <= BAR.n; k++) {
+    const at = COMP_BAR_T(k);
+    stack(k, Array.from({ length: k }, () => P * R), C.simple, t, at, { ghost: true });
+    stack(k, Array.from({ length: k }, (_, j) => compAt(j) * R), C.comp, t, at);
+  }
+  legend(t, S.comp[0] + 0.8, [[C.principal, '元本'], [C.comp, 'その年の利息'], ['ghost', '単利なら']]);
+  // live ticker: this year's interest
+  const k = clamp(Math.floor((t - COMP_BAR_T(1)) / 0.62) + 1, 0, BAR.n);
+  const tp = eOut(seg(t, COMP_BAR_T(1), COMP_BAR_T(1) + 0.4));
+  if (tp > 0) {
+    ctx.save();
+    ctx.globalAlpha *= tp;
+    rrect(250, 312, 450, 132, 22); ctx.fillStyle = C.bg2; ctx.fill();
+    ctx.strokeStyle = C.comp; ctx.lineWidth = 2; ctx.stroke();
+    font(28, 700); ctx.fillStyle = C.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(`${k}年目の利息`, 280, 356);
+    font(58, 900); ctx.fillStyle = C.comp;
+    ctx.fillText(`+${yen(compAt(k - 1) * R, 2)}万円`, 280, 424);
+    ctx.restore();
+  }
+  // year-10 bracket
+  const bp = eOut(seg(t, 33.4, 34.0));
+  if (bp > 0) {
+    ctx.save();
+    ctx.globalAlpha *= bp;
+    const x = bx(BAR.n) + BAR.w / 2 + 18, y0 = by(simpleAt(10)), y1 = by(compAt(10));
+    ctx.strokeStyle = C.gold; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x + 16, y0); ctx.lineTo(x + 16, y1); ctx.lineTo(x, y1); ctx.stroke();
+    font(30, 900); ctx.fillStyle = C.gold; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(`+${yen(compAt(10) - simpleAt(10), 1)}万`, x + 28, (y0 + y1) / 2);
+    ctx.restore();
+  }
+  richIn([['増えた分が、', C.ink], ['次の利息を生む。', C.comp, 900]], W / 2, 1030, t, 31.9, { size: 44, align: 'center' });
+}
+
+function sceneLine(t) {
+  header('30年', C.gold, 'で並べてみると', t, S.line[0] + 0.1);
+  const G = { x0: 260, x1: 1560, y0: 930, y1: 300, vmax: 450 };
+  const gx = y => lerp(G.x0, G.x1, y / 30), gy = v => lerp(G.y0, G.y1, v / G.vmax);
+  const fp = eOut(seg(t, S.line[0] + 0.5, S.line[0] + 1.1));
+  ctx.save();
+  ctx.globalAlpha *= fp;
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 2;
+  font(24, 400); ctx.fillStyle = C.dim; ctx.textBaseline = 'middle'; ctx.textAlign = 'right';
+  for (let v = 0; v <= 400; v += 100) { ctx.beginPath(); ctx.moveTo(G.x0, gy(v)); ctx.lineTo(G.x1, gy(v)); ctx.stroke(); ctx.fillText(v + '万', G.x0 - 18, gy(v)); }
+  ctx.textAlign = 'center'; font(26, 700); ctx.fillStyle = C.sub; ctx.textBaseline = 'alphabetic';
+  for (let y = 0; y <= 30; y += 5) ctx.fillText(y + '年', gx(y), G.y0 + 46);
+  ctx.restore();
+
+  const yr = 30 * eInOut(seg(t, ...LINE_DRAW));
+  if (yr > 0) {
+    // gap fill
+    ctx.save();
+    ctx.beginPath();
+    for (let y = 0; y <= yr; y += 0.1) ctx.lineTo(gx(y), gy(compAt(y)));
+    ctx.lineTo(gx(yr), gy(compAt(yr)));
+    ctx.lineTo(gx(yr), gy(simpleAt(yr)));
+    ctx.lineTo(gx(0), gy(simpleAt(0)));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(61,220,151,0.14)'; ctx.fill();
+    // lines
+    const line = (f, col) => {
+      ctx.beginPath();
+      for (let y = 0; y <= yr; y += 0.1) ctx.lineTo(gx(y), gy(f(y)));
+      ctx.lineTo(gx(yr), gy(f(yr)));
+      ctx.strokeStyle = col; ctx.lineWidth = 7; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(gx(yr), gy(f(yr)), 11, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill();
+    };
+    line(simpleAt, C.simple);
+    line(compAt, C.comp);
+    // live year label
+    if (t < LINE_DRAW[1] + 0.3) {
+      font(30, 900); ctx.fillStyle = C.ink; ctx.textAlign = 'center';
+      ctx.fillText(`${Math.floor(yr)}年`, gx(yr), gy(compAt(yr)) - 32);
+    }
+    ctx.restore();
+  }
+  // end labels
+  const ep = eOut(seg(t, LINE_DRAW[1] + 0.2, LINE_DRAW[1] + 0.7));
+  if (ep > 0) {
+    ctx.save();
+    ctx.globalAlpha *= ep;
+    font(34, 900); ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = C.comp; ctx.fillText(`複利 ${yen(Math.round(compAt(30)))}万円`, G.x1 + 30, gy(compAt(30)));
+    ctx.fillStyle = C.simple; ctx.fillText(`単利 ${yen(simpleAt(30))}万円`, G.x1 + 30, gy(simpleAt(30)));
+    ctx.restore();
+  }
+  // gap chips at 10/20/30
+  [10, 20, 30].forEach((y, i) => {
+    const p = eOut(seg(t, 45.6 + i * 0.7, 46.0 + i * 0.7));
+    if (p <= 0) return;
+    ctx.save();
+    ctx.globalAlpha *= p;
+    const x = gx(y), ys = gy(simpleAt(y)), yc = gy(compAt(y));
+    ctx.strokeStyle = C.gold; ctx.lineWidth = 3; ctx.setLineDash([6, 6]);
+    ctx.beginPath(); ctx.moveTo(x, ys); ctx.lineTo(x, yc); ctx.stroke(); ctx.setLineDash([]);
+    const label = `差 ${yen(Math.round(compAt(y) - simpleAt(y)))}万`;
+    font(30, 900);
+    const w = ctx.measureText(label).width + 30;
+    const ly = Math.min(ys + 30, G.y0 - 60);
+    rrect(x - w / 2, ly, w, 50, 25); ctx.fillStyle = C.gold; ctx.fill();
+    ctx.fillStyle = C.bg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, ly + 26);
+    ctx.restore();
+  });
+  richIn([['最初の10年はほぼ同じ。', C.ink], ['差は後半に一気に開く。', C.gold, 900]], W / 2, 1030, t, 47.9, { size: 44, align: 'center' });
+}
+
+function sceneRule(t) {
+  header('目安', C.gold, '72の法則', t, S.rule[0] + 0.1);
+  richIn([['72', C.gold, 900, 110], [' ÷ 年利(%) ', C.ink, 900, 80], ['≒', C.sub, 400, 80], [' 2倍になる年数', C.ink, 900, 80]],
+    W / 2, 420, t, S.rule[0] + 0.6, { align: 'center' });
+  richIn([['年5%なら  72 ÷ 5 = ', C.sub, 700], ['約14年で2倍', C.comp, 900]], W / 2, 540, t, S.rule[0] + 2.2, { size: 52, align: 'center' });
+  const rows = [3, 5, 7];
+  rows.forEach((pct, i) => {
+    const a = RULE_ROW_T(i);
+    const p = eOut(seg(t, a, a + 0.6));
+    if (p <= 0) return;
+    const y = 680 + i * 105;
+    const years = 72 / pct;
+    ctx.save();
+    ctx.globalAlpha *= clamp(p * 2);
+    font(44, 900); ctx.fillStyle = C.ink; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText(`年${pct}%`, 560, y);
+    const wMax = 900, w = wMax * (years / 24) * p;
+    rrect(600, y - 30, w, 60, 30); ctx.fillStyle = pct === 5 ? C.comp : C.principal; ctx.fill();
+    font(40, 900); ctx.fillStyle = C.ink; ctx.textAlign = 'left';
+    ctx.fillText(`約${yen(years, years % 1 ? 1 : 0)}年`, 600 + w + 24, y);
+    ctx.restore();
+  });
+  textIn(`※ 正確には ${rows.map(p => `${p}%: ${yen(doubling(p), 1)}年`).join(' / ')}。暗算用の目安です。`, W / 2, 1020, t, RULE_ROW_T(2) + 0.8, { size: 26, weight: 400, color: C.dim, align: 'center' });
+}
+
+function sceneTsumi(t) {
+  header('積立', C.comp, '毎月コツコツなら？', t, S.tsumi[0] + 0.1);
+  richIn([['毎月 ', C.ink], [`${MONTHLY}万円`, C.gold, 900], [' を ', C.ink], [`${YEARS}年`, C.gold, 900], [' 積み立てると', C.ink]], 120, 320, t, S.tsumi[0] + 0.7, { size: 60 });
+  textIn('（年5%・毎月複利で計算した例）', 120, 380, t, S.tsumi[0] + 1.0, { size: 28, weight: 400, color: C.dim });
+
+  const X0 = 120, X1 = 1800, Y = 520, BH = 130;
+  const scale = (X1 - X0) / TSUMI_TOTAL;
+  const fp = eInOut(seg(t, ...TSUMI_FILL));
+  const ap = eOut(seg(t, S.tsumi[0] + 1.6, S.tsumi[0] + 2.1));
+  if (ap > 0) {
+    ctx.save();
+    ctx.globalAlpha *= ap;
+    rrect(X0, Y, X1 - X0, BH, 20); ctx.fillStyle = C.bg2; ctx.fill();
+    const wP = TSUMI_PRINCIPAL * scale * clamp(fp / 0.43);
+    const wG = (TSUMI_TOTAL - TSUMI_PRINCIPAL) * scale * clamp((fp - 0.43) / 0.57);
+    ctx.save(); rrect(X0, Y, X1 - X0, BH, 20); ctx.clip();
+    ctx.fillStyle = C.principal; ctx.fillRect(X0, Y, wP, BH);
+    ctx.fillStyle = C.comp; ctx.fillRect(X0 + wP, Y, wG, BH);
+    ctx.restore();
+    font(34, 900); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    if (wP > 360) { ctx.fillStyle = C.ink; ctx.fillText(`積み立てた元本 ${yen(TSUMI_PRINCIPAL)}万`, X0 + 30, Y + BH / 2); }
+    if (wG > 330) { ctx.fillStyle = C.bg; ctx.fillText(`増えた分 約${yen(Math.round(TSUMI_TOTAL - TSUMI_PRINCIPAL))}万`, X0 + wP + 30, Y + BH / 2); }
+    ctx.restore();
+  }
+  const tv = fp <= 0.43 ? TSUMI_PRINCIPAL * clamp(fp / 0.43) : lerp(TSUMI_PRINCIPAL, TSUMI_TOTAL, (fp - 0.43) / 0.57);
+  if (fp > 0) {
+    ctx.save();
+    font(40, 700); ctx.fillStyle = C.sub; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('30年後の合計', 1800, 790);
+    font(130, 900); ctx.fillStyle = fp >= 1 ? C.comp : C.ink;
+    ctx.fillText(`約${yen(Math.round(tv))}万円`, 1800, 930);
+    ctx.restore();
+  }
+  richIn([['元本の ', C.ink], [`約${yen(TSUMI_TOTAL / TSUMI_PRINCIPAL, 1)}倍`, C.comp, 900], ['。半分以上が「増えた分」。', C.ink]], 120, 900, t, TSUMI_FILL[1] + 0.6, { size: 44 });
+}
+
+function sceneEnd(t) {
+  textIn('複利を味方にする 3つのコツ', W / 2, 250, t, S.end[0] + 0.2, { size: 72, weight: 900, align: 'center' });
+  const rows = [
+    ['1', '早く始める', '時間が、いちばんの味方。'],
+    ['2', '長く続ける', '差は後半に一気に開く。'],
+    ['3', '利息を引き出さない', '再投資で、雪だるま式に。'],
+  ];
+  rows.forEach(([n, head, body], i) => {
+    const a = END_ROW_T(i), y = 420 + i * 150;
+    const p = eOut(seg(t, a, a + 0.5));
+    if (p <= 0) return;
+    ctx.save();
+    ctx.globalAlpha *= p;
+    const x = 360 + (1 - p) * -30;
+    ctx.beginPath(); ctx.arc(x, y, 44, 0, Math.PI * 2); ctx.fillStyle = C.comp; ctx.fill();
+    font(48, 900); ctx.fillStyle = C.bg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n, x, y + 2);
+    font(56, 900); ctx.fillStyle = C.ink; ctx.textAlign = 'left'; ctx.fillText(head, x + 80, y);
+    const hw = ctx.measureText(head).width;
+    font(40, 400); ctx.fillStyle = C.sub; ctx.fillText(body, x + 80 + hw + 40, y + 4);
+    ctx.restore();
+  });
+  textIn('※ 年5%は計算上の仮定です。実際の運用では元本割れもあり、税金・手数料もかかります。特定の商品をすすめるものではありません。',
+    W / 2, 1000, t, END_ROW_T(2) + 0.8, { size: 26, weight: 400, color: C.dim, align: 'center' });
+}
+
+const SCENES = [
+  [S.hook, sceneHook], [S.title, sceneTitle], [S.simple, sceneSimple], [S.comp, sceneComp],
+  [S.line, sceneLine], [S.rule, sceneRule], [S.tsumi, sceneTsumi], [S.end, sceneEnd],
+];
+
+window.renderAt = function (t) {
+  t = clamp(t, 0, DUR);
+  ctx.save();
+  background(t);
+  for (const [range, draw] of SCENES) {
+    const a = sceneAlpha(t, range);
+    if (a <= 0) continue;
+    ctx.save();
+    ctx.globalAlpha = a;
+    draw(t);
+    ctx.restore();
+  }
+  progress(t);
+  ctx.restore();
+};
+
+// ---------- sound: every cue derives from the timeline above, 1 frame after its event ----------
+const F1 = 1 / FPS;
+function cues() {
+  const c = [];
+  const sceneStarts = Object.values(S).map(r => r[0]).filter(x => x > 0);
+  sceneStarts.forEach(x => c.push({ t: x - 0.25, type: 'whoosh' }));
+  c.push({ t: 0.3, type: 'pop' }, { t: 1.4, type: 'pop' }, { t: 1.65, type: 'pop' });
+  for (let x = 2.0; x < 4.2; x += 0.07) c.push({ t: x, type: 'tick', p: (x - 2) / 2.2 });
+  c.push({ t: 4.2, type: 'chime', root: 72 }, { t: 4.7, type: 'pop' });
+  c.push({ t: S.title[0] + 0.25, type: 'chime', root: 76 }, { t: S.title[0] + 1.2, type: 'pop' });
+  for (let k = 0; k <= 10; k++) c.push({ t: SIMPLE_BAR_T(k), type: 'blip', note: 64 });
+  c.push({ t: 18.9, type: 'pop' });
+  for (let k = 0; k <= 10; k++) c.push({ t: COMP_BAR_T(k), type: 'blip', note: 64 + [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17][k] });
+  c.push({ t: 33.4, type: 'chime', root: 79 }, { t: 31.9, type: 'pop' });
+  for (let x = LINE_DRAW[0]; x < LINE_DRAW[1]; x += 0.215) c.push({ t: x, type: 'tick', p: (x - LINE_DRAW[0]) / (LINE_DRAW[1] - LINE_DRAW[0]) });
+  c.push({ t: LINE_DRAW[1] + 0.2, type: 'chime', root: 76 });
+  [0, 1, 2].forEach(i => c.push({ t: 45.6 + i * 0.7, type: 'blip', note: 72 + i * 4 }));
+  c.push({ t: 47.9, type: 'pop' });
+  c.push({ t: S.rule[0] + 0.6, type: 'pop' }, { t: S.rule[0] + 2.2, type: 'chime', root: 72 });
+  [0, 1, 2].forEach(i => c.push({ t: RULE_ROW_T(i), type: 'blip', note: 67 + i * 5 }));
+  c.push({ t: S.tsumi[0] + 0.7, type: 'pop' });
+  for (let x = TSUMI_FILL[0]; x < TSUMI_FILL[1]; x += 0.12) c.push({ t: x, type: 'tick', p: (x - TSUMI_FILL[0]) / (TSUMI_FILL[1] - TSUMI_FILL[0]) });
+  c.push({ t: TSUMI_FILL[1], type: 'chime', root: 79 }, { t: TSUMI_FILL[1] + 0.6, type: 'pop' });
+  c.push({ t: S.end[0] + 0.2, type: 'pop' });
+  [0, 1, 2].forEach(i => c.push({ t: END_ROW_T(i), type: 'blip', note: 72 + [0, 4, 7][i] }));
+  c.push({ t: END_ROW_T(2) + 0.9, type: 'chime', root: 72 });
+  return c.map(e => ({ ...e, t: e.t + F1 }));
+}
+
+const midi = n => 440 * Math.pow(2, (n - 69) / 12);
+
+window.renderAudio = async function () {
+  const SR = 48000;
+  const ac = new OfflineAudioContext(2, SR * DUR, SR);
+  const master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
+  const music = ac.createGain(); music.connect(master);
+  const sfx = ac.createGain(); sfx.gain.value = 0.9; sfx.connect(master);
+  // music bed: fade in, fade out, slight dip while numbers count
+  music.gain.setValueAtTime(0, 0);
+  music.gain.linearRampToValueAtTime(0.32, 1.2);
+  music.gain.setValueAtTime(0.32, DUR - 2.5);
+  music.gain.linearRampToValueAtTime(0, DUR - 0.1);
+
+  const noise = ac.createBuffer(1, SR * 1, SR);
+  { const d = noise.getChannelData(0); let s = 12345; for (let i = 0; i < d.length; i++) { s = (s * 1103515245 + 12345) & 0x7fffffff; d[i] = s / 0x3fffffff - 1; } }
+
+  function tone(dest, freq, t0, dur, { type = 'sine', gain = 0.2, attack = 0.005, pan = 0, cutoff = 0 } = {}) {
+    const o = ac.createOscillator(); o.type = type; o.frequency.value = freq;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(gain, t0 + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    let node = o;
+    if (cutoff) { const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = cutoff; o.connect(f); node = f; }
+    const p = ac.createStereoPanner(); p.pan.value = pan;
+    node.connect(g); g.connect(p); p.connect(dest);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+
+  // 96 BPM, bar = 2.5 s; Cmaj9 - Am9 - Fmaj9 - G6/9
+  const BEAT = 60 / 96, BARLEN = BEAT * 4;
+  const prog = [[48, 55, 59, 62, 64], [45, 52, 55, 59, 60], [41, 48, 52, 55, 57], [43, 50, 52, 57, 59]];
+  const nBars = Math.ceil(DUR / BARLEN);
+  for (let b = 0; b < nBars; b++) {
+    const t0 = b * BARLEN, ch = prog[b % 4];
+    // pad
+    ch.slice(1).forEach((n, i) => tone(music, midi(n), t0, BARLEN + 0.6, { type: 'triangle', gain: 0.05, attack: 0.6, pan: (i - 1.5) * 0.3, cutoff: 1400 }));
+    // bass
+    tone(music, midi(ch[0] - 12 + 12), t0, BARLEN * 0.9, { type: 'sine', gain: 0.16, attack: 0.02 });
+    // pluck arpeggio, eighths; brighter from the 30-year chart on
+    const bright = t0 >= S.line[0] - 0.01 && t0 < S.end[0];
+    for (let e = 0; e < 8; e++) {
+      const n = ch[1 + [0, 1, 2, 3, 2, 1, 3, 2][e]] + 12 + (bright && e % 2 ? 12 : 0);
+      tone(music, midi(n), t0 + e * BEAT / 2, 0.45, { type: 'triangle', gain: 0.045, pan: e % 2 ? 0.25 : -0.25, cutoff: 3200 });
+    }
+    // soft kick on 1 and 3
+    [0, 2].forEach(q => {
+      const tk = t0 + q * BEAT;
+      const o = ac.createOscillator(); o.frequency.setValueAtTime(110, tk); o.frequency.exponentialRampToValueAtTime(42, tk + 0.18);
+      const g = ac.createGain(); g.gain.setValueAtTime(0.22, tk); g.gain.exponentialRampToValueAtTime(0.0001, tk + 0.3);
+      o.connect(g); g.connect(music); o.start(tk); o.stop(tk + 0.35);
+    });
+  }
+
+  for (const e of cues()) {
+    const t0 = e.t;
+    if (t0 < 0 || t0 > DUR - 0.05) continue;
+    if (e.type === 'tick') tone(sfx, 1400 + 900 * e.p, t0, 0.04, { type: 'square', gain: 0.025, cutoff: 5000 });
+    else if (e.type === 'blip') tone(sfx, midi(e.note + 12), t0, 0.22, { type: 'sine', gain: 0.16 });
+    else if (e.type === 'pop') { tone(sfx, 520, t0, 0.09, { type: 'sine', gain: 0.12 }); tone(sfx, 780, t0 + 0.012, 0.07, { type: 'sine', gain: 0.05 }); }
+    else if (e.type === 'chime') {
+      [0, 4, 7, 12].forEach((iv, i) => {
+        tone(sfx, midi(e.root + iv), t0 + i * 0.045, 1.4, { type: 'sine', gain: 0.09, pan: (i - 1.5) * 0.25 });
+        tone(sfx, midi(e.root + iv) * 2.76, t0 + i * 0.045, 0.5, { type: 'sine', gain: 0.015 });
+      });
+    } else if (e.type === 'whoosh') {
+      const src = ac.createBufferSource(); src.buffer = noise;
+      const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.2;
+      f.frequency.setValueAtTime(300, t0); f.frequency.exponentialRampToValueAtTime(3500, t0 + 0.45);
+      const g = ac.createGain(); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.12, t0 + 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.6);
+      src.connect(f); f.connect(g); g.connect(sfx); src.start(t0); src.stop(t0 + 0.65);
+    }
+  }
+  const buf = await ac.startRendering();
+  return encodeWav(buf);
+};
+
+function encodeWav(buf) {
+  const ch = buf.numberOfChannels, len = buf.length, sr = buf.sampleRate;
+  const out = new DataView(new ArrayBuffer(44 + len * ch * 4));
+  const w = (o, s) => [...s].forEach((c, i) => out.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); out.setUint32(4, 36 + len * ch * 4, true); w(8, 'WAVE'); w(12, 'fmt ');
+  out.setUint32(16, 16, true); out.setUint16(20, 3, true); out.setUint16(22, ch, true);
+  out.setUint32(24, sr, true); out.setUint32(28, sr * ch * 4, true); out.setUint16(32, ch * 4, true); out.setUint16(34, 32, true);
+  w(36, 'data'); out.setUint32(40, len * ch * 4, true);
+  const data = [...Array(ch)].map((_, c) => buf.getChannelData(c));
+  let o = 44;
+  for (let i = 0; i < len; i++) for (let c = 0; c < ch; c++) { out.setFloat32(o, data[c][i], true); o += 4; }
+  const bytes = new Uint8Array(out.buffer);
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+// ---------- playback ----------
+window.fontsReady = (async () => {
+  await document.fonts.ready;
+  for (let pass = 0; pass < 3; pass++) {
+    for (let x = 0; x <= DUR; x += 0.5) window.renderAt(x);
+    await document.fonts.ready;
+    await new Promise(r => setTimeout(r, 200));
+  }
+  return true;
+})();
+
+const q = new URLSearchParams(location.search);
+if (q.has('t')) {
+  window.fontsReady.then(() => window.renderAt(parseFloat(q.get('t'))));
+} else if (!q.has('render')) {
+  window.fontsReady.then(() => {
+    const start = performance.now();
+    const loop = now => { window.renderAt(((now - start) / 1000) % DUR); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  });
+}
+</script>
+</body>
+</html>
