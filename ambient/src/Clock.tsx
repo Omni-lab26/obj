@@ -6,6 +6,7 @@ import { Gesture, GestureDetector, type TouchData } from 'react-native-gesture-h
 import Reanimated, {
   cancelAnimation,
   Easing as Ease,
+  interpolateColor,
   makeMutable,
   runOnJS,
   useAnimatedReaction,
@@ -329,6 +330,13 @@ function makeEditGesture(
   };
 }
 
+// The dashed frame round the digits while they are edited: its own colour, turning
+// to red (and back) as a pinch goes past the biggest size.
+function EditFrame({ color, over, frameStyle }: { color: string; over: SharedValue<number>; frameStyle: object }) {
+  const tint = useAnimatedStyle(() => ({ borderColor: interpolateColor(over.get(), [0, 1], [color, LIMIT_RED]) }), [color]);
+  return <Reanimated.View pointerEvents="none" style={[styles.frame, tint, frameStyle]} />;
+}
+
 // While the timer is being set, its digits are reels, like a slot machine's: each
 // rolls round with the rulers on the UI thread, from the digit at one tick to the
 // digit at the next (forwards, through the ones between, and backwards when the
@@ -544,7 +552,6 @@ export function Clock(props: Props) {
   // 1 while a pinch tries to go past the biggest size (the frame shows it in red).
   const over = useSharedValue(0);
   const [editGesture] = useState(() => makeEditGesture(px, py, zoom, lim, busy, over));
-  const overStyle = useAnimatedStyle(() => ({ opacity: over.get() }));
   // Text grown by a zoom blurs, so under a zoom the digits are drawn afresh a little
   // bigger than they are shown, in half-octave steps (2^0.5), and shown at 63-89 % of
   // that: always a slight shrink of a sharp drawing, never a stretch, with room for
@@ -890,22 +897,11 @@ export function Clock(props: Props) {
               ) : null}
             </View>
           </Reanimated.View>
-          {framed && edit
-            ? // Round the digits, and the date above them when there is one (as wide
-              // as that is, if wider); a red one over it when a pinch goes too far.
-              [c.inkSoft, LIMIT_RED].map((color, i) => (
-                <Reanimated.View
-                  key={color}
-                  pointerEvents="none"
-                  style={[
-                    styles.frame,
-                    { borderColor: color },
-                    i === 1 ? [styles.frameLimit, overStyle] : null,
-                    frameStyle,
-                  ]}
-                />
-              ))
-            : null}
+          {framed && edit ? (
+            // Round the digits, and the date above them when there is one (as wide as
+            // that is, if wider); it turns red when a pinch goes too far.
+            <EditFrame color={c.inkSoft} over={over} frameStyle={frameStyle} />
+          ) : null}
         </View>
         {/* The hint's line stays even when empty, so the digits never move (and it
             steps aside while editing, which its taps and holds have no part in). */}
@@ -1142,9 +1138,6 @@ const styles = StyleSheet.create({
   wheelsAbove: {
     bottom: '100%',
     marginBottom: 10,
-  },
-  frameLimit: {
-    borderWidth: 2,
   },
   drawnBig: {
     position: 'absolute',
