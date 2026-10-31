@@ -4,6 +4,7 @@ export type DigitColor = { h: number; l: number };
 
 /** The colour as #rrggbb (full saturation, as the field shows it). */
 export function colorHex({ h, l }: DigitColor): string {
+  'worklet';
   const k = (n: number) => (n + h / 30) % 12;
   const a = Math.min(l, 1 - l);
   const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
