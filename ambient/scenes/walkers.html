@@ -35,6 +35,10 @@
 // #p=key:value,… overrides any entry of P.
 (() => {
   const { clamp, lerp, rand, angleDiff } = Host;
+  // Running off when startled: steps this much longer and quicker; the flinch first
+  // lasts STARTLE seconds.
+  const RUN = { stride: 1.3, quick: 1.5 };
+  const STARTLE = 0.3;
 
   const P = {
     Lfrac: 0.105, // sole length / short side of the screen
@@ -913,7 +917,7 @@ void main() {
       size = pause ? rand(0.6, 0.8) : Math.min(size, 0.45);
       w.mode = 'closing';
     }
-    const pace = (P.stepLen * L * w.lenF * (flee ? 1.15 * 1.28 : 1) * w.cad) / P.stepT;
+    const pace = (P.stepLen * L * w.lenF * (flee ? RUN.stride * RUN.quick : 1) * w.cad) / P.stepT;
     const st = steer(w, { x: base.cx ?? base.x, y: base.cy ?? base.y, t: base.t }, flee ? 0.6 : 0.11, pace * size);
     w.dir = st.dir;
     // Letting someone pass: a shorter, slower step.
@@ -922,13 +926,13 @@ void main() {
     const n = [-d[1], d[0]];
     // No two steps are quite the same.
     const jitter = SOLO ? 1 : 1 + (Math.random() - 0.5) * 0.06;
-    const stride = P.stepLen * L * w.lenF * size * (flee ? 1.15 : 1) * jitter;
+    const stride = P.stepLen * L * w.lenF * size * (flee ? RUN.stride : 1) * jitter;
     const bx = base.cx ?? base.x;
     const by = base.cy ?? base.y;
     const K = { x: bx + d[0] * stride, y: by + d[1] * stride };
     const lead = P.plantLead * L * size;
     const g = w.gap * L * sideOf(foot);
-    const quick = flee ? 1.28 : 1;
+    const quick = flee ? RUN.quick : 1;
     const period = (((P.stepT / w.cad) * (1 + 0.15 * (1 - size))) / quick) * (SOLO ? 1 : 1 + (Math.random() - 0.5) * 0.04);
     const swing = swingT() / w.cad / quick;
     // Setting off: the first foot lifts right away.
@@ -1147,6 +1151,7 @@ void main() {
       loadIn: 0,
       mode: 'walk',
       flee: 0,
+      startle: 0,
       // Most passers-by pause somewhere in the middle of the screen, briefly.
       willStop: Math.random() < 0.85,
       stopIn: rand(0.2, 1.2),
@@ -1241,6 +1246,7 @@ void main() {
     w.dtLast = dt;
     w.age += dt;
     w.flee = Math.max(0, w.flee - dt);
+    w.startle = Math.max(0, w.startle - dt);
     // Someone newly in the way of the steps already planned: plan them again (the
     // step in the air still lands), so steering can go round them in time.
     w.watch -= dt;
@@ -1416,7 +1422,16 @@ void main() {
         heel = (w.stagger ? 0.3 : 0.15) * w.relax;
         if (w.stagger) ball = 0.05 * w.relax;
       }
-      return { x: cur.x, y: cur.y, a: cur.a, heel, ball, toe, air: 0 };
+      // Startled: a flinch, the whole foot jerked up off the glass for a moment.
+      let air = 0;
+      if (w.startle > 0) {
+        const hop = Math.sin(Math.PI * (1 - w.startle / STARTLE)) * 0.4;
+        heel += hop;
+        ball += hop * 0.9;
+        toe += hop * 0.8;
+        air = smooth(clamp(hop / 0.12, 0, 1));
+      }
+      return { x: cur.x, y: cur.y, a: cur.a, heel, ball, toe, air };
     }
     const u = clamp((w.t - nxt.lift) / (nxt.land - nxt.lift), 0, 1);
     const e = smooth(u);
@@ -1715,12 +1730,14 @@ void main() {
     for (const w of walkers) drawTag(w, trackBox(w, dt), dt);
   }
 
-  // A tap startles the walkers near it: they turn away and hurry off.
+  // A tap startles the walkers near it: they flinch (feet jerked up off the glass for
+  // a moment), turn away and run off.
   function tap(x, y) {
     for (const w of walkers) {
-      if (Math.hypot(w.x - x, w.y - y) > 5 * L) continue;
+      if (Math.hypot(w.x - x, w.y - y) > 7 * L) continue;
       const away = Math.atan2(w.y - y, w.x - x);
-      w.flee = rand(2.2, 3);
+      w.flee = rand(2.6, 3.4);
+      w.startle = STARTLE;
       w.goal = { x: w.x + Math.cos(away) * Host.w * 4, y: w.y + Math.sin(away) * Host.w * 4 };
       replan(w);
       if (w.mode !== 'stand') {

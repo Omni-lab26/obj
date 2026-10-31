@@ -175,6 +175,7 @@
 
     // ── fish ───────────────────────────────────────────────────────────
     const SEGMENTS = 12;
+    const SCARE = 1.4; // seconds a startled fish dashes for
 
     function makeFish(sp, depth, i, pattern) {
       const L = sp.length * U * rand(0.85, 1.15) * lerp(1, 0.82, depth);
@@ -202,6 +203,9 @@
         heading,
         speed: sp.speed * U,
         boost: 0,
+        // Startled: seconds left of the dash, and what it is fleeing from.
+        scared: 0,
+        scaredAt: null,
         phase: rand(0, 10),
         seed: Math.floor(rand(1, 1e6)),
         target: null,
@@ -307,6 +311,18 @@
     }
 
     function steer(f, dt, t) {
+      // Startled: a dash straight away from the scare, then an easing back to cruising.
+      if (f.scared > 0) {
+        f.scared = Math.max(0, f.scared - dt);
+        const s = f.scaredAt;
+        const away = Math.atan2(f.y - s.y, f.x - s.x);
+        f.heading += clamp(angleDiff(away, f.heading) * 3, -7 * f.sp.agility, 7 * f.sp.agility) * dt;
+        const dash = f.sp.speed * U * (1 + 6 * Math.min(1, f.scared / SCARE));
+        f.speed = lerp(f.speed, dash, 1 - Math.exp(-dt * 9));
+        // (Wherever it heads next, it is somewhere away from here.)
+        if (f.scared === 0) pickTarget(f);
+        return;
+      }
       // Food wins over wandering.
       let goal = f.target;
       let hungry = false;
@@ -835,8 +851,25 @@
       ripples.push({ x, y, age: 0, life: 0.9, speed: U * 5, small: true });
     }
 
+    // A tap right by a fish startles it: it jerks round, its body bent like a C, and
+    // dashes off away from the tap (and any others near it with it). A tap in open
+    // water drops food.
     function tap(x, y) {
       ripples.push({ x, y, age: 0, life: 1.6, speed: U * 7 });
+      let startled = false;
+      for (const f of fish) {
+        let near = Infinity;
+        for (const p of f.pts) near = Math.min(near, Math.hypot(p.x - x, p.y - y));
+        if (near > f.L * 0.6 + U * 5) continue;
+        startled = true;
+        f.scared = SCARE * rand(0.85, 1.15);
+        f.scaredAt = { x, y };
+        // The first jerk: the head snaps most of the way round at once, and the spine,
+        // following it, makes the C.
+        const away = Math.atan2(f.y - y, f.x - x);
+        f.heading += angleDiff(away, f.heading) * 0.55;
+        f.phase += Math.PI * 0.5;
+      }
       // The wave pushes nearby leaves away.
       for (const p of pads) {
         const dx = p.x - x;
@@ -850,6 +883,7 @@
           p.vr += rand(-0.15, 0.15);
         }
       }
+      if (startled) return;
       const n = 3 + Math.floor(Math.random() * 3);
       for (let k = 0; k < n; k++) {
         pellets.push({
