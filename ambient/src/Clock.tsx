@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { memo, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Animated, Easing, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector, type TouchData } from 'react-native-gesture-handler';
@@ -337,6 +337,116 @@ function EditFrame({ color, over, frameStyle }: { color: string; over: SharedVal
   return <Reanimated.View pointerEvents="none" style={[styles.frame, tint, frameStyle]} />;
 }
 
+// How many times their size the digits are drawn at (see Clock), for Digits to follow.
+type DrawStore = { get: () => number; set: (v: number) => void; subscribe: (cb: () => void) => () => void };
+function makeDrawStore(): DrawStore {
+  let v = 1;
+  const subs = new Set<() => void>();
+  return {
+    get: () => v,
+    set: (next) => {
+      if (next === v) return;
+      v = next;
+      subs.forEach((cb) => cb());
+    },
+    subscribe: (cb) => {
+      subs.add(cb);
+      return () => subs.delete(cb);
+    },
+  };
+}
+const ONE: DrawStore = { get: () => 1, set: () => {}, subscribe: () => () => {} };
+
+// A page's digits (and seconds), drawn at the size the zoom has them shown at, in
+// their box as laid out (so nothing round them moves) and scaled back into it. As the
+// zoom changes only this redraws.
+const Digits = memo(function Digits({
+  main,
+  small,
+  mode,
+  size,
+  rowW,
+  digitPerPt,
+  font,
+  ink,
+  inkSoft,
+  reeling,
+  hoursAt,
+  quartersAt,
+  drawAt,
+}: {
+  main: string;
+  small: string;
+  mode: Settings['mode'];
+  size: number;
+  rowW: number;
+  digitPerPt: number;
+  font: ReturnType<typeof clockFont>;
+  ink: string;
+  inkSoft: string;
+  reeling: boolean;
+  hoursAt: SharedValue<number>;
+  quartersAt: SharedValue<number>;
+  drawAt: DrawStore;
+}) {
+  const at = useSyncExternalStore(drawAt.subscribe, drawAt.get);
+  const big = rowW ? at : 1;
+  const drawn = size * big;
+  const cell = digitPerPt * drawn;
+  const line = size * 1.08;
+  // (Drawn bigger or smaller, it keeps the box it has at its own size.)
+  return (
+    <View style={big !== 1 ? { width: rowW, height: line } : null}>
+      <View
+        style={
+          big !== 1
+            ? [
+                styles.row,
+                styles.drawnBig,
+                // As big as it is drawn, centred on the box and scaled to fit it.
+                { width: rowW * big, height: line * big, left: (rowW * (1 - big)) / 2, top: (line * (1 - big)) / 2 },
+                { transform: [{ scale: 1 / big }] },
+              ]
+            : styles.row
+        }
+      >
+        {[...main].map((ch, i) => {
+          const digit = ch >= '0' && ch <= '9';
+          const textStyle = [font.time, styles.time, { fontSize: drawn, lineHeight: drawn * 1.08, color: ink, letterSpacing: 0 }];
+          // The timer being set: reels that roll with the rulers (HH:MM:SS → kinds).
+          const kind = mode === 'timer' && reeling && digit && cell ? [0, 1, -1, 2, 3, -1, 4, 5][i] : -1;
+          if (kind >= 0) {
+            return <Reel key={i} kind={kind} at={kind < 2 ? hoursAt : quartersAt} cell={cell} size={drawn} textStyle={textStyle} />;
+          }
+          return (
+            <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
+              <Text style={textStyle}>{ch}</Text>
+            </View>
+          );
+        })}
+        {small ? (
+          <Text
+            style={[
+              font.time,
+              styles.time,
+              {
+                fontSize: drawn * font.secondsScale,
+                lineHeight: drawn * font.secondsScale * 1.1,
+                color: inkSoft,
+                letterSpacing: 0,
+                marginLeft: drawn * 0.06,
+                marginBottom: drawn * 0.16,
+              },
+            ]}
+          >
+            {small}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+});
+
 // While the timer is being set, its digits are reels, like a slot machine's: each
 // rolls round with the rulers on the UI thread, from the digit at one tick to the
 // digit at the next (forwards, through the ones between, and backwards when the
@@ -548,22 +658,26 @@ export function Clock(props: Props) {
   // 1 while a pinch tries to go past the biggest size (the frame shows it in red).
   const over = useSharedValue(0);
   const [editGesture] = useState(() => makeEditGesture(px, py, zoom, lim, busy, over));
-  // Text grown by a zoom blurs, so while a pinch zooms the digits they are drawn afresh
-  // a little bigger than they are shown, in half-octave steps (2^0.5), and shown at
-  // 63-89 % of that: a slight shrink of a sharp drawing, never a stretch, with room
-  // for the zoom to grow before the next drawing is in. Redrawn only when a pinch
-  // crosses a step; once the fingers lift, at exactly the size shown.
-  const [drawStep, setDrawStep] = useState(0);
-  const drawStepUI = useSharedValue(0);
+  // Text is drawn as pixels, and a zoom (a transform) only stretches or squeezes those
+  // pixels, like an enlarged photo. So the digits are drawn afresh at the zoom's size
+  // as it changes: a hair bigger (3 %) than shown, so that until the next drawing is in
+  // the zoom only ever squeezes it a little, never stretches it, and redrawn each time
+  // the zoom moves past that. Only the digits redraw (see Digits), not the clock round
+  // them. With no fingers on them (at rest, or gliding), at exactly the size shown.
+  const [drawAt] = useState(makeDrawStore);
+  const drawUI = useSharedValue(1);
+  // (A plain function for the UI thread to call back: not the store's own method,
+  // which would go over as a copy of the store.)
+  const setDraw = (v: number) => drawAt.set(v);
   useAnimatedReaction(
-    () => zoom.get(),
-    (k) => {
-      const step = drawStepUI.get();
-      const r = k / Math.pow(2, step);
-      const next = k === 1 ? 0 : r > 0.95 || r < 0.55 ? Math.round(2 * Math.log2(Math.max(k, 0.01) / 0.75)) / 2 : step;
-      if (next !== step) {
-        drawStepUI.set(next);
-        runOnJS(setDrawStep)(next);
+    () => ({ k: zoom.get(), held: busy.get() }),
+    ({ k, held }) => {
+      const was = drawUI.get();
+      const r = k / was;
+      const next = k === 1 ? 1 : !held ? k : r > 0.995 || r < 0.94 ? k * 1.03 : was;
+      if (next !== was) {
+        drawUI.set(next);
+        runOnJS(setDraw)(next);
       }
     }
   );
@@ -776,11 +890,6 @@ export function Clock(props: Props) {
     editGesture.set({
       done: (x, y, k) => {
         pending.current = { x, y, k };
-        // At rest, drawn at just the size they are shown at: even a slight shrink of
-        // a drawing leaves thin strokes rough.
-        const exact = Math.log2(k);
-        drawStepUI.set(exact);
-        setDrawStep(exact);
       },
       limit: buzzLimit,
     })
@@ -814,11 +923,6 @@ export function Clock(props: Props) {
     framed: boolean
   ) => {
     const size = sizeFor(m);
-    // Drawn at the zoom's step (see drawStep) and shown scaled back to their size, in
-    // their box as laid out, so nothing else moves.
-    const big = framed && rowW ? Math.pow(2, drawStep) : 1;
-    const drawn = size * big;
-    const cell = digitPerPt * drawn;
     // The date's width (not a mode's name, which shows only for a moment).
     const measureLabel =
       measure && !flash
@@ -841,7 +945,7 @@ export function Clock(props: Props) {
         {/* The digits, in a box the edit frame hangs on (so it is always round them). */}
         <View>
           <Reanimated.View
-            style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, big !== 1 ? { width: rowW } : null, digitsStyle]}
+            style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, digitsStyle]}
             onLayout={
               measure
                 ? (e) => {
@@ -851,52 +955,21 @@ export function Clock(props: Props) {
                 : undefined
             }
           >
-            <View
-              style={
-                big !== 1
-                  ? [
-                      styles.row,
-                      styles.drawnBig,
-                      // As big as it is drawn, centred on the box and scaled to fit it.
-                      { width: rowW * big, height: size * 1.08 * big, left: (rowW * (1 - big)) / 2, top: (size * 1.08 * (1 - big)) / 2 },
-                      { transform: [{ scale: 1 / big }] },
-                    ]
-                  : styles.row
-              }
-            >
-              {[...f.main].map((ch, i) => {
-                const digit = ch >= '0' && ch <= '9';
-                const textStyle = [font.time, styles.time, { fontSize: drawn, lineHeight: drawn * 1.08, color: c.ink, letterSpacing: 0 }];
-                // The timer being set: reels that roll with the rulers (HH:MM:SS → kinds).
-                const kind = m === 'timer' && reeling && digit && cell ? [0, 1, -1, 2, 3, -1, 4, 5][i] : -1;
-                if (kind >= 0) {
-                  return <Reel key={i} kind={kind} at={kind < 2 ? hoursAt : quartersAt} cell={cell} size={drawn} textStyle={textStyle} />;
-                }
-                return (
-                  <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
-                    <Text style={textStyle}>{ch}</Text>
-                  </View>
-                );
-              })}
-              {f.small ? (
-                <Text
-                  style={[
-                    font.time,
-                    styles.time,
-                    {
-                      fontSize: drawn * font.secondsScale,
-                      lineHeight: drawn * font.secondsScale * 1.1,
-                      color: c.inkSoft,
-                      letterSpacing: 0,
-                      marginLeft: drawn * 0.06,
-                      marginBottom: drawn * 0.16,
-                    },
-                  ]}
-                >
-                  {f.small}
-                </Text>
-              ) : null}
-            </View>
+            <Digits
+              main={f.main}
+              small={f.small}
+              mode={m}
+              size={size}
+              rowW={rowW}
+              digitPerPt={digitPerPt}
+              font={font}
+              ink={c.ink}
+              inkSoft={c.inkSoft}
+              reeling={reeling}
+              hoursAt={hoursAt}
+              quartersAt={quartersAt}
+              drawAt={framed ? drawAt : ONE}
+            />
           </Reanimated.View>
           {framed && edit ? (
             // Round the digits, and the date above them when there is one (as wide as
