@@ -110,153 +110,155 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
           <View style={[StyleSheet.absoluteFill, { backgroundColor: c.veil }]} />
 
           <Animated.View style={[styles.page, { transform: [{ translateY: rise }] }]}>
-            <ScrollView
-              contentContainerStyle={[styles.content, { paddingTop: top + 2, paddingBottom: insets.bottom + 36 }]}
-              showsVerticalScrollIndicator={false}
-            >
-              <Text style={[styles.title, { color: c.ink }]}>{t.settings}</Text>
+            <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+              {/* A tap anywhere off the cards (round and between them, and below) closes
+                  the page, as the button does: it lands on this, behind them. */}
+              <Pressable onPress={onClose} accessible={false} style={StyleSheet.absoluteFill} />
+              <View pointerEvents="box-none" style={[styles.content, { paddingTop: top + 2, paddingBottom: insets.bottom + 36 }]}>
+                <Text style={[styles.title, { color: c.ink }]}>{t.settings}</Text>
 
-              {/* In both languages, so it can be found in either. */}
-              <Card title="言語 · Language" c={c}>
-                <View style={styles.tiles}>
-                  {LANGS.map((l) => {
-                    const on = settings.lang === l.id;
-                    return (
-                      <Pressable
-                        key={l.id}
-                        onPress={() => {
-                          tick();
-                          update((s) => ({ ...s, lang: l.id }));
-                        }}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: on }}
-                        accessibilityLabel={l.label}
-                        style={({ pressed }) => [styles.lang, { backgroundColor: on ? c.ink : c.tile, transform: [{ scale: pressed ? 0.97 : 1 }] }]}
-                      >
-                        <Text style={[styles.langText, { color: on ? c.onInk : c.ink }]}>{l.label}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </Card>
-
-              <Card title={t.display} c={c}>
-                <View style={styles.tiles}>
-                  <Toggle label={t.showClock} note={t.showClockNote} off={t.off} on={settings.clock.visible} onChange={(v) => setClock({ visible: v })} c={c} />
-                  <Toggle label={t.showDate} note={t.showDateNote} off={t.off} on={settings.clock.date} onChange={(v) => setClock({ date: v })} c={c} />
-                  <Toggle label={t.hour24} note={t.hour24Note} off={t.off} on={settings.clock.hour24} onChange={(v) => setClock({ hour24: v })} c={c} />
-                  <Toggle label={t.seconds} note={t.secondsNote} off={t.off} on={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
-                </View>
-                <Text style={[styles.note, { color: c.faint }]}>{t.longPressNote}</Text>
-              </Card>
-
-              <Card title={t.font} c={c}>
-                <View style={styles.fonts}>
-                  {clockFonts.map((f) => {
-                    const selected = settings.clock.font === f.id;
-                    return (
-                      <Pressable
-                        key={f.id}
-                        onPress={() => setClock({ font: f.id, visible: true })}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected }}
-                        accessibilityLabel={t.fontNamed(en ? f.labelEn : f.label)}
-                        style={({ pressed }) => [
-                          styles.font,
-                          { backgroundColor: selected ? c.ink : c.tile },
-                          { transform: [{ scale: pressed ? 0.96 : 1 }] },
-                        ]}
-                      >
-                        {/* Small enough that every font's four digits fit the tile whole. */}
-                        <FitText
-                          text={numerals('12:34', settings.clock.numerals)}
-                          size={(f.time.fontSize ?? 96) * 0.27}
-                          style={[
-                            f.time,
-                            { letterSpacing: (f.time.letterSpacing ?? 0) * 0.27, color: selected ? c.onInk : c.ink, includeFontPadding: false },
-                          ]}
-                        />
-                        <FitText text={en ? f.labelEn : f.label} size={12} style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]} />
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </Card>
-
-              {/* The numeral systems an iPhone's Lock Screen offers, each shown as the
-                  time in the font chosen above. */}
-              <Card title={t.numerals} c={c}>
-                <View style={styles.fonts}>
-                  {NUMERALS.map((n) => {
-                    const selected = settings.clock.numerals === n.id;
-                    const f = clockFont(settings.clock.font);
-                    return (
-                      <Pressable
-                        key={n.id}
-                        onPress={() => setClock({ numerals: n.id, visible: true })}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected }}
-                        accessibilityLabel={en ? n.en : n.ja}
-                        style={({ pressed }) => [styles.font, { backgroundColor: selected ? c.ink : c.tile }, { transform: [{ scale: pressed ? 0.96 : 1 }] }]}
-                      >
-                        <FitText
-                          text={numerals('12:34', n.id)}
-                          size={(f.time.fontSize ?? 96) * 0.27}
-                          style={[f.time, { letterSpacing: 0, color: selected ? c.onInk : c.ink, includeFontPadding: false }]}
-                        />
-                        <FitText text={en ? n.en : n.ja} size={12} style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]} />
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </Card>
-
-              <Card title={t.colour} c={c}>
-                <ColorPicker
-                  value={digitColor}
-                  onChange={(v) => update((s) => ({ ...s, clock: { ...s.clock, color: v } }))}
-                  onAuto={() => setClock({ color: null })}
-                  tone={tone}
-                  font={settings.clock.font}
-                  hour24={settings.clock.hour24}
-                  seconds={settings.clock.seconds}
-                  numeralsId={settings.clock.numerals}
-                  c={c}
-                />
-              </Card>
-
-              {hasPhotos ? (
-                <Card title={t.digital} value={`${Math.round(settings.digital * 100)}%`} c={c}>
-                  <View style={[styles.slab, { backgroundColor: c.tile }]}>
-                    <Text style={[styles.end, { color: c.ink }]}>{t.digitalRaw}</Text>
-                    <Slider
-                      style={styles.slider}
-                      minimumValue={0}
-                      maximumValue={1}
-                      value={initialDigital}
-                      onValueChange={(v) => update((s) => ({ ...s, digital: v }))}
-                      minimumTrackTintColor={c.ink}
-                      maximumTrackTintColor={c.track}
-                      thumbTintColor={c.ink}
-                      accessibilityLabel={t.digitalStrength}
-                    />
-                    <Text style={[styles.end, { color: c.ink }]}>{t.digitalFull}</Text>
+                {/* In both languages, so it can be found in either. */}
+                <Card title="言語 · Language" c={c}>
+                  <View style={styles.tiles}>
+                    {LANGS.map((l) => {
+                      const on = settings.lang === l.id;
+                      return (
+                        <Pressable
+                          key={l.id}
+                          onPress={() => {
+                            tick();
+                            update((s) => ({ ...s, lang: l.id }));
+                          }}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected: on }}
+                          accessibilityLabel={l.label}
+                          style={({ pressed }) => [styles.lang, { backgroundColor: on ? c.ink : c.tile, transform: [{ scale: pressed ? 0.97 : 1 }] }]}
+                        >
+                          <Text style={[styles.langText, { color: on ? c.onInk : c.ink }]}>{l.label}</Text>
+                        </Pressable>
+                      );
+                    })}
                   </View>
-                  <Text style={[styles.note, { color: c.faint }]}>{t.digitalNote}</Text>
                 </Card>
-              ) : null}
-              <Card title={t.howTo} c={c}>
-                <Pressable
-                  onPress={onShowTips}
-                  accessibilityRole="button"
-                  accessibilityLabel={t.showHowTo}
-                  style={({ pressed }) => [styles.howto, { backgroundColor: c.tile, transform: [{ scale: pressed ? 0.97 : 1 }] }]}
-                >
-                  <Text style={[styles.howtoText, { color: c.ink }]}>{t.showHowTo}</Text>
-                  <Text style={[styles.howtoNote, { color: c.faint }]}>{t.showHowToNote}</Text>
-                </Pressable>
-              </Card>
-              {credit ? <Text style={[styles.note, styles.credit, { color: c.soft }]}>{t.photoCredit(credit)}</Text> : null}
+
+                <Card title={t.display} c={c}>
+                  <View style={styles.tiles}>
+                    <Toggle label={t.showClock} note={t.showClockNote} off={t.off} on={settings.clock.visible} onChange={(v) => setClock({ visible: v })} c={c} />
+                    <Toggle label={t.showDate} note={t.showDateNote} off={t.off} on={settings.clock.date} onChange={(v) => setClock({ date: v })} c={c} />
+                    <Toggle label={t.hour24} note={t.hour24Note} off={t.off} on={settings.clock.hour24} onChange={(v) => setClock({ hour24: v })} c={c} />
+                    <Toggle label={t.seconds} note={t.secondsNote} off={t.off} on={settings.clock.seconds} onChange={(v) => setClock({ seconds: v })} c={c} />
+                  </View>
+                  <Text style={[styles.note, { color: c.faint }]}>{t.longPressNote}</Text>
+                </Card>
+
+                <Card title={t.font} c={c}>
+                  <View style={styles.fonts}>
+                    {clockFonts.map((f) => {
+                      const selected = settings.clock.font === f.id;
+                      return (
+                        <Pressable
+                          key={f.id}
+                          onPress={() => setClock({ font: f.id, visible: true })}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected }}
+                          accessibilityLabel={t.fontNamed(en ? f.labelEn : f.label)}
+                          style={({ pressed }) => [
+                            styles.font,
+                            { backgroundColor: selected ? c.ink : c.tile },
+                            { transform: [{ scale: pressed ? 0.96 : 1 }] },
+                          ]}
+                        >
+                          {/* Small enough that every font's four digits fit the tile whole. */}
+                          <FitText
+                            text={numerals('12:34', settings.clock.numerals)}
+                            size={(f.time.fontSize ?? 96) * 0.27}
+                            style={[
+                              f.time,
+                              { letterSpacing: (f.time.letterSpacing ?? 0) * 0.27, color: selected ? c.onInk : c.ink, includeFontPadding: false },
+                            ]}
+                          />
+                          <FitText text={en ? f.labelEn : f.label} size={12} style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]} />
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </Card>
+
+                {/* The numeral systems an iPhone's Lock Screen offers, each shown as the
+                    time in the font chosen above. */}
+                <Card title={t.numerals} c={c}>
+                  <View style={styles.fonts}>
+                    {NUMERALS.map((n) => {
+                      const selected = settings.clock.numerals === n.id;
+                      const f = clockFont(settings.clock.font);
+                      return (
+                        <Pressable
+                          key={n.id}
+                          onPress={() => setClock({ numerals: n.id, visible: true })}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected }}
+                          accessibilityLabel={en ? n.en : n.ja}
+                          style={({ pressed }) => [styles.font, { backgroundColor: selected ? c.ink : c.tile }, { transform: [{ scale: pressed ? 0.96 : 1 }] }]}
+                        >
+                          <FitText
+                            text={numerals('12:34', n.id)}
+                            size={(f.time.fontSize ?? 96) * 0.27}
+                            style={[f.time, { letterSpacing: 0, color: selected ? c.onInk : c.ink, includeFontPadding: false }]}
+                          />
+                          <FitText text={en ? n.en : n.ja} size={12} style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]} />
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </Card>
+
+                <Card title={t.colour} c={c}>
+                  <ColorPicker
+                    value={digitColor}
+                    onChange={(v) => update((s) => ({ ...s, clock: { ...s.clock, color: v } }))}
+                    onAuto={() => setClock({ color: null })}
+                    tone={tone}
+                    font={settings.clock.font}
+                    hour24={settings.clock.hour24}
+                    seconds={settings.clock.seconds}
+                    numeralsId={settings.clock.numerals}
+                    c={c}
+                  />
+                </Card>
+
+                {hasPhotos ? (
+                  <Card title={t.digital} value={`${Math.round(settings.digital * 100)}%`} c={c}>
+                    <View style={[styles.slab, { backgroundColor: c.tile }]}>
+                      <Text style={[styles.end, { color: c.ink }]}>{t.digitalRaw}</Text>
+                      <Slider
+                        style={styles.slider}
+                        minimumValue={0}
+                        maximumValue={1}
+                        value={initialDigital}
+                        onValueChange={(v) => update((s) => ({ ...s, digital: v }))}
+                        minimumTrackTintColor={c.ink}
+                        maximumTrackTintColor={c.track}
+                        thumbTintColor={c.ink}
+                        accessibilityLabel={t.digitalStrength}
+                      />
+                      <Text style={[styles.end, { color: c.ink }]}>{t.digitalFull}</Text>
+                    </View>
+                    <Text style={[styles.note, { color: c.faint }]}>{t.digitalNote}</Text>
+                  </Card>
+                ) : null}
+                <Card title={t.howTo} c={c}>
+                  <Pressable
+                    onPress={onShowTips}
+                    accessibilityRole="button"
+                    accessibilityLabel={t.showHowTo}
+                    style={({ pressed }) => [styles.howto, { backgroundColor: c.tile, transform: [{ scale: pressed ? 0.97 : 1 }] }]}
+                  >
+                    <Text style={[styles.howtoText, { color: c.ink }]}>{t.showHowTo}</Text>
+                    <Text style={[styles.howtoNote, { color: c.faint }]}>{t.showHowToNote}</Text>
+                  </Pressable>
+                </Card>
+                {credit ? <Text style={[styles.note, styles.credit, { color: c.soft }]}>{t.photoCredit(credit)}</Text> : null}
+              </View>
             </ScrollView>
           </Animated.View>
 
@@ -426,6 +428,9 @@ const styles = StyleSheet.create({
   },
   page: {
     flex: 1,
+  },
+  scroll: {
+    flexGrow: 1,
   },
   content: {
     width: '100%',
