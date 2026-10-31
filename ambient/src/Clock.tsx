@@ -8,6 +8,7 @@ import Reanimated, {
   Easing as Ease,
   makeMutable,
   runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -87,8 +88,6 @@ const LABEL = { height: 23, gap: 2 };
 const HINT = { height: 18, gap: 6 };
 const LABEL_LINE = LABEL.height + LABEL.gap; // the date's line above the digits, with its gap
 const LIMIT_RED = '#d7003a'; // 紅: the frame's colour when a pinch goes past the biggest size
-// While editing, the digits are drawn up to this many times their size, to be shrunk.
-const BIG_MAX = 4;
 // About how wide the longest hint each mode shows is, in each language, for room
 // beside the digits that doesn't change as hints come and go.
 const HINT_W = { ja: { clock: 0, timer: 280, stopwatch: 200 }, en: { clock: 0, timer: 320, stopwatch: 200 } } as const;
@@ -545,6 +544,24 @@ export function Clock(props: Props) {
   const over = useSharedValue(0);
   const [editGesture] = useState(() => makeEditGesture(px, py, zoom, lim, busy, over));
   const overStyle = useAnimatedStyle(() => ({ opacity: over.get() }));
+  // Text grown by a zoom blurs, and text shrunk a long way goes rough, so the digits
+  // are drawn afresh at the zoom's size, rounded up to a half octave (2^0.5 steps),
+  // and only ever shown at 71-100 % of what they were drawn at: they look the same at
+  // any size. Redrawn only when a pinch crosses a step, a few times a pinch at most.
+  const [drawStep, setDrawStep] = useState(0);
+  const drawStepUI = useSharedValue(0);
+  useAnimatedReaction(
+    () => zoom.get(),
+    (k) => {
+      const r = k / Math.pow(2, drawStepUI.get());
+      // (At rest, back to their own size.)
+      if (r > 1.01 || r < 0.66 || (k === 1 && r !== 1)) {
+        const next = Math.ceil(2 * Math.log2(Math.max(k, 0.01)) - 1e-3) / 2;
+        drawStepUI.set(next);
+        runOnJS(setDrawStep)(next);
+      }
+    }
+  );
   const placeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: px.get() }, { translateY: py.get() }] }));
   // Under a zoom the digits scale about their centre, and the label above and the hint
   // below move out (or in) by as much as the digits' line grows (or shrinks).
@@ -736,11 +753,9 @@ export function Clock(props: Props) {
     framed: boolean
   ) => {
     const size = sizeFor(m);
-    // While they are edited, the digits are drawn at the biggest size a pinch can take
-    // them to (within reason) and shown shrunk to their size: a pinch then only ever
-    // shrinks a sharp picture of them, where growing one drawn at their size would
-    // blur it. (In their box as laid out, so nothing else moves.)
-    const big = edit && framed && rowW ? Math.min(BIG_MAX, Math.max(1, limits.kMax)) : 1;
+    // Drawn at the zoom's step (see drawStep) and shown scaled back to their size, in
+    // their box as laid out, so nothing else moves.
+    const big = framed && rowW ? Math.pow(2, drawStep) : 1;
     const drawn = size * big;
     const cell = digitPerPt * drawn;
     // The date's width (not a mode's name, which shows only for a moment).
@@ -765,7 +780,7 @@ export function Clock(props: Props) {
         {/* The digits, in a box the edit frame hangs on (so it is always round them). */}
         <View>
           <Reanimated.View
-            style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, big > 1 ? { width: rowW } : null, digitsStyle]}
+            style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, big !== 1 ? { width: rowW } : null, digitsStyle]}
             onLayout={
               measure
                 ? (e) => {
@@ -777,11 +792,11 @@ export function Clock(props: Props) {
           >
             <View
               style={
-                big > 1
+                big !== 1
                   ? [
                       styles.row,
                       styles.drawnBig,
-                      // As big as it is drawn, centred on the box and shrunk to fit it.
+                      // As big as it is drawn, centred on the box and scaled to fit it.
                       { width: rowW * big, height: size * 1.08 * big, left: (rowW * (1 - big)) / 2, top: (size * 1.08 * (1 - big)) / 2 },
                       { transform: [{ scale: 1 / big }] },
                     ]

@@ -24,7 +24,7 @@
 // The ink is printed through a fine dot screen, and a tracker tags every walker.
 //
 // Numbers come from measuring the reference recording (a 1544 x 930 px page with
-// 89 px soles): soles 2.3 : 1, a step every 0.758 s, stance 1.045 s, step length
+// 89 px soles): soles 2.3 : 1, a step every 0.758 s, stance 1.045 s (now shorter), step length
 // 2.42 soles, footprints 0.75 soles apart, vanishing point at (0.48 W, -0.2 H),
 // dot pitch 2.5 px, leg blur growing about 0.25 sole lengths per sole length of
 // height. Radii, ink and the lean were then fitted by replaying one measured walker
@@ -45,7 +45,7 @@
     ankleZ: 0.25,
     shin: 1.65,
     thigh: 1.6,
-    hipZ: 3.2,
+    hipZ: 3.45, // standing, the legs nearly straight: a knee well ahead of the ankle read as a stoop
     torsoZ: 6.2,
     rAnkle: 0.28,
     rKnee: 0.3,
@@ -53,9 +53,9 @@
     rTorso0: 0.42,
     rTorso1: 0.5,
     stepT: 0.758,
-    stance: 1.045,
-    heelOff: 0.4, // the heel takes this long (s) to come up before toe-off
-    flatAfter: 0.25, // and the sole this long to roll down flat after landing
+    stance: 0.9, // (the reference's 1.045 left each sole down too long: about 60 % of a stride, as people walk)
+    heelOff: 0.32, // the heel takes this long (s) to come up before toe-off
+    flatAfter: 0.15, // and the sole this long to roll down flat after landing
     stepLen: 2.42,
     heelPeak: 0.3, // heel height at toe-off
     heelSwing: 0.3, // heel height early in the swing
@@ -69,7 +69,7 @@
     inkMin: 0.08,
     torsoInk: 0.22,
     torsoBase: 0, // the body's haze starts this far (L) above the hips
-    torsoLean: 0.35, // how far (L) the top of the body is ahead of the pelvis: upright, a slight lean
+    torsoLean: 0.2, // how far (L) the top of the body is ahead of the pelvis: upright, a slight lean
     sway: 0.07, // the pelvis shifts this far (L) toward the foot carrying the weight
     soleInk: 1, // ink of a sole flat on the glass
     blurMax: 3, // the blur stops growing above this (L)
@@ -132,7 +132,10 @@
   let depth = 1000;
 
   function setupView() {
-    L = clamp(P.Lfrac * Math.min(Host.w, Host.h), 30, 110);
+    // On a big screen (an iPad) people grow less than the screen does: past a phone's
+    // width the sole gains under half as much, so they stay passersby, not giants.
+    const short = Math.min(Host.w, Host.h);
+    L = clamp(P.Lfrac * (short > 390 ? 390 + (short - 390) * 0.45 : short), 30, 110);
     vp = { x: P.vpX * Host.w, y: P.vpY * Host.h };
     // Perspective strength: a hip at the bottom edge leans hipShift·L toward the
     // vanishing point, like the lowest walkers in the reference.
