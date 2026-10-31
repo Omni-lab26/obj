@@ -11,7 +11,7 @@ import { colorHex, type DigitColor } from './colors';
 import { clockFont, clockFonts, type FontId } from './fonts';
 import { CloseIcon } from './icons';
 import { scenes } from './scenes';
-import { LANGS, NUMERALS, numerals, type NumeralId } from './i18n';
+import { LANGS } from './i18n';
 import { useSettings, useT } from './settings';
 
 // Settings in the app's own manner rather than a system list: the scene stays behind
@@ -170,7 +170,7 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
                         >
                           {/* Small enough that every font's four digits fit the tile whole. */}
                           <FitText
-                            text={numerals('12:34', settings.clock.numerals)}
+                            text="12:34"
                             size={(f.time.fontSize ?? 96) * 0.27}
                             style={[
                               f.time,
@@ -184,35 +184,7 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
                   </View>
                 </Card>
 
-                {/* The numeral systems an iPhone's Lock Screen offers, each shown as the
-                    time in the font chosen above. */}
-                <Card title={t.numerals} c={c}>
-                  <View style={styles.fonts}>
-                    {NUMERALS.map((n) => {
-                      const selected = settings.clock.numerals === n.id;
-                      const f = clockFont(settings.clock.font);
-                      return (
-                        <Pressable
-                          key={n.id}
-                          onPress={() => setClock({ numerals: n.id, visible: true })}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected }}
-                          accessibilityLabel={en ? n.en : n.ja}
-                          style={({ pressed }) => [styles.font, { backgroundColor: selected ? c.ink : c.tile }, { transform: [{ scale: pressed ? 0.96 : 1 }] }]}
-                        >
-                          <FitText
-                            text={numerals('12:34', n.id)}
-                            size={(f.time.fontSize ?? 96) * 0.27}
-                            style={[f.time, { letterSpacing: 0, color: selected ? c.onInk : c.ink, includeFontPadding: false }]}
-                          />
-                          <FitText text={en ? n.en : n.ja} size={12} style={[styles.fontLabel, { color: selected ? c.onInk : c.soft }]} />
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </Card>
-
-                <Card title={t.colour} c={c}>
+                  <Card title={t.colour} c={c}>
                   <ColorPicker
                     value={digitColor}
                     onChange={(v) => update((s) => ({ ...s, clock: { ...s.clock, color: v } }))}
@@ -221,7 +193,6 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
                     font={settings.clock.font}
                     hour24={settings.clock.hour24}
                     seconds={settings.clock.seconds}
-                    numeralsId={settings.clock.numerals}
                     c={c}
                   />
                 </Card>
@@ -305,7 +276,6 @@ function ColorPicker({
   font,
   hour24,
   seconds,
-  numeralsId,
   c,
 }: {
   value: DigitColor | null;
@@ -315,7 +285,6 @@ function ColorPicker({
   font: FontId;
   hour24: boolean;
   seconds: boolean;
-  numeralsId: NumeralId;
   c: Colors;
 }) {
   const t = useT();
@@ -335,7 +304,7 @@ function ColorPicker({
         >
           <Text style={[styles.autoText, { color: value ? c.ink : c.onInk }]}>{t.auto}</Text>
         </Pressable>
-        <LiveTime color={ink} font={font} hour24={hour24} seconds={seconds} numeralsId={numeralsId} />
+        <LiveTime color={ink} font={font} hour24={hour24} seconds={seconds} />
       </View>
       {/* Across: hue. Down: from white through the colour to black. */}
       <ColorField value={value} onChange={onChange} onLive={setLive} />
@@ -345,8 +314,7 @@ function ColorPicker({
 
 /**
  * One line of text at the given size, or smaller when that would not fit the width
- * it has: some numeral systems draw their digits two or three times as wide as ours,
- * and a cut-off "…" would hide just what the tile is there to show. (It measures the
+ * it has: a cut-off "…" would hide just what the tile is there to show. (It measures the
  * text once at full size, out of sight, and scales it to the room, with a little to
  * spare for strokes that reach past their letter.)
  */
@@ -371,7 +339,7 @@ function FitText({ text, size, style }: { text: string; size: number; style: obj
 }
 
 /** The time now, in the clock's font, ticking each second. */
-function LiveTime({ color, font, hour24, seconds, numeralsId }: { color: string; font: FontId; hour24: boolean; seconds: boolean; numeralsId: NumeralId }) {
+function LiveTime({ color, font, hour24, seconds }: { color: string; font: FontId; hour24: boolean; seconds: boolean }) {
   const words = useT();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -389,11 +357,11 @@ function LiveTime({ color, font, hour24, seconds, numeralsId }: { color: string;
         numberOfLines={1}
         style={[f.time, { fontSize: size, lineHeight: size * 1.1, letterSpacing: (f.time.letterSpacing ?? 0) * 0.4, color, includeFontPadding: false }]}
       >
-        {numerals(`${hour24 ? h : h % 12 || 12}:${two(d.getMinutes())}`, numeralsId)}
+        {`${hour24 ? h : h % 12 || 12}:${two(d.getMinutes())}`}
       </Text>
       {seconds ? (
         <Text style={[f.time, { fontSize: size * f.secondsScale, marginLeft: 3, marginBottom: size * 0.14, color, letterSpacing: 0, includeFontPadding: false }]}>
-          {numerals(two(d.getSeconds()), numeralsId)}
+          {two(d.getSeconds())}
         </Text>
       ) : null}
     </View>

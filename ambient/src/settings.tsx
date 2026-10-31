@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 
 import type { DigitColor } from './colors';
 import type { FontId } from './fonts';
-import { deviceLang, STRINGS, type Lang, type NumeralId } from './i18n';
+import { deviceLang, STRINGS, type Lang } from './i18n';
 
 export type Settings = {
   clock: {
@@ -14,8 +14,6 @@ export type Settings = {
     hour24: boolean;
     /** The digits' colour; null follows the scene (white on dark, black on light). */
     color: DigitColor | null;
-    /** The numeral system the digits are drawn in. */
-    numerals: NumeralId;
   };
   /** What the centre shows. */
   mode: 'clock' | 'timer' | 'stopwatch';
@@ -46,7 +44,7 @@ export type Settings = {
 };
 
 export const defaultSettings: Settings = {
-  clock: { visible: true, font: 'system', seconds: false, date: true, hour24: true, color: null, numerals: 'latn' },
+  clock: { visible: true, font: 'system', seconds: false, date: true, hour24: true, color: null },
   mode: 'clock',
   timer: { duration: 5 * 60_000, endAt: null, left: 5 * 60_000 },
   stopwatch: { startAt: null, elapsed: 0 },

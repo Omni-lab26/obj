@@ -1,5 +1,5 @@
-// The words the app shows, in Japanese and English, and the numeral systems the
-// clock can be drawn in. The language follows settings (first the phone's own).
+// The words the app shows, in Japanese and English. The language follows settings
+// (first the phone's own).
 
 export type Lang = 'ja' | 'en';
 
@@ -58,7 +58,6 @@ const ja = {
   longPressNote: '画面のどこかを長押しすると、いつでも時計を出したり隠したりできます。',
   font: 'フォント',
   fontNamed: (n: string) => `フォント ${n}`,
-  numerals: '数字の種類',
   colour: '色',
   auto: '自動',
   autoColour: '色を自動にする',
@@ -81,7 +80,7 @@ const ja = {
       body: '数字を左右にスライドすると、時計 → タイマー → ストップウォッチ と切り替わります（ぐるっと一周）。タイマーとストップウォッチは数字をタップで開始、長押しでリセット',
     },
     { title: '数字の位置と大きさ', body: 'ペンを押して、1本指で移動・2本指でつまんで大きさ' },
-    { title: '設定', body: 'フォント・数字の種類・色・言語など' },
+    { title: '設定', body: 'フォント・色・言語など' },
     { title: '背景を切り替え', body: '‹ › で前後の背景へ。画面のどこかを長押しすると時計を隠す・出す' },
   ],
   tipsNext: 'タップで次へ',
@@ -144,7 +143,6 @@ const en: typeof ja = {
   longPressNote: 'Hold anywhere on the screen to show or hide the clock at any time.',
   font: 'Font',
   fontNamed: (n: string) => `Font ${n}`,
-  numerals: 'Numerals',
   colour: 'Colour',
   auto: 'Auto',
   autoColour: 'Automatic colour',
@@ -166,7 +164,7 @@ const en: typeof ja = {
       body: 'Slide the digits left or right: Clock → Timer → Stopwatch, and round again. Tap the timer or stopwatch to start; hold to reset',
     },
     { title: 'Place and size', body: 'Tap the pen, then drag with one finger and pinch with two' },
-    { title: 'Settings', body: 'Font, numerals, colour, language and more' },
+    { title: 'Settings', body: 'Font, colour, language and more' },
     { title: 'Backgrounds', body: '‹ › for the previous or next. Hold anywhere to hide or show the clock' },
   ],
   tipsNext: 'Tap for the next',
@@ -194,30 +192,3 @@ export const LANGS: { id: Lang; label: string }[] = [
   { id: 'ja', label: '日本語' },
   { id: 'en', label: 'English' },
 ];
-
-/**
- * The numeral systems the clock can be drawn in: the ones an iPhone's Lock Screen
- * offers. zero is the system's digit 0; the rest follow it in Unicode.
- */
-export type NumeralId = 'latn' | 'arab' | 'deva' | 'beng' | 'gujr' | 'guru' | 'knda' | 'mlym' | 'orya' | 'mtei' | 'khmr' | 'mymr';
-export const NUMERALS: { id: NumeralId; zero: number; ja: string; en: string }[] = [
-  { id: 'latn', zero: 0x30, ja: 'アラビア（西）', en: 'Arabic, Western' },
-  { id: 'arab', zero: 0x660, ja: 'アラビア（東）', en: 'Arabic, Eastern' },
-  { id: 'deva', zero: 0x966, ja: 'デーヴァナーガリー', en: 'Devanagari' },
-  { id: 'beng', zero: 0x9e6, ja: 'ベンガル', en: 'Bangla' },
-  { id: 'gujr', zero: 0xae6, ja: 'グジャラート', en: 'Gujarati' },
-  { id: 'guru', zero: 0xa66, ja: 'グルムキー', en: 'Gurmukhi' },
-  { id: 'knda', zero: 0xce6, ja: 'カンナダ', en: 'Kannada' },
-  { id: 'mlym', zero: 0xd66, ja: 'マラヤーラム', en: 'Malayalam' },
-  { id: 'orya', zero: 0xb66, ja: 'オリヤー', en: 'Odia' },
-  { id: 'mtei', zero: 0xabf0, ja: 'メイテイ', en: 'Meitei' },
-  { id: 'khmr', zero: 0x17e0, ja: 'クメール', en: 'Khmer' },
-  { id: 'mymr', zero: 0x1040, ja: 'ビルマ', en: 'Burmese' },
-];
-
-/** The same text with its digits 0-9 in the given numeral system. */
-export function numerals(text: string, id: NumeralId): string {
-  if (id === 'latn') return text;
-  const zero = (NUMERALS.find((n) => n.id === id) ?? NUMERALS[0]).zero;
-  return text.replace(/[0-9]/g, (d) => String.fromCharCode(zero + d.charCodeAt(0) - 48));
-}

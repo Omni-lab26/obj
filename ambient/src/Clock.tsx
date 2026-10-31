@@ -18,10 +18,10 @@ import Reanimated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { colorHex, luminance, withAlpha } from './colors';
+import { colorHex, withAlpha } from './colors';
 import { FaceBackdrop } from './FaceBackdrop';
 import { clockFont } from './fonts';
-import { numerals, type Strings } from './i18n';
+import type { Strings } from './i18n';
 import { useSettings, useT, type Settings } from './settings';
 import { TimerSaves } from './TimerSaves';
 import { TimeScrubber } from './TimeScrubber';
@@ -380,14 +380,12 @@ function Reel({
   cell,
   size,
   textStyle,
-  num,
 }: {
   kind: number;
   at: SharedValue<number>;
   cell: number;
   size: number;
   textStyle: object;
-  num: (text: string) => string;
 }) {
   const line = size * 1.08;
   const base = REEL_BASE[kind];
@@ -403,7 +401,7 @@ function Reel({
       <Reanimated.View style={[styles.reel, style]}>
         {Array.from({ length: base + 1 }, (_, i) => (
           <Text key={i} style={[textStyle, { height: line, marginVertical: vpad }]}>
-            {num(String(i % base))}
+            {String(i % base)}
           </Text>
         ))}
       </Reanimated.View>
@@ -478,8 +476,6 @@ export function Clock(props: Props) {
   const t = useT();
   const lang = useSettings().settings.lang;
   const modeNames = { clock: t.modeClock, timer: t.modeTimer, stopwatch: t.modeStopwatch };
-  // Digits in the numeral system chosen in settings.
-  const num = (text: string) => numerals(text, clock.numerals);
   // The length on the rulers while one is being dragged or gliding (seconds).
   const [preview, setPreview] = useState<number | null>(null);
   const fast = (mode === 'stopwatch' && stopwatch.startAt != null) || (mode === 'timer' && (timerRunning(timer) || timerDone(timer)));
@@ -528,9 +524,9 @@ export function Clock(props: Props) {
     opacity: showWheels.get(),
     transform: [{ translateX: wheelsX.get() + ringOffset(MODES.indexOf('timer'), pos.get()) * span.get() }, { translateY: wheelsY.get() }],
   }));
-  // Digit width per point of font size, measured once per font and numeral system:
-  // the widest of its ten digits, which every digit's cell then takes, so a running
-  // count never shifts sideways or crowds (some scripts' digits differ a lot in width).
+  // Digit width per point of font size, measured once per font: the widest of its ten
+  // digits, which every digit's cell then takes, so a running count never shifts
+  // sideways or crowds.
   const [digitWidths, setDigitWidths] = useState<number[]>([]);
   const digitPerPt = digitWidths.length === 10 ? Math.max(...digitWidths) : 0;
   const [colonPerPt, setColonPerPt] = useState(0);
@@ -552,11 +548,11 @@ export function Clock(props: Props) {
   // 1 while a pinch tries to go past the biggest size (the frame shows it in red).
   const over = useSharedValue(0);
   const [editGesture] = useState(() => makeEditGesture(px, py, zoom, lim, busy, over));
-  // Text grown by a zoom blurs, so under a zoom the digits are drawn afresh a little
-  // bigger than they are shown, in half-octave steps (2^0.5), and shown at 63-89 % of
-  // that: always a slight shrink of a sharp drawing, never a stretch, with room for
-  // the zoom to grow a little before the next drawing is in. Redrawn only when a
-  // pinch crosses a step; at rest (no zoom) they are drawn at their own size.
+  // Text grown by a zoom blurs, so while a pinch zooms the digits they are drawn afresh
+  // a little bigger than they are shown, in half-octave steps (2^0.5), and shown at
+  // 63-89 % of that: a slight shrink of a sharp drawing, never a stretch, with room
+  // for the zoom to grow before the next drawing is in. Redrawn only when a pinch
+  // crosses a step; once the fingers lift, at exactly the size shown.
   const [drawStep, setDrawStep] = useState(0);
   const drawStepUI = useSharedValue(0);
   useAnimatedReaction(
@@ -780,6 +776,11 @@ export function Clock(props: Props) {
     editGesture.set({
       done: (x, y, k) => {
         pending.current = { x, y, k };
+        // At rest, drawn at just the size they are shown at: even a slight shrink of
+        // a drawing leaves thin strokes rough.
+        const exact = Math.log2(k);
+        drawStepUI.set(exact);
+        setDrawStep(exact);
       },
       limit: buzzLimit,
     })
@@ -834,7 +835,7 @@ export function Clock(props: Props) {
             numberOfLines={1}
             onLayout={measureLabel}
           >
-            {num(label) || '\u00a0'}
+            {label || '\u00a0'}
           </Animated.Text>
         </Reanimated.View>
         {/* The digits, in a box the edit frame hangs on (so it is always round them). */}
@@ -869,11 +870,11 @@ export function Clock(props: Props) {
                 // The timer being set: reels that roll with the rulers (HH:MM:SS → kinds).
                 const kind = m === 'timer' && reeling && digit && cell ? [0, 1, -1, 2, 3, -1, 4, 5][i] : -1;
                 if (kind >= 0) {
-                  return <Reel key={i} kind={kind} at={kind < 2 ? hoursAt : quartersAt} cell={cell} size={drawn} textStyle={textStyle} num={num} />;
+                  return <Reel key={i} kind={kind} at={kind < 2 ? hoursAt : quartersAt} cell={cell} size={drawn} textStyle={textStyle} />;
                 }
                 return (
                   <View key={i} style={digit && cell ? { width: cell, alignItems: 'center' } : null}>
-                    <Text style={textStyle}>{num(ch)}</Text>
+                    <Text style={textStyle}>{ch}</Text>
                   </View>
                 );
               })}
@@ -892,7 +893,7 @@ export function Clock(props: Props) {
                     },
                   ]}
                 >
-                  {num(f.small)}
+                  {f.small}
                 </Text>
               ) : null}
             </View>
@@ -915,12 +916,10 @@ export function Clock(props: Props) {
   };
 
   // A colour chosen in settings takes over from the scene's, on both faces. The veil
-  // behind stays the scene's (darkening a dark one, lightening a light one), unless the
-  // colour is as dark as a dark scene or as light as a light one: then it turns over,
-  // to set the digits off.
+  // behind always stays the scene's (darkening a dark one, lightening a light one),
+  // whatever the colour: turned over, it showed as a dark smudge on a white scene.
   const custom = clock.color ? colorHex(clock.color) : null;
   const inks = custom ? { dark: { ink: custom, inkSoft: withAlpha(custom, 0.82) }, light: { ink: custom, inkSoft: withAlpha(custom, 0.82) } } : FACES;
-  const veil: 'dark' | 'light' = !custom ? tone : tone === 'dark' ? (luminance(custom) < 0.08 ? 'light' : 'dark') : luminance(custom) > 0.6 ? 'dark' : 'light';
 
   // One page per mode, round a ring. The pages that aren't showing carry their mode's
   // name, so it is there as soon as one slides in, and stays a moment once it lands.
@@ -931,7 +930,7 @@ export function Clock(props: Props) {
     const labelOpacity = current ? flashOpacity : still;
     return (
       <>
-        <FaceBackdrop tone={veil} />
+        <FaceBackdrop tone={tone} />
         <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
           {face(m, f, inks.dark, label, labelOpacity, current, current)}
         </Animated.View>
@@ -957,7 +956,7 @@ export function Clock(props: Props) {
             },
           ]}
         >
-          {/* Each digit at 100 pt, measured once per font and numeral system: the widest
+          {/* Each digit at 100 pt, measured once per font: the widest
               gives every digit's cell. */}
           {Array.from({ length: 10 }, (_, d) => (
             <Text
@@ -973,7 +972,7 @@ export function Clock(props: Props) {
                 });
               }}
             >
-              {num(String(d))}
+              {String(d)}
             </Text>
           ))}
           <Text
