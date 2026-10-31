@@ -612,10 +612,11 @@ export function Clock(props: Props) {
   }, [tone, toneMix, fadeMs]);
 
   const font = clockFont(clock.font);
-  // Scale with the screen (lying down, the height decides), but stop growing on
-  // tablets. Each mode has one fixed size for its longest reading, so the digits never
-  // grow or shrink as the count goes on; the chosen scale multiplies them all.
-  const room = Math.min(width / 390, height / 640, 1.6);
+  // Scale with the screen (lying down, the height decides), on to about twice a
+  // phone's on an iPad, then stop: the clock should hold a big screen, not fill it.
+  // Each mode has one fixed size for its longest reading, so the digits never grow or
+  // shrink as the count goes on; the chosen scale multiplies them all.
+  const room = Math.min(width / 390, height / 640, 2.2);
   const baseSize = (m: Settings['mode']) => {
     const longest = m === 'clock' ? 5 + (clock.seconds ? 1.1 : 0) : m === 'timer' ? 8 : 9.1;
     return (font.time.fontSize ?? 96) * room * Math.min(1, 5 / longest);
@@ -714,7 +715,8 @@ export function Clock(props: Props) {
   const wheelsAbove = wheelsH > roomBelow && roomAbove > roomBelow;
   // Neither side quite big enough: the rulers stay on screen, over the digits' edge.
   const wheelsLift = wheelsAbove ? Math.max(0, wheelsH - roomAbove) : -Math.max(0, wheelsH - roomBelow);
-  const rulerWidth = Math.min(width * 0.88, 380);
+  // (A little longer on an iPad, to go with its bigger digits.)
+  const rulerWidth = Math.min(width * 0.88, 380 * Math.min(1.4, Math.max(1, room)));
   const rulerLeft = width / 2 + at.x - rulerWidth / 2;
   const wheelsShift =
     rulerLeft < MARGIN ? MARGIN - rulerLeft : rulerLeft + rulerWidth > width - MARGIN ? width - MARGIN - rulerLeft - rulerWidth : 0;
