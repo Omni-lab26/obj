@@ -73,10 +73,11 @@ function Player() {
   const nextKey = useRef(1);
   const scene = scenes[index];
 
-  // ── chrome: shows on any touch, fades away when left alone ──────────────
+  // ── chrome: a tap shows it (or puts it away), and it fades when left alone ──
   // Shown at launch, so the controls are discoverable; they fade when left alone.
   const [chrome] = useState(() => new Animated.Value(1));
   const [chromeOn, setChromeOn] = useState(true);
+  const chromeShown = useRef(true);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Moving or resizing the digits (the pen and the arrows at the top left); the
   // controls stay up until it is done.
@@ -96,6 +97,8 @@ function Player() {
   const hideChrome = useCallback(() => {
     // (The controls stay up while being edited, or explained.)
     if (editing.current || tipsUp.current) return;
+    clearTimeout(hideTimer.current);
+    chromeShown.current = false;
     setChromeOn(false);
     Animated.timing(chrome, {
       toValue: 0,
@@ -107,6 +110,7 @@ function Player() {
 
   const showChrome = useCallback(() => {
     clearTimeout(hideTimer.current);
+    chromeShown.current = true;
     setChromeOn(true);
     Animated.timing(chrome, {
       toValue: 1,
@@ -116,6 +120,13 @@ function Player() {
     }).start();
     hideTimer.current = setTimeout(hideChrome, CHROME_IDLE_MS);
   }, [chrome, hideChrome]);
+
+  // A tap on the scene (or the clock's digits) shows the controls, or puts them away
+  // if they are up; left alone they still fade by themselves.
+  const toggleChrome = useCallback(() => {
+    if (chromeShown.current) hideChrome();
+    else showChrome();
+  }, [hideChrome, showChrome]);
 
   useEffect(() => {
     hideTimer.current = setTimeout(hideChrome, CHROME_IDLE_MS);
@@ -267,7 +278,7 @@ function Player() {
             paused={paused || settingsOpen}
             digital={settings.digital}
             onReady={() => reveal(layer)}
-            onTouch={showChrome}
+            onTap={toggleChrome}
             onLongPress={toggleClock}
             onTone={(t) => setMeasuredTone((m) => (m[layer.scene.id] === t ? m : { ...m, [layer.scene.id]: t }))}
           />
@@ -285,7 +296,7 @@ function Player() {
         onReset={resetCount}
         onSetDuration={(ms) => update((s) => ({ ...s, timer: setTimerDuration(ms) }))}
         onMode={setMode}
-        onTouch={showChrome}
+        onTouch={toggleChrome}
         onHide={toggleClock}
         saves={settings.timerSaves}
         onSave={saveTimer}

@@ -152,6 +152,9 @@
     if (e.buttons && scene && scene.move) scene.move(e.clientX, e.clientY);
   });
   addEventListener('pointerup', () => {
+    // Let go before it became a long-press, and without moving: a tap (the app shows
+    // or hides its controls).
+    if (press) post({ type: 'tap' });
     endPress();
     if (scene && scene.up) scene.up();
   });

@@ -15,14 +15,15 @@ export type SceneViewProps = {
   /** Digital layer amount from settings, 0..1. */
   digital: number;
   onReady: () => void;
-  onTouch: () => void;
+  /** A tap on the scene (let go without moving, before it became a long-press). */
+  onTap: () => void;
   onLongPress: () => void;
   /** Photo scenes report whether the area behind the clock is light or dark. */
   onTone?: (tone: 'dark' | 'light') => void;
 };
 
-/** Runs one scene page full-screen. The page reports 'ready', 'touch' and 'longpress' back. */
-export function SceneView({ scene, paused, digital, onReady, onTouch, onLongPress, onTone }: SceneViewProps) {
+/** Runs one scene page full-screen. The page reports 'ready', 'tap' and 'longpress' back. */
+export function SceneView({ scene, paused, digital, onReady, onTap, onLongPress, onTone }: SceneViewProps) {
   const ref = useRef<WebViewHandle>(null);
   // Read once: settings at load time; later changes go through injectJavaScript.
   const [initScript] = useState(() => `window.__ambientInit = ${JSON.stringify({ digital })}; true;`);
@@ -43,7 +44,7 @@ export function SceneView({ scene, paused, digital, onReady, onTouch, onLongPres
       return;
     }
     if (msg.type === 'ready') onReady();
-    else if (msg.type === 'touch') onTouch();
+    else if (msg.type === 'tap') onTap();
     else if (msg.type === 'longpress') onLongPress();
     else if (msg.type === 'tone' && msg.tone) onTone?.(msg.tone);
   };

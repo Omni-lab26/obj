@@ -7,7 +7,7 @@ type AmbientWindow = Window & {
 };
 
 /** Web stand-in for the WebView: the same page in an iframe, same messages. */
-export function SceneView({ scene, paused, digital, onReady, onTouch, onLongPress, onTone }: SceneViewProps) {
+export function SceneView({ scene, paused, digital, onReady, onTap, onLongPress, onTone }: SceneViewProps) {
   const ref = useRef<HTMLIFrameElement>(null);
   const latest = useRef({ paused, digital });
   useEffect(() => {
@@ -24,13 +24,13 @@ export function SceneView({ scene, paused, digital, onReady, onTouch, onLongPres
         win?.__ambient?.setDigital(latest.current.digital);
         if (latest.current.paused) win?.__ambient?.pause();
         onReady();
-      } else if (type === 'touch') onTouch();
+      } else if (type === 'tap') onTap();
       else if (type === 'longpress') onLongPress();
       else if (type === 'tone' && (e.data.tone === 'dark' || e.data.tone === 'light')) onTone?.(e.data.tone);
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [onReady, onTouch, onLongPress, onTone]);
+  }, [onReady, onTap, onLongPress, onTone]);
 
   useEffect(() => {
     const win = ref.current?.contentWindow as AmbientWindow | null | undefined;
