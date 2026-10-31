@@ -11,6 +11,7 @@ import Reanimated, {
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withSpring,
   withTiming,
   type SharedValue,
@@ -544,25 +545,33 @@ export function Clock(props: Props) {
   const over = useSharedValue(0);
   const [editGesture] = useState(() => makeEditGesture(px, py, zoom, lim, busy, over));
   const overStyle = useAnimatedStyle(() => ({ opacity: over.get() }));
-  // Text grown by a zoom blurs, and text shrunk a long way goes rough, so the digits
-  // are drawn afresh at the zoom's size, rounded up to a half octave (2^0.5 steps),
-  // and only ever shown at 71-100 % of what they were drawn at: they look the same at
-  // any size. Redrawn only when a pinch crosses a step, a few times a pinch at most.
+  // Text grown by a zoom blurs, so under a zoom the digits are drawn afresh a little
+  // bigger than they are shown, in half-octave steps (2^0.5), and shown at 63-89 % of
+  // that: always a slight shrink of a sharp drawing, never a stretch, with room for
+  // the zoom to grow a little before the next drawing is in. Redrawn only when a
+  // pinch crosses a step; at rest (no zoom) they are drawn at their own size.
   const [drawStep, setDrawStep] = useState(0);
   const drawStepUI = useSharedValue(0);
   useAnimatedReaction(
     () => zoom.get(),
     (k) => {
-      const r = k / Math.pow(2, drawStepUI.get());
-      // (At rest, back to their own size.)
-      if (r > 1.01 || r < 0.66 || (k === 1 && r !== 1)) {
-        const next = Math.ceil(2 * Math.log2(Math.max(k, 0.01)) - 1e-3) / 2;
+      const step = drawStepUI.get();
+      const r = k / Math.pow(2, step);
+      const next = k === 1 ? 0 : r > 0.95 || r < 0.55 ? Math.round(2 * Math.log2(Math.max(k, 0.01) / 0.75)) / 2 : step;
+      if (next !== step) {
         drawStepUI.set(next);
         runOnJS(setDrawStep)(next);
       }
     }
   );
-  const placeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: px.get() }, { translateY: py.get() }] }));
+  // While editing, the hand's place and size stay on the UI thread (the digits as laid
+  // out, zoomed): they are only laid out afresh at that size once editing is done,
+  // behind a quick fade. (Laying them out again the moment the fingers lift showed
+  // them a frame at the old zoom on top of the new size: a flash of them too big.)
+  const pending = useRef<{ x: number; y: number; k: number } | null>(null);
+  const swapping = useRef(false);
+  const fade = useSharedValue(1);
+  const placeStyle = useAnimatedStyle(() => ({ opacity: fade.get(), transform: [{ translateX: px.get() }, { translateY: py.get() }] }));
   // Under a zoom the digits scale about their centre, and the label above and the hint
   // below move out (or in) by as much as the digits' line grows (or shrinks).
   const digitsStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() }] }));
@@ -688,26 +697,44 @@ export function Clock(props: Props) {
   // The UI thread follows the settings (and the screen), except mid-edit. What the
   // fingers just left is taken as it is; any other change (a reset, a turn of the
   // screen, another mode's size) glides there.
-  const shownAt = useRef<{ x: number; y: number; scale: number; wide: boolean; byHand: boolean } | null>(null);
+  const shownAt = useRef<{ x: number; y: number; scale: number; wide: boolean } | null>(null);
+  const lastPlaced = useRef(placed);
   useLayoutEffect(() => {
     lim.set(limits);
     if (busy.get()) return;
+    const fresh = placed !== lastPlaced.current;
+    lastPlaced.current = placed;
     const was = shownAt.current;
-    shownAt.current = { x: at.x, y: at.y, scale, wide, byHand: false };
+    shownAt.current = { x: at.x, y: at.y, scale, wide };
+    // An edit just committed: laid out at its size now, so drop the zoom (unseen,
+    // mid-fade) and fade back in.
+    if (swapping.current) {
+      swapping.current = false;
+      pending.current = null;
+      px.set(at.x);
+      py.set(at.y);
+      zoom.set(1);
+      fade.set(withDelay(60, withTiming(1, { duration: 200 })));
+      return;
+    }
+    // Mid-edit, the hand's place and size stand, unless the place is set anew (reset).
+    if (pending.current && !fresh) return;
+    const edited = pending.current != null;
+    pending.current = null;
     const turned = !!was && was.wide !== wide;
-    if (was && Math.abs(was.x - at.x) < 0.5 && Math.abs(was.y - at.y) < 0.5 && Math.abs(was.scale - scale) < 1e-3) return;
-    if (!was || (was.byHand && !turned)) {
+    if (!edited && was && Math.abs(was.x - at.x) < 0.5 && Math.abs(was.y - at.y) < 0.5 && Math.abs(was.scale - scale) < 1e-3) return;
+    if (!was) {
       px.set(at.x);
       py.set(at.y);
       zoom.set(1);
       return;
     }
     const glide = { duration: turned ? 520 : 320, easing: Ease.out(Ease.cubic) };
-    // The digits are laid out at the new size already: start them at the old one, as
-    // far as that fits this screen (after a turn of the phone, the old size and place
-    // may not), and on it, then glide to where they belong here.
-    const k0 = Math.min(limits.kMax, Math.max(limits.kMin, was.scale / scale));
-    const from = clampPlace(was.x, was.y, k0, limits);
+    // The digits are laid out at the new size already: start them where and as big as
+    // they are shown now (as far as that fits this screen: after a turn of the phone it
+    // may not), then glide to where they belong here.
+    const k0 = Math.min(limits.kMax, Math.max(limits.kMin, (zoom.get() * was.scale) / scale));
+    const from = clampPlace(px.get(), py.get(), k0, limits);
     px.set(from.x);
     py.set(from.y);
     zoom.set(k0);
@@ -715,11 +742,37 @@ export function Clock(props: Props) {
     py.set(withTiming(at.y, glide));
     zoom.set(withTiming(1, glide));
   });
+  // Done editing: fade out, take the hand's place and size, and (above) fade back in.
+  const commitEdit = () => {
+    const p = pending.current;
+    if (!p) {
+      fade.set(withTiming(1, { duration: 160 }));
+      return;
+    }
+    swapping.current = true;
+    onFace({ x: p.x / width, y: p.y / height, scale: clampScale(scale * p.k) });
+    // (Should nothing need laying out again, never stay faded.)
+    setTimeout(() => {
+      if (!swapping.current) return;
+      swapping.current = false;
+      pending.current = null;
+      fade.set(withTiming(1, { duration: 200 }));
+    }, 500);
+  };
+  useEffect(() => {
+    if (edit || !pending.current) return;
+    fade.set(
+      withTiming(0, { duration: 90 }, (finished) => {
+        if (finished) runOnJS(commitEdit)();
+      })
+    );
+    // (Only as editing ends.)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [edit]);
   useEffect(() =>
     editGesture.set({
       done: (x, y, k) => {
-        if (shownAt.current) shownAt.current.byHand = true;
-        onFace({ x: x / width, y: y / height, scale: clampScale(scale * k) });
+        pending.current = { x, y, k };
       },
       limit: buzzLimit,
     })
