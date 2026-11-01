@@ -29,7 +29,7 @@
 3. **プライバシーポリシーを公開する**（GitHub Pages）
    - 公開リポジトリ `Omni-lab26/lento` に、`privacy.html` を `index.html` として置きます。
    - そのリポジトリの Settings → Pages で、Branch を `main`、フォルダを `/ (root)` にして Save します。
-   - 公開される URL は `https://omni-lab26.github.io/lento/` です。これを「プライバシーポリシー URL」と「サポート URL」の両方に使います。
+   - **公開済み**: https://omni-lab26.github.io/lento/ 。これを「プライバシーポリシー URL」と「サポート URL」の両方に使います。
 4. **Expo のアカウントでログインし、プロジェクトをつなぐ**（`ambient` フォルダで実行）
    ```sh
    npx eas-cli@latest login
