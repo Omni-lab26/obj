@@ -26,10 +26,10 @@
 2. **Apple Developer Program に登録する**
    - https://developer.apple.com/programs/ から申し込みます（年 99 ドル）。
    - 個人なら数時間から1〜2日で使えるようになります。
-3. **プライバシーポリシーを公開する**
-   - `privacy.html` の `you@example.com` を、問い合わせ先のメールアドレスに書き換えます。
-   - 誰でも見られる URL で公開します。GitHub Pages、Notion の公開ページ、自分のサイトなど、どこでもかまいません。
-   - この URL を「プライバシーポリシー URL」と「サポート URL」に使います。
+3. **プライバシーポリシーを公開する**（GitHub Pages）
+   - 公開リポジトリ `Omni-lab26/lento` に、`privacy.html` を `index.html` として置きます。
+   - そのリポジトリの Settings → Pages で、Branch を `main`、フォルダを `/ (root)` にして Save します。
+   - 公開される URL は `https://omni-lab26.github.io/lento/` です。これを「プライバシーポリシー URL」と「サポート URL」の両方に使います。
 4. **Expo のアカウントでログインし、プロジェクトをつなぐ**（`ambient` フォルダで実行）
    ```sh
    npx eas-cli@latest login
