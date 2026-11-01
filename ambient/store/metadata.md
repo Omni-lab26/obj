@@ -153,13 +153,25 @@ The app keeps the screen awake on purpose, so it can be used as a desk clock.
 
 ## スクリーンショット
 
-`store/screenshots/` にあります（JPEG）。
+`store/screenshots/` にあります（JPEG）。App Store Connect にはこちらを入れます。
 
 | 枠 | サイズ | フォルダ |
 | --- | --- | --- |
 | iPhone 6.9インチ | 1320 × 2868 | `iphone-6.9/ja`, `iphone-6.9/en` |
 | iPad 13インチ | 2064 × 2752 | `ipad-13/ja`, `ipad-13/en` |
 
-1. 鯉と時計 2. サメとタイマー（目盛りと保存） 3. 通りすがりとストップウォッチ 4. 設定 5. 位置と大きさの編集
+アイコンと同じ生成りの紙とインクで、上にフェルマータと見出し、下にアプリの画面を置いています。
 
-ウェブ版から撮ったものです。実機と見た目がほぼ同じであることは確認していますが、ぼかしの質感などは実機のほうがきれいです。実機で撮り直す場合は、iPhone 16 Pro Max / 17 Pro Max（6.9インチ）と iPad Pro 13インチのシミュレーターか実機で撮ってください。
+| # | 画面 | 見出し（日本語） | 見出し（英語） |
+| --- | --- | --- | --- |
+| 1 | 鯉と時計 | 眺めていられる、置き時計 | A clock you can simply watch |
+| 2 | サメとタイマー | 目盛りをなぞって、タイマー | Set the timer by touch |
+| 3 | 通りすがりとストップウォッチ | ストップウォッチも、静かに | A quiet stopwatch, too |
+| 4 | 設定 | フォントも色も、好みのままに | Your font, your colour |
+| 5 | 位置と大きさの編集 | どこにでも、どんな大きさでも | Anywhere, any size |
+
+アプリの画面だけの元画像は `screenshots/raw/` にあります。ウェブ版から撮ったもので、ぼかしの質感などは実機のほうがきれいです。
+
+作り直すときは、次の2つを順に実行します。
+1. ウェブ版を書き出して `localhost:8765` で配信し、`node store/tools/shots.cjs` を実行すると、元画像（`raw/`）を撮ります。
+2. `NOTO_SERIF_JP=<Noto Serif JP の ttf> python3 store/tools/frame.py` を実行すると、見出し付きに組みます。見出しの文言は `frame.py` の中にあります。
