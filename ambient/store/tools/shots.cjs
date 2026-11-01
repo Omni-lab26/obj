@@ -8,13 +8,13 @@ const DEVICES = [
   { id: 'iphone-6.9', w: 440, h: 956, dpr: 3 },
   { id: 'ipad-13', w: 1032, h: 1376, dpr: 2 },
 ];
-const base = (lang) => ({ lang, tipsSeen: true, digital: 0.5, clock: { visible: true, font: 'system', seconds: true, date: true, hour24: true, color: null } });
+const base = (lang) => ({ lang, langChosen: true, tipsSeen: true, digital: 0.5, clock: { visible: true, font: 'condensed', seconds: true, date: true, hour24: true, color: null } });
 const SHOTS = [
   { name: '01-koi-clock', s: (l) => ({ ...base(l), mode: 'clock', scene: 'koi' }) },
   { name: '02-sharks-timer', s: (l) => ({ ...base(l), mode: 'timer', scene: 'sharks', timer: { duration: 25 * 60000, endAt: null, left: 25 * 60000, dial: 25 * 60000 }, timerSaves: [3 * 60000, 25 * 60000, 50 * 60000, null, null] }) },
   { name: '03-walkers-stopwatch', s: (l) => ({ ...base(l), mode: 'stopwatch', scene: 'walkers', stopwatch: { startAt: null, elapsed: 754300 } }) },
   { name: '04-settings', s: (l) => ({ ...base(l), mode: 'clock', scene: 'koi', clock: { ...base(l).clock, color: { h: 28, l: 0.62 } } }), settings: true },
-  { name: '05-edit', s: (l) => ({ ...base(l), mode: 'clock', scene: 'blank', clock: { ...base(l).clock, font: 'serif' } }), edit: true },
+  { name: '05-edit', s: (l) => ({ ...base(l), mode: 'clock', scene: 'blank', clock: { ...base(l).clock } }), edit: true },
 ];
 (async () => {
   const browser = await chromium.launch();
