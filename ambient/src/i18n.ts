@@ -1,3 +1,5 @@
+import { getLocales } from 'expo-localization';
+
 // The words the app shows, in Japanese and English. The language follows settings
 // (first the phone's own).
 
@@ -178,11 +180,15 @@ const en: typeof ja = {
 export const STRINGS = { ja, en };
 export type Strings = typeof ja;
 
-/** The phone's language, if it is one of ours (else English). */
+/**
+ * The phone's language: Japanese on a phone set to Japanese (or to Japan as its
+ * region), English anywhere else. (Read from the phone's own settings: the JS
+ * engine's idea of the locale follows the languages the app declares, not the phone.)
+ */
 export function deviceLang(): Lang {
   try {
-    const locale = Intl.DateTimeFormat().resolvedOptions().locale ?? '';
-    return locale.toLowerCase().startsWith('ja') ? 'ja' : 'en';
+    const [first] = getLocales();
+    return first?.languageCode === 'ja' || first?.regionCode === 'JP' ? 'ja' : 'en';
   } catch {
     return 'ja';
   }

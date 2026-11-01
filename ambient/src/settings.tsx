@@ -33,8 +33,10 @@ export type Settings = {
    */
   face: { x: number; y: number; scale: number };
   faceWide: { x: number; y: number; scale: number };
-  /** The language of everything shown (the phone's own, to begin with). */
+  /** The language of everything shown: the phone's own until one is chosen in settings. */
   lang: Lang;
+  /** A language has been chosen in settings (else lang follows the phone). */
+  langChosen?: boolean;
   /** The first-time bubbles that explain the buttons have been seen. */
   tipsSeen: boolean;
   /** Digital layer: 0 = the raw picture (素), 1 = fully digital. */
@@ -44,7 +46,7 @@ export type Settings = {
 };
 
 export const defaultSettings: Settings = {
-  clock: { visible: true, font: 'system', seconds: false, date: true, hour24: true, color: null },
+  clock: { visible: true, font: 'condensed', seconds: false, date: true, hour24: true, color: null },
   mode: 'clock',
   timer: { duration: 5 * 60_000, endAt: null, left: 5 * 60_000 },
   stopwatch: { startAt: null, elapsed: 0 },
@@ -79,6 +81,8 @@ function withDefaults(stored: Partial<Settings>): Settings {
     timerSaves: defaultSettings.timerSaves.map((d, i) => stored.timerSaves?.[i] ?? d),
     face: { ...defaultSettings.face, ...stored.face },
     faceWide: { ...defaultSettings.faceWide, ...stored.faceWide },
+    // (Saved languages that were never chosen came from an older guess at the phone's.)
+    lang: stored.langChosen && stored.lang ? stored.lang : deviceLang(),
   };
 }
 

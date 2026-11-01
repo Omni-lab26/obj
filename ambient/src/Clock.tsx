@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { memo, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { Animated, Easing, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, PixelRatio, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector, type TouchData } from 'react-native-gesture-handler';
 import Reanimated, {
@@ -293,8 +293,9 @@ function makeEditGesture(
       const p = lim.get();
       const want = (s.k * f.d) / s.d;
       const k = f.n === 2 ? Math.min(p.kMax, Math.max(p.kMin, want)) : s.k;
-      // Spread past the biggest size: the frame turns red, with a buzz as it does.
-      const beyond = f.n === 2 && want > p.kMax * 1.01;
+      // Spread past the biggest size, or pinched past the smallest: the frame turns
+      // red, with a buzz as it does.
+      const beyond = f.n === 2 && (want > p.kMax * 1.01 || want < p.kMin * 0.99);
       if (beyond && over.get() < 1) {
         over.set(1);
         runOnJS(limit)();
@@ -331,7 +332,7 @@ function makeEditGesture(
 }
 
 // The dashed frame round the digits while they are edited: its own colour, turning
-// to red (and back) as a pinch goes past the biggest size.
+// to red (and back) as a pinch goes past the biggest or smallest size.
 function EditFrame({ color, over, frameStyle }: { color: string; over: SharedValue<number>; frameStyle: object }) {
   const tint = useAnimatedStyle(() => ({ borderColor: interpolateColor(over.get(), [0, 1], [color, LIMIT_RED]) }), [color]);
   return <Reanimated.View pointerEvents="none" style={[styles.frame, tint, frameStyle]} />;
@@ -374,6 +375,7 @@ const Digits = memo(function Digits({
   hoursAt,
   quartersAt,
   drawAt,
+  rendered,
 }: {
   main: string;
   small: string;
@@ -388,13 +390,20 @@ const Digits = memo(function Digits({
   hoursAt: SharedValue<number>;
   quartersAt: SharedValue<number>;
   drawAt: DrawStore;
+  /** Told the size they are drawn at once it is laid out (the zoom shows the rest). */
+  rendered?: SharedValue<number>;
 }) {
   const at = useSyncExternalStore(drawAt.subscribe, drawAt.get);
   const big = rowW ? at : 1;
   const drawn = size * big;
   const cell = digitPerPt * drawn;
   const line = size * 1.08;
-  // (Drawn bigger or smaller, it keeps the box it has at its own size.)
+  useLayoutEffect(() => {
+    rendered?.set(big);
+  }, [big, rendered]);
+  // Drawn bigger or smaller, it keeps the box it has at its own size, and spills out of
+  // it evenly, on whole pixels (text off the pixel grid is drawn soft).
+  const px = (v: number) => Math.round(v * PixelRatio.get()) / PixelRatio.get();
   return (
     <View style={big !== 1 ? { width: rowW, height: line } : null}>
       <View
@@ -403,9 +412,8 @@ const Digits = memo(function Digits({
             ? [
                 styles.row,
                 styles.drawnBig,
-                // As big as it is drawn, centred on the box and scaled to fit it.
-                { width: rowW * big, height: line * big, left: (rowW * (1 - big)) / 2, top: (line * (1 - big)) / 2 },
-                { transform: [{ scale: 1 / big }] },
+                // As big as it is drawn, centred on the box (not scaled: see Clock).
+                { width: rowW * big, height: line * big, left: px((rowW * (1 - big)) / 2), top: px((line * (1 - big)) / 2) },
               ]
             : styles.row
         }
@@ -655,15 +663,16 @@ export function Clock(props: Props) {
   const zoom = useSharedValue(1);
   const busy = useSharedValue(0);
   const lim = useSharedValue<Limits>({ W: width, H: height, rowW: 0, rowH: 0, sideW: 0, labelW: 0, bh: 0, cy0: 0, top: 0, bottom: 0, left: 0, right: 0, kMin: 1, kMax: 1 });
-  // 1 while a pinch tries to go past the biggest size (the frame shows it in red).
+  // 1 while a pinch tries to go past the biggest or smallest size (the frame shows it in red).
   const over = useSharedValue(0);
   const [editGesture] = useState(() => makeEditGesture(px, py, zoom, lim, busy, over));
   // Text is drawn as pixels, and a zoom (a transform) only stretches or squeezes those
   // pixels, like an enlarged photo. So the digits are drawn afresh at the zoom's size
-  // as it changes: a hair bigger (3 %) than shown, so that until the next drawing is in
-  // the zoom only ever squeezes it a little, never stretches it, and redrawn each time
-  // the zoom moves past that. Only the digits redraw (see Digits), not the clock round
-  // them. With no fingers on them (at rest, or gliding), at exactly the size shown.
+  // as it changes: a hair bigger (0.75 %) than shown, so that until the next drawing is
+  // in the zoom only ever squeezes it a touch, never stretches it, and redrawn each
+  // time the zoom moves past that (every 1.5 % or so). Only the digits redraw (see
+  // Digits), not the clock round them. With no fingers on them (at rest, or gliding),
+  // at exactly the size shown, with no transform left at all (see digitsStyle).
   const [drawAt] = useState(makeDrawStore);
   const drawUI = useSharedValue(1);
   // (A plain function for the UI thread to call back: not the store's own method,
@@ -674,7 +683,7 @@ export function Clock(props: Props) {
     ({ k, held }) => {
       const was = drawUI.get();
       const r = k / was;
-      const next = k === 1 ? 1 : !held ? k : r > 0.995 || r < 0.94 ? k * 1.03 : was;
+      const next = k === 1 ? 1 : !held ? k : r > 1 || r < 0.985 ? k * 1.0075 : was;
       if (next !== was) {
         drawUI.set(next);
         runOnJS(setDraw)(next);
@@ -688,12 +697,24 @@ export function Clock(props: Props) {
   const pending = useRef<{ x: number; y: number; k: number } | null>(null);
   const swapping = useRef(false);
   const fade = useSharedValue(1);
-  const placeStyle = useAnimatedStyle(() => ({ opacity: fade.get(), transform: [{ translateX: px.get() }, { translateY: py.get() }] }));
+  // (Moves land on whole device pixels: text placed between them is drawn soft.)
+  const dpr = PixelRatio.get();
+  const placeStyle = useAnimatedStyle(() => ({
+    opacity: fade.get(),
+    transform: [{ translateX: Math.round(px.get() * dpr) / dpr }, { translateY: Math.round(py.get() * dpr) / dpr }],
+  }));
   // Under a zoom the digits scale about their centre, and the label above and the hint
   // below move out (or in) by as much as the digits' line grows (or shrinks).
-  const digitsStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() }] }));
-  const aboveStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (-lim.get().rowH * (zoom.get() - 1)) / 2 }] }));
-  const belowStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (lim.get().rowH * (zoom.get() - 1)) / 2 }] }));
+  // The digits are drawn at about the zoom's size already (see Digits); the transform
+  // only makes up what is left, and is none at all once the drawing has caught up, so
+  // at rest nothing is stretched or squeezed.
+  const rendered = useSharedValue(1);
+  const digitsStyle = useAnimatedStyle(() => {
+    const r = zoom.get() / rendered.get();
+    return { transform: [{ scale: Math.abs(r - 1) < 1e-4 ? 1 : r }] };
+  });
+  const aboveStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.round(((-lim.get().rowH * (zoom.get() - 1)) / 2) * dpr) / dpr }] }));
+  const belowStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.round(((lim.get().rowH * (zoom.get() - 1)) / 2) * dpr) / dpr }] }));
   // The edit frame hangs on the digits' own box as laid out, and grows with them while
   // a pinch zooms them: evenly about its middle (the digits grow about theirs, and the
   // date above moves up by as much as the frame's bottom moves down). Its edges move,
@@ -920,7 +941,9 @@ export function Clock(props: Props) {
     label: string,
     labelOpacity: Animated.Value | number,
     measure: boolean,
-    framed: boolean
+    framed: boolean,
+    // The edit frame's colour: the scene's plain ink, never a colour chosen for the digits.
+    frameInk: string
   ) => {
     const size = sizeFor(m);
     // The date's width (not a mode's name, which shows only for a moment).
@@ -969,12 +992,13 @@ export function Clock(props: Props) {
               hoursAt={hoursAt}
               quartersAt={quartersAt}
               drawAt={framed ? drawAt : ONE}
+              rendered={framed ? rendered : undefined}
             />
           </Reanimated.View>
           {framed && edit ? (
             // Round the digits, and the date above them when there is one (as wide as
             // that is, if wider); it turns red when a pinch goes too far.
-            <EditFrame color={c.inkSoft} over={over} frameStyle={frameStyle} />
+            <EditFrame color={frameInk} over={over} frameStyle={frameStyle} />
           ) : null}
         </View>
         {/* The hint's line stays even when empty, so the digits never move (and it
@@ -1005,9 +1029,9 @@ export function Clock(props: Props) {
       <>
         <FaceBackdrop tone={tone} />
         <Animated.View style={[styles.face, { opacity: toneMix.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
-          {face(m, f, inks.dark, label, labelOpacity, current, current)}
+          {face(m, f, inks.dark, label, labelOpacity, current, current, FACES.dark.inkSoft)}
         </Animated.View>
-        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(m, f, inks.light, label, labelOpacity, false, current)}</Animated.View>
+        <Animated.View style={[styles.face, styles.faceOver, { opacity: toneMix }]}>{face(m, f, inks.light, label, labelOpacity, false, current, FACES.light.inkSoft)}</Animated.View>
       </>
     );
   };

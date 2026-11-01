@@ -127,7 +127,7 @@ export function SettingsSheet({ open, onClose, tone, credit, onShowTips }: Props
                           key={l.id}
                           onPress={() => {
                             tick();
-                            update((s) => ({ ...s, lang: l.id }));
+                            update((s) => ({ ...s, lang: l.id, langChosen: true }));
                           }}
                           accessibilityRole="button"
                           accessibilityState={{ selected: on }}

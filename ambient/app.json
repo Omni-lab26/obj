@@ -61,6 +61,15 @@
           "imageWidth": 120,
           "backgroundColor": "#121212"
         }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": [
+            "ja",
+            "en"
+          ]
+        }
       ]
     ],
     "extra": {
