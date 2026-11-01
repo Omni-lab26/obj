@@ -51,6 +51,10 @@
 | `npm run live -- --no-pull` | ブランチを追いかけない |
 | `npm run live -- --clear` | Metro のキャッシュを消してから起動 |
 
+## App Store / Google Play に出す
+
+アイコン・バンドル ID・EAS の設定、掲載文、プライバシーポリシー、スクリーンショットは `store/` にまとめてあります。手順は [store/README.md](store/README.md) を見てください。
+
 ## ブラウザで背景だけ見る
 
 `scenes/koi.html` などをそのままブラウザで開けば、アプリなしで背景だけ動きます。
