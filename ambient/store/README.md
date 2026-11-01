@@ -3,7 +3,7 @@
 ## このリポジトリでできていること
 
 - **app.json**
-  - バンドル ID `com.omnilab.ambient`（Android も同じ）
+  - バンドル ID `com.omnilab.lento`（Android も同じ）
   - iPad 対応、縦横4方向
   - 暗号化なしの申告
   - プライバシーマニフェスト（トラッキングなし・収集データなし）
@@ -21,7 +21,7 @@
 ## 自分でやること
 
 1. **ID を決める**
-   - バンドル ID `com.omnilab.ambient` でよいか確認します。App Store Connect に登録すると変えられません。
+   - バンドル ID `com.omnilab.lento` でよいか確認します。App Store Connect に登録すると変えられません。
    - 変える場合は、app.json の `ios.bundleIdentifier` と `android.package` を書き換えます。
 2. **Apple Developer Program に登録する**
    - https://developer.apple.com/programs/ から申し込みます（年 99 ドル）。
@@ -66,7 +66,7 @@
 ## 気をつけること
 
 - **名前の重複**
-  - 「Ambient Clock」がすでに使われていたら、別の名前にします。例: 「Ambient Clock — 動く背景の時計」「Ambient: Desk Clock」など。
+  - 「Lento — 動く背景の時計」がすでに使われていたら、別の名前にします。例: 「Lento 置き時計」「Lento: 動く背景と時計」など。
   - 名前は App Store Connect でアプリを登録するときに決まります。
 - **最低限の機能（審査ガイドライン 4.2）**
   - 時計アプリはここで止められることがあります。

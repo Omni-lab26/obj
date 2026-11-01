@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Ambient",
-    "slug": "ambient",
+    "name": "Lento",
+    "slug": "lento",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#121212",
     "ios": {
-      "bundleIdentifier": "com.omnilab.ambient",
+      "bundleIdentifier": "com.omnilab.lento",
       "supportsTablet": true,
       "requireFullScreen": false,
       "config": {
@@ -35,7 +35,7 @@
       }
     },
     "android": {
-      "package": "com.omnilab.ambient",
+      "package": "com.omnilab.lento",
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",

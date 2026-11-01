@@ -10,15 +10,15 @@ App Store Connect の「App 情報」「価格および配信状況」「App の
 **名前**（30文字まで）
 
 ```
-Ambient Clock
+Lento — 動く背景の時計
 ```
 
-> 「Ambient」だけだと他のアプリと名前がかぶる可能性が高いので、「Ambient Clock」にしています。ホーム画面に出る名前は app.json の `name`（Ambient）のままです。
+> Lento（レント）は音楽用語で「ゆっくりと」。ホーム画面に出る名前は app.json の `name` の「Lento」だけです。もし「Lento — 動く背景の時計」が使えなければ「Lento 置き時計」「Lento: 動く背景と時計」などに。
 
 **サブタイトル**（30文字まで）
 
 ```
-動く背景と、静かな時計
+静かに流れる、置き時計
 ```
 
 **プロモーションテキスト**（170文字まで・審査なしで後から変更可）
@@ -30,7 +30,7 @@ Ambient Clock
 **説明**（4000文字まで）
 
 ```
-Ambient Clock は、動く背景の上に大きな時計を置いておくためのアプリです。机の上やベッドサイドに立てて、眺めていられる時計を目指しました。
+Lento（レント）は、動く背景の上に大きな時計を置いておくためのアプリです。机の上やベッドサイドに立てて、眺めていられる時計を目指しました。
 
 ■ 背景
 ・夜の鯉：黒い池を文字でできた錦鯉が泳ぎ、蓮の葉が浮かびます。タップするとエサが落ちて、鯉が寄ってきます。鯉のすぐそばをタップすると、驚いて逃げます。
@@ -58,7 +58,7 @@ Ambient Clock は、動く背景の上に大きな時計を置いておくため
 **キーワード**（100文字まで・カンマ区切り）
 
 ```
-時計,置き時計,卓上時計,タイマー,ストップウォッチ,鯉,アクアリウム,環境,インテリア,デスク,ベッドサイド,大きい時計,スクリーンセーバー
+時計,置き時計,卓上時計,タイマー,ストップウォッチ,鯉,アクアリウム,インテリア,デスク,ベッドサイド,大きい時計,スクリーンセーバー,レント
 ```
 
 **サポート URL**：プライバシーポリシーと同じページ（`privacy.html` を公開した URL）でかまいません。問い合わせ先のメールアドレスをそのページに書いてください。
@@ -74,7 +74,7 @@ Ambient Clock は、動く背景の上に大きな時計を置いておくため
 **Name**
 
 ```
-Ambient Clock
+Lento — Clock on Living Scenes
 ```
 
 **Subtitle**
@@ -92,7 +92,7 @@ Koi in a pond at night, sharks in the shallows, passersby seen through frosted g
 **Description**
 
 ```
-Ambient Clock puts a large clock over a slowly moving scene: something to stand on your desk or bedside table and simply look at.
+Lento puts a large clock over a slowly moving scene: something to stand on your desk or bedside table and simply look at.
 
 SCENES
 • Night koi: koi drawn in type swim a dark pond among lotus leaves. Tap to drop food and they gather; tap right by one and it darts away.
