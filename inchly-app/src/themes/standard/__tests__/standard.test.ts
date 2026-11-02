@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 // スタンダード took the site's look; the look it had before stays as クラシック.
-import { applyDesign, BGS, CORNERS, DEFAULT_DESIGN, INKS, THEMES, THEMES_SHOWN, themeOf, themeShown, TIMERS, usesPicks } from '../../../design';
+import { applyDesign, BGS, CORNERS, DEFAULT_DESIGN, INKS, THEME_ROLE, THEMES, THEMES_SHOWN, themeOf, themeShown, TIMERS, usesPicks } from '../../../design';
 import { focus, radius, useT } from '../../../theme';
 import { CREATURES, faceOf, greyed, ICONS, STICKERS, stickerRows } from '../art';
 import { OWN } from '../../own';
@@ -12,8 +12,10 @@ jest.mock('react', () => ({ ...jest.requireActual('react'), useSyncExternalStore
 jest.mock('../../../ui/motion', () => ({ IOS: null }));
 
 describe('themes', () => {
-  it('shows スタンダード, クラシック and サイバー, スタンダード first and the default', () => {
-    expect(THEMES_SHOWN).toEqual(['standard', 'classic', 'cyber']);
+  it('shows スタンダード (main, first, the default), サイバー, and クラシック (sub, last)', () => {
+    expect(THEMES_SHOWN).toEqual(['standard', 'cyber', 'classic']);
+    expect(THEME_ROLE.standard).toBe('メイン');
+    expect(THEME_ROLE.classic).toBe('サブ');
     expect(themeShown('classic')).toBe(true);
     expect(DEFAULT_DESIGN.theme).toBe('standard');
     expect(THEMES.standard.label).toBe('スタンダード');

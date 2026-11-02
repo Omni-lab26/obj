@@ -293,7 +293,9 @@ export const THEMES_OPEN = true;
  * before it) and サイバー. The others come back once they're properly built;
  * one picked before shows as スタンダード meanwhile, and the choice is kept for then.
  */
-export const THEMES_SHOWN: ThemeId[] = ['standard', 'classic', 'cyber'];
+export const THEMES_SHOWN: ThemeId[] = ['standard', 'cyber', 'classic'];
+/** スタンダード is the main look; クラシック (the look before it) stays as a sub one, listed last. */
+export const THEME_ROLE: Partial<Record<ThemeId, 'メイン' | 'サブ'>> = { standard: 'メイン', classic: 'サブ' };
 export const themeShown = (id: string) => THEMES_SHOWN.includes(themeId(id));
 
 /** Called by the store whenever its state changes: the design as saved, applied as it can be shown now. */

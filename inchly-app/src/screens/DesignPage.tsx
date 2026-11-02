@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { type Backdrop, backdropOf, BACKDROPS, BACKDROPS_OPEN, BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_PEACH, STREAKS, THEMES, themeOf, ThemeId, themeShown, TIMERS, useDesign, usesPicks } from '@/design';
+import { type Backdrop, backdropOf, BACKDROPS, BACKDROPS_OPEN, BGS, CARDS, CORNERS, DEFAULT_DESIGN, Design, FAMILIES, INKS, STREAK_PEACH, STREAKS, THEME_ROLE, THEMES, THEMES_SHOWN, themeOf, ThemeId, themeShown, TIMERS, useDesign, usesPicks } from '@/design';
 import { setDesign } from '@/store';
 import { faceFor, focus, hair, lift, radius, useT } from '@/theme';
 import { haptic, Press, StdKey, Txt } from '@/ui/base';
@@ -38,7 +38,7 @@ export function DesignPage({ onClose, swipeBack }: { onClose: () => void; swipeB
   // スタンダード draws its own My Page card and streak (ボッ): those picks don't apply to it
   const std = isStd(d.theme);
   // only the themes that are ready (design.ts THEMES_SHOWN); a few sit in one row, more go by family
-  const shown = keys(THEMES).filter((k) => themeShown(k));
+  const shown = THEMES_SHOWN.filter((k) => themeShown(k)); // in its order: the main one first, the sub one last
   const byFamily = shown.length > 3;
   const [family, setFamily] = useState<(typeof FAMILIES)[number]['id']>(themeOf(d.theme).family);
   // swipe left to go back (as a page of its own)
@@ -178,7 +178,7 @@ export function ThemeTile({ id, on, onPress, width = '31.5%' }: { id: ThemeId; o
   const c = th.colors ?? { canvas: '#F4F5F8', surface: '#FFFFFF', ink: '#121417', ink3: '#848A96', sunken: '#EFF1F5' };
   const r = th.corners ?? { card: 16, inner: 12 };
   return (
-    <Press onPress={onPress} haptics={false} scale={0.96} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`テーマ ${th.label}`}
+    <Press onPress={onPress} haptics={false} scale={0.96} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`テーマ ${th.label}${THEME_ROLE[id] ? `（${THEME_ROLE[id]}）` : ''}`}
       style={[{ width, padding: 5, gap: 6, borderRadius: radius.inner + 4, backgroundColor: t.surface, borderWidth: on ? 2 : hair, borderColor: on ? t.ink : t.line, alignItems: 'center' }, std && PICK(on)]}>
       <View style={[{ width: '100%', aspectRatio: 0.82, borderRadius: radius.inner, backgroundColor: c.canvas, overflow: 'hidden', padding: 7, gap: 6 }, std && { borderRadius: SR.mid - 5 }]}>
         <TextureFill texture={th.texture ?? null} />
@@ -193,6 +193,8 @@ export function ThemeTile({ id, on, onPress, width = '31.5%' }: { id: ThemeId; o
         </View>
       </View>
       <Txt size={11} w={on ? '700' : '500'} tone={on ? 'ink' : 'ink2'} numberOfLines={1}>{th.label}</Txt>
+      {/* メイン / サブ under the name (the others: nothing) */}
+      {THEME_ROLE[id] ? <Txt size={9.5} w="700" tone="ink3" lh={12} style={{ marginTop: -4 }}>{THEME_ROLE[id]}</Txt> : null}
     </Press>
   );
 }

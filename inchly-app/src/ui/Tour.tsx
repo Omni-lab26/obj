@@ -111,7 +111,9 @@ function Bubble({ step, rect, n, i, next, skip }: { step: Step; rect: Rect | nul
   // the hole around the place (none: the whole screen dimmed)
   const r = rect ? { x: rect.x - PAD, y: rect.y - PAD, w: rect.w + PAD * 2, h: rect.h + PAD * 2 } : { x: W / 2, y: H / 2, w: 0, h: 0 };
   // the dim: one still view whose thick border is the dim and whose inside is the hole, so the hole has round corners
-  const B = Math.max(W, H);
+  // thick enough that its rounded outer corners still cover the far corners of the screen (W + H: a hole in one corner
+  // leaves the opposite corner about W + H away; max(W, H) left a light triangle at the bottom left)
+  const B = W + H;
   const R = 14;
 
   // the bubble: above the place when it's low on the screen, else below; its tail points at the place's middle
