@@ -1,0 +1,77 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 omni-lab26",
+    "categories": [
+      "UTILITIES",
+      "LIFESTYLE"
+    ],
+    "advisory": {
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "contests": "NONE",
+      "gambling": false,
+      "gamblingSimulated": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "unrestrictedWebAccess": false,
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE"
+    },
+    "info": {
+      "ja": {
+        "title": "Lento — 動く背景の時計",
+        "subtitle": "静かに流れる、置き時計",
+        "promoText": "鯉の泳ぐ夜の池、サメの浅瀬、すりガラス越しの通行人。ゆっくり動く背景の上に、時計・タイマー・ストップウォッチを置いておけるアプリです。",
+        "description": "Lento（レント）は、動く背景の上に大きな時計を置いておくためのアプリです。机の上やベッドサイドに立てて、眺めていられる時計を目指しました。\n\n■ 背景\n・夜の鯉：黒い池を文字でできた錦鯉が泳ぎ、蓮の葉が浮かびます。タップするとエサが落ちて、鯉が寄ってきます。鯉のすぐそばをタップすると、驚いて逃げます。\n・浅瀬のサメ：白い浅瀬をシュモクザメやトラフザメが回遊します。\n・通りすがり：すりガラスの床を下から見上げたように、靴底だけがくっきり見える人たちが行き交います。タップすると驚いて走り去ります。\n・白紙：何もない一枚の紙。\n\n■ 時計・タイマー・ストップウォッチ\n・数字を左右にスライドして切り替え。\n・タイマーは目盛りをなぞって時間を合わせ、よく使う時間を5つまで保存できます。数字はスロットのように回ります。\n・ストップウォッチは数字をタップで開始・停止、長押しでリセット。\n\n■ 自分好みに\n・数字の位置と大きさを自由に変えられます（1本指で移動、2本指でつまんで拡大縮小）。縦向きと横向きで別々に覚えます。\n・8種類のフォント、好きな色、日付・秒・24時間表示の切り替え。\n・画面のどこかを長押しすると、時計を隠して背景だけにできます。\n\n■ そのほか\n・画面はスリープしません。置き時計としてそのまま使えます。\n・iPhone と iPad、縦向き・横向きに対応。\n・日本語と英語に対応。\n・アカウント登録なし、広告なし、データの収集なし。すべて端末の中で動き、インターネットにもつながりません。",
+        "keywords": [
+          "時計",
+          "置き時計",
+          "卓上時計",
+          "タイマー",
+          "ストップウォッチ",
+          "鯉",
+          "アクアリウム",
+          "インテリア",
+          "デスク",
+          "ベッドサイド",
+          "大きい時計",
+          "スクリーンセーバー",
+          "レント"
+        ],
+        "supportUrl": "https://omni-lab26.github.io/lento/",
+        "privacyPolicyUrl": "https://omni-lab26.github.io/lento/"
+      },
+      "en-US": {
+        "title": "Lento — Clock on Living Scenes",
+        "subtitle": "A quiet clock on living scenes",
+        "promoText": "Koi in a pond at night, sharks in the shallows, passersby seen through frosted glass: slow, living backgrounds with a clock, timer and stopwatch on top.",
+        "description": "Lento puts a large clock over a slowly moving scene: something to stand on your desk or bedside table and simply look at.\n\nSCENES\n• Night koi: koi drawn in type swim a dark pond among lotus leaves. Tap to drop food and they gather; tap right by one and it darts away.\n• Sharks in the shallows: hammerheads and a leopard shark circle a bright sandy bay.\n• Passing by: people seen from under a frosted glass floor, only their soles sharp. Tap and they startle and run off.\n• Blank: a plain sheet of paper.\n\nCLOCK, TIMER, STOPWATCH\n• Slide the digits sideways to switch.\n• Set the timer by running a finger along its rulers, and keep up to five favourite lengths. The digits roll like a slot machine.\n• Tap the stopwatch to start or stop, hold to reset.\n\nMAKE IT YOURS\n• Move the digits anywhere and resize them: drag with one finger, pinch with two. Upright and on its side are remembered separately.\n• Eight fonts, any colour, and the date, seconds and 24-hour time on or off.\n• Hold anywhere to hide the clock and leave just the scene.\n\nALSO\n• The screen stays awake, so it works as a desk clock.\n• iPhone and iPad, upright or on its side.\n• English and Japanese.\n• No account, no ads, no data collected. Everything runs on the device, with no internet connection.",
+        "keywords": [
+          "clock",
+          "desk clock",
+          "bedside",
+          "timer",
+          "stopwatch",
+          "koi",
+          "aquarium",
+          "ambient",
+          "screensaver",
+          "big clock",
+          "minimal",
+          "calm"
+        ],
+        "supportUrl": "https://omni-lab26.github.io/lento/",
+        "privacyPolicyUrl": "https://omni-lab26.github.io/lento/"
+      }
+    },
+    "review": {
+      "demoRequired": false,
+      "notes": "No account or sign-in is needed. Things to try:\n- Slide the digits left or right to switch between clock, timer and stopwatch.\n- Tap the pen at the top left to move (one finger) and resize (pinch) the digits.\n- Use ‹ › at the bottom to change the background scene. In the koi and shark scenes, tap the water to drop food, or tap right by a fish to startle it.\n- Hold anywhere on the screen to hide or show the clock.\nThe app keeps the screen awake on purpose, so it can be used as a desk clock."
+    }
+  }
+}
