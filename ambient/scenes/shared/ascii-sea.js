@@ -633,6 +633,7 @@
     // ── lotus leaves ───────────────────────────────────────────────────
     // Round leaves float on the surface: fish pass underneath, taps push them.
     const pads = [];
+    if (/[#&]probe/.test(location.hash)) window.__seaPads = pads;
 
     function spawnPads() {
       const cfg = config.pads;

@@ -1,4 +1,4 @@
-# Store screenshots in Lento's look: the icon's paper and ink, a fermata, a headline,
+# Store screenshots in Lento's look: paper and ink, the app's icon, a headline,
 # and the app's own screen below.
 import math, os
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -26,8 +26,8 @@ CAPS = {
   ],
 }
 DEV = {
-  'iphone-6.9': dict(W=1320, H=2868, head=92, sub=44, shotW=1010, top=640, radius=70, mark=96),
-  'ipad-13': dict(W=2064, H=2752, head=104, sub=50, shotW=1560, top=650, radius=40, mark=110),
+  'iphone-6.9': dict(W=1320, H=2868, head=92, sub=44, shotW=1010, top=640, radius=70, mark=128),
+  'ipad-13': dict(W=2064, H=2752, head=104, sub=50, shotW=1560, top=650, radius=40, mark=140),
 }
 
 def paper(W, H):
@@ -51,6 +51,14 @@ def fermata(size, color):
         d.ellipse([x - th / 2, y - th / 2, x + th / 2, y + th / 2], fill=color)
     r = W * 0.088; d.ellipse([ax - r, ay - r * 1.2, ax + r, ay + r * 0.8], fill=color)
     return lay.resize((size, size), Image.LANCZOS)
+
+def app_icon(size):
+    # The app's own icon, with the corners the home screen gives it.
+    ic = Image.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'assets', 'icon.png')).convert('RGB').resize((size, size), Image.LANCZOS)
+    mask = Image.new('L', (size * 4, size * 4), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, size * 4 - 1, size * 4 - 1], radius=int(size * 4 * 0.225), fill=255)
+    out = ic.convert('RGBA'); out.putalpha(mask.resize((size, size), Image.LANCZOS))
+    return out
 
 def font(lang, size, kind):
     if lang == 'ja':
@@ -78,7 +86,7 @@ for dev, p in DEV.items():
             W, H = p['W'], p['H']
             im = paper(W, H).convert('RGBA')
             m = p['mark']
-            im.alpha_composite(fermata(m, INK + (255,)), ((W - m) // 2, int(p['top'] * 0.17)))
+            im.alpha_composite(app_icon(m), ((W - m) // 2, int(p['top'] * 0.13)))
             d = ImageDraw.Draw(im)
             head, sub = CAPS[lang][i]
             centred(d, W, int(p['top'] * 0.37), head, lang, p['head'], 'head', INK)

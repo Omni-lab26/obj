@@ -166,7 +166,7 @@ The app keeps the screen awake on purpose, so it can be used as a desk clock.
 | iPhone 6.9インチ | 1320 × 2868 | `iphone-6.9/ja`, `iphone-6.9/en` |
 | iPad 13インチ | 2064 × 2752 | `ipad-13/ja`, `ipad-13/en` |
 
-アイコンと同じ生成りの紙とインクで、上にフェルマータと見出し、下にアプリの画面を置いています。
+生成りの紙とインクの地に、上にアプリのアイコンと見出し、下にアプリの画面を置いています。
 
 | # | 画面 | 見出し（日本語） | 見出し（英語） |
 | --- | --- | --- | --- |
