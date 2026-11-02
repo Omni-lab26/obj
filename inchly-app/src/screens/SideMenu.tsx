@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BACKDROPS, BACKDROPS_OPEN, themeOf, useDesign, usesPicks } from '@/design';
+import { BACKDROPS, BACKDROPS_OPEN, themeOf, THEMES_OPEN, useDesign, usesPicks } from '@/design';
 import { useStore } from '@/store';
 import { useT } from '@/theme';
 import { Press, Txt } from '@/ui/base';
@@ -38,8 +38,8 @@ export function SideMenu({ close, leave }: { close: () => void; leave: () => voi
     { icon: 'gear', label: '設定', go: open('/settings') },
     { icon: 'book', label: '科目と色', go: open('/subjects') },
     { icon: 'bookmark', label: 'ブックマーク', sub: saved ? String(saved) : undefined, go: open('/bookmarks') },
-    // the look (the デザイン page), and what moves behind the pages (with クラシック; closed for now: design.ts BACKDROPS_OPEN)
-    { icon: 'sun', label: 'テーマ', sub: themeOf(d.theme).label, go: open('/design') },
+    // the look (the デザイン page; not while themes are closed: design.ts THEMES_OPEN), and what moves behind the pages (with クラシック; closed for now: design.ts BACKDROPS_OPEN)
+    ...(THEMES_OPEN ? [{ icon: 'sun' as const, label: 'テーマ', sub: themeOf(d.theme).label, go: open('/design') }] : []),
     ...(BACKDROPS_OPEN ? [{ icon: 'waves' as const, label: '背景', sub: picks ? BACKDROPS[d.backdrop].label : 'クラシックのみ', go: () => { leave(); backdropSheet(); } }] : []),
   ];
   return (

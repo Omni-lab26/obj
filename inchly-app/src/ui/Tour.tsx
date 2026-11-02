@@ -4,7 +4,7 @@ import { Pressable, StyleProp, StyleSheet, useWindowDimensions, View, ViewStyle 
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BACKDROPS_OPEN } from '../design';
+import { BACKDROPS_OPEN, THEMES_OPEN } from '../design';
 import { setState, useStore } from '../store';
 import { useT } from '../theme';
 import { backdropClock, backdropHeld } from './backdrop/shared';
@@ -60,8 +60,8 @@ const STEPS: Step[] = [
   { at: ['tab-me'], title: 'グラフで振り返る', body: 'マイページで、この7日間とこれまでの勉強時間をグラフで見られます。棒を押すと、何を勉強したかの内訳も出ます。',
     lines: 'マイページで、この7日間とこれまでの\n勉強時間をグラフで見られます。\n棒を押すと、何を勉強したかの\n内訳も出ます。' },
   { at: ['messages'], title: 'メッセージ', body: '右上の吹き出しから、仲間と1対1でやりとりできます。', lines: '右上の吹き出しから、仲間と1対1で\nやりとりできます。' },
-  { title: 'メニューは右にスワイプ', body: `ホームを右にスワイプすると、設定・テーマ・${BACKDROPS_OPEN ? '背景・' : ''}科目と色のメニューが出ます。`,
-    lines: `ホームを右にスワイプすると、\n設定・テーマ・${BACKDROPS_OPEN ? '背景・' : ''}科目と色の\nメニューが出ます。` },
+  { title: 'メニューは右にスワイプ', body: `ホームを右にスワイプすると、設定・${THEMES_OPEN ? 'テーマ・' : ''}${BACKDROPS_OPEN ? '背景・' : ''}科目と色のメニューが出ます。`,
+    lines: `ホームを右にスワイプすると、\n設定・${THEMES_OPEN ? 'テーマ・' : ''}${BACKDROPS_OPEN ? '背景・' : ''}科目と色の\nメニューが出ます。` },
   { title: '準備OK', body: 'さっそく下の「勉強を開始」から始めてみよう。', lines: 'さっそく下の「勉強を開始」から\n始めてみよう。' },
 ];
 

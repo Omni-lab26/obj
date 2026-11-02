@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { themeOf, useDesign } from '@/design';
+import { themeOf, THEMES_OPEN, useDesign } from '@/design';
 import { useStore } from '@/store';
 import { T } from '@/themes/kit';
 import { haptic } from '@/ui/base';
@@ -31,7 +31,8 @@ export function Menu({ leave }: { close: () => void; leave: () => void }) {
     { icon: 'gear', label: '設定', go: open('/settings') },
     { icon: 'book', label: '科目と色', go: open('/subjects') },
     { icon: 'bookmark', label: 'ブックマーク', sub: saved ? String(saved) : undefined, go: open('/bookmarks') },
-    { icon: 'sun', label: 'テーマ', sub: themeOf(theme).label, go: open('/design') },
+    // the デザイン page, while themes are open (design.ts THEMES_OPEN)
+    ...(THEMES_OPEN ? [{ icon: 'sun' as const, label: 'テーマ', sub: themeOf(theme).label, go: open('/design') }] : []),
   ];
   return (
     <View style={{ flex: 1, backgroundColor: S.paper, paddingTop: insets.top + 14, paddingBottom: insets.bottom + 18, paddingLeft: 20, paddingRight: 18 }}>
