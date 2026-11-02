@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 // スタンダード took the site's look; the look it had before stays as クラシック.
-import { applyDesign, BGS, CORNERS, DEFAULT_DESIGN, INKS, THEME_ROLE, THEMES, THEMES_SHOWN, themeOf, themeShown, TIMERS, usesPicks } from '../../../design';
+import { applyDesign, BGS, CORNERS, DEFAULT_DESIGN, INKS, THEME_ROLE, THEMES, THEMES_OPEN, THEMES_SHOWN, themeOf, themeShown, TIMERS, usesPicks } from '../../../design';
 import { focus, radius, useT } from '../../../theme';
 import { CREATURES, faceOf, greyed, ICONS, STICKERS, stickerRows } from '../art';
 import { OWN } from '../../own';
@@ -38,6 +38,8 @@ describe('themes', () => {
     const d = { ...DEFAULT_DESIGN, theme: 'classic' as const, bg: 'warm' as const, ink: 'navy' as const, corners: 'l' as const, timer: 'plum' as const };
     applyDesign(d);
     const t = useT();
+    // theme switching closed (the MVP): クラシック shows as スタンダード; open, it is your picks
+    if (!THEMES_OPEN) { expect(t.canvas).toBe(THEMES.standard.colors!.canvas); return; }
     expect(t.canvas).toBe(BGS.warm.canvas);
     expect(t.ink).toBe(INKS.navy.ink);
     expect(t.surface).toBe('#FFFFFF');

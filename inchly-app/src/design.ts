@@ -286,8 +286,11 @@ export const onDesign = (l: () => void) => { listeners.add(l); return () => { li
 export const getDesign = () => design;
 export const designVersion = () => version;
 
-/** Theme switching is open (false hides it: everyone gets the standard look, and the saved choice is kept for later). */
-export const THEMES_OPEN = true;
+/**
+ * Theme switching is open (false hides it: everyone gets the standard look, and the saved choice is kept for later).
+ * The MVP ships with スタンダード only: closed until the other themes are properly finished (MEMO.md).
+ */
+export const THEMES_OPEN = false;
 /**
  * The themes that can be picked for now: スタンダード, クラシック (the look
  * before it) and サイバー. The others come back once they're properly built;

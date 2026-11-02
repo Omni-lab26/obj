@@ -3,7 +3,7 @@
 import { TODO_CAP, TODO_EXP } from '../exp';
 import { addSubject, dropFavorite, dropIcon, keepIcon, MAX_FAVS, toggleFavorite, MAX_ICONS, startFree, commitAll, commitHeld, commitRecord, doneOn, planNow, finishBlock, getState, INITIAL, MAX_TICKETS, migrate, removeSubject, rollDay, setState, splitAtMidnight, startFrom, startStudy, toggleBookmark, toggleTodo, keepFree, sortFree, updateSubject } from '../../store';
 import { AREA_SHADES, FREE, OTHER_COLORS, subj } from '../../data';
-import { backdropOf, BACKDROPS_OPEN, DEFAULT_DESIGN, getDesign, themeShown } from '../../design';
+import { backdropOf, BACKDROPS_OPEN, DEFAULT_DESIGN, getDesign, THEMES_OPEN, themeShown } from '../../design';
 import { addDays, dateKey } from '../time';
 
 const reset = (patch = {}) => setState({ ...INITIAL, ...patch });
@@ -337,10 +337,12 @@ describe('背景', () => {
 describe('themes not out yet', () => {
   it('show as the standard look, and the choice is kept', () => {
     reset({ design: { ...DEFAULT_DESIGN, theme: 'neon' } });
-    expect(getDesign().theme).toBe(themeShown('neon') ? 'neon' : 'standard');
+    expect(getDesign().theme).toBe(THEMES_OPEN && themeShown('neon') ? 'neon' : 'standard');
     expect(getState().design.theme).toBe('neon');
     reset({ design: { ...DEFAULT_DESIGN, theme: 'cyber' } });
-    expect(getDesign().theme).toBe('cyber');
+    // theme switching closed (the MVP: スタンダード only): everyone sees スタンダード, the choice still kept
+    expect(getDesign().theme).toBe(THEMES_OPEN ? 'cyber' : 'standard');
+    expect(getState().design.theme).toBe('cyber');
     reset(); // back to the standard look for the tests after
   });
 });
