@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A 試着室 · Inchly テーマ</title>
+<meta name="description" content="テーマの選び方の案A：自分のホームを、テーマを着がえるように横にすべらせて見る">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Share+Tech+Mono&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&text=0123456789:&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@900&text=%E6%B8%88&display=swap">
+<link rel="stylesheet" href="shared/app.css">
+<link rel="stylesheet" href="shared/skins.css">
+<link rel="stylesheet" href="shared/pages.css">
+<style>
+/* ===== A 試着室：部屋ごと着がえる。地・上の操作・下の板・ボタンまで、見ているテーマの見た目になる ===== */
+.a-app{--a-fg:var(--ink);--a-fg2:var(--ink-3);color:var(--a-fg);transition:color var(--t-micro) var(--ios)}
+@media (max-width:430px){ .a-app{height:100vh;height:100dvh;min-height:0;overflow:hidden} .note{margin-bottom:calc(var(--safe-bottom) + 32px)} }
+.a-app[data-th="cyber"]{--a-fg:#E6F4F5;--a-fg2:#93A9AE}
+.a-app[data-th="classic"]{--a-fg:var(--pk-ink);--a-fg2:#848A96}
+.a-app .os{color:var(--a-fg);transition:color var(--t-micro) var(--ios)}
+.a-app .os-home{background:var(--a-fg)}
+
+/* 地：3枚を重ねて、すべらせた分だけ透明度で入れかわる */
+.a-bg{position:absolute;inset:0;z-index:0}
+.a-bg i{position:absolute;inset:0;opacity:0}
+.a-bg i[data-th="standard"]{background:var(--dots),var(--paper)}
+.a-bg i[data-th="cyber"]{background:repeating-linear-gradient(to bottom,rgba(0,240,255,.035) 0 1px,transparent 1px 3px),radial-gradient(120% 50% at 50% 30%,#0C1A28,#03060A 75%)}
+.a-bg i[data-th="classic"]{background:linear-gradient(to bottom,rgba(255,255,255,.8),rgba(255,255,255,0) 320px),var(--pk-canvas)}
+
+.a-screen{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;padding:0!important;overflow:hidden!important}
+
+/* 上：戻る・題といまのテーマ・ホーム／タイマー */
+.a-top{flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;height:calc(56px + var(--safe-top));padding:var(--safe-top) 12px 0}
+.a-title{display:flex;flex-direction:column;align-items:center;gap:1px;text-align:center}
+.a-title b{font:800 17px/1.2 var(--a-font,var(--f-body))}
+.a-title small{font-size:11.5px;line-height:1.3;color:var(--a-fg2);white-space:nowrap}
+.a-title small em{font-style:normal;font-weight:700;color:var(--a-fg)}
+.a-top .ab-back{justify-self:start}
+.a-top .a-seg{justify-self:end}
+
+/* 着がえる場所 */
+.a-car{position:relative;flex:1 1 auto;min-height:0;touch-action:pan-y;outline:none}
+.a-car:focus-visible{outline:3px solid var(--focus);outline-offset:-3px}
+.a-track{position:absolute;left:0;top:6px;display:flex;gap:14px;will-change:transform}
+.a-slide{position:relative;flex:none;border-radius:30px;overflow:hidden;transition:box-shadow var(--t-micro) var(--ios)}
+.a-slide[data-th="standard"]{box-shadow:0 0 0 2px var(--ink),6px 6px 0 2px var(--lime-2)}
+.a-slide[data-th="cyber"]{border-radius:6px;box-shadow:0 0 0 1px rgba(0,240,255,.6),0 0 26px rgba(0,240,255,.18)}
+.a-slide[data-th="classic"]{box-shadow:0 0 0 .5px rgba(15,23,42,.1),0 18px 40px rgba(15,23,42,.16)}
+.a-veil{position:absolute;inset:0;z-index:20;pointer-events:none;opacity:0}
+.a-slide[data-th="standard"] .a-veil{background:var(--paper-2)}
+.a-slide[data-th="cyber"] .a-veil{background:#03060A}
+.a-slide[data-th="classic"] .a-veil{background:var(--pk-canvas)}
+
+/* ボタン（テーマごとの形）：.ab > .ab-f */
+.ab{--kd:0px;position:relative;display:inline-flex;align-items:stretch;flex:none;min-width:44px;min-height:44px;padding:0;border:0;background:none;color:inherit;font:700 15px/1.2 var(--f-body);cursor:pointer;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.ab-f{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:0;padding:0 16px;white-space:nowrap;
+  transition:transform var(--t-release) var(--ios),opacity var(--t-release) var(--ios),background-color var(--t-micro) var(--ios),color var(--t-micro) var(--ios),box-shadow var(--t-micro) var(--ios)}
+.ab.is-down .ab-f{transition:transform var(--t-press) var(--press-ease),opacity var(--t-press) var(--press-ease)}
+.ab .pi svg,.ab svg{flex:none}
+.ab-icon .ab-f{width:44px;padding:0}
+.ab-sm{min-height:36px}
+.ab-sm .ab-f{padding:0 12px;font-size:13px}
+.ab-icon.ab-sm .ab-f{width:40px}
+.ab:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+/* スタンダード：面と床（押すと面だけ下がる） */
+.a-app[data-th="standard"] .ab{--kd:4px;border-radius:12px;box-shadow:0 var(--kd) 0 2px var(--ink)}
+.a-app[data-th="standard"] .ab-sm{--kd:3px}
+.a-app[data-th="standard"] .ab-f{border-radius:12px;background:var(--card);box-shadow:var(--ring)}
+.a-app[data-th="standard"] .ab.is-down .ab-f{transform:translateY(calc(var(--kd) - 1px))}
+.a-app[data-th="standard"] .ab-go{box-shadow:0 var(--kd) 0 2px var(--lime-2)}
+.a-app[data-th="standard"] .ab-go .ab-f{background:var(--ink);color:var(--on-ink);box-shadow:0 0 0 2px var(--ink)}
+.a-app[data-th="standard"] .ab-go[aria-disabled="true"]{box-shadow:none}
+.a-app[data-th="standard"] .ab-go[aria-disabled="true"] .ab-f{background:var(--paper-2);color:var(--ink-3);box-shadow:0 0 0 2px var(--line-2);transform:none}
+/* サイバー：角を落とした板。押すと一瞬暗く */
+.a-app[data-th="cyber"] .ab-f{background:rgba(3,6,10,.7);color:#00F0FF;box-shadow:inset 0 0 0 1.5px rgba(0,240,255,.6);
+  clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px))}
+.a-app[data-th="cyber"] .ab.is-down .ab-f{opacity:.55}
+.a-app[data-th="cyber"] .ab-go .ab-f{background:#FCEE0A;color:#000;box-shadow:none;font-weight:800}
+.a-app[data-th="cyber"] .ab-go .ab-f::before{content:"SET //";margin-right:2px;font:400 11px/1 var(--f-mono);letter-spacing:.16em;opacity:.7}
+.a-app[data-th="cyber"] .ab-go[aria-disabled="true"] .ab-f{background:rgba(252,238,10,.08);color:#93A9AE;box-shadow:inset 0 0 0 1px rgba(252,238,10,.35)}
+.a-app[data-th="cyber"] .ab-go[aria-disabled="true"] .ab-f::before{content:"ACTIVE //"}
+/* クラシック：白い丸と、メインの色で塗ったボタン。押すと少し縮む */
+.a-app[data-th="classic"] .ab-f{border-radius:999px;background:#fff;color:var(--pk-ink);box-shadow:0 0 0 .5px rgba(15,23,42,.08),0 4px 14px rgba(15,23,42,.1);font-family:var(--f-sys)}
+.a-app[data-th="classic"] .ab.is-down .ab-f{transform:scale(.96)}
+.a-app[data-th="classic"] .ab-go .ab-f{border-radius:var(--pk-ri);background:var(--pk-ink);color:#fff}
+.a-app[data-th="classic"] .ab-go[aria-disabled="true"] .ab-f{background:rgba(118,118,128,.14);color:#848A96;box-shadow:none}
+
+/* ホーム／タイマー */
+.a-seg{display:inline-flex;padding:0;border:0}
+.a-seg button{position:relative;min-width:52px;min-height:36px;padding:0 9px;white-space:nowrap;border:0;background:none;color:var(--a-fg2);font:700 13px/1 var(--f-body);cursor:pointer;
+  transition:background-color var(--t-micro) var(--ios),color var(--t-micro) var(--ios)}
+.a-seg button::after{content:"";position:absolute;inset:-4px 0}
+.a-seg button[aria-pressed="true"]{color:var(--a-fg)}
+.a-app[data-th="standard"] .a-seg{border-radius:11px;background:var(--card);box-shadow:var(--ring),0 3px 0 2px var(--ink);overflow:hidden}
+.a-app[data-th="standard"] .a-seg button + button{box-shadow:-2px 0 0 0 var(--ink)}
+.a-app[data-th="standard"] .a-seg button[aria-pressed="true"]{background:var(--lime);color:var(--ink)}
+.a-app[data-th="cyber"] .a-seg{box-shadow:inset 0 0 0 1px rgba(0,240,255,.45)}
+.a-app[data-th="cyber"] .a-seg button{font-family:var(--f-body)}
+.a-app[data-th="cyber"] .a-seg button[aria-pressed="true"]{background:#FCEE0A;color:#000}
+.a-app[data-th="classic"] .a-seg{padding:2px;border-radius:10px;background:rgba(118,118,128,.14)}
+.a-app[data-th="classic"] .a-seg button{border-radius:8px;min-height:32px;font-family:var(--f-sys);font-weight:600}
+.a-app[data-th="classic"] .a-seg button[aria-pressed="true"]{background:#fff;box-shadow:0 1px 4px rgba(15,23,42,.14)}
+
+/* 左右の矢印（となりのテーマの上） */
+.a-arrow{position:absolute;z-index:3;top:50%;margin-top:-22px}
+.a-arrow.l{left:6px} .a-arrow.r{right:6px}
+.a-arrow[hidden]{display:none}
+
+/* 下の板 */
+.a-panel{flex:none;display:flex;flex-direction:column;gap:10px;padding:12px 16px calc(var(--safe-bottom) + 14px)}
+@media (max-width:430px){ .a-panel{padding-bottom:max(14px,calc(var(--safe-bottom) + 4px))} }
+.a-name{display:flex;align-items:center;gap:8px;min-height:30px}
+.a-name h2{font:800 24px/1.2 var(--f-body);letter-spacing:-.01em;transition:color var(--t-micro) var(--ios)}
+.a-app[data-th="cyber"] .a-name h2{font-weight:800}
+.a-app[data-th="classic"] .a-name h2{font-family:var(--f-sys)}
+.a-name .role,.a-name .now-tag{flex:none}
+.a-name .now-tag{margin-left:auto}
+.a-app[data-th="cyber"] .role{background:none;box-shadow:inset 0 0 0 1px rgba(0,240,255,.5);color:#00F0FF;font-family:var(--f-mono);letter-spacing:.06em}
+.a-app[data-th="cyber"] .now-tag{background:#FCEE0A;box-shadow:none}
+.a-app[data-th="classic"] .role{background:rgba(118,118,128,.14);box-shadow:none;color:#5A606B;font-family:var(--f-sys);border-radius:999px}
+.a-app[data-th="classic"] .now-tag{background:var(--pk-ink);color:#fff;box-shadow:none;border-radius:999px;font-family:var(--f-sys)}
+.a-line{font-size:13.5px;line-height:1.5;color:var(--a-fg2);min-height:2.4em;transition:color var(--t-micro) var(--ios)}
+.a-dots{display:flex;justify-content:center;gap:4px;margin:-4px 0 -2px}
+.a-dots button{position:relative;display:grid;place-items:center;width:32px;height:28px;padding:0;border:0;background:none;cursor:pointer}
+.a-dots button::after{content:"";position:absolute;inset:-8px 0}
+.a-dots i{display:block;width:8px;height:8px;transition:background-color var(--t-micro) var(--ios)}
+.a-app[data-th="standard"] .a-dots i{background:var(--card);box-shadow:var(--ring-thin)}
+.a-app[data-th="standard"] .a-dots [aria-current="true"] i{background:var(--ink)}
+.a-app[data-th="cyber"] .a-dots i{width:16px;height:4px;background:#12202B}
+.a-app[data-th="cyber"] .a-dots [aria-current="true"] i{background:#00F0FF;box-shadow:0 0 6px #00F0FF}
+.a-app[data-th="classic"] .a-dots i{width:7px;height:7px;border-radius:50%;background:rgba(118,118,128,.35)}
+.a-app[data-th="classic"] .a-dots [aria-current="true"] i{background:var(--pk-ink)}
+.a-acts{display:flex;gap:10px}
+.a-acts .ab-go{flex:1;min-height:52px}
+.a-acts .ab-go .ab-f{font-size:16px}
+.a-acts .ab-picks .ab-f{padding:0 14px;font-size:14px}
+
+/* クラシックのときの選択シート（クラシックの見た目） */
+#sheet-picks .sheet-panel{max-height:62%}
+#sheet-picks .sheet-scrim{background:rgba(15,23,42,.18)}
+.a-app[data-th="classic"] #sheet-picks .sheet-panel{background:#fff;box-shadow:0 -10px 40px rgba(15,23,42,.18);font-family:var(--f-sys)}
+.a-app[data-th="classic"] #sheet-picks .pk-o{background:#fff;box-shadow:0 0 0 .5px rgba(15,23,42,.14);border-radius:14px}
+.a-app[data-th="classic"] #sheet-picks .pk-o[aria-checked="true"]{background:#fff;box-shadow:0 0 0 2px var(--pk-ink)}
+.a-app[data-th="classic"] #sheet-picks .pk-h,.a-app[data-th="classic"] #sheet-picks .sheet-h h2{font-family:var(--f-sys)}
+.a-app[data-th="classic"] #sheet-picks .sheet-acts .ab-go .ab-f{border-radius:14px}
+.pk-done{min-height:50px;width:100%}
+.sr-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="app a-app" id="app" data-th="standard">
+    <div class="os" aria-hidden="true"><span>7:32</span><span class="os-r"><svg width="17" height="11" viewBox="0 0 17 11"><g fill="currentColor"><rect x="0" y="7" width="3" height="4"/><rect x="4.5" y="5" width="3" height="6"/><rect x="9" y="2.5" width="3" height="8.5"/><rect x="13.5" y="0" width="3" height="11"/></g></svg><svg width="25" height="12" viewBox="0 0 25 12"><rect x="1" y="1" width="20" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".45"/><rect x="3" y="3" width="13" height="6" rx="1" fill="currentColor"/><rect x="22.5" y="4" width="1.5" height="4" fill="currentColor" opacity=".45"/></svg></span></div>
+    <div class="a-bg" aria-hidden="true"><i data-th="standard"></i><i data-th="cyber"></i><i data-th="classic"></i></div>
+    <main class="screen a-screen">
+      <header class="a-top">
+        <a class="ab ab-icon ab-back" href="index.html" aria-label="戻る（案の一覧へ）"><span class="ab-f" id="back-ic"></span></a>
+        <div class="a-title"><b>テーマ</b><small>いま：<em id="cur-name">スタンダード</em></small></div>
+        <div class="a-seg" role="group" aria-label="見る画面"><button type="button" aria-pressed="true" data-view="home">ホーム</button><button type="button" aria-pressed="false" data-view="timer">タイマー</button></div>
+      </header>
+      <div class="a-car" id="car" tabindex="0" role="region" aria-roledescription="カルーセル" aria-label="テーマの見本。左右にすべらせて着がえる（矢印キーでも）">
+        <div class="a-track" id="track"></div>
+        <button class="ab ab-icon a-arrow l" type="button" id="prev" aria-label="前のテーマ"><span class="ab-f"></span></button>
+        <button class="ab ab-icon a-arrow r" type="button" id="next" aria-label="次のテーマ"><span class="ab-f"></span></button>
+      </div>
+      <section class="a-panel" aria-labelledby="a-name">
+        <div class="a-name"><h2 id="a-name">スタンダード</h2><span class="role main" id="a-role">メイン</span><span class="now-tag" id="a-nowtag">いまのテーマ</span></div>
+        <p class="a-line" id="a-line"></p>
+        <div class="a-dots" id="dots" role="group" aria-label="テーマを選ぶ"></div>
+        <div class="a-acts">
+          <button class="ab ab-picks" type="button" id="picks-open" hidden><span class="ab-f">色・角を選ぶ</span></button>
+          <button class="ab ab-go" type="button" id="go"><span class="ab-f">このテーマにする</span></button>
+        </div>
+      </section>
+      <p class="sr-live" id="live" aria-live="polite"></p>
+    </main>
+
+    <div class="sheet" id="sheet-picks" hidden>
+      <div class="sheet-scrim" data-close-sheet></div>
+      <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-picks-h">
+        <span class="sheet-grab" aria-hidden="true"></span>
+        <div class="sheet-h"><h2 id="sheet-picks-h">クラシックの色と角</h2></div>
+        <div id="picks-box"></div>
+        <div class="sheet-acts"><button class="ab ab-go pk-done" type="button" data-close-sheet><span class="ab-f">できた</span></button></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="note">
+    <p class="label-j sq">この案で見てほしい点</p>
+    <h1>A 試着室</h1>
+    <p>自分のホームのまま、横にすべらせてテーマを着がえる案。地・上の操作・下のボタンまで、見ているテーマの見た目に変わります。</p>
+    <ul>
+      <li>指（マウスならドラッグ）で左右にすべらせる。矢印・下の点・キーボードの ← → でも。</li>
+      <li>右上で「タイマー」にすると、勉強中のタイマーで比べられます（サイバーは雨が流れる）。</li>
+      <li>クラシックでは「色・角を選ぶ」から、地の色・メインの色・角・タイマーの色。選ぶとすぐ見本が変わります。</li>
+      <li>「このテーマにする」で決定。いまのテーマは、上の「いま：」と「いまのテーマ」の札でわかります。</li>
+    </ul>
+    <p class="note-links"><a class="link" href="b.html">B 棚</a><a class="link" href="c.html">C くらべる</a><a class="link" href="index.html">一覧へ</a><a class="link" href="img/now-design.webp">今のページ（写真）</a><a class="link" href="img/classic-home.webp">今のクラシック（写真）</a><a class="link" href="img/cyber-home.webp">今のサイバー（写真）</a></p>
+  </aside>
+</div>
+<script src="shared/app.js"></script>
+<script src="shared/skins.js"></script>
+<script>
+(() => {
+  'use strict';
+  const A = window.App, S = window.Skins;
+  const $ = s => document.querySelector(s);
+  const app = $('#app'), car = $('#car'), track = $('#track');
+  const IDS = S.ORDER;
+  let idx = 0, view = 'home', pos = 0, geo = null;
+  const reduced = () => A.reduced();
+
+  $('#back-ic').innerHTML = S.ic('chev', 2.4).replace('d="M9.5 6l6 6-6 6"', 'd="M14.5 6l-6 6 6 6"');
+  $('#prev .ab-f').innerHTML = S.ic('chev', 2.4).replace('d="M9.5 6l6 6-6 6"', 'd="M14.5 6l-6 6 6 6"');
+  $('#next .ab-f').innerHTML = S.ic('chev', 2.4);
+  $('#dots').innerHTML = IDS.map((t, i) => `<button type="button" data-i="${i}" aria-label="${S.THEMES[t].name}"><i></i></button>`).join('');
+  $('#picks-box').appendChild(S.picksUI({ compact: true, id: 'a' }));
+
+  /* スライド（テーマ1つに1枚） */
+  track.innerHTML = IDS.map(t => `<div class="a-slide" data-th="${t}"><div class="a-scr"></div><span class="a-veil"></span></div>`).join('');
+  const slides = [...track.children];
+  const bgs = [...document.querySelectorAll('.a-bg i')];
+
+  function measure() {
+    const W = car.clientWidth, H = car.clientHeight;
+    const s = Math.min(W * 0.78 / 390, (H - 16) / 600);
+    const w = Math.round(390 * s), h = Math.round(H - 16);
+    geo = { W, H, s, w, h, step: w + 14, off: (W - w) / 2 };
+  }
+  function render() {
+    measure();
+    slides.forEach((el, i) => {
+      el.style.width = geo.w + 'px'; el.style.height = geo.h + 'px';
+      S.mount(el.querySelector('.a-scr'), IDS[i], view, { scale: geo.s, height: geo.h, live: i === idx });
+    });
+    paint(pos, false);
+  }
+  /* p はいま見ている位置（0〜2、すべらせている間は小数） */
+  function paint(p, anim) {
+    pos = p;
+    const dur = anim ? (anim === 'back' ? 'var(--t-move)' : 'var(--t-present)') : '0s';
+    track.style.transition = anim && !reduced() ? `transform ${dur} var(--ios)` : 'none';
+    track.style.transform = `translate3d(${(geo.off - p * geo.step).toFixed(1)}px,0,0)`;
+    slides.forEach((el, i) => { const v = el.querySelector('.a-veil'); v.style.transition = track.style.transition.replace('transform', 'opacity'); v.style.opacity = Math.min(1, Math.abs(p - i)) * .5; });
+    bgs.forEach((b, i) => { b.style.transition = track.style.transition.replace('transform', 'opacity'); b.style.opacity = Math.max(0, 1 - Math.abs(p - i)); });
+  }
+  /* 上の操作と下の板を、そのテーマの見た目に */
+  let shown = -1;
+  function chrome(i) {
+    if (i === shown) return;
+    shown = i;
+    const t = IDS[i], T = S.THEMES[t];
+    app.dataset.th = t;
+    $('#a-name').textContent = T.name;
+    const role = $('#a-role'); role.hidden = !T.role; role.textContent = T.role; role.classList.toggle('main', T.role === 'メイン');
+    $('#a-line').textContent = T.line;
+    $('#picks-open').hidden = t !== 'classic';
+    document.querySelectorAll('#dots button').forEach((b, k) => b.setAttribute('aria-current', String(k === i)));
+    $('#prev').hidden = i === 0; $('#next').hidden = i === IDS.length - 1;
+    state();
+  }
+  function state() {
+    const t = IDS[shown], cur = S.current === t;
+    const go = $('#go');
+    go.setAttribute('aria-disabled', String(cur));
+    go.querySelector('.ab-f').textContent = cur ? 'いまのテーマ' : 'このテーマにする';
+    $('#a-nowtag').hidden = !cur;
+    $('#cur-name').textContent = S.THEMES[S.current].name;
+    slides.forEach(el => el.classList.toggle('is-current', el.dataset.th === S.current));
+  }
+  function go(i, how) {
+    i = Math.max(0, Math.min(IDS.length - 1, i));
+    const moved = i !== idx;
+    idx = i;
+    paint(i, how === undefined ? 'present' : how);
+    chrome(i);
+    slides.forEach((el, k) => S.setLive(el.querySelector('.sk'), k === i));
+    if (moved) $('#live').textContent = `${S.THEMES[IDS[i]].name}。${S.THEMES[IDS[i]].line}`;
+  }
+
+  /* すべらせる（指に 1:1。横に動いたときだけ取る。縦は見本の中のスクロールへ） */
+  let drag = null, wasDrag = false;
+  car.addEventListener('pointerdown', e => {
+    if (e.button && e.button !== 0) return;
+    if (e.target.closest('button')) return;
+    drag = { x: e.clientX, y: e.clientY, id: e.pointerId, mode: null, hist: [[e.timeStamp, e.clientX]] };
+  });
+  car.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.mode) {
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) { drag.mode = 'h'; try { car.setPointerCapture(e.pointerId); } catch (_) {} document.body.style.userSelect = 'none'; }
+      else if (Math.abs(dy) > 8) { drag = null; return; }
+      else return;
+    }
+    let p = idx - dx / geo.step;
+    const last = IDS.length - 1;
+    if (p < 0) p = p / 3; else if (p > last) p = last + (p - last) / 3;
+    paint(p, false);
+    chrome(Math.round(Math.max(0, Math.min(last, p))));
+    drag.hist.push([e.timeStamp, e.clientX]); if (drag.hist.length > 6) drag.hist.shift();
+    drag.dx = dx;
+  });
+  function end(e) {
+    if (!drag || (e && e.pointerId !== drag.id)) return;
+    const d = drag; drag = null; document.body.style.userSelect = '';
+    if (d.mode !== 'h') return;
+    wasDrag = true; setTimeout(() => { wasDrag = false; }, 0);
+    const h = d.hist, a = h[0], b = h[h.length - 1];
+    const v = (b[1] - a[1]) / Math.max(1, b[0] - a[0]); // px/ms
+    let t = idx;
+    if (d.dx < -geo.step * .3 || v < -.35) t = idx + 1;
+    else if (d.dx > geo.step * .3 || v > .35) t = idx - 1;
+    t = Math.max(0, Math.min(IDS.length - 1, t));
+    go(t, t === idx ? 'back' : 'present');
+  }
+  car.addEventListener('pointerup', end);
+  car.addEventListener('pointercancel', end);
+  car.addEventListener('click', e => { if (wasDrag) { e.stopPropagation(); e.preventDefault(); } }, true);
+  car.addEventListener('keydown', e => { if (e.key === 'ArrowRight') { e.preventDefault(); go(idx + 1); } if (e.key === 'ArrowLeft') { e.preventDefault(); go(idx - 1); } });
+  $('#prev').addEventListener('click', () => go(idx - 1));
+  $('#next').addEventListener('click', () => go(idx + 1));
+  $('#dots').addEventListener('click', e => { const b = e.target.closest('button'); if (b) go(+b.dataset.i); });
+
+  /* ホーム／タイマー */
+  document.querySelector('.a-seg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || b.dataset.view === view) return;
+    view = b.dataset.view;
+    document.querySelectorAll('.a-seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    render();
+    if (!reduced()) slides.forEach(el => el.querySelector('.a-scr').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'linear' }));
+  });
+
+  /* 決める */
+  $('#go').addEventListener('click', () => {
+    const t = IDS[shown];
+    if (S.current === t) return;
+    S.setCurrent(t);
+    state();
+    A.toast({ title: `${S.THEMES[t].name}にしました`, sub: '記録はそのまま。見た目だけが変わります', ms: 2400 });
+  });
+  $('#picks-open').addEventListener('click', () => A.sheet.open('sheet-picks'));
+
+  /* 押した印（床は動かず、面だけ） */
+  const downs = new Set();
+  document.addEventListener('pointerdown', e => { const b = e.target.closest('.ab'); if (b && b.getAttribute('aria-disabled') !== 'true') { b.classList.add('is-down'); b._t = performance.now(); downs.add(b); } }, { passive: true });
+  ['pointerup', 'pointercancel'].forEach(n => document.addEventListener(n, () => { downs.forEach(b => setTimeout(() => b.classList.remove('is-down'), reduced() ? 0 : Math.max(0, 90 - (performance.now() - b._t)))); downs.clear(); }, { passive: true }));
+
+  let rt = 0;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+  render();
+  go(0, false);
+  // 見本の撮影用：#cyber などで、そのテーマから開く
+  const start = IDS.indexOf(location.hash.slice(1));
+  if (start > 0) go(start, false);
+})();
+</script>
+</body>
+</html>

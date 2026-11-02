@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>C くらべる · Inchly テーマ</title>
+<meta name="description" content="テーマの選び方の案C：いまのテーマと選んだテーマを、同じ画面の上で境目をずらしてくらべる">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Share+Tech+Mono&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&text=0123456789:&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@900&text=%E6%B8%88&display=swap">
+<link rel="stylesheet" href="shared/app.css">
+<link rel="stylesheet" href="shared/skins.css">
+<link rel="stylesheet" href="shared/pages.css">
+<style>
+/* ===== C くらべる：同じ画面の上で、境目を指でずらして くらべる ===== */
+@media (max-width:430px){ .note{margin-bottom:calc(var(--safe-bottom) + 32px)} }
+.app > .screen{padding-bottom:0!important}
+.c-body{display:flex;flex-direction:column;gap:12px;padding-top:4px}
+
+/* いま ⇄ くらべる相手 */
+.vs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vs-now{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 10px 0 6px;border-radius:10px;background:var(--card);box-shadow:var(--ring)}
+.vs-now small{display:inline-flex;align-items:center;height:22px;padding:0 6px;border-radius:6px;background:var(--lime);box-shadow:var(--ring-thin);font:700 11px/1 var(--f-body)}
+.vs-now b{font:800 14px/1 var(--f-body);white-space:nowrap}
+.vs-x{font-size:13px;color:var(--ink-3)}
+.vs .chips{gap:8px}
+.vs .chip{min-height:36px}
+.vs .chip > .face{padding:0 12px;font-size:14px}
+.vs .chip .mt{width:20px;height:20px;border-radius:5px;box-shadow:var(--ring-thin)}
+.vs .chip .mt .pix svg{width:14px;height:auto}
+.vs .chip .mt-cyber .plate{padding:1px;gap:0;box-shadow:none;background:none}
+.vs .chip .mt-cyber .plate b{font-size:6px;letter-spacing:0}
+.vs .chip .mt-cyber .led,.vs .chip .mt-cyber .rec{display:none}
+.vs .chip .mt-classic .glass{width:80%;border-radius:4px}
+.c-seg{display:flex}
+
+/* くらべる箱：左がいま、右がくらべる相手。境目は transform だけで動く */
+.cmp{position:relative;flex:none;overflow:hidden;border-radius:26px;background:var(--paper-2);box-shadow:var(--ring);touch-action:pan-y;user-select:none;-webkit-user-select:none;isolation:isolate}
+.cmp-l,.cmp-r{position:absolute;inset:0}
+.cmp-l{z-index:0} .cmp-r{z-index:1}
+.cmp-r{overflow:hidden;will-change:transform}
+.cmp-ri{position:absolute;top:0;left:0;bottom:0;will-change:transform}
+.cmp-tag{position:absolute;z-index:30;top:10px;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;border-radius:8px;background:var(--card);box-shadow:var(--ring-thin);font:700 12px/1 var(--f-body);color:var(--ink);white-space:nowrap;pointer-events:none}
+.cmp-tag.l{left:10px} .cmp-tag.r{right:10px}
+.cmp-tag em{font-style:normal;font:400 11px/1 var(--f-pixj);color:var(--ink-3)}
+.cmp-d{position:absolute;z-index:31;top:0;bottom:0;left:0;width:0;will-change:transform;pointer-events:none}
+.cmp-d::before{content:"";position:absolute;top:0;bottom:0;left:-1.5px;width:3px;background:var(--ink);box-shadow:0 0 0 1.5px var(--card)}
+.cmp-grip{position:absolute;top:50%;left:-24px;width:48px;height:48px;margin-top:-24px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;
+  background:var(--lime);box-shadow:var(--ring),0 3px 0 2px var(--ink);color:var(--ink);cursor:ew-resize;pointer-events:auto;touch-action:none}
+.cmp-grip::after{content:"";position:absolute;inset:-6px}
+.cmp-grip svg{width:26px;height:16px}
+.cmp-grip:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.cmp.is-anim .cmp-r,.cmp.is-anim .cmp-ri,.cmp.is-anim .cmp-d{transition:transform var(--t-move) var(--ios)}
+.c-hint{margin-top:-4px;font-size:12px;line-height:1.5;color:var(--ink-3);text-align:center}
+
+.c-picks{margin-top:6px}
+.c-picks > .sec-h{margin-bottom:12px}
+.c-foot{font-size:12px;line-height:1.6;color:var(--ink-3)}
+
+/* 決める（下に貼りつく） */
+.c-acts{position:sticky;bottom:0;z-index:20;margin:4px calc(-1 * var(--gutter)) 0;padding:12px var(--gutter) calc(var(--safe-bottom) + 14px);
+  background:linear-gradient(to bottom,rgba(243,238,227,0),var(--paper) 12px)}
+@media (max-width:430px){ .c-acts{padding-bottom:max(14px,var(--safe-bottom))} }
+.c-acts .key .face{gap:10px}
+.c-acts small{font:600 12.5px/1 var(--f-body);opacity:.75}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="app">
+    <div class="os" aria-hidden="true"><span>7:32</span><span class="os-r"><svg width="17" height="11" viewBox="0 0 17 11"><g fill="currentColor"><rect x="0" y="7" width="3" height="4"/><rect x="4.5" y="5" width="3" height="6"/><rect x="9" y="2.5" width="3" height="8.5"/><rect x="13.5" y="0" width="3" height="11"/></g></svg><svg width="25" height="12" viewBox="0 0 25 12"><rect x="1" y="1" width="20" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".45"/><rect x="3" y="3" width="13" height="6" rx="1" fill="currentColor"/><rect x="22.5" y="4" width="1.5" height="4" fill="currentColor" opacity=".45"/></svg></span></div>
+    <main class="screen">
+      <header class="pg-hdr">
+        <a class="key key-sm key-icon back" href="index.html" aria-label="戻る（案の一覧へ）"><i data-pi="left"></i></a>
+        <h1 class="pg-t">テーマ</h1>
+        <button class="tbtn" type="button" id="reset">元に戻す</button>
+      </header>
+      <div class="c-body">
+        <div class="vs" id="vs">
+          <span class="vs-now" aria-live="polite"><small>いま</small><b id="now-name">スタンダード</b></span>
+          <span class="vs-x">と くらべる</span>
+          <div class="chips" data-single role="group" aria-label="くらべるテーマ" id="pick"></div>
+        </div>
+        <div class="seg seg-block c-seg" role="group" aria-label="くらべる画面" id="c-seg"><button type="button" aria-pressed="true" data-view="home">ホーム</button><button type="button" aria-pressed="false" data-view="timer">タイマー</button></div>
+        <div class="cmp" id="cmp" role="group" aria-label="2つのテーマをくらべる。境目を左右にずらす">
+          <div class="cmp-l" id="cmp-l"></div>
+          <div class="cmp-r" id="cmp-r"><div class="cmp-ri" id="cmp-ri"></div></div>
+          <span class="cmp-tag l" id="tag-l"></span>
+          <span class="cmp-tag r" id="tag-r"></span>
+          <div class="cmp-d" id="cmp-d"><button class="cmp-grip" type="button" id="grip" role="slider" aria-label="境目" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="まん中"><svg viewBox="0 0 26 16" aria-hidden="true"><path d="M8 2 2 8l6 6M18 2l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"/></svg></button></div>
+        </div>
+        <p class="c-hint">境目を左右にずらすか、くらべたい所を押す</p>
+        <section class="c-picks" id="c-picks" hidden aria-labelledby="c-picks-h">
+          <div class="sec-h"><h2 class="sec-t" id="c-picks-h" style="--accent:var(--sky)">クラシックの色と角</h2><span class="sec-a">選ぶとすぐ変わる</span></div>
+        </section>
+        <p class="c-foot">変えても記録はそのまま。見た目だけが変わります。地の色・メインの色・角・タイマーの色は、テーマで決まります（クラシックを選ぶと自分で選べます）</p>
+        <div class="c-acts"><button class="key key-ink key-block key-lg" type="button" id="c-go">こっちにする</button></div>
+      </div>
+    </main>
+  </div>
+
+  <aside class="note">
+    <p class="label-j sq">この案で見てほしい点</p>
+    <h1>C くらべる</h1>
+    <p>いまのテーマと、気になるテーマを、同じホームの上に重ねてくらべる案。まん中の境目を指でずらすと、左がいま、右が選んだテーマに切りかわります。</p>
+    <ul>
+      <li>上のチップで、くらべる相手（サイバー・クラシック）を選ぶ。</li>
+      <li>「ホーム／タイマー」で、くらべる画面を切りかえ。ホームは上下にスクロールすると、両方いっしょに動きます。</li>
+      <li>境目はドラッグ・押した所・キーボードの ← → で動きます。</li>
+      <li>「こっちにする」で決めると、いままでのテーマが比べる相手に回ります（すぐ戻して比べられる）。</li>
+    </ul>
+    <p class="note-links"><a class="link" href="a.html">A 試着室</a><a class="link" href="b.html">B 棚</a><a class="link" href="index.html">一覧へ</a></p>
+  </aside>
+</div>
+<script src="shared/app.js"></script>
+<script src="shared/skins.js"></script>
+<script>
+(() => {
+  'use strict';
+  const A = window.App, S = window.Skins;
+  const $ = s => document.querySelector(s);
+  const cmp = $('#cmp'), R = $('#cmp-r'), RI = $('#cmp-ri'), D = $('#cmp-d');
+  let other = 'cyber', view = 'home', frac = .5, W = 0, H = 0;
+
+  function paintTop() {
+    $('#now-name').textContent = S.THEMES[S.current].name;
+    const others = S.ORDER.filter(t => t !== S.current);
+    if (!others.includes(other)) other = others[0];
+    $('#pick').innerHTML = others.map(t => `<button class="chip" type="button" aria-pressed="${t === other}" data-th="${t}"><span class="face">${S.motif(t)}${S.THEMES[t].name}</span></button>`).join('');
+    $('#c-go').textContent = `${S.THEMES[other].name}にする`;
+    A.upgrade($('#c-go').parentElement);
+    $('#c-picks').hidden = !(other === 'classic' || S.current === 'classic');
+    if (!$('#c-picks').hidden && !$('#c-picks .pk')) $('#c-picks').appendChild(S.picksUI({ id: 'c' }));
+  }
+  function size() {
+    W = cmp.parentElement.clientWidth;
+    const scr = document.querySelector('.app > .screen');
+    const wide = matchMedia('(min-width:431px)').matches;
+    const viewH = wide ? scr.clientHeight : innerHeight;
+    // 箱のほかに見える物：上の帯・テーマの行・切りかえ・下のボタン
+    const top = cmp.getBoundingClientRect().top - (wide ? scr.getBoundingClientRect().top - scr.scrollTop : -scrollY);
+    H = Math.round(Math.max(420, Math.min(760, viewH - top - 100)));
+    cmp.style.height = H + 'px';
+    RI.style.width = W + 'px';
+  }
+  let syncing = false;
+  function render() {
+    size();
+    const s = W / 390;
+    const l = S.mount($('#cmp-l'), S.current, view, { scale: s, height: H });
+    const r = S.mount(RI, other, view, { scale: s, height: H, live: true });
+    $('#tag-l').innerHTML = `<em>いま</em>${S.THEMES[S.current].name}`;
+    $('#tag-r').innerHTML = `${S.THEMES[other].name}`;
+    // ホームは上下にスクロールできる：左右をいっしょに
+    const a = l.querySelector('.sk-scroll'), b = r.querySelector('.sk-scroll');
+    if (a && b) {
+      const link = (x, y) => x.addEventListener('scroll', () => { if (syncing) return; syncing = true; y.scrollTop = x.scrollTop; requestAnimationFrame(() => { syncing = false; }); }, { passive: true });
+      link(a, b); link(b, a);
+    }
+    place(frac, false);
+  }
+  /* 境目：f は 0〜1。右の層をずらし、中身は逆にずらして、同じ位置に見せる */
+  function place(f, anim) {
+    frac = Math.max(0, Math.min(1, f));
+    const x = Math.round(frac * W);
+    cmp.classList.toggle('is-anim', !!anim && !A.reduced());
+    R.style.transform = `translate3d(${x}px,0,0)`;
+    RI.style.transform = `translate3d(${-x}px,0,0)`;
+    D.style.transform = `translate3d(${x}px,0,0)`;
+    const g = $('#grip');
+    g.setAttribute('aria-valuenow', Math.round(frac * 100));
+    g.setAttribute('aria-valuetext', frac < .15 ? `ほぼ${S.THEMES[other].name}` : frac > .85 ? `ほぼ${S.THEMES[S.current].name}` : `左 ${S.THEMES[S.current].name}・右 ${S.THEMES[other].name}`);
+  }
+
+  /* 指：横に動いたら境目を取る（縦はスクロールへ）。押しただけなら、その場所へ */
+  let drag = null;
+  cmp.addEventListener('pointerdown', e => {
+    if (e.button && e.button !== 0) return;
+    const onGrip = !!e.target.closest('#grip');
+    drag = { x: e.clientX, y: e.clientY, id: e.pointerId, mode: onGrip ? 'h' : null, t: e.timeStamp };
+    if (onGrip) { try { cmp.setPointerCapture(e.pointerId); } catch (_) {} }
+  });
+  cmp.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.mode) {
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) { drag.mode = 'h'; try { cmp.setPointerCapture(e.pointerId); } catch (_) {} }
+      else if (Math.abs(dy) > 8) { drag = null; return; }
+      else return;
+    }
+    const r = cmp.getBoundingClientRect();
+    place((e.clientX - r.left) / r.width, false);
+  });
+  const end = e => {
+    if (!drag || (e && e.pointerId !== drag.id)) return;
+    const d = drag; drag = null;
+    if (d.mode) return;
+    if (e.type === 'pointerup' && e.timeStamp - d.t < 500) { const r = cmp.getBoundingClientRect(); place((e.clientX - r.left) / r.width, true); }
+  };
+  cmp.addEventListener('pointerup', end);
+  cmp.addEventListener('pointercancel', end);
+  $('#grip').addEventListener('keydown', e => {
+    const k = { ArrowLeft: -.05, ArrowRight: .05, Home: -1, End: 1 }[e.key];
+    if (k == null) return; e.preventDefault(); place(frac + k, true);
+  });
+
+  $('#pick').addEventListener('change', () => {
+    const b = $('#pick [aria-pressed="true"]'); if (!b) return;
+    other = b.dataset.th; paintTop(); render();
+    if (!A.reduced()) RI.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'linear' });
+  });
+  $('#c-seg').addEventListener('change', () => {
+    view = $('#c-seg [aria-pressed="true"]').dataset.view; render();
+    if (!A.reduced()) cmp.animate([{ opacity: .4 }, { opacity: 1 }], { duration: 200, easing: 'linear' });
+  });
+  $('#c-go').addEventListener('click', () => {
+    const was = S.current, t = other;
+    S.setCurrent(t); other = was;
+    paintTop(); render();
+    A.toast({ title: `${S.THEMES[t].name}にしました`, sub: `左がいまの${S.THEMES[t].name}。前の${S.THEMES[was].name}と、まだくらべられます`, ms: 2600 });
+  });
+  $('#reset').addEventListener('click', () => {
+    S.setCurrent('standard'); S.resetPicks(); other = 'cyber';
+    paintTop(); render();
+    A.toast({ title: 'はじめのデザインに戻しました', ms: 2000 });
+  });
+
+  let rt = 0;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+  paintTop();
+  A.upgrade(document);
+  // 見本の撮影用：#vs-classic などで、くらべる相手を変えて開く
+  const m = location.hash.match(/^#vs-(\w+)/);
+  if (m && S.THEMES[m[1]] && m[1] !== S.current) { other = m[1]; paintTop(); }
+  render();
+})();
+</script>
+</body>
+</html>

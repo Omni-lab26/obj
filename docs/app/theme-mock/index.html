@@ -1,0 +1,209 @@
+<title>Inchly テーマの選び方</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&family=DotGothic16&family=Noto+Sans+JP:wght@400;500;700;800&display=swap">
+<style>
+/* 紙とインクの1ページ：案ごとに大きな画面の写真と、ひらく所。下に見どころの表 */
+:root{
+  --bg:#F3EEE3; --bg-2:#EBE4D4; --card:#FBF8F1; --ink:#17121F; --ink-2:#2B2436; --ink-3:#6C6477; --line:#D8CFBD;
+  --lime:#C6F432; --lime-2:#A8D81C; --sun:#FFD23F; --sky:#58C8FF; --coral:#FF6B4A; --on-lime:#17121F;
+  --ring:0 0 0 2px var(--ink); --ring-thin:0 0 0 1.5px var(--ink);
+  --dots:radial-gradient(rgba(23,18,31,.10) 1px,transparent 1.3px) 0 0/18px 18px;
+  --f-body:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+  --f-disp:"Bricolage Grotesque","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-pix:"DotGothic16","Hiragino Sans","Noto Sans JP",monospace;
+  --ios:cubic-bezier(.32,.72,0,1);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15111C; --bg-2:#1D1826; --card:#211B2B; --ink:#F3EEE3; --ink-2:#DCD5C6; --ink-3:#A39CAF; --line:#3A3346;
+  --lime:#C6F432; --lime-2:#A8D81C; --sun:#FFD23F; --sky:#58C8FF; --coral:#FF8A6E; --on-lime:#17121F;
+  --dots:radial-gradient(rgba(243,238,227,.07) 1px,transparent 1.3px) 0 0/18px 18px; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15111C; --bg-2:#1D1826; --card:#211B2B; --ink:#F3EEE3; --ink-2:#DCD5C6; --ink-3:#A39CAF; --line:#3A3346;
+  --lime:#C6F432; --lime-2:#A8D81C; --sun:#FFD23F; --sky:#58C8FF; --coral:#FF8A6E; --on-lime:#17121F;
+  --dots:radial-gradient(rgba(243,238,227,.07) 1px,transparent 1.3px) 0 0/18px 18px; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--dots),var(--bg);color:var(--ink);font:400 15px/1.75 var(--f-body);-webkit-font-smoothing:antialiased;line-break:strict;overflow-x:clip}
+h1,h2,h3,p,ul{margin:0}
+ul{padding:0;list-style:none}
+a{color:inherit}
+img{max-width:100%;display:block}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font:400 14px/1.3 var(--f-pix);letter-spacing:.04em;color:var(--ink-2)}
+.eyebrow::before{content:"";width:9px;height:9px;background:var(--lime);box-shadow:var(--ring-thin)}
+.wb{word-break:auto-phrase}
+.nb{display:inline-block}
+
+/* 頭 */
+.hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:end;padding-bottom:36px;border-bottom:2px solid var(--ink)}
+.hero h1{margin:14px 0 18px;font:800 clamp(34px,6vw,56px)/1.12 var(--f-disp);letter-spacing:-.02em;text-wrap:balance}
+.hero h1 em{font-style:normal;display:inline-block;margin-top:4px;padding:0 .14em;background:var(--lime);color:var(--on-lime);box-shadow:var(--ring)}
+.lead{max-width:36em;font-size:16px;color:var(--ink-2)}
+.quote{position:relative;padding:18px 20px 18px 22px;border-radius:18px;background:var(--card);box-shadow:var(--ring),6px 6px 0 0 var(--lime-2)}
+.quote p{font:700 18px/1.6 var(--f-body)}
+.quote small{display:block;margin-top:8px;font-size:12.5px;color:var(--ink-3)}
+
+/* 今のページ */
+.now{display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px;align-items:center;margin-top:36px;padding:20px;border-radius:22px;background:var(--card);box-shadow:var(--ring)}
+.now img{width:200px;border-radius:22px;box-shadow:var(--ring)}
+.now h2{font:800 20px/1.35 var(--f-body);margin:8px 0 8px}
+.now p{color:var(--ink-2);max-width:40em}
+.now ul{display:grid;gap:6px;margin-top:12px}
+.now li,.pro li{position:relative;padding-left:16px;color:var(--ink-2);font-size:14px;line-height:1.65}
+.now li::before,.pro li::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:7px;background:var(--sun);box-shadow:var(--ring-thin)}
+
+/* 3つの案 */
+.sec-h{display:flex;align-items:baseline;gap:14px;margin:56px 0 20px;flex-wrap:wrap}
+.sec-h h2{font:800 26px/1.3 var(--f-body)}
+.sec-h p{font-size:14px;color:var(--ink-3)}
+.pros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.pro{display:flex;flex-direction:column;gap:14px;min-width:0;padding:16px 16px 18px;border-radius:24px;background:var(--card);box-shadow:var(--ring)}
+.pro-h{display:flex;align-items:center;gap:10px}
+.pro-k{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:10px;background:var(--lime);box-shadow:var(--ring);font:800 20px/1 var(--f-disp);color:var(--on-lime)}
+.pro-h h3{font:800 21px/1.3 var(--f-body)}
+.shot{display:block;border-radius:30px;overflow:hidden;background:var(--bg-2);box-shadow:0 0 0 6px var(--ink);margin:6px 6px 4px;aspect-ratio:390/844}
+.shot img{width:100%;height:100%;object-fit:cover}
+.pro > p{font-size:14.5px;line-height:1.7;color:var(--ink-2)}
+.pro ul{display:grid;gap:5px}
+.open{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;margin-top:auto;padding:0 18px;border-radius:12px;background:var(--ink);color:var(--bg);
+  font:700 15px/1 var(--f-body);text-decoration:none;box-shadow:0 4px 0 0 var(--lime-2);transition:transform .3s var(--ios)}
+.open:active{transform:translateY(3px);transition-duration:.09s}
+.open:focus-visible,.shot:focus-visible{outline:3px solid #6B4CFF;outline-offset:4px}
+.open svg{width:14px;height:14px}
+
+/* 見どころ */
+.look{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-radius:22px;background:var(--card);box-shadow:var(--ring);overflow:hidden}
+.look > div{min-width:0;padding:20px 20px 22px}
+.look > div + div{box-shadow:-2px 0 0 0 var(--ink)}
+.look h3{display:flex;align-items:center;gap:8px;font:800 17px/1.3 var(--f-body);margin-bottom:12px}
+.look h3 span{display:grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--lime);box-shadow:var(--ring-thin);font:800 15px/1 var(--f-disp);color:var(--on-lime)}
+.look dt{display:inline-flex;align-items:center;gap:7px;margin-top:10px;font:400 13px/1.3 var(--f-pix);color:var(--ink-2)}
+.look dt::before{content:"";width:8px;height:8px;background:var(--c);box-shadow:var(--ring-thin)}
+.look dt.good{--c:var(--lime)} .look dt.bad{--c:var(--coral)}
+.look dd{margin:6px 0 0;font-size:14px;line-height:1.7;color:var(--ink-2)}
+.mix{margin-top:18px;padding:16px 20px;border-radius:16px;background:var(--bg-2);box-shadow:inset 0 0 0 1.5px var(--line);font-size:14.5px;color:var(--ink-2)}
+.mix b{color:var(--ink)}
+.common{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 28px;margin-top:20px}
+.common li{position:relative;padding-left:16px;font-size:13.5px;line-height:1.7;color:var(--ink-3)}
+.common li::before{content:"";position:absolute;left:0;top:.65em;width:6px;height:6px;background:var(--ink-3)}
+.foot{margin-top:40px;font-size:12.5px;color:var(--ink-3)}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:24px}
+  .pros{grid-template-columns:1fr;max-width:460px;margin:0 auto}
+  .look{grid-template-columns:1fr}
+  .look > div + div{box-shadow:0 -2px 0 0 var(--ink)}
+  .common{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .wrap{padding-block:24px 48px}
+  .now{grid-template-columns:1fr;gap:16px}
+  .now img{width:min(220px,70%);margin:0 auto}
+  .shot{margin:6px 10% 4px}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Inchly · デザインのページ</p>
+      <h1><span class="nb">テーマの選び方、</span><span class="nb"><em>3つの案</em></span></h1>
+      <p class="lead wb">テーマを選ぶページ（デザインのページ）を、3つの形で作りました。どれも本物に近い見本で、スマホでもパソコンでもさわって試せます。</p>
+    </div>
+    <figure class="quote" style="margin:0">
+      <p class="wb">テーマ変えのページもうちょいこだわりたいな。案出して</p>
+      <small>オーナーより。この3つが、その答えです</small>
+    </figure>
+  </header>
+
+  <section class="now" aria-labelledby="now-h">
+    <img src="img/now-design.webp" alt="今のデザインのページ。上に小さな見本、下に3つのテーマのタイル" width="200" height="433" loading="lazy">
+    <div>
+      <p class="eyebrow">今のページ</p>
+      <h2 id="now-h">小さな見本と、3つのタイル</h2>
+      <p class="wb">上にいまの見た目の小さな見本、その下にスタンダード（メイン）・サイバー・クラシック（サブ）のタイル。押すとすぐ変わります。</p>
+      <ul>
+        <li>クラシックだけ、地の色・メインの色・角・タイマーの色を選べる。</li>
+        <li>直したい所：選ぶ前に、ホームやタイマーがどう変わるかが小さくてわかりにくい。テーマごとの楽しさ（住人・ネオン・シール）も見えない。</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="sec-h"><h2>3つの案</h2><p>写真か「開く」で、その案の見本へ</p></div>
+  <div class="pros">
+    <article class="pro" aria-labelledby="pa">
+      <div class="pro-h"><span class="pro-k" aria-hidden="true">A</span><h3 id="pa">試着室</h3></div>
+      <a class="shot" href="a.html" aria-label="A 試着室を開く"><img src="shots/a.webp" alt="A 試着室：サイバーのホームを着ている画面" width="390" height="844" loading="lazy"></a>
+      <p class="wb">自分のホームのまま、横にすべらせてテーマを着がえる。地・上の操作・決めるボタンまで、そのテーマの見た目に変わります。</p>
+      <ul>
+        <li>指で左右に（矢印・下の点・← → でも）</li>
+        <li>右上でホーム／タイマーを切りかえ</li>
+        <li>クラシックは「色・角を選ぶ」から</li>
+      </ul>
+      <a class="open" href="a.html">A を開く<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></a>
+    </article>
+    <article class="pro" aria-labelledby="pb">
+      <div class="pro-h"><span class="pro-k" aria-hidden="true">B</span><h3 id="pb">テーマの棚</h3></div>
+      <a class="shot" href="b.html" aria-label="B テーマの棚を開く"><img src="shots/b.webp" alt="B テーマの棚：3つのテーマのカードが棚に並ぶ画面" width="390" height="844" loading="lazy"></a>
+      <p class="wb">テーマを1枚ずつのカードにして棚に並べる。そのテーマらしい絵と、変わるもの（色・字・タイマー・演出）がひと目でわかります。</p>
+      <ul>
+        <li>押すと大きく開き、ホーム／タイマーの見本</li>
+        <li>「演出を見る」で記録したときの一瞬を再生</li>
+        <li>クラシックは開いた中で色を選ぶ</li>
+      </ul>
+      <a class="open" href="b.html">B を開く<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></a>
+    </article>
+    <article class="pro" aria-labelledby="pc">
+      <div class="pro-h"><span class="pro-k" aria-hidden="true">C</span><h3 id="pc">くらべる</h3></div>
+      <a class="shot" href="c.html" aria-label="C くらべるを開く"><img src="shots/c.webp" alt="C くらべる：左がスタンダード、右がサイバーのホームを境目でくらべる画面" width="390" height="844" loading="lazy"></a>
+      <p class="wb">いまのテーマと気になるテーマを、同じ画面に重ねてくらべる。まん中の境目を指でずらすと、左がいま、右が選んだテーマ。</p>
+      <ul>
+        <li>上のチップでくらべる相手を選ぶ</li>
+        <li>ホームは上下にスクロールしても左右がそろう</li>
+        <li>決めると、前のテーマがくらべる相手に回る</li>
+      </ul>
+      <a class="open" href="c.html">C を開く<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></a>
+    </article>
+  </div>
+
+  <div class="sec-h"><h2>どれにするか決めるときの見どころ</h2></div>
+  <div class="look">
+    <div>
+      <h3><span aria-hidden="true">A</span>試着室</h3>
+      <dl>
+        <dt class="good">よい点</dt>
+        <dd class="wb">「着がえた」感じがいちばん強い。部屋ごと変わるので、決めたあとの姿が想像しやすい。テーマが増えても、すべらせるだけ。</dd>
+        <dt class="bad">気になる点</dt>
+        <dd class="wb">何が変わるかの説明は1行だけで、演出は見られない。テーマが増えると端まで行くのが手間（下の点で飛べる）。</dd>
+      </dl>
+    </div>
+    <div>
+      <h3><span aria-hidden="true">B</span>テーマの棚</h3>
+      <dl>
+        <dt class="good">よい点</dt>
+        <dd class="wb">全部を一度に見渡せる。絵と「色・字・タイマー・演出」で、違いが言葉でもわかる。演出を再生できるのはこの案だけ。</dd>
+        <dt class="bad">気になる点</dt>
+        <dd class="wb">大きな見本は開くまで出ない（1回多く押す）。クラシックの色を選ぶと、見本が上に隠れて変化が見えにくい。</dd>
+      </dl>
+    </div>
+    <div>
+      <h3><span aria-hidden="true">C</span>くらべる</h3>
+      <dl>
+        <dt class="good">よい点</dt>
+        <dd class="wb">同じ場所の違い（数字の字・カードの角・色）がいちばん細かくわかる。前のテーマとも行き来しやすい。</dd>
+        <dt class="bad">気になる点</dt>
+        <dd class="wb">一度にくらべるのは2つだけ。境目をずらす操作は、はじめての人に一言の説明がいる。上が少しこみ合う。</dd>
+      </dl>
+    </div>
+  </div>
+  <p class="mix wb"><b>まぜるなら：</b>B の棚を入口にして、カードを押すと A の試着室になる（その中で C のように「いま」と並べられる）、という組み合わせもできます。</p>
+  <ul class="common">
+    <li>どの案も、いまのテーマを上にはっきり出す。戻るボタンと、押せる所は 44pt 以上。</li>
+    <li>クラシックを選ぶと、地の色・メインの色・角・タイマーの色を選べる（アプリと同じ4つ）。</li>
+    <li>背景（鯉の池など）は今回は出していない。マイページのカードと連続記録はテーマで決まる。</li>
+    <li>動きは MOTION.md どおり：跳ねない、短い、位置と透明度だけ。「視差効果を減らす」で止まる。</li>
+  </ul>
+  <p class="foot">見本のデータは、サンプルのアカウント（はる）。テーマを決めても保存はしない見本です。</p>
+</div>
