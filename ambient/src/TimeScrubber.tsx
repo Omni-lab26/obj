@@ -3,12 +3,14 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
   makeMutable,
   runOnJS,
   useAnimatedProps,
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
+  withDecay,
   withSequence,
   withSpring,
   withTiming,
@@ -19,13 +21,14 @@ import { FaceBackdrop } from './FaceBackdrop';
 import { useT } from './settings';
 
 // Two rulers under fixed red marks: hours above (0-23), minutes and seconds below (an
-// hour in 15-second ticks). Each has two ends, where it gives a little and springs
-// back. Drag one sideways and
-// the time runs with it. Let go and it carries on the way a scrolled list does on an
-// iPhone, slowing down over half a second or so, and comes to rest on a whole step
-// (an hour, a minute; a single tick if it was let go slowly). The landing is worked
-// out on release from that deceleration, and a spring with no bounce carries the
-// ruler there from the finger's speed.
+// hour in 15-second ticks), turning like the wheels of the iPhone's own timer. Drag
+// one sideways and it stays under the finger, a light click for each step (an hour,
+// a minute) that passes the mark. Let go and it carries on with the iPhone's own
+// deceleration and comes to rest exactly on a whole step (a single tick if it was let
+// go slowly): the landing is worked out on release, and the release speed nudged just
+// enough that the same slowing-down ends there, with no spring and no bounce. Each
+// has two ends, where it gives a little and eases back. The ticks are drawn round a
+// drum: evenly spaced under the mark, closer together and fainter toward the ends.
 //
 // Everything that moves runs on the UI thread: the drag, the glide, and the ticks,
 // which are a small pool of slots re-labelled as the ruler turns. Only the value
@@ -73,21 +76,31 @@ const ROW = 46;
 const DECELERATION = 0.998;
 const GLIDE = DECELERATION / (1 - DECELERATION) / 1000;
 const SLOW = 220; // px/s: slower than this, it lands on the nearest single tick
-const DETENT = 0.45; // how strongly a dragged ruler catches on each step (0 none, under 1)
+// The drum: a tick x px from the mark (along the ruler) is drawn at half·sin(x·a/half)/a,
+// so it moves with the finger under the mark and bunches up toward the ends.
+const DRUM = 1;
 
 const clampTick = (v: number, n: number) => {
   'worklet';
   return Math.min(n - 1, Math.max(0, v));
 };
 
-// The phone's own clicks; in a browser, a short vibration where there is one.
-function buzz(strength: 1 | 2) {
+// The phone's own selection click (what its pickers give for each row); in a browser,
+// a short vibration where there is one.
+function click() {
   if (Platform.OS === 'web') {
-    globalThis.navigator?.vibrate?.(strength === 2 ? 18 : 8);
+    globalThis.navigator?.vibrate?.(6);
     return;
   }
-  Haptics.impactAsync(strength === 2 ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  Haptics.selectionAsync().catch(() => {});
 }
+
+// Where a tick x px along the ruler from the mark is drawn, and how much it faces us.
+const drum = (x: number, half: number) => {
+  'worklet';
+  const th = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, (x * DRUM) / half));
+  return { x: (half * Math.sin(th)) / DRUM, face: Math.cos(th) };
+};
 
 const AnimatedInput = Animated.createAnimatedComponent(TextInput);
 
@@ -99,20 +112,20 @@ function Slot({ j, ruler, offset, half, ink, inkSoft }: { j: number; ruler: Rule
     const x = (j - (idx - base)) * ruler.gap;
     const t = base + j;
     const m = ruler.major(t);
-    const d = Math.min(1, Math.abs(x) / half);
+    const p = drum(x, half);
     const on = t >= 0 && t < ruler.count ? 1 : 0;
     return {
-      transform: [{ translateX: x }],
-      // Darkest and tallest at the mark, falling away toward the ends of the window.
-      opacity: on * (1 - d * d) * (m === 0 ? 0.6 : 1),
-      height: (m === 2 ? 20 : m === 1 ? 14 : 8) * (1 - 0.3 * d),
+      transform: [{ translateX: p.x }],
+      // Darkest and tallest at the mark, turning away round the drum toward the ends.
+      opacity: on * p.face * p.face * (m === 0 ? 0.6 : 1),
+      height: (m === 2 ? 20 : m === 1 ? 14 : 8) * (0.7 + 0.3 * p.face),
     };
   });
   const labelStyle = useAnimatedStyle(() => {
     const idx = -offset.get() / ruler.gap;
     const x = (j - (idx - Math.round(idx))) * ruler.gap;
-    const d = Math.min(1, Math.abs(x) / half);
-    return { transform: [{ translateX: x - 20 }], opacity: 1 - d * d };
+    const p = drum(x, half);
+    return { transform: [{ translateX: p.x - 20 }, { scaleX: 0.4 + 0.6 * p.face }], opacity: p.face * p.face };
   });
   const labelProps = useAnimatedProps(() => {
     const t = Math.round(-offset.get() / ruler.gap) + j;
@@ -154,35 +167,47 @@ function makeRulerGesture(ruler: Ruler, offset: SharedValue<number>, busy: Share
       start.set(offset.get());
     })
     .onUpdate((e) => {
-      // Each step (an hour, a minute) has a slight catch: the ruler lingers over the
-      // step's long tick and hurries between, so the finger feels them go by.
-      const step = ruler.fling * ruler.gap;
-      const catchAt = (px: number) => px - (DETENT * step * Math.sin((2 * Math.PI * px) / step)) / (2 * Math.PI);
-      const s0 = start.get();
-      let v = s0 + catchAt(s0 + e.translationX) - catchAt(s0);
-      // Past either end the ruler gives a little, with resistance.
+      // Under the finger, one to one.
+      let v = start.get() + e.translationX;
+      // Past either end the ruler gives a little, with more resistance the further it
+      // goes (as an iPhone list does).
       const lo = -(ruler.count - 1) * ruler.gap;
-      if (v > 0) v *= 0.3;
-      if (v < lo) v = lo + (v - lo) * 0.3;
+      const give = (d: number) => (d * 120) / (d + 120);
+      if (v > 0) v = give(v);
+      if (v < lo) v = lo - give(lo - v);
       offset.set(v);
     })
     .onEnd((e) => {
+      const x0 = offset.get();
       const v = e.velocityX;
-      const unit = Math.abs(v) > SLOW ? ruler.fling : 1;
-      const target = clampTick(Math.round(-(offset.get() + v * GLIDE) / ruler.gap / unit) * unit, ruler.count);
+      const fast = Math.abs(v) > SLOW;
+      const unit = fast ? ruler.fling : 1;
+      const target = clampTick(Math.round(-(x0 + v * GLIDE) / ruler.gap / unit) * unit, ruler.count);
+      const to = -target * ruler.gap;
       // The landing is known now, so the timer takes it at once (a tap mid-glide starts
       // it at that length); the ruler only has to get there.
       runOnJS(commit)(target);
       const mine = grab.get();
-      // Critically damped: it glides in and stops, without bouncing back.
-      offset.set(
-        withSpring(-target * ruler.gap, { velocity: v, stiffness: 90, damping: 19, mass: 1, overshootClamping: true }, () => {
-          // Caught again on the way: the new drag owns the ruler now.
-          if (grab.get() !== mine) return;
-          busy.set(false);
-          runOnJS(rest)();
-        })
-      );
+      const settled = () => {
+        'worklet';
+        // Caught again on the way: the new drag owns the ruler now.
+        if (grab.get() !== mine) return;
+        busy.set(false);
+        runOnJS(rest)();
+      };
+      if (fast && (to - x0) * v > 0) {
+        // The iPhone's own slowing-down, from a release speed nudged so that it comes to
+        // rest right on the step; the last fraction of a pixel is closed at once.
+        offset.set(
+          withDecay({ velocity: (to - x0) / GLIDE, deceleration: DECELERATION, clamp: x0 < to ? [x0, to] : [to, x0] }, (finished) => {
+            if (!finished || grab.get() !== mine) return;
+            offset.set(withTiming(to, { duration: 80, easing: Easing.out(Easing.quad) }, settled));
+          })
+        );
+      } else {
+        // Let go slowly, or past an end: it eases onto the nearest step.
+        offset.set(withTiming(to, { duration: 260, easing: Easing.out(Easing.cubic) }, settled));
+      }
     })
     .onFinalize((_e, ok) => {
       // A touch that never moved: nothing to settle.
@@ -244,12 +269,12 @@ function RulerView({ ruler, value, width, ink, inkSoft, onPreview, onChange, pos
   );
   useEffect(() => g.follow(value), [g, value]);
 
-  // A buzz for every step that passes the mark (each hour, each minute), a firmer one
-  // every fifth minute, and the mark gives a little nod with it.
+  // A click for every step that passes the mark (each hour, each minute), and the mark
+  // gives a little nod with it.
   const nod = useSharedValue(0);
-  const tick = (v: number, click: 0 | 1 | 2) => {
+  const tick = (v: number, step: boolean) => {
     onPreview(v);
-    if (click) buzz(click);
+    if (step) click();
   };
   useAnimatedReaction(
     () => Math.round(-offset.get() / ruler.gap),
@@ -258,13 +283,14 @@ function RulerView({ ruler, value, width, ink, inkSoft, onPreview, onChange, pos
       const at = clampTick(cur, ruler.count);
       const step = Math.floor(cur / ruler.fling) !== Math.floor(prev / ruler.fling) && cur >= 0 && cur < ruler.count;
       if (step) nod.set(withSequence(withTiming(1, { duration: 40 }), withTiming(0, { duration: 160 })));
-      runOnJS(tick)(at, step ? (ruler.major(at) === 2 ? 2 : 1) : 0);
+      runOnJS(tick)(at, step);
     }
   );
   const markStyle = useAnimatedStyle(() => ({ transform: [{ scaleY: 1 + 0.25 * nod.get() }, { scaleX: 1 + 0.4 * nod.get() }] }));
 
   const half = width / 2;
-  const n = Math.ceil(half / ruler.gap) + 2;
+  // (Enough slots to fill the drum to its ends, which reach further along the ruler.)
+  const n = Math.ceil((half * Math.PI) / 2 / DRUM / ruler.gap) + 2;
   const slots = [];
   for (let j = -n; j <= n; j++) slots.push(<Slot key={j} j={j} ruler={ruler} offset={offset} half={half} ink={ink} inkSoft={inkSoft} />);
   return (
