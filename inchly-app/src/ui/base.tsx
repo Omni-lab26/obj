@@ -410,10 +410,15 @@ export function Card({ children, style, pad = 14 }: { children?: ReactNode; styl
  */
 export function PixHead({ children, size = 16, color = S.ink, lines = 1 }: { children: ReactNode; size?: number; color?: string; lines?: number }) {
   useT(); // the face arrives later: render again then
+  // under 16pt the dots fall between pixels and blur thin: the system face, bold, says it instead
+  if (size < 16) return <Text numberOfLines={lines} style={{ fontFamily: font.text, fontSize: size, lineHeight: Math.round(size * 1.3), fontWeight: '800', letterSpacing: 0.2, color }}>{children}</Text>;
   const natural = Math.ceil(size * 1.45);
   const give = (natural - Math.round(size * 1.25)) / 2;
+  const dot = size / 16;
+  // bold: a copy one dot to the right (a shadow without blur) doubles the single-dot strokes
   return (
-    <Text numberOfLines={lines} style={{ fontFamily: bundledFace('pixel') ?? font.text, fontSize: size, lineHeight: natural, marginVertical: -give, letterSpacing: 0.3, color }}>{children}</Text>
+    <Text numberOfLines={lines} style={{ fontFamily: bundledFace('pixel') ?? font.text, fontSize: size, lineHeight: natural, marginVertical: -give, letterSpacing: 0.3 + dot, color,
+      textShadowColor: color, textShadowOffset: { width: dot, height: 0 }, textShadowRadius: 0 }}>{children}</Text>
   );
 }
 /** スタンダード's section heading: a small square (its accent, sun unless said) and the words in DotGothic16. */

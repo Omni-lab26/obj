@@ -10,7 +10,7 @@ import { dateKey, jpDate, mondayIndex } from '@/lib/time';
 import { useDeadlines } from '@/screens/model';
 import { doneOn, keepFree, type Session, sortFree, useNow, useStore, useSubjects } from '@/store';
 import { Creature, Pix, PixSticker } from '@/themes/standard/pixel';
-import { bundledFace, font, hair, noOutline, type, useT } from '@/theme';
+import { font, hair, noOutline, type, useT } from '@/theme';
 import { Card, haptic, PixHead, Press, StdHead, StdKey, SubjTile, Txt } from '@/ui/base';
 import { ring, S, SR, useStd } from '@/ui/stdLook';
 import { Screen, useTabPad } from '@/ui/Chrome';
@@ -545,7 +545,7 @@ function StdTag({ now }: { now?: boolean }) {
   useT(); // the faces arrive later: render again then
   return now ? (
     <View style={{ minHeight: 18, paddingHorizontal: 6, justifyContent: 'center', borderRadius: 6, backgroundColor: S.pause, boxShadow: ring(1.5) }}>
-      <Text style={{ fontFamily: bundledFace('label') ?? font.text, fontSize: 10, lineHeight: 12, letterSpacing: 0.6, color: '#FFFFFF' }}>NOW</Text>
+      <Text style={{ fontFamily: font.text, fontSize: 11, lineHeight: 13, fontWeight: '800', letterSpacing: 0.6, color: '#FFFFFF' }}>NOW</Text>
     </View>
   ) : (
     <View style={{ minHeight: 20, paddingHorizontal: 6, justifyContent: 'center', borderRadius: 7, backgroundColor: S.card, boxShadow: ring(1.5) }}>

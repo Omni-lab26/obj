@@ -8,7 +8,6 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { onMoment } from '../moments';
 import { hair, lift, useT } from '../theme';
 import type { CreatureId, Face } from '../themes/standard/art';
-import { Dots } from '../themes/standard/parts';
 import { Creature } from '../themes/standard/pixel';
 import { haptic, Press, StdKey, Txt } from './base';
 import { Sticker } from './Sticker';
@@ -133,7 +132,7 @@ function StdWords({ title, sub }: { title: string; sub?: string }) {
   return (
     <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
       <Txt size={15} w="700" lh={20} numberOfLines={1}>{title}</Txt>
-      {m ? <Dots size={12} lh={15} ls={0.5} color={S.runInk}>{m[1]}</Dots> : null}
+      {m ? <Txt num size={12.5} w="800" lh={16} color={S.runInk}>{m[1]}</Txt> : null}
       {rest ? <Txt size={12} lh={16} tone="ink2" numberOfLines={1}>{rest}</Txt> : null}
     </View>
   );

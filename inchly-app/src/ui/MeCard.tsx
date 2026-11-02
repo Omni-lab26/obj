@@ -263,7 +263,7 @@ function StdCard({ name, handle, goal, since, stats, lv }: Props) {
               <Txt size={12} lh={16} tone="ink3" numberOfLines={1}>{`@${handle} · ${goal}`}</Txt>
             </View>
             <View style={{ alignItems: 'flex-end', gap: 2 }}>
-              <Txt style={{ fontFamily: bundledFace('label') ?? font.text, fontSize: 11, lineHeight: 13, letterSpacing: 0.6, color: S.ink3 }}>SINCE</Txt>
+              <Txt style={{ fontFamily: font.text, fontSize: 10.5, lineHeight: 13, fontWeight: '800', letterSpacing: 0.8, color: S.ink2 }}>SINCE</Txt>
               <Txt num size={13} w="700" lh={15}>{since}</Txt>
             </View>
           </View>

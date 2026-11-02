@@ -33,7 +33,7 @@ function RecordChip({ rec }: { rec: NonNullable<Post['rec']> }) {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, marginTop: 9, paddingVertical: 10, paddingHorizontal: 12, borderRadius: SR.mid, backgroundColor: S.paper2, boxShadow: ring(1.5) }}>
         <SubjTile name={sj.name} color={sj.c} area={sj.area} size={32} radius={8} />
         <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
-          <PixHead size={13} color={S.ink2}>勉強の記録</PixHead>
+          <PixHead size={13}>勉強の記録</PixHead>
           <Txt size={14} w="700" lh={18} numberOfLines={1}>{sj.name}{rec.note ? <Txt size={13} tone="ink2">{`  ${rec.note}`}</Txt> : null}</Txt>
         </View>
         <Txt num size={15} w="800" lh={18}>{hm(rec.min)}</Txt>

@@ -90,7 +90,8 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true, square }
       const d = new Date(start);
       d.setDate(start.getDate() + c * 7);
       const x = c * (size + gap);
-      if (d.getMonth() !== prev && (!months.length || x - months[months.length - 1].x > 30)) months.push({ x, label: `${d.getMonth() + 1}月` });
+      // a month that starts in the last columns has no room for its name: it is left out, not broken onto two lines
+      if (d.getMonth() !== prev && (!months.length || x - months[months.length - 1].x > 30) && x <= weeks * (size + gap) - 26) months.push({ x, label: `${d.getMonth() + 1}月` });
       prev = d.getMonth();
     }
   }
@@ -100,14 +101,15 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true, square }
     <View>
       {labels ? (
         <View style={{ height: MONTH_H, marginLeft: GUTTER }} pointerEvents="none">
-          {months.map((m) => <Txt key={m.label + m.x} size={10.5} tone="ink3" lh={12} style={{ position: 'absolute', left: m.x, top: 0 }}>{m.label}</Txt>)}
+          {/* スタンダード (square cells): the labels darker and bold, so the small words read */}
+          {months.map((m) => <Txt key={m.label + m.x} size={10.5} tone={square ? 'ink2' : 'ink3'} w={square ? '700' : undefined} lh={12} numberOfLines={1} style={{ position: 'absolute', left: m.x, top: 0 }}>{m.label}</Txt>)}
         </View>
       ) : null}
       <View style={{ flexDirection: 'row' }}>
       {labels ? (
         <View style={{ width: GUTTER }} pointerEvents="none">
           {size ? Array.from({ length: 7 }, (_, r) => (['月', '水', '金'].includes(dowLabel(r)) ? (
-            <Txt key={r} size={10} tone="ink3" lh={12} style={{ position: 'absolute', top: r * (size + gap) + size / 2 - 6, left: 0 }}>{dowLabel(r)}</Txt>
+            <Txt key={r} size={10} tone={square ? 'ink2' : 'ink3'} w={square ? '700' : undefined} lh={12} style={{ position: 'absolute', top: r * (size + gap) + size / 2 - 6, left: 0 }}>{dowLabel(r)}</Txt>
           ) : null)) : null}
         </View>
       ) : null}
@@ -145,9 +147,9 @@ export function Heatmap({ weeks, gap = 3, legend = true, labels = true, square }
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
           <View />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-            <Txt size={11} tone="ink3">少</Txt>
+            <Txt size={11} tone={square ? 'ink2' : 'ink3'} w={square ? '700' : undefined}>少</Txt>
             {t.grass.map((c) => <View key={c} style={square ? { width: 11, height: 11, backgroundColor: c, boxShadow: EDGE } : { width: 10, height: 10, borderRadius: 2.5, backgroundColor: c }} />)}
-            <Txt size={11} tone="ink3">多</Txt>
+            <Txt size={11} tone={square ? 'ink2' : 'ink3'} w={square ? '700' : undefined}>多</Txt>
           </View>
         </View>
       ) : null}

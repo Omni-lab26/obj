@@ -22,7 +22,7 @@ import { Rolling } from '@/ui/Rolling';
 import { TourSpot } from '@/ui/Tour';
 import type { StickerId } from './art';
 import { GAP, GUTTER, R, ring, S } from './look';
-import { Aux, B, Card, Dot, Dots, J, Key, Link, Person, Plate, PlateBtn, SecHead, Tag } from './parts';
+import { Aux, B, Card, Dot, J, Key, Link, Person, Plate, PlateBtn, SecHead, Tag } from './parts';
 import { Menu } from './menu';
 import { Creature, LogoMark, Pix, PixSticker } from './pixel';
 
@@ -150,7 +150,7 @@ function Day({ d }: { d: WeekDay }) {
         ...(d.future && !d.today ? { borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(23,18,31,0.38)' } : { boxShadow: ring(d.today && !d.studied ? 2 : 1.5) }) }}>
         {d.studied ? <Pix name="check" px={1.5} /> : d.rest ? <J size={10} w="700" lh={12}>休</J> : null}
       </View>
-      <Dots size={11} lh={12} color={d.today ? S.ink : S.ink3}>{d.label}</Dots>
+      <J size={11} w="800" lh={13} color={d.today ? S.ink : S.ink2}>{d.label}</J>
     </View>
   );
 }

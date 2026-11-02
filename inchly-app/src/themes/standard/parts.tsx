@@ -36,10 +36,16 @@ export function Num({ lh, style, ...props }: TextProps) {
   const size = props.size ?? 24;
   return <T f="groteskBold" num ls={-size * 0.02} {...props} lh={Math.ceil(size * 1.2)} style={[keep(Math.ceil(size * 1.2), lh), style]} />;
 }
-/** DotGothic16 (headings, small labels). `up`: moved up by (its glyphs sit a little low in their line). */
+/**
+ * DotGothic16 for headings, at 16pt or 32pt only (its 16-dot grid lands on whole points; between, it blurs).
+ * Set bold: a copy one dot to the right (a text shadow without blur) doubles each stroke, as bold pixel
+ * faces are drawn, so the thin single-dot lines read. `up`: moved up by (its glyphs sit a little low in their line).
+ */
 export function Dots({ lh, up, style, ...props }: TextProps & { up?: number }) {
   const size = props.size ?? 16;
-  return <T f="pixel" {...props} lh={Math.ceil(size * 1.45)} style={[keep(Math.ceil(size * 1.45), lh, up), style]} />;
+  const dot = size / 16;
+  return <T f="pixel" {...props} ls={(props.ls ?? 0) + dot} lh={Math.ceil(size * 1.45)}
+    style={[keep(Math.ceil(size * 1.45), lh, up), { textShadowColor: props.color ?? S.ink, textShadowOffset: { width: dot, height: 0 }, textShadowRadius: 0 }, style]} />;
 }
 
 // ---------- pressing ----------
