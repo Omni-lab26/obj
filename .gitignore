@@ -1,3 +1,6 @@
 _build/shots/
 _build/tmp/
 node_modules/
+
+# 参考画像（第三者の作品。リポジトリには入れない）
+news-app/mock/ref/
