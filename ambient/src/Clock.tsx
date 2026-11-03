@@ -375,7 +375,6 @@ const Digits = memo(function Digits({
   hoursAt,
   quartersAt,
   drawAt,
-  rendered,
 }: {
   main: string;
   small: string;
@@ -390,19 +389,17 @@ const Digits = memo(function Digits({
   hoursAt: SharedValue<number>;
   quartersAt: SharedValue<number>;
   drawAt: DrawStore;
-  /** Told the size they are drawn at once it is laid out (the zoom shows the rest). */
-  rendered?: SharedValue<number>;
 }) {
   const at = useSyncExternalStore(drawAt.subscribe, drawAt.get);
   const big = rowW ? at : 1;
   const drawn = size * big;
   const cell = digitPerPt * drawn;
   const line = size * 1.08;
-  useLayoutEffect(() => {
-    rendered?.set(big);
-  }, [big, rendered]);
-  // Drawn bigger or smaller, it keeps the box it has at its own size, and spills out of
-  // it evenly, on whole pixels (text off the pixel grid is drawn soft).
+  // Drawn bigger or smaller, it keeps the box it has at its own size, centred on it on
+  // whole pixels (text off the pixel grid is drawn soft), and is scaled back into it in
+  // the same breath: the new drawing and the scale that fits it reach the screen
+  // together, so a redraw never shows (a scale applied apart from it showed the digits
+  // a frame too big or small, a flicker as they redrew).
   const px = (v: number) => Math.round(v * PixelRatio.get()) / PixelRatio.get();
   return (
     <View style={big !== 1 ? { width: rowW, height: line } : null}>
@@ -412,8 +409,9 @@ const Digits = memo(function Digits({
             ? [
                 styles.row,
                 styles.drawnBig,
-                // As big as it is drawn, centred on the box (not scaled: see Clock).
+                // As big as it is drawn, centred on the box and scaled to fit it.
                 { width: rowW * big, height: line * big, left: px((rowW * (1 - big)) / 2), top: px((line * (1 - big)) / 2) },
+                { transform: [{ scale: 1 / big }] },
               ]
             : styles.row
         }
@@ -672,7 +670,7 @@ export function Clock(props: Props) {
   // in the zoom only ever squeezes it a touch, never stretches it, and redrawn each
   // time the zoom moves past that (every 1.5 % or so). Only the digits redraw (see
   // Digits), not the clock round them. With no fingers on them (at rest, or gliding),
-  // at exactly the size shown, with no transform left at all (see digitsStyle).
+  // at exactly the size shown.
   const [drawAt] = useState(makeDrawStore);
   const drawUI = useSharedValue(1);
   // (A plain function for the UI thread to call back: not the store's own method,
@@ -705,14 +703,9 @@ export function Clock(props: Props) {
   }));
   // Under a zoom the digits scale about their centre, and the label above and the hint
   // below move out (or in) by as much as the digits' line grows (or shrinks).
-  // The digits are drawn at about the zoom's size already (see Digits); the transform
-  // only makes up what is left, and is none at all once the drawing has caught up, so
-  // at rest nothing is stretched or squeezed.
-  const rendered = useSharedValue(1);
-  const digitsStyle = useAnimatedStyle(() => {
-    const r = zoom.get() / rendered.get();
-    return { transform: [{ scale: Math.abs(r - 1) < 1e-4 ? 1 : r }] };
-  });
+  // (The digits inside are drawn at about the zoom's size and scaled back by as much,
+  // so together they show at the zoom's size, drawn sharp: see Digits.)
+  const digitsStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() }] }));
   const aboveStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.round(((-lim.get().rowH * (zoom.get() - 1)) / 2) * dpr) / dpr }] }));
   const belowStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.round(((lim.get().rowH * (zoom.get() - 1)) / 2) * dpr) / dpr }] }));
   // The edit frame hangs on the digits' own box as laid out, and grows with them while
@@ -992,7 +985,6 @@ export function Clock(props: Props) {
               hoursAt={hoursAt}
               quartersAt={quartersAt}
               drawAt={framed ? drawAt : ONE}
-              rendered={framed ? rendered : undefined}
             />
           </Reanimated.View>
           {framed && edit ? (
