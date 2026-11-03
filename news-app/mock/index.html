@@ -211,8 +211,14 @@ svg { display: block; }
 .send-list button span { font-size: 12px; font-weight: 700; color: var(--accent); }
 
 .fab { position: absolute; right: 16px; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); height: 54px; padding: 0 18px 0 14px; border-radius: 27px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px; z-index: 6; background: rgba(255,106,26,.78); border-color: rgba(255,255,255,.35); }
-.profile { z-index: 45; transform: translateX(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
-.profile.open { transform: none; }
+.slide { z-index: 45; transform: translateX(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.slide.open { transform: none; }
+/* プロフィールは、タップしたアイコンの位置から広がって出てくる */
+.profile { z-index: 45; clip-path: circle(0px at var(--ox, 30px) var(--oy, 70px)); transition: clip-path .5s cubic-bezier(.3,.8,.2,1); pointer-events: none; }
+.profile.open { clip-path: circle(140% at var(--ox, 30px) var(--oy, 70px)); pointer-events: auto; }
+.profile .pass, .profile .bio, .profile .stats, .profile .pbtns { transform-origin: var(--ox, 30px) 0; transform: scale(.82) translateY(-14px); opacity: 0; transition: transform .5s cubic-bezier(.3,.8,.2,1), opacity .3s; }
+.profile.open .pass, .profile.open .bio, .profile.open .stats, .profile.open .pbtns { transform: none; opacity: 1; }
+.profile.open .bio { transition-delay: .06s; } .profile.open .stats { transition-delay: .1s; } .profile.open .pbtns { transition-delay: .14s; }
 .pass { margin: 4px 16px 0; border-radius: 22px; overflow: hidden; background: #1f1e1d; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
 .pass .art { position: relative; height: 190px; overflow: hidden; }
 .pass .art img { width: 100%; height: 100%; object-fit: cover; filter: saturate(1.15) blur(1px); transform: scale(1.06); }
@@ -237,6 +243,37 @@ svg { display: block; }
 .pc small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
 .pc .t { font-size: 13.5px; line-height: 1.55; }
 .pc .f { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.nfilter { display: flex; gap: 6px; padding: 2px 16px 6px; overflow-x: auto; scrollbar-width: none; }
+.nday { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 16px 6px; font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .04em; }
+.nday button { font-weight: 600; color: #7cc0ff; font-size: 12px; }
+.ni { display: flex; gap: 12px; width: 100%; padding: 11px 16px; align-items: flex-start; position: relative; }
+.ni.unread { background: rgba(255,255,255,.04); }
+.ni.unread::before { content: ""; position: absolute; left: 6px; top: 26px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.ni .who { position: relative; width: 42px; height: 42px; flex: none; }
+.ni .who .av { width: 42px; height: 42px; border-radius: 50%; background-size: cover; background-position: center; }
+.ni .who .av.sq { border-radius: 12px; }
+.ni .badge { position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; border: 2px solid var(--bg); color: #fff; }
+.ni .x { flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.5; }
+.ni .x b { font-weight: 700; }
+.ni .x .q { display: block; color: var(--muted); font-size: 12.5px; margin-top: 3px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ni .x small { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; }
+.ni .th { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; flex: none; }
+.ni .join { flex: none; padding: 7px 12px; border-radius: 999px; background: #fff; color: #111; font-weight: 700; font-size: 12px; align-self: center; }
+.toggle { width: 46px; height: 28px; border-radius: 14px; background: var(--wire); position: relative; flex: none; transition: background .2s; }
+.toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.toggle.on { background: var(--ok); }
+.toggle.on::after { transform: translateX(18px); }
+.setrow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.setrow .x { flex: 1; font-size: 13.5px; } .setrow small { display: block; color: var(--muted); font-size: 11.5px; }
+.sgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 10px; padding: 6px 16px 20px; }
+.scard { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.scard .im { position: relative; border-radius: 14px; overflow: hidden; }
+.scard img { width: 100%; aspect-ratio: 3/4; object-fit: cover; }
+.scard .kind2 { position: absolute; left: 8px; bottom: 8px; font: 600 10px/1 var(--font); padding: 5px 7px; border-radius: 999px; }
+.scard .t { font-size: 12.5px; font-weight: 600; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.scard small { color: var(--muted); font-size: 10.5px; }
+.ssort { display: flex; justify-content: space-between; align-items: center; padding: 2px 16px 8px; font-size: 12px; color: var(--muted); }
+.ssort select { background: var(--surface2); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; font: 600 12px var(--font); }
 .who-btn { font-weight: 700; font-size: 12.5px; }
 .newg { display: flex; gap: 12px; align-items: center; width: calc(100% - 32px); margin: 0 16px 6px; padding: 12px; border-radius: 18px; border: 1px dashed var(--muted); }
 .newg .x { flex: 1; min-width: 0; font-size: 13px; } .newg .x span { display: block; color: var(--muted); font-size: 12px; }
@@ -271,7 +308,7 @@ svg { display: block; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 .simple { padding: 54px 16px 20px; }
 .simple h2 { margin: 6px 0 14px; font-size: 26px; }
-@media (prefers-reduced-motion: reduce) { .article, .sheet, .room, .toast, .scrim { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .article, .sheet, .room, .toast, .scrim, .slide, .profile, .profile * { transition: none !important; } }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -294,7 +331,7 @@ svg { display: block; }
           <div class="wordmark"><span class="mark"><i></i><i></i></span>Halftick</div>
           <div style="display:flex;gap:4px">
             <button class="iconbtn" aria-label="配信を作る" data-toast="配信を作る（オーナーだけ）">＋</button>
-            <button class="iconbtn" aria-label="通知" data-open="notif"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="dot"></span></button>
+            <button class="iconbtn" aria-label="通知" data-notif><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="dot"></span></button>
           </div>
           <span class="note" style="left:16px;top:92px">自分・配信を作る・通知</span>
         </div>
@@ -366,6 +403,12 @@ svg { display: block; }
       <div class="top"><button class="round glass" data-close="room" aria-label="戻る">‹</button><b id="room-name"></b><button class="round glass" data-groupinfo aria-label="グループの情報">⋯</button></div>
       <div class="scroller"><div class="msgs" id="msgs"></div></div>
       <div class="composer"><input id="room-input" placeholder="メッセージ" aria-label="メッセージ"><button id="room-send" aria-label="送信">➤</button></div>
+    </section>
+
+    <!-- お知らせ -->
+    <section class="screen slide" id="notif" aria-hidden="true">
+      <div class="top"><button class="round glass" data-close="notif" aria-label="戻る">‹</button><b>お知らせ</b><button class="round glass" data-notifset aria-label="お知らせの設定">⚙︎</button></div>
+      <div class="scroller" id="n-scroll"></div>
     </section>
 
     <!-- プロフィール -->
@@ -441,7 +484,8 @@ svg { display: block; }
   ]);
   const count = list => list.reduce((n, c) => n + 1 + count(c.kids), 0);
 
-  const state = { tab: 'home', chip: '最新', sort: 'top', saved: new Set(['fomc']), cur: null, cover: 1 };
+  const state = { tab: 'home', chip: '最新', sort: 'top', saved: new Set(['fomc', 'nfp', 'yen']), savedAt: { fomc: 3, nfp: 1, yen: 2 }, savedSort: 'new', cur: null, cover: 1, notifFilter: 'all' };
+  let saveSeq = 10;
 
   // ---------- ホーム ----------
   const CHIPS = ['最新', '速報', '盛り上がり中', '株式', '為替', '債券'];
@@ -602,7 +646,17 @@ svg { display: block; }
     $('#p-right').outerHTML = me ? '<button id="p-right" class="round glass" data-open="me" aria-label="設定">⚙︎</button>' : '<span id="p-right" style="width:40px"></span>';
     const tabs = me ? [['comments', 'コメント'], ['saved', '保存した記事'], ['groups', 'グループ']] : [['comments', 'コメント'], ['posts', '投稿']];
     let list = '';
-    if (state.ptab === 'saved' && me) list = A.filter(a => state.saved.has(a.id)).map(a => `<button class="pc" data-article="${a.id}"><small>${esc(a.when)}</small><div class="t">${esc(a.title)}</div></button>`).join('') || '<p class="muted" style="padding:12px 16px;font-size:12.5px">まだ保存した記事はありません</p>';
+    if (state.ptab === 'saved' && me) {
+      const order = A.map(a => a.id);
+      const sv = A.filter(a => state.saved.has(a.id)).sort((a, b) =>
+        state.savedSort === 'new' ? state.savedAt[b.id] - state.savedAt[a.id]
+        : state.savedSort === 'old' ? state.savedAt[a.id] - state.savedAt[b.id]
+        : state.savedSort === 'date' ? order.indexOf(a.id) - order.indexOf(b.id)
+        : b.c - a.c);
+      list = sv.length ? `<div class="ssort rel"><span>${sv.length}件</span><label for="saved-sort" class="vis-hidden">並び替え</label><select id="saved-sort">${[['new', '保存した順（新しい）'], ['old', '保存した順（古い）'], ['date', '配信が新しい順'], ['hot', 'みんなの声が多い順']].map(([k, l]) => `<option value="${k}" ${state.savedSort === k ? 'selected' : ''}>${l}</option>`).join('')}</select><span class="note" style="right:16px;top:-20px">並び替え</span></div>
+        <div class="sgrid rel">${sv.map(a => `<button class="scard" data-article="${a.id}"><span class="im"><img src="${R}th${a.img}.jpg" alt=""><span class="kind2 glass">${a.id === 'nfp' ? '▶ 動画あり' : a.tag}</span></span><span class="t">${esc(a.title)}</span><small>${esc(a.when.split(' · ')[0])}</small></button>`).join('')}<span class="note" style="left:16px;top:10px">長方形のサムネ・2列・下に題名</span></div>`
+        : '<p class="muted" style="padding:12px 16px;font-size:12.5px">まだ保存した記事はありません。気になった記事はチェックで保存できます</p>';
+    }
     else if (state.ptab === 'groups' && me) list = ROOMS.filter(r => r.kind === 'group').map(r => `<button class="pc" data-room="${r.id}"><small>${r.members || 2}人</small><div class="t">${esc(r.name)}</div></button>`).join('');
     else if (state.ptab === 'posts') list = '<p class="muted" style="padding:12px 16px;font-size:12.5px">' + (['s.tanaka', 'Mia Chen', 'y.okada'].includes(name) ? '投稿は「みんな」に並んでいます' : 'まだ投稿はありません') + '</p>';
     else list = cs.length ? cs.map(({ c, art }) => `<button class="pc" data-article="${art.id}" data-comments="1"><small>${esc(art.title)}</small><div class="t">${esc(c.t)}</div><div class="f">▲ ${c.up} · ${c.min === 0 ? 'たった今' : c.min + '分前'}</div></button>`).join('')
@@ -628,6 +682,54 @@ svg { display: block; }
       <div>${list}</div>`;
     $('#p-scroll').scrollTop = 0;
     $('#profile').classList.add('open'); $('#profile').setAttribute('aria-hidden', 'false');
+  }
+
+  // ---------- お知らせ ----------
+  const NOTIFS = [
+    { day: '今日', type: 'reply', who: 'Mia Chen', text: '<b>Mia Chen</b> さんから返信が来ました', q: 'Agree, but JPY barely moved — Dec is ~60% priced already.', art: 'boj', at: '12分前', unread: true },
+    { day: '今日', type: 'react', who: 'k.mori', text: '<b>k.mori</b> さんほか11人が、あなたのコメントに ▲ を付けました', q: '「広がり」は強いね。12月は普通にあり得る', art: 'boj', at: '20分前', unread: true },
+    { day: '今日', type: 'post', text: '<b>15:30 の配信</b>が届きました', q: '日経平均は3日ぶりにひと休み。半導体株で利益確定の売りが出ました', art: 'nikkei', at: '40分前', unread: true },
+    { day: '今日', type: 'group', room: 'macro', text: '<b>マクロ勉強会</b>で y.okada さんが記事を共有しました', q: '日銀は金利0.75%で据え置き。でも声明にちょっと変化あり', at: '1時間前', unread: false },
+    { day: '今日', type: 'breaking', text: '<b>速報</b>　日銀は金利0.75%で据え置き', q: 'いま 214件の声が集まっています', art: 'boj', at: '3時間前', unread: false },
+    { day: '昨日', type: 'mention', who: 's.tanaka', text: '<b>s.tanaka</b> さんがあなたの名前を出しました', q: '@あなた さんの言う通り、入札は弱かったですね', art: 'ust', at: '昨日 22:41', unread: false },
+    { day: '昨日', type: 'invite', who: 'David Ruiz', text: '<b>David Ruiz</b> さんから「London macro desk」に招待されました', q: '9人のグループ', at: '昨日 18:05', unread: false },
+    { day: '今週', type: 'approve', text: '<b>投稿の申請</b>が通りました。「みんな」に書けるようになりました', q: '', at: '11月1日', unread: false },
+  ];
+  const NTYPE = { reply: ['↩', '#4c8dff', '返信'], react: ['▲', '#ff6a1a', 'リアクション'], mention: ['@', '#ae3ec9', 'メンション'], post: ['◷', '#3ddc84', '配信'], breaking: ['!', '#ff3b30', '配信'], group: ['#', '#0c8599', 'グループ'], invite: ['＋', '#0c8599', 'グループ'], approve: ['✓', '#3ddc84', 'そのほか'] };
+  const NSET = { slot7: true, slot1130: false, slot1530: true, slot22: true, breaking: true, reply: true, react: false, group: true };
+  function renderNotif() {
+    const f = state.notifFilter;
+    const pass = n => f === 'all' || (f === 'reply' ? ['reply', 'mention', 'react'].includes(n.type) : f === 'post' ? ['post', 'breaking'].includes(n.type) : ['group', 'invite'].includes(n.type));
+    const list = NOTIFS.filter(pass);
+    const days = [...new Set(list.map(n => n.day))];
+    const unread = NOTIFS.filter(n => n.unread).length;
+    $('#n-scroll').innerHTML = `
+      <div class="nfilter rel">${[['all', 'すべて'], ['reply', '返信・反応'], ['post', '配信'], ['group', 'グループ']].map(([k, l]) => `<button class="chip ${f === k ? 'on' : ''}" data-nfilter="${k}">${l}</button>`).join('')}<span class="note" style="right:16px;top:-18px">種類で絞り込み</span></div>
+      ${days.map((d, i) => `<div class="nday"><span>${d}</span>${i === 0 && unread ? `<button data-readall>すべて既読にする</button>` : ''}</div>` + list.filter(n => n.day === d).map(n => {
+        const [ic, col] = NTYPE[n.type];
+        const face = n.who ? `<span class="av" style="background:${FACE(n.who)}"></span>` : n.room ? `<span class="av sq" style="background:${roomIcon(ROOMS.find(r => r.id === n.room))}"></span>` : `<span class="av" style="background:#26272b;display:grid;place-items:center"><span class="mark"><i></i><i></i></span></span>`;
+        const act = n.type === 'invite' ? 'data-toast="グループに参加しました（ワイヤー）"' : n.room ? `data-room="${n.room}"` : n.art ? `data-article="${n.art}" data-comments="${['reply', 'react', 'mention'].includes(n.type) ? 1 : ''}"` : `data-tab-go="people"`;
+        return `<button class="ni ${n.unread ? 'unread' : ''}" ${act}><span class="who">${face}<span class="badge" style="background:${col}">${ic}</span></span>
+          <span class="x">${n.text}${n.q ? `<span class="q">${esc(n.q)}</span>` : ''}<small>${n.at}</small></span>
+          ${n.type === 'invite' ? '<span class="join">参加する</span>' : n.art ? `<img class="th" src="${R}sq${byId(n.art).img}.jpg" alt="">` : ''}</button>`;
+      }).join('')).join('') || '<p class="muted" style="padding:20px 16px;font-size:13px">ここに入るお知らせはまだありません</p>'}
+      <p class="muted" style="text-align:center;font-size:11.5px;padding:18px 16px 0">30日より前のお知らせは消えます</p>`;
+  }
+  function openNotif() {
+    renderNotif();
+    $('#notif').classList.add('open'); $('#notif').setAttribute('aria-hidden', 'false');
+  }
+  function closeNotif() {
+    NOTIFS.forEach(n => n.unread = false);
+    document.querySelectorAll('.dot').forEach(d => d.hidden = true);
+    $('#notif').classList.remove('open'); $('#notif').setAttribute('aria-hidden', 'true');
+  }
+  function openNotifSettings() {
+    const rows = [['いつもの配信', [['slot7', '7:00　米国の引け後'], ['slot1130', '11:30　アジアの昼'], ['slot1530', '15:30　アジアの引け・欧州の寄り付き'], ['slot22', '22:00　米国の寄り付き前']]],
+      ['そのほか', [['breaking', '速報'], ['reply', '返信とメンション'], ['react', 'リアクション'], ['group', 'グループの新しいメッセージ']]]];
+    openSheet(`<div class="sh-head"><b>お知らせの設定</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
+      <div class="past" style="overflow-y:auto;padding-bottom:30px">${rows.map(([h, rs]) => `<span class="lbl">${h}</span>` + rs.map(([k, l]) => `<div class="setrow"><span class="x">${l}${k === 'breaking' ? '<small>日銀・FRBの発表や雇用統計など</small>' : ''}</span><button class="toggle ${NSET[k] ? 'on' : ''}" data-nset="${k}" aria-label="${l}" aria-pressed="${NSET[k]}"></button></div>`).join('')).join('')}
+      <p class="muted" style="font-size:11.5px;line-height:1.6;margin-top:14px">夜中（0:00〜6:00）は、速報以外のお知らせを鳴らさずに届けます。</p></div>`, 'full');
   }
 
   // ---------- 記事 ----------
@@ -744,8 +846,8 @@ svg { display: block; }
     const d = t.dataset;
     if (d.tab) { state.tab = d.tab; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === t)); ['home', 'lib', 'people', 'chat'].forEach(k => $('#tab-' + k).hidden = k !== d.tab); if (d.tab === 'lib') renderLib(); return; }
     if (d.chip) { state.chip = d.chip; renderChips(); renderFeed(); return; }
-    if (d.article) { e.preventDefault(); setSheet('closed'); $('#profile').classList.remove('open'); if ($('#room').classList.contains('open') && t.classList.contains('shared')) {} openArticle(d.article, !!d.comments); return; }
-    if (d.save) { const id = d.save; state.saved.has(id) ? state.saved.delete(id) : state.saved.add(id); toast(state.saved.has(id) ? '保存しました。ライブラリからいつでも読めます' : '保存を外しました'); document.querySelectorAll(`[data-save="${id}"]`).forEach(b => { if (b.classList.contains('save')) b.classList.toggle('on', state.saved.has(id)); else b.textContent = state.saved.has(id) ? '✓ 保存した' : '＋ 保存'; }); renderLib(); return; }
+    if (d.article) { e.preventDefault(); setSheet('closed'); $('#profile').classList.remove('open'); if ($('#notif').classList.contains('open')) closeNotif(); if ($('#room').classList.contains('open') && t.classList.contains('shared')) {} openArticle(d.article, !!d.comments); return; }
+    if (d.save) { const id = d.save; state.saved.has(id) ? state.saved.delete(id) : (state.saved.add(id), state.savedAt[id] = ++saveSeq); toast(state.saved.has(id) ? '保存しました。ライブラリからいつでも読めます' : '保存を外しました'); document.querySelectorAll(`[data-save="${id}"]`).forEach(b => { if (b.classList.contains('save')) b.classList.toggle('on', state.saved.has(id)); else b.textContent = state.saved.has(id) ? '✓ 保存した' : '＋ 保存'; }); renderLib(); return; }
     if (t.id === 'cbar') { openComments(); return; }
     if (d.sort) { state.sort = d.sort; openComments(); return; }
     if (d.like) { const c = findC(discFor(state.cur.id), +d.like); c.liked = !c.liked; t.classList.toggle('liked', c.liked); t.textContent = `▲ ${c.up + (c.liked ? 1 : 0)}`; return; }
@@ -754,9 +856,19 @@ svg { display: block; }
     if (d.share !== undefined) { openShare(); return; }
     if (d.cover) { state.cover = +d.cover; openShare(); return; }
     if (d.send) { const r = ROOMS.find(x => x.id === d.send); r.msgs.push({ me: 1, share: state.cur ? state.cur.id : 'boj', t: 'これどう思う？' }); setSheet('closed'); toast(`${r.name} に送りました`); return; }
-    if (d.person) { setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
+    if (d.person) {
+      const dr = $('#device').getBoundingClientRect(), tr = t.getBoundingClientRect();
+      if (!$('#profile').classList.contains('open')) { $('#profile').style.setProperty('--ox', `${tr.left + tr.width / 2 - dr.left}px`); $('#profile').style.setProperty('--oy', `${tr.top + tr.height / 2 - dr.top}px`); }
+      setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
+    if (d.notif !== undefined) { openNotif(); return; }
+    if (d.close === 'notif') { closeNotif(); return; }
+    if (d.nfilter) { state.notifFilter = d.nfilter; renderNotif(); return; }
+    if (d.readall !== undefined) { NOTIFS.forEach(n => n.unread = false); renderNotif(); toast('すべて既読にしました'); return; }
+    if (d.notifset !== undefined) { openNotifSettings(); return; }
+    if (d.nset) { NSET[d.nset] = !NSET[d.nset]; t.classList.toggle('on', NSET[d.nset]); t.setAttribute('aria-pressed', NSET[d.nset]); return; }
+    if (d.tabGo) { closeNotif(); document.querySelector(`[data-tab="${d.tabGo}"]`).click(); return; }
     if (d.newgroup !== undefined) { openNewGroup(); return; }
     if (d.icon) { draft.icon = d.icon; openNewGroup(); return; }
     if (d.chatview) { state.chatView = d.chatview; renderRooms(); return; }
@@ -765,7 +877,7 @@ svg { display: block; }
     if (t.id === 'g-create') { if (draft.name.trim()) createGroup(); return; }
     if (d.copy) { navigator.clipboard?.writeText(d.copy).catch(() => {}); toast('招待リンクをコピーしました'); return; }
     if (d.groupinfo !== undefined) { openGroupInfo(); return; }
-    if (d.room) { setSheet('closed'); $('#profile').classList.remove('open'); openRoom(d.room); return; }
+    if (d.room) { setSheet('closed'); $('#profile').classList.remove('open'); if ($('#notif').classList.contains('open')) closeNotif(); openRoom(d.room); return; }
     if (t.id === 'room-send') { const i = $('#room-input'); if (!i.value.trim()) return; state.room.msgs.push({ me: 1, t: i.value.trim() }); i.value = ''; openRoom(state.room.id); return; }
     if (d.open) { openSimple(d.open); return; }
     if (d.close === 'article') { setSheet('closed'); $('#article').classList.remove('open'); $('#article').setAttribute('aria-hidden', 'true'); return; }
@@ -775,6 +887,7 @@ svg { display: block; }
   });
   scrim.addEventListener('click', () => setSheet('closed'));
   document.addEventListener('change', e => {
+    if (e.target.id === 'saved-sort') { state.savedSort = e.target.value; openProfile(state.person); return; }
     if (e.target.id !== 'g-photo' || !e.target.files[0]) return;
     const fr = new FileReader();
     fr.onload = () => { draft.icon = fr.result; openNewGroup(); };
