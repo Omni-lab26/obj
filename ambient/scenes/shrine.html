@@ -402,18 +402,35 @@ void main() {
 
   // Oblique projection: world x runs along the torii beam, world y along the path
   // (towards the viewer), z is height and points straight up the screen.
+  //
+  // The app draws its clock over the middle: digits centred at (W/2, (H - 0.08W)/2) under
+  // a soft veil about 0.7W x 0.24H (0.66W x 0.3H on wide screens), and its controls along
+  // the bottom 90 px. The torii, the fox and the hall are placed clear of both; grass,
+  // frost and trees run on underneath.
   function layout() {
     const W = Host.w, H = Host.h;
-    const s = Math.min(W, H * 0.6);
+    const wide = W > H;
     const land = clamp((W / H - 0.75) / 0.8, 0, 1); // 0 portrait .. 1 landscape
     const ax = (23 * Math.PI) / 180;
-    const ay = (lerp(120, 136, land) * Math.PI) / 180; // a shallower path on wide screens
+    const ay = (lerp(120, 142, land) * Math.PI) / 180; // a flatter path on wide screens
     const ex = [Math.cos(ax), Math.sin(ax)];
     const ey = [Math.cos(ay), Math.sin(ay)];
-    const O = [W * 0.5 + s * 0.035, H * 0.5 + s * lerp(0.125, 0.15, land)];
+    const fox = [-0.012, 0.045];
+    const clockBottom = (H - 0.08 * W) / 2 + (wide ? 0.15 : 0.12) * H;
+    const barTop = H - 90;
+    const m = Math.max(6, H * 0.012);
+    // Per unit of scale, from the torii's foot: the top of the lintel's raised left end,
+    // and the fox's feet in front of it. Fit both between the clock and the bar.
+    const top = -0.25 * ex[1] - 0.02 * ey[1] - 0.218;
+    const foot = fox[0] * ex[1] + fox[1] * ey[1];
+    const s = Math.min(W, H * (wide ? 0.5 : 0.6), (barTop - clockBottom - 2 * m - ch) / (foot - top));
+    const O = [W * (wide ? 0.78 : 0.44), clockBottom + m - top * s];
     const det = ex[0] * ey[1] - ey[0] * ex[1];
+    // The hall stands behind the torii on wide screens (up and to the right, beside the
+    // clock); on tall ones it stands off to the right, so it stays below the clock too.
+    const hc = wide ? [0.03, -0.46] : [0.35, -0.12];
     L = {
-      W, H, s, land, ex, ey, O,
+      W, H, s, land, ex, ey, O, fox,
       P: (x, y, z = 0) => [O[0] + s * (x * ex[0] + y * ey[0]), O[1] + s * (x * ex[1] + y * ey[1] - z)],
       // Screen point (on the ground) -> world x, y.
       inv: (px, py) => {
@@ -425,10 +442,13 @@ void main() {
       pathW: 0.068,
       pathEnd: 0.8,
       pillarX: 0.115,
-      fox: [-0.012, 0.045],
-      // On wide screens the path axis is flatter, so the hall steps back to clear the torii.
-      hut: { x0: -0.085, x1: 0.085, y0: -0.43 - 0.12 * land, y1: -0.33 - 0.12 * land },
+      hut: { cx: hc[0], x0: hc[0] - 0.085, x1: hc[0] + 0.085, y0: hc[1] - 0.05, y1: hc[1] + 0.05 },
+      // Small scenes (a phone on its side) get the compact fox.
+      smallFox: s < 260,
     };
+    // Stone pad around the hall, reaching across to the path.
+    const h = L.hut;
+    L.pad = { x0: Math.min(-0.11, h.x0 - 0.045), x1: Math.max(0.11, h.x1 + 0.045), y0: h.y0 - 0.05, y1: h.y1 + 0.05 };
     // Lanterns in pairs along the path.
     L.lanterns = [];
     for (let k = 0; k < 6; k++) {
@@ -437,11 +457,12 @@ void main() {
     }
     const yBottom = L.inv(W * 0.5, H + s * 0.2)[1];
     L.lanterns = L.lanterns.filter(([x, y]) => y < yBottom + 0.2);
-    // Canopy edge: a ragged line a little above the torii, lifted clear of the hut.
-    const roofTop = L.P(0, L.hut.y0 - 0.01, 0.13)[1];
-    const hutX = L.P(0, (L.hut.y0 + L.hut.y1) / 2)[0];
+    // Canopy edge: a ragged line across the top third, lifted clear of the hall.
+    const roofTop = L.P(h.cx, h.y0 - 0.03, 0.13)[1];
+    const hutX = L.P(h.cx, (h.y0 + h.y1) / 2)[0];
+    const base = H * lerp(0.37, 0.34, land);
     L.canopyEdge = (x) => {
-      let y = O[1] - s * (0.4 + 0.05 * (noise2(x / (s * 0.18), 3.1, 9) - 0.5));
+      let y = base - s * 0.05 * (noise2(x / (s * 0.18), 3.1, 9) - 0.5);
       const dh = Math.abs(x - hutX) / (s * 0.3);
       if (dh < 1) y = Math.min(y, lerp(roofTop - s * 0.06, y, dh * dh));
       return y;
@@ -553,7 +574,7 @@ void main() {
     // Everything standing, back to front.
     const things = [];
     for (const t of trees) things.push({ d: t.gy, draw: () => paintTree(t) });
-    things.push({ d: L.P(0, L.hut.y1)[1], draw: paintHut });
+    things.push({ d: L.P(L.hut.cx, L.hut.y1)[1], draw: paintHut });
     things.push({ d: L.P(0, 0)[1], draw: paintTorii });
     L.lanterns.forEach(([x, y]) => things.push({ d: L.P(x, y)[1], draw: () => paintLantern(x, y) }));
     things.sort((a, b) => a.d - b.d);
@@ -636,9 +657,9 @@ void main() {
 
   function paintPath() {
     const P = L.P, w = L.pathW, cb = 0.016;
-    const y0 = L.hut.y1 + 0.02, y1 = L.pathEnd;
-    // Stone forecourt in front of the hall, then the path.
-    poly([P(-0.11, L.hut.y0 - 0.05), P(0.11, L.hut.y0 - 0.05), P(0.11, y0), P(-0.11, y0)], C.stone, STONE);
+    const d = L.pad, y0 = d.y1, y1 = L.pathEnd;
+    // Stone forecourt around the hall, then the path.
+    poly([P(d.x0, d.y0), P(d.x1, d.y0), P(d.x1, d.y1), P(d.x0, d.y1)], C.stone, STONE);
     poly([P(-w, y0 - 0.01), P(w, y0 - 0.01), P(w, y1), P(-w, y1)], C.stone, STONE);
     // Steps: a dark riser and a lit tread edge, every two rows or so.
     const step = 0.036;
@@ -666,7 +687,8 @@ void main() {
         const gy = cy0 + ht * s;
         const [wx, wy] = L.inv(cx0, gy);
         // Nothing grows on the path, the forecourt or the hall.
-        if (Math.abs(wx) < 0.2 && wy > L.hut.y0 - 0.09) continue;
+        if (Math.abs(wx) < 0.2 && wy > L.pad.y0 - 0.05) continue;
+        if (wx > L.pad.x0 - 0.06 && wx < L.pad.x1 + 0.06 && wy > L.pad.y0 - 0.12 && wy < L.pad.y1 + 0.06) continue;
         trees.push({ x: cx0, y: cy0, R, ht, gy, pal: pickCrown(rnd), seed: Math.floor(rnd() * 1e6) });
       }
     }
@@ -766,10 +788,11 @@ void main() {
     // ridge runs parallel to the torii, so its broad front slope faces down the path.
     box(h.x0 - 0.03, h.x1 + 0.03, h.y0 - 0.03, h.y1 + 0.035, 0, 0.014, C.stoneLight, C.stone, C.stoneDark, STONE);
     box(h.x0, h.x1, h.y0, h.y1, 0.014, 0.064, null, C.wood, C.woodDark, WOOD);
-    poly([P(-0.034, h.y1, 0.014), P(0.034, h.y1, 0.014), P(0.034, h.y1, 0.054), P(-0.034, h.y1, 0.054)], C.interior, GAP);
+    const hx = h.cx;
+    poly([P(hx - 0.034, h.y1, 0.014), P(hx + 0.034, h.y1, 0.014), P(hx + 0.034, h.y1, 0.054), P(hx - 0.034, h.y1, 0.054)], C.interior, GAP);
     // Offering box and two small red lanterns at the door.
-    box(-0.028, 0.028, h.y1 + 0.01, h.y1 + 0.028, 0.014, 0.03, C.wood, C.woodDark, C.interior, WOOD);
-    for (const x of [-0.062, 0.062]) box(x - 0.009, x + 0.009, h.y1 + 0.018, h.y1 + 0.034, 0.014, 0.05, C.redLight, C.red, C.redDark, RED);
+    box(hx - 0.028, hx + 0.028, h.y1 + 0.01, h.y1 + 0.028, 0.014, 0.03, C.wood, C.woodDark, C.interior, WOOD);
+    for (const x of [hx - 0.062, hx + 0.062]) box(x - 0.009, x + 0.009, h.y1 + 0.018, h.y1 + 0.034, 0.014, 0.05, C.redLight, C.red, C.redDark, RED);
     const ov = 0.024, zr = 0.125, ze = 0.062, ym = (h.y0 + h.y1) / 2;
     const xa = h.x0 - ov, xb = h.x1 + ov, ya = h.y0 - ov, yb = h.y1 + ov;
     // Gable wall on the right, then the back slope (barely seen), then the front slope.
@@ -1047,6 +1070,18 @@ void main() {
     [[5, 4, 'T'], [6, 4, 'T'], [6, 3, 'T'], [7, 3, 't']],
     [[5, 3, 'T'], [6, 2, 'T'], [6, 1, 'T'], [7, 1, 't']],
   ];
+  // The compact fox, for small scenes.
+  const FOX_BODY_S = [
+    'E.E.',
+    'HMH.',
+    'BWb.',
+    'P.P.',
+  ];
+  const FOX_TAIL_S = [
+    [[3, 2, 'T'], [3, 3, 'T'], [4, 3, 't']],
+    [[3, 2, 'T'], [4, 2, 'T'], [4, 1, 't']],
+    [[3, 1, 'T'], [4, 0, 'T'], [4, -1, 't']],
+  ];
   const FOX_KEY = {
     E: ['^', [236, 126, 44]],
     e: ['A', [255, 168, 80]],
@@ -1086,11 +1121,13 @@ void main() {
     }
     // The fox.
     const f = L.P(L.fox[0], L.fox[1]);
-    const c0 = Math.round(f[0] / cw) - 2;
-    const r0 = Math.round(f[1] / ch) - FOX_BODY.length + 1;
+    const body = L.smallFox ? FOX_BODY_S : FOX_BODY;
+    const tail = L.smallFox ? FOX_TAIL_S : FOX_TAIL;
+    const c0 = Math.round(f[0] / cw) - (L.smallFox ? 1 : 2);
+    const r0 = Math.round(f[1] / ch) - body.length + 1;
     const perk = fox.perk > 0;
     const earUp = perk || fox.ear > 0;
-    FOX_BODY.forEach((line, r) => {
+    body.forEach((line, r) => {
       for (let c = 0; c < line.length; c++) {
         let k = line[c];
         if (k === '.') continue;
@@ -1104,7 +1141,7 @@ void main() {
     });
     const sw = Math.sin(fox.tail);
     const pose = perk ? (sw > 0.3 ? 2 : sw < -0.3 ? 0 : 1) : sw > 0.55 ? 1 : 0;
-    for (const [c, r, k] of FOX_TAIL[pose]) {
+    for (const [c, r, k] of tail[pose]) {
       const [g, rgb] = FOX_KEY[k];
       writeOver(c0 + c, r0 + r, k === 'T' && pose === 2 ? '/' : g, rgb, 1);
     }
