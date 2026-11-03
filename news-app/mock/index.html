@@ -243,6 +243,39 @@ svg { display: block; }
 .pc small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
 .pc .t { font-size: 13.5px; line-height: 1.55; }
 .pc .f { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.rise { z-index: 46; opacity: 0; transform: translateY(16px); transition: opacity .25s, transform .3s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+.rise.open { opacity: 1; transform: none; pointer-events: auto; }
+.sbar { display: flex; gap: 10px; align-items: center; padding: calc(54px + env(safe-area-inset-top, 0px)) 16px 10px; }
+.sfield { flex: 1; min-width: 0; height: 44px; border-radius: 22px; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 14px; color: var(--muted); }
+.sfield input { flex: 1; min-width: 0; background: none; border: 0; color: var(--text); font: 15px var(--font); outline: none; }
+.sfield input::-webkit-search-cancel-button { display: none; }
+.sclear { width: 22px; height: 22px; border-radius: 50%; background: var(--wire); font-size: 11px; display: grid; place-items: center; }
+.scancel { font-size: 14px; color: #7cc0ff; font-weight: 600; flex: none; }
+.ssec { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 16px 8px; font: 700 15px/1.2 var(--font); }
+.ssec button { font-size: 12px; font-weight: 600; color: #7cc0ff; }
+.recent { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px; }
+.rchip { display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 13px; border-radius: 999px; background: var(--surface2); font-size: 12.5px; }
+.rchip .x { font-size: 10px; color: var(--muted); }
+.trend { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; }
+.trend .rk { width: 20px; font: 700 15px/1 var(--mono); color: var(--muted); text-align: center; flex: none; }
+.trend .x { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; } .trend small { display: block; color: var(--muted); font-size: 11.5px; font-weight: 400; margin-top: 2px; }
+.trend .up { font: 600 11px/1 var(--font); color: var(--ok); flex: none; }
+.ggrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; }
+.gtile { position: relative; height: 84px; border-radius: 16px; overflow: hidden; background-size: cover; background-position: center; }
+.gtile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,.65), rgba(0,0,0,.05)); }
+.gtile span { position: absolute; left: 12px; bottom: 10px; z-index: 1; font: 700 15px/1 var(--font); }
+.ppl { display: flex; gap: 14px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
+.pp { flex: none; width: 70px; text-align: center; font-size: 11.5px; }
+.pp .av { display: block; width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 6px; background-size: cover; background-position: center; }
+.pp small { display: block; color: var(--muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stabs { display: flex; gap: 6px; padding: 0 16px 6px; overflow-x: auto; scrollbar-width: none; }
+.sr { display: flex; gap: 12px; align-items: center; width: 100%; padding: 10px 16px; }
+.sr .im { width: 58px; height: 58px; border-radius: 12px; background-size: cover; background-position: center; flex: none; position: relative; }
+.sr .im.round { border-radius: 50%; }
+.sr .im .pl { position: absolute; inset: 0; margin: auto; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; }
+.sr .x { flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.45; } .sr small { display: block; color: var(--muted); font-size: 11px; }
+.sr .x .q { display: block; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; padding: 0 1px; }
 .nfilter { display: flex; gap: 6px; padding: 2px 16px 6px; overflow-x: auto; scrollbar-width: none; }
 .nday { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 16px 6px; font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .04em; }
 .nday button { font-weight: 600; color: #7cc0ff; font-size: 12px; }
@@ -308,7 +341,7 @@ svg { display: block; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 .simple { padding: 54px 16px 20px; }
 .simple h2 { margin: 6px 0 14px; font-size: 26px; }
-@media (prefers-reduced-motion: reduce) { .article, .sheet, .room, .toast, .scrim, .slide, .profile, .profile * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .article, .sheet, .room, .toast, .scrim, .slide, .rise, .profile, .profile * { transition: none !important; } }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -345,7 +378,7 @@ svg { display: block; }
       <div class="scroller">
         <div class="lib-top">
           <button class="iconbtn glass" aria-label="メニュー">☰</button>
-          <button class="iconbtn glass" aria-label="検索" data-toast="検索">⌕</button>
+          <button class="iconbtn glass" aria-label="検索" data-search>⌕</button>
         </div>
         <div class="lib-title">ライブラリ</div>
         <div class="sec rel">ジャンルから探す ›<span class="note" style="left:110px;top:16px">ジャンルごとの過去の記事</span></div>
@@ -389,7 +422,7 @@ svg { display: block; }
         <button class="tab" data-tab="chat"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg>チャット</button>
         <span class="note" style="left:8px;top:-22px">Liquid Glass の浮いたタブ</span>
       </div>
-      <button class="searchbtn glass" aria-label="検索" data-toast="検索（ワイヤー）"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg></button>
+      <button class="searchbtn glass" aria-label="検索" data-search><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg></button>
     </nav>
 
     <!-- 記事（全画面） -->
@@ -403,6 +436,12 @@ svg { display: block; }
       <div class="top"><button class="round glass" data-close="room" aria-label="戻る">‹</button><b id="room-name"></b><button class="round glass" data-groupinfo aria-label="グループの情報">⋯</button></div>
       <div class="scroller"><div class="msgs" id="msgs"></div></div>
       <div class="composer"><input id="room-input" placeholder="メッセージ" aria-label="メッセージ"><button id="room-send" aria-label="送信">➤</button></div>
+    </section>
+
+    <!-- 検索 -->
+    <section class="screen rise" id="search" aria-hidden="true">
+      <div class="sbar"><label class="sfield glass" for="s-input"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="s-input" type="search" placeholder="記事・人・コメントを探す" autocomplete="off" enterkeyhint="search"><button class="sclear" id="s-clear" aria-label="消す" hidden>✕</button></label><button class="scancel" data-close="search">キャンセル</button></div>
+      <div class="scroller" id="s-body"></div>
     </section>
 
     <!-- お知らせ -->
@@ -684,6 +723,58 @@ svg { display: block; }
     $('#profile').classList.add('open'); $('#profile').setAttribute('aria-hidden', 'false');
   }
 
+  // ---------- 検索 ----------
+  state.recent = ['日銀', '利回り', 'Mia Chen'];
+  state.stab = 'all';
+  const TRENDS = [['#日銀', 'boj', '214件の声 · 3時間前から'], ['#雇用統計', 'nfp', '302件の声'], ['#米国債', 'ust', '133件の声'], ['#ドル円152円', 'yen', '41件の声'], ['#半導体', 'nikkei', '86件の声']];
+  const VIDEOS = [['boj', '3分でわかる、日銀の声明どこが変わった？', '4:12'], ['nfp', 'はじめての雇用統計の読み方', '6:40'], ['ust', '国債の入札、人気がないと何が起きる？', '5:05']];
+  const hl = (text, q) => { const t = esc(text); if (!q) return t; const i = text.toLowerCase().indexOf(q.toLowerCase()); return i < 0 ? t : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length)); };
+  function allComments() { const out = []; const walk = (l, a) => l.forEach(c => { out.push({ c, a }); walk(c.kids, a); }); A.forEach(a => walk(discFor(a.id), a)); return out; }
+  function renderSearch() {
+    const q = $('#s-input').value.trim();
+    $('#s-clear').hidden = !q;
+    if (!q) {
+      $('#s-body').innerHTML = `
+        ${state.recent.length ? `<div class="ssec"><span>最近さがしたもの</span><button data-clearrecent>消す</button></div><div class="recent">${state.recent.map(r => `<span class="rchip"><button data-q="${esc(r)}">${esc(r)}</button><button class="x" data-delrecent="${esc(r)}" aria-label="${esc(r)} を消す">✕</button></span>`).join('')}</div>` : ''}
+        <div class="ssec rel"><span>いま話題になっていること</span><span class="note" style="right:16px;top:14px">議論が多い順</span></div>
+        ${TRENDS.map(([k, id, sub], i) => `<button class="trend" data-article="${id}" data-comments="1"><span class="rk">${i + 1}</span><span class="x">${esc(k)}<small>${esc(sub)}</small></span>${i < 2 ? '<span class="up">↑ 急上昇</span>' : ''}</button>`).join('')}
+        <div class="ssec"><span>ジャンルから探す</span></div>
+        <div class="ggrid">${GENRES.slice(0, 6).map(([g, i]) => `<button class="gtile" style="background-image:url(${R}sq${i}.jpg)" data-q="${g === '中央銀行' ? '日銀' : g === 'マクロ' ? 'FOMC' : g}"><span>${g}</span></button>`).join('')}</div>
+        <div class="ssec"><span>話してみたい人</span></div>
+        <div class="ppl">${PEOPLE.slice(0, 6).map(n => `<button class="pp" data-person="${esc(n)}"><span class="av" style="background:${FACE(n)}"></span>${esc(n)}<small>${esc(ROLE[n])}</small></button>`).join('')}</div>`;
+      return;
+    }
+    const ql = q.toLowerCase(), has = x => x.toLowerCase().includes(ql);
+    const arts = A.filter(a => has(a.title) || has(a.tag) || has(a.lab));
+    const vids = VIDEOS.filter(v => has(v[1]));
+    const ppl = PEOPLE.filter(n => has(n) || has(ROLE[n]));
+    const grps = ROOMS.filter(r => r.kind === 'group' && has(r.name));
+    const cms = allComments().filter(x => has(x.c.t)).slice(0, 8);
+    const groups = [['art', '記事', arts], ['vid', '動画', vids], ['ppl', '人', ppl], ['grp', 'グループ', grps], ['cm', 'コメント', cms]];
+    const total = groups.reduce((n, g) => n + g[2].length, 0);
+    const row = {
+      art: a => `<button class="sr" data-article="${a.id}"><span class="im" style="background-image:url(${R}sq${a.img}.jpg)"></span><span class="x"><small>${esc(a.when.split(' · ')[0])} · ${esc(a.tag)}</small><span class="q">${hl(a.title, q)}</span></span></button>`,
+      vid: v => `<button class="sr" data-article="${v[0]}"><span class="im" style="background-image:url(${R}th${byId(v[0]).img}.jpg)"><span class="pl glass">▶</span></span><span class="x"><small>動画 · ${v[2]}</small><span class="q">${hl(v[1], q)}</span></span></button>`,
+      ppl: n => `<button class="sr" data-person="${esc(n)}"><span class="im round" style="background:${FACE(n)}"></span><span class="x">${hl(n, q)}<small>${hl(ROLE[n], q)}</small></span></button>`,
+      grp: r => `<button class="sr" data-room="${r.id}"><span class="im" style="background:${roomIcon(r)}"></span><span class="x">${hl(r.name, q)}<small>${r.members}人 · 参加中</small></span></button>`,
+      cm: x => `<button class="sr" data-article="${x.a.id}" data-comments="1"><span class="im round" style="background:${FACE(x.c.who)}"></span><span class="x"><small>${esc(x.c.who)} · ${esc(x.a.title)}</small><span class="q">${hl(x.c.t, q)}</span></span></button>`,
+    };
+    const tabs = [['all', `すべて ${total}`], ...groups.filter(g => g[2].length).map(g => [g[0], `${g[1]} ${g[2].length}`])];
+    if (!tabs.some(t => t[0] === state.stab)) state.stab = 'all';
+    $('#s-body').innerHTML = !total
+      ? `<div style="padding:40px 24px;text-align:center"><div style="font-size:16px;font-weight:700">「${esc(q)}」は見つかりませんでした</div><p class="muted" style="font-size:13px;line-height:1.7">ことばを短くするか、ジャンルの名前で探してみてください。<br>たとえば「日銀」「為替」「雇用統計」</p></div>`
+      : `<div class="stabs rel">${tabs.map(([k, l]) => `<button class="chip ${state.stab === k ? 'on' : ''}" data-stab="${k}">${l}</button>`).join('')}<span class="note" style="right:16px;top:-18px">種類ごとに切り替え</span></div>` +
+        groups.filter(g => g[2].length && (state.stab === 'all' || state.stab === g[0])).map(([k, l, items]) =>
+          `<div class="ssec"><span>${l}</span>${state.stab === 'all' && items.length > 3 ? `<button data-stab="${k}">すべて見る（${items.length}）</button>` : ''}</div>` + items.slice(0, state.stab === 'all' ? 3 : 50).map(row[k]).join('')).join('');
+  }
+  function openSearch(q = '') {
+    $('#s-input').value = q; state.stab = 'all'; renderSearch();
+    $('#search').classList.add('open'); $('#search').setAttribute('aria-hidden', 'false');
+    setTimeout(() => $('#s-input').focus(), 250);
+  }
+  function closeSearch() { $('#search').classList.remove('open'); $('#search').setAttribute('aria-hidden', 'true'); $('#s-input').blur(); }
+  function remember(q) { q = q.trim(); if (!q) return; state.recent = [q, ...state.recent.filter(r => r !== q)].slice(0, 8); }
+
   // ---------- お知らせ ----------
   const NOTIFS = [
     { day: '今日', type: 'reply', who: 'Mia Chen', text: '<b>Mia Chen</b> さんから返信が来ました', q: 'Agree, but JPY barely moved — Dec is ~60% priced already.', art: 'boj', at: '12分前', unread: true },
@@ -846,7 +937,7 @@ svg { display: block; }
     const d = t.dataset;
     if (d.tab) { state.tab = d.tab; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === t)); ['home', 'lib', 'people', 'chat'].forEach(k => $('#tab-' + k).hidden = k !== d.tab); if (d.tab === 'lib') renderLib(); return; }
     if (d.chip) { state.chip = d.chip; renderChips(); renderFeed(); return; }
-    if (d.article) { e.preventDefault(); setSheet('closed'); $('#profile').classList.remove('open'); if ($('#notif').classList.contains('open')) closeNotif(); if ($('#room').classList.contains('open') && t.classList.contains('shared')) {} openArticle(d.article, !!d.comments); return; }
+    if (d.article) { e.preventDefault(); if ($('#search').classList.contains('open')) { remember($('#s-input').value); closeSearch(); } setSheet('closed'); $('#profile').classList.remove('open'); if ($('#notif').classList.contains('open')) closeNotif(); if ($('#room').classList.contains('open') && t.classList.contains('shared')) {} openArticle(d.article, !!d.comments); return; }
     if (d.save) { const id = d.save; state.saved.has(id) ? state.saved.delete(id) : (state.saved.add(id), state.savedAt[id] = ++saveSeq); toast(state.saved.has(id) ? '保存しました。ライブラリからいつでも読めます' : '保存を外しました'); document.querySelectorAll(`[data-save="${id}"]`).forEach(b => { if (b.classList.contains('save')) b.classList.toggle('on', state.saved.has(id)); else b.textContent = state.saved.has(id) ? '✓ 保存した' : '＋ 保存'; }); renderLib(); return; }
     if (t.id === 'cbar') { openComments(); return; }
     if (d.sort) { state.sort = d.sort; openComments(); return; }
@@ -857,11 +948,19 @@ svg { display: block; }
     if (d.cover) { state.cover = +d.cover; openShare(); return; }
     if (d.send) { const r = ROOMS.find(x => x.id === d.send); r.msgs.push({ me: 1, share: state.cur ? state.cur.id : 'boj', t: 'これどう思う？' }); setSheet('closed'); toast(`${r.name} に送りました`); return; }
     if (d.person) {
+      if ($('#search').classList.contains('open')) remember($('#s-input').value);
       const dr = $('#device').getBoundingClientRect(), tr = t.getBoundingClientRect();
       if (!$('#profile').classList.contains('open')) { $('#profile').style.setProperty('--ox', `${tr.left + tr.width / 2 - dr.left}px`); $('#profile').style.setProperty('--oy', `${tr.top + tr.height / 2 - dr.top}px`); }
       setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
+    if (d.search !== undefined) { openSearch(); return; }
+    if (d.close === 'search') { closeSearch(); return; }
+    if (t.id === 's-clear') { $('#s-input').value = ''; renderSearch(); $('#s-input').focus(); return; }
+    if (d.q) { $('#s-input').value = d.q; remember(d.q); state.stab = 'all'; renderSearch(); return; }
+    if (d.delrecent) { state.recent = state.recent.filter(r => r !== d.delrecent); renderSearch(); return; }
+    if (d.clearrecent !== undefined) { state.recent = []; renderSearch(); return; }
+    if (d.stab) { state.stab = d.stab; renderSearch(); $('#s-body').scrollTop = 0; return; }
     if (d.notif !== undefined) { openNotif(); return; }
     if (d.close === 'notif') { closeNotif(); return; }
     if (d.nfilter) { state.notifFilter = d.nfilter; renderNotif(); return; }
@@ -877,7 +976,7 @@ svg { display: block; }
     if (t.id === 'g-create') { if (draft.name.trim()) createGroup(); return; }
     if (d.copy) { navigator.clipboard?.writeText(d.copy).catch(() => {}); toast('招待リンクをコピーしました'); return; }
     if (d.groupinfo !== undefined) { openGroupInfo(); return; }
-    if (d.room) { setSheet('closed'); $('#profile').classList.remove('open'); if ($('#notif').classList.contains('open')) closeNotif(); openRoom(d.room); return; }
+    if (d.room) { if ($('#search').classList.contains('open')) closeSearch(); setSheet('closed'); $('#profile').classList.remove('open'); if ($('#notif').classList.contains('open')) closeNotif(); openRoom(d.room); return; }
     if (t.id === 'room-send') { const i = $('#room-input'); if (!i.value.trim()) return; state.room.msgs.push({ me: 1, t: i.value.trim() }); i.value = ''; openRoom(state.room.id); return; }
     if (d.open) { openSimple(d.open); return; }
     if (d.close === 'article') { setSheet('closed'); $('#article').classList.remove('open'); $('#article').setAttribute('aria-hidden', 'true'); return; }
@@ -894,9 +993,12 @@ svg { display: block; }
     fr.readAsDataURL(e.target.files[0]);
   });
   document.addEventListener('input', e => {
+    if (e.target.id === 's-input') { renderSearch(); return; }
     if (e.target.id === 'g-name') { draft.name = e.target.value; const b = $('#g-create'); if (b) b.disabled = !draft.name.trim(); }
   });
   document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.id === 's-input') { remember(e.target.value); e.target.blur(); }
+    if (e.key === 'Escape' && $('#search').classList.contains('open')) closeSearch();
     if (e.key === 'Enter' && e.target.id === 'c-input') $('#c-send').click();
     if (e.key === 'Enter' && e.target.id === 'room-input') $('#room-send').click();
   });
