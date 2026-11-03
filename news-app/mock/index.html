@@ -243,6 +243,16 @@ svg { display: block; }
 .pc small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
 .pc .t { font-size: 13.5px; line-height: 1.55; }
 .pc .f { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.gabout { padding: 10px 18px 0; margin: 0; font-size: 13.5px; line-height: 1.7; color: rgba(255,255,255,.82); }
+.gsort { display: flex; gap: 6px; padding: 14px 18px 4px; }
+.eps { padding: 0 18px; }
+.ep { display: flex; gap: 12px; width: 100%; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,.1); align-items: flex-start; }
+.ep .x { flex: 1; min-width: 0; font-size: 14px; line-height: 1.45; }
+.ep small { display: block; color: rgba(255,255,255,.55); font-size: 11px; margin-bottom: 3px; }
+.ep .sn { display: block; color: rgba(255,255,255,.6); font-size: 12.5px; margin-top: 3px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ep .eb { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; }
+.ep img { width: 76px; height: 76px; border-radius: 12px; object-fit: cover; flex: none; margin-top: 2px; }
+.pill2 { padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.12); font: 600 11.5px/1 var(--font); }
 .pfilter { display: flex; gap: 6px; padding: 10px 16px 8px; overflow-x: auto; scrollbar-width: none; }
 .gate { margin: 4px 16px 8px; padding: 14px; border-radius: 16px; background: var(--surface); display: flex; gap: 12px; align-items: center; font-size: 13px; line-height: 1.5; }
 .gate .ic2 { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; flex: none; background: rgba(174,62,201,.18); color: #d9a3ff; }
@@ -482,6 +492,11 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <button class="cbar glass" id="cbar" aria-label="議論を開く"></button>
     </section>
 
+    <!-- ジャンル -->
+    <section class="screen slide" id="genre" aria-hidden="true" style="z-index:25;background:var(--tint,#1b1d22)">
+      <div class="scroller" id="g-scroll"></div>
+    </section>
+
     <!-- チャットルーム -->
     <section class="screen room" id="room" aria-hidden="true">
       <div class="top"><button class="round glass" data-close="room" aria-label="戻る">‹</button><b id="room-name"></b><button class="round glass" data-groupinfo aria-label="グループの情報">⋯</button></div>
@@ -539,6 +554,13 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     { id: 'ust', img: 5, lab: 'US pre-open', tag: '#債券', tm: '昨日 22:00', when: '11月3日（月）22:00 · 米国の寄り付き前', title: '米10年債の利回りが4.4%台に。入札の人気がいまひとつでした', c: 133, r: 640, tint: '#3d1210' },
     { id: 'nfp', img: 11, lab: 'Breaking', tag: '#雇用統計', tm: '11/1', when: '11月1日（土）22:30 · 速報', title: '米雇用統計は+18.7万人。予想より強めの結果に', c: 302, r: 1800, tint: '#0f1a24' },
     { id: 'earn', img: 10, lab: 'Weekly', tag: '#決算', tm: '10/31', when: '10月31日（金）15:30 · 週末のまとめ', title: '来週の決算、注目は半導体と銀行です', c: 64, r: 220, tint: '#121212' },
+    { id: 'gdp', img: 2, lab: 'Macro', tag: '#GDP', tm: '10/30', when: '10月30日（木）22:00 · 米国の寄り付き前', title: '米GDPは年率2.8%。個人消費がまだ強いみたいです', c: 92, r: 340, tint: '#1d2b1a', min: 6 },
+    { id: 'ecb', img: 6, lab: 'Central bank', tag: '#ECB', tm: '10/29', when: '10月29日（水）22:00 · 速報', title: 'ECBは据え置き。ラガルド総裁「データ次第」をくり返す', c: 71, r: 260, tint: '#2b1f1a', min: 3 },
+    { id: 'jgb', img: 4, lab: 'Bonds', tag: '#国債', tm: '10/28', when: '10月28日（火）15:30 · アジアの引け', title: '日本の10年債利回り1.7%台に。20年ぶりの高さが続いています', c: 58, r: 210, tint: '#2a2421', min: 4 },
+    { id: 'cny', img: 8, lab: 'FX', tag: '#人民元', tm: '10/27', when: '10月27日（月）11:30 · アジアの昼', title: '人民元はじわっと元安。中国の基準値がヒントになっています', c: 33, r: 120, tint: '#24221f', min: 3 },
+    { id: 'chip', img: 9, lab: 'Equity', tag: '#半導体', tm: '10/24', when: '10月24日（金）7:00 · 米国の引け後', title: '米半導体株が反発。決算の数字は「思ったより悪くない」', c: 77, r: 290, tint: '#1f2a1c', min: 5 },
+    { id: 'aipow', img: 3, lab: 'Tech', tag: '#テック', tm: '10/22', when: '10月22日（水）22:00 · 米国の寄り付き前', title: 'AIの電力不足で、電力会社の株にも注目が集まっています', c: 49, r: 180, tint: '#2a1f2a', min: 4 },
+    { id: 'bank', img: 10, lab: 'Earnings', tag: '#銀行', tm: '10/17', when: '10月17日（金）15:30 · 週末のまとめ', title: '米大手銀行の決算、金利が高いおかげで利ざやは好調', c: 41, r: 150, tint: '#121212', min: 3 },
   ];
   const byId = id => A.find(a => a.id === id);
   const PEOPLE = ['s.tanaka', 'Mia Chen', 'k.mori', 'y.okada', 'David Ruiz', 'a.ishii', 'h.kato', 'n.sato'];
@@ -612,8 +634,45 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
 
   // ---------- ライブラリ ----------
   const GENRES = [['マクロ', 1], ['中央銀行', 7], ['為替', 8], ['株式', 9], ['債券', 5], ['決算', 10], ['テック', 3]];
+  const GMAP = {
+    'マクロ': { ids: ['fomc', 'nfp', 'gdp', 'ust', 'ecb'], tint: '#16243f', about: '景気・物価・雇用など、世界の経済の大きな流れ。', vids: ['nfp'] },
+    '中央銀行': { ids: ['boj', 'fomc', 'ecb', 'jgb'], tint: '#3a1a14', about: '日銀・FRB・ECBの金利の決定と、その読み方。', vids: ['boj'] },
+    '為替': { ids: ['yen', 'boj', 'cny', 'nfp'], tint: '#2a2826', about: 'ドル円を中心に、お金の交換レートが動く理由。', vids: ['boj', 'nfp'] },
+    '株式': { ids: ['nikkei', 'chip', 'earn', 'aipow'], tint: '#1f2a1c', about: '日本と米国の株の動き。半導体とテックが中心です。', vids: [] },
+    '債券': { ids: ['ust', 'jgb', 'fomc'], tint: '#3d1210', about: '国債の利回りと入札。金利の土台になる市場です。', vids: ['ust'] },
+    '決算': { ids: ['earn', 'chip', 'bank'], tint: '#121212', about: '企業の決算のポイントを、短く分かりやすく。', vids: [] },
+    'テック': { ids: ['aipow', 'chip', 'nikkei'], tint: '#2a1f2a', about: 'AI・半導体・電力など、テクノロジーとお金の話。', vids: [] },
+  };
+  state.gfollow = new Set(['為替']); state.gnotify = new Set(['為替']); state.gview = 'all'; state.gsort = 'new';
+  function renderGenre() {
+    const g = state.genre, G = GMAP[g], img = GENRES.find(x => x[0] === g)[1];
+    const arts = G.ids.map(byId).filter(Boolean);
+    let items = [...arts.map(a => ({ kind: 'art', a })), ...G.vids.map(id => ({ kind: 'vid', a: byId(id), v: VIDEOS.find(v => v[0] === id) }))];
+    if (state.gview !== 'all') items = items.filter(x => x.kind === state.gview);
+    const order = A.map(a => a.id);
+    items.sort((x, y) => state.gsort === 'hot' ? y.a.c - x.a.c : order.indexOf(x.a.id) - order.indexOf(y.a.id));
+    const el = $('#genre'); el.style.setProperty('--tint', G.tint);
+    $('#g-scroll').innerHTML = `
+      <div class="hero rel"><img src="${R}sq${img}.jpg" alt="">
+        <div class="hero-btns"><button class="round glass" data-close="genre" aria-label="戻る">‹</button><div class="pillbtns glass"><button class="iconbtn" data-search aria-label="このジャンルを検索">⌕</button><button class="iconbtn" data-gsortbtn aria-label="並び替え">⇅</button><button class="iconbtn" data-toast="このジャンルをシェア（ワイヤー）" aria-label="その他">•••</button></div></div>
+        <span class="note" style="left:14px;bottom:30px">ジャンルの絵を全画面のトップに</span></div>
+      <div class="head rel"><div style="flex:1;min-width:0"><h2>${esc(g)}</h2><div class="when">記事 ${arts.length} · 動画 ${G.vids.length} · 毎日更新 · <button data-gviewbtn style="color:inherit;font-weight:600">表示：${{ all: 'すべて', art: '記事だけ', vid: '動画だけ' }[state.gview]} ⌃</button></div></div>
+        <div class="btns"><button class="round glass ${state.gnotify.has(g) ? 'save on' : ''}" data-gnotify aria-label="新着を知らせる">${state.gnotify.has(g) ? '🔔︎' : '🔕︎'}</button><button class="round glass save ${state.gfollow.has(g) ? 'on' : ''}" data-gfollow aria-label="フォロー">✓</button></div>
+        <span class="note" style="right:18px;top:-24px">🔔 新着を知らせる / ✓ フォロー</span></div>
+      <p class="gabout">${esc(G.about)}${state.gfollow.has(g) ? '<br><span class="muted" style="font-size:12px">フォロー中：ホームで優先して表示します</span>' : ''}</p>
+      <div class="gsort rel">${[['new', '新しい順'], ['hot', 'みんなの声が多い順']].map(([k, l]) => `<button class="chip ${state.gsort === k ? 'on' : ''}" data-gsort="${k}">${l}</button>`).join('')}</div>
+      <div class="eps">${items.map(x => x.kind === 'vid'
+        ? `<button class="ep" data-article="${x.a.id}"><span class="x"><small>${esc(x.a.tm)} · 動画</small><b>${esc(x.v[1])}</b><span class="sn">${esc(x.a.title)}</span><span class="eb"><span class="muted">•••</span><span class="pill2">▶ ${x.v[2]}</span></span></span><img src="${R}th${x.a.img}.jpg" alt=""></button>`
+        : `<button class="ep" data-article="${x.a.id}"><span class="x"><small>${esc(x.a.when.split(' · ')[0])}</small><b>${esc(x.a.title)}</b><span class="sn">${esc(x.a.when.split(' · ')[1] || '')}の配信。${x.a.c}件の声が集まっています</span><span class="eb"><span class="muted">💬 ${x.a.c}</span><span class="pill2">記事 ${x.a.min || 3}分</span></span></span><img src="${R}sq${x.a.img}.jpg" alt=""></button>`).join('') || '<p class="muted" style="padding:16px;font-size:13px">ここに入るものはまだありません</p>'}</div>
+      <div class="sec" style="padding-top:22px">ほかのジャンル</div>
+      <div class="recent" style="padding:0 16px 20px">${GENRES.filter(x => x[0] !== g).map(([n]) => `<button class="chip" data-genre="${n}">${n}</button>`).join('')}</div>`;
+  }
+  function openGenre(g) {
+    state.genre = g; state.gview = 'all'; renderGenre(); $('#g-scroll').scrollTop = 0;
+    $('#genre').classList.add('open'); $('#genre').setAttribute('aria-hidden', 'false');
+  }
   function renderLib() {
-    $('#genres').innerHTML = GENRES.map(([g, i]) => `<button class="genre" data-toast="ジャンル「${g}」の記事一覧（ワイヤー）"><img src="${R}sq${i}.jpg" alt=""><span>${g}</span></button>`).join('');
+    $('#genres').innerHTML = GENRES.map(([g, i]) => `<button class="genre" data-genre="${g}"><img src="${R}sq${i}.jpg" alt=""><span>${g}</span></button>`).join('');
     $('#newest').innerHTML = A.slice(0, 5).map(a => `<button class="big" data-article="${a.id}"><img src="${R}sq${a.img}.jpg" alt=""><div class="m"><small>${esc(a.tm)} · 記事 3分</small>${esc(a.title)}</div></button>`).join('');
     $('#videos').innerHTML = [['boj', '3分でわかる、日銀の声明どこが変わった？', '4:12'], ['nfp', 'はじめての雇用統計の読み方', '6:40'], ['ust', '国債の入札、人気がないと何が起きる？', '5:05']].map(([id, t, l]) => `
       <button class="vid" data-article="${id}"><div class="vb"><img src="${R}th${byId(id).img}.jpg" alt=""><span class="play glass">▶</span></div><p>${t}<br><span class="muted">${l}</span></p></button>`).join('');
@@ -943,7 +1002,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <div class="ssec rel"><span>いま話題になっていること</span><span class="note" style="right:16px;top:14px">議論が多い順</span></div>
         ${TRENDS.map(([k, id, sub], i) => `<button class="trend" data-article="${id}" data-comments="1"><span class="rk">${i + 1}</span><span class="x">${esc(k)}<small>${esc(sub)}</small></span>${i < 2 ? '<span class="up">↑ 急上昇</span>' : ''}</button>`).join('')}
         <div class="ssec"><span>ジャンルから探す</span></div>
-        <div class="ggrid">${GENRES.slice(0, 6).map(([g, i]) => `<button class="gtile" style="background-image:url(${R}sq${i}.jpg)" data-q="${g === '中央銀行' ? '日銀' : g === 'マクロ' ? 'FOMC' : g}"><span>${g}</span></button>`).join('')}</div>
+        <div class="ggrid">${GENRES.slice(0, 6).map(([g, i]) => `<button class="gtile" style="background-image:url(${R}sq${i}.jpg)" data-genre="${g}"><span>${g}</span></button>`).join('')}</div>
         <div class="ssec"><span>話してみたい人</span></div>
         <div class="ppl">${PEOPLE.slice(0, 6).map(n => `<button class="pp" data-person="${esc(n)}"><span class="av" style="background:${FACE(n)}"></span>${esc(n)}<small>${esc(ROLE[n])}</small></button>`).join('')}</div>`;
       return;
@@ -1158,6 +1217,13 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
+    if (d.genre) { if ($('#search').classList.contains('open')) closeSearch(); openGenre(d.genre); return; }
+    if (d.close === 'genre') { $('#genre').classList.remove('open'); $('#genre').setAttribute('aria-hidden', 'true'); return; }
+    if (d.gfollow !== undefined) { const g = state.genre; state.gfollow.has(g) ? state.gfollow.delete(g) : state.gfollow.add(g); renderGenre(); toast(state.gfollow.has(g) ? `「${g}」をフォローしました` : 'フォローを外しました'); return; }
+    if (d.gnotify !== undefined) { const g = state.genre; state.gnotify.has(g) ? state.gnotify.delete(g) : state.gnotify.add(g); renderGenre(); toast(state.gnotify.has(g) ? `「${g}」の新着をお知らせします` : 'お知らせをオフにしました'); return; }
+    if (d.gsort) { state.gsort = d.gsort; renderGenre(); return; }
+    if (d.gsortbtn !== undefined) { state.gsort = state.gsort === 'new' ? 'hot' : 'new'; renderGenre(); toast(state.gsort === 'new' ? '新しい順にしました' : 'みんなの声が多い順にしました'); return; }
+    if (d.gviewbtn !== undefined) { state.gview = { all: 'art', art: 'vid', vid: 'all' }[state.gview]; renderGenre(); return; }
     if (d.pfilter) { state.pfilter = d.pfilter; renderPosts(); return; }
     if (d.post) { openPostComments(d.post); setTimeout(() => setSheet('full'), 30); return; }
     if (d.plike) { const p = findPost(d.plike); p.liked = !p.liked; renderPosts(); if (sheetPos !== 'closed' && state.cur.post) openComments(); return; }
