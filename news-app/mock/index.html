@@ -254,15 +254,15 @@ svg { display: block; }
           <button class="iconbtn glass" aria-label="検索" data-toast="検索">⌕</button>
         </div>
         <div class="lib-title">ライブラリ</div>
-        <div class="sec rel">ジャンル ›<span class="note" style="left:110px;top:16px">ジャンルごとの過去の記事</span></div>
+        <div class="sec rel">ジャンルから探す ›<span class="note" style="left:110px;top:16px">ジャンルごとの過去の記事</span></div>
         <div class="row" id="genres"></div>
-        <div class="sec rel">新着の記事 ›</div>
+        <div class="sec rel">新しく届いた記事 ›</div>
         <div class="row" id="newest"></div>
-        <div class="sec rel">解説動画 ›<span class="note" style="left:110px;top:16px">記事に付ける解説動画</span></div>
+        <div class="sec rel">動画でサクッと ›<span class="note" style="left:110px;top:16px">記事に付ける解説動画</span></div>
         <div class="row" id="videos"></div>
         <div class="sec">保存した記事 ›</div>
         <div class="past" id="saved"></div>
-        <div class="sec">過去の配信 ›</div>
+        <div class="sec">これまでの配信 ›</div>
         <div class="past" id="past"></div>
       </div>
     </section>
@@ -271,7 +271,7 @@ svg { display: block; }
     <section class="screen" id="tab-people" hidden>
       <div class="scroller">
         <div class="simple"><h2>みんなの投稿</h2></div>
-        <div class="apply">投稿は認証制です。投稿したい人は申請し、オーナーが認めると書けるようになります。<br><button data-toast="申請を送りました（ワイヤー）">投稿を申請する</button></div>
+        <div class="apply">いまは、オーナーがOKした人だけが投稿できます。書いてみたい人は、気軽に申請してください。<br><button data-toast="申請を送りました。返事を待っててください">投稿してみたい</button></div>
         <div id="posts"></div>
       </div>
     </section>
@@ -328,13 +328,13 @@ svg { display: block; }
 
   // 仮データ（すべてサンプル）
   const A = [
-    { id: 'nikkei', img: 9, lab: 'Asia close', tag: '#株式', tm: '15:30', when: '11月4日（火）15:30 · アジア引け・欧州寄り付き', title: '日経平均は3日ぶり反落、半導体に利益確定売り', c: 86, r: 412, tint: '#1f2a1c' },
-    { id: 'boj', img: 7, brk: true, lab: 'BOJ decision', tag: '#日銀', tm: '12:18', when: '11月4日（火）12:18 · 速報', title: '日銀、政策金利を0.75%で据え置き。声明に「賃金上昇の広がり」', c: 214, r: 1200, tint: '#3a1a14' },
-    { id: 'yen', img: 8, lab: 'Midday', tag: '#為替', tm: '11:30', when: '11月4日（火）11:30 · アジアの昼', title: 'ドル円152円台、輸入企業の買いが再燃', c: 41, r: 188, tint: '#2a2826' },
-    { id: 'fomc', img: 1, lab: 'US close', tag: '#FRB', tm: '7:00', when: '11月4日（火）7:00 · 米国の大引け後', title: 'FOMC議事要旨、12月の利下げに慎重な声が多数', c: 57, r: 301, tint: '#172441' },
-    { id: 'ust', img: 5, lab: 'US pre-open', tag: '#債券', tm: '昨日 22:00', when: '11月3日（月）22:00 · 米国の寄り付き前', title: '米10年債利回り4.4%台、入札不調で上昇', c: 133, r: 640, tint: '#3d1210' },
-    { id: 'nfp', img: 11, lab: 'Breaking', tag: '#雇用統計', tm: '11/1', when: '11月1日（土）22:30 · 速報', title: '米雇用統計 +18.7万人、予想を上回る', c: 302, r: 1800, tint: '#0f1a24' },
-    { id: 'earn', img: 10, lab: 'Weekly', tag: '#決算', tm: '10/31', when: '10月31日（金）15:30 · 週末のまとめ', title: '来週の決算：半導体と銀行に注目', c: 64, r: 220, tint: '#121212' },
+    { id: 'nikkei', img: 9, lab: 'Asia close', tag: '#株式', tm: '15:30', when: '11月4日（火）15:30 · アジア引け・欧州寄り付き', title: '日経平均は3日ぶりにひと休み。半導体株で利益確定の売りが出ました', c: 86, r: 412, tint: '#1f2a1c' },
+    { id: 'boj', img: 7, brk: true, lab: 'BOJ decision', tag: '#日銀', tm: '12:18', when: '11月4日（火）12:18 · 速報', title: '日銀は金利0.75%で据え置き。でも声明にちょっと変化あり', c: 214, r: 1200, tint: '#3a1a14' },
+    { id: 'yen', img: 8, lab: 'Midday', tag: '#為替', tm: '11:30', when: '11月4日（火）11:30 · アジアの昼', title: 'ドル円は152円台へ。お昼に輸入企業の買いがまた増えてきました', c: 41, r: 188, tint: '#2a2826' },
+    { id: 'fomc', img: 1, lab: 'US close', tag: '#FRB', tm: '7:00', when: '11月4日（火）7:00 · 米国の大引け後', title: 'FOMCの議事要旨、12月の利下げには慎重な人が多めでした', c: 57, r: 301, tint: '#172441' },
+    { id: 'ust', img: 5, lab: 'US pre-open', tag: '#債券', tm: '昨日 22:00', when: '11月3日（月）22:00 · 米国の寄り付き前', title: '米10年債の利回りが4.4%台に。入札の人気がいまひとつでした', c: 133, r: 640, tint: '#3d1210' },
+    { id: 'nfp', img: 11, lab: 'Breaking', tag: '#雇用統計', tm: '11/1', when: '11月1日（土）22:30 · 速報', title: '米雇用統計は+18.7万人。予想より強めの結果に', c: 302, r: 1800, tint: '#0f1a24' },
+    { id: 'earn', img: 10, lab: 'Weekly', tag: '#決算', tm: '10/31', when: '10月31日（金）15:30 · 週末のまとめ', title: '来週の決算、注目は半導体と銀行です', c: 64, r: 220, tint: '#121212' },
   ];
   const byId = id => A.find(a => a.id === id);
   const PEOPLE = ['s.tanaka', 'Mia Chen', 'k.mori', 'y.okada', 'David Ruiz', 'a.ishii', 'h.kato', 'n.sato'];
@@ -377,30 +377,30 @@ svg { display: block; }
   const state = { tab: 'home', chip: '最新', sort: 'top', saved: new Set(['fomc']), cur: null, cover: 1 };
 
   // ---------- ホーム ----------
-  const CHIPS = ['最新', '速報', '議論中', '株式', '為替', '債券'];
+  const CHIPS = ['最新', '速報', '盛り上がり中', '株式', '為替', '債券'];
   function renderChips() {
     $('#chips').innerHTML = CHIPS.map(c => `<button class="chip ${c === state.chip ? 'on' : ''}" data-chip="${c}">${c}</button>`).join('') +
-      '<span class="note" style="left:16px;top:44px">絞り込み（最新・速報・議論中・ジャンル）</span>';
+      '<span class="note" style="left:16px;top:44px">絞り込み（最新・速報・盛り上がり中・ジャンル）</span>';
   }
   function renderFeed() {
     let list = A.slice(0, 5);
     if (state.chip === '速報') list = A.filter(a => a.brk);
-    else if (state.chip === '議論中') list = [...A].sort((a, b) => b.c - a.c).slice(0, 4);
+    else if (state.chip === '盛り上がり中') list = [...A].sort((a, b) => b.c - a.c).slice(0, 4);
     else if (state.chip !== '最新') list = A.filter(a => a.tag.includes(state.chip === '株式' ? '株式' : state.chip === '為替' ? '為替' : '債券'));
     $('#feed').innerHTML = list.map((a, i) => `
       <article class="feed-item rel">
-        <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · オーナー配信</div></div><span class="more">•••</span></div>
+        <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · いつもの配信</div></div><span class="more">•••</span></div>
         <div class="lab"><span>${esc(a.lab)} <span class="tag">${esc(a.tag)}</span></span><span class="tm">${esc(a.tm)}</span></div>
         <button class="thumb" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${R}sq${a.img}.jpg" alt="">${a.brk ? '<span class="brk">速報</span>' : ''}</button>
         <div class="title-line">${esc(a.title)}</div>
         <div class="acts">
           <span class="act">🔥 ${a.r >= 1000 ? (a.r / 1000).toFixed(1) + 'k' : a.r}</span>
           <span class="act">💬 ${a.c}</span>
-          <button class="act" data-save="${a.id}" aria-label="保存">${state.saved.has(a.id) ? '✓ 保存済み' : '＋ 保存'}</button>
-          <button class="act go" data-article="${a.id}" data-comments="1">議論を見る</button>
+          <button class="act" data-save="${a.id}" aria-label="保存">${state.saved.has(a.id) ? '✓ 保存した' : '＋ 保存'}</button>
+          <button class="act go" data-article="${a.id}" data-comments="1">議論をのぞく</button>
         </div>
-        ${i === 0 ? '<span class="note" style="left:16px;top:96px">サムネ（タップで記事を全画面で開く）</span><span class="note" style="right:16px;bottom:52px">議論を見る＝記事を開いてコメント欄も出す</span>' : ''}
-      </article>`).join('') || '<p class="muted" style="padding:20px 16px">該当する配信はまだありません</p>';
+        ${i === 0 ? '<span class="note" style="left:16px;top:96px">サムネ（タップで記事を全画面で開く）</span><span class="note" style="right:16px;bottom:52px">議論をのぞく＝記事を開いてコメント欄も出す</span>' : ''}
+      </article>`).join('') || '<p class="muted" style="padding:20px 16px">ここに入る配信はまだありません。次の配信をお楽しみに</p>';
   }
 
   // ---------- ライブラリ ----------
@@ -408,11 +408,11 @@ svg { display: block; }
   function renderLib() {
     $('#genres').innerHTML = GENRES.map(([g, i]) => `<button class="genre" data-toast="ジャンル「${g}」の記事一覧（ワイヤー）"><img src="${R}sq${i}.jpg" alt=""><span>${g}</span></button>`).join('');
     $('#newest').innerHTML = A.slice(0, 5).map(a => `<button class="big" data-article="${a.id}"><img src="${R}sq${a.img}.jpg" alt=""><div class="m"><small>${esc(a.tm)} · 記事 3分</small>${esc(a.title)}</div></button>`).join('');
-    $('#videos').innerHTML = [['boj', '3分でわかる：日銀声明の変化', '4:12'], ['nfp', '雇用統計の読み方', '6:40'], ['ust', '入札が不調だと何が起きる？', '5:05']].map(([id, t, l]) => `
+    $('#videos').innerHTML = [['boj', '3分でわかる、日銀の声明どこが変わった？', '4:12'], ['nfp', 'はじめての雇用統計の読み方', '6:40'], ['ust', '国債の入札、人気がないと何が起きる？', '5:05']].map(([id, t, l]) => `
       <button class="vid" data-article="${id}"><div class="vb"><img src="${R}th${byId(id).img}.jpg" alt=""><span class="play glass">▶</span></div><p>${t}<br><span class="muted">${l}</span></p></button>`).join('');
     const item = a => `<button class="pi" data-article="${a.id}" style="width:100%;text-align:left"><img src="${R}sq${a.img}.jpg" alt=""><div class="x"><small>${esc(a.when)}</small>${esc(a.title)}</div><span class="kind">${a.id === 'nfp' ? '▶ 動画' : '記事'}</span></button>`;
     const sv = A.filter(a => state.saved.has(a.id));
-    $('#saved').innerHTML = sv.length ? sv.map(item).join('') : '<p class="muted" style="font-size:12.5px;margin:0">記事のチェックで保存すると、ここに並びます</p>';
+    $('#saved').innerHTML = sv.length ? sv.map(item).join('') : '<p class="muted" style="font-size:12.5px;margin:0">気になった記事は、チェックで保存しておくとここに並びます</p>';
     $('#past').innerHTML = A.slice(4).map(item).join('');
   }
 
@@ -453,27 +453,27 @@ svg { display: block; }
         <div class="hero-btns"><button class="round glass" data-close="article" aria-label="閉じる">⌄</button>
           <div class="pillbtns glass"><button class="iconbtn" data-share aria-label="共有">⇪</button><button class="iconbtn" data-toast="表示の切り替え：日本語 / English">文A</button><button class="iconbtn" data-toast="通報・ミュートなど">•••</button></div></div>
         <span class="note" style="left:14px;bottom:30px">最初のサムネを全画面のトップに</span></div>
-      <div class="head rel"><div style="flex:1;min-width:0"><h2>${esc(a.title)}</h2><div class="when">${esc(a.when)} · 表示：日本語 ⌃</div></div>
+      <div class="head rel"><div style="flex:1;min-width:0"><h2>${esc(a.title)}</h2><div class="when">${esc(a.when)} · 日本語で表示中 ⌃</div></div>
         <div class="btns"><button class="round glass" data-share aria-label="グループに共有">⤴︎</button><button class="round glass save ${state.saved.has(id) ? 'on' : ''}" data-save="${id}" aria-label="記事を保存">✓</button></div>
         <span class="note" style="right:18px;top:-24px">✓ ＝ 記事を保存</span></div>
       <div class="body">
-        <p>${a.brk ? '声明は賃金について「上昇の広がりがみられる」と前回より踏み込んだ。総裁会見は15:30から。市場は12月会合での利上げを約6割織り込んでいる。' : 'ここに本文が入ります。オーナーが材料（公式データの数字、見出しとリンク）を見ながら書いた解説を置きます。'}</p>
+        <p>${a.brk ? '今回の声明では、賃金について「上昇の広がりがみられる」と、前回よりちょっと踏み込みました。総裁の会見は15:30から。市場は12月の利上げを6割くらい見込んでいます。' : 'ここに本文が入ります。オーナーが数字や見出しを見ながら、かみくだいて書いた解説を置きます。'}</p>
         <div class="wbar" style="width:96%"></div><div class="wbar" style="width:88%"></div><div class="wbar" style="width:64%"></div>
         <div class="fig rel"><img src="${R}chart1.jpg" alt="棒グラフの見本"><span class="note" style="left:10px;top:10px">グラフ：月ごとの推移（棒）</span></div>
         <div class="cap">図1　見本のグラフ（本番は指標の数字で描く）</div>
-        <p>次の段落。グラフや表は文章の途中に差し込めるようにします。</p>
+        <p>グラフで見ると、ここ半年の流れがよく分かります。</p>
         <div class="wbar" style="width:92%"></div><div class="wbar" style="width:72%"></div>
         <div class="fig rel"><img src="${R}chart2.jpg" alt="線と帯のグラフの見本"><span class="note" style="left:10px;top:10px">グラフ：値動きと期間の平均</span></div>
         <div class="fig rel"><img src="${R}chart3.jpg" alt="詳細カードの見本"><span class="note" style="left:10px;top:10px">要点のカード（項目と値）</span></div>
         <div class="video rel"><img src="${R}th${byId('nfp').img}.jpg" alt=""><span class="play glass">▶</span><span class="len glass">解説動画 · 4:12</span><span class="note" style="right:10px;top:10px">解説動画</span></div>
         <div class="wbar" style="width:90%"></div><div class="wbar" style="width:58%"></div>
-        <div class="refs rel"><h3>参考リンク</h3>
+        <div class="refs rel"><h3>もっと詳しく知りたい人へ</h3>
           <a class="ref" href="https://www.boj.or.jp/" target="_blank" rel="noopener"><span>当面の金融政策運営について<small>日本銀行 · boj.or.jp</small></span>↗</a>
           <a class="ref" href="https://www.stat.go.jp/" target="_blank" rel="noopener"><span>消費者物価指数<small>総務省統計局 · stat.go.jp</small></span>↗</a>
           <span class="note" style="right:0;top:6px">記事の一番下に参考リンク</span></div>
       </div>`;
     $('#cbar').innerHTML = `<span class="faces"><i style="background:${FACE('s.tanaka')}"></i><i style="background:${FACE('Mia Chen')}"></i><i style="background:${FACE('k.mori')}"></i></span>
-      <span class="txt"><b>議論 ${total}件</b><span>s.tanaka「一部に」から「広がり」へ。12月を…</span></span><span class="round glass" style="width:38px;height:38px">⌃</span>
+      <span class="txt"><b>みんなの声 ${total}件</b><span>s.tanaka「一部に」から「広がり」へ。12月を…</span></span><span class="round glass" style="width:38px;height:38px">⌃</span>
       <span class="note" style="left:10px;top:-22px">下のバー＝コメント欄（タップで半分まで開く）</span>`;
     $('#art-scroll').scrollTop = 0;
     el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
@@ -495,7 +495,7 @@ svg { display: block; }
 
   function commentHTML(list, depth) {
     return list.map(c => `
-      <div class="cm"><div class="h"><b>${esc(c.who)}</b><span class="muted">${esc(ROLE[c.who] || '')} · ${c.min === 0 ? 'たった今' : c.min + '分'}</span></div>
+      <div class="cm"><div class="h"><b>${esc(c.who)}</b><span class="muted">${esc(ROLE[c.who] || '')} · ${c.min === 0 ? 'たった今' : c.min + '分前'}</span></div>
         <div class="t">${esc(c.t)}</div>
         <div class="f"><button data-like="${c.id}" class="${c.liked ? 'liked' : ''}">▲ ${c.up + (c.liked ? 1 : 0)}</button><button data-reply="${esc(c.who)}">返信する</button>${c.kids.length ? `<span>返信 ${count(c.kids)}</span>` : ''}</div>
         ${c.kids.length ? (depth >= 4 ? `<button class="deeper" data-toast="この枝だけを広い幅で表示（返信の続き）">続きを読む（${count(c.kids)}件）›</button>` : `<div class="kids">${commentHTML(c.kids, depth + 1)}</div>`) : ''}
@@ -508,17 +508,17 @@ svg { display: block; }
   function openComments() {
     const total = count(discFor(state.cur.id));
     openSheet(`
-      <div class="sh-head rel"><b>議論 <span class="muted" style="font-weight:500">${total}</span></b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button>
+      <div class="sh-head rel"><b>みんなの声 <span class="muted" style="font-weight:500">${total}</span></b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button>
         <span class="note" style="left:16px;top:-26px">上に引くと全体、下に引くと閉じる</span></div>
-      <div class="sorts rel"><button class="chip ${state.sort === 'top' ? 'on' : ''}" data-sort="top">反応が多い順</button><button class="chip ${state.sort === 'new' ? 'on' : ''}" data-sort="new">新しい順</button>
+      <div class="sorts rel"><button class="chip ${state.sort === 'top' ? 'on' : ''}" data-sort="top">人気順</button><button class="chip ${state.sort === 'new' ? 'on' : ''}" data-sort="new">新しい順</button>
         <span class="note" style="right:16px;top:6px">YouTube のような並び替え（設定に保存）</span></div>
-      <div class="newc">↑ 新しいコメント 5件</div>
+      <div class="newc">↑ 新しいコメントが5件あります</div>
       <div class="clist" id="clist">${commentHTML(sorted(), 1)}</div>
-      <div class="composer"><input id="c-input" placeholder="議論に参加する…" aria-label="コメントを書く"><button id="c-send" aria-label="送信">➤</button></div>`, sheetPos === 'full' ? 'full' : 'half');
+      <div class="composer"><input id="c-input" placeholder="あなたはどう思う？" aria-label="コメントを書く"><button id="c-send" aria-label="送信">➤</button></div>`, sheetPos === 'full' ? 'full' : 'half');
   }
   function openShare() {
     openSheet(`
-      <div class="sh-head"><b>共有</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
+      <div class="sh-head"><b>仲間に送る</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
       <div class="share-wrap">
         <div class="cover-pick"><button class="chip ${state.cover === 1 ? 'on' : ''}" data-cover="1">表紙 1（カード）</button><button class="chip ${state.cover === 2 ? 'on' : ''}" data-cover="2">表紙 2（ポスター）</button></div>
         <div class="cover rel"><img src="${R}cover${state.cover}.jpg" alt="記事の表紙の見本"><span class="note" style="left:8px;top:8px">記事の表紙（共有・SNS用の画像）</span></div>
@@ -527,9 +527,9 @@ svg { display: block; }
   }
   function openSimple(kind) {
     const body = kind === 'notif'
-      ? [['返信', 'Mia Chen があなたのコメントに返信しました', 'boj'], ['新しい配信', '15:30 アジア引け・欧州寄り付き', 'nikkei'], ['速報', '日銀、政策金利を0.75%で据え置き', 'boj'], ['リアクション', 'あなたのコメントに ▲ が12件', 'fomc']]
+      ? [['返信', 'Mia Chen さんから返信が来ました', 'boj'], ['新しい配信', '15:30 の配信が届きました', 'nikkei'], ['速報', '日銀は金利0.75%で据え置き', 'boj'], ['リアクション', 'あなたのコメントに ▲ が12件ついています', 'fomc']]
         .map(([k, t, id]) => `<button class="pi" style="width:100%;text-align:left" data-article="${id}" data-comments="1"><span class="kind">${k}</span><span class="x">${t}</span></button>`).join('')
-      : `<div class="pi"><span class="avatar"></span><span class="x"><b>あなた</b><small>職種（任意）· 日本語</small></span></div>` + ['通知の種類（定時配信・速報・返信）', '言語（日本語 / English）', 'コメントの並び順', 'ブロックした人', '利用規約・プライバシー', 'アカウントを削除'].map(t => `<div class="pi"><span class="x">${t}</span>›</div>`).join('');
+      : `<div class="pi"><span class="avatar"></span><span class="x"><b>あなた</b><small>職種（任意）· 日本語</small></span></div>` + ['お知らせの種類（いつもの配信・速報・返信）', '言語（日本語 / English）', 'コメントの並び順', 'ブロックした人', '利用規約・プライバシー', 'アカウントを削除'].map(t => `<div class="pi"><span class="x">${t}</span>›</div>`).join('');
     openSheet(`<div class="sh-head"><b>${kind === 'notif' ? '通知' : '自分'}</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div><div class="past" style="overflow-y:auto">${body}</div>`, 'full');
   }
 
@@ -558,12 +558,12 @@ svg { display: block; }
     if (d.tab) { state.tab = d.tab; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === t)); ['home', 'lib', 'people', 'chat'].forEach(k => $('#tab-' + k).hidden = k !== d.tab); if (d.tab === 'lib') renderLib(); return; }
     if (d.chip) { state.chip = d.chip; renderChips(); renderFeed(); return; }
     if (d.article) { e.preventDefault(); setSheet('closed'); if ($('#room').classList.contains('open') && t.classList.contains('shared')) {} openArticle(d.article, !!d.comments); return; }
-    if (d.save) { const id = d.save; state.saved.has(id) ? state.saved.delete(id) : state.saved.add(id); toast(state.saved.has(id) ? '記事を保存しました（ライブラリに追加）' : '保存を外しました'); document.querySelectorAll(`[data-save="${id}"]`).forEach(b => { if (b.classList.contains('save')) b.classList.toggle('on', state.saved.has(id)); else b.textContent = state.saved.has(id) ? '✓ 保存済み' : '＋ 保存'; }); renderLib(); return; }
+    if (d.save) { const id = d.save; state.saved.has(id) ? state.saved.delete(id) : state.saved.add(id); toast(state.saved.has(id) ? '保存しました。ライブラリからいつでも読めます' : '保存を外しました'); document.querySelectorAll(`[data-save="${id}"]`).forEach(b => { if (b.classList.contains('save')) b.classList.toggle('on', state.saved.has(id)); else b.textContent = state.saved.has(id) ? '✓ 保存した' : '＋ 保存'; }); renderLib(); return; }
     if (t.id === 'cbar') { openComments(); return; }
     if (d.sort) { state.sort = d.sort; openComments(); return; }
     if (d.like) { const c = findC(discFor(state.cur.id), +d.like); c.liked = !c.liked; t.classList.toggle('liked', c.liked); t.textContent = `▲ ${c.up + (c.liked ? 1 : 0)}`; return; }
-    if (d.reply) { const i = $('#c-input'); i.placeholder = `@${d.reply} に返信`; i.focus(); return; }
-    if (t.id === 'c-send') { const i = $('#c-input'); if (!i.value.trim()) return; discFor(state.cur.id).unshift(C('あなた', i.value.trim(), 0, 0)); state.sort = 'new'; openComments(); toast('コメントしました'); return; }
+    if (d.reply) { const i = $('#c-input'); i.placeholder = `${d.reply} さんに返信`; i.focus(); return; }
+    if (t.id === 'c-send') { const i = $('#c-input'); if (!i.value.trim()) return; discFor(state.cur.id).unshift(C('あなた', i.value.trim(), 0, 0)); state.sort = 'new'; openComments(); toast('コメントしました。返信が来たらお知らせします'); return; }
     if (d.share !== undefined) { openShare(); return; }
     if (d.cover) { state.cover = +d.cover; openShare(); return; }
     if (d.send) { const r = ROOMS.find(x => x.id === d.send); r.msgs.push({ me: 1, share: state.cur ? state.cur.id : 'boj', t: 'これどう思う？' }); setSheet('closed'); toast(`${r.name} に送りました`); return; }
