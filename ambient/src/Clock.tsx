@@ -704,7 +704,9 @@ export function Clock(props: Props) {
   // Under a zoom the digits scale about their centre, and the label above and the hint
   // below move out (or in) by as much as the digits' line grows (or shrinks).
   // (The digits inside are drawn at about the zoom's size and scaled back by as much,
-  // so together they show at the zoom's size, drawn sharp: see Digits.)
+  // so together they show at the zoom's size, drawn sharp: see Digits.) Only the page
+  // showing takes the zoom: the others wait off screen beside it, and swollen by a big
+  // pinch their digits would reach into view.
   const digitsStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() }] }));
   const aboveStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.round(((-lim.get().rowH * (zoom.get() - 1)) / 2) * dpr) / dpr }] }));
   const belowStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.round(((lim.get().rowH * (zoom.get() - 1)) / 2) * dpr) / dpr }] }));
@@ -949,7 +951,7 @@ export function Clock(props: Props) {
         : undefined;
     return (
       <>
-        <Reanimated.View style={[styles.line, styles.labelLine, aboveStyle]}>
+        <Reanimated.View style={[styles.line, styles.labelLine, framed ? aboveStyle : null]}>
           <Animated.Text
             style={[styles.date, { color: c.inkSoft, opacity: labelOpacity }]}
             numberOfLines={1}
@@ -961,7 +963,7 @@ export function Clock(props: Props) {
         {/* The digits, in a box the edit frame hangs on (so it is always round them). */}
         <View>
           <Reanimated.View
-            style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, digitsStyle]}
+            style={[styles.row, { height: size * 1.08, opacity: f.dim ? 0.3 : 1 }, framed ? digitsStyle : null]}
             onLayout={
               measure
                 ? (e) => {
@@ -995,7 +997,7 @@ export function Clock(props: Props) {
         </View>
         {/* The hint's line stays even when empty, so the digits never move (and it
             steps aside while editing, which its taps and holds have no part in). */}
-        <Reanimated.View style={[styles.line, styles.hintLine, belowStyle, { opacity: edit ? 0 : 1 }]}>
+        <Reanimated.View style={[styles.line, styles.hintLine, framed ? belowStyle : null, { opacity: edit ? 0 : 1 }]}>
           <Text style={[styles.hint, { color: c.inkSoft }]} numberOfLines={1}>
             {f.hint || '\u00a0'}
           </Text>
