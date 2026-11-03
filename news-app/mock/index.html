@@ -128,9 +128,9 @@ svg { display: block; }
 .cbar .txt span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(255,255,255,.7); }
 
 /* コメントのシート（タップで画面の半分まで。上に引くと全体） */
-.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 39; }
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 49; }
 .scrim.on { opacity: 1; pointer-events: auto; }
-.sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 94%; z-index: 40; border-radius: 28px 28px 0 0; background: rgba(28,29,33,.92);
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 94%; z-index: 50; border-radius: 28px 28px 0 0; background: rgba(28,29,33,.92);
   backdrop-filter: blur(28px) saturate(160%); -webkit-backdrop-filter: blur(28px) saturate(160%); border-top: 1px solid var(--glass-line);
   transform: translateY(100%); transition: transform .32s cubic-bezier(.2,.8,.2,1); display: flex; flex-direction: column; }
 .sheet.dragging { transition: none; }
@@ -210,6 +210,34 @@ svg { display: block; }
 .send-list button { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--surface2); font-size: 13.5px; }
 .send-list button span { font-size: 12px; font-weight: 700; color: var(--accent); }
 
+.fab { position: absolute; right: 16px; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); height: 54px; padding: 0 18px 0 14px; border-radius: 27px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px; z-index: 6; background: rgba(255,106,26,.78); border-color: rgba(255,255,255,.35); }
+.profile { z-index: 45; transform: translateX(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.profile.open { transform: none; }
+.pass { margin: 4px 16px 0; border-radius: 22px; overflow: hidden; background: #1f1e1d; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+.pass .art { position: relative; height: 190px; overflow: hidden; }
+.pass .art img { width: 100%; height: 100%; object-fit: cover; filter: saturate(1.15) blur(1px); transform: scale(1.06); }
+.pass .ascii { position: absolute; inset: 0; font: 500 9px/1.05 var(--mono); color: rgba(255,255,255,.85); white-space: pre; overflow: hidden; padding: 8px; mix-blend-mode: screen; }
+.pass .panel { padding: 16px 18px 16px; }
+.pass .nm { font: 600 26px/1.1 var(--font); }
+.pass .sub { font: 500 11.5px/1 var(--mono); letter-spacing: .08em; margin-top: 10px; text-transform: uppercase; }
+.pass .rule { height: 1px; background: rgba(255,255,255,.14); margin: 14px 0 10px; }
+.pass .meta { display: flex; justify-content: space-between; font: 400 11.5px/1 var(--mono); color: rgba(255,255,255,.45); letter-spacing: .05em; }
+.pass .foot { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 26px; font: 400 11px/1 var(--mono); color: rgba(255,255,255,.45); letter-spacing: .05em; }
+.appicon { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(135deg, #9bf0e1, #b7a4ff 45%, #ffd59a); display: grid; place-items: center; }
+.appicon .mark i { background: #1f1e1d; }
+.bio { padding: 16px 18px 4px; font-size: 13.5px; line-height: 1.7; color: rgba(255,255,255,.85); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 10px 16px 0; border-radius: 16px; background: var(--surface); }
+.stats div { padding: 12px 0; text-align: center; font-size: 11px; color: var(--muted); }
+.stats b { display: block; font: 700 17px/1.2 var(--font); color: var(--text); font-variant-numeric: tabular-nums; }
+.pbtns { display: flex; gap: 8px; padding: 12px 16px 0; }
+.pbtns .primary, .pbtns .ghost { margin: 0; height: 44px; }
+.pbtns .ghost { width: 54px; flex: none; }
+.ptabs { display: flex; gap: 6px; padding: 16px 16px 6px; }
+.pc { display: block; width: 100%; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.pc small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+.pc .t { font-size: 13.5px; line-height: 1.55; }
+.pc .f { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.who-btn { font-weight: 700; font-size: 12.5px; }
 .newg { display: flex; gap: 12px; align-items: center; width: calc(100% - 32px); margin: 0 16px 6px; padding: 12px; border-radius: 18px; border: 1px dashed var(--muted); }
 .newg .x { flex: 1; min-width: 0; font-size: 13px; } .newg .x span { display: block; color: var(--muted); font-size: 12px; }
 .newg .ic { width: 48px; height: 48px; border-radius: 14px; flex: none; }
@@ -253,7 +281,7 @@ svg { display: block; }
     <section class="screen" id="tab-home">
       <div class="scroller">
         <div class="top rel">
-          <button class="avatar" aria-label="自分" data-open="me"></button>
+          <button class="avatar" aria-label="自分のプロフィール" data-person="あなた"></button>
           <div class="wordmark"><span class="mark"><i></i><i></i></span>Halftick</div>
           <div style="display:flex;gap:4px">
             <button class="iconbtn" aria-label="配信を作る" data-toast="配信を作る（オーナーだけ）">＋</button>
@@ -299,11 +327,11 @@ svg { display: block; }
     <!-- チャット -->
     <section class="screen" id="tab-chat" hidden>
       <div class="scroller">
-        <div class="simple" style="display:flex;justify-content:space-between;align-items:flex-start"><h2>チャット</h2><button class="act glass" style="margin-top:8px" data-newgroup>＋ グループを作る</button></div>
-        <button class="newg rel" data-newgroup><span class="ic plus">＋</span><span class="x"><b>新しいグループを作る</b><span>仲間を誘って、配信のことをゆっくり話せます</span></span><span class="note" style="right:10px;top:-10px">グループを作る</span></button>
-        <div class="muted" style="font-size:12px;padding:10px 16px 2px">参加しているグループ</div>
+        <div class="simple"><h2>チャット</h2></div>
+        <div class="muted" style="font-size:12px;padding:0 16px 2px">参加しているグループ</div>
         <div id="rooms"></div>
       </div>
+      <button class="fab glass" data-newgroup aria-label="グループを作る"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M12 8v5M9.5 10.5h5"/></svg><span>グループを作る</span><span class="note" style="right:0;top:-22px">右下＝グループを作る</span></button>
     </section>
 
     <!-- 下のタブ -->
@@ -329,6 +357,12 @@ svg { display: block; }
       <div class="top"><button class="round glass" data-close="room" aria-label="戻る">‹</button><b id="room-name"></b><button class="round glass" data-groupinfo aria-label="グループの情報">⋯</button></div>
       <div class="scroller"><div class="msgs" id="msgs"></div></div>
       <div class="composer"><input id="room-input" placeholder="メッセージ" aria-label="メッセージ"><button id="room-send" aria-label="送信">➤</button></div>
+    </section>
+
+    <!-- プロフィール -->
+    <section class="screen profile" id="profile" aria-hidden="true">
+      <div class="top"><button class="round glass" data-close="profile" aria-label="戻る">‹</button><b id="p-title">プロフィール</b><span id="p-right" style="width:40px"></span></div>
+      <div class="scroller" id="p-scroll"></div>
     </section>
 
     <div class="scrim" id="scrim"></div>
@@ -505,10 +539,69 @@ svg { display: block; }
         ${r.id === 'dm' ? '' : `<div class="invite">招待リンク<div class="link">${r.link || 'halftick.app/g/m4cr0x'}</div></div><button class="primary" data-copy="${r.link || 'halftick.app/g/m4cr0x'}">招待リンクをコピー</button>`}
         <span class="lbl">メンバー</span>
         <div class="pick"><span class="av avatar" style="width:34px;height:34px"></span><span class="x">あなた<small>${r.id === 'dm' ? '' : '作った人'}</small></span></div>
-        ${names.map(n => `<div class="pick"><span class="av" style="background:${FACE(n)}"></span><span class="x">${esc(n)}<small>${esc(ROLE[n])}</small></span>${r.id === 'dm' ? '' : `<button class="act" data-toast="${esc(n)} さんとの1対1を開きます（同じグループなので話せます）">話す</button>`}</div>`).join('')}
+        ${names.map(n => `<div class="pick"><button class="av" style="background:${FACE(n)}" data-person="${esc(n)}" aria-label="${esc(n)} のプロフィール"></button><span class="x">${esc(n)}<small>${esc(ROLE[n])}</small></span>${r.id === 'dm' ? '' : `<button class="act" data-toast="${esc(n)} さんとの1対1を開きます（同じグループなので話せます）">話す</button>`}</div>`).join('')}
         <button class="ghost" data-toast="このグループのお知らせをオフにしました">お知らせをオフにする</button>
         ${r.id === 'dm' ? '' : '<button class="ghost" style="color:#ff6b6b" data-toast="抜けるときは確認を出します（ワイヤー）">グループを抜ける</button>'}
       </div>`, 'full');
+  }
+
+  // ---------- プロフィール ----------
+  const BIO = {
+    'あなた': '為替と金利が好きな会社員です。朝7時の配信を読むのが日課。',
+    's.tanaka': '債券を見て15年。金利の話ならいつでも。週末は釣り。',
+    'Mia Chen': 'FX sales in Singapore. Asia hours, coffee, and too many charts.',
+    'k.mori': '東京の為替ディーラー。実需の流れの話が好きです。',
+    'y.okada': '地方銀行で運用をしています。預金と貸出の現場から。',
+  };
+  const PIMG = { 'あなた': 3, 's.tanaka': 5, 'Mia Chen': 1, 'k.mori': 8, 'y.okada': 2, 'David Ruiz': 4, 'a.ishii': 6, 'h.kato': 9, 'n.sato': 10 };
+  function ascii() {
+    const ch = '#X8H/MS4|_=:.'; let o = '';
+    for (let y = 0; y < 18; y++) { let line = ''; for (let x = 0; x < 52; x++) line += Math.random() < 0.22 ? ch[Math.floor(Math.random() * ch.length)] : ' '; o += line + '\n'; }
+    return o;
+  }
+  function myComments(name) {
+    const out = [];
+    const walk = (list, art) => list.forEach(c => { if (c.who === name) out.push({ c, art }); walk(c.kids, art); });
+    A.forEach(a => walk(discFor(a.id), a));
+    return out;
+  }
+  state.ptab = 'comments';
+  function openProfile(name) {
+    const me = name === 'あなた';
+    state.person = name;
+    const cs = myComments(name);
+    const up = cs.reduce((n, x) => n + x.c.up, 0);
+    const shares = ROOMS.some(r => r.id === 'macro') && ['s.tanaka', 'y.okada', 'k.mori'].includes(name);
+    $('#p-title').textContent = me ? 'あなたのプロフィール' : name;
+    $('#p-right').outerHTML = me ? '<button id="p-right" class="round glass" data-open="me" aria-label="設定">⚙︎</button>' : '<span id="p-right" style="width:40px"></span>';
+    const tabs = me ? [['comments', 'コメント'], ['saved', '保存した記事'], ['groups', 'グループ']] : [['comments', 'コメント'], ['posts', '投稿']];
+    let list = '';
+    if (state.ptab === 'saved' && me) list = A.filter(a => state.saved.has(a.id)).map(a => `<button class="pc" data-article="${a.id}"><small>${esc(a.when)}</small><div class="t">${esc(a.title)}</div></button>`).join('') || '<p class="muted" style="padding:12px 16px;font-size:12.5px">まだ保存した記事はありません</p>';
+    else if (state.ptab === 'groups' && me) list = ROOMS.filter(r => r.id !== 'dm').map(r => `<button class="pc" data-room="${r.id}"><small>${r.members || 2}人</small><div class="t">${esc(r.name)}</div></button>`).join('');
+    else if (state.ptab === 'posts') list = '<p class="muted" style="padding:12px 16px;font-size:12.5px">' + (['s.tanaka', 'Mia Chen', 'y.okada'].includes(name) ? '投稿は「みんな」に並んでいます' : 'まだ投稿はありません') + '</p>';
+    else list = cs.length ? cs.map(({ c, art }) => `<button class="pc" data-article="${art.id}" data-comments="1"><small>${esc(art.title)}</small><div class="t">${esc(c.t)}</div><div class="f">▲ ${c.up} · ${c.min === 0 ? 'たった今' : c.min + '分前'}</div></button>`).join('')
+      : `<p class="muted" style="padding:12px 16px;font-size:12.5px">${me ? 'まだコメントはありません。気になる配信で「あなたはどう思う？」に書いてみてください' : 'まだコメントはありません'}</p>`;
+    $('#p-scroll').innerHTML = `
+      <div class="pass rel">
+        <div class="art"><img src="${R}sq${PIMG[name] || 6}.jpg" alt=""><div class="ascii">${ascii()}</div></div>
+        <div class="panel">
+          <div class="nm">${esc(name)}</div>
+          <div class="sub">${esc(ROLE[name] || '為替・金利ウォッチャー')}</div>
+          <div class="rule"></div>
+          <div class="meta"><span>#${String(214 + (PIMG[name] || 1) * 37).padStart(6, '0')}</span><span>${me ? 'MEMBER' : ['s.tanaka', 'Mia Chen', 'y.okada'].includes(name) ? 'VERIFIED POSTER' : 'MEMBER'}</span></div>
+          <div class="foot"><span>SINCE ${me ? 'TUE 04 NOV, 2026' : 'MON 12 OCT, 2026'}</span><span class="appicon"><span class="mark"><i></i><i></i></span></span></div>
+        </div>
+        <span class="note" style="left:10px;top:10px">メンバーカード（記事の表紙1の形）</span>
+      </div>
+      <div class="bio">${esc(BIO[name] || 'よろしくお願いします。')}</div>
+      <div class="stats"><div><b>${cs.length + (me ? 0 : 40)}</b>コメント</div><div><b>${up + (me ? 0 : 300)}</b>もらった ▲</div><div><b>${me ? ROOMS.filter(r => r.id !== 'dm').length : 2}</b>グループ</div></div>
+      <div class="pbtns">${me
+        ? '<button class="primary" data-toast="名前・職種・ひとこと・カードの絵を変えられます（ワイヤー）">プロフィールを編集</button><button class="ghost" data-toast="プロフィールのリンクをコピーしました">⇪</button>'
+        : `<button class="primary" ${shares ? 'data-room="dm"' : `data-toast="同じグループに入ると、${esc(name)} さんと1対1で話せます"`}>メッセージを送る</button><button class="ghost" data-toast="ブロック・通報（ワイヤー）">•••</button>`}</div>
+      <div class="ptabs">${tabs.map(([k, l]) => `<button class="chip ${state.ptab === k ? 'on' : ''}" data-ptab="${k}">${l}</button>`).join('')}</div>
+      <div>${list}</div>`;
+    $('#p-scroll').scrollTop = 0;
+    $('#profile').classList.add('open'); $('#profile').setAttribute('aria-hidden', 'false');
   }
 
   // ---------- 記事 ----------
@@ -563,7 +656,7 @@ svg { display: block; }
 
   function commentHTML(list, depth) {
     return list.map(c => `
-      <div class="cm"><div class="h"><b>${esc(c.who)}</b><span class="muted">${esc(ROLE[c.who] || '')} · ${c.min === 0 ? 'たった今' : c.min + '分前'}</span></div>
+      <div class="cm"><div class="h"><button class="who-btn" data-person="${esc(c.who)}">${esc(c.who)}</button><span class="muted">${esc(ROLE[c.who] || '')} · ${c.min === 0 ? 'たった今' : c.min + '分前'}</span></div>
         <div class="t">${esc(c.t)}</div>
         <div class="f"><button data-like="${c.id}" class="${c.liked ? 'liked' : ''}">▲ ${c.up + (c.liked ? 1 : 0)}</button><button data-reply="${esc(c.who)}">返信する</button>${c.kids.length ? `<span>返信 ${count(c.kids)}</span>` : ''}</div>
         ${c.kids.length ? (depth >= 4 ? `<button class="deeper" data-toast="この枝だけを広い幅で表示（返信の続き）">続きを読む（${count(c.kids)}件）›</button>` : `<div class="kids">${commentHTML(c.kids, depth + 1)}</div>`) : ''}
@@ -625,7 +718,7 @@ svg { display: block; }
     const d = t.dataset;
     if (d.tab) { state.tab = d.tab; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === t)); ['home', 'lib', 'people', 'chat'].forEach(k => $('#tab-' + k).hidden = k !== d.tab); if (d.tab === 'lib') renderLib(); return; }
     if (d.chip) { state.chip = d.chip; renderChips(); renderFeed(); return; }
-    if (d.article) { e.preventDefault(); setSheet('closed'); if ($('#room').classList.contains('open') && t.classList.contains('shared')) {} openArticle(d.article, !!d.comments); return; }
+    if (d.article) { e.preventDefault(); setSheet('closed'); $('#profile').classList.remove('open'); if ($('#room').classList.contains('open') && t.classList.contains('shared')) {} openArticle(d.article, !!d.comments); return; }
     if (d.save) { const id = d.save; state.saved.has(id) ? state.saved.delete(id) : state.saved.add(id); toast(state.saved.has(id) ? '保存しました。ライブラリからいつでも読めます' : '保存を外しました'); document.querySelectorAll(`[data-save="${id}"]`).forEach(b => { if (b.classList.contains('save')) b.classList.toggle('on', state.saved.has(id)); else b.textContent = state.saved.has(id) ? '✓ 保存した' : '＋ 保存'; }); renderLib(); return; }
     if (t.id === 'cbar') { openComments(); return; }
     if (d.sort) { state.sort = d.sort; openComments(); return; }
@@ -635,13 +728,16 @@ svg { display: block; }
     if (d.share !== undefined) { openShare(); return; }
     if (d.cover) { state.cover = +d.cover; openShare(); return; }
     if (d.send) { const r = ROOMS.find(x => x.id === d.send); r.msgs.push({ me: 1, share: state.cur ? state.cur.id : 'boj', t: 'これどう思う？' }); setSheet('closed'); toast(`${r.name} に送りました`); return; }
+    if (d.person) { setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
+    if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
+    if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
     if (d.newgroup !== undefined) { openNewGroup(); return; }
     if (d.sw) { draft.color = d.sw; openNewGroup(); return; }
     if (d.pick) { draft.who.has(d.pick) ? draft.who.delete(d.pick) : draft.who.add(d.pick); openNewGroup(); return; }
     if (t.id === 'g-create') { if (draft.name.trim()) createGroup(); return; }
     if (d.copy) { navigator.clipboard?.writeText(d.copy).catch(() => {}); toast('招待リンクをコピーしました'); return; }
     if (d.groupinfo !== undefined) { openGroupInfo(); return; }
-    if (d.room) { setSheet('closed'); openRoom(d.room); return; }
+    if (d.room) { setSheet('closed'); $('#profile').classList.remove('open'); openRoom(d.room); return; }
     if (t.id === 'room-send') { const i = $('#room-input'); if (!i.value.trim()) return; state.room.msgs.push({ me: 1, t: i.value.trim() }); i.value = ''; openRoom(state.room.id); return; }
     if (d.open) { openSimple(d.open); return; }
     if (d.close === 'article') { setSheet('closed'); $('#article').classList.remove('open'); $('#article').setAttribute('aria-hidden', 'true'); return; }
