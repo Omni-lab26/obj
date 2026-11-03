@@ -243,6 +243,26 @@ svg { display: block; }
 .pc small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
 .pc .t { font-size: 13.5px; line-height: 1.55; }
 .pc .f { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.sgroup { margin: 0 16px; border-radius: 18px; background: var(--surface); overflow: hidden; }
+.sgh { padding: 18px 20px 8px; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+.srow { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 16px; min-height: 52px; border-top: 1px solid var(--line); text-align: left; }
+.srow:first-child { border-top: 0; }
+.srow .ico { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 14px; flex: none; color: #fff; }
+.srow .x { flex: 1; min-width: 0; font-size: 14px; } .srow .x small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; line-height: 1.4; }
+.srow .v { color: var(--muted); font-size: 12.5px; flex: none; max-width: 42%; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srow .chev { color: var(--muted); flex: none; }
+.srow.danger .x { color: #ff6b6b; }
+.sme { display: flex; align-items: center; gap: 14px; margin: 4px 16px 0; padding: 14px 16px; border-radius: 18px; background: var(--surface); width: calc(100% - 32px); text-align: left; }
+.sme .av { width: 54px; height: 54px; border-radius: 50%; background-size: cover; background-position: center; flex: none; }
+.sme .x { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; } .sme small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 3px; }
+.sfoot { text-align: center; font-size: 11px; color: var(--muted); padding: 22px 16px 10px; line-height: 1.7; }
+.opt { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 0; border-bottom: 1px solid var(--line); text-align: left; }
+.opt .x { flex: 1; font-size: 14px; } .opt small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; line-height: 1.5; }
+.opt .rd { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--muted); flex: none; display: grid; place-items: center; }
+.opt.on .rd { border-color: var(--accent); } .opt.on .rd::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+.mutes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.addrow { display: flex; gap: 8px; } .addrow .field { flex: 1; min-width: 0; } .addrow button { padding: 0 16px; border-radius: 14px; background: #fff; color: #111; font-weight: 700; }
+.warn { padding: 14px; border-radius: 16px; background: rgba(255,59,48,.12); color: #ffb3ad; font-size: 13px; line-height: 1.7; }
 .rise { z-index: 46; opacity: 0; transform: translateY(16px); transition: opacity .25s, transform .3s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
 .rise.open { opacity: 1; transform: none; pointer-events: auto; }
 .sbar { display: flex; gap: 10px; align-items: center; padding: calc(54px + env(safe-area-inset-top, 0px)) 16px 10px; }
@@ -436,6 +456,12 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div class="top"><button class="round glass" data-close="room" aria-label="戻る">‹</button><b id="room-name"></b><button class="round glass" data-groupinfo aria-label="グループの情報">⋯</button></div>
       <div class="scroller"><div class="msgs" id="msgs"></div></div>
       <div class="composer"><input id="room-input" placeholder="メッセージ" aria-label="メッセージ"><button id="room-send" aria-label="送信">➤</button></div>
+    </section>
+
+    <!-- 設定 -->
+    <section class="screen slide" id="settings" aria-hidden="true" style="z-index:47">
+      <div class="top"><button class="round glass" data-close="settings" aria-label="戻る">‹</button><b>設定</b><span style="width:40px"></span></div>
+      <div class="scroller" id="set-body"></div>
     </section>
 
     <!-- 検索 -->
@@ -682,7 +708,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     const up = cs.reduce((n, x) => n + x.c.up, 0);
     const shares = ROOMS.some(r => r.id === 'macro') && ['s.tanaka', 'y.okada', 'k.mori'].includes(name);
     $('#p-title').textContent = me ? 'あなたのプロフィール' : name;
-    $('#p-right').outerHTML = me ? '<button id="p-right" class="round glass" data-open="me" aria-label="設定">⚙︎</button>' : '<span id="p-right" style="width:40px"></span>';
+    $('#p-right').outerHTML = me ? '<button id="p-right" class="round glass" data-settings aria-label="設定">⚙︎</button>' : '<span id="p-right" style="width:40px"></span>';
     const tabs = me ? [['comments', 'コメント'], ['saved', '保存した記事'], ['groups', 'グループ']] : [['comments', 'コメント'], ['posts', '投稿']];
     let list = '';
     if (state.ptab === 'saved' && me) {
@@ -715,12 +741,98 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div class="bio">${esc(BIO[name] || 'よろしくお願いします。')}</div>
       <div class="stats"><div><b>${cs.length + (me ? 0 : 40)}</b>コメント</div><div><b>${up + (me ? 0 : 300)}</b>もらった ▲</div><div><b>${me ? ROOMS.filter(r => r.kind === 'group').length : 2}</b>グループ</div></div>
       <div class="pbtns">${me
-        ? '<button class="primary" data-toast="名前・職種・ひとこと・カードの絵を変えられます（ワイヤー）">プロフィールを編集</button><button class="ghost" data-toast="プロフィールのリンクをコピーしました">⇪</button>'
+        ? '<button class="primary" data-editprofile>プロフィールを編集</button><button class="ghost" data-toast="プロフィールのリンクをコピーしました">⇪</button>'
         : `<button class="primary" ${shares ? `data-dm="${esc(name)}"` : `data-toast="同じグループに入ると、${esc(name)} さんと1対1で話せます"`}>メッセージを送る</button><button class="ghost" data-toast="ブロック・通報（ワイヤー）">•••</button>`}</div>
       <div class="ptabs">${tabs.map(([k, l]) => `<button class="chip ${state.ptab === k ? 'on' : ''}" data-ptab="${k}">${l}</button>`).join('')}</div>
       <div>${list}</div>`;
     $('#p-scroll').scrollTop = 0;
     $('#profile').classList.add('open'); $('#profile').setAttribute('aria-hidden', 'false');
+  }
+
+  // ---------- 設定 ----------
+  const SET = { dm: 'group', quiet: true, quietFrom: '23:00', quietTo: '7:00', showRole: true, lang: 'ja', time: 'local', mutes: ['仮想通貨 爆益', '絶対儲かる'], blocked: ['spam_trader88'], login: ['apple'], apply: 'pending' };
+  const CHOICES = {
+    dm: ['1対1のメッセージを受け取る相手', [['group', '同じグループの人なら誰でも', '最初はこの設定です'], ['talked', '話したことのある人だけ', 'グループで返信し合ったことがある人など'], ['none', '受け取らない', '自分から送ることはできます']]],
+    lang: ['言語', [['ja', '日本語', ''], ['en', 'English', '']]],
+    sort: ['コメントの並び順', [['top', '人気順', 'リアクションと返信が多いものを上に'], ['new', '新しい順', '']]],
+    time: ['時刻の表示', [['local', 'いる地域の時間（自動）', 'いまは日本時間で表示しています'], ['jst', 'いつも日本時間', 'まとめの配信時刻（7:00 / 11:30 / 15:30 / 22:00）と同じ時計']]],
+    quiet: ['夜は鳴らさない時間', [['23:00-7:00', '23:00〜7:00', ''], ['0:00-6:00', '0:00〜6:00', ''], ['22:00-8:00', '22:00〜8:00', '']]],
+  };
+  const label = (k) => k === 'sort' ? (state.sort === 'top' ? '人気順' : '新しい順') : k === 'quiet' ? (SET.quiet ? `${SET.quietFrom}〜${SET.quietTo}` : 'オフ') : CHOICES[k][1].find(o => o[0] === SET[k])[1];
+  function renderSettings() {
+    const row = (ico, col, x, sub, right, attr) => `<button class="srow" ${attr}><span class="ico" style="background:${col}">${ico}</span><span class="x">${x}${sub ? `<small>${sub}</small>` : ''}</span>${right}</button>`;
+    const go = v => `${v ? `<span class="v">${esc(v)}</span>` : ''}<span class="chev">›</span>`;
+    const tg = (k) => `<span class="toggle ${SET[k] ? 'on' : ''}" aria-hidden="true"></span>`;
+    $('#set-body').innerHTML = `
+      <button class="sme" data-editprofile><span class="av" style="background:${FACE('あなた')}"></span><span class="x">あなた<small>為替・金利ウォッチャー · プロフィールを編集</small></span><span class="chev">›</span></button>
+      <div class="sgh">アカウント</div><div class="sgroup">
+        ${row('◎', '#4c8dff', 'ログイン方法', '', go(SET.login.map(l => ({ apple: 'Apple', google: 'Google', mail: 'メール' }[l])).join('・')), 'data-sheet="login"')}
+        ${row('✎', '#ae3ec9', '投稿の申請', '', go(SET.apply === 'pending' ? '確認中' : SET.apply === 'ok' ? '投稿できます' : '未申請'), 'data-sheet="apply"')}
+      </div>
+      <div class="sgh">お知らせ</div><div class="sgroup">
+        ${row('◷', '#ff6a1a', 'お知らせの種類', '配信の時刻ごと・速報・返信など', go(''), 'data-notifset')}
+        ${row('☾', '#5c5f66', '夜は鳴らさない', '速報以外は、鳴らさずに届けます', go(label('quiet')), 'data-choice="quiet"')}
+      </div>
+      <div class="sgh">プライバシーと安全</div><div class="sgroup">
+        ${row('✉', '#0c8599', '1対1のメッセージを受け取る相手', '', go(label('dm')), 'data-choice="dm"')}
+        ${row('⊘', '#e8590c', 'ミュートした言葉', 'この言葉を含むコメントは隠れます', go(`${SET.mutes.length}件`), 'data-sheet="mutes"')}
+        ${row('◐', '#2f9e44', '職種をプロフィールに出す', '勤め先が分かりそうなときはオフにできます', tg('showRole'), 'data-settoggle="showRole"')}
+        ${row('⛔', '#c2255c', 'ブロックした人', '', go(`${SET.blocked.length}人`), 'data-sheet="blocked"')}
+        ${row('⚑', '#ff3b30', '通報・困ったときの窓口', '荒らし・なりすまし・こわい思いをしたとき', go(''), 'data-sheet="help"')}
+      </div>
+      <div class="sgh">表示</div><div class="sgroup">
+        ${row('文', '#3b5bdb', '言語', '', go(label('lang')), 'data-choice="lang"')}
+        ${row('↕', '#7048e8', 'コメントの並び順', '', go(label('sort')), 'data-choice="sort"')}
+        ${row('◴', '#1098ad', '時刻の表示', '', go(label('time')), 'data-choice="time"')}
+      </div>
+      <div class="sgh">そのほか</div><div class="sgroup">
+        ${row('§', '#5c5f66', '利用規約', '', go(''), 'data-toast="利用規約を開きます（ワイヤー）"')}
+        ${row('🔒︎', '#5c5f66', 'プライバシーポリシー', '', go(''), 'data-toast="プライバシーポリシーを開きます（ワイヤー）"')}
+        ${row('☰', '#5c5f66', '投稿とコメントのルール', '気持ちよく議論するための約束', go(''), 'data-toast="投稿とコメントのルールを開きます（ワイヤー）"')}
+        ${row('?', '#5c5f66', '問い合わせ・不具合の報告', '', go(''), 'data-sheet="contact"')}
+      </div>
+      <div class="sgh"></div><div class="sgroup">
+        ${row('⇥', '#5c5f66', 'ログアウト', '', '', 'data-sheet="logout"')}
+        <button class="srow danger" data-sheet="delete"><span class="ico" style="background:#3a1a1a;color:#ff6b6b">✕</span><span class="x">アカウントを削除</span><span class="chev">›</span></button>
+      </div>
+      <div class="sfoot">Halftick 0.1（ワイヤーフレーム）<br>11月4日（火）16:10 · いまの表示：${SET.time === 'jst' ? '日本時間' : 'いる地域の時間'}</div>`;
+  }
+  function openSettings() {
+    renderSettings();
+    $('#settings').classList.add('open'); $('#settings').setAttribute('aria-hidden', 'false');
+  }
+  const head = t => `<div class="sh-head"><b>${t}</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>`;
+  function openChoice(k) {
+    const [title, opts] = CHOICES[k];
+    const cur = k === 'sort' ? state.sort : k === 'quiet' ? `${SET.quietFrom}-${SET.quietTo}` : SET[k];
+    openSheet(head(title) + `<div class="past">${k === 'quiet' ? `<div class="setrow"><span class="x">夜は鳴らさない</span><button class="toggle ${SET.quiet ? 'on' : ''}" data-settoggle="quiet" aria-label="夜は鳴らさない"></button></div>` : ''}
+      ${opts.map(([v, l, sub]) => `<button class="opt ${cur === v ? 'on' : ''}" data-pickopt="${k}:${v}"><span class="x">${l}${sub ? `<small>${sub}</small>` : ''}</span><span class="rd"></span></button>`).join('')}
+      ${k === 'dm' ? '<p class="muted" style="font-size:11.5px;line-height:1.6;margin-top:12px">1対1は、もともと同じグループの人とだけ話せます。ここではそれをさらに絞れます。</p>' : ''}</div>`, 'half');
+  }
+  function openSetSheet(kind) {
+    if (kind === 'mutes') return openSheet(head('ミュートした言葉') + `<div class="past"><p class="muted" style="font-size:12px;line-height:1.6;margin:0 0 12px">この言葉を含むコメントや投稿は、あなたの画面では隠れます。相手には分かりません。</p>
+      <div class="addrow"><input class="field" id="mute-input" placeholder="例：爆益、宣伝" maxlength="20" aria-label="ミュートする言葉"><button data-addmute>追加</button></div>
+      <div class="mutes">${SET.mutes.map(m => `<span class="rchip">${esc(m)}<button class="x" data-delmute="${esc(m)}" aria-label="${esc(m)} を外す">✕</button></span>`).join('') || '<span class="muted" style="font-size:12.5px">まだありません</span>'}</div></div>`, 'half');
+    if (kind === 'blocked') return openSheet(head('ブロックした人') + `<div class="past">${SET.blocked.map(n => `<div class="pick"><span class="av" style="background:#333"></span><span class="x">${esc(n)}<small>ブロック中 · お互いのコメントとメッセージが見えません</small></span><button class="act" data-unblock="${esc(n)}">解除</button></div>`).join('') || '<p class="muted" style="font-size:13px">ブロックした人はいません</p>'}</div>`, 'half');
+    if (kind === 'login') return openSheet(head('ログイン方法') + `<div class="past">${[['apple', 'Apple'], ['google', 'Google'], ['mail', 'メールアドレス']].map(([k, l]) => `<div class="setrow"><span class="x">${l}${SET.login.includes(k) ? '<small>つながっています</small>' : ''}</span>${SET.login.includes(k) ? (SET.login.length > 1 ? `<button class="act" data-unlink="${k}">外す</button>` : '<span class="muted" style="font-size:12px">いまのログイン方法</span>') : `<button class="act" data-link="${k}">つなぐ</button>`}</div>`).join('')}
+      <p class="muted" style="font-size:11.5px;margin-top:12px;line-height:1.6">ログイン方法を2つ以上つないでおくと、スマホを変えたときも安心です。</p></div>`, 'half');
+    if (kind === 'apply') return openSheet(head('投稿の申請') + `<div class="past"><div class="invite">${SET.apply === 'pending' ? 'いま確認中です。OKが出たらお知らせします。<div class="muted" style="font-size:11.5px;margin-top:6px">11月3日に申請 · 職種：為替・金利ウォッチャー</div>' : '投稿できます'}</div>${SET.apply === 'pending' ? '<button class="ghost" data-cancelapply>申請を取り消す</button>' : ''}</div>`, 'half');
+    if (kind === 'help') return openSheet(head('通報・困ったときの窓口') + `<div class="past"><p style="font-size:13.5px;line-height:1.7;margin:0">コメントやメッセージは、長押しのメニューから通報できます。<br>人の場合は、プロフィールの「•••」から通報とブロックができます。</p>
+      <button class="primary" data-toast="窓口のフォームを開きます（ワイヤー）">運営に相談する</button><p class="muted" style="font-size:11.5px;line-height:1.6;margin-top:12px">こわい思いをしたときは、ためらわずに相談してください。できるだけ早く確認します。</p></div>`, 'half');
+    if (kind === 'contact') return openSheet(head('問い合わせ・不具合の報告') + `<div class="past"><label class="lbl" for="contact-text" style="margin-top:0">どんなことですか？</label><textarea class="field" id="contact-text" style="height:120px;padding:12px 14px;resize:none" placeholder="例：通知が届かない、表示がおかしい"></textarea>
+      <p class="muted" style="font-size:11.5px;margin:8px 0 0">アプリのバージョンと端末の種類は、いっしょに送られます。</p><button class="primary" data-sendcontact>送る</button></div>`, 'full');
+    if (kind === 'logout') return openSheet(head('ログアウトしますか？') + `<div class="past"><p class="muted" style="font-size:13px;line-height:1.6;margin:0">保存した記事やグループは消えません。もう一度ログインすれば元どおりです。</p><button class="primary" data-toast="ログアウトしました（ワイヤー）">ログアウト</button><button class="ghost" data-close="sheet">やめる</button></div>`, 'half');
+    if (kind === 'delete') return openSheet(head('アカウントを削除') + `<div class="past"><div class="warn">削除すると、プロフィール、保存した記事、グループへの参加、1対1のメッセージが消えて、元に戻せません。<br>書いたコメントは「削除されたユーザー」として残ります。</div>
+      <label class="lbl" for="del-confirm">確認のため「削除」と入力してください</label><input class="field" id="del-confirm" placeholder="削除" autocomplete="off">
+      <button class="primary" id="del-go" style="background:#ff3b30;color:#fff" disabled>アカウントを削除する</button><button class="ghost" data-close="sheet">やめる</button></div>`, 'full');
+  }
+  function openEditProfile() {
+    openSheet(head('プロフィールを編集') + `<div class="past" style="overflow-y:auto;padding-bottom:30px">
+      <label class="photo-pick" for="me-photo"><span class="pv" style="background:${FACE('あなた')}"></span><span>アイコンを変える<small>写真フォルダから、またはサンプルから</small></span></label><input type="file" accept="image/*" id="me-photo" class="vis-hidden">
+      <label class="lbl" for="pf-name">表示名（本名でなくて大丈夫です）</label><input class="field" id="pf-name" value="あなた" maxlength="20">
+      <label class="lbl" for="pf-role">職種（任意）</label><input class="field" id="pf-role" value="為替・金利ウォッチャー" maxlength="24">
+      <label class="lbl" for="pf-bio">ひとこと</label><textarea class="field" id="pf-bio" style="height:90px;padding:12px 14px;resize:none" maxlength="120">為替と金利が好きな会社員です。朝7時の配信を読むのが日課。</textarea>
+      <button class="primary" data-saveprofile>保存する</button></div>`, 'full');
   }
 
   // ---------- 検索 ----------
@@ -954,6 +1066,22 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
+    if (d.settings !== undefined) { openSettings(); return; }
+    if (d.close === 'settings') { $('#settings').classList.remove('open'); $('#settings').setAttribute('aria-hidden', 'true'); return; }
+    if (d.choice) { openChoice(d.choice); return; }
+    if (d.pickopt) { const [k, v] = d.pickopt.split(':'); if (k === 'sort') state.sort = v; else if (k === 'quiet') { [SET.quietFrom, SET.quietTo] = v.split('-'); SET.quiet = true; } else SET[k] = v; renderSettings(); openChoice(k); toast(k === 'lang' && v === 'en' ? 'English に切り替えます（ワイヤーでは日本語のまま）' : '変更しました'); return; }
+    if (d.settoggle) { SET[d.settoggle] = !SET[d.settoggle]; t.querySelector('.toggle')?.classList.toggle('on', SET[d.settoggle]); if (t.classList.contains('toggle')) t.classList.toggle('on', SET[d.settoggle]); renderSettings(); return; }
+    if (d.sheet) { openSetSheet(d.sheet); return; }
+    if (d.addmute !== undefined) { const i = $('#mute-input'); const v = i.value.trim(); if (v && !SET.mutes.includes(v)) SET.mutes.push(v); renderSettings(); openSetSheet('mutes'); return; }
+    if (d.delmute) { SET.mutes = SET.mutes.filter(m => m !== d.delmute); renderSettings(); openSetSheet('mutes'); return; }
+    if (d.unblock) { SET.blocked = SET.blocked.filter(n => n !== d.unblock); renderSettings(); openSetSheet('blocked'); toast('ブロックを解除しました'); return; }
+    if (d.link) { SET.login.push(d.link); renderSettings(); openSetSheet('login'); toast('つなぎました'); return; }
+    if (d.unlink) { SET.login = SET.login.filter(l => l !== d.unlink); renderSettings(); openSetSheet('login'); return; }
+    if (d.cancelapply !== undefined) { SET.apply = 'none'; renderSettings(); setSheet('closed'); toast('申請を取り消しました'); return; }
+    if (d.sendcontact !== undefined) { setSheet('closed'); toast('送りました。ありがとうございます'); return; }
+    if (d.editprofile !== undefined) { openEditProfile(); return; }
+    if (d.saveprofile !== undefined) { setSheet('closed'); toast('プロフィールを保存しました'); return; }
+    if (t.id === 'del-go') { setSheet('closed'); toast('ワイヤーなので削除はしません'); return; }
     if (d.search !== undefined) { openSearch(); return; }
     if (d.close === 'search') { closeSearch(); return; }
     if (t.id === 's-clear') { $('#s-input').value = ''; renderSearch(); $('#s-input').focus(); return; }
@@ -993,10 +1121,12 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     fr.readAsDataURL(e.target.files[0]);
   });
   document.addEventListener('input', e => {
+    if (e.target.id === 'del-confirm') { $('#del-go').disabled = e.target.value.trim() !== '削除'; return; }
     if (e.target.id === 's-input') { renderSearch(); return; }
     if (e.target.id === 'g-name') { draft.name = e.target.value; const b = $('#g-create'); if (b) b.disabled = !draft.name.trim(); }
   });
   document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.id === 'mute-input') document.querySelector('[data-addmute]').click();
     if (e.key === 'Enter' && e.target.id === 's-input') { remember(e.target.value); e.target.blur(); }
     if (e.key === 'Escape' && $('#search').classList.contains('open')) closeSearch();
     if (e.key === 'Enter' && e.target.id === 'c-input') $('#c-send').click();
