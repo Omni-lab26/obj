@@ -395,12 +395,11 @@ const Digits = memo(function Digits({
   const drawn = size * big;
   const cell = digitPerPt * drawn;
   const line = size * 1.08;
-  // Drawn bigger or smaller, it keeps the box it has at its own size, centred on it on
-  // whole pixels (text off the pixel grid is drawn soft), and is scaled back into it in
-  // the same breath: the new drawing and the scale that fits it reach the screen
-  // together, so a redraw never shows (a scale applied apart from it showed the digits
-  // a frame too big or small, a flicker as they redrew).
-  const px = (v: number) => Math.round(v * PixelRatio.get()) / PixelRatio.get();
+  // Drawn bigger or smaller, it keeps the box it has at its own size, centred on it, and
+  // is scaled back into it in the same breath: the new drawing and the scale that fits
+  // it reach the screen together, so a redraw never shows (a scale applied apart from
+  // it showed the digits a frame too big or small, a flicker as they redrew). At rest a
+  // copy laid out with no scale at all takes over (see restK in Clock).
   return (
     <View style={big !== 1 ? { width: rowW, height: line } : null}>
       <View
@@ -410,7 +409,7 @@ const Digits = memo(function Digits({
                 styles.row,
                 styles.drawnBig,
                 // As big as it is drawn, centred on the box and scaled to fit it.
-                { width: rowW * big, height: line * big, left: px((rowW * (1 - big)) / 2), top: px((line * (1 - big)) / 2) },
+                { width: rowW * big, height: line * big, left: (rowW * (1 - big)) / 2, top: (line * (1 - big)) / 2 },
                 { transform: [{ scale: 1 / big }] },
               ]
             : styles.row
@@ -707,7 +706,28 @@ export function Clock(props: Props) {
   // so together they show at the zoom's size, drawn sharp: see Digits.) Only the page
   // showing takes the zoom: the others wait off screen beside it, and swollen by a big
   // pinch their digits would reach into view.
-  const digitsStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.get() }] }));
+  // With the fingers off them, a scaled drawing is still drawn a hair off the pixel
+  // grid, and so soft. So once a pinch is let go, a second drawing at exactly the size
+  // shown, laid out with no transform at all, is put over it and faded in (in 90 ms,
+  // once it is on screen: the two look the same, so no swap shows). It is gone the
+  // moment the digits move again, and the moving drawing takes over.
+  const [restK, setRestK] = useState<number | null>(null);
+  const stillK = useSharedValue(0);
+  const stillOn = useSharedValue(0);
+  useAnimatedReaction(
+    () => busy.get() === 1 || Math.abs(zoom.get() - stillK.get()) > 1e-4,
+    (moving) => {
+      if (moving && stillOn.get() !== 0) {
+        cancelAnimation(stillOn);
+        stillOn.set(0);
+      }
+    }
+  );
+  const showStill = () => {
+    if (busy.get() === 0 && Math.abs(zoom.get() - stillK.get()) < 1e-4) stillOn.set(withDelay(16, withTiming(1, { duration: 90 })));
+  };
+  const stillStyle = useAnimatedStyle(() => ({ opacity: stillOn.get() }));
+  const digitsStyle = useAnimatedStyle(() => ({ opacity: stillOn.get() >= 1 ? 0 : 1, transform: [{ scale: zoom.get() }] }));
   const aboveStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.round(((-lim.get().rowH * (zoom.get() - 1)) / 2) * dpr) / dpr }] }));
   const belowStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.round(((lim.get().rowH * (zoom.get() - 1)) / 2) * dpr) / dpr }] }));
   // The edit frame hangs on the digits' own box as laid out, and grows with them while
@@ -906,6 +926,10 @@ export function Clock(props: Props) {
     editGesture.set({
       done: (x, y, k) => {
         pending.current = { x, y, k };
+        stillK.set(k);
+        // (The same size as last time: already laid out, so just shown again.)
+        if (k === restK) showStill();
+        else setRestK(k);
       },
       limit: buzzLimit,
     })
@@ -989,6 +1013,36 @@ export function Clock(props: Props) {
               drawAt={framed ? drawAt : ONE}
             />
           </Reanimated.View>
+          {framed && edit && restK != null && rowW ? (
+            // The same digits at rest, drawn at their size shown (see restK).
+            <Reanimated.View
+              pointerEvents="none"
+              onLayout={showStill}
+              style={[
+                styles.still,
+                { left: (rowW * (1 - restK)) / 2, top: (size * 1.08 * (1 - restK)) / 2, width: rowW * restK, height: size * 1.08 * restK },
+                stillStyle,
+              ]}
+            >
+              <View style={[styles.row, { opacity: f.dim ? 0.3 : 1 }]}>
+                <Digits
+                  main={f.main}
+                  small={f.small}
+                  mode={m}
+                  size={size * restK}
+                  rowW={rowW * restK}
+                  digitPerPt={digitPerPt}
+                  font={font}
+                  ink={c.ink}
+                  inkSoft={c.inkSoft}
+                  reeling={reeling}
+                  hoursAt={hoursAt}
+                  quartersAt={quartersAt}
+                  drawAt={ONE}
+                />
+              </View>
+            </Reanimated.View>
+          ) : null}
           {framed && edit ? (
             // Round the digits, and the date above them when there is one (as wide as
             // that is, if wider); it turns red when a pinch goes too far.
@@ -1228,6 +1282,12 @@ const styles = StyleSheet.create({
   wheelsAbove: {
     bottom: '100%',
     marginBottom: 10,
+  },
+  still: {
+    position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   drawnBig: {
     position: 'absolute',
