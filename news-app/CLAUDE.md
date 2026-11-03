@@ -7,7 +7,7 @@
 - 確かめていないことは「未確認」と書く。「直した」は verify と撮影のあとにだけ言う。
 
 ## プロダクト
-- 名前：Quote Wire（正式名称・仮確定）。アプリの表示名は QWire、ストアの名前は「QWire - Quote Wire」（コード名：news-app）。bundle ID：app.quotewire（案）、slug：quotewire（案）。確定後は**変更禁止**（変えるときは必ず相談）
+- 名前：Halftick（仮確定）（コード名：news-app）。bundle ID：app.halftick（案）、slug：halftick（案）。確定後は**変更禁止**（変えるときは必ず相談）
 - 何のアプリか：金融・ビジネスの「NERV」。世界の一次情報と報道をAIでまとめて1日4回＋速報で配信し、記事ごとのコメントとグループ・個人間チャットで専門職が語り合える場所
 - 仕様の正：`docs/brief.md`（MVP・やらないこと）、`docs/screens.md`、`docs/design.md`、`docs/data-model.md`
 - `docs/brief.md` の「やらないこと」にある機能は作らない。思いついた機能は「あとで」に書くだけにする
