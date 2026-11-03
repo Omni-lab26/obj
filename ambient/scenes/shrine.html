@@ -400,19 +400,23 @@ void main() {
     atlasData = new Uint8Array(a.getImageData(0, 0, atlasCanvas.width, chD).data.buffer);
   }
 
+  const L_PILLAR = 0.115; // torii posts stand this far either side of the path's centre
+
   // Oblique projection: world x runs along the torii beam, world y along the path
   // (towards the viewer), z is height and points straight up the screen.
   //
-  // The app draws its clock over the middle: digits centred at (W/2, (H - 0.08W)/2) under
-  // a soft veil about 0.7W x 0.24H (0.66W x 0.3H on wide screens), and its controls along
-  // the bottom 90 px. The torii, the fox and the hall are placed clear of both; grass,
-  // frost and trees run on underneath.
+  // The app draws its clock over the middle: digits centred at (W/2, (H - 0.08W)/2) with
+  // a soft veil around them, and (for a few seconds after a tap) controls along the bottom
+  // 90 px. The torii, the fox and the hall are placed clear of both; grass, frost and
+  // trees run on underneath. Tall screens: below the clock, about 0.7W x 0.24H. Wide
+  // screens: the digits are only about 0.15H either side of centre (veil 0.05W beyond),
+  // so the torii takes the right half, as tall as the room there allows.
   function layout() {
     const W = Host.w, H = Host.h;
     const wide = W > H;
     const land = clamp((W / H - 0.75) / 0.8, 0, 1); // 0 portrait .. 1 landscape
     const ax = (23 * Math.PI) / 180;
-    const ay = (lerp(120, 142, land) * Math.PI) / 180; // a flatter path on wide screens
+    const ay = ((wide ? 128 : lerp(120, 142, land)) * Math.PI) / 180;
     const ex = [Math.cos(ax), Math.sin(ax)];
     const ey = [Math.cos(ay), Math.sin(ay)];
     const fox = [-0.012, 0.045];
@@ -423,12 +427,34 @@ void main() {
     // and the fox's feet in front of it. Fit both between the clock and the bar.
     const top = -0.25 * ex[1] - 0.02 * ey[1] - 0.218;
     const foot = fox[0] * ex[1] + fox[1] * ey[1];
-    const s = Math.min(W, H * (wide ? 0.5 : 0.6), (barTop - clockBottom - 2 * m - ch) / (foot - top));
-    const O = [W * (wide ? 0.78 : 0.44), clockBottom + m - top * s];
+    let s, O, hc;
+    if (!wide) {
+      // Below the clock; the hall off to the torii's right so it stays below it too.
+      s = Math.min(W, H * 0.6, (barTop - clockBottom - 2 * m - ch) / (foot - top));
+      O = [W * 0.44, clockBottom + m - top * s];
+      hc = [0.35, -0.12];
+    } else {
+      // Right of the clock; the hall behind, up and to the right. Fit the torii's raised
+      // left end and the hall's far corner between the veil and the screen edge, and the
+      // lintel and the feet between 0.25H and the bar.
+      // Two places for the hall: off to the right (cleaner), or more squarely behind the
+      // torii (leaves the torii more width where width is what limits it). Take whichever
+      // gives the bigger torii, the first on a tie.
+      const keepRight = W / 2 + 0.15 * H + 0.05 * W;
+      const left = -0.25 * ex[0] + 0.02 * ey[0];
+      const feet = Math.max(foot, L_PILLAR * ex[1]);
+      const feetY = Math.min(barTop - m - ch, H * 0.78);
+      const sTall = Math.min((feetY - H * 0.25) / (feet - top), H * 1.2);
+      let right = 0;
+      s = 0;
+      for (const c of [[-0.04, -0.32], [-0.12, -0.34]]) {
+        const r = (c[0] + 0.109) * ex[0] + (c[1] - 0.074) * ey[0];
+        const sc = Math.min((W - keepRight - 2 * m) / (r - left), sTall);
+        if (sc > s + 0.5) [s, hc, right] = [sc, c, r];
+      }
+      O = [(keepRight + m - left * s + W - m - right * s) / 2, feetY - feet * s];
+    }
     const det = ex[0] * ey[1] - ey[0] * ex[1];
-    // The hall stands behind the torii on wide screens (up and to the right, beside the
-    // clock); on tall ones it stands off to the right, so it stays below the clock too.
-    const hc = wide ? [0.03, -0.46] : [0.35, -0.12];
     L = {
       W, H, s, land, ex, ey, O, fox,
       P: (x, y, z = 0) => [O[0] + s * (x * ex[0] + y * ey[0]), O[1] + s * (x * ex[1] + y * ey[1] - z)],
@@ -441,7 +467,7 @@ void main() {
       sh: [s * 0.42, s * 0.3],
       pathW: 0.068,
       pathEnd: 0.8,
-      pillarX: 0.115,
+      pillarX: L_PILLAR,
       hut: { cx: hc[0], x0: hc[0] - 0.085, x1: hc[0] + 0.085, y0: hc[1] - 0.05, y1: hc[1] + 0.05 },
       // Small scenes (a phone on its side) get the compact fox.
       smallFox: s < 260,
@@ -468,7 +494,8 @@ void main() {
       return y;
     };
     // Below the crowns: dark ground with pale trunks.
-    L.shadeEdge = (x) => L.canopyEdge(x) + s * (0.15 + 0.04 * noise2(x / (s * 0.12), 7.7, 3));
+    const sb = Math.min(s, H * 0.67);
+    L.shadeEdge = (x) => L.canopyEdge(x) + sb * (0.15 + 0.04 * noise2(x / (s * 0.12), 7.7, 3));
   }
 
   // ── painting ────────────────────────────────────────────────────────────
@@ -673,22 +700,31 @@ void main() {
   }
 
   function makeTrees(rnd) {
-    const s = L.s, W = L.W;
+    const s = L.s, W = L.W, P = L.P, h = L.hut;
+    // Crowns are sized by the scene's scale, but no bigger than a short screen can hold.
+    const st = Math.min(s, L.H * 0.75);
     const trees = [];
-    const sp = s * 0.125;
+    const sp = st * 0.125;
+    // Screen boxes of the torii and the hall, with the depth (ground y) they stand at: a
+    // tree in front of either would hide it, so none stands there.
+    const keep = [
+      { x0: P(-0.25, 0.02)[0], x1: P(0.25, -0.02)[0], y0: P(-0.25, -0.02, 0.22)[1], y1: P(L_PILLAR, 0)[1], d: P(0, 0)[1] - s * 0.05 },
+      { x0: P(h.x0 - 0.03, h.y1 + 0.03)[0], x1: P(h.x1 + 0.03, h.y0 - 0.03)[0], y0: P(h.cx, h.y0 - 0.03, 0.13)[1], y1: P(h.cx, h.y1 + 0.04)[1], d: P(h.cx, h.y0)[1] },
+    ];
     for (let y = -s * 0.15; y < L.H; y += sp * 0.8) {
       for (let x = -sp; x < W + sp; x += sp) {
         const cx0 = x + (rnd() - 0.5) * sp * 1.1 + ((Math.round(y / sp) & 1) * sp) / 2;
         const cy0 = y + (rnd() - 0.5) * sp * 0.9;
-        const R = s * (0.06 + rnd() * 0.065);
+        const R = st * (0.06 + rnd() * 0.065);
         if (rnd() < 0.12) continue; // a clearing
         if (cy0 + R * 0.35 > L.canopyEdge(cx0)) continue;
-        const ht = 0.13 + rnd() * 0.12;
+        const ht = ((0.13 + rnd() * 0.12) * st) / s;
         const gy = cy0 + ht * s;
         const [wx, wy] = L.inv(cx0, gy);
         // Nothing grows on the path, the forecourt or the hall.
         if (Math.abs(wx) < 0.2 && wy > L.pad.y0 - 0.05) continue;
         if (wx > L.pad.x0 - 0.06 && wx < L.pad.x1 + 0.06 && wy > L.pad.y0 - 0.12 && wy < L.pad.y1 + 0.06) continue;
+        if (keep.some((k) => gy > k.d && cx0 + R > k.x0 && cx0 - R < k.x1 && gy > k.y0 && cy0 - R < k.y1)) continue;
         trees.push({ x: cx0, y: cy0, R, ht, gy, pal: pickCrown(rnd), seed: Math.floor(rnd() * 1e6) });
       }
     }
