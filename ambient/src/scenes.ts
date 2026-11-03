@@ -60,6 +60,16 @@ const meta: Omit<Scene, 'html' | 'kind'>[] = [
     tone: 'dark',
   },
   {
+    id: 'shrine',
+    title: 'Shrine',
+    caption: '秋の神社',
+    hint: 'タップで落ち葉が舞う',
+    captionEn: 'Shrine in autumn',
+    hintEn: 'Tap to scatter leaves',
+    background: '#1b1c12',
+    tone: 'dark',
+  },
+  {
     id: 'blank',
     title: 'Blank',
     caption: '白紙',

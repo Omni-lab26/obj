@@ -1,0 +1,1236 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Shrine</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1b1c12; }
+  body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  canvas { position: absolute; inset: 0; display: block; }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<script src="shared/host.js"></script>
+<script>
+// A shrine in autumn seen from high above, drawn in type. Ginkgo canopy along the top,
+// a red torii in the middle with a fox sitting at its foot, a stone path with lanterns
+// running down to a bottom corner, grass with white frost and flowers.
+//
+// The picture is painted once per resize (flat-shaded shapes in an oblique projection
+// anchored on the torii) into a grid of cells: one colour and one material per cell.
+// A shader then draws every cell as a glyph picked from its material and brightness,
+// tinted by the cell colour, over a dark blurred copy of the picture; the glyphs re-roll
+// on their own beat, so the type shimmers while the scene holds still. A second pass
+// blurs the top and bottom bands (tilt-shift). Falling leaves and the fox are glyphs
+// written into a small overlay texture each frame.
+//
+// Test hooks (besides Host's #seed / #hold): #plain shows the painted picture without
+// glyphs; #cells=N sets the grid fineness (cells across the short side, default 118);
+// #probe exposes the scene state as window.__shrine.
+(() => {
+  const { clamp, lerp, rand, hash3, noise2 } = Host;
+  const PLAIN = /[#&]plain/.test(location.hash);
+  const CELLS = Number((/cells=(\d+)/.exec(location.hash) || [])[1]) || 118;
+
+  // ── glyphs ──────────────────────────────────────────────────────────────
+  // '─' and '═' are drawn edge to edge so runs of them read as scanlines; '•' is a fat dot.
+  const GLYPHS = [' ', '.', "'", ',', '`', ':', ';', '-', '=', '+', '*', 'o', '%', 'S', '8', '#', '@',
+    '/', '\\', '|', '~', '&', '^', 'A', '_', '!', 'H', 'w', 'v', '(', ')', 'O', 'X', '"', 'l', '─', '═', 'Y', 'x', '<', '>', '•'];
+  const GI = {};
+  GLYPHS.forEach((g, i) => (GI[g] = i));
+  const FONT = '600 {px}px ui-monospace, "SF Mono", Menlo, "Roboto Mono", monospace';
+
+  // ── materials ───────────────────────────────────────────────────────────
+  // Each material is also a glyph family: 8 brightness levels x 4 variants (the first
+  // variant is the usual one, the others turn up as the cell re-rolls).
+  const GRASS = 0, WHITE = 1, SHADE = 2, CANOPY = 3, TRUNK = 4, STONE = 5, CURB = 6, RED = 7,
+    BLACK = 8, ROOF = 9, WOOD = 10, LANTERN = 11, FLAME = 12, DIRT = 13, FOX = 14, GAP = 15;
+  const FAMILY = [];
+  // gain: brightness -> level; boost: glyph colour over the cell colour; rate: re-rolls/s;
+  // sway: how much the breeze moves it; edge: outlines get / \ | - glyphs.
+  FAMILY[GRASS] = { gain: 2.7, boost: 1.55, rate: 2.2, sway: 1, lv: ["  .'", ".' ,", "'/.,", "/',/", "//'/", "///'", "//|/", "///|"] };
+  FAMILY[WHITE] = { gain: 1.1, boost: 1.32, rate: 1.6, sway: 0.25, lv: ['  . ', '. .:', '.-:\'', '-.•:', '•-.=', '=•-*', '•=*•', '•=#•'] };
+  FAMILY[SHADE] = { gain: 3.2, boost: 1.5, rate: 1.4, sway: 0.4, lv: ['    ', ' .  ', '. : ', ".:' ", ":.;'", "/:.'", "/'.:", "//.'"] };
+  FAMILY[CANOPY] = { gain: 1.85, boost: 1.32, rate: 2.0, sway: 0.75, lv: ['  . ', '.:  ', ':o.*', 'o:*.', 'oo*%', 'oo%*', 'o%8*', 'o8%O'] };
+  FAMILY[TRUNK] = { gain: 1.3, boost: 1.25, rate: 0.8, sway: 0, edge: 1, lv: ['  . ', '.|  ', '|!. ', '||!:', '||!l', '|l|!', '||l!', '|!|l'] };
+  FAMILY[STONE] = { gain: 1.9, boost: 1.45, rate: 0.9, sway: 0, lv: ['  . ', '.-  ', '-.─ ', '─-.=', '─=-─', '═─=-', '═=─S', '═─#='] };
+  FAMILY[CURB] = { gain: 1.5, boost: 1.3, rate: 0.8, sway: 0, edge: 1, lv: ['  . ', '.-/ ', '/-.=', '/=-/', '//=─', '/═/=', '/S═/', '#/S═'] };
+  FAMILY[RED] = { gain: 1.9, boost: 1.45, rate: 0.6, sway: 0, edge: 1, lv: ['  . ', '.:#|', '#|:.', '#|%H', '##|%', '#H#%', '##%8', '#@%8'] };
+  FAMILY[BLACK] = { gain: 2.4, boost: 1.5, rate: 0.6, sway: 0, edge: 1, lv: ['  . ', '.S  ', 'S.=:', 'SS-.', 'SS=S', 'SS═8', 'S8S#', 'S8#S'] };
+  FAMILY[ROOF] = { gain: 1.25, boost: 1.25, rate: 0.9, sway: 0, edge: 1, lv: ['  . ', ".'/ ", "/'./", "//'|", '///=', '//═/', '/═//', '//#/'] };
+  FAMILY[WOOD] = { gain: 2.6, boost: 1.45, rate: 0.6, sway: 0, edge: 1, lv: ['  . ', '.:  ', ':=.|', '=|:#', '#=|:', '=#|%', '#%=|', '#8%='] };
+  FAMILY[LANTERN] = { gain: 1.4, boost: 1.25, rate: 0.7, sway: 0, edge: 1, lv: ['  . ', '.:= ', '=:#.', '#=%:', '#%=A', '#%A8', '8#%@', '#8@%'] };
+  FAMILY[FLAME] = { gain: 1.2, boost: 1.4, rate: 3.0, sway: 0, lv: ['.:  ', ':*. ', '*o:.', 'o*%.', '@o*%', '@*o%', '@%o*', '@@*%'] };
+  FAMILY[DIRT] = { gain: 3.0, boost: 1.4, rate: 0.9, sway: 0, lv: ['    ', ' .  ', '.~ -', '~.-─', '~-─.', '─~-=', '~─=-', '─=~-'] };
+  FAMILY[FOX] = { gain: 1.5, boost: 1.3, rate: 1.2, sway: 0, lv: ['  . ', '.:& ', '&%:*', '&%8*', '&8%#', '&%8@', '&@8%', '&8@%'] };
+  FAMILY[GAP] = { gain: 3.4, boost: 1.4, rate: 1.4, sway: 0.5, lv: ['    ', ' .  ', '. . ', '.:  ', ':.o ', ':o.*', 'o:.*', 'o.:*'] };
+
+  // Material ids are painted as flat colours on a second canvas, then snapped back.
+  const matColor = (m) => `rgb(${(m & 3) * 85},${((m >> 2) & 3) * 85},0)`;
+
+  // ── palette ─────────────────────────────────────────────────────────────
+  const C = {
+    grassDark: [48, 72, 28], grass: [78, 112, 42], grassLight: [130, 150, 62], grassShade: [24, 34, 14],
+    white: [234, 234, 226], whiteDim: [168, 172, 158], whiteDark: [70, 80, 58],
+    shadeGround: [26, 30, 16],
+    trunk: '#d2cdc0', trunkShade: '#8c887c',
+    stone: '#55544f', stoneDark: '#1e1d1b', stoneLight: '#c4c3ba', curb: '#d2d0c6', curbShade: '#8e8c84',
+    red: '#c8381f', redLight: '#e2553a', redDark: '#8c2414', black: '#57524e', blackDark: '#26221f',
+    roof: '#9fc48c', roofLight: '#bfe0a8', roofDark: '#5f8a5a', wood: '#6a442a', woodDark: '#2e1e14', interior: '#140e0a',
+    lantern: '#eeede6', lanternMid: '#b8b7ae', lanternDark: '#55544e', flame: '#f08a2c',
+    dirt: [52, 40, 30],
+    shadow: 'rgba(8,10,4,0.5)', shadowSoft: 'rgba(8,10,4,0.28)',
+  };
+  const CROWN = [
+    ['#b8953a', '#d6b866', '#6e5420'], // gold
+    ['#a7803a', '#c9a258', '#5e4520'], // ochre
+    ['#c0a24c', '#ddc47c', '#78602a'], // light gold
+    ['#99913e', '#bab262', '#5a5626'], // olive yellow
+    ['#b07434', '#cf9454', '#683e1e'], // orange-brown
+  ];
+
+  // ── canvas & GL ─────────────────────────────────────────────────────────
+  const canvas = document.getElementById('gl');
+  const entry = Host.canvas(canvas, 2);
+  let gl = canvas.getContext('webgl', { antialias: false, alpha: false, depth: false, stencil: false, premultipliedAlpha: false, powerPreference: 'low-power' });
+  let ctx2d = null;
+  // Without WebGL the painted picture is shown as it is, on a 2D canvas of its own.
+  function useFallback() {
+    gl = null;
+    canvas.style.display = 'none';
+    const c2 = document.createElement('canvas');
+    document.body.appendChild(c2);
+    Host.canvas(c2, 2);
+    ctx2d = c2.getContext('2d');
+  }
+
+  const VS = `attribute vec2 a; void main() { gl_Position = vec4(a, 0.0, 1.0); }`;
+
+  // Pass 1: one glyph per cell over the dark blurred picture.
+  const FS_GLYPH = `
+precision highp float;
+uniform sampler2D uCell;   // rgb colour, a = material*16
+uniform sampler2D uAux;    // r = lantern id+1, g = glow, b = sway, a = edge glyph+1
+uniform sampler2D uOver;   // rgb glyph colour, a = glyph+1 (falling leaves, the fox)
+uniform sampler2D uAtlas;  // glyphs in a row, white on clear
+uniform sampler2D uTable;  // 8 levels x 4 variants per family, then gain/boost/rate
+uniform sampler2D uNoise;  // smooth tiling noise
+uniform vec2 uRes, uCellPx, uGrid, uCellCss;
+uniform float uT, uGlyphs, uPlain;
+uniform vec2 uWind, uCloud;
+uniform vec4 uGust0, uGust1, uGust2;
+
+float hash13(vec3 p3) {
+  p3 = fract(p3 * 0.1031);
+  p3 += dot(p3, p3.zyx + 31.32);
+  return fract((p3.x + p3.y) * p3.z);
+}
+float tab(float col, float fam) {
+  return texture2D(uTable, vec2((col + 0.5) / 40.0, (fam + 0.5) / 16.0)).r * 255.0;
+}
+float gust(vec4 g, vec2 p) {
+  if (g.w <= 0.0) return 0.0;
+  float d = length((p - g.xy) * vec2(1.0, 1.25));
+  float band = (d - g.z) / (24.0 + g.z * 0.35);
+  return g.w * exp(-band * band) ;
+}
+
+void main() {
+  vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
+  vec2 cf = p / uCellPx;
+  vec2 cell = floor(cf);
+  vec2 local = cf - cell;
+  vec2 cuv = (cell + 0.5) / uGrid;
+  vec4 cd = texture2D(uCell, cuv);
+  vec4 ax = texture2D(uAux, cuv);
+  float fam = floor(cd.a * 255.0 / 16.0 + 0.02);
+  vec3 col = cd.rgb;
+
+  // Dark, softly blurred picture underneath.
+  vec2 o = 0.65 / uGrid;
+  vec2 puv = cf / uGrid;
+  vec3 base = 0.25 * (texture2D(uCell, puv + vec2(-o.x, -o.y)).rgb + texture2D(uCell, puv + vec2(o.x, -o.y)).rgb
+    + texture2D(uCell, puv + vec2(-o.x, o.y)).rgb + texture2D(uCell, puv + vec2(o.x, o.y)).rgb);
+
+  // Breeze over grass and leaves, slow cloud shadows over everything.
+  vec2 cc = (cell + 0.5) * uCellCss;
+  float sway = ax.b;
+  float wind = texture2D(uNoise, cc * vec2(0.0042, 0.0062) + uWind).r;
+  float wind2 = texture2D(uNoise, cc * vec2(0.011, 0.016) - uWind * 1.7).r;
+  float w = (wind - 0.5) * 0.8 + (wind2 - 0.5) * 0.45;
+  float cloudC = texture2D(uNoise, cc * vec2(0.0011, 0.0013) + uCloud).r;
+  float cloudP = texture2D(uNoise, p / uCellPx * uCellCss * vec2(0.0011, 0.0013) + uCloud).r;
+  float shadeC = 1.0 - 0.2 * smoothstep(0.5, 0.78, cloudC);
+  float shadeP = 1.0 - 0.2 * smoothstep(0.5, 0.78, cloudP);
+  float g = gust(uGust0, cc) + gust(uGust1, cc) + gust(uGust2, cc);
+  col *= (1.0 + sway * (w * 0.42 + g * 0.45)) * shadeC;
+  base *= (1.0 + sway * w * 0.22) * shadeP;
+
+  // Lantern flames flicker; their glow spills a little warmth around them.
+  if (ax.r > 0.0) {
+    float id = ax.r * 255.0;
+    float fl = 0.72 + 0.16 * sin(uT * 7.3 + id * 2.1) + 0.1 * sin(uT * 17.9 + id * 5.3) * sin(uT * 3.1 + id);
+    vec3 warm = vec3(1.0, 0.62, 0.22);
+    if (fam > 11.5 && fam < 12.5) {
+      col *= 0.5 + 0.8 * fl;
+      base *= 0.6 + 0.8 * fl;
+    } else {
+      col += warm * ax.g * fl * 0.5;
+      base += warm * ax.g * fl * 0.3;
+    }
+  }
+
+  // Pick a glyph: brightness picks the level, a hash that re-rolls on the cell's own
+  // beat picks the variant.
+  float gain = tab(32.0, fam) / 40.0;
+  float boost = tab(33.0, fam) / 80.0;
+  float rate = tab(34.0, fam) / 40.0 * (1.0 + g * 3.0 + sway * max(w, 0.0) * 1.5);
+  float lum = dot(col, vec3(0.32, 0.5, 0.18));
+  float ph = hash13(vec3(cell, 3.7)) * 6.0;
+  float k = floor(uT * rate + ph);
+  float r1 = hash13(vec3(cell, k));
+  float r2 = hash13(vec3(cell + 17.0, k));
+  float level = clamp(floor(lum * gain * 8.0 + (r2 - 0.5) * 0.9), 0.0, 7.0);
+  float variant = floor(r1 * r1 * 4.0);
+  float gi = tab(level * 4.0 + variant, fam);
+  float edge = floor(ax.a * 255.0 + 0.5);
+  if (edge > 0.5 && r2 < 0.78 && level > 1.0) gi = edge - 1.0;
+  // A gust flattens the grass for a moment.
+  if (g * sway > 0.35 && r1 < 0.7) gi = r2 < 0.5 ? 7.0 : 20.0;
+  vec3 gcol = min(col * boost + (boost - 1.0) * 0.05, vec3(1.0));
+
+  vec4 ov = texture2D(uOver, cuv);
+  if (ov.a > 0.0) {
+    gi = floor(ov.a * 255.0 + 0.5) - 1.0;
+    gcol = ov.rgb;
+    base = mix(base, ov.rgb * 0.55, 0.55);
+  }
+
+  float ink = texture2D(uAtlas, vec2((gi + local.x) / uGlyphs, local.y)).a;
+  // Scanlines: the bottom of every row is a touch darker.
+  float scan = 1.0 - 0.35 * smoothstep(0.78, 1.0, local.y);
+  vec3 outc = mix(base * 0.52 * scan, gcol, ink);
+  if (uPlain > 0.5) outc = base;
+  gl_FragColor = vec4(outc, 1.0);
+}`;
+
+  // Pass 2: tilt-shift. The top and bottom bands are blurred, more across than down,
+  // so the rows of type smear into streaks the way they do through a long lens.
+  const FS_TILT = `
+precision highp float;
+uniform sampler2D uImg;
+uniform vec2 uRes, uBlur, uBand;
+void main() {
+  vec2 uv = gl_FragCoord.xy / uRes;
+  float top = 1.0 - smoothstep(0.0, uBand.x, 1.0 - uv.y);
+  float bot = 1.0 - smoothstep(0.0, uBand.y, uv.y);
+  float k = max(top, bot);
+  vec3 c = texture2D(uImg, uv).rgb;
+  if (k > 0.01) {
+    vec2 r = uBlur * k / uRes;
+    vec3 acc = c;
+    for (int i = 0; i < 14; i++) {
+      float fi = float(i);
+      float a = fi * 2.39996 + 0.5;
+      float rr = sqrt((fi + 0.5) / 14.0);
+      acc += texture2D(uImg, uv + vec2(cos(a), sin(a)) * rr * r).rgb;
+    }
+    c = acc / 15.0;
+    c = mix(c, c * 1.06 + 0.012, k);
+  }
+  // A faint vignette keeps the corners quiet.
+  vec2 q = uv - 0.5;
+  c *= 1.0 - 0.28 * dot(q, q);
+  gl_FragColor = vec4(c, 1.0);
+}`;
+
+  let progGlyph, progTilt, quad;
+  let texCell, texAux, texOver, texAtlas, texTable, texNoise, texFbo, fbo;
+  let U1 = {}, U2 = {};
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  function program(fs, names) {
+    const p = gl.createProgram();
+    gl.attachShader(p, compile(gl.VERTEX_SHADER, VS));
+    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+    gl.bindAttribLocation(p, 0, 'a');
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const u = {};
+    names.forEach((n) => (u[n] = gl.getUniformLocation(p, n)));
+    return [p, u];
+  }
+  function makeTex(filter, wrap) {
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap || gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap || gl.CLAMP_TO_EDGE);
+    return t;
+  }
+
+  function initGL() {
+    [progGlyph, U1] = program(FS_GLYPH, ['uCell', 'uAux', 'uOver', 'uAtlas', 'uTable', 'uNoise', 'uRes', 'uCellPx', 'uGrid', 'uCellCss', 'uT', 'uGlyphs', 'uPlain', 'uWind', 'uCloud', 'uGust0', 'uGust1', 'uGust2']);
+    [progTilt, U2] = program(FS_TILT, ['uImg', 'uRes', 'uBlur', 'uBand']);
+    quad = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    texCell = makeTex(gl.LINEAR);
+    texAux = makeTex(gl.NEAREST);
+    texOver = makeTex(gl.NEAREST);
+    texAtlas = makeTex(gl.NEAREST);
+    texTable = makeTex(gl.NEAREST);
+    texNoise = makeTex(gl.LINEAR, gl.REPEAT);
+    texFbo = makeTex(gl.LINEAR);
+    fbo = gl.createFramebuffer();
+    uploadTable();
+    uploadNoise();
+    if (cols) uploadGrid();
+  }
+
+  // Glyph table: 32 columns of glyph indices per family, then gain, boost and rate.
+  function uploadTable() {
+    const data = new Uint8Array(40 * 16);
+    FAMILY.forEach((f, fam) => {
+      for (let l = 0; l < 8; l++) {
+        for (let v = 0; v < 4; v++) data[fam * 40 + l * 4 + v] = GI[f.lv[l][v]] ?? 0;
+      }
+      data[fam * 40 + 32] = Math.round(f.gain * 40);
+      data[fam * 40 + 33] = Math.round(f.boost * 80);
+      data[fam * 40 + 34] = Math.min(255, Math.round(f.rate * 2.3 * 40 * (Host.reducedMotion ? 0.4 : 1)));
+    });
+    gl.bindTexture(gl.TEXTURE_2D, texTable);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, 40, 16, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, data);
+  }
+
+  // Smooth tiling value noise (64 x 64), blurred so bilinear lookups stay soft.
+  function uploadNoise() {
+    const N = 64;
+    let a = new Float32Array(N * N);
+    for (let i = 0; i < N * N; i++) a[i] = hash3(i % N, (i / N) | 0, 4242);
+    for (let pass = 0; pass < 3; pass++) {
+      const b = new Float32Array(N * N);
+      for (let y = 0; y < N; y++)
+        for (let x = 0; x < N; x++) {
+          let s = 0;
+          for (let dy = -1; dy <= 1; dy++)
+            for (let dx = -1; dx <= 1; dx++) s += a[((y + dy + N) % N) * N + ((x + dx + N) % N)];
+          b[y * N + x] = s / 9;
+        }
+      a = b;
+    }
+    let lo = 1, hi = 0;
+    for (const v of a) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+    const data = new Uint8Array(N * N);
+    for (let i = 0; i < N * N; i++) data[i] = Math.round(((a[i] - lo) / (hi - lo)) * 255);
+    gl.bindTexture(gl.TEXTURE_2D, texNoise);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, N, N, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, data);
+  }
+
+  // ── grid & layout ───────────────────────────────────────────────────────
+  let cwD = 8, chD = 13; // cell size in device px
+  let cw = 4, ch = 6.5; // and in CSS px
+  let cols = 0, rows = 0;
+  let cellData, auxData, overData; // Uint8Array RGBA per cell
+  let atlasCanvas = null;
+  let atlasData = null;
+  let L = null; // layout
+
+  function resize() {
+    const dpr = entry.dpr;
+    const short = Math.min(Host.w, Host.h);
+    const css = clamp(short / CELLS, 3, 6.5);
+    cwD = Math.max(6, Math.round(css * dpr));
+    chD = Math.round(cwD * 1.62);
+    cw = cwD / dpr;
+    ch = chD / dpr;
+    cols = Math.ceil(canvas.width / cwD);
+    rows = Math.ceil(canvas.height / chD);
+    cellData = new Uint8Array(cols * rows * 4);
+    auxData = new Uint8Array(cols * rows * 4);
+    overData = new Uint8Array(cols * rows * 4);
+    buildAtlas();
+    const t0 = performance.now();
+    layout();
+    paint();
+    L.paintMs = performance.now() - t0;
+    if (gl) uploadGrid();
+    resetLife();
+  }
+
+  function buildAtlas() {
+    atlasCanvas = document.createElement('canvas');
+    atlasCanvas.width = cwD * GLYPHS.length;
+    atlasCanvas.height = chD;
+    const a = atlasCanvas.getContext('2d', { willReadFrequently: true });
+    const px = Math.max(6, Math.round(Math.min(chD * 0.9, cwD / 0.6)));
+    a.font = FONT.replace('{px}', String(px));
+    a.textAlign = 'center';
+    a.textBaseline = 'middle';
+    a.fillStyle = '#fff';
+    const lw = Math.max(1, Math.round(chD * 0.1));
+    // A hairline stroke over the fill: small type needs the extra ink.
+    a.strokeStyle = '#fff';
+    a.lineWidth = Math.max(0.5, cwD * 0.07);
+    GLYPHS.forEach((g, i) => {
+      const x = i * cwD;
+      if (g === '─') a.fillRect(x, Math.round(chD * 0.5 - lw / 2), cwD, lw);
+      else if (g === '═') {
+        a.fillRect(x, Math.round(chD * 0.36 - lw / 2), cwD, lw);
+        a.fillRect(x, Math.round(chD * 0.64 - lw / 2), cwD, lw);
+      } else if (g === '•') {
+        a.beginPath();
+        a.arc(x + cwD / 2, chD * 0.52, Math.max(1, cwD * 0.24), 0, Math.PI * 2);
+        a.fill();
+      } else {
+        a.fillText(g, x + cwD / 2, chD * 0.54);
+        a.strokeText(g, x + cwD / 2, chD * 0.54);
+      }
+    });
+    atlasData = new Uint8Array(a.getImageData(0, 0, atlasCanvas.width, chD).data.buffer);
+  }
+
+  // Oblique projection: world x runs along the torii beam, world y along the path
+  // (towards the viewer), z is height and points straight up the screen.
+  function layout() {
+    const W = Host.w, H = Host.h;
+    const s = Math.min(W, H * 0.6);
+    const land = clamp((W / H - 0.75) / 0.8, 0, 1); // 0 portrait .. 1 landscape
+    const ax = (23 * Math.PI) / 180;
+    const ay = (lerp(120, 136, land) * Math.PI) / 180; // a shallower path on wide screens
+    const ex = [Math.cos(ax), Math.sin(ax)];
+    const ey = [Math.cos(ay), Math.sin(ay)];
+    const O = [W * 0.5 + s * 0.035, H * 0.5 + s * lerp(0.125, 0.15, land)];
+    const det = ex[0] * ey[1] - ey[0] * ex[1];
+    L = {
+      W, H, s, land, ex, ey, O,
+      P: (x, y, z = 0) => [O[0] + s * (x * ex[0] + y * ey[0]), O[1] + s * (x * ex[1] + y * ey[1] - z)],
+      // Screen point (on the ground) -> world x, y.
+      inv: (px, py) => {
+        const dx = (px - O[0]) / s, dy = (py - O[1]) / s;
+        return [(dx * ey[1] - ey[0] * dy) / det, (ex[0] * dy - ex[1] * dx) / det];
+      },
+      // Shadows fall right and a little forward (light from the upper left).
+      sh: [s * 0.42, s * 0.3],
+      pathW: 0.068,
+      pathEnd: 0.8,
+      pillarX: 0.115,
+      fox: [-0.012, 0.045],
+      // On wide screens the path axis is flatter, so the hall steps back to clear the torii.
+      hut: { x0: -0.085, x1: 0.085, y0: -0.43 - 0.12 * land, y1: -0.33 - 0.12 * land },
+    };
+    // Lanterns in pairs along the path.
+    L.lanterns = [];
+    for (let k = 0; k < 6; k++) {
+      const y = 0.06 + k * 0.29;
+      L.lanterns.push([-0.16, y], [0.165, y + 0.04]);
+    }
+    const yBottom = L.inv(W * 0.5, H + s * 0.2)[1];
+    L.lanterns = L.lanterns.filter(([x, y]) => y < yBottom + 0.2);
+    // Canopy edge: a ragged line a little above the torii, lifted clear of the hut.
+    const roofTop = L.P(0, L.hut.y0 - 0.01, 0.13)[1];
+    const hutX = L.P(0, (L.hut.y0 + L.hut.y1) / 2)[0];
+    L.canopyEdge = (x) => {
+      let y = O[1] - s * (0.4 + 0.05 * (noise2(x / (s * 0.18), 3.1, 9) - 0.5));
+      const dh = Math.abs(x - hutX) / (s * 0.3);
+      if (dh < 1) y = Math.min(y, lerp(roofTop - s * 0.06, y, dh * dh));
+      return y;
+    };
+    // Below the crowns: dark ground with pale trunks.
+    L.shadeEdge = (x) => L.canopyEdge(x) + s * (0.15 + 0.04 * noise2(x / (s * 0.12), 7.7, 3));
+  }
+
+  // ── painting ────────────────────────────────────────────────────────────
+  const picC = document.createElement('canvas');
+  const matC = document.createElement('canvas');
+  const groundC = document.createElement('canvas');
+  const groundM = document.createElement('canvas');
+  let cx, mx;
+
+  function prng(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const fbm = (x, y, seed) => noise2(x, y, seed) * 0.6 + noise2(x * 2.1, y * 2.1, seed + 1) * 0.28 + noise2(x * 4.3, y * 4.3, seed + 2) * 0.12;
+  const smooth = (a, b, x) => {
+    const t = clamp((x - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
+  const mix3 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+
+  function pathOf(pts) {
+    const p = new Path2D();
+    pts.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y)));
+    p.closePath();
+    return p;
+  }
+  function fill(path, color, mat) {
+    cx.fillStyle = color;
+    cx.fill(path);
+    if (mat != null) {
+      mx.fillStyle = matColor(mat);
+      mx.fill(path);
+    }
+  }
+  const poly = (pts, color, mat) => fill(pathOf(pts), color, mat);
+  function disc(x, y, rx, ry, color, mat) {
+    const p = new Path2D();
+    p.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    fill(p, color, mat);
+  }
+  // A box in world space: the faces a camera above and in front can see.
+  function box(x0, x1, y0, y1, z0, z1, top, front, side, mat, topMat) {
+    const P = L.P;
+    if (side) poly([P(x1, y0, z0), P(x1, y1, z0), P(x1, y1, z1), P(x1, y0, z1)], side, mat);
+    if (front) poly([P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1)], front, mat);
+    if (top) poly([P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1)], top, topMat ?? mat);
+  }
+  // Its shadow: the footprint pushed away from the light by its height.
+  function boxShadow(x0, x1, y0, y1, z0, z1, color) {
+    const P = L.P;
+    const off = (p, z) => [p[0] + L.sh[0] * z, p[1] + L.sh[1] * z];
+    const pts = [];
+    for (const [x, y] of [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]) pts.push(off(P(x, y), z0), off(P(x, y), z1));
+    poly(hull(pts), color || C.shadow, null);
+  }
+  function hull(pts) {
+    pts = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [], up = [];
+    for (const p of pts) {
+      while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop();
+      lo.push(p);
+    }
+    for (let i = pts.length - 1; i >= 0; i--) {
+      const p = pts[i];
+      while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop();
+      up.push(p);
+    }
+    return lo.slice(0, -1).concat(up.slice(0, -1));
+  }
+
+  function paint() {
+    const W2 = cols * 2, H2 = rows * 2;
+    picC.width = matC.width = W2;
+    picC.height = matC.height = H2;
+    cx = picC.getContext('2d', { willReadFrequently: true });
+    mx = matC.getContext('2d', { willReadFrequently: true });
+    const T = (L.timings = {});
+    let tp = performance.now();
+    const lap = (k) => { const n = performance.now(); T[k] = +(n - tp).toFixed(1); tp = n; };
+    paintGround();
+    lap('ground');
+    cx.imageSmoothingEnabled = true;
+    cx.drawImage(groundC, 0, 0, W2, H2);
+    mx.imageSmoothingEnabled = false;
+    mx.drawImage(groundM, 0, 0, W2, H2);
+    const k = [2 / cw, 2 / ch];
+    cx.setTransform(k[0], 0, 0, k[1], 0, 0);
+    mx.setTransform(k[0], 0, 0, k[1], 0, 0);
+
+    const rnd = prng(20261103);
+    const trees = makeTrees(rnd);
+
+    paintPath();
+    paintShadows(trees);
+
+    // Everything standing, back to front.
+    const things = [];
+    for (const t of trees) things.push({ d: t.gy, draw: () => paintTree(t) });
+    things.push({ d: L.P(0, L.hut.y1)[1], draw: paintHut });
+    things.push({ d: L.P(0, 0)[1], draw: paintTorii });
+    L.lanterns.forEach(([x, y]) => things.push({ d: L.P(x, y)[1], draw: () => paintLantern(x, y) }));
+    things.sort((a, b) => a.d - b.d);
+    for (const t of things) t.draw();
+    lap('shapes');
+
+    // The fox's shadow; the fox itself is drawn as live glyphs on top.
+    const f = L.P(L.fox[0], L.fox[1]);
+    disc(f[0] + L.s * 0.022, f[1] + L.s * 0.006, L.s * 0.034, L.s * 0.016, C.shadowSoft, null);
+
+    cx.setTransform(1, 0, 0, 1, 0, 0);
+    mx.setTransform(1, 0, 0, 1, 0, 0);
+    bake();
+    lap('bake');
+  }
+
+  // Ground, cell by cell: grass with streaks, white frost and flowers in drifts, dark
+  // earth under the trees, and the path trailing off as dirt at the far end.
+  function paintGround() {
+    groundC.width = groundM.width = cols;
+    groundC.height = groundM.height = rows;
+    const gc = groundC.getContext('2d');
+    const gm = groundM.getContext('2d');
+    const ic = gc.createImageData(cols, rows);
+    const im = gm.createImageData(cols, rows);
+    const s = L.s;
+    const edge = new Float32Array(cols);
+    for (let c = 0; c < cols; c++) edge[c] = L.shadeEdge((c + 0.5) * cw);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = (c + 0.5) * cw, y = (r + 0.5) * ch;
+        const [wx, wy] = L.inv(x, y);
+        // Grass: fine streaks along the slope plus broad patches.
+        const sx = (wx * 0.7 + wy * 0.4) * 34, sy = (wy - wx * 0.3) * 9;
+        const streak = noise2(sx, sy, 21) * 0.68 + noise2(sx * 2.1, sy * 2.1, 22) * 0.32;
+        const broad = noise2(wx * 3, wy * 3, 31) * 0.7 + noise2(wx * 6.3, wy * 6.3, 32) * 0.3;
+        let col = mix3(C.grassDark, C.grass, smooth(0.25, 0.75, broad));
+        col = mix3(col, C.grassLight, smooth(0.55, 0.85, streak) * 0.8);
+        col = mix3(col, C.grassShade, smooth(0.45, 0.2, streak) * 0.6);
+        let mat = GRASS;
+        // Frost and white flowers: big drifts away from the path, most on the right.
+        const ax = Math.abs(wx);
+        let wv = fbm(wx * 3.6, wy * 3.6, 77) + 0.34 * smooth(0.24, 0.5, ax) - 0.22 * smooth(0.75, 1.4, ax) + (wx > 0 ? 0.12 * smooth(-0.1, 0.4, wy) : 0.04);
+        wv -= 0.6 * smooth(0.27, 0.2, ax) * smooth(-0.6, -0.5, wy);
+        const fleck = hash3(c, r, 5);
+        if (wv > 0.85 || (wv > 0.78 && fleck > 0.55)) {
+          const mott = noise2(wx * 22, wy * 22, 91);
+          col = mix3(C.white, C.whiteDim, smooth(0.4, 0.8, mott));
+          if (fleck < 0.1) col = mix3(col, C.whiteDark, 0.75);
+          else if (fleck < 0.16) col = mix3(col, C.grass, 0.6);
+          mat = WHITE;
+        }
+        // Under the canopy: dark earth.
+        const se = edge[c];
+        const under = smooth(se + s * 0.02, se - s * 0.06, y);
+        if (under > 0) {
+          col = mix3(col, C.shadeGround, under * 0.82);
+          if (under > 0.5 && mat === GRASS) mat = SHADE;
+          if (under > 0.75) mat = SHADE;
+        }
+        // Beyond the stone steps the path goes on as bare earth.
+        if (wy > L.pathEnd && Math.abs(wx) < L.pathW + 0.03 + (wy - L.pathEnd) * 0.15) {
+          col = mix3(C.dirt, [30, 24, 18], fbm(wx * 30, wy * 30, 5));
+          mat = DIRT;
+        }
+        const i = (r * cols + c) * 4;
+        ic.data[i] = col[0];
+        ic.data[i + 1] = col[1];
+        ic.data[i + 2] = col[2];
+        ic.data[i + 3] = 255;
+        im.data[i] = (mat & 3) * 85;
+        im.data[i + 1] = ((mat >> 2) & 3) * 85;
+        im.data[i + 2] = 0;
+        im.data[i + 3] = 255;
+      }
+    }
+    gc.putImageData(ic, 0, 0);
+    gm.putImageData(im, 0, 0);
+  }
+
+  function paintPath() {
+    const P = L.P, w = L.pathW, cb = 0.016;
+    const y0 = L.hut.y1 + 0.02, y1 = L.pathEnd;
+    // Stone forecourt in front of the hall, then the path.
+    poly([P(-0.11, L.hut.y0 - 0.05), P(0.11, L.hut.y0 - 0.05), P(0.11, y0), P(-0.11, y0)], C.stone, STONE);
+    poly([P(-w, y0 - 0.01), P(w, y0 - 0.01), P(w, y1), P(-w, y1)], C.stone, STONE);
+    // Steps: a dark riser and a lit tread edge, every two rows or so.
+    const step = 0.036;
+    for (let y = y0 + 0.01; y < y1 - 0.01; y += step) {
+      poly([P(-w, y), P(w, y), P(w, y + 0.011), P(-w, y + 0.011)], C.stoneDark, null);
+      poly([P(-w, y + 0.011), P(w, y + 0.011), P(w, y + 0.019), P(-w, y + 0.019)], C.stoneLight, null);
+    }
+    // Kerbs along both sides.
+    poly([P(-w - cb, y0), P(-w, y0), P(-w, y1), P(-w - cb, y1)], C.curb, CURB);
+    poly([P(w, y0), P(w + cb, y0), P(w + cb, y1), P(w, y1)], C.curbShade, CURB);
+  }
+
+  function makeTrees(rnd) {
+    const s = L.s, W = L.W;
+    const trees = [];
+    const sp = s * 0.125;
+    for (let y = -s * 0.15; y < L.H; y += sp * 0.8) {
+      for (let x = -sp; x < W + sp; x += sp) {
+        const cx0 = x + (rnd() - 0.5) * sp * 1.1 + ((Math.round(y / sp) & 1) * sp) / 2;
+        const cy0 = y + (rnd() - 0.5) * sp * 0.9;
+        const R = s * (0.06 + rnd() * 0.065);
+        if (rnd() < 0.12) continue; // a clearing
+        if (cy0 + R * 0.35 > L.canopyEdge(cx0)) continue;
+        const ht = 0.13 + rnd() * 0.12;
+        const gy = cy0 + ht * s;
+        const [wx, wy] = L.inv(cx0, gy);
+        // Nothing grows on the path, the forecourt or the hall.
+        if (Math.abs(wx) < 0.2 && wy > L.hut.y0 - 0.09) continue;
+        trees.push({ x: cx0, y: cy0, R, ht, gy, pal: pickCrown(rnd), seed: Math.floor(rnd() * 1e6) });
+      }
+    }
+    // The big yellow-green tree to the left of the torii, as in the reference.
+    const lt = L.P(-0.5, -0.12, 0);
+    trees.push({ x: lt[0], y: lt[1] - s * 0.2, R: s * 0.13, ht: 0.2, gy: lt[1], pal: CROWN[3], seed: 4711, big: true });
+    return trees;
+  }
+  function pickCrown(rnd) {
+    const v = rnd();
+    return CROWN[v < 0.3 ? 0 : v < 0.55 ? 1 : v < 0.75 ? 2 : v < 0.9 ? 3 : 4];
+  }
+
+  function paintShadows(trees) {
+    const s = L.s;
+    // Trees: a soft blob on the ground, offset away from the light.
+    for (const t of trees) {
+      if (t.gy < L.canopyEdge(t.x) - s * 0.05) continue;
+      disc(t.x + L.sh[0] * t.ht * 0.8, t.gy + L.sh[1] * t.ht * 0.6, t.R * 1.1, t.R * 0.55, C.shadowSoft, null);
+    }
+    // Torii.
+    const px = L.pillarX;
+    for (const x of [-px, px]) boxShadow(x - 0.018, x + 0.018, -0.018, 0.018, 0, 0.17);
+    boxShadow(-0.24, 0.24, -0.02, 0.02, 0.165, 0.2);
+    boxShadow(-0.17, 0.17, -0.012, 0.012, 0.122, 0.137, C.shadowSoft);
+    // Hall.
+    const h = L.hut;
+    boxShadow(h.x0 - 0.02, h.x1 + 0.02, h.y0 - 0.02, h.y1 + 0.02, 0, 0.11, C.shadowSoft);
+    // Lanterns.
+    for (const [x, y] of L.lanterns) boxShadow(x - 0.03, x + 0.03, y - 0.03, y + 0.03, 0, 0.11, C.shadowSoft);
+  }
+
+  function paintTree(t) {
+    const s = L.s;
+    const rnd = prng(t.seed);
+    // Trunk: pale, from the ground up into the crown.
+    const tw = Math.max(cw * 0.6, s * (0.0045 + rnd() * 0.0035)) * (t.big ? 1.6 : 1);
+    poly([[t.x - tw, t.gy], [t.x + tw, t.gy], [t.x + tw * 0.7, t.y], [t.x - tw * 0.7, t.y]], C.trunk, TRUNK);
+    poly([[t.x + tw * 0.2, t.gy], [t.x + tw, t.gy], [t.x + tw * 0.7, t.y], [t.x + tw * 0.15, t.y]], C.trunkShade, TRUNK);
+    // A branch or two.
+    for (let b = 0; b < 2; b++) {
+      const by = lerp(t.gy, t.y, 0.55 + rnd() * 0.3);
+      const dir = rnd() < 0.5 ? -1 : 1;
+      poly([[t.x, by], [t.x, by - tw * 1.4], [t.x + dir * t.R * 0.5, by - t.R * 0.45], [t.x + dir * t.R * 0.5, by - t.R * 0.38]], C.trunk, TRUNK);
+    }
+    // Crown: clumps of leaves, a shadowed side, a lit side.
+    const n = t.big ? 9 : 5 + Math.floor(rnd() * 3);
+    const clumps = [];
+    for (let i = 0; i < n; i++) {
+      const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * t.R * 0.62;
+      clumps.push([t.x + Math.cos(a) * d, t.y + Math.sin(a) * d * 0.85, t.R * (0.38 + rnd() * 0.22)]);
+    }
+    const [mid, light, dark] = t.pal;
+    for (const [x, y, r] of clumps) disc(x + r * 0.12, y + r * 0.16, r, r * 0.92, dark, CANOPY);
+    for (const [x, y, r] of clumps) disc(x - r * 0.05, y - r * 0.06, r * 0.86, r * 0.8, mid, CANOPY);
+    for (const [x, y, r] of clumps) disc(x - r * 0.28, y - r * 0.3, r * 0.45, r * 0.4, light, CANOPY);
+  }
+
+  function paintTorii() {
+    const P = L.P, px = L.pillarX;
+    // Pillars: round posts, lit on the left, black feet.
+    const r = 0.023, zt = 0.168;
+    for (const x of [-px, px]) {
+      const b = P(x, 0, 0), t = P(x, 0, zt), rw = r * L.s;
+      poly([[b[0] - rw, b[1]], [b[0] + rw, b[1]], [t[0] + rw, t[1]], [t[0] - rw, t[1]]], C.red, RED);
+      poly([[b[0] + rw * 0.35, b[1]], [b[0] + rw, b[1]], [t[0] + rw, t[1]], [t[0] + rw * 0.35, t[1]]], C.redDark, RED);
+      poly([[b[0] - rw * 0.75, b[1]], [b[0] - rw * 0.25, b[1]], [t[0] - rw * 0.25, t[1]], [t[0] - rw * 0.75, t[1]]], C.redLight, RED);
+      const k = P(x, 0, 0.016);
+      poly([[b[0] - rw * 1.1, b[1]], [b[0] + rw * 1.1, b[1]], [k[0] + rw * 1.1, k[1]], [k[0] - rw * 1.1, k[1]]], C.blackDark, BLACK);
+    }
+    // Tie beam (nuki) and the strut above it.
+    box(-0.175, 0.175, -0.011, 0.011, 0.118, 0.134, C.redLight, C.red, C.redDark, RED);
+    box(-0.012, 0.012, -0.009, 0.009, 0.134, 0.168, C.redLight, C.red, C.redDark, RED);
+    // Lintel: red lower layer, black upper layer, ends curving up.
+    lintel(-0.215, 0.215, 0.017, 0.164, 0.184, C.redLight, C.red, RED, 0.008);
+    lintel(-0.25, 0.25, 0.02, 0.184, 0.2, C.black, C.blackDark, BLACK, 0.018);
+  }
+  function lintel(x0, x1, d, z0, z1, top, front, mat, lift) {
+    const P = L.P, n = 12;
+    const zf = (x) => lift * Math.pow(Math.max(0, (Math.abs(x) - (x1 - x0) * 0.3) / ((x1 - x0) * 0.2)), 2);
+    const xs = [];
+    for (let i = 0; i <= n; i++) xs.push(lerp(x0, x1, i / n));
+    const fr = [], tp = [];
+    for (const x of xs) fr.push(P(x, d, z1 + zf(x)));
+    for (let i = xs.length - 1; i >= 0; i--) fr.push(P(xs[i], d, z0 + zf(xs[i]) * 0.6));
+    for (const x of xs) tp.push(P(x, -d, z1 + zf(x)));
+    for (let i = xs.length - 1; i >= 0; i--) tp.push(P(xs[i], d, z1 + zf(xs[i])));
+    poly(fr, front, mat);
+    poly(tp, top, mat);
+    // End cap on the right is in shade.
+    poly([P(x1, -d, z1 + zf(x1)), P(x1, d, z1 + zf(x1)), P(x1, d, z0 + zf(x1) * 0.6), P(x1, -d, z0 + zf(x1) * 0.6)], C.blackDark, mat);
+  }
+
+  function paintHut() {
+    const P = L.P, h = L.hut;
+    // Stone base, wooden walls with a dark doorway, then a pale green copper roof whose
+    // ridge runs parallel to the torii, so its broad front slope faces down the path.
+    box(h.x0 - 0.03, h.x1 + 0.03, h.y0 - 0.03, h.y1 + 0.035, 0, 0.014, C.stoneLight, C.stone, C.stoneDark, STONE);
+    box(h.x0, h.x1, h.y0, h.y1, 0.014, 0.064, null, C.wood, C.woodDark, WOOD);
+    poly([P(-0.034, h.y1, 0.014), P(0.034, h.y1, 0.014), P(0.034, h.y1, 0.054), P(-0.034, h.y1, 0.054)], C.interior, GAP);
+    // Offering box and two small red lanterns at the door.
+    box(-0.028, 0.028, h.y1 + 0.01, h.y1 + 0.028, 0.014, 0.03, C.wood, C.woodDark, C.interior, WOOD);
+    for (const x of [-0.062, 0.062]) box(x - 0.009, x + 0.009, h.y1 + 0.018, h.y1 + 0.034, 0.014, 0.05, C.redLight, C.red, C.redDark, RED);
+    const ov = 0.024, zr = 0.125, ze = 0.062, ym = (h.y0 + h.y1) / 2;
+    const xa = h.x0 - ov, xb = h.x1 + ov, ya = h.y0 - ov, yb = h.y1 + ov;
+    // Gable wall on the right, then the back slope (barely seen), then the front slope.
+    poly([P(h.x1, h.y0, 0.064), P(h.x1, h.y1, 0.064), P(h.x1, ym, zr - 0.01)], C.woodDark, WOOD);
+    poly([P(xa, ya, ze), P(xb, ya, ze), P(xb, ym, zr), P(xa, ym, zr)], C.roofDark, ROOF);
+    poly([P(xa, yb, ze), P(xb, yb, ze), P(xb, ym, zr), P(xa, ym, zr)], C.roof, ROOF);
+    // Ridge cap, a lit band along the eave, and the shaded barge edge on the right.
+    poly([P(xa, ym - 0.007, zr + 0.004), P(xb, ym - 0.007, zr + 0.004), P(xb, ym + 0.009, zr - 0.003), P(xa, ym + 0.009, zr - 0.003)], C.roofLight, ROOF);
+    poly([P(xa, yb, ze), P(xb, yb, ze), P(xb, yb - 0.012, ze + 0.009), P(xa, yb - 0.012, ze + 0.009)], C.roofLight, ROOF);
+    poly([P(xb, yb, ze), P(xb, ym, zr), P(xb - 0.01, ym, zr), P(xb - 0.01, yb, ze)], C.roofDark, ROOF);
+  }
+
+  function paintLantern(x, y) {
+    const lm = C.lanternMid, ld = C.lanternDark, lt = C.lantern;
+    // Drawn about the lantern's own foot, at 1.35x the base dimensions below.
+    const P0 = L.P;
+    const k0 = 1.35;
+    const Pl = (px, py, pz = 0) => P0(x + (px - x) * k0, y + (py - y) * k0, pz * k0);
+    L.P = Pl;
+    box(x - 0.024, x + 0.024, y - 0.024, y + 0.024, 0, 0.01, lt, lm, ld, LANTERN);
+    box(x - 0.009, x + 0.009, y - 0.009, y + 0.009, 0.01, 0.042, lt, lm, ld, LANTERN);
+    box(x - 0.02, x + 0.02, y - 0.02, y + 0.02, 0.042, 0.049, lt, lm, ld, LANTERN);
+    box(x - 0.015, x + 0.015, y - 0.015, y + 0.015, 0.049, 0.067, lt, lm, ld, LANTERN);
+    // The fire box's window glows.
+    const P = L.P;
+    poly([P(x - 0.008, y + 0.0151, 0.052), P(x + 0.008, y + 0.0151, 0.052), P(x + 0.008, y + 0.0151, 0.063), P(x - 0.008, y + 0.0151, 0.063)], C.flame, FLAME);
+    poly([P(x + 0.0151, y - 0.007, 0.052), P(x + 0.0151, y + 0.007, 0.052), P(x + 0.0151, y + 0.007, 0.063), P(x + 0.0151, y - 0.007, 0.063)], '#c06a24', FLAME);
+    // Cap: a low pyramid, lit faces toward the upper left.
+    const k = 0.032, zb = 0.067, za = 0.088;
+    const a = P(x, y, za);
+    const c0 = P(x - k, y - k, zb), c1 = P(x + k, y - k, zb), c2 = P(x + k, y + k, zb), c3 = P(x - k, y + k, zb);
+    poly([c0, c1, a], lt, LANTERN);
+    poly([c3, c0, a], '#ecebe2', LANTERN);
+    poly([c1, c2, a], ld, LANTERN);
+    poly([c2, c3, a], lm, LANTERN);
+    disc(a[0], a[1] - L.s * 0.005, L.s * 0.008, L.s * 0.008, '#f2f1ea', LANTERN);
+    L.P = P0;
+  }
+
+  // ── bake: picture -> per-cell colour, material, aux ──────────────────────
+  function bake() {
+    const W2 = cols * 2;
+    const pc = cx.getImageData(0, 0, W2, rows * 2).data;
+    const pm = mx.getImageData(0, 0, W2, rows * 2).data;
+    const n = cols * rows;
+    const lum = new Float32Array(n);
+    const mats = new Uint8Array(n);
+    const votes = new Uint8Array(16);
+    // Material of one sub-pixel: its id when the colour is a clean material colour,
+    // or 16 + the nearest id when it is an anti-aliased blend of two.
+    const matAt = (o) => {
+      const mr = pm[o], mg = pm[o + 1];
+      const qr = (mr + 42) / 85 | 0, qg = (mg + 42) / 85 | 0;
+      const d = Math.abs(mr - qr * 85) + Math.abs(mg - qg * 85) + pm[o + 2];
+      return (d < 6 ? 0 : 16) + qr + qg * 4;
+    };
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const o0 = (r * 2 * W2 + c * 2) * 4, o1 = o0 + 4, o2 = o0 + W2 * 4, o3 = o2 + 4;
+        let R = (pc[o0] + pc[o1] + pc[o2] + pc[o3]) / 4;
+        let G = (pc[o0 + 1] + pc[o1 + 1] + pc[o2 + 1] + pc[o3 + 1]) / 4;
+        let B = (pc[o0 + 2] + pc[o1 + 2] + pc[o2 + 2] + pc[o3 + 2]) / 4;
+        // Majority of the clean sub-pixels; a blend only when there is none.
+        const a = matAt(o0), b = matAt(o1), d = matAt(o2), e = matAt(o3);
+        let m = -1;
+        votes.fill(0);
+        let bestV = 0;
+        for (const v of [a, b, d, e]) {
+          if (v >= 16) continue;
+          if (++votes[v] > bestV) {
+            bestV = votes[v];
+            m = v;
+          }
+        }
+        if (m < 0) m = a & 15;
+        const i = r * cols + c;
+        mats[i] = m;
+        lum[i] = (R * 0.32 + G * 0.5 + B * 0.18) / 255;
+        // Leaf texture in the crowns: clumps and the odd dark gap.
+        let f = 1;
+        if (m === CANOPY) {
+          const nz = noise2(c * 0.55, r * 0.38, 11);
+          f = 0.72 + 0.55 * nz;
+          if (nz < 0.18 || hash3(c, r, 13) < 0.09) f *= 0.3;
+        } else if (m === STONE || m === CURB || m === LANTERN) f = 0.9 + 0.2 * hash3(c, r, 17);
+        const o = i * 4;
+        cellData[o] = Math.min(255, R * f + 0.5);
+        cellData[o + 1] = Math.min(255, G * f + 0.5);
+        cellData[o + 2] = Math.min(255, B * f + 0.5);
+        cellData[o + 3] = m * 16;
+      }
+    }
+
+    // Aux: sway and outline glyphs per cell...
+    auxData.fill(0);
+    for (let r = 1; r < rows - 1; r++) {
+      for (let c = 1; c < cols - 1; c++) {
+        const i = r * cols + c, o = i * 4, fam = FAMILY[mats[i]];
+        auxData[o + 2] = (fam.sway || 0) * 255;
+        // Outlines: where the picture's brightness steps, on the families that take them.
+        if (!fam.edge) continue;
+        const up = i - cols, dn = i + cols;
+        const gx = lum[up + 1] + 2 * lum[i + 1] + lum[dn + 1] - lum[up - 1] - 2 * lum[i - 1] - lum[dn - 1];
+        const gy = lum[dn - 1] + 2 * lum[dn] + lum[dn + 1] - lum[up - 1] - 2 * lum[up] - lum[up + 1];
+        if (gx * gx + gy * gy < 0.3) continue;
+        const ax = Math.abs(gx), ay = Math.abs(gy);
+        const g = ay > 2.2 * ax ? (gy > 0 ? '_' : '-') : ax > 2.2 * ay ? '|' : gx * gy > 0 ? '/' : '\\';
+        auxData[o + 3] = GI[g] + 1;
+      }
+    }
+    // ...and lantern light: each lantern warms the cells around its fire box.
+    const gr = L.s * 0.05;
+    L.lanterns.forEach(([lx, ly], k) => {
+      const [gx, gy] = L.P(lx, ly + 0.021, 0.078);
+      const c0 = Math.max(0, Math.floor((gx - gr * 2) / cw)), c1 = Math.min(cols - 1, Math.ceil((gx + gr * 2) / cw));
+      const r0 = Math.max(0, Math.floor((gy - gr * 2) / ch)), r1 = Math.min(rows - 1, Math.ceil((gy + gr * 2) / ch));
+      for (let r = r0; r <= r1; r++) {
+        for (let c = c0; c <= c1; c++) {
+          const dx = (c + 0.5) * cw - gx, dy = ((r + 0.5) * ch - gy) * 1.3;
+          const v = Math.exp((-(dx * dx + dy * dy) / (gr * gr)) * 2.2) * 0.45;
+          const o = (r * cols + c) * 4;
+          if (v > 0.02 && v * 255 > auxData[o + 1]) {
+            auxData[o] = k + 1;
+            auxData[o + 1] = v * 255;
+          }
+        }
+      }
+    });
+    for (let i = 0; i < n; i++) {
+      if (mats[i] !== FLAME) continue;
+      auxData[i * 4 + 1] = 255;
+      if (!auxData[i * 4]) auxData[i * 4] = 1;
+    }
+    L.mats = mats;
+  }
+
+  function uploadGrid() {
+    gl.bindTexture(gl.TEXTURE_2D, texCell);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, cols, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, cellData);
+    gl.bindTexture(gl.TEXTURE_2D, texAux);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, cols, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, auxData);
+    gl.bindTexture(gl.TEXTURE_2D, texOver);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, cols, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, overData);
+    gl.bindTexture(gl.TEXTURE_2D, texAtlas);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, atlasCanvas.width, chD, 0, gl.RGBA, gl.UNSIGNED_BYTE, atlasData);
+    gl.bindTexture(gl.TEXTURE_2D, texFbo);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texFbo, 0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  // ── life: leaves and the fox ────────────────────────────────────────────
+  const leaves = [];
+  const gusts = [];
+  const LEAF_FALL = ['v', '*', '^', '%'];
+  const LEAF_REST = [',', '`', '*', 'v', "'"];
+  const LEAF_COL = [[255, 210, 70], [250, 190, 50], [255, 226, 120], [244, 156, 48]];
+  const fox = { perk: 0, flick: 0, look: 0, ear: 0, earT: 4, tail: 0, lookT: 0 };
+  let spawnT = 1;
+
+  function resetLife() {
+    leaves.length = 0;
+    gusts.length = 0;
+    // A scatter of fallen leaves on the grass and steps.
+    const s = L.s;
+    for (let k = 0; k < 26; k++) {
+      const x = rand(0, L.W);
+      const y = rand(L.canopyEdge(x) + s * 0.05, L.H);
+      leaves.push(makeLeaf(x, y, 0, true));
+    }
+  }
+  function makeLeaf(x, y, z, resting) {
+    return {
+      x, y, z,
+      vx: 0, vy: 0, vz: 0,
+      ph: rand(0, Math.PI * 2),
+      spin: rand(1.5, 3.5) * (Math.random() < 0.5 ? -1 : 1),
+      sway: rand(0.6, 1.2),
+      rest: resting ? rand(0, 40) : -1,
+      life: rand(40, 80),
+      col: LEAF_COL[Math.floor(Math.random() * LEAF_COL.length)],
+      g: LEAF_REST[Math.floor(Math.random() * LEAF_REST.length)],
+    };
+  }
+  function dropLeaf() {
+    // From somewhere in the crowns, falling its own height to the ground below.
+    const s = L.s;
+    for (let tries = 0; tries < 8; tries++) {
+      const x = rand(0, L.W);
+      const edge = L.canopyEdge(x);
+      const y = rand(Math.max(0, edge - s * 0.3), edge);
+      if (y < 0) continue;
+      const z = s * rand(0.1, 0.2);
+      const l = makeLeaf(x, y + z, z, false);
+      l.vx = rand(-6, 6);
+      leaves.push(l);
+      return;
+    }
+  }
+
+  function updateLife(dt, t) {
+    const s = L.s;
+    spawnT -= dt;
+    if (spawnT <= 0) {
+      dropLeaf();
+      spawnT = rand(1.4, 3.2) * (Host.reducedMotion ? 3 : 1);
+    }
+    for (let k = leaves.length - 1; k >= 0; k--) {
+      const l = leaves[k];
+      if (l.rest >= 0) {
+        l.rest += dt;
+        if (l.rest > l.life) leaves.splice(k, 1);
+        continue;
+      }
+      // Flutter: drag-limited fall, a side-to-side swing, and the breeze.
+      l.ph += dt * l.spin;
+      l.vz -= dt * s * 0.35;
+      l.vz *= 1 - dt * 1.6;
+      l.vz = Math.max(l.vz, -s * 0.07);
+      l.vx *= 1 - dt * 0.8;
+      l.vy *= 1 - dt * 0.8;
+      const swing = Math.sin(l.ph * 0.6) * s * 0.06 * l.sway;
+      l.x += (l.vx + swing + s * 0.012 * Math.sin(t * 0.3)) * dt;
+      l.y += l.vy * dt;
+      l.z += l.vz * dt;
+      if (l.z <= 0) {
+        l.z = 0;
+        l.rest = 0;
+        l.vx = l.vy = l.vz = 0;
+      }
+      if (l.x < -40 || l.x > L.W + 40 || l.y > L.H + s) leaves.splice(k, 1);
+    }
+    // Keep the ground from filling up: the oldest settled leaves go first.
+    let resting = 0;
+    for (const l of leaves) if (l.rest >= 0) resting++;
+    if (resting > 60) {
+      let oldest = null;
+      for (const l of leaves) if (l.rest >= 0 && (!oldest || l.rest > oldest.rest)) oldest = l;
+      if (oldest) oldest.life = Math.min(oldest.life, oldest.rest + 3);
+    }
+    for (let k = gusts.length - 1; k >= 0; k--) {
+      gusts[k].age += dt;
+      if (gusts[k].age > 2.2) gusts.splice(k, 1);
+    }
+    // Fox: tail sways, ears twitch now and then, perks up when tapped near.
+    fox.perk = Math.max(0, fox.perk - dt);
+    fox.tail += dt * (fox.perk > 0 ? 7 : 1.3);
+    fox.earT -= dt;
+    if (fox.earT <= 0) {
+      fox.ear = 0.35;
+      fox.earT = rand(4, 9);
+    }
+    fox.ear = Math.max(0, fox.ear - dt);
+    fox.lookT -= dt;
+    if (fox.lookT <= 0 && fox.perk <= 0) {
+      fox.look = Math.random() < 0.6 ? 0 : Math.random() < 0.5 ? -1 : 1;
+      fox.lookT = rand(3, 8);
+    }
+  }
+
+  // Fox sprite, one character per cell. E ear, H head, M muzzle, B body, W chest,
+  // P paw, T tail, t tail tip.
+  const FOX_BODY = [
+    '.E.E..',
+    '.HHH..',
+    '.HMH..',
+    'BBWBb.',
+    'BBWBb.',
+    '.P.P..',
+  ];
+  // Tail poses: curled low, swept up, raised high (a flick).
+  const FOX_TAIL = [
+    [[5, 4, 'T'], [5, 5, 'T'], [6, 5, 'T'], [7, 5, 't']],
+    [[5, 4, 'T'], [6, 4, 'T'], [6, 3, 'T'], [7, 3, 't']],
+    [[5, 3, 'T'], [6, 2, 'T'], [6, 1, 'T'], [7, 1, 't']],
+  ];
+  const FOX_KEY = {
+    E: ['^', [236, 126, 44]],
+    e: ['A', [255, 168, 80]],
+    H: ['&', [244, 150, 58]],
+    M: ['v', [246, 234, 214]],
+    B: ['%', [228, 124, 40]],
+    b: ['&', [204, 104, 34]],
+    W: ['#', [244, 230, 206]],
+    P: ['&', [196, 98, 32]],
+    T: ['~', [236, 136, 48]],
+    t: ['@', [248, 238, 220]],
+  };
+
+  const written = [];
+  function writeOver(c, r, glyph, rgb, alpha) {
+    if (c < 0 || r < 0 || c >= cols || r >= rows) return;
+    const i = r * cols + c, o = i * 4;
+    const a = alpha == null ? 1 : alpha;
+    const cr = cellData[o], cg = cellData[o + 1], cb = cellData[o + 2];
+    // Fading glyphs sink into the cell's own colour.
+    overData[o] = Math.round(lerp(Math.min(255, cr * 1.4), rgb[0], a));
+    overData[o + 1] = Math.round(lerp(Math.min(255, cg * 1.4), rgb[1], a));
+    overData[o + 2] = Math.round(lerp(Math.min(255, cb * 1.4), rgb[2], a));
+    overData[o + 3] = GI[glyph] + 1;
+    written.push(o);
+  }
+
+  function writeOverlay() {
+    for (const o of written) overData[o + 3] = 0;
+    written.length = 0;
+    // Leaves: settled ones first, so the fox and falling ones draw over them.
+    for (const l of leaves) {
+      if (l.rest < 0) continue;
+      const fade = clamp(Math.min(l.rest * 2, (l.life - l.rest) / 3), 0, 1);
+      if (fade <= 0.05) continue;
+      writeOver(Math.floor(l.x / cw), Math.floor(l.y / ch), l.g, l.col, fade * 0.9);
+    }
+    // The fox.
+    const f = L.P(L.fox[0], L.fox[1]);
+    const c0 = Math.round(f[0] / cw) - 2;
+    const r0 = Math.round(f[1] / ch) - FOX_BODY.length + 1;
+    const perk = fox.perk > 0;
+    const earUp = perk || fox.ear > 0;
+    FOX_BODY.forEach((line, r) => {
+      for (let c = 0; c < line.length; c++) {
+        let k = line[c];
+        if (k === '.') continue;
+        let dc = 0;
+        if ((k === 'H' || k === 'M' || k === 'E') && fox.look) dc = fox.look;
+        if (k === 'E' && earUp) k = 'e';
+        const [g, rgb] = FOX_KEY[k];
+        writeOver(c0 + c + dc, r0 + r - (k === 'e' && perk ? 1 : 0), g, rgb, 1);
+        if (k === 'e' && perk) writeOver(c0 + c + dc, r0 + r, '|', FOX_KEY.E[1], 1);
+      }
+    });
+    const sw = Math.sin(fox.tail);
+    const pose = perk ? (sw > 0.3 ? 2 : sw < -0.3 ? 0 : 1) : sw > 0.55 ? 1 : 0;
+    for (const [c, r, k] of FOX_TAIL[pose]) {
+      const [g, rgb] = FOX_KEY[k];
+      writeOver(c0 + c, r0 + r, k === 'T' && pose === 2 ? '/' : g, rgb, 1);
+    }
+    // Falling leaves on top.
+    for (const l of leaves) {
+      if (l.rest >= 0) continue;
+      const g = LEAF_FALL[((Math.floor(l.ph / (Math.PI / 4)) % 4) + 4) % 4];
+      writeOver(Math.floor(l.x / cw), Math.floor((l.y - l.z) / ch), g, l.col, 1);
+    }
+  }
+
+  // ── frame ───────────────────────────────────────────────────────────────
+  function frame(dt, t) {
+    updateLife(dt, t);
+    if (Host.warming) return;
+    if (!gl) {
+      if (ctx2d) drawFallback();
+      return;
+    }
+    writeOverlay();
+    gl.bindTexture(gl.TEXTURE_2D, texOver);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, cols, rows, gl.RGBA, gl.UNSIGNED_BYTE, overData);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+    // Pass 1 into the framebuffer.
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.useProgram(progGlyph);
+    const units = [texCell, texAux, texOver, texAtlas, texTable, texNoise];
+    const names = ['uCell', 'uAux', 'uOver', 'uAtlas', 'uTable', 'uNoise'];
+    units.forEach((tx, i) => {
+      gl.activeTexture(gl.TEXTURE0 + i);
+      gl.bindTexture(gl.TEXTURE_2D, tx);
+      gl.uniform1i(U1[names[i]], i);
+    });
+    gl.uniform2f(U1.uRes, canvas.width, canvas.height);
+    gl.uniform2f(U1.uCellPx, cwD, chD);
+    gl.uniform2f(U1.uGrid, cols, rows);
+    gl.uniform2f(U1.uCellCss, cw, ch);
+    gl.uniform1f(U1.uT, t % 1000);
+    gl.uniform1f(U1.uGlyphs, GLYPHS.length);
+    gl.uniform1f(U1.uPlain, PLAIN ? 1 : 0);
+    gl.uniform2f(U1.uWind, (t * 0.021) % 1, (t * 0.009) % 1);
+    gl.uniform2f(U1.uCloud, (t * 0.0021) % 1, (t * 0.0013) % 1);
+    const gu = [U1.uGust0, U1.uGust1, U1.uGust2];
+    for (let k = 0; k < 3; k++) {
+      const g = gusts[gusts.length - 1 - k];
+      if (!g) gl.uniform4f(gu[k], 0, 0, 0, 0);
+      else gl.uniform4f(gu[k], g.x, g.y, g.age * L.s * 0.55, Math.max(0, 1 - g.age / 2.2) * 0.9);
+    }
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // Pass 2: tilt-shift to the screen.
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.useProgram(progTilt);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texFbo);
+    gl.uniform1i(U2.uImg, 0);
+    gl.uniform2f(U2.uRes, canvas.width, canvas.height);
+    gl.uniform2f(U2.uBlur, cwD * 2.2, chD * 0.75);
+    gl.uniform2f(U2.uBand, 0.17, 0.15);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  // Without WebGL: the painted picture, softened. Still reads as the place.
+  function drawFallback() {
+    ctx2d.setTransform(1, 0, 0, 1, 0, 0);
+    ctx2d.imageSmoothingEnabled = true;
+    ctx2d.drawImage(picC, 0, 0, cols * cwD, rows * chD);
+  }
+
+  // ── tap: a gust lifts leaves; near the fox, it perks up ──────────────────
+  function tap(x, y) {
+    const s = L.s;
+    gusts.push({ x, y, age: 0 });
+    if (gusts.length > 3) gusts.shift();
+    // Leaves already near the tap get lifted.
+    for (const l of leaves) {
+      const d = Math.hypot(l.x - x, (l.y - y) * 1.2);
+      if (d > s * 0.22) continue;
+      const a = Math.atan2(l.y - y, l.x - x);
+      const push = (1 - d / (s * 0.22)) * s;
+      l.rest = -1;
+      l.vx += Math.cos(a) * push * 0.5;
+      l.vy += Math.sin(a) * push * 0.25;
+      l.vz += push * rand(0.3, 0.55);
+      l.life = rand(40, 80);
+    }
+    // And a burst of fresh ones: from the crowns if the tap is in the trees.
+    const m = L.mats[clamp(Math.floor(y / ch), 0, rows - 1) * cols + clamp(Math.floor(x / cw), 0, cols - 1)];
+    const inTrees = m === CANOPY || m === TRUNK || m === GAP;
+    const n = 14 + Math.floor(Math.random() * 10);
+    for (let k = 0; k < n; k++) {
+      const a = rand(0, Math.PI * 2), d = rand(0, s * 0.06);
+      const z = inTrees ? s * rand(0.06, 0.16) : rand(0, s * 0.02);
+      const l = makeLeaf(x + Math.cos(a) * d, y + Math.sin(a) * d * 0.7 + z, z, false);
+      l.vx = Math.cos(a) * s * rand(0.15, 0.45);
+      l.vy = Math.sin(a) * s * rand(0.05, 0.2);
+      l.vz = inTrees ? rand(0, s * 0.1) : s * rand(0.25, 0.5);
+      leaves.push(l);
+    }
+    if (leaves.length > 160) leaves.splice(0, leaves.length - 160);
+    const f = L.P(L.fox[0], L.fox[1]);
+    if (Math.hypot(x - f[0], y - f[1] + ch * 2) < s * 0.14) {
+      fox.perk = 1.8;
+      fox.look = x < f[0] - cw ? -1 : x > f[0] + cw ? 1 : 0;
+      fox.lookT = 2.5;
+    }
+  }
+
+  if (/[#&]probe/.test(location.hash)) window.__shrine = { leaves, fox, get layout() { return L; }, get grid() { return { cols, rows, cw, ch }; } };
+
+  if (gl) {
+    try {
+      initGL();
+      canvas.addEventListener('webglcontextlost', (e) => e.preventDefault());
+      canvas.addEventListener('webglcontextrestored', initGL);
+    } catch (e) {
+      useFallback();
+    }
+  } else useFallback();
+  Host.start({ frame, resize, tap });
+})();
+</script>
+</body>
+</html>
