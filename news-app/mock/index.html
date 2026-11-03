@@ -6,7 +6,7 @@
 <title>Halftick Wireframe</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Shippori+Mincho+B1:wght@700;800&family=Instrument+Serif&display=swap" rel="stylesheet">
 <style>
 /* 簡単なワイヤーフレーム。画像は ref/（オーナーが送った参考画像の切り抜き。リポジトリには入れない）
    レイアウト：スマホ1台分の枠。広い画面では中央に枠、狭い画面では全面 */
@@ -243,6 +243,59 @@ svg { display: block; }
 .pc small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
 .pc .t { font-size: 13.5px; line-height: 1.55; }
 .pc .f { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.atabs { display: flex; gap: 6px; padding: 0 16px 10px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line); }
+.atabs .chip b { display: inline-block; min-width: 16px; padding: 1px 5px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 10px; margin-left: 4px; }
+.acard { margin: 12px 16px 0; padding: 14px; border-radius: 18px; background: var(--surface); }
+.acard h4 { margin: 0 0 10px; font-size: 13px; letter-spacing: .03em; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+.acard h4 button { font-size: 12px; color: #7cc0ff; font-weight: 600; }
+.slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.slot2 { padding: 10px 8px; border-radius: 14px; background: var(--surface2); text-align: left; font-size: 11px; line-height: 1.4; color: var(--muted); border: 1.5px solid transparent; }
+.slot2 b { display: block; font: 700 15px/1.2 var(--mono); color: var(--text); }
+.slot2.done b::after { content: " ✓"; color: var(--ok); font-size: 12px; }
+.slot2.next { border-color: var(--accent); }
+.slot2.on { background: #fff; color: #555; } .slot2.on b { color: #111; }
+.alert { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 14px; background: rgba(255,59,48,.12); margin-top: 8px; font-size: 13px; line-height: 1.5; }
+.alert .x { flex: 1; min-width: 0; } .alert small { display: block; color: #ffb3ad; font-size: 11.5px; }
+.alert button { flex: none; padding: 8px 12px; border-radius: 999px; background: #ff3b30; color: #fff; font-weight: 700; font-size: 12px; }
+.statrow { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.statrow:first-of-type { border-top: 0; }
+.statrow img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex: none; }
+.statrow .x { flex: 1; min-width: 0; line-height: 1.4; } .statrow small { display: block; color: var(--muted); font-size: 11px; }
+.mat { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.45; }
+.mat:first-of-type { border-top: 0; }
+.mat .x { flex: 1; min-width: 0; } .mat small { display: block; color: var(--muted); font-size: 11px; }
+.mat .num { font: 600 13px/1.3 var(--mono); }
+.mat button { flex: none; padding: 7px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: 11.5px; font-weight: 600; }
+.mat button.used { background: rgba(61,220,132,.15); border-color: transparent; color: var(--ok); }
+.langtabs { display: flex; gap: 6px; margin-bottom: 8px; }
+.aedit .field { margin-bottom: 8px; }
+.aedit textarea.field { height: 150px; padding: 12px 14px; resize: vertical; line-height: 1.7; }
+.blocks { display: flex; flex-wrap: wrap; gap: 6px; }
+.blk { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--surface2); font-size: 12px; }
+.blk button { color: var(--muted); font-size: 11px; }
+.tpls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+.tpl { border-radius: 12px; overflow: hidden; border: 2px solid transparent; font-size: 10.5px; background: var(--surface2); text-align: center; padding-bottom: 5px; }
+.tpl.on { border-color: var(--accent); }
+.tpl img { width: 100%; aspect-ratio: 1; object-fit: cover; margin-bottom: 4px; }
+.tprev { display: flex; gap: 12px; align-items: flex-start; margin-top: 10px; }
+.tprev img { width: 132px; height: 132px; border-radius: 16px; object-fit: cover; flex: none; }
+.checks { display: flex; flex-direction: column; gap: 8px; }
+.ck2 { display: flex; gap: 10px; align-items: center; font-size: 13px; }
+.ck2 i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11px; flex: none; background: var(--wire); color: var(--muted); }
+.ck2.ok i { background: var(--ok); color: #062; }
+.ck2.self { cursor: pointer; }
+.pubbar { display: flex; gap: 8px; margin: 14px 16px 0; }
+.pubbar .primary, .pubbar .ghost { margin: 0; }
+.qitem { padding: 12px 0; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.55; }
+.qitem:first-of-type { border-top: 0; }
+.qitem .hd2 { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.qitem .hd2 .av { width: 30px; height: 30px; border-radius: 50%; background-size: cover; flex: none; }
+.qitem small { color: var(--muted); font-size: 11px; }
+.qitem .quote { padding: 8px 10px; border-radius: 10px; background: var(--surface2); margin: 6px 0; }
+.qbtns { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.qbtns button { padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid var(--line); }
+.qbtns .yes { background: #fff; color: #111; border-color: #fff; }
+.qbtns .no { color: #ff8a80; }
 .gabout { padding: 10px 18px 0; margin: 0; font-size: 13.5px; line-height: 1.7; color: rgba(255,255,255,.82); }
 .gsort { display: flex; gap: 6px; padding: 14px 18px 4px; }
 .eps { padding: 0 18px; }
@@ -422,7 +475,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
           <button class="avatar" aria-label="自分のプロフィール" data-person="あなた"></button>
           <div class="wordmark"><span class="mark"><i></i><i></i></span>Halftick</div>
           <div style="display:flex;gap:4px">
-            <button class="iconbtn" aria-label="配信を作る" data-toast="配信を作る（オーナーだけ）">＋</button>
+            <button class="iconbtn" aria-label="管理画面（オーナーだけ）" data-admin>＋</button>
             <button class="iconbtn" aria-label="通知" data-notif><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="dot"></span></button>
           </div>
           <span class="note" style="left:16px;top:92px">自分・配信を作る・通知</span>
@@ -504,6 +557,13 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div class="composer"><input id="room-input" placeholder="メッセージ" aria-label="メッセージ"><button id="room-send" aria-label="送信">➤</button></div>
     </section>
 
+    <!-- 管理画面（オーナーだけ） -->
+    <section class="screen rise" id="admin" aria-hidden="true" style="z-index:44">
+      <div class="top"><button class="round glass" data-close="admin" aria-label="閉じる">✕</button><b>管理画面 <span class="chip" style="padding:4px 8px;font-size:10px;margin-left:4px">オーナーだけ</span></b><span style="width:40px"></span></div>
+      <div class="atabs" id="atabs"></div>
+      <div class="scroller" id="a-body" style="padding-bottom:40px"></div>
+    </section>
+
     <!-- 設定 -->
     <section class="screen slide" id="settings" aria-hidden="true" style="z-index:47">
       <div class="top"><button class="round glass" data-close="settings" aria-label="戻る">‹</button><b>設定</b><span style="width:40px"></span></div>
@@ -563,6 +623,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     { id: 'bank', img: 10, lab: 'Earnings', tag: '#銀行', tm: '10/17', when: '10月17日（金）15:30 · 週末のまとめ', title: '米大手銀行の決算、金利が高いおかげで利ざやは好調', c: 41, r: 150, tint: '#121212', min: 3 },
   ];
   const byId = id => A.find(a => a.id === id);
+  const imgOf = (a, k) => a.src || `${R}${k}${a.img}.jpg`;
   const PEOPLE = ['s.tanaka', 'Mia Chen', 'k.mori', 'y.okada', 'David Ruiz', 'a.ishii', 'h.kato', 'n.sato'];
   const ROLE = { 's.tanaka': '債券ストラテジスト', 'Mia Chen': 'FX Sales, Singapore', 'k.mori': '為替ディーラー', 'y.okada': '地銀 運用部', 'David Ruiz': 'Macro PM, London', 'a.ishii': '生保 運用', 'h.kato': 'メガバンク 為替', 'n.sato': '個人投資家', 'あなた': '為替・金利ウォッチャー' };
   const FACEIMG = { 's.tanaka': 5, 'Mia Chen': 1, 'k.mori': 8, 'y.okada': 2, 'David Ruiz': 4, 'a.ishii': 6, 'h.kato': 9, 'n.sato': 10, 'あなた': 3 };
@@ -620,7 +681,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <article class="feed-item rel">
         <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · いつもの配信</div></div><span class="more">•••</span></div>
         <div class="lab"><span>${esc(a.lab)} <span class="tag">${esc(a.tag)}</span></span><span class="tm">${esc(a.tm)}</span></div>
-        <button class="thumb" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${R}sq${a.img}.jpg" alt="">${a.brk ? '<span class="brk">速報</span>' : ''}</button>
+        <button class="thumb" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${imgOf(a, 'sq')}" alt="">${a.brk ? '<span class="brk">速報</span>' : ''}</button>
         <div class="title-line">${esc(a.title)}</div>
         <div class="acts">
           <span class="act">🔥 ${a.r >= 1000 ? (a.r / 1000).toFixed(1) + 'k' : a.r}</span>
@@ -662,8 +723,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <p class="gabout">${esc(G.about)}${state.gfollow.has(g) ? '<br><span class="muted" style="font-size:12px">フォロー中：ホームで優先して表示します</span>' : ''}</p>
       <div class="gsort rel">${[['new', '新しい順'], ['hot', 'みんなの声が多い順']].map(([k, l]) => `<button class="chip ${state.gsort === k ? 'on' : ''}" data-gsort="${k}">${l}</button>`).join('')}</div>
       <div class="eps">${items.map(x => x.kind === 'vid'
-        ? `<button class="ep" data-article="${x.a.id}"><span class="x"><small>${esc(x.a.tm)} · 動画</small><b>${esc(x.v[1])}</b><span class="sn">${esc(x.a.title)}</span><span class="eb"><span class="muted">•••</span><span class="pill2">▶ ${x.v[2]}</span></span></span><img src="${R}th${x.a.img}.jpg" alt=""></button>`
-        : `<button class="ep" data-article="${x.a.id}"><span class="x"><small>${esc(x.a.when.split(' · ')[0])}</small><b>${esc(x.a.title)}</b><span class="sn">${esc(x.a.when.split(' · ')[1] || '')}の配信。${x.a.c}件の声が集まっています</span><span class="eb"><span class="muted">💬 ${x.a.c}</span><span class="pill2">記事 ${x.a.min || 3}分</span></span></span><img src="${R}sq${x.a.img}.jpg" alt=""></button>`).join('') || '<p class="muted" style="padding:16px;font-size:13px">ここに入るものはまだありません</p>'}</div>
+        ? `<button class="ep" data-article="${x.a.id}"><span class="x"><small>${esc(x.a.tm)} · 動画</small><b>${esc(x.v[1])}</b><span class="sn">${esc(x.a.title)}</span><span class="eb"><span class="muted">•••</span><span class="pill2">▶ ${x.v[2]}</span></span></span><img src="${imgOf(x.a, 'th')}" alt=""></button>`
+        : `<button class="ep" data-article="${x.a.id}"><span class="x"><small>${esc(x.a.when.split(' · ')[0])}</small><b>${esc(x.a.title)}</b><span class="sn">${esc(x.a.when.split(' · ')[1] || '')}の配信。${x.a.c}件の声が集まっています</span><span class="eb"><span class="muted">💬 ${x.a.c}</span><span class="pill2">記事 ${x.a.min || 3}分</span></span></span><img src="${imgOf(x.a, 'sq')}" alt=""></button>`).join('') || '<p class="muted" style="padding:16px;font-size:13px">ここに入るものはまだありません</p>'}</div>
       <div class="sec" style="padding-top:22px">ほかのジャンル</div>
       <div class="recent" style="padding:0 16px 20px">${GENRES.filter(x => x[0] !== g).map(([n]) => `<button class="chip" data-genre="${n}">${n}</button>`).join('')}</div>`;
   }
@@ -673,10 +734,10 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   }
   function renderLib() {
     $('#genres').innerHTML = GENRES.map(([g, i]) => `<button class="genre" data-genre="${g}"><img src="${R}sq${i}.jpg" alt=""><span>${g}</span></button>`).join('');
-    $('#newest').innerHTML = A.slice(0, 5).map(a => `<button class="big" data-article="${a.id}"><img src="${R}sq${a.img}.jpg" alt=""><div class="m"><small>${esc(a.tm)} · 記事 3分</small>${esc(a.title)}</div></button>`).join('');
+    $('#newest').innerHTML = A.slice(0, 5).map(a => `<button class="big" data-article="${a.id}"><img src="${imgOf(a, 'sq')}" alt=""><div class="m"><small>${esc(a.tm)} · 記事 3分</small>${esc(a.title)}</div></button>`).join('');
     $('#videos').innerHTML = [['boj', '3分でわかる、日銀の声明どこが変わった？', '4:12'], ['nfp', 'はじめての雇用統計の読み方', '6:40'], ['ust', '国債の入札、人気がないと何が起きる？', '5:05']].map(([id, t, l]) => `
-      <button class="vid" data-article="${id}"><div class="vb"><img src="${R}th${byId(id).img}.jpg" alt=""><span class="play glass">▶</span></div><p>${t}<br><span class="muted">${l}</span></p></button>`).join('');
-    const item = a => `<button class="pi" data-article="${a.id}" style="width:100%;text-align:left"><img src="${R}sq${a.img}.jpg" alt=""><div class="x"><small>${esc(a.when)}</small>${esc(a.title)}</div><span class="kind">${a.id === 'nfp' ? '▶ 動画' : '記事'}</span></button>`;
+      <button class="vid" data-article="${id}"><div class="vb"><img src="${imgOf(byId(id), 'th')}" alt=""><span class="play glass">▶</span></div><p>${t}<br><span class="muted">${l}</span></p></button>`).join('');
+    const item = a => `<button class="pi" data-article="${a.id}" style="width:100%;text-align:left"><img src="${imgOf(a, 'sq')}" alt=""><div class="x"><small>${esc(a.when)}</small>${esc(a.title)}</div><span class="kind">${a.id === 'nfp' ? '▶ 動画' : '記事'}</span></button>`;
     const sv = A.filter(a => state.saved.has(a.id));
     $('#saved').innerHTML = sv.length ? sv.map(item).join('') : '<p class="muted" style="font-size:12.5px;margin:0">気になった記事は、チェックで保存しておくとここに並びます</p>';
     $('#past').innerHTML = A.slice(4).map(item).join('');
@@ -705,7 +766,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div class="tx ${full ? '' : 'clamp'}">${esc(p.t)}</div>
       ${!full && (p.t.length > 160 || (p.t.match(/\n/g) || []).length >= 3) ? `<button class="more2" data-post="${p.id}">続きを読む</button>` : ''}
       ${p.link ? `<a class="lcard" href="https://${p.link.dom}/" target="_blank" rel="noopener"><span class="lg">↗</span><span class="x">${esc(p.link.title)}<small>${esc(p.link.dom)}</small></span></a>` : ''}
-      ${q ? `<button class="qcard" data-article="${q.id}"><img src="${R}sq${q.img}.jpg" alt=""><span><small>Halftick の配信 · ${esc(q.tm)}</small>${esc(q.title)}</span></button>` : ''}
+      ${q ? `<button class="qcard" data-article="${q.id}"><img src="${imgOf(q, 'sq')}" alt=""><span><small>Halftick の配信 · ${esc(q.tm)}</small>${esc(q.title)}</span></button>` : ''}
       <div class="tags"><span>${esc(p.tag)}</span></div>
       <div class="acts"><button class="act ${p.liked ? 'on' : ''}" data-plike="${p.id}">▲ ${p.up + (p.liked ? 1 : 0)}</button><button class="act" data-post="${p.id}">💬 ${count(discFor(p.id))}</button><button class="act ${p.saved ? 'on' : ''}" data-psave="${p.id}" aria-label="保存">${p.saved ? '✓' : '＋'}</button><button class="act go" data-pshare="${p.id}">グループに送る</button></div>
     </article>`;
@@ -739,7 +800,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div class="counter" id="q-count">${qdraft.text.length} / 1000</div>
       <label class="lbl" for="q-link">リンク（任意）</label><input class="field" id="q-link" placeholder="https://" value="${esc(qdraft.link)}">
       <span class="lbl">配信を引用する（任意）</span>
-      <div class="qpick">${A.slice(0, 6).map(a => `<button class="${qdraft.quote === a.id ? 'on' : ''}" data-qquote="${a.id}"><img src="${R}sq${a.img}.jpg" alt=""><span>${esc(a.title)}</span></button>`).join('')}</div>
+      <div class="qpick">${A.slice(0, 6).map(a => `<button class="${qdraft.quote === a.id ? 'on' : ''}" data-qquote="${a.id}"><img src="${imgOf(a, 'sq')}" alt=""><span>${esc(a.title)}</span></button>`).join('')}</div>
       <span class="lbl">ジャンル</span>
       <div class="recent" style="padding:0">${tags.map(t => `<button class="chip ${qdraft.tag === t ? 'on' : ''}" data-qtag="${t}">${t.slice(1)}</button>`).join('')}</div>
       <div class="rules">投稿のルール：人を傷つける書き方、特定の銘柄の売買をすすめる投稿、宣伝はできません。気持ちよく議論できる場にしましょう。</div>
@@ -870,7 +931,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         : state.savedSort === 'date' ? order.indexOf(a.id) - order.indexOf(b.id)
         : b.c - a.c);
       list = sv.length ? `<div class="ssort rel"><span>${sv.length}件</span><label for="saved-sort" class="vis-hidden">並び替え</label><select id="saved-sort">${[['new', '保存した順（新しい）'], ['old', '保存した順（古い）'], ['date', '配信が新しい順'], ['hot', 'みんなの声が多い順']].map(([k, l]) => `<option value="${k}" ${state.savedSort === k ? 'selected' : ''}>${l}</option>`).join('')}</select><span class="note" style="right:16px;top:-20px">並び替え</span></div>
-        <div class="sgrid rel">${sv.map(a => `<button class="scard" data-article="${a.id}"><span class="im"><img src="${R}th${a.img}.jpg" alt=""><span class="kind2 glass">${a.id === 'nfp' ? '▶ 動画あり' : a.tag}</span></span><span class="t">${esc(a.title)}</span><small>${esc(a.when.split(' · ')[0])}</small></button>`).join('')}<span class="note" style="left:16px;top:10px">長方形のサムネ・2列・下に題名</span></div>`
+        <div class="sgrid rel">${sv.map(a => `<button class="scard" data-article="${a.id}"><span class="im"><img src="${imgOf(a, 'th')}" alt=""><span class="kind2 glass">${a.id === 'nfp' ? '▶ 動画あり' : a.tag}</span></span><span class="t">${esc(a.title)}</span><small>${esc(a.when.split(' · ')[0])}</small></button>`).join('')}<span class="note" style="left:16px;top:10px">長方形のサムネ・2列・下に題名</span></div>`
         : '<p class="muted" style="padding:12px 16px;font-size:12.5px">まだ保存した記事はありません。気になった記事はチェックで保存できます</p>';
     }
     else if (state.ptab === 'groups' && me) list = ROOMS.filter(r => r.kind === 'group').map(r => `<button class="pc" data-room="${r.id}"><small>${r.members || 2}人</small><div class="t">${esc(r.name)}</div></button>`).join('');
@@ -898,6 +959,175 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div>${list}</div>`;
     $('#p-scroll').scrollTop = 0;
     $('#profile').classList.add('open'); $('#profile').setAttribute('aria-hidden', 'false');
+  }
+
+  // ---------- 管理画面（オーナーだけ） ----------
+  const SLOTS = [['7:00', '米国の引け後', 'fomc'], ['11:30', 'アジアの昼', 'yen'], ['15:30', 'アジアの引け・欧州の寄り付き', 'nikkei'], ['22:00', '米国の寄り付き前', null]];
+  const MATS = {
+    data: [
+      ['米CPI（10月）前年比', '3.1%', '予想 3.0% · 前回 2.9% · 米労働統計局 · 22:30 発表', 'bls.gov'],
+      ['米10年債利回り', '4.41%', '前日比 +0.04 · 米財務省 · 15:00 時点', 'treasury.gov'],
+      ['ECB 政策金利', '2.00%', '据え置き · 欧州中央銀行 · 10月29日', 'ecb.europa.eu'],
+    ],
+    heads: [
+      ['米CPI、市場予想をわずかに上回る見通し', 'Reuters', 'reuters.com'],
+      ['FRB高官「利下げを急ぐ必要はない」', 'Bloomberg', 'bloomberg.com'],
+      ['ユーロ圏の物価、エネルギーで再び上向き', 'Financial Times', 'ft.com'],
+    ],
+    cal: [['22:30', '米CPI（10月）'], ['24:00', 'FRB ウォラー理事の講演'], ['明日 8:50', '日本 GDP 速報']],
+  };
+  const APPLIES = [
+    { who: 'h.kato', role: 'メガバンク 為替', why: '銀行の為替の現場で見ている、企業の両替の動きを書きたいです', at: '昨日' },
+    { who: 'a.ishii', role: '生保 運用', why: '生命保険会社の目線で、超長期の国債の話をしたいです', at: '2日前' },
+  ];
+  const REPORTS = [
+    { who: 'spam_trader88', where: '配信「日銀は金利0.75%で据え置き」のコメント', t: '【必見】このコインで月100万！今すぐDMして', why: '宣伝', n: 6 },
+    { who: 'n.sato', where: '配信「米10年債の利回りが4.4%台に」のコメント', t: '初心者ですが、債券ってなんで下がると利回りが上がるんですか？', why: 'その他', n: 1 },
+  ];
+  const TPLS = [['paper', '紙面'], ['gauge', '計器'], ['light', '光'], ['ink', '墨']];
+  const DRAFT = { slot: '22:00', breaking: false, tplName: 'paper', big: 'CPI 発表', en: 'US CPI', ja: '', jaBody: '', enTitle: '', enBody: '', lang: 'ja', genres: new Set(['マクロ']), links: [], used: new Set(), blocks: [['chart', 'グラフ：米CPIの推移（棒）']], video: false, ai: false, selfOk: false, max: '' };
+  state.atab = 'today';
+  // サムネの型を描く（見出しの言葉を入れるだけで作れる）
+  function drawPoster(tpl, big, en, code) {
+    const W = 600, c = document.createElement('canvas'); c.width = c.height = W; const x = c.getContext('2d');
+    const mincho = '"Shippori Mincho B1", serif', goth = '"Zen Kaku Gothic New", sans-serif', mono = '"Geist Mono", monospace', serif = '"Instrument Serif", serif';
+    const fit = (t, font, max, start) => { let sz = start; do { x.font = font.replace('$', sz); sz -= 4; } while (x.measureText(t).width > max && sz > 20); return sz + 4; };
+    if (tpl === 'paper') {
+      x.fillStyle = '#efe6d4'; x.fillRect(0, 0, W, W);
+      x.fillStyle = '#c8452d';
+      for (let i = 0; i < 5; i++) { x.beginPath(); const y0 = 250 + i * 46; x.moveTo(0, y0); for (let k = 0; k <= 12; k++) x.lineTo(k * 50, y0 + Math.sin(k * 0.9 + i) * 16 + (k % 2 ? 6 : -6)); x.lineTo(W, y0 + 40); x.lineTo(0, y0 + 40); x.closePath(); x.globalAlpha = 0.85 - i * 0.12; x.fill(); }
+      x.globalAlpha = 1; x.fillStyle = '#2a211c'; const sz = fit(big, `800 $px ${mincho}`, 560, 150); x.font = `800 ${sz}px ${mincho}`; x.textBaseline = 'top'; x.fillText(big, 22, 28);
+      x.font = `400 92px ${serif}`; x.fillText(en.toUpperCase(), 24, 478);
+      x.strokeStyle = '#c8452d'; x.lineWidth = 4; x.strokeRect(500, 470, 70, 70); x.fillStyle = '#c8452d'; x.font = `800 40px ${mincho}`; x.fillText('半', 515, 482);
+      x.font = `500 14px ${mono}`; x.fillStyle = '#6d5f52'; x.fillText(code, 26, 576);
+    } else if (tpl === 'gauge') {
+      x.fillStyle = '#0f1a24'; x.fillRect(0, 0, W, W);
+      x.fillStyle = '#e8452c'; x.beginPath(); x.moveTo(330, 0); x.lineTo(470, 0); x.lineTo(240, 600); x.lineTo(100, 600); x.closePath(); x.fill();
+      x.strokeStyle = '#e9e0cc'; x.lineWidth = 2; for (let i = 0; i < 18; i++) { x.beginPath(); x.moveTo(380 + i * 10, 360); x.lineTo(380 + i * 10, i % 3 ? 400 : 430); x.stroke(); }
+      x.beginPath(); x.arc(300, 300, 70, 0, Math.PI * 2); x.stroke(); x.beginPath(); x.moveTo(200, 300); x.lineTo(400, 300); x.moveTo(300, 200); x.lineTo(300, 400); x.stroke();
+      x.fillStyle = '#ff5a4f'; x.beginPath(); x.arc(300, 300, 9, 0, Math.PI * 2); x.fill();
+      x.fillStyle = '#e9e0cc'; const chars = [...big.replace(/\s/g, '')].slice(0, 6); const cs = Math.min(84, Math.floor(470 / chars.length)); x.font = `700 ${cs}px ${goth}`; x.textBaseline = 'top'; chars.forEach((ch, i) => x.fillText(ch, 34, 34 + i * cs));
+      x.font = `500 15px ${mono}`; x.fillStyle = '#8fa3b5'; x.fillText(en.toUpperCase(), 34 + cs + 14, 40); x.fillText(code, 400, 540); x.fillText('HALFTICK · LIVE', 400, 562);
+    } else if (tpl === 'light') {
+      x.fillStyle = '#1c2b58'; x.fillRect(0, 0, W, W);
+      x.save(); x.translate(W / 2, W / 2); x.rotate(-0.35); x.filter = 'blur(34px)';
+      const g = x.createLinearGradient(0, -90, 0, 90); ['#28c3a0', '#b8e04a', '#ffd23f', '#ff7a2f', '#ff3d6e', '#8f5bff'].forEach((col, i) => g.addColorStop(i / 5, col));
+      x.fillStyle = g; x.fillRect(-500, -80, 1000, 160); x.restore(); x.filter = 'none';
+      x.fillStyle = '#f6efe2'; x.textAlign = 'center'; x.textBaseline = 'middle'; const sz = fit(big, `800 $px ${mincho}`, 520, 130); x.font = `800 ${sz}px ${mincho}`; x.fillText(big, W / 2, 250);
+      x.font = `400 40px ${serif}`; x.fillText(en, W / 2, 360); x.textAlign = 'left'; x.font = `500 14px ${mono}`; x.fillStyle = 'rgba(246,239,226,.7)'; x.fillText(code, 26, 570);
+    } else {
+      x.fillStyle = '#0b0b0c'; x.fillRect(0, 0, W, W);
+      const g = x.createLinearGradient(220, 0, 380, 0); g.addColorStop(0, 'rgba(255,248,230,0)'); g.addColorStop(0.5, 'rgba(255,248,230,.95)'); g.addColorStop(1, 'rgba(255,248,230,0)');
+      x.fillStyle = g; x.beginPath(); x.moveTo(290, 0); x.lineTo(310, 0); x.lineTo(380, 600); x.lineTo(220, 600); x.closePath(); x.fill();
+      x.fillStyle = '#1b1b1d'; x.fillRect(0, 0, 230, 600); x.fillRect(370, 0, 230, 600);
+      x.fillStyle = '#0b0b0c'; x.fillRect(296, 520, 8, 26); x.beginPath(); x.arc(300, 514, 6, 0, Math.PI * 2); x.fill();
+      x.fillStyle = '#f2efe8'; const chars = [...big.replace(/\s/g, '')].slice(0, 6); x.font = `700 46px ${mincho}`; x.textBaseline = 'top'; chars.forEach((ch, i) => x.fillText(ch, 420, 60 + i * 52));
+      x.font = `500 13px ${mono}`; x.fillStyle = '#9a9890'; x.fillText(en.toUpperCase(), 420, 60 + chars.length * 52 + 14); x.fillText(code, 26, 570);
+    }
+    const img = x.getImageData(0, 0, W, W), d = img.data;
+    for (let i = 0; i < d.length; i += 4) { const n = (Math.random() - 0.5) * 34; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+    x.putImageData(img, 0, 0);
+    return c.toDataURL('image/jpeg', 0.86);
+  }
+  const posterOf = tpl => drawPoster(tpl, DRAFT.big || 'Halftick', DRAFT.en || 'TODAY', `HT-1104-${DRAFT.breaking ? 'B' : SLOTS.findIndex(s => s[0] === DRAFT.slot) + 1}`);
+  function renderAdmin() {
+    const T = [['today', '今日'], ['make', '配信を作る'], ['apply', '申請', APPLIES.length], ['report', '通報', REPORTS.length]];
+    $('#atabs').innerHTML = T.map(([k, l, n]) => `<button class="chip ${state.atab === k ? 'on' : ''}" data-atab="${k}">${l}${n ? `<b>${n}</b>` : ''}</button>`).join('');
+    const B = $('#a-body');
+    if (state.atab === 'today') {
+      B.innerHTML = `
+        <div class="acard rel"><h4>今日の配信 · 11月4日（火）</h4>
+          <div class="slots">${SLOTS.map(([t, n, id]) => `<button class="slot2 ${id ? 'done' : 'next'}" ${id ? `data-article="${id}"` : `data-makeslot="${t}"`}><b>${t}</b>${id ? '公開済み' : 'あと5時間50分'}</button>`).join('')}</div>
+          <span class="note" style="right:12px;top:10px">4つの枠の進み具合</span></div>
+        <div class="acard"><h4>速報の材料がそろいました</h4>
+          <div class="alert"><span class="x"><b>米CPI（10月）が 22:30 に出ます</b><small>予想 3.0% · 出たら数字が自動で入ります</small></span><button data-makebreaking>下書きを作る</button></div></div>
+        <div class="acard"><h4>出した配信の反応</h4>
+          ${SLOTS.filter(s => s[2]).map(([t, , id]) => { const a = byId(id); return `<button class="statrow" style="width:100%;text-align:left" data-article="${id}"><img src="${imgOf(a, 'sq')}" alt=""><span class="x">${esc(a.title)}<small>${t} · 読まれた数 ${(a.r * 7).toLocaleString()} · 声 ${a.c} · 保存 ${Math.round(a.r / 9)}</small></span></button>`; }).join('')}</div>
+        <div class="acard"><h4>今日の予定</h4>${MATS.cal.map(([t, n]) => `<div class="mat"><span class="num" style="width:76px">${t}</span><span class="x">${n}</span></div>`).join('')}</div>
+        <div class="acard"><h4>見ておきたいこと</h4>
+          <div class="mat"><span class="x">投稿の申請が ${APPLIES.length}件 届いています</span><button data-atab="apply">見る</button></div>
+          <div class="mat"><span class="x">通報が ${REPORTS.length}件 あります</span><button data-atab="report">見る</button></div></div>`;
+      return;
+    }
+    if (state.atab === 'apply') {
+      B.innerHTML = `<div class="acard"><h4>投稿の申請</h4>${APPLIES.map((a, i) => `<div class="qitem"><div class="hd2"><span class="av" style="background:${FACE(a.who)}"></span><span><b>${esc(a.who)}</b> <small>${esc(a.role)} · ${a.at}</small></span></div><div class="quote">${esc(a.why)}</div><small>これまでのコメント ${12 + i * 9}件 · もらった ▲ ${80 + i * 40} · 通報 0件</small><div class="qbtns"><button class="yes" data-approveapp="${i}">OKする</button><button data-person="${esc(a.who)}">プロフィールを見る</button><button class="no" data-rejectapp="${i}">今回は見送る</button></div></div>`).join('') || '<p class="muted" style="font-size:13px;margin:0">新しい申請はありません</p>'}</div>
+        <p class="muted" style="font-size:11.5px;padding:10px 20px;line-height:1.6">OKすると「みんな」に書けるようになり、本人にお知らせが届きます。見送るときは、理由をひとこと添えて送れます。</p>`;
+      return;
+    }
+    if (state.atab === 'report') {
+      B.innerHTML = `<div class="acard"><h4>通報</h4>${REPORTS.map((r, i) => `<div class="qitem"><div class="hd2"><span class="av" style="background:${r.who === 'spam_trader88' ? '#333' : FACE(r.who)}"></span><span><b>${esc(r.who)}</b> <small>${esc(r.where)}</small></span></div><div class="quote">${esc(r.t)}</div><small>理由：${r.why} · ${r.n}人が通報 · AIの判定：${r.why === '宣伝' ? '<span style="color:#ff8a80">宣伝の可能性が高い</span>' : '問題なさそう'}</small><div class="qbtns"><button class="yes" data-hide="${i}">非表示にする</button><button data-okrep="${i}">問題なし</button>${r.why === '宣伝' ? `<button class="no" data-ban="${i}">投稿を止める（7日）</button>` : ''}</div></div>`).join('') || '<p class="muted" style="font-size:13px;margin:0">対応が必要な通報はありません</p>'}</div>
+        <p class="muted" style="font-size:11.5px;padding:10px 20px;line-height:1.6">非表示にしたものは消さずに記録を残します。同じ人の通報が続くときは、投稿を一時的に止められます。</p>`;
+      return;
+    }
+    // 配信を作る
+    const D = DRAFT;
+    const checks = [
+      ['元情報へのリンクがある', D.links.length > 0],
+      ['英語の見出しと本文がある', !!(D.enTitle.trim() && D.enBody.trim())],
+      ['数字は材料（公式データ）から入れた', D.used.size > 0 || !/[0-9]/.test(D.jaBody)],
+      ['AIで下書きした文には表示を付けた', !D.max || D.ai],
+    ];
+    const ready = checks.every(c => c[1]) && D.selfOk && D.ja.trim();
+    if (!D.poster) D.poster = posterOf(D.tplName);
+    B.innerHTML = `
+      <div class="acard rel"><h4>出す枠</h4>
+        <div class="slots">${SLOTS.map(([t, , id]) => `<button class="slot2 ${D.slot === t && !D.breaking ? 'on' : ''} ${id ? 'done' : ''}" data-dslot="${t}"><b>${t}</b>${id ? '公開済み' : '予約できます'}</button>`).join('')}</div>
+        <button class="ck2 self" style="margin-top:10px" data-dbreaking><i style="${D.breaking ? 'background:#ff3b30;color:#fff' : ''}">!</i>速報として今すぐ出す（全員にお知らせ）</button></div>
+
+      <div class="acard rel"><h4>材料（サーバーが集めたもの）<span class="muted" style="font-size:11px;font-weight:400">15:58 更新</span></h4>
+        <div class="muted" style="font-size:11.5px;margin-bottom:4px">公式データの数字</div>
+        ${MATS.data.map((m, i) => `<div class="mat"><span class="x">${m[0]} <span class="num">${m[1]}</span><small>${m[2]}</small></span><button class="${D.used.has('d' + i) ? 'used' : ''}" data-usedata="${i}">${D.used.has('d' + i) ? '入れた' : '本文に入れる'}</button></div>`).join('')}
+        <div class="muted" style="font-size:11.5px;margin:10px 0 4px">見出しとリンク（本文は取り込みません）</div>
+        ${MATS.heads.map((h, i) => `<div class="mat"><span class="x">${h[0]}<small>${h[1]} · ${h[2]}</small></span><button class="${D.used.has('h' + i) ? 'used' : ''}" data-usehead="${i}">${D.used.has('h' + i) ? '入れた' : '参考リンクに'}</button></div>`).join('')}
+        <span class="note" style="right:12px;top:10px">数字はここから入れる（AIに作らせない）</span></div>
+
+      <div class="acard rel"><h4>Max の下書きを貼る（任意）</h4>
+        <label class="vis-hidden" for="d-max">Max の下書き</label><textarea class="field" id="d-max" style="height:80px;padding:10px 12px;resize:vertical" placeholder="Claude（Max）で作った下書きをここに貼ると、本文に流し込めます">${esc(D.max)}</textarea>
+        <button class="ghost" data-usemax style="margin-top:8px">本文に流し込む</button>
+        <span class="note" style="right:12px;top:10px">サーバーからAIは呼ばない</span></div>
+
+      <div class="acard aedit rel"><h4>見出しと本文</h4>
+        <div class="langtabs">${[['ja', '日本語'], ['en', 'English']].map(([k, l]) => `<button class="chip ${D.lang === k ? 'on' : ''}" data-dlang="${k}">${l}${k === 'en' && !(D.enTitle && D.enBody) ? ' ・未入力' : ''}</button>`).join('')}</div>
+        ${D.lang === 'ja'
+          ? `<label class="vis-hidden" for="d-ja">見出し</label><input class="field" id="d-ja" placeholder="見出し（ちょっとフレンドリーに）" value="${esc(D.ja)}"><label class="vis-hidden" for="d-jab">本文</label><textarea class="field" id="d-jab" placeholder="本文。です・ます調で話しかけるように">${esc(D.jaBody)}</textarea>`
+          : `<label class="vis-hidden" for="d-en">Headline</label><input class="field" id="d-en" placeholder="Headline" value="${esc(D.enTitle)}"><label class="vis-hidden" for="d-enb">Body</label><textarea class="field" id="d-enb" placeholder="Body">${esc(D.enBody)}</textarea>`}
+        <div class="muted" style="font-size:11.5px;margin:4px 0 6px">本文の途中に入れるもの</div>
+        <div class="blocks">${D.blocks.map(([k, l], i) => `<span class="blk">${l}<button data-delblk="${i}" aria-label="外す">✕</button></span>`).join('')}${D.video ? '<span class="blk">▶ 解説動画（題名のすぐ下）<button data-delvideo aria-label="外す">✕</button></span>' : ''}</div>
+        <div class="qbtns"><button data-addblk="chart">＋ グラフ</button><button data-addblk="card">＋ 要点カード</button><button data-addvideo>＋ 解説動画</button></div>
+        <label class="ck2 self" style="margin-top:12px"><input type="checkbox" id="d-ai" ${D.ai ? 'checked' : ''}> AIで下書きした文を含む（記事に表示が付きます）</label></div>
+
+      <div class="acard rel"><h4>サムネ（型に言葉を入れるだけ）</h4>
+        <div class="tprev"><img src="${D.poster}" alt="サムネの見本"><div style="flex:1;min-width:0">
+          <label class="lbl" for="d-big" style="margin-top:0">大きな文字</label><input class="field" id="d-big" maxlength="8" value="${esc(D.big)}">
+          <label class="lbl" for="d-enbig" style="margin-top:8px">英字</label><input class="field" id="d-enbig" maxlength="20" value="${esc(D.en)}"></div></div>
+        <div class="tpls">${TPLS.map(([k, l]) => `<button class="tpl ${D.tplName === k ? 'on' : ''}" data-tpl="${k}"><img src="${posterOf(k)}" alt="">${l}</button>`).join('')}</div>
+        <button class="ghost" data-toast="写真を選んでサムネにします（ワイヤー）" style="margin-top:10px">写真から選ぶ</button>
+        <span class="note" style="right:12px;top:10px">サムネの型（自前で作れる）</span></div>
+
+      <div class="acard"><h4>ジャンル</h4><div class="recent" style="padding:0">${GENRES.map(([g]) => `<button class="chip ${D.genres.has(g) ? 'on' : ''}" data-dgenre="${g}">${g}</button>`).join('')}</div></div>
+
+      <div class="acard"><h4>参考リンク</h4>${D.links.length ? D.links.map(l => `<div class="mat"><span class="x">${esc(l[0])}<small>${esc(l[1])}</small></span></div>`).join('') : '<p class="muted" style="font-size:12.5px;margin:0">材料の「参考リンクに」から足せます</p>'}</div>
+
+      <div class="acard rel"><h4>出す前の確認</h4><div class="checks">
+        ${checks.map(([l, ok]) => `<div class="ck2 ${ok ? 'ok' : ''}"><i>${ok ? '✓' : ''}</i>${l}</div>`).join('')}
+        <button class="ck2 self ${D.selfOk ? 'ok' : ''}" data-selfok><i>${D.selfOk ? '✓' : ''}</i>特定の銘柄の売買をすすめていない（自分で確認）</button></div>
+        <span class="note" style="right:12px;top:10px">CLAUDE.md のニュースのルール</span></div>
+
+      <div class="pubbar"><button class="ghost" data-dpreview style="width:auto;padding:0 16px">見え方</button><button class="primary" data-publish ${ready ? '' : 'disabled'}>${D.breaking ? '速報として今すぐ出す' : `${D.slot} に予約する`}</button></div>
+      <p class="muted" style="font-size:11.5px;text-align:center;padding:8px 16px">下書きは自動で保存されます</p>`;
+  }
+  let fontsReady = false;
+  function openAdmin(tab) {
+    if (!fontsReady && document.fonts) Promise.all(['800 40px "Shippori Mincho B1"', '40px "Instrument Serif"', '700 40px "Zen Kaku Gothic New"', '500 14px "Geist Mono"'].map(f => document.fonts.load(f))).then(() => { fontsReady = true; DRAFT.poster = null; renderAdmin(); }).catch(() => {});
+    if (tab) state.atab = tab; renderAdmin(); $('#admin').classList.add('open'); $('#admin').setAttribute('aria-hidden', 'false'); }
+  function publishDraft() {
+    const D = DRAFT, id = 'n' + Date.now();
+    const a = { id, img: 1, src: D.poster, brk: D.breaking, lab: D.breaking ? 'Breaking' : 'US pre-open', tag: '#' + [...D.genres][0], tm: D.breaking ? '今' : D.slot, when: D.breaking ? '11月4日（火）16:12 · 速報' : `11月4日（火）${D.slot} · 予約`, title: D.ja.trim(), c: 0, r: 0, tint: '#1d2238' };
+    A.unshift(a); DISC[id] = [];
+    if (!D.breaking) { const s2 = SLOTS.find(s => s[0] === D.slot); if (s2) s2[2] = id; }
+    Object.assign(D, { ja: '', jaBody: '', enTitle: '', enBody: '', max: '', links: [], used: new Set(), selfOk: false, ai: false, poster: null });
+    renderFeed(); renderLib(); state.atab = 'today'; renderAdmin();
+    toast(a.brk ? '速報を出しました。全員にお知らせが届きます' : `${a.tm} に予約しました`);
   }
 
   // ---------- 設定 ----------
@@ -1016,8 +1246,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     const groups = [['art', '記事', arts], ['vid', '動画', vids], ['ppl', '人', ppl], ['grp', 'グループ', grps], ['cm', 'コメント', cms]];
     const total = groups.reduce((n, g) => n + g[2].length, 0);
     const row = {
-      art: a => `<button class="sr" data-article="${a.id}"><span class="im" style="background-image:url(${R}sq${a.img}.jpg)"></span><span class="x"><small>${esc(a.when.split(' · ')[0])} · ${esc(a.tag)}</small><span class="q">${hl(a.title, q)}</span></span></button>`,
-      vid: v => `<button class="sr" data-article="${v[0]}"><span class="im" style="background-image:url(${R}th${byId(v[0]).img}.jpg)"><span class="pl glass">▶</span></span><span class="x"><small>動画 · ${v[2]}</small><span class="q">${hl(v[1], q)}</span></span></button>`,
+      art: a => `<button class="sr" data-article="${a.id}"><span class="im" style="background-image:url(${imgOf(a, 'sq')})"></span><span class="x"><small>${esc(a.when.split(' · ')[0])} · ${esc(a.tag)}</small><span class="q">${hl(a.title, q)}</span></span></button>`,
+      vid: v => `<button class="sr" data-article="${v[0]}"><span class="im" style="background-image:url(${imgOf(byId(v[0]), 'th')})"><span class="pl glass">▶</span></span><span class="x"><small>動画 · ${v[2]}</small><span class="q">${hl(v[1], q)}</span></span></button>`,
       ppl: n => `<button class="sr" data-person="${esc(n)}"><span class="im round" style="background:${FACE(n)}"></span><span class="x">${hl(n, q)}<small>${hl(ROLE[n], q)}</small></span></button>`,
       grp: r => `<button class="sr" data-room="${r.id}"><span class="im" style="background:${roomIcon(r)}"></span><span class="x">${hl(r.name, q)}<small>${r.members}人 · 参加中</small></span></button>`,
       cm: x => `<button class="sr" data-article="${x.a.id}" data-comments="1"><span class="im round" style="background:${FACE(x.c.who)}"></span><span class="x"><small>${esc(x.c.who)} · ${esc(x.a.title)}</small><span class="q">${hl(x.c.t, q)}</span></span></button>`,
@@ -1065,7 +1295,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         const act = n.type === 'invite' ? 'data-toast="グループに参加しました（ワイヤー）"' : n.room ? `data-room="${n.room}"` : n.art ? `data-article="${n.art}" data-comments="${['reply', 'react', 'mention'].includes(n.type) ? 1 : ''}"` : `data-tab-go="people"`;
         return `<button class="ni ${n.unread ? 'unread' : ''}" ${act}><span class="who">${face}<span class="badge" style="background:${col}">${ic}</span></span>
           <span class="x">${n.text}${n.q ? `<span class="q">${esc(n.q)}</span>` : ''}<small>${n.at}</small></span>
-          ${n.type === 'invite' ? '<span class="join">参加する</span>' : n.art ? `<img class="th" src="${R}sq${byId(n.art).img}.jpg" alt="">` : ''}</button>`;
+          ${n.type === 'invite' ? '<span class="join">参加する</span>' : n.art ? `<img class="th" src="${imgOf(byId(n.art), 'sq')}" alt="">` : ''}</button>`;
       }).join('')).join('') || '<p class="muted" style="padding:20px 16px;font-size:13px">ここに入るお知らせはまだありません</p>'}
       <p class="muted" style="text-align:center;font-size:11.5px;padding:18px 16px 0">30日より前のお知らせは消えます</p>`;
   }
@@ -1092,7 +1322,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     const el = $('#article'); el.style.setProperty('--tint', a.tint);
     const total = count(discFor(id));
     $('#art-scroll').innerHTML = `
-      <div class="hero rel"><img src="${R}sq${a.img}.jpg" alt="">
+      <div class="hero rel"><img src="${imgOf(a, 'sq')}" alt="">
         <div class="hero-btns"><button class="round glass" data-close="article" aria-label="閉じる">⌄</button>
           <div class="pillbtns glass"><button class="iconbtn" data-share aria-label="共有">⇪</button><button class="iconbtn" data-toast="表示の切り替え：日本語 / English">文A</button><button class="iconbtn" data-toast="通報・ミュートなど">•••</button></div></div>
         <span class="note" style="left:14px;bottom:30px">最初のサムネを全画面のトップに</span></div>
@@ -1100,7 +1330,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <div class="btns"><button class="round glass" data-share aria-label="グループに共有">⤴︎</button><button class="round glass save ${state.saved.has(id) ? 'on' : ''}" data-save="${id}" aria-label="記事を保存">✓</button></div>
         <span class="note" style="right:18px;top:-24px">✓ ＝ 記事を保存</span></div>
       <div class="body">
-        <div class="video rel"><img src="${R}th${byId('nfp').img}.jpg" alt=""><span class="play glass">▶</span><span class="len glass">動画でサクッと · 4:12</span><span class="note" style="right:10px;top:10px">解説動画（本文の前、題名のすぐ下）</span></div>
+        <div class="video rel"><img src="${imgOf(byId('nfp'), 'th')}" alt=""><span class="play glass">▶</span><span class="len glass">動画でサクッと · 4:12</span><span class="note" style="right:10px;top:10px">解説動画（本文の前、題名のすぐ下）</span></div>
         <p>${a.brk ? '今回の声明では、賃金について「上昇の広がりがみられる」と、前回よりちょっと踏み込みました。総裁の会見は15:30から。市場は12月の利上げを6割くらい見込んでいます。' : 'ここに本文が入ります。オーナーが数字や見出しを見ながら、かみくだいて書いた解説を置きます。'}</p>
         <div class="wbar" style="width:96%"></div><div class="wbar" style="width:88%"></div><div class="wbar" style="width:64%"></div>
         <div class="fig rel"><img src="${R}chart1.jpg" alt="棒グラフの見本"><span class="note" style="left:10px;top:10px">グラフ：月ごとの推移（棒）</span></div>
@@ -1217,6 +1447,31 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
+    if (d.admin !== undefined) { openAdmin(); return; }
+    if (d.close === 'admin') { $('#admin').classList.remove('open'); $('#admin').setAttribute('aria-hidden', 'true'); return; }
+    if (d.atab) { state.atab = d.atab; renderAdmin(); $('#a-body').scrollTop = 0; return; }
+    if (d.makeslot) { DRAFT.slot = d.makeslot; DRAFT.breaking = false; state.atab = 'make'; renderAdmin(); return; }
+    if (d.makebreaking !== undefined) { Object.assign(DRAFT, { breaking: true, big: 'CPI 発表', en: 'US CPI', ja: '米CPIは3.1%。予想よりちょっと高めでした', tplName: 'gauge', poster: null }); DRAFT.used.add('d0'); DRAFT.jaBody = '10月の米国の消費者物価は前年より3.1%上がりました（予想3.0%、前回2.9%）。'; DRAFT.links = [['米労働統計局 · 消費者物価指数', 'bls.gov']]; state.atab = 'make'; renderAdmin(); toast('数字を入れた下書きを作りました'); return; }
+    if (d.dslot) { DRAFT.slot = d.dslot; DRAFT.breaking = false; DRAFT.poster = null; renderAdmin(); return; }
+    if (d.dbreaking !== undefined) { DRAFT.breaking = !DRAFT.breaking; DRAFT.poster = null; renderAdmin(); return; }
+    if (d.usedata !== undefined) { const m = MATS.data[+d.usedata]; DRAFT.used.add('d' + d.usedata); DRAFT.jaBody += (DRAFT.jaBody ? '\n' : '') + `${m[0]}は${m[1]}（${m[2].split(' · ').slice(0, 2).join('、')}）。`; if (!DRAFT.links.some(l => l[1] === m[3])) DRAFT.links.push([m[2].split(' · ')[m[2].split(' · ').length - 2] || m[0], m[3]]); renderAdmin(); return; }
+    if (d.usehead !== undefined) { const h = MATS.heads[+d.usehead]; DRAFT.used.add('h' + d.usehead); DRAFT.links.push([`${h[0]}（${h[1]}）`, h[2]]); renderAdmin(); return; }
+    if (d.usemax !== undefined) { if (!DRAFT.max.trim()) return toast('先に下書きを貼ってください'); DRAFT.jaBody = DRAFT.max.trim(); DRAFT.ai = true; renderAdmin(); toast('本文に流し込みました。AIの表示もオンにしました'); return; }
+    if (d.dlang) { DRAFT.lang = d.dlang; renderAdmin(); return; }
+    if (d.addblk) { DRAFT.blocks.push(d.addblk === 'chart' ? ['chart', 'グラフ：材料の数字から'] : ['card', '要点カード']); renderAdmin(); return; }
+    if (d.delblk !== undefined) { DRAFT.blocks.splice(+d.delblk, 1); renderAdmin(); return; }
+    if (d.addvideo !== undefined) { DRAFT.video = true; renderAdmin(); return; }
+    if (d.delvideo !== undefined) { DRAFT.video = false; renderAdmin(); return; }
+    if (d.tpl) { DRAFT.tplName = d.tpl; DRAFT.poster = null; renderAdmin(); return; }
+    if (d.dgenre) { DRAFT.genres.has(d.dgenre) ? DRAFT.genres.delete(d.dgenre) : DRAFT.genres.add(d.dgenre); if (!DRAFT.genres.size) DRAFT.genres.add(d.dgenre); renderAdmin(); return; }
+    if (d.selfok !== undefined) { DRAFT.selfOk = !DRAFT.selfOk; renderAdmin(); return; }
+    if (d.dpreview !== undefined) { openSheet(head('ホームでの見え方') + `<div class="past"><div class="feed-item" style="padding:0;border:0"><div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · いつもの配信</div></div></div><div class="lab"><span>${DRAFT.breaking ? 'Breaking' : 'US pre-open'} <span class="tag">#${[...DRAFT.genres][0]}</span></span><span class="tm">${DRAFT.breaking ? '今' : DRAFT.slot}</span></div><div class="thumb"><img src="${DRAFT.poster}" alt="">${DRAFT.breaking ? '<span class="brk">速報</span>' : ''}</div><div class="title-line">${esc(DRAFT.ja || '（見出しを入れてください）')}</div></div></div>`, 'full'); return; }
+    if (d.publish !== undefined) { publishDraft(); return; }
+    if (d.approveapp !== undefined) { const a = APPLIES.splice(+d.approveapp, 1)[0]; renderAdmin(); toast(`${a.who} さんをOKしました。お知らせが届きます`); return; }
+    if (d.rejectapp !== undefined) { const a = APPLIES.splice(+d.rejectapp, 1)[0]; renderAdmin(); toast(`${a.who} さんに、今回は見送る旨を伝えました`); return; }
+    if (d.hide !== undefined) { REPORTS.splice(+d.hide, 1); renderAdmin(); toast('非表示にしました（記録は残ります）'); return; }
+    if (d.okrep !== undefined) { REPORTS.splice(+d.okrep, 1); renderAdmin(); toast('問題なしにしました'); return; }
+    if (d.ban !== undefined) { REPORTS.splice(+d.ban, 1); renderAdmin(); toast('7日間、投稿を止めました'); return; }
     if (d.genre) { if ($('#search').classList.contains('open')) closeSearch(); openGenre(d.genre); return; }
     if (d.close === 'genre') { $('#genre').classList.remove('open'); $('#genre').setAttribute('aria-hidden', 'true'); return; }
     if (d.gfollow !== undefined) { const g = state.genre; state.gfollow.has(g) ? state.gfollow.delete(g) : state.gfollow.add(g); renderGenre(); toast(state.gfollow.has(g) ? `「${g}」をフォローしました` : 'フォローを外しました'); return; }
@@ -1284,6 +1539,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   });
   scrim.addEventListener('click', () => setSheet('closed'));
   document.addEventListener('change', e => {
+    if (e.target.id === 'd-ai') { DRAFT.ai = e.target.checked; renderAdmin(); return; }
     if (e.target.id === 'saved-sort') { state.savedSort = e.target.value; openProfile(state.person); return; }
     if (e.target.id !== 'g-photo' || !e.target.files[0]) return;
     const fr = new FileReader();
@@ -1291,6 +1547,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     fr.readAsDataURL(e.target.files[0]);
   });
   document.addEventListener('input', e => {
+    const dm = { 'd-ja': 'ja', 'd-jab': 'jaBody', 'd-en': 'enTitle', 'd-enb': 'enBody', 'd-max': 'max', 'd-big': 'big', 'd-enbig': 'en' }[e.target.id];
+    if (dm) { DRAFT[dm] = e.target.value; if (dm === 'big' || dm === 'en') { DRAFT.poster = posterOf(DRAFT.tplName); document.querySelector('.tprev img').src = DRAFT.poster; } const btn = document.querySelector('[data-publish]'); if (btn) { const ok = DRAFT.links.length && DRAFT.enTitle.trim() && DRAFT.enBody.trim() && (!DRAFT.max || DRAFT.ai) && DRAFT.selfOk && DRAFT.ja.trim(); btn.disabled = !ok; } return; }
     if (e.target.id === 'q-text') { qdraft.text = e.target.value; $('#q-count').textContent = `${qdraft.text.length} / 1000`; $('#q-post').disabled = !qdraft.text.trim(); return; }
     if (e.target.id === 'q-link') { qdraft.link = e.target.value; return; }
     if (e.target.id === 'del-confirm') { $('#del-go').disabled = e.target.value.trim() !== '削除'; return; }
@@ -1307,6 +1565,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   $('#notes-toggle').addEventListener('change', e => $('#device').classList.toggle('show-notes', e.target.checked));
 
   document.documentElement.style.setProperty('--me-face', FACE('あなた').replace(' center/cover', ''));
+  document.fonts && document.fonts.ready.then(() => { DRAFT.poster = null; });
   renderChips(); renderFeed(); renderLib(); renderPosts(); renderRooms();
   setSheet('closed');
 })();
