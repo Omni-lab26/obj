@@ -243,6 +243,35 @@ svg { display: block; }
 .pc small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
 .pc .t { font-size: 13.5px; line-height: 1.55; }
 .pc .f { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.pfilter { display: flex; gap: 6px; padding: 10px 16px 8px; overflow-x: auto; scrollbar-width: none; }
+.gate { margin: 4px 16px 8px; padding: 14px; border-radius: 16px; background: var(--surface); display: flex; gap: 12px; align-items: center; font-size: 13px; line-height: 1.5; }
+.gate .ic2 { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; flex: none; background: rgba(174,62,201,.18); color: #d9a3ff; }
+.gate .x { flex: 1; min-width: 0; } .gate small { display: block; color: var(--muted); font-size: 11.5px; }
+.gate button { flex: none; padding: 8px 12px; border-radius: 999px; background: #fff; color: #111; font-weight: 700; font-size: 12px; }
+.gate .wf { display: block; margin-top: 4px; font-size: 11px; color: #7cc0ff; background: none; padding: 0; font-weight: 600; }
+.ucompose { display: flex; gap: 10px; align-items: center; margin: 4px 16px 8px; padding: 12px 14px; border-radius: 18px; background: var(--surface); width: calc(100% - 32px); color: var(--muted); font-size: 13.5px; }
+.ucompose .av { width: 34px; height: 34px; border-radius: 50%; flex: none; background-size: cover; }
+.upost { padding: 14px 16px 12px; border-bottom: 1px solid var(--line); }
+.upost .by .ver { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; background: #4c8dff; color: #fff; font-size: 9px; margin-left: 4px; vertical-align: 1px; }
+.upost .tx { font-size: 14.5px; line-height: 1.7; margin: 10px 0 0; white-space: pre-line; }
+.upost .tx.clamp { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.upost .more2 { font-size: 12.5px; color: #7cc0ff; font-weight: 600; margin-top: 4px; }
+.upost .tags { display: flex; gap: 6px; margin-top: 8px; } .upost .tags span { font-size: 12px; color: #4aa3ff; }
+.lcard { display: flex; gap: 10px; align-items: center; margin-top: 10px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); width: 100%; font-size: 12.5px; line-height: 1.4; }
+.lcard .lg { width: 38px; height: 38px; border-radius: 10px; background: var(--surface2); display: grid; place-items: center; flex: none; font-size: 15px; }
+.lcard .x { flex: 1; min-width: 0; } .lcard small { display: block; color: var(--muted); font-size: 11px; }
+.qcard { display: flex; gap: 10px; margin-top: 10px; padding: 8px; border-radius: 14px; background: var(--surface); width: 100%; align-items: center; font-size: 12.5px; line-height: 1.45; }
+.qcard img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; flex: none; }
+.qcard small { display: block; color: var(--muted); font-size: 10.5px; margin-bottom: 2px; }
+.upost .acts { margin-top: 10px; }
+.upost .act.on { background: rgba(255,106,26,.18); color: var(--accent); }
+.rules { padding: 10px 12px; border-radius: 12px; background: var(--surface2); font-size: 11.5px; line-height: 1.6; color: var(--muted); margin-top: 12px; }
+.counter { text-align: right; font-size: 11px; color: var(--muted); margin-top: 4px; }
+.qpick { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+.qpick button { flex: none; width: 84px; border-radius: 12px; overflow: hidden; border: 2px solid transparent; font-size: 10.5px; line-height: 1.3; text-align: left; background: var(--surface2); }
+.qpick button.on { border-color: var(--accent); }
+.qpick img { width: 84px; height: 60px; object-fit: cover; }
+.qpick span { display: block; padding: 4px 6px 6px; height: 36px; overflow: hidden; }
 .sgroup { margin: 0 16px; border-radius: 18px; background: var(--surface); overflow: hidden; }
 .sgh { padding: 18px 20px 8px; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
 .srow { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 16px; min-height: 52px; border-top: 1px solid var(--line); text-align: left; }
@@ -417,10 +446,12 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     <!-- みんな -->
     <section class="screen" id="tab-people" hidden>
       <div class="scroller">
-        <div class="simple"><h2>みんなの投稿</h2></div>
-        <div class="apply">いまは、オーナーがOKした人だけが投稿できます。書いてみたい人は、気軽に申請してください。<br><button data-toast="申請を送りました。返事を待っててください">投稿してみたい</button></div>
+        <div class="simple" style="padding-bottom:4px"><h2 style="margin-bottom:2px">みんなの投稿</h2><div class="muted" style="font-size:12px">オーナーが認めた人の投稿です。配信の外の話もここで</div></div>
+        <div class="pfilter rel" id="pfilter"></div>
+        <div id="pgate"></div>
         <div id="posts"></div>
       </div>
+      <button class="fab glass" data-compose aria-label="投稿する"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span>書く</span><span class="note" style="right:0;top:-22px">右下＝投稿を書く</span></button>
     </section>
 
     <!-- チャット -->
@@ -511,7 +542,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   ];
   const byId = id => A.find(a => a.id === id);
   const PEOPLE = ['s.tanaka', 'Mia Chen', 'k.mori', 'y.okada', 'David Ruiz', 'a.ishii', 'h.kato', 'n.sato'];
-  const ROLE = { 's.tanaka': '債券ストラテジスト', 'Mia Chen': 'FX Sales, Singapore', 'k.mori': '為替ディーラー', 'y.okada': '地銀 運用部', 'David Ruiz': 'Macro PM, London', 'a.ishii': '生保 運用', 'h.kato': 'メガバンク 為替', 'n.sato': '個人投資家', 'あなた': '' };
+  const ROLE = { 's.tanaka': '債券ストラテジスト', 'Mia Chen': 'FX Sales, Singapore', 'k.mori': '為替ディーラー', 'y.okada': '地銀 運用部', 'David Ruiz': 'Macro PM, London', 'a.ishii': '生保 運用', 'h.kato': 'メガバンク 為替', 'n.sato': '個人投資家', 'あなた': '為替・金利ウォッチャー' };
   const FACEIMG = { 's.tanaka': 5, 'Mia Chen': 1, 'k.mori': 8, 'y.okada': 2, 'David Ruiz': 4, 'a.ishii': 6, 'h.kato': 9, 'n.sato': 10, 'あなた': 3 };
   const FACE = n => `url(${R}sq${FACEIMG[n] || 7}.jpg) center/cover`;
   const ICONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => `${R}sq${i}.jpg`);
@@ -593,12 +624,73 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   }
 
   // ---------- みんな ----------
-  function renderPosts() {
-    $('#posts').innerHTML = [['s.tanaka', '今週の米債入札カレンダーと注目点まとめ'], ['Mia Chen', 'Asia FX weekly: KRW and TWD flows'], ['y.okada', '地銀の預金金利、各行の動き']].map(([w, t]) => `
-      <div class="post"><div class="by"><div class="av" style="background:${FACE(w)}"></div><div><div class="nm">${w}</div><div class="hd">${ROLE[w]} · 認証済み</div></div></div>
-      <div style="font-size:14px;font-weight:600">${t}</div><div class="wbar" style="width:92%"></div><div class="wbar" style="width:70%"></div>
-      <div class="acts"><span class="act">🔥 24</span><button class="act" data-toast="個人の投稿の議論（ワイヤー）">💬 8</button></div></div>`).join('');
+  const POSTS = [
+    { id: 'p1', who: 's.tanaka', min: 25, tag: '#債券', up: 48, liked: false, saved: false,
+      t: '今週の米国債の入札をまとめました。\n\n火曜 3年債、水曜 10年債、木曜 30年債。先週の10年債は人気がいまひとつだったので、今週も「入札の結果が出る時間（日本時間の深夜3時）」に金利がはねやすいです。\n\n個人的には、海外の買い手がどれくらい入るか（間接入札の割合）を見ています。',
+      link: { dom: 'treasurydirect.gov', title: 'Upcoming Auctions — TreasuryDirect' } },
+    { id: 'p2', who: 'Mia Chen', min: 52, tag: '#為替', up: 31, liked: false, saved: false,
+      t: 'Asia FX this week: KRW and TWD both saw steady exporter selling. Feels like the same flow Tokyo desks describe for USDJPY at 152.', quote: 'yen' },
+    { id: 'p3', who: 'y.okada', min: 130, tag: '#銀行', up: 27, liked: false, saved: false,
+      t: '地方銀行の現場から。\n日銀が据え置きでも、預金の金利を上げる競争はじわじわ続いています。ネット銀行のキャンペーンに合わせて動くお客さんが、思ったより多いです。' },
+    { id: 'p4', who: 'k.mori', min: 190, tag: '#日銀', up: 19, liked: false, saved: false,
+      t: '今日の声明、「広がり」の一語でここまで議論が伸びるのは面白い。配信の議論、まだ読んでない人はぜひ。', quote: 'boj' },
+    { id: 'p5', who: 'David Ruiz', min: 300, tag: '#マクロ', up: 12, liked: false, saved: false,
+      t: 'London open take: gilts calmer than expected. Watching whether the BoE minutes next week lean dovish.' },
+  ];
+  state.pfilter = 'hot';
+  const findPost = id => POSTS.find(p => p.id === id);
+  function postHTML(p, full) {
+    const q = p.quote && byId(p.quote);
+    return `<article class="upost">
+      <div class="by"><button class="av" style="background:${FACE(p.who)}" data-person="${esc(p.who)}" aria-label="${esc(p.who)} のプロフィール"></button><div><div class="nm">${esc(p.who)}<span class="ver" title="認証済み">✓</span></div><div class="hd">${esc(ROLE[p.who] || '')} · ${p.min === 0 ? 'たった今' : ago(p.min)}</div></div><button class="more" data-toast="通報・ミュート・ブロック（ワイヤー）" aria-label="その他">•••</button></div>
+      <div class="tx ${full ? '' : 'clamp'}">${esc(p.t)}</div>
+      ${!full && (p.t.length > 160 || (p.t.match(/\n/g) || []).length >= 3) ? `<button class="more2" data-post="${p.id}">続きを読む</button>` : ''}
+      ${p.link ? `<a class="lcard" href="https://${p.link.dom}/" target="_blank" rel="noopener"><span class="lg">↗</span><span class="x">${esc(p.link.title)}<small>${esc(p.link.dom)}</small></span></a>` : ''}
+      ${q ? `<button class="qcard" data-article="${q.id}"><img src="${R}sq${q.img}.jpg" alt=""><span><small>Halftick の配信 · ${esc(q.tm)}</small>${esc(q.title)}</span></button>` : ''}
+      <div class="tags"><span>${esc(p.tag)}</span></div>
+      <div class="acts"><button class="act ${p.liked ? 'on' : ''}" data-plike="${p.id}">▲ ${p.up + (p.liked ? 1 : 0)}</button><button class="act" data-post="${p.id}">💬 ${count(discFor(p.id))}</button><button class="act ${p.saved ? 'on' : ''}" data-psave="${p.id}" aria-label="保存">${p.saved ? '✓' : '＋'}</button><button class="act go" data-pshare="${p.id}">グループに送る</button></div>
+    </article>`;
   }
+  function renderPosts() {
+    const F = [['hot', '人気'], ['new', '新しい'], ['#債券', '債券'], ['#為替', '為替'], ['#日銀', '日銀'], ['#銀行', '銀行']];
+    $('#pfilter').innerHTML = F.map(([k, l]) => `<button class="chip ${state.pfilter === k ? 'on' : ''}" data-pfilter="${k}">${l}</button>`).join('');
+    $('#pgate').innerHTML = SET.apply === 'ok'
+      ? `<button class="ucompose" data-compose><span class="av" style="background:${FACE('あなた')}"></span>いま気になっていること、書いてみませんか？</button>`
+      : SET.apply === 'pending'
+        ? `<div class="gate rel"><span class="ic2">✎</span><span class="x"><b>投稿の申請を確認中です</b><small>OKが出たら、ここから書けるようになります</small><button class="wf" data-approve>（ワイヤー用）承認された状態で見る</button></span><span class="note" style="right:10px;top:-10px">認証制</span></div>`
+        : `<div class="gate"><span class="ic2">✎</span><span class="x"><b>書いてみたい人は申請を</b><small>オーナーがOKした人だけが投稿できます</small></span><button data-apply>申請する</button></div>`;
+    let list = [...POSTS];
+    if (state.pfilter === 'hot') list.sort((a, b) => (b.up + count(discFor(b.id)) * 2) - (a.up + count(discFor(a.id)) * 2));
+    else if (state.pfilter === 'new') list.sort((a, b) => a.min - b.min);
+    else list = list.filter(p => p.tag === state.pfilter);
+    $('#posts').innerHTML = list.map(p => postHTML(p, false)).join('') || '<p class="muted" style="padding:20px 16px;font-size:13px">このジャンルの投稿はまだありません</p>';
+  }
+  const qdraft = { text: '', link: '', tag: '#マクロ', quote: '' };
+  function openCompose() {
+    if (SET.apply !== 'ok') {
+      return openSheet(head('投稿の申請') + `<div class="past"><p style="font-size:13.5px;line-height:1.7;margin:0">みんなの投稿は、オーナーがOKした人だけが書けます。どんな話を書きたいか、ひとこと教えてください。</p>
+        <label class="lbl" for="ap-role">職種（任意）</label><input class="field" id="ap-role" value="為替・金利ウォッチャー">
+        <label class="lbl" for="ap-why">書きたいこと</label><textarea class="field" id="ap-why" style="height:90px;padding:12px 14px;resize:none" placeholder="例：地銀の現場で見ている預金の動き"></textarea>
+        <button class="primary" data-sendapply>申請する</button></div>`, 'full');
+    }
+    const tags = ['#マクロ', '#日銀', '#為替', '#債券', '#株式', '#銀行'];
+    openSheet(head('投稿する') + `<div class="past" style="overflow-y:auto;padding-bottom:30px">
+      <div class="by" style="margin:2px 0 10px"><span class="av" style="background:${FACE('あなた')};width:36px;height:36px;border-radius:50%;display:block"></span><div><div class="nm">あなた</div><div class="hd">みんなの投稿に載ります</div></div></div>
+      <label class="vis-hidden" for="q-text">本文</label><textarea class="field" id="q-text" style="height:150px;padding:12px 14px;resize:none;line-height:1.7" maxlength="1000" placeholder="気づいたこと、現場の空気、読んだ資料のこと…">${esc(qdraft.text)}</textarea>
+      <div class="counter" id="q-count">${qdraft.text.length} / 1000</div>
+      <label class="lbl" for="q-link">リンク（任意）</label><input class="field" id="q-link" placeholder="https://" value="${esc(qdraft.link)}">
+      <span class="lbl">配信を引用する（任意）</span>
+      <div class="qpick">${A.slice(0, 6).map(a => `<button class="${qdraft.quote === a.id ? 'on' : ''}" data-qquote="${a.id}"><img src="${R}sq${a.img}.jpg" alt=""><span>${esc(a.title)}</span></button>`).join('')}</div>
+      <span class="lbl">ジャンル</span>
+      <div class="recent" style="padding:0">${tags.map(t => `<button class="chip ${qdraft.tag === t ? 'on' : ''}" data-qtag="${t}">${t.slice(1)}</button>`).join('')}</div>
+      <div class="rules">投稿のルール：人を傷つける書き方、特定の銘柄の売買をすすめる投稿、宣伝はできません。気持ちよく議論できる場にしましょう。</div>
+      <button class="primary" id="q-post" ${qdraft.text.trim() ? '' : 'disabled'}>投稿する</button></div>`, 'full');
+  }
+  function openPostComments(id) {
+    const p = findPost(id); state.cur = { id: p.id, title: p.t.slice(0, 30), post: p };
+    openComments();
+  }
+
 
   // ---------- チャット ----------
   const ROOMS = [
@@ -1004,8 +1096,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <span class="note" style="left:16px;top:-26px">上に引くと全体、下に引くと閉じる</span></div>
       <div class="sorts rel"><button class="chip ${state.sort === 'top' ? 'on' : ''}" data-sort="top">人気順</button><button class="chip ${state.sort === 'new' ? 'on' : ''}" data-sort="new">新しい順</button>
         <span class="note" style="right:16px;top:6px">YouTube のような並び替え（設定に保存）</span></div>
-      <div class="newc">↑ 新しいコメントが5件あります</div>
-      <div class="clist" id="clist">${commentHTML(sorted(), 1)}</div>
+      ${state.cur.post ? '' : '<div class="newc">↑ 新しいコメントが5件あります</div>'}
+      <div class="clist" id="clist">${state.cur.post ? `<div style="margin:0 -16px 6px">${postHTML(state.cur.post, true)}</div>` : ''}${commentHTML(sorted(), 1)}</div>
       <div class="composer"><input id="c-input" placeholder="あなたはどう思う？" aria-label="コメントを書く"><button id="c-send" aria-label="送信">➤</button></div>`, sheetPos === 'full' ? 'full' : 'half');
   }
   function openShare() {
@@ -1066,6 +1158,18 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
+    if (d.pfilter) { state.pfilter = d.pfilter; renderPosts(); return; }
+    if (d.post) { openPostComments(d.post); setTimeout(() => setSheet('full'), 30); return; }
+    if (d.plike) { const p = findPost(d.plike); p.liked = !p.liked; renderPosts(); if (sheetPos !== 'closed' && state.cur.post) openComments(); return; }
+    if (d.psave) { const p = findPost(d.psave); p.saved = !p.saved; renderPosts(); toast(p.saved ? '投稿を保存しました' : '保存を外しました'); return; }
+    if (d.pshare) { const p = findPost(d.pshare); openSheet(head('グループに送る') + `<div class="past"><div class="send-list">${ROOMS.map(r => `<button data-psend="${r.id}">${esc(r.name)}${r.kind === 'dm' ? '（1対1）' : ''}<span>送る</span></button>`).join('')}</div></div>`, 'half'); state.sharePost = p; return; }
+    if (d.psend) { const r = ROOMS.find(x => x.id === d.psend); r.msgs.push({ me: 1, t: `「${state.sharePost.t.slice(0, 40)}…」（${state.sharePost.who} さんの投稿）` }); r.at = 0; r.sub = 'あなた: 投稿を共有しました'; renderRooms(); setSheet('closed'); toast(`${r.name} に送りました`); return; }
+    if (d.compose !== undefined) { openCompose(); return; }
+    if (d.approve !== undefined) { SET.apply = 'ok'; renderPosts(); renderSettings(); toast('承認された状態にしました（ワイヤー用）'); return; }
+    if (d.apply !== undefined || d.sendapply !== undefined) { SET.apply = 'pending'; renderPosts(); setSheet('closed'); toast('申請しました。返事を待っててください'); return; }
+    if (d.qquote) { qdraft.quote = qdraft.quote === d.qquote ? '' : d.qquote; openCompose(); return; }
+    if (d.qtag) { qdraft.tag = d.qtag; openCompose(); return; }
+    if (t.id === 'q-post') { if (!qdraft.text.trim()) return; const lk = qdraft.link.trim().replace(/^https?:\/\//, ''); const nid = 'p' + Date.now(); DISC[nid] = []; POSTS.unshift({ id: nid, who: 'あなた', min: 0, tag: qdraft.tag, up: 0, liked: false, saved: false, t: qdraft.text.trim(), quote: qdraft.quote || undefined, link: lk ? { dom: lk.split('/')[0], title: lk } : undefined }); Object.assign(qdraft, { text: '', link: '', quote: '' }); state.pfilter = 'new'; renderPosts(); setSheet('closed'); toast('投稿しました'); return; }
     if (d.settings !== undefined) { openSettings(); return; }
     if (d.close === 'settings') { $('#settings').classList.remove('open'); $('#settings').setAttribute('aria-hidden', 'true'); return; }
     if (d.choice) { openChoice(d.choice); return; }
@@ -1121,6 +1225,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     fr.readAsDataURL(e.target.files[0]);
   });
   document.addEventListener('input', e => {
+    if (e.target.id === 'q-text') { qdraft.text = e.target.value; $('#q-count').textContent = `${qdraft.text.length} / 1000`; $('#q-post').disabled = !qdraft.text.trim(); return; }
+    if (e.target.id === 'q-link') { qdraft.link = e.target.value; return; }
     if (e.target.id === 'del-confirm') { $('#del-go').disabled = e.target.value.trim() !== '削除'; return; }
     if (e.target.id === 's-input') { renderSearch(); return; }
     if (e.target.id === 'g-name') { draft.name = e.target.value; const b = $('#g-create'); if (b) b.disabled = !draft.name.trim(); }
