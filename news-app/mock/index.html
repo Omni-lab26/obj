@@ -210,6 +210,26 @@ svg { display: block; }
 .send-list button { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--surface2); font-size: 13.5px; }
 .send-list button span { font-size: 12px; font-weight: 700; color: var(--accent); }
 
+.newg { display: flex; gap: 12px; align-items: center; width: calc(100% - 32px); margin: 0 16px 6px; padding: 12px; border-radius: 18px; border: 1px dashed var(--muted); }
+.newg .x { flex: 1; min-width: 0; font-size: 13px; } .newg .x span { display: block; color: var(--muted); font-size: 12px; }
+.newg .ic { width: 48px; height: 48px; border-radius: 14px; flex: none; }
+.ic.plus { display: grid; place-items: center; font-size: 22px; color: var(--accent); background: rgba(255,106,26,.12); }
+.field { width: 100%; height: 46px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface2); color: var(--text); padding: 0 14px; font: 15px var(--font); }
+.lbl { font-size: 12px; color: var(--muted); margin: 16px 0 8px; display: block; }
+.swatches { display: flex; gap: 10px; }
+.sw { width: 34px; height: 34px; border-radius: 10px; border: 2px solid transparent; }
+.sw.on { border-color: #fff; }
+.pick { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.pick .av { width: 34px; height: 34px; border-radius: 50%; flex: none; }
+.pick .x { flex: 1; min-width: 0; font-size: 13.5px; } .pick small { display: block; color: var(--muted); font-size: 11px; }
+.pick .ck { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--muted); display: grid; place-items: center; font-size: 13px; }
+.pick.on .ck { background: var(--accent); border-color: var(--accent); color: #fff; }
+.primary { width: 100%; height: 50px; border-radius: 25px; background: #fff; color: #111; font-weight: 700; font-size: 15px; margin-top: 18px; display: grid; place-items: center; }
+.primary[disabled] { opacity: .35; cursor: default; }
+.ghost { width: 100%; height: 46px; border-radius: 23px; border: 1px solid var(--line); font-weight: 600; font-size: 14px; margin-top: 10px; display: grid; place-items: center; }
+.invite { margin-top: 14px; padding: 14px; border-radius: 16px; background: var(--surface2); font-size: 13px; line-height: 1.5; }
+.invite .link { font-family: var(--mono); font-size: 13px; margin-top: 6px; color: #7cc0ff; word-break: break-all; }
+.sys { align-self: center; max-width: 86%; text-align: center; font-size: 11.5px; color: var(--muted); background: var(--surface); padding: 7px 12px; border-radius: 999px; }
 .toast { position: absolute; left: 50%; top: 60px; transform: translate(-50%, -20px); opacity: 0; transition: all .25s; z-index: 60; padding: 10px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 .simple { padding: 54px 16px 20px; }
@@ -279,7 +299,9 @@ svg { display: block; }
     <!-- チャット -->
     <section class="screen" id="tab-chat" hidden>
       <div class="scroller">
-        <div class="simple"><h2>チャット</h2><div class="muted" style="font-size:12px;margin-top:-8px">グループ</div></div>
+        <div class="simple" style="display:flex;justify-content:space-between;align-items:flex-start"><h2>チャット</h2><button class="act glass" style="margin-top:8px" data-newgroup>＋ グループを作る</button></div>
+        <button class="newg rel" data-newgroup><span class="ic plus">＋</span><span class="x"><b>新しいグループを作る</b><span>仲間を誘って、配信のことをゆっくり話せます</span></span><span class="note" style="right:10px;top:-10px">グループを作る</span></button>
+        <div class="muted" style="font-size:12px;padding:10px 16px 2px">参加しているグループ</div>
         <div id="rooms"></div>
       </div>
     </section>
@@ -304,7 +326,7 @@ svg { display: block; }
 
     <!-- チャットルーム -->
     <section class="screen room" id="room" aria-hidden="true">
-      <div class="top"><button class="round glass" data-close="room" aria-label="戻る">‹</button><b id="room-name"></b><span style="width:40px"></span></div>
+      <div class="top"><button class="round glass" data-close="room" aria-label="戻る">‹</button><b id="room-name"></b><button class="round glass" data-groupinfo aria-label="グループの情報">⋯</button></div>
       <div class="scroller"><div class="msgs" id="msgs"></div></div>
       <div class="composer"><input id="room-input" placeholder="メッセージ" aria-label="メッセージ"><button id="room-send" aria-label="送信">➤</button></div>
     </section>
@@ -426,21 +448,67 @@ svg { display: block; }
 
   // ---------- チャット ----------
   const ROOMS = [
-    { id: 'macro', name: 'マクロ勉強会', sub: 'y.okada: 共有：日銀、政策金利を0.75%で据え置き', n: 3, msgs: [
+    { id: 'macro', name: 'マクロ勉強会', members: 12, color: '#3b5bdb', sub: 'y.okada: 共有：日銀、政策金利を0.75%で据え置き', n: 3, msgs: [
       { who: 'y.okada', share: 'boj', t: '据え置きは予想通り。声明の変化、みんなどう見ます？' },
       { me: 1, t: '「広がり」は強いね。12月は普通にあり得る' },
       { who: 's.tanaka', t: '公開の議論にも書いたけど、債券はもう半分くらい織り込んでる' } ] },
-    { id: 'fx', name: 'Tokyo FX desk alumni', sub: 'Mia Chen: see you at the Dec meeting', n: 0, msgs: [{ who: 'Mia Chen', t: 'see you at the Dec meeting' }] },
+    { id: 'fx', name: 'Tokyo FX desk alumni', members: 8, color: '#2f9e44', sub: 'Mia Chen: see you at the Dec meeting', n: 0, msgs: [{ who: 'Mia Chen', t: 'see you at the Dec meeting' }] },
     { id: 'dm', name: 's.tanaka（1対1）', sub: '例のレポート、明日送ります', n: 0, msgs: [{ who: 's.tanaka', t: '例のレポート、明日送ります' }] },
   ];
   function renderRooms() {
-    $('#rooms').innerHTML = ROOMS.map(r => `<button class="ci" data-room="${r.id}"><span class="ic"></span><span class="x"><b>${esc(r.name)}</b><span>${esc(r.sub)}</span></span>${r.n ? `<span class="n">${r.n}</span>` : ''}</button>`).join('');
+    $('#rooms').innerHTML = ROOMS.map(r => `<button class="ci" data-room="${r.id}"><span class="ic" style="background:${r.color || 'var(--surface2)'}"></span><span class="x"><b>${esc(r.name)}</b><span>${esc(r.sub)}</span></span>${r.members ? `<span class="muted" style="font-size:11px">${r.members}人</span>` : ''}${r.n ? `<span class="n">${r.n}</span>` : ''}</button>`).join('');
   }
   function openRoom(id) {
     const r = ROOMS.find(x => x.id === id); state.room = r;
     $('#room-name').textContent = r.name;
-    $('#msgs').innerHTML = r.msgs.map(m => `<div class="mg ${m.me ? 'me' : ''}">${m.who ? `<div class="who">${esc(m.who)}</div>` : ''}${m.share ? `<button class="shared" data-article="${m.share}"><img src="${R}cover1.jpg" alt="共有された配信の表紙"></button>` : ''}<div class="bub">${esc(m.t)}</div></div>`).join('');
+    $('#msgs').innerHTML = r.msgs.map(m => m.sys ? `<div class="sys">${esc(m.sys)}</div>` : `<div class="mg ${m.me ? 'me' : ''}">${m.who ? `<div class="who">${esc(m.who)}</div>` : ''}${m.share ? `<button class="shared" data-article="${m.share}"><img src="${R}cover1.jpg" alt="共有された配信の表紙"></button>` : ''}<div class="bub">${esc(m.t)}</div></div>`).join('');
     $('#room').classList.add('open'); $('#room').setAttribute('aria-hidden', 'false');
+  }
+
+  // ---------- グループを作る ----------
+  const SW = ['#3b5bdb', '#2f9e44', '#e8590c', '#ae3ec9', '#0c8599', '#c2255c'];
+  const draft = { name: '', color: SW[0], who: new Set() };
+  function openNewGroup() {
+    openSheet(`
+      <div class="sh-head"><b>グループを作る</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
+      <div class="past" style="overflow-y:auto;padding-bottom:30px">
+        <label class="lbl" for="g-name" style="margin-top:4px">グループの名前</label>
+        <input class="field" id="g-name" maxlength="30" placeholder="例：マクロ勉強会、同期の為替部" value="${esc(draft.name)}">
+        <span class="lbl">アイコンの色</span>
+        <div class="swatches">${SW.map(c => `<button class="sw ${c === draft.color ? 'on' : ''}" style="background:${c}" data-sw="${c}" aria-label="色"></button>`).join('')}</div>
+        <span class="lbl">誰を誘う？（あとから招待リンクでも誘えます）</span>
+        ${PEOPLE.map(n => `<button class="pick ${draft.who.has(n) ? 'on' : ''}" data-pick="${esc(n)}"><span class="av" style="background:${FACE(n)}"></span><span class="x">${esc(n)}<small>${esc(ROLE[n])}</small></span><span class="ck">${draft.who.has(n) ? '✓' : ''}</span></button>`).join('')}
+        <button class="primary" id="g-create" ${draft.name.trim() ? '' : 'disabled'}>作る${draft.who.size ? `（${draft.who.size}人を誘う）` : ''}</button>
+      </div>`, 'full');
+  }
+  function createGroup() {
+    const id = 'g' + Date.now().toString(36), code = Math.random().toString(36).slice(2, 8);
+    const r = { id, name: draft.name.trim(), color: draft.color, members: draft.who.size + 1, n: 0, sub: 'グループができました', link: `halftick.app/g/${code}`,
+      msgs: [{ sys: `グループ「${draft.name.trim()}」ができました` }, ...(draft.who.size ? [{ sys: `${[...draft.who].join('、')} さんを誘いました` }] : []), { sys: '招待リンクを送ると、ほかの仲間も入れます' }] };
+    ROOMS.unshift(r); renderRooms();
+    draft.name = ''; draft.who = new Set(); draft.color = SW[0];
+    openSheet(`
+      <div class="sh-head"><b>できました！</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
+      <div class="past">
+        <div class="pi" style="border:0"><span class="ic" style="width:52px;height:52px;border-radius:16px;background:${r.color}"></span><span class="x"><b style="font-size:16px">${esc(r.name)}</b><small>${r.members}人 · 招待リンクを持っている人だけが入れます</small></span></div>
+        <div class="invite">招待リンク<div class="link">${r.link}</div><div class="muted" style="font-size:11.5px;margin-top:6px">リンクを送った相手が入れます。広まりすぎたら、グループの情報から作り直せます</div></div>
+        <button class="primary" data-copy="${r.link}">招待リンクをコピー</button>
+        <button class="ghost" data-room="${r.id}">チャットを開く</button>
+      </div>`, 'half');
+  }
+  function openGroupInfo() {
+    const r = state.room; if (!r) return;
+    const names = r.id === 'dm' ? ['s.tanaka'] : PEOPLE.slice(0, Math.min(r.members ? r.members - 1 : 3, 6));
+    openSheet(`
+      <div class="sh-head"><b>${esc(r.name)}</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
+      <div class="past" style="overflow-y:auto;padding-bottom:30px">
+        ${r.id === 'dm' ? '' : `<div class="invite">招待リンク<div class="link">${r.link || 'halftick.app/g/m4cr0x'}</div></div><button class="primary" data-copy="${r.link || 'halftick.app/g/m4cr0x'}">招待リンクをコピー</button>`}
+        <span class="lbl">メンバー</span>
+        <div class="pick"><span class="av avatar" style="width:34px;height:34px"></span><span class="x">あなた<small>${r.id === 'dm' ? '' : '作った人'}</small></span></div>
+        ${names.map(n => `<div class="pick"><span class="av" style="background:${FACE(n)}"></span><span class="x">${esc(n)}<small>${esc(ROLE[n])}</small></span>${r.id === 'dm' ? '' : `<button class="act" data-toast="${esc(n)} さんとの1対1を開きます（同じグループなので話せます）">話す</button>`}</div>`).join('')}
+        <button class="ghost" data-toast="このグループのお知らせをオフにしました">お知らせをオフにする</button>
+        ${r.id === 'dm' ? '' : '<button class="ghost" style="color:#ff6b6b" data-toast="抜けるときは確認を出します（ワイヤー）">グループを抜ける</button>'}
+      </div>`, 'full');
   }
 
   // ---------- 記事 ----------
@@ -567,7 +635,13 @@ svg { display: block; }
     if (d.share !== undefined) { openShare(); return; }
     if (d.cover) { state.cover = +d.cover; openShare(); return; }
     if (d.send) { const r = ROOMS.find(x => x.id === d.send); r.msgs.push({ me: 1, share: state.cur ? state.cur.id : 'boj', t: 'これどう思う？' }); setSheet('closed'); toast(`${r.name} に送りました`); return; }
-    if (d.room) { openRoom(d.room); return; }
+    if (d.newgroup !== undefined) { openNewGroup(); return; }
+    if (d.sw) { draft.color = d.sw; openNewGroup(); return; }
+    if (d.pick) { draft.who.has(d.pick) ? draft.who.delete(d.pick) : draft.who.add(d.pick); openNewGroup(); return; }
+    if (t.id === 'g-create') { if (draft.name.trim()) createGroup(); return; }
+    if (d.copy) { navigator.clipboard?.writeText(d.copy).catch(() => {}); toast('招待リンクをコピーしました'); return; }
+    if (d.groupinfo !== undefined) { openGroupInfo(); return; }
+    if (d.room) { setSheet('closed'); openRoom(d.room); return; }
     if (t.id === 'room-send') { const i = $('#room-input'); if (!i.value.trim()) return; state.room.msgs.push({ me: 1, t: i.value.trim() }); i.value = ''; openRoom(state.room.id); return; }
     if (d.open) { openSimple(d.open); return; }
     if (d.close === 'article') { setSheet('closed'); $('#article').classList.remove('open'); $('#article').setAttribute('aria-hidden', 'true'); return; }
@@ -576,6 +650,9 @@ svg { display: block; }
     if (d.toast) { toast(d.toast); return; }
   });
   scrim.addEventListener('click', () => setSheet('closed'));
+  document.addEventListener('input', e => {
+    if (e.target.id === 'g-name') { draft.name = e.target.value; const b = $('#g-create'); if (b) b.disabled = !draft.name.trim(); }
+  });
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter' && e.target.id === 'c-input') $('#c-send').click();
     if (e.key === 'Enter' && e.target.id === 'room-input') $('#room-send').click();
