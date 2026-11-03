@@ -1,0 +1,11 @@
+
+# 検証の成果物（撮影など）
+.artifacts/
+
+# 環境変数（.env.example はコミットする）
+.env
+.env.local
+.env.*.local
+
+# Web 書き出し
+dist/

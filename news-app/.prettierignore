@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.expo/
+.artifacts/
+ios/
+android/
+package-lock.json
+supabase/.temp/

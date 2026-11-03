@@ -1,0 +1,15 @@
+# コミット前に整形・lint・型チェックを自動で実行する。
+# 入れ方：npm i -D lefthook && npx lefthook install
+
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: '*.{js,jsx,ts,tsx,json,md,css,yml}'
+      run: npx prettier --check {staged_files}
+    lint:
+      glob: '*.{js,jsx,ts,tsx}'
+      run: npx eslint {staged_files}
+    typecheck:
+      glob: '*.{ts,tsx}'
+      run: npx tsc --noEmit
