@@ -54,7 +54,7 @@ svg { display: block; }
 
 /* 上のバー */
 .top { display: flex; align-items: center; justify-content: space-between; padding: 54px 16px 8px; }
-.avatar { width: 34px; height: 34px; border-radius: 50%; background: conic-gradient(from 200deg, #ff9a3d, #ffd25c, #7ad7ff, #b98cff, #ff9a3d); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--me-face, #333) center/cover; border: 1.5px solid rgba(255,255,255,.35); }
 .wordmark { font: 700 18px/1 var(--font); display: flex; align-items: center; gap: 6px; }
 .mark { display: inline-flex; align-items: flex-end; gap: 2px; height: 15px; }
 .mark i { width: 3px; background: var(--accent); border-radius: 1px; }
@@ -244,9 +244,18 @@ svg { display: block; }
 .ic.plus { display: grid; place-items: center; font-size: 22px; color: var(--accent); background: rgba(255,106,26,.12); }
 .field { width: 100%; height: 46px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface2); color: var(--text); padding: 0 14px; font: 15px var(--font); }
 .lbl { font-size: 12px; color: var(--muted); margin: 16px 0 8px; display: block; }
-.swatches { display: flex; gap: 10px; }
-.sw { width: 34px; height: 34px; border-radius: 10px; border: 2px solid transparent; }
-.sw.on { border-color: #fff; }
+.icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.icon-opt { aspect-ratio: 1; border-radius: 12px; background-size: cover; background-position: center; border: 2px solid transparent; }
+.icon-opt.on { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+.photo-pick { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--surface2); margin-bottom: 10px; cursor: pointer; font-size: 13.5px; font-weight: 600; }
+.photo-pick .pv { width: 52px; height: 52px; border-radius: 14px; background: var(--wire) center/cover; display: grid; place-items: center; font-size: 20px; flex: none; }
+.photo-pick small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; }
+.vis-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.chatview { display: flex; gap: 6px; padding: 0 16px 8px; }
+.ci .ic { background-size: cover !important; background-position: center !important; }
+.ci .ic.dm { border-radius: 50%; }
+.ci .tm { font-size: 11px; color: var(--muted); flex: none; text-align: right; }
+.ci .tm .n { display: inline-block; margin-top: 4px; }
 .pick { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .pick .av { width: 34px; height: 34px; border-radius: 50%; flex: none; }
 .pick .x { flex: 1; min-width: 0; font-size: 13.5px; } .pick small { display: block; color: var(--muted); font-size: 11px; }
@@ -328,7 +337,7 @@ svg { display: block; }
     <section class="screen" id="tab-chat" hidden>
       <div class="scroller">
         <div class="simple"><h2>チャット</h2></div>
-        <div class="muted" style="font-size:12px;padding:0 16px 2px">参加しているグループ</div>
+        <div class="chatview rel" id="chatview"></div>
         <div id="rooms"></div>
       </div>
       <button class="fab glass" data-newgroup aria-label="グループを作る"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M12 8v5M9.5 10.5h5"/></svg><span>グループを作る</span><span class="note" style="right:0;top:-22px">右下＝グループを作る</span></button>
@@ -395,7 +404,9 @@ svg { display: block; }
   const byId = id => A.find(a => a.id === id);
   const PEOPLE = ['s.tanaka', 'Mia Chen', 'k.mori', 'y.okada', 'David Ruiz', 'a.ishii', 'h.kato', 'n.sato'];
   const ROLE = { 's.tanaka': '債券ストラテジスト', 'Mia Chen': 'FX Sales, Singapore', 'k.mori': '為替ディーラー', 'y.okada': '地銀 運用部', 'David Ruiz': 'Macro PM, London', 'a.ishii': '生保 運用', 'h.kato': 'メガバンク 為替', 'n.sato': '個人投資家', 'あなた': '' };
-  const FACE = n => `hsl(${(PEOPLE.indexOf(n) * 47 + 20) % 360} 60% 60%)`;
+  const FACEIMG = { 's.tanaka': 5, 'Mia Chen': 1, 'k.mori': 8, 'y.okada': 2, 'David Ruiz': 4, 'a.ishii': 6, 'h.kato': 9, 'n.sato': 10, 'あなた': 3 };
+  const FACE = n => `url(${R}sq${FACEIMG[n] || 7}.jpg) center/cover`;
+  const ICONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => `${R}sq${i}.jpg`);
 
   // 議論（返信は何段でも。字下げは4段まで、それより深いと「続きを読む」）
   let cid = 100;
@@ -482,34 +493,49 @@ svg { display: block; }
 
   // ---------- チャット ----------
   const ROOMS = [
-    { id: 'macro', name: 'マクロ勉強会', members: 12, color: '#3b5bdb', sub: 'y.okada: 共有：日銀、政策金利を0.75%で据え置き', n: 3, msgs: [
+    { id: 'dm-Mia Chen', kind: 'dm', with: 'Mia Chen', name: 'Mia Chen', at: 3, sub: 'Thanks! Will read it tonight 🙏', n: 1, msgs: [{ me: 1, share: 'fomc', t: '議事要旨、これ読んだ？' }, { who: 'Mia Chen', t: 'Thanks! Will read it tonight 🙏' }] },
+    { id: 'macro', kind: 'group', name: 'マクロ勉強会', members: 12, icon: 2, at: 18, sub: 'y.okada: 共有：日銀、政策金利を0.75%で据え置き', n: 3, msgs: [
       { who: 'y.okada', share: 'boj', t: '据え置きは予想通り。声明の変化、みんなどう見ます？' },
       { me: 1, t: '「広がり」は強いね。12月は普通にあり得る' },
       { who: 's.tanaka', t: '公開の議論にも書いたけど、債券はもう半分くらい織り込んでる' } ] },
-    { id: 'fx', name: 'Tokyo FX desk alumni', members: 8, color: '#2f9e44', sub: 'Mia Chen: see you at the Dec meeting', n: 0, msgs: [{ who: 'Mia Chen', t: 'see you at the Dec meeting' }] },
-    { id: 'dm', name: 's.tanaka（1対1）', sub: '例のレポート、明日送ります', n: 0, msgs: [{ who: 's.tanaka', t: '例のレポート、明日送ります' }] },
+    { id: 'dm-k.mori', kind: 'dm', with: 'k.mori', name: 'k.mori', at: 52, sub: '152円の売り、どこまで続くかな', n: 0, msgs: [{ who: 'k.mori', t: '152円の売り、どこまで続くかな' }] },
+    { id: 'fx', kind: 'group', name: 'Tokyo FX desk alumni', members: 8, icon: 1, at: 160, sub: 'Mia Chen: see you at the Dec meeting', n: 0, msgs: [{ who: 'Mia Chen', t: 'see you at the Dec meeting' }] },
+    { id: 'dm-s.tanaka', kind: 'dm', with: 's.tanaka', name: 's.tanaka', at: 1440, sub: '例のレポート、明日送ります', n: 0, msgs: [{ who: 's.tanaka', t: '例のレポート、明日送ります' }] },
   ];
+  const roomIcon = r => r.kind === 'dm' ? FACE(r.with) : typeof r.icon === 'string' ? `url(${r.icon}) center/cover` : `url(${ICONS[(r.icon || 1) - 1]}) center/cover`;
+  const ago = m => m < 1 ? 'たった今' : m < 60 ? `${m}分前` : m < 1440 ? `${Math.floor(m / 60)}時間前` : '昨日';
+  state.chatView = 'all';
   function renderRooms() {
-    $('#rooms').innerHTML = ROOMS.map(r => `<button class="ci" data-room="${r.id}"><span class="ic" style="background:${r.color || 'var(--surface2)'}"></span><span class="x"><b>${esc(r.name)}</b><span>${esc(r.sub)}</span></span>${r.members ? `<span class="muted" style="font-size:11px">${r.members}人</span>` : ''}${r.n ? `<span class="n">${r.n}</span>` : ''}</button>`).join('');
+    $('#chatview').innerHTML = [['all', 'すべて'], ['dm', '個人'], ['group', 'グループ']].map(([k, l]) => `<button class="chip ${state.chatView === k ? 'on' : ''}" data-chatview="${k}">${l}</button>`).join('') +
+      '<span class="note" style="right:16px;top:6px">最初は一緒に表示。上のボタンで切り替え</span>';
+    const list = ROOMS.filter(r => state.chatView === 'all' || r.kind === state.chatView).sort((a, b) => a.at - b.at);
+    $('#rooms').innerHTML = list.map(r => `<button class="ci" data-room="${r.id}"><span class="ic ${r.kind}" style="background:${roomIcon(r)}"></span><span class="x"><b>${esc(r.name)}</b>${r.kind === 'group' ? ` <span class="muted" style="display:inline;font-size:11px">· ${r.members}人</span>` : ''}<span>${esc(r.sub)}</span></span><span class="tm">${ago(r.at)}${r.n ? `<br><span class="n">${r.n}</span>` : ''}</span></button>`).join('')
+      || `<p class="muted" style="padding:16px;font-size:13px">${state.chatView === 'dm' ? 'まだ1対1のチャットはありません。同じグループの人のプロフィールから話しかけられます' : 'まだグループはありません。右下のボタンから作れます'}</p>`;
+  }
+  function openDM(name) {
+    let r = ROOMS.find(x => x.kind === 'dm' && x.with === name);
+    if (!r) { r = { id: 'dm-' + name, kind: 'dm', with: name, name, at: 0, sub: 'まだメッセージはありません', n: 0, msgs: [{ sys: `${name} さんとの1対1です。同じグループのメンバーだから話せます` }] }; ROOMS.push(r); renderRooms(); }
+    openRoom(r.id);
   }
   function openRoom(id) {
-    const r = ROOMS.find(x => x.id === id); state.room = r;
+    const r = ROOMS.find(x => x.id === id); state.room = r; r.n = 0; renderRooms();
     $('#room-name').textContent = r.name;
     $('#msgs').innerHTML = r.msgs.map(m => m.sys ? `<div class="sys">${esc(m.sys)}</div>` : `<div class="mg ${m.me ? 'me' : ''}">${m.who ? `<div class="who">${esc(m.who)}</div>` : ''}${m.share ? `<button class="shared" data-article="${m.share}"><img src="${R}cover1.jpg" alt="共有された配信の表紙"></button>` : ''}<div class="bub">${esc(m.t)}</div></div>`).join('');
     $('#room').classList.add('open'); $('#room').setAttribute('aria-hidden', 'false');
   }
 
   // ---------- グループを作る ----------
-  const SW = ['#3b5bdb', '#2f9e44', '#e8590c', '#ae3ec9', '#0c8599', '#c2255c'];
-  const draft = { name: '', color: SW[0], who: new Set() };
+  const draft = { name: '', icon: ICONS[1], who: new Set() };
   function openNewGroup() {
     openSheet(`
       <div class="sh-head"><b>グループを作る</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
       <div class="past" style="overflow-y:auto;padding-bottom:30px">
         <label class="lbl" for="g-name" style="margin-top:4px">グループの名前</label>
         <input class="field" id="g-name" maxlength="30" placeholder="例：マクロ勉強会、同期の為替部" value="${esc(draft.name)}">
-        <span class="lbl">アイコンの色</span>
-        <div class="swatches">${SW.map(c => `<button class="sw ${c === draft.color ? 'on' : ''}" style="background:${c}" data-sw="${c}" aria-label="色"></button>`).join('')}</div>
+        <span class="lbl">アイコン</span>
+        <label class="photo-pick rel" for="g-photo"><span class="pv" style="${draft.icon.startsWith('data:') ? `background-image:url(${draft.icon})` : ''}">${draft.icon.startsWith('data:') ? '' : '＋'}</span><span>写真から選ぶ<small>${draft.icon.startsWith('data:') ? '選んだ写真をアイコンにします' : '写真フォルダの画像を使えます'}</small></span><span class="note" style="right:8px;top:-10px">写真フォルダ</span></label>
+        <input type="file" accept="image/*" id="g-photo" class="vis-hidden">
+        <div class="icon-grid rel">${ICONS.slice(0, 12).map(u => `<button class="icon-opt ${u === draft.icon ? 'on' : ''}" style="background-image:url(${u})" data-icon="${u}" aria-label="サンプルのアイコン"></button>`).join('')}<span class="note" style="right:0;top:-22px">サンプルのアイコン</span></div>
         <span class="lbl">誰を誘う？（あとから招待リンクでも誘えます）</span>
         ${PEOPLE.map(n => `<button class="pick ${draft.who.has(n) ? 'on' : ''}" data-pick="${esc(n)}"><span class="av" style="background:${FACE(n)}"></span><span class="x">${esc(n)}<small>${esc(ROLE[n])}</small></span><span class="ck">${draft.who.has(n) ? '✓' : ''}</span></button>`).join('')}
         <button class="primary" id="g-create" ${draft.name.trim() ? '' : 'disabled'}>作る${draft.who.size ? `（${draft.who.size}人を誘う）` : ''}</button>
@@ -517,14 +543,14 @@ svg { display: block; }
   }
   function createGroup() {
     const id = 'g' + Date.now().toString(36), code = Math.random().toString(36).slice(2, 8);
-    const r = { id, name: draft.name.trim(), color: draft.color, members: draft.who.size + 1, n: 0, sub: 'グループができました', link: `halftick.app/g/${code}`,
+    const r = { id, kind: 'group', at: 0, name: draft.name.trim(), icon: draft.icon, members: draft.who.size + 1, n: 0, sub: 'グループができました', link: `halftick.app/g/${code}`,
       msgs: [{ sys: `グループ「${draft.name.trim()}」ができました` }, ...(draft.who.size ? [{ sys: `${[...draft.who].join('、')} さんを誘いました` }] : []), { sys: '招待リンクを送ると、ほかの仲間も入れます' }] };
     ROOMS.unshift(r); renderRooms();
-    draft.name = ''; draft.who = new Set(); draft.color = SW[0];
+    draft.name = ''; draft.who = new Set(); draft.icon = ICONS[1];
     openSheet(`
       <div class="sh-head"><b>できました！</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
       <div class="past">
-        <div class="pi" style="border:0"><span class="ic" style="width:52px;height:52px;border-radius:16px;background:${r.color}"></span><span class="x"><b style="font-size:16px">${esc(r.name)}</b><small>${r.members}人 · 招待リンクを持っている人だけが入れます</small></span></div>
+        <div class="pi" style="border:0"><span class="ic" style="width:52px;height:52px;border-radius:16px;flex:none;background:${roomIcon(r)}"></span><span class="x"><b style="font-size:16px">${esc(r.name)}</b><small>${r.members}人 · 招待リンクを持っている人だけが入れます</small></span></div>
         <div class="invite">招待リンク<div class="link">${r.link}</div><div class="muted" style="font-size:11.5px;margin-top:6px">リンクを送った相手が入れます。広まりすぎたら、グループの情報から作り直せます</div></div>
         <button class="primary" data-copy="${r.link}">招待リンクをコピー</button>
         <button class="ghost" data-room="${r.id}">チャットを開く</button>
@@ -532,16 +558,16 @@ svg { display: block; }
   }
   function openGroupInfo() {
     const r = state.room; if (!r) return;
-    const names = r.id === 'dm' ? ['s.tanaka'] : PEOPLE.slice(0, Math.min(r.members ? r.members - 1 : 3, 6));
+    const names = r.kind === 'dm' ? [r.with] : PEOPLE.slice(0, Math.min(r.members ? r.members - 1 : 3, 6));
     openSheet(`
       <div class="sh-head"><b>${esc(r.name)}</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
       <div class="past" style="overflow-y:auto;padding-bottom:30px">
-        ${r.id === 'dm' ? '' : `<div class="invite">招待リンク<div class="link">${r.link || 'halftick.app/g/m4cr0x'}</div></div><button class="primary" data-copy="${r.link || 'halftick.app/g/m4cr0x'}">招待リンクをコピー</button>`}
+        ${r.kind === 'dm' ? '' : `<div class="invite">招待リンク<div class="link">${r.link || 'halftick.app/g/m4cr0x'}</div></div><button class="primary" data-copy="${r.link || 'halftick.app/g/m4cr0x'}">招待リンクをコピー</button>`}
         <span class="lbl">メンバー</span>
-        <div class="pick"><span class="av avatar" style="width:34px;height:34px"></span><span class="x">あなた<small>${r.id === 'dm' ? '' : '作った人'}</small></span></div>
-        ${names.map(n => `<div class="pick"><button class="av" style="background:${FACE(n)}" data-person="${esc(n)}" aria-label="${esc(n)} のプロフィール"></button><span class="x">${esc(n)}<small>${esc(ROLE[n])}</small></span>${r.id === 'dm' ? '' : `<button class="act" data-toast="${esc(n)} さんとの1対1を開きます（同じグループなので話せます）">話す</button>`}</div>`).join('')}
+        <div class="pick"><span class="av" style="background:${FACE('あなた')}"></span><span class="x">あなた<small>${r.kind === 'dm' ? '' : '作った人'}</small></span></div>
+        ${names.map(n => `<div class="pick"><button class="av" style="background:${FACE(n)}" data-person="${esc(n)}" aria-label="${esc(n)} のプロフィール"></button><span class="x">${esc(n)}<small>${esc(ROLE[n])}</small></span>${r.kind === 'dm' ? '' : `<button class="act" data-dm="${esc(n)}">話す</button>`}</div>`).join('')}
         <button class="ghost" data-toast="このグループのお知らせをオフにしました">お知らせをオフにする</button>
-        ${r.id === 'dm' ? '' : '<button class="ghost" style="color:#ff6b6b" data-toast="抜けるときは確認を出します（ワイヤー）">グループを抜ける</button>'}
+        ${r.kind === 'dm' ? '' : '<button class="ghost" style="color:#ff6b6b" data-toast="抜けるときは確認を出します（ワイヤー）">グループを抜ける</button>'}
       </div>`, 'full');
   }
 
@@ -577,7 +603,7 @@ svg { display: block; }
     const tabs = me ? [['comments', 'コメント'], ['saved', '保存した記事'], ['groups', 'グループ']] : [['comments', 'コメント'], ['posts', '投稿']];
     let list = '';
     if (state.ptab === 'saved' && me) list = A.filter(a => state.saved.has(a.id)).map(a => `<button class="pc" data-article="${a.id}"><small>${esc(a.when)}</small><div class="t">${esc(a.title)}</div></button>`).join('') || '<p class="muted" style="padding:12px 16px;font-size:12.5px">まだ保存した記事はありません</p>';
-    else if (state.ptab === 'groups' && me) list = ROOMS.filter(r => r.id !== 'dm').map(r => `<button class="pc" data-room="${r.id}"><small>${r.members || 2}人</small><div class="t">${esc(r.name)}</div></button>`).join('');
+    else if (state.ptab === 'groups' && me) list = ROOMS.filter(r => r.kind === 'group').map(r => `<button class="pc" data-room="${r.id}"><small>${r.members || 2}人</small><div class="t">${esc(r.name)}</div></button>`).join('');
     else if (state.ptab === 'posts') list = '<p class="muted" style="padding:12px 16px;font-size:12.5px">' + (['s.tanaka', 'Mia Chen', 'y.okada'].includes(name) ? '投稿は「みんな」に並んでいます' : 'まだ投稿はありません') + '</p>';
     else list = cs.length ? cs.map(({ c, art }) => `<button class="pc" data-article="${art.id}" data-comments="1"><small>${esc(art.title)}</small><div class="t">${esc(c.t)}</div><div class="f">▲ ${c.up} · ${c.min === 0 ? 'たった今' : c.min + '分前'}</div></button>`).join('')
       : `<p class="muted" style="padding:12px 16px;font-size:12.5px">${me ? 'まだコメントはありません。気になる配信で「あなたはどう思う？」に書いてみてください' : 'まだコメントはありません'}</p>`;
@@ -594,10 +620,10 @@ svg { display: block; }
         <span class="note" style="left:10px;top:10px">メンバーカード（記事の表紙1の形）</span>
       </div>
       <div class="bio">${esc(BIO[name] || 'よろしくお願いします。')}</div>
-      <div class="stats"><div><b>${cs.length + (me ? 0 : 40)}</b>コメント</div><div><b>${up + (me ? 0 : 300)}</b>もらった ▲</div><div><b>${me ? ROOMS.filter(r => r.id !== 'dm').length : 2}</b>グループ</div></div>
+      <div class="stats"><div><b>${cs.length + (me ? 0 : 40)}</b>コメント</div><div><b>${up + (me ? 0 : 300)}</b>もらった ▲</div><div><b>${me ? ROOMS.filter(r => r.kind === 'group').length : 2}</b>グループ</div></div>
       <div class="pbtns">${me
         ? '<button class="primary" data-toast="名前・職種・ひとこと・カードの絵を変えられます（ワイヤー）">プロフィールを編集</button><button class="ghost" data-toast="プロフィールのリンクをコピーしました">⇪</button>'
-        : `<button class="primary" ${shares ? 'data-room="dm"' : `data-toast="同じグループに入ると、${esc(name)} さんと1対1で話せます"`}>メッセージを送る</button><button class="ghost" data-toast="ブロック・通報（ワイヤー）">•••</button>`}</div>
+        : `<button class="primary" ${shares ? `data-dm="${esc(name)}"` : `data-toast="同じグループに入ると、${esc(name)} さんと1対1で話せます"`}>メッセージを送る</button><button class="ghost" data-toast="ブロック・通報（ワイヤー）">•••</button>`}</div>
       <div class="ptabs">${tabs.map(([k, l]) => `<button class="chip ${state.ptab === k ? 'on' : ''}" data-ptab="${k}">${l}</button>`).join('')}</div>
       <div>${list}</div>`;
     $('#p-scroll').scrollTop = 0;
@@ -683,7 +709,7 @@ svg { display: block; }
       <div class="share-wrap">
         <div class="cover-pick"><button class="chip ${state.cover === 1 ? 'on' : ''}" data-cover="1">表紙 1（カード）</button><button class="chip ${state.cover === 2 ? 'on' : ''}" data-cover="2">表紙 2（ポスター）</button></div>
         <div class="cover rel"><img src="${R}cover${state.cover}.jpg" alt="記事の表紙の見本"><span class="note" style="left:8px;top:8px">記事の表紙（共有・SNS用の画像）</span></div>
-        <div class="send-list">${ROOMS.map(r => `<button data-send="${r.id}">${esc(r.name)}<span>送る</span></button>`).join('')}<button data-toast="リンクをコピーしました">リンクをコピー<span>halftick.app/p/1104-2</span></button></div>
+        <div class="send-list">${ROOMS.map(r => `<button data-send="${r.id}">${esc(r.name)}${r.kind === 'dm' ? '（1対1）' : ''}<span>送る</span></button>`).join('')}<button data-toast="リンクをコピーしました">リンクをコピー<span>halftick.app/p/1104-2</span></button></div>
       </div>`, 'full');
   }
   function openSimple(kind) {
@@ -732,7 +758,9 @@ svg { display: block; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
     if (d.newgroup !== undefined) { openNewGroup(); return; }
-    if (d.sw) { draft.color = d.sw; openNewGroup(); return; }
+    if (d.icon) { draft.icon = d.icon; openNewGroup(); return; }
+    if (d.chatview) { state.chatView = d.chatview; renderRooms(); return; }
+    if (d.dm) { setSheet('closed'); $('#profile').classList.remove('open'); openDM(d.dm); return; }
     if (d.pick) { draft.who.has(d.pick) ? draft.who.delete(d.pick) : draft.who.add(d.pick); openNewGroup(); return; }
     if (t.id === 'g-create') { if (draft.name.trim()) createGroup(); return; }
     if (d.copy) { navigator.clipboard?.writeText(d.copy).catch(() => {}); toast('招待リンクをコピーしました'); return; }
@@ -746,6 +774,12 @@ svg { display: block; }
     if (d.toast) { toast(d.toast); return; }
   });
   scrim.addEventListener('click', () => setSheet('closed'));
+  document.addEventListener('change', e => {
+    if (e.target.id !== 'g-photo' || !e.target.files[0]) return;
+    const fr = new FileReader();
+    fr.onload = () => { draft.icon = fr.result; openNewGroup(); };
+    fr.readAsDataURL(e.target.files[0]);
+  });
   document.addEventListener('input', e => {
     if (e.target.id === 'g-name') { draft.name = e.target.value; const b = $('#g-create'); if (b) b.disabled = !draft.name.trim(); }
   });
@@ -755,6 +789,7 @@ svg { display: block; }
   });
   $('#notes-toggle').addEventListener('change', e => $('#device').classList.toggle('show-notes', e.target.checked));
 
+  document.documentElement.style.setProperty('--me-face', FACE('あなた').replace(' center/cover', ''));
   renderChips(); renderFeed(); renderLib(); renderPosts(); renderRooms();
   setSheet('closed');
 })();
