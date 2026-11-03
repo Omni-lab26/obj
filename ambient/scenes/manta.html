@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Mantas</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0a0e17; }
+  body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  canvas { position: absolute; inset: 0; display: block; }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<canvas id="fx"></canvas>
+<script src="shared/host.js"></script>
+<script src="shared/ascii-sea.js"></script>
+<script>
+// Mantas in deep water at night, drawn in type: broad wings beating slowly, long tails
+// trailing behind in a few loose dots. Tap to feed; tap right by one and it veers off.
+(() => {
+  const { lerp } = Host;
+
+  // Five tones, darkest to palest, then an eye colour. Pale glyphs on the dark tiles.
+  const tones = (dark, mid, light, pale, eye) => [
+    { fill: dark, glyph: '#dfe3ff' },
+    { fill: mid, glyph: '#e8ebff' },
+    { fill: light, glyph: '#1b1f3a' },
+    { fill: pale, glyph: '#262b4a' },
+    { fill: eye, glyph: '#c9cdf0' },
+  ];
+  const D = 0, M = 1, L = 2, P = 3, EYE = 4;
+
+  // The disc's centre line seen from above: a blunt head, broad over the wings' roots,
+  // then narrowing into the root of the tail.
+  const disc = (u) =>
+    u < 0.08 ? lerp(0.55, 0.85, u / 0.08)
+    : u < 0.4 ? lerp(0.85, 1, (u - 0.08) / 0.32)
+    : lerp(1, 0.08, Math.pow((u - 0.4) / 0.6, 0.9));
+
+  const manta = (id, palette, accents) => ({
+    id,
+    length: 10.5,
+    reach: 1.7,
+    width: 0.16,
+    profile: disc,
+    speed: 1.15,
+    agility: 0.45,
+    beat: 1.5,
+    wave: 0.012,
+    // The wings: broad triangles from just behind the head to the root of the tail,
+    // beating slowly (their span drawing in on the upstroke).
+    wings: { from: 0.04, to: 0.62, tipAt: 0.3, span: 0.78, sweep: 0.08, root: 0.07, tip: 0.012, solid: 1, stretch: 0.3, rate: 0.85 },
+    fins: [
+      // Cephalic fins: two short horns curling forward from the head.
+      { at: 0.04, len: 0.12, root: 0.035, tip: 0.02, sweep: 2.55, flap: 0, solid: 0.9 },
+    ],
+    // A long thin tail, frayed to a trail of dots.
+    tail: 0.9,
+    tailSpread: 0.012,
+    tailShape: 0.6,
+    fork: 0,
+    tailSolid: 0.32,
+    hammer: 0,
+    eyes: { at: 0.06, side: 0.82, r: 0.016 },
+    eye: EYE,
+    shimmer: 1.8,
+    patternScale: [5, 1.6],
+    fillFrom: 0.08,
+    accents,
+    accentRate: 0.02,
+    palette,
+    // Darker down the middle of the back, paler toward the wingtips; a pale chevron on
+    // each shoulder, as reef mantas have.
+    paint(t, s, n, part, pattern, h) {
+      if (part === 2) return h > 0.5 ? M : D;
+      if (part === 3) return D;
+      const side = Math.abs(s);
+      if (part === 1) {
+        if (t < 0.4 && side < 0.5 && n > 0.45) return P;
+        return h > 0.55 ? M : n > 0.6 ? L : D;
+      }
+      if (t > 0.12 && t < 0.4 && side > 0.55 && n > 0.5) return L;
+      return side < 0.4 ? (n > 0.5 ? D : M) : n > 0.55 ? M : L;
+    },
+  });
+
+  const indigo = manta('indigo', tones('#2f3168', '#464a91', '#7277c4', '#a3a7e3', '#0f1124'), ['#9aa0ff', '#6fd3c4']);
+  const teal = manta('teal', tones('#1f4a4a', '#2f6b66', '#5a9e92', '#8ccab9', '#0b1a1a'), ['#9ee6d2', '#8f95ff']);
+  const dusk = { ...manta('dusk', tones('#3a2d5e', '#58468c', '#8a76c2', '#b9a8e6', '#140f24'), ['#c7a6ff']), length: 8, speed: 1.35 };
+
+  AsciiSea.create({
+    theme: {
+      bg: '#0a0e17',
+      grid: 'rgba(140,160,220,0.055)',
+      vignette: ['rgba(38,44,78,0.45)', 'rgba(6,8,14,0)'],
+      glow: true,
+      shadow: [0, 0, 0],
+      shadowAlpha: 0.25,
+      shadowOffset: 0.3,
+    },
+    species: [indigo, teal, dusk],
+    school: [
+      { species: 'indigo', depth: 0.05 },
+      { species: 'teal', depth: 0.35 },
+      { species: 'dusk', depth: 0.6 },
+    ],
+    particles: 'specks',
+    cellsAcross: 44,
+    ambientGlyph: '#4a5070',
+    rippleGlyph: '#7b84b8',
+    pellet: { fill: '#c9b36a', glyph: '#1d1a0c' },
+  });
+})();
+</script>
+</body>
+</html>

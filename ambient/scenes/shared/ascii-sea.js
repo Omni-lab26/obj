@@ -289,7 +289,8 @@
         const dx = f.x - o.x;
         const dy = f.y - o.y;
         const d = Math.hypot(dx, dy);
-        const r = (f.L + o.L) * 0.6;
+        // (Wide creatures, mantas, keep their distance by their span: reach × length.)
+        const r = (f.L * (f.sp.reach || 1) + o.L * (o.sp.reach || 1)) * 0.6;
         if (d > 0.001 && d < r) {
           const w = 1 - d / r;
           sx += (dx / d) * w * w * 2.2;
@@ -510,7 +511,10 @@
         tx /= d;
         ty /= d;
         const bodyW = W * sp.profile(fin.at);
-        const len = fin.len * f.L;
+        // A wing (a manta's) beats: both sides reach out and draw in together, which
+        // seen from above is the down- and upstroke. stretch is how much shorter it gets.
+        const beat = fin.stretch ? 1 - fin.stretch * (0.5 + 0.5 * Math.sin(f.phase * (fin.rate || 0.5) + (fin.lag || 0))) : 1;
+        const len = fin.len * f.L * beat;
         for (let side = -1; side <= 1; side += 2) {
           // Rotate the backward direction (-t) out toward this side. Positive
           // rotation turns toward -n, hence the mirrored sign.
@@ -522,6 +526,41 @@
           const rx = p.x + p.nx * side * bodyW * 0.55;
           const ry = p.y + p.ny * side * bodyW * 0.55;
           addPart(rx, ry, rx + dx * len, ry + dy * len, fin.root * f.L, fin.tip * f.L, 0.3, 0.5, 1, fin.solid);
+        }
+      }
+
+      // Wings (a manta's): broad triangles, from the body's edge between wings.from and
+      // wings.to out to a tip beside wings.tipAt, filled by a fan of strokes that all
+      // meet at the tip. They beat like fins with stretch: span in and out together.
+      if (sp.wings) {
+        const w = sp.wings;
+        const beat = 1 - w.stretch * (0.5 + 0.5 * Math.sin(f.phase * (w.rate || 0.5)));
+        const at = (u) => {
+          const k = Math.min(SEGMENTS - 1.001, u * (SEGMENTS - 1));
+          const k0 = Math.floor(k);
+          const t0 = k - k0;
+          const a = q[k0];
+          const b = q[k0 + 1];
+          let bx = b.x - a.x;
+          let by = b.y - a.y;
+          const bd = Math.hypot(bx, by) || 1;
+          return { x: a.x + (b.x - a.x) * t0, y: a.y + (b.y - a.y) * t0, nx: a.nx, ny: a.ny, bx: bx / bd, by: by / bd };
+        };
+        const p = at(w.tipAt);
+        const N = 7;
+        for (let side = -1; side <= 1; side += 2) {
+          const tipX = p.x + p.nx * side * w.span * f.L * beat + p.bx * w.sweep * f.L;
+          const tipY = p.y + p.ny * side * w.span * f.L * beat + p.by * w.sweep * f.L;
+          for (let j = 0; j < N; j++) {
+            const u = w.from + ((w.to - w.from) * j) / (N - 1);
+            const e = at(u);
+            const off = W * sp.profile(u) * 0.7;
+            const rx = e.x + e.nx * side * off;
+            const ry = e.y + e.ny * side * off;
+            // Thicker toward the middle of the fan, so the wing is solid there.
+            const mid = 1 - Math.abs(j / (N - 1) - 0.4) * 1.2;
+            addPart(rx, ry, tipX, tipY, w.root * f.L * (0.55 + 0.45 * mid), w.tip * f.L, u, u, 1, w.solid);
+          }
         }
       }
 
@@ -623,7 +662,8 @@
           // Glyph: density picks from the ramp with a little per-cell jitter.
           cellGlyph[i] =
             part === 4 ? G['@'] : clamp(Math.floor(best * (RAMP.length - 1) * 1.15 + (hsh - 0.5) * 4), 0, RAMP.length - 1);
-          const accent = sp.accentIds.length && hsh > 0.985 ? sp.accentIds[Math.floor(hsh * 1e5) % sp.accentIds.length] : -1;
+          // A few glyphs in an accent colour (how many: accentRate, 1.5 % by default).
+          const accent = sp.accentIds.length && hsh > 1 - (sp.accentRate ?? 0.015) ? sp.accentIds[Math.floor(hsh * 1e5) % sp.accentIds.length] : -1;
           cellGlyphC[i] = accent >= 0 ? accent : cellFill[i] >= 0 ? pal.glyph : pal.fill;
           cellGlyphA[i] = clamp(0.35 + best, 0.3, 1) * f.alpha;
         }
