@@ -243,6 +243,27 @@ svg { display: block; }
 .pc small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
 .pc .t { font-size: 13.5px; line-height: 1.55; }
 .pc .f { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.tchip { margin-left: auto; font: 700 10px/1 var(--font); padding: 5px 8px; border-radius: 999px; letter-spacing: .05em; flex: none; }
+.t-slot { background: rgba(255,255,255,.12); color: #e6e6e8; } .t-brk { background: #ff3b30; color: #fff; }
+.t-note { background: rgba(46,196,182,.18); color: #5fe0d3; } .t-deep { background: rgba(155,123,255,.2); color: #c4b0ff; }
+.feed-item.k-note { box-shadow: inset 3px 0 0 #2ec4b6; } .feed-item.k-deep { box-shadow: inset 3px 0 0 #9b7bff; }
+.notebody { display: block; width: 100%; margin-top: 12px; padding: 16px 16px 18px; border-radius: 20px; background: rgba(46,196,182,.08); border: 1px solid rgba(46,196,182,.28); font-size: 16.5px; line-height: 1.7; font-weight: 500; }
+.notebody .q { display: block; font: 700 34px/.6 var(--font); color: #2ec4b6; margin: 6px 0 4px; }
+.dcover { position: relative; display: block; width: 100%; margin-top: 12px; border-radius: 22px; overflow: hidden; }
+.dcover img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+.dband { position: absolute; left: 12px; bottom: 12px; padding: 7px 11px; border-radius: 999px; font: 700 11px/1 var(--font); background: rgba(70,50,140,.55); border-color: rgba(196,176,255,.45); }
+.dtitle { font-size: 18.5px; font-weight: 800; line-height: 1.42; margin-top: 12px; letter-spacing: -.01em; }
+.dlead { font-size: 13px; color: var(--muted); line-height: 1.6; margin-top: 4px; }
+.deepstrip { background: #6a4fd6; }
+.rhythm { position: relative; height: 40px; margin: 0 22px 8px; }
+.rline { position: absolute; left: 0; right: 0; top: 14px; height: 1px; background: var(--line); }
+.rtick { position: absolute; top: 4px; transform: translateX(-1px); display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.rtick i { width: 3px; height: 20px; border-radius: 1px; background: var(--text); }
+.rtick.next i { height: 10px; margin-top: 10px; background: var(--muted); }
+.rtick b { font: 600 10.5px/1 var(--mono); color: var(--muted); transform: translateX(-40%); }
+.rtick.done b { color: var(--text); }
+.rdot { position: absolute; top: 8px; width: 12px; height: 12px; border-radius: 50%; transform: translateX(-6px); border: 2px solid var(--bg); }
+.rdot.r-note { background: #2ec4b6; } .rdot.r-breaking { background: #ff3b30; } .rdot.r-deep { background: #9b7bff; }
 .brkbar { position: relative; margin: 0 16px 6px; }
 .brkbar .bx { display: flex; gap: 10px; align-items: center; width: 100%; padding: 11px 40px 11px 12px; border-radius: 16px; background: linear-gradient(90deg, rgba(255,59,48,.28), rgba(255,59,48,.1)); border: 1px solid rgba(255,59,48,.45); font-size: 13px; line-height: 1.45; }
 .brkbar .x { flex: 1; min-width: 0; } .brkbar b { display: block; font-size: 11px; color: #ff8a80; letter-spacing: .06em; }
@@ -582,6 +603,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         </div>
         <div id="brkbar"></div>
         <div class="chips rel" id="chips"></div>
+        <div class="rhythm rel" id="rhythm"></div>
         <div id="feed"></div>
       </div>
     </section>
@@ -721,9 +743,12 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   // 仮データ（すべてサンプル）
   const A = [
     { id: 'nikkei', img: 9, lab: 'Asia close', tag: '#株式', tm: '15:30', when: '11月4日（火）15:30 · アジア引け・欧州寄り付き', title: '日経平均は3日ぶりにひと休み。半導体株で利益確定の売りが出ました', c: 86, r: 412, tint: '#1f2a1c' },
+    { id: 'n1', type: 'note', tm: '14:05', when: '11月4日（火）14:05 · ひとこと', tag: '#中央銀行', title: '会見で「データ次第」が7回', text: '15:30 の配信の前にひとこと。さっきの総裁会見、「データ次第」が7回出てきました。数えてた人いますか？笑　12月に動くかは、やっぱり来月の賃金のデータ次第っぽいです。', c: 38, r: 160 },
     { id: 'boj', img: 7, brk: true, lab: 'BOJ decision', tag: '#日銀', tm: '12:18', when: '11月4日（火）12:18 · 速報', title: '日銀は金利0.75%で据え置き。でも声明にちょっと変化あり', c: 214, r: 1200, tint: '#3a1a14' },
     { id: 'yen', img: 8, lab: 'Midday', tag: '#為替', tm: '11:30', when: '11月4日（火）11:30 · アジアの昼', title: 'ドル円は152円台へ。お昼に輸入企業の買いがまた増えてきました', c: 41, r: 188, tint: '#2a2826' },
+    { id: 'n2', type: 'note', tm: '9:40', when: '11月4日（火）9:40 · ひとこと', tag: '#為替', title: 'ドル円152.80まで', text: '朝のドル円、152.80まで上がって少し戻しています。輸入企業の買いが多そう。11:30 の配信でくわしく書きますね。', link: ['日本銀行 · 外国為替市況', 'boj.or.jp'], c: 21, r: 95 },
     { id: 'fomc', img: 1, lab: 'US close', tag: '#FRB', tm: '7:00', when: '11月4日（火）7:00 · 米国の大引け後', title: 'FOMCの議事要旨、12月の利下げには慎重な人が多めでした', c: 57, r: 301, tint: '#172441' },
+    { id: 'd1', type: 'deep', img: 2, read: 8, lab: 'Deep dive', tag: '#仕事と賃金', tm: '昨日 20:00', when: '11月3日（月）20:00 · 深掘り', title: 'なぜ日本の賃金は30年上がりにくかったのか。グラフで振り返る', lead: '物価、生産性、働き方の3つから、ゆっくり読み解きます。週末に読みたい長めの記事です。', c: 126, r: 520, tint: '#1f1d2e' },
     { id: 'ust', img: 5, lab: 'US pre-open', tag: '#債券', tm: '昨日 22:00', when: '11月3日（月）22:00 · 米国の寄り付き前', title: '米10年債の利回りが4.4%台に。入札の人気がいまひとつでした', c: 133, r: 640, tint: '#3d1210' },
     { id: 'nfp', img: 11, lab: 'Breaking', tag: '#雇用統計', tm: '11/1', when: '11月1日（土）22:30 · 速報', title: '米雇用統計は+18.7万人。予想より強めの結果に', c: 302, r: 1800, tint: '#0f1a24' },
     { id: 'earn', img: 10, lab: 'Weekly', tag: '#決算', tm: '10/31', when: '10月31日（金）15:30 · 週末のまとめ', title: '来週の決算、注目は半導体と銀行です', c: 64, r: 220, tint: '#121212' },
@@ -742,7 +767,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     { id: 'imf', img: 1, lab: 'World', tag: '#世界経済', tm: '10/3', when: '10月3日（金）22:00 · 米国の寄り付き前', title: 'IMFの見通し、世界の成長は3%前後で横ばいです', c: 63, r: 240, tint: '#16243f', min: 3 },
   ];
   const byId = id => A.find(a => a.id === id);
-  const imgOf = (a, k) => a.src || `${R}${k}${a.img}.jpg`;
+  const NOTE_TILE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#123b38"/><text x="50" y="68" font-size="60" text-anchor="middle" fill="#5fe0d3" font-family="Georgia,serif">“</text></svg>');
+  const imgOf = (a, k) => a.src || (a.type === 'note' ? NOTE_TILE : `${R}${k}${a.img}.jpg`);
   const PEOPLE = ['s.tanaka', 'Mia Chen', 'k.mori', 'y.okada', 'David Ruiz', 'a.ishii', 'h.kato', 'n.sato'];
   const ROLE = { 's.tanaka': '債券ストラテジスト', 'Mia Chen': 'FX Sales, Singapore', 'k.mori': '為替ディーラー', 'y.okada': '地銀 運用部', 'David Ruiz': 'Macro PM, London', 'a.ishii': '生保 運用', 'h.kato': 'メガバンク 為替', 'n.sato': '個人投資家', 'あなた': '為替・金利ウォッチャー' };
   const FACEIMG = { 's.tanaka': 5, 'Mia Chen': 1, 'k.mori': 8, 'y.okada': 2, 'David Ruiz': 4, 'a.ishii': 6, 'h.kato': 9, 'n.sato': 10, 'あなた': 3 };
@@ -786,7 +812,9 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   let saveSeq = 10;
 
   // ---------- ホーム ----------
-  const CHIPS = ['最新', '速報', '盛り上がり中', '物価', '仕事', '株式', '為替', '債券'];
+  const CHIPS = ['最新', '定時', '速報', 'ひとこと', '深掘り', '盛り上がり中', '物価', '仕事', '株式', '為替', '債券'];
+  const tp = a => a.type || (a.brk ? 'breaking' : 'slot');
+  const TYPE = { slot: ['定時', 't-slot'], breaking: ['速報', 't-brk'], note: ['ひとこと', 't-note'], deep: ['深掘り', 't-deep'] };
   function renderChips() {
     $('#chips').innerHTML = CHIPS.map(c => `<button class="chip ${c === state.chip ? 'on' : ''}" data-chip="${c}">${c}</button>`).join('') +
       '<span class="note" style="left:16px;top:44px">絞り込み（最新・速報・盛り上がり中・ジャンル）</span>';
@@ -795,13 +823,15 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   function renderFeed() {
     const nb = A.find(a => a.brk && !/^\d+\/\d+$/.test(a.tm));
     $('#brkbar').innerHTML = nb && !state.brkClosed ? `<div class="brkbar rel"><button class="bx" data-article="${nb.id}" data-comments="1"><span class="pulse"></span><span class="x"><b>速報 · ${esc(nb.tm)}</b>${esc(nb.title)}<small>${nb.c}人が話しています</small></span>›</button><button class="close" data-brkclose aria-label="閉じる">✕</button><span class="note" style="right:10px;bottom:-10px">速報の帯（その日だけ）</span></div>` : '';
-    let list = A.slice(0, 5);
-    if (state.chip === '速報') list = A.filter(a => a.brk);
-    else if (state.chip === '盛り上がり中') list = [...A].sort((a, b) => b.c - a.c).slice(0, 4);
+    let list = A.slice(0, 8);
+    const tmap = { '定時': 'slot', '速報': 'breaking', 'ひとこと': 'note', '深掘り': 'deep' };
+    if (tmap[state.chip]) list = A.filter(a => tp(a) === tmap[state.chip]).slice(0, 8);
+    else if (state.chip === '盛り上がり中') list = [...A].sort((a, b) => b.c - a.c).slice(0, 5);
     else if (state.chip !== '最新') list = A.filter(a => ({ '物価': ['#物価', '#エネルギー', '#不動産'], '仕事': ['#賃金', '#雇用統計'], '株式': ['#株式', '#半導体'], '為替': ['#為替', '#人民元'], '債券': ['#債券', '#国債'] }[state.chip] || []).includes(a.tag));
-    $('#feed').innerHTML = list.map((a, i) => `
+    renderRhythm();
+    $('#feed').innerHTML = list.map((a, i) => tp(a) === 'note' ? noteCard(a) : tp(a) === 'deep' ? deepCard(a) : `
       <article class="feed-item rel ${a.brk ? 'brkcard' : ''}">
-        <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · いつもの配信</div></div><span class="more">•••</span></div>
+        <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · ${a.brk ? '速報' : `${esc(a.tm)} の定時配信`}</div></div><span class="tchip ${TYPE[tp(a)][1]}">${TYPE[tp(a)][0]}</span></div>
         <div class="lab"><span>${esc(a.lab)} <span class="tag">${esc(a.tag)}</span></span><span class="tm">${esc(a.tm)}</span></div>
         <button class="thumb" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${imgOf(a, 'sq')}" alt="">${a.brk ? '<span class="brk">速報</span>' : ''}</button>
         <div class="title-line">${esc(a.title)}</div>
@@ -811,9 +841,39 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
           <button class="act" data-save="${a.id}" aria-label="保存">${state.saved.has(a.id) ? '✓ 保存した' : '＋ 保存'}</button>
           <button class="act go" data-article="${a.id}" data-comments="1">議論をのぞく</button>
         </div>
-        ${i === 0 ? '<span class="note" style="left:16px;top:96px">サムネ（タップで記事を全画面で開く）</span><span class="note" style="right:16px;bottom:52px">議論をのぞく＝記事を開いてコメント欄も出す</span>' : ''}
+        ${i === 0 ? '<span class="note" style="left:16px;top:96px">定時配信＝正方形のサムネの記事</span><span class="note" style="right:16px;bottom:52px">議論をのぞく＝記事を開いてコメント欄も出す</span>' : ''}
       </article>`).join('') || '<p class="muted" style="padding:20px 16px">ここに入る配信はまだありません。次の配信をお楽しみに</p>';
   }
+
+  function noteCard(a, inSheet) {
+    return `<article class="feed-item k-note rel">
+      <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · ${esc(a.tm)}</div></div><span class="tchip t-note">ひとこと</span></div>
+      <button class="notebody" ${inSheet ? '' : `data-note="${a.id}"`}><span class="q">“</span>${esc(a.text)}</button>
+      ${a.link ? `<a class="lcard" href="https://${a.link[1]}/" target="_blank" rel="noopener"><span class="lg">↗</span><span class="x">${esc(a.link[0])}<small>${esc(a.link[1])}</small></span></a>` : ''}
+      <div class="tags"><span style="font-size:12px;color:#4aa3ff">${esc(a.tag)}</span></div>
+      ${inSheet ? '' : `<div class="acts"><span class="act">▲ ${a.r}</span><span class="act">💬 ${a.c}</span><button class="act" data-save="${a.id}" aria-label="保存">${state.saved.has(a.id) ? '✓ 保存した' : '＋ 保存'}</button><button class="act go" data-note="${a.id}">話す</button></div>`}
+      ${inSheet ? '' : '<span class="note" style="right:16px;top:52px">ひとこと＝絵なし・文字が主役（青緑）</span>'}
+    </article>`;
+  }
+  function deepCard(a) {
+    return `<article class="feed-item k-deep rel">
+      <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · ${esc(a.tm)}</div></div><span class="tchip t-deep">深掘り</span></div>
+      <button class="dcover" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${imgOf(a, 'th')}" alt=""><span class="dband glass">深掘り · 読む時間 ${a.read}分</span></button>
+      <div class="dtitle">${esc(a.title)}</div><div class="dlead">${esc(a.lead)}</div>
+      <div class="acts"><span class="act">▲ ${a.r}</span><span class="act">💬 ${a.c}</span><button class="act" data-save="${a.id}" aria-label="保存">${state.saved.has(a.id) ? '✓ 保存した' : '＋ 保存'}</button><button class="act go" data-article="${a.id}">じっくり読む</button></div>
+      <span class="note" style="right:16px;top:52px">深掘り＝横長の表紙・長めの記事（紫）</span>
+    </article>`;
+  }
+  // 今日のリズム（4本の目盛り＋不定期の点）
+  const toPct = t => { const [h, m] = t.split(':').map(Number); return Math.max(0, Math.min(100, ((h + m / 60) - 6) / 18 * 100)); };
+  function renderRhythm() {
+    const today = A.filter(a => /^\d+:\d+$/.test(a.tm));
+    $('#rhythm').innerHTML = `<div class="rline"></div>
+      ${['7:00', '11:30', '15:30', '22:00'].map(t => { const done = today.some(a => tp(a) === 'slot' && a.tm === t); return `<span class="rtick ${done ? 'done' : 'next'}" style="left:${toPct(t)}%"><i></i><b>${t}</b></span>`; }).join('')}
+      ${today.filter(a => tp(a) !== 'slot').map(a => `<button class="rdot r-${tp(a)}" style="left:${toPct(a.tm)}%" ${tp(a) === 'note' ? `data-note="${a.id}"` : `data-article="${a.id}"`} aria-label="${esc(a.tm)} ${TYPE[tp(a)][0]}"></button>`).join('')}
+      <span class="note" style="right:0;top:-18px">今日のリズム：棒＝定時、点＝ひとこと・速報</span>`;
+  }
+  function openNote(id) { const a = byId(id); state.cur = { id: a.id, title: a.title, note: a }; openComments(); setTimeout(() => setSheet('full'), 30); }
 
   // ---------- ライブラリ ----------
   const GENRES = [['マクロ', 1], ['物価と家計', 9], ['仕事と賃金', 2], ['中央銀行', 7], ['為替', 8], ['株式', 9], ['債券', 5], ['不動産', 11], ['エネルギー', 6], ['テック', 3], ['決算', 10], ['政策と財政', 4], ['世界経済', 1]];
@@ -862,13 +922,13 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   }
   function renderLib() {
     $('#genres').innerHTML = GENRES.map(([g, i]) => `<button class="genre" data-genre="${g}"><img src="${R}sq${i}.jpg" alt=""><span>${g}</span></button>`).join('');
-    $('#newest').innerHTML = A.slice(0, 5).map(a => `<button class="big" data-article="${a.id}"><img src="${imgOf(a, 'sq')}" alt=""><div class="m"><small>${esc(a.tm)} · 記事 3分</small>${esc(a.title)}</div></button>`).join('');
+    $('#newest').innerHTML = A.filter(a => a.type !== 'note').slice(0, 5).map(a => `<button class="big" data-article="${a.id}"><img src="${imgOf(a, 'sq')}" alt=""><div class="m"><small>${esc(a.tm)} · 記事 3分</small>${esc(a.title)}</div></button>`).join('');
     $('#videos').innerHTML = [['boj', '3分でわかる、日銀の声明どこが変わった？', '4:12'], ['nfp', 'はじめての雇用統計の読み方', '6:40'], ['ust', '国債の入札、人気がないと何が起きる？', '5:05']].map(([id, t, l]) => `
       <button class="vid" data-article="${id}"><div class="vb"><img src="${imgOf(byId(id), 'th')}" alt=""><span class="play glass">▶</span></div><p>${t}<br><span class="muted">${l}</span></p></button>`).join('');
     const item = a => `<button class="pi" data-article="${a.id}" style="width:100%;text-align:left"><img src="${imgOf(a, 'sq')}" alt=""><div class="x"><small>${esc(a.when)}</small>${esc(a.title)}</div><span class="kind">${a.id === 'nfp' ? '▶ 動画' : '記事'}</span></button>`;
     const sv = A.filter(a => state.saved.has(a.id));
     $('#saved').innerHTML = sv.length ? sv.map(item).join('') : '<p class="muted" style="font-size:12.5px;margin:0">気になった記事は、チェックで保存しておくとここに並びます</p>';
-    $('#past').innerHTML = A.slice(4).map(item).join('');
+    $('#past').innerHTML = A.filter(a => a.type !== 'note').slice(4).map(item).join('');
   }
 
   // ---------- みんな ----------
@@ -1192,7 +1252,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   }
 
   // ---------- 最初の起動 ----------
-  const OB = { step: 'welcome', method: '', email: '', name: '', role: '', showRole: true, icon: null, genres: new Set(), notif: { slot7: true, slot1130: false, slot1530: false, slot22: true, breaking: true, reply: true } };
+  const OB = { step: 'welcome', method: '', email: '', name: '', role: '', showRole: true, icon: null, genres: new Set(), notif: { slot7: true, slot1130: false, slot1530: false, slot22: true, breaking: true, note: false, deep: true, reply: true } };
   const ROLES = ['証券', '銀行', '運用・ファンド', '保険', '会計・税務', '事業会社（企画・財務）', '営業', 'エンジニア', 'コンサル', '経営者', '公務員', '研究・教育', '学生', '個人投資家'];
   const STEPS = ['profile', 'genres', 'notif'];
   function obTop(back) {
@@ -1269,9 +1329,11 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (st === 'notif') {
       const N = OB.notif, rows = [['slot7', '7:00', '米国の引け後'], ['slot1130', '11:30', 'アジアの昼'], ['slot1530', '15:30', 'アジアの引け・欧州の寄り付き'], ['slot22', '22:00', '米国の寄り付き前']];
       el.innerHTML = `<div class="obs">${obTop('genres')}
-        <h2>どの配信をお知らせしますか？</h2><p class="lead">ぜんぶ受け取ってもいいし、朝と夜だけでも大丈夫。あとから設定で変えられます。</p>
+        <h2>どの配信をお知らせしますか？</h2><p class="lead">受け取るものは、あなたが選べます。ぜんぶでも、朝と夜だけでも大丈夫。あとから設定で変えられます。</p>
         <div class="body2">${rows.map(([k, t, n]) => `<div class="nrow"><b class="t">${t}</b><span class="x">${n}</span><button class="toggle ${N[k] ? 'on' : ''}" data-obnotif="${k}" aria-label="${t} の配信"></button></div>`).join('')}
           <div class="nrow"><b class="t" style="color:#ff6b6b">速報</b><span class="x">日銀・FRBの発表、雇用統計など<small>大事なときだけ届きます</small></span><button class="toggle ${N.breaking ? 'on' : ''}" data-obnotif="breaking" aria-label="速報"></button></div>
+          <div class="nrow"><b class="t" style="color:#5fe0d3">ひとこと</b><span class="x">オーナーの短い投稿<small>不定期。1日に何回か届くことがあります</small></span><button class="toggle ${N.note ? 'on' : ''}" data-obnotif="note" aria-label="ひとこと"></button></div>
+          <div class="nrow"><b class="t" style="color:#c4b0ff">深掘り</b><span class="x">長めの解説記事<small>不定期。週に1〜2本くらい</small></span><button class="toggle ${N.deep ? 'on' : ''}" data-obnotif="deep" aria-label="深掘り"></button></div>
           <div class="nrow"><b class="t">返信</b><span class="x">あなたのコメントに返信が来たとき</span><button class="toggle ${N.reply ? 'on' : ''}" data-obnotif="reply" aria-label="返信"></button></div></div>
         <div class="foot2"><button class="primary" data-obgo="done" data-obperm>お知らせを受け取る</button><button class="ghost" data-obgo="done">あとで</button></div></div>`;
       return;
@@ -1325,7 +1387,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     { who: 'n.sato', where: '配信「米10年債の利回りが4.4%台に」のコメント', t: '初心者ですが、債券ってなんで下がると利回りが上がるんですか？', why: 'その他', n: 1 },
   ];
   const TPLS = [['paper', '紙面'], ['gauge', '計器'], ['light', '光'], ['ink', '墨']];
-  const DRAFT = { slot: '22:00', breaking: false, tplName: 'paper', big: 'CPI 発表', en: 'US CPI', ja: '', jaBody: '', enTitle: '', enBody: '', lang: 'ja', genres: new Set(['マクロ']), links: [], used: new Set(), blocks: [['chart', 'グラフ：米CPIの推移（棒）']], video: false, ai: false, selfOk: false, max: '' };
+  const DRAFT = { type: 'slot', note: '', noteLink: '', readMin: 6, slot: '22:00', breaking: false, tplName: 'paper', big: 'CPI 発表', en: 'US CPI', ja: '', jaBody: '', enTitle: '', enBody: '', lang: 'ja', genres: new Set(['マクロ']), links: [], used: new Set(), blocks: [['chart', 'グラフ：米CPIの推移（棒）']], video: false, ai: false, selfOk: false, max: '' };
   state.atab = 'today';
   // サムネの型を描く（見出しの言葉を入れるだけで作れる）
   function drawPoster(tpl, big, en, code) {
@@ -1379,6 +1441,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <div class="acard rel"><h4>今日の配信 · 11月4日（火）</h4>
           <div class="slots">${SLOTS.map(([t, n, id]) => `<button class="slot2 ${id ? 'done' : 'next'}" ${id ? `data-article="${id}"` : `data-makeslot="${t}"`}><b>${t}</b>${id ? '公開済み' : 'あと5時間50分'}</button>`).join('')}</div>
           <span class="note" style="right:12px;top:10px">4つの枠の進み具合</span></div>
+        <div class="acard"><h4>いつでも出せる</h4><div class="qbtns" style="margin-top:0"><button class="yes" data-dtype="note" data-gomake>＋ ひとことを書く</button><button data-dtype="deep" data-gomake>＋ 深掘りを書く</button></div></div>
         <div class="acard"><h4>速報の材料がそろいました</h4>
           <div class="alert"><span class="x"><b>米CPI（10月）が 22:30 に出ます</b><small>予想 3.0% · 出たら数字が自動で入ります</small></span><button data-makebreaking>下書きを作る</button></div></div>
         <div class="acard"><h4>出した配信の反応</h4>
@@ -1409,10 +1472,30 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     ];
     const ready = checks.every(c => c[1]) && D.selfOk && D.ja.trim();
     if (!D.poster) D.poster = posterOf(D.tplName);
-    B.innerHTML = `
+    const typeBar = `<div class="acard rel"><h4>投稿の種類</h4><div class="slots">${[['slot', '定時配信', '4つの時刻'], ['breaking', '速報', '今すぐ・赤'], ['note', 'ひとこと', 'いつでも・短く'], ['deep', '深掘り', 'いつでも・長く']].map(([k, l, sub]) => `<button class="slot2 ${D.type === k ? 'on' : ''}" data-dtype="${k}"><b style="font-family:var(--font);font-size:13px">${l}</b>${sub}</button>`).join('')}</div>
+      <p class="muted" style="font-size:11.5px;line-height:1.6;margin:10px 0 0">種類ごとに、ホームでの形と色が変わります（定時＝正方形のサムネ、速報＝赤、ひとこと＝青緑の文字だけ、深掘り＝紫の横長の表紙）。お知らせは、受け取る設定にしている人にだけ届きます。</p>
+      <span class="note" style="right:12px;top:10px">種類で形・色・内容を分ける</span></div>`;
+    if (D.type === 'note') {
+      const okN = D.note.trim() && D.selfOk;
+      B.innerHTML = typeBar + `
+      <div class="acard rel"><h4>ひとこと</h4>
+        <label class="vis-hidden" for="d-note">ひとこと</label><textarea class="field" id="d-note" style="height:130px;padding:12px 14px;resize:vertical;line-height:1.7" maxlength="500" placeholder="いま気づいたこと、次の配信の予告、数字のメモなど">${esc(D.note)}</textarea>
+        <div class="counter" id="d-note-count">${D.note.length} / 500</div>
+        <label class="lbl" for="d-notelink">リンク（任意）</label><input class="field" id="d-notelink" placeholder="https://" value="${esc(D.noteLink)}">
+        <button class="ghost" data-toast="写真を1枚つけられます（ワイヤー）" style="margin-top:6px">写真を1枚つける（任意）</button>
+        <span class="note" style="right:12px;top:10px">絵なし・文字が主役</span></div>
+      <div class="acard"><h4>ジャンル</h4><div class="recent" style="padding:0">${GENRES.map(([g]) => `<button class="chip ${D.genres.has(g) ? 'on' : ''}" data-dgenre="${g}">${g}</button>`).join('')}</div></div>
+      <div class="acard"><h4>出す前の確認</h4><div class="checks"><button class="ck2 self ${D.selfOk ? 'ok' : ''}" data-selfok><i>${D.selfOk ? '✓' : ''}</i>特定の銘柄の売買をすすめていない（自分で確認）</button><div class="ck2 ${!/[0-9]/.test(D.note) || D.noteLink ? 'ok' : ''}"><i>${!/[0-9]/.test(D.note) || D.noteLink ? '✓' : ''}</i>数字を書くときは、元情報のリンクを付けた</div></div></div>
+      <div class="pubbar"><button class="primary" data-publishnote ${okN ? '' : 'disabled'}>いま出す</button></div>
+      <p class="muted" style="font-size:11.5px;text-align:center;padding:8px 16px">日本語のひとことは、英語の画面では「Japanese only」と表示されます（あとで翻訳を付けられます）</p>`;
+      return;
+    }
+    B.innerHTML = typeBar + `
+      ${D.type === 'deep' ? `<div class="acard rel"><h4>出す時刻</h4><div class="slots" style="grid-template-columns:1fr 1fr"><button class="slot2 on"><b style="font-family:var(--font);font-size:13px">いま出す</b>すぐに公開</button><button class="slot2" data-toast="時刻を選んで予約できます（ワイヤー）"><b style="font-family:var(--font);font-size:13px">時刻を決める</b>週末の朝など</button></div>
+        <label class="lbl" for="d-read">読む時間（目安）</label><input class="field" id="d-read" type="number" min="3" max="30" value="${D.readMin}" style="width:120px"></div>` : `
       <div class="acard rel"><h4>出す枠</h4>
         <div class="slots">${SLOTS.map(([t, , id]) => `<button class="slot2 ${D.slot === t && !D.breaking ? 'on' : ''} ${id ? 'done' : ''}" data-dslot="${t}"><b>${t}</b>${id ? '公開済み' : '予約できます'}</button>`).join('')}</div>
-        <button class="ck2 self" style="margin-top:10px" data-dbreaking><i style="${D.breaking ? 'background:#ff3b30;color:#fff' : ''}">!</i>速報として今すぐ出す（全員にお知らせ）</button></div>
+        ${D.breaking ? '<p class="muted" style="font-size:11.5px;margin:10px 0 0;color:#ff8a80">速報として今すぐ出します（枠は使いません）</p>' : ''}</div>`}
 
       <div class="acard rel"><h4>材料（サーバーが集めたもの）<span class="muted" style="font-size:11px;font-weight:400">15:58 更新</span></h4>
         <div class="muted" style="font-size:11.5px;margin-bottom:4px">公式データの数字</div>
@@ -1453,22 +1536,32 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <button class="ck2 self ${D.selfOk ? 'ok' : ''}" data-selfok><i>${D.selfOk ? '✓' : ''}</i>特定の銘柄の売買をすすめていない（自分で確認）</button></div>
         <span class="note" style="right:12px;top:10px">CLAUDE.md のニュースのルール</span></div>
 
-      <div class="pubbar"><button class="ghost" data-dpreview style="width:auto;padding:0 16px">見え方</button><button class="primary" data-publish ${ready ? '' : 'disabled'}>${D.breaking ? '速報として今すぐ出す' : `${D.slot} に予約する`}</button></div>
+      <div class="pubbar"><button class="ghost" data-dpreview style="width:auto;padding:0 16px">見え方</button><button class="primary" data-publish ${ready ? '' : 'disabled'}>${D.breaking ? '速報として今すぐ出す' : D.type === 'deep' ? '深掘りをいま出す' : `${D.slot} に予約する`}</button></div>
       <p class="muted" style="font-size:11.5px;text-align:center;padding:8px 16px">下書きは自動で保存されます</p>`;
   }
   let fontsReady = false;
   function openAdmin(tab) {
     if (!fontsReady && document.fonts) Promise.all(['800 40px "Shippori Mincho B1"', '40px "Instrument Serif"', '700 40px "Zen Kaku Gothic New"', '500 14px "Geist Mono"'].map(f => document.fonts.load(f))).then(() => { fontsReady = true; DRAFT.poster = null; renderAdmin(); }).catch(() => {});
     if (tab) state.atab = tab; renderAdmin(); $('#admin').classList.add('open'); $('#admin').setAttribute('aria-hidden', 'false'); }
+  function publishNote() {
+    const D = DRAFT, id = 'n' + Date.now();
+    const lk = D.noteLink.trim().replace(/^https?:\/\//, '');
+    A.unshift({ id, type: 'note', tm: '16:12', when: '11月4日（火）16:12 · ひとこと', tag: '#' + [...D.genres][0], title: D.note.trim().slice(0, 24), text: D.note.trim(), link: lk ? [lk, lk.split('/')[0]] : undefined, c: 0, r: 0 });
+    DISC[id] = [];
+    Object.assign(D, { note: '', noteLink: '', selfOk: false });
+    renderFeed(); state.atab = 'today'; renderAdmin();
+    toast('ひとことを出しました。受け取る設定の人にお知らせが届きます');
+  }
   function publishDraft() {
     const D = DRAFT, id = 'n' + Date.now();
-    const a = { id, img: 1, src: D.poster, brk: D.breaking, lab: D.breaking ? 'Breaking' : 'US pre-open', tag: '#' + [...D.genres][0], tm: D.breaking ? '今' : D.slot, when: D.breaking ? '11月4日（火）16:12 · 速報' : `11月4日（火）${D.slot} · 予約`, title: D.ja.trim(), c: 0, r: 0, tint: '#1d2238' };
+    const a = { id, img: 1, src: D.poster, type: D.type === 'deep' ? 'deep' : undefined, read: D.readMin, lead: D.jaBody.slice(0, 60), brk: D.breaking, lab: D.breaking ? 'Breaking' : 'US pre-open', tag: '#' + [...D.genres][0], tm: D.breaking ? '今' : D.slot, when: D.breaking ? '11月4日（火）16:12 · 速報' : `11月4日（火）${D.slot} · 予約`, title: D.ja.trim(), c: 0, r: 0, tint: '#1d2238' };
     A.unshift(a); DISC[id] = [];
-    if (!D.breaking) { const s2 = SLOTS.find(s => s[0] === D.slot); if (s2) s2[2] = id; }
+    if (D.type === 'deep') { a.tm = '16:12'; a.when = '11月4日（火）16:12 · 深掘り'; }
+    if (D.type === 'slot') { const s2 = SLOTS.find(s => s[0] === D.slot); if (s2) s2[2] = id; }
     Object.assign(D, { ja: '', jaBody: '', enTitle: '', enBody: '', max: '', links: [], used: new Set(), selfOk: false, ai: false, poster: null });
     renderFeed(); renderLib(); state.atab = 'today'; renderAdmin();
     if (a.brk) { state.brkClosed = false; renderFeed(); setTimeout(() => dropAlert(a), 300); }
-    toast(a.brk ? '速報を出しました。全員にお知らせが届きます' : `${a.tm} に予約しました`);
+    toast(a.brk ? '速報を出しました。受け取る設定の人にお知らせが届きます' : D.type === 'deep' ? '深掘りを出しました' : `${a.tm} に予約しました`);
   }
 
   // ---------- 設定 ----------
@@ -1621,7 +1714,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     { day: '今週', type: 'approve', text: '<b>投稿の申請</b>が通りました。「みんな」に書けるようになりました', q: '', at: '11月1日', unread: false },
   ];
   const NTYPE = { reply: ['↩', '#4c8dff', '返信'], react: ['▲', '#ff6a1a', 'リアクション'], mention: ['@', '#ae3ec9', 'メンション'], post: ['◷', '#3ddc84', '配信'], breaking: ['!', '#ff3b30', '配信'], group: ['#', '#0c8599', 'グループ'], invite: ['＋', '#0c8599', 'グループ'], approve: ['✓', '#3ddc84', 'そのほか'] };
-  const NSET = { slot7: true, slot1130: false, slot1530: true, slot22: true, breaking: true, reply: true, react: false, group: true };
+  const NSET = { slot7: true, slot1130: false, slot1530: true, slot22: true, breaking: true, note: false, deep: true, reply: true, react: false, group: true };
   function renderNotif() {
     const f = state.notifFilter;
     const pass = n => f === 'all' || (f === 'reply' ? ['reply', 'mention', 'react'].includes(n.type) : f === 'post' ? ['post', 'breaking'].includes(n.type) : ['group', 'invite'].includes(n.type));
@@ -1651,7 +1744,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   }
   function openNotifSettings() {
     const rows = [['いつもの配信', [['slot7', '7:00　米国の引け後'], ['slot1130', '11:30　アジアの昼'], ['slot1530', '15:30　アジアの引け・欧州の寄り付き'], ['slot22', '22:00　米国の寄り付き前']]],
-      ['そのほか', [['breaking', '速報'], ['reply', '返信とメンション'], ['react', 'リアクション'], ['group', 'グループの新しいメッセージ']]]];
+      ['不定期の配信', [['breaking', '速報'], ['note', 'ひとこと（短い投稿）'], ['deep', '深掘り（長めの記事）']]],
+      ['みんなとのやりとり', [['reply', '返信とメンション'], ['react', 'リアクション'], ['group', 'グループの新しいメッセージ']]]];
     openSheet(`<div class="sh-head"><b>お知らせの設定</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
       <div class="past" style="overflow-y:auto;padding-bottom:30px">${rows.map(([h, rs]) => `<span class="lbl">${h}</span>` + rs.map(([k, l]) => `<div class="setrow"><span class="x">${l}${k === 'breaking' ? '<small>日銀・FRBの発表や雇用統計など</small>' : ''}</span><button class="toggle ${NSET[k] ? 'on' : ''}" data-nset="${k}" aria-label="${l}" aria-pressed="${NSET[k]}"></button></div>`).join('')).join('')}
       <p class="muted" style="font-size:11.5px;line-height:1.6;margin-top:14px">夜中（0:00〜6:00）は、速報以外のお知らせを鳴らさずに届けます。</p></div>`, 'full');
@@ -1667,6 +1761,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <div class="hero-btns"><button class="round glass" data-close="article" aria-label="閉じる">⌄</button>
           <div class="pillbtns glass"><button class="iconbtn" data-share aria-label="共有">⇪</button><button class="iconbtn" data-toast="表示の切り替え：日本語 / English">文A</button><button class="iconbtn" data-toast="通報・ミュートなど">•••</button></div></div>
         <span class="note" style="left:14px;bottom:30px">最初のサムネを全画面のトップに</span></div>
+      ${a.type === 'deep' ? `<div class="brkstrip deepstrip rel"><b>DEEP DIVE</b><span>深掘り · 読む時間 ${a.read}分 · ${a.c}人が話しています</span><span class="note" style="right:0;top:-20px">深掘りの記事は紫の帯</span></div>` : ''}
       ${a.brk ? `<div class="brkstrip rel"><span class="pulse"></span><b>BREAKING</b><span>${esc(a.tm)} · 発表から3時間 · ${a.c}人が話しています</span><span class="note" style="right:0;top:-20px">速報の記事は赤い帯</span></div>` : ''}
       <div class="head rel"><div style="flex:1;min-width:0"><h2>${esc(a.title)}</h2><div class="when">${esc(a.when)} · 日本語で表示中 ⌃</div></div>
         <div class="btns"><button class="round glass" data-share aria-label="グループに共有">⤴︎</button><button class="round glass save ${state.saved.has(id) ? 'on' : ''}" data-save="${id}" aria-label="記事を保存">✓</button></div>
@@ -1728,8 +1823,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <span class="note" style="left:16px;top:-26px">上に引くと全体、下に引くと閉じる</span></div>
       <div class="sorts rel"><button class="chip ${state.sort === 'top' ? 'on' : ''}" data-sort="top">人気順</button><button class="chip ${state.sort === 'new' ? 'on' : ''}" data-sort="new">新しい順</button>
         <span class="note" style="right:16px;top:6px">YouTube のような並び替え（設定に保存）</span></div>
-      ${state.cur.post ? '' : '<div class="newc">↑ 新しいコメントが5件あります</div>'}
-      <div class="clist" id="clist">${state.cur.post ? `<div style="margin:0 -16px 6px">${postHTML(state.cur.post, true)}</div>` : ''}${commentHTML(sorted(), 1)}</div>
+      ${state.cur.post || state.cur.note ? '' : '<div class="newc">↑ 新しいコメントが5件あります</div>'}
+      <div class="clist" id="clist">${state.cur.post ? `<div style="margin:0 -16px 6px">${postHTML(state.cur.post, true)}</div>` : state.cur.note ? `<div style="margin:0 -16px 6px">${noteCard(state.cur.note, true)}</div>` : ''}${commentHTML(sorted(), 1)}</div>
       <div class="composer"><input id="c-input" placeholder="あなたはどう思う？" aria-label="コメントを書く"><button id="c-send" aria-label="送信">➤</button></div>`, sheetPos === 'full' ? 'full' : 'half');
   }
   function openShare() {
@@ -1773,6 +1868,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     const d = t.dataset;
     if (d.tab) { state.tab = d.tab; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === t)); ['home', 'lib', 'people', 'chat'].forEach(k => $('#tab-' + k).hidden = k !== d.tab); if (d.tab === 'lib') renderLib(); return; }
     if (d.chip) { state.chip = d.chip; renderChips(); renderFeed(); return; }
+    if (d.article && byId(d.article)?.type === 'note') { e.preventDefault(); ['search', 'profile', 'notif'].forEach(k => $('#' + k).classList.remove('open')); openNote(d.article); return; }
     if (d.article) { e.preventDefault(); if ($('#search').classList.contains('open')) { remember($('#s-input').value); closeSearch(); } setSheet('closed'); $('#profile').classList.remove('open'); if ($('#notif').classList.contains('open')) closeNotif(); if ($('#room').classList.contains('open') && t.classList.contains('shared')) {} openArticle(d.article, !!d.comments); return; }
     if (d.save) { const id = d.save; state.saved.has(id) ? state.saved.delete(id) : (state.saved.add(id), state.savedAt[id] = ++saveSeq); toast(state.saved.has(id) ? '保存しました。ライブラリからいつでも読めます' : '保存を外しました'); document.querySelectorAll(`[data-save="${id}"]`).forEach(b => { if (b.classList.contains('save')) b.classList.toggle('on', state.saved.has(id)); else b.textContent = state.saved.has(id) ? '✓ 保存した' : '＋ 保存'; }); renderLib(); return; }
     if (t.id === 'cbar') { openComments(); return; }
@@ -1791,6 +1887,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
+    if (d.note) { openNote(d.note); return; }
     if (d.cmenu) { openCommentMenu(+d.cmenu); return; }
     if (d.report) { openReport(d.report); return; }
     if (d.reason) { rep.reason = d.reason; renderReport(); return; }
@@ -1821,9 +1918,11 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (d.admin !== undefined) { openAdmin(); return; }
     if (d.close === 'admin') { $('#admin').classList.remove('open'); $('#admin').setAttribute('aria-hidden', 'true'); return; }
     if (d.atab) { state.atab = d.atab; renderAdmin(); $('#a-body').scrollTop = 0; return; }
-    if (d.makeslot) { DRAFT.slot = d.makeslot; DRAFT.breaking = false; state.atab = 'make'; renderAdmin(); return; }
-    if (d.makebreaking !== undefined) { Object.assign(DRAFT, { breaking: true, big: 'CPI 発表', en: 'US CPI', ja: '米CPIは3.1%。予想よりちょっと高めでした', tplName: 'gauge', poster: null }); DRAFT.used.add('d0'); DRAFT.jaBody = '10月の米国の消費者物価は前年より3.1%上がりました（予想3.0%、前回2.9%）。'; DRAFT.links = [['米労働統計局 · 消費者物価指数', 'bls.gov']]; state.atab = 'make'; renderAdmin(); toast('数字を入れた下書きを作りました'); return; }
-    if (d.dslot) { DRAFT.slot = d.dslot; DRAFT.breaking = false; DRAFT.poster = null; renderAdmin(); return; }
+    if (d.makeslot) { DRAFT.slot = d.makeslot; DRAFT.type = 'slot'; DRAFT.breaking = false; state.atab = 'make'; renderAdmin(); return; }
+    if (d.makebreaking !== undefined) { Object.assign(DRAFT, { type: 'breaking', breaking: true, big: 'CPI 発表', en: 'US CPI', ja: '米CPIは3.1%。予想よりちょっと高めでした', tplName: 'gauge', poster: null }); DRAFT.used.add('d0'); DRAFT.jaBody = '10月の米国の消費者物価は前年より3.1%上がりました（予想3.0%、前回2.9%）。'; DRAFT.links = [['米労働統計局 · 消費者物価指数', 'bls.gov']]; state.atab = 'make'; renderAdmin(); toast('数字を入れた下書きを作りました'); return; }
+    if (d.dtype) { if (d.gomake !== undefined) state.atab = 'make'; DRAFT.type = d.dtype; DRAFT.breaking = d.dtype === 'breaking'; if (d.dtype === 'breaking') DRAFT.tplName = 'gauge'; if (d.dtype === 'deep') DRAFT.tplName = 'light'; DRAFT.poster = null; renderAdmin(); return; }
+    if (d.publishnote !== undefined) { publishNote(); return; }
+    if (d.dslot) { DRAFT.slot = d.dslot; DRAFT.type = 'slot'; DRAFT.breaking = false; DRAFT.poster = null; renderAdmin(); return; }
     if (d.dbreaking !== undefined) { DRAFT.breaking = !DRAFT.breaking; DRAFT.poster = null; renderAdmin(); return; }
     if (d.usedata !== undefined) { const m = MATS.data[+d.usedata]; DRAFT.used.add('d' + d.usedata); DRAFT.jaBody += (DRAFT.jaBody ? '\n' : '') + `${m[0]}は${m[1]}（${m[2].split(' · ').slice(0, 2).join('、')}）。`; if (!DRAFT.links.some(l => l[1] === m[3])) DRAFT.links.push([m[2].split(' · ')[m[2].split(' · ').length - 2] || m[0], m[3]]); renderAdmin(); return; }
     if (d.usehead !== undefined) { const h = MATS.heads[+d.usehead]; DRAFT.used.add('h' + d.usehead); DRAFT.links.push([`${h[0]}（${h[1]}）`, h[2]]); renderAdmin(); return; }
@@ -1925,6 +2024,9 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (e.target.id === 'ob-role') { OB.role = e.target.value; return; }
     if (e.target.id === 'ob-mail') { OB.email = e.target.value; document.querySelector('[data-obsendmail]').disabled = !/.+@.+\..+/.test(OB.email); return; }
     if (e.target.classList.contains('ob-code')) { const all = [...document.querySelectorAll('.ob-code')]; const i = all.indexOf(e.target); if (e.target.value && all[i + 1]) all[i + 1].focus(); if (all.every(x => x.value)) { OB.step = 'profile'; setTimeout(renderOnboard, 250); } return; }
+    if (e.target.id === 'd-note') { DRAFT.note = e.target.value; $('#d-note-count').textContent = `${DRAFT.note.length} / 500`; document.querySelector('[data-publishnote]').disabled = !(DRAFT.note.trim() && DRAFT.selfOk); return; }
+    if (e.target.id === 'd-notelink') { DRAFT.noteLink = e.target.value; return; }
+    if (e.target.id === 'd-read') { DRAFT.readMin = +e.target.value || 6; return; }
     const dm = { 'd-ja': 'ja', 'd-jab': 'jaBody', 'd-en': 'enTitle', 'd-enb': 'enBody', 'd-max': 'max', 'd-big': 'big', 'd-enbig': 'en' }[e.target.id];
     if (dm) { DRAFT[dm] = e.target.value; if (dm === 'big' || dm === 'en') { DRAFT.poster = posterOf(DRAFT.tplName); document.querySelector('.tprev img').src = DRAFT.poster; } const btn = document.querySelector('[data-publish]'); if (btn) { const ok = DRAFT.links.length && DRAFT.enTitle.trim() && DRAFT.enBody.trim() && (!DRAFT.max || DRAFT.ai) && DRAFT.selfOk && DRAFT.ja.trim(); btn.disabled = !ok; } return; }
     if (e.target.id === 'q-text') { qdraft.text = e.target.value; $('#q-count').textContent = `${qdraft.text.length} / 1000`; $('#q-post').disabled = !qdraft.text.trim(); return; }
