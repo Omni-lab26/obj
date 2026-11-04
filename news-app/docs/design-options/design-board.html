@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Halftick design board</title>
+<!-- デザインのルール（docs/design.md）の見本。撮影：node scripts/shot-design-board.mjs -->
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Shippori+Mincho+B1:wght@700;800&family=Instrument+Serif&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --sys: -apple-system, "SF Pro Text", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace; --mincho: "Shippori Mincho B1", serif; }
+  body { background: #0b0c0e; color: #f2f2f3; font-family: var(--sys); padding: 44px; width: 1480px; }
+  h1 { font: 700 26px/1.2 var(--sys); display: flex; align-items: center; gap: 12px; }
+  .sub { color: #9a9ca3; font-size: 14px; margin: 8px 0 30px; }
+  .grid { display: grid; grid-template-columns: 1.05fr 1fr 1fr; gap: 26px; align-items: start; }
+  .panel { background: #15161a; border: 1px solid #26272b; border-radius: 24px; padding: 22px; }
+  .panel h2 { font: 700 12px/1 var(--mono); letter-spacing: .12em; color: #9a9ca3; margin-bottom: 16px; text-transform: uppercase; }
+  .mark { display: inline-flex; align-items: flex-end; gap: 3px; height: 20px; }
+  .mark i { display: block; width: 4px; background: #ff6a1a; border-radius: 1.5px; } .mark i:first-child { height: 20px; } .mark i:last-child { height: 10px; }
+  .sw { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .s { border-radius: 14px; height: 74px; padding: 8px 10px; display: flex; flex-direction: column; justify-content: flex-end; font: 500 10.5px/1.35 var(--mono); border: 1px solid rgba(255,255,255,.08); }
+  .s b { font: 700 11px/1.2 var(--sys); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .lbl { font: 500 11px/1 var(--mono); color: #9a9ca3; margin: 18px 0 10px; }
+  .type div { display: flex; align-items: baseline; gap: 14px; padding: 8px 0; border-bottom: 1px solid #222327; }
+  .type span.k { width: 74px; flex: none; font: 500 11px/1 var(--mono); color: #9a9ca3; }
+  /* ガラスの見本の背景（自前のグラデーション） */
+  .scene { position: relative; height: 300px; border-radius: 20px; overflow: hidden; background: #1c2b58; }
+  .scene .streak { position: absolute; left: -20%; right: -20%; top: 40%; height: 110px; transform: rotate(-16deg); filter: blur(26px); background: linear-gradient(90deg, #28c3a0, #b8e04a, #ffd23f, #ff7a2f, #ff3d6e, #8f5bff); opacity: .9; }
+  .scene .big { position: absolute; left: 22px; top: 34px; font: 800 64px/1 var(--mincho); color: #f6efe2; letter-spacing: -.02em; }
+  .scene .en { position: absolute; left: 24px; top: 108px; font: 400 26px/1 "Instrument Serif", serif; color: #f6efe2; }
+  .glass { background: rgba(28,28,32,.48); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(22px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 8px 24px rgba(0,0,0,.35); }
+  .gl-light { background: rgba(255,255,255,.6); border: 1px solid rgba(0,0,0,.08); backdrop-filter: blur(22px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 8px 24px rgba(0,0,0,.12); color: #16161a; }
+  .tabs { position: absolute; left: 14px; right: 84px; bottom: 16px; height: 58px; border-radius: 29px; display: flex; justify-content: space-around; align-items: center; font-size: 10px; }
+  .tabs span { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 10px; border-radius: 18px; }
+  .tabs span.on { background: rgba(255,255,255,.14); }
+  .srch { position: absolute; right: 14px; bottom: 16px; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; }
+  .pill { position: absolute; right: 14px; top: 16px; height: 40px; border-radius: 20px; display: flex; align-items: center; gap: 18px; padding: 0 16px; font-size: 14px; }
+  .rnd { position: absolute; left: 14px; top: 16px; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; }
+  .btn { height: 46px; padding: 0 20px; border-radius: 23px; display: inline-flex; align-items: center; gap: 8px; font: 700 14px/1 var(--sys); }
+  .b-pri { background: #fff; color: #111; } .b-acc { background: rgba(255,106,26,.82); color: #fff; border: 1px solid rgba(255,255,255,.35); } .b-gh { border: 1px solid #34363b; }
+  .chip { padding: 9px 13px; border-radius: 999px; background: #26272b; font: 600 12px/1 var(--sys); } .chip.on { background: #fff; color: #111; }
+  .ticks { display: grid; grid-template-columns: repeat(4, 1fr); position: relative; margin-top: 6px; }
+  .ticks:before { content: ""; position: absolute; left: 0; right: 0; top: 18px; height: 1px; background: #34363b; }
+  .tick { display: flex; flex-direction: column; gap: 6px; }
+  .tick i { display: block; width: 3px; height: 18px; background: #f2f2f3; border-radius: 1px; }
+  .tick.now i { height: 36px; margin-top: -18px; width: 4px; background: #ff6a1a; } .tick.next i { height: 9px; margin-top: 9px; background: #9a9ca3; }
+  .tick b { font: 600 14px/1 var(--mono); } .tick.now b { color: #ff6a1a; } .tick small { font-size: 10.5px; color: #9a9ca3; }
+  .card { background: #1c1d20; border-radius: 18px; padding: 14px; }
+  .poster { height: 210px; border-radius: 16px; position: relative; overflow: hidden; background: #efe6d4; }
+  .poster .h { position: absolute; left: 14px; top: 12px; font: 800 58px/1 var(--mincho); color: #2a211c; }
+  .poster svg { position: absolute; left: 0; right: 0; top: 92px; width: 100%; height: 80px; }
+  .poster .e { position: absolute; left: 16px; bottom: 12px; font: 400 34px/1 "Instrument Serif", serif; color: #2a211c; }
+  .poster .seal { position: absolute; right: 14px; bottom: 14px; width: 40px; height: 40px; border: 2.5px solid #c8452d; color: #c8452d; font: 800 22px/34px var(--mincho); text-align: center; }
+  .poster .no { position: absolute; right: 64px; bottom: 16px; font: 500 10px/1 var(--mono); color: #6d5f52; }
+  .meta { display: flex; justify-content: space-between; font: 700 11px/1 var(--sys); letter-spacing: .04em; margin: 12px 0 8px; }
+  .meta .t { color: #9a9ca3; font-family: var(--mono); font-weight: 500; }
+  .brk { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; background: #ff3b30; color: #fff; font-size: 11.5px; }
+  .brk b { font: 700 11px/1 var(--mono); letter-spacing: .12em; } .dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+  .cm { padding: 10px 0; border-bottom: 1px solid #26272b; font-size: 13.5px; line-height: 1.6; }
+  .cm .h { font-size: 12px; } .cm .h b { font-size: 12.5px; } .cm .h span { color: #9a9ca3; }
+  .cm .f { font-size: 11.5px; color: #9a9ca3; margin-top: 4px; display: flex; gap: 14px; } .cm .f .on { color: #ff6a1a; }
+  .kids { margin-left: 4px; padding-left: 12px; border-left: 2px solid #34363b; }
+  .pass { border-radius: 20px; overflow: hidden; background: #1f1e1d; box-shadow: 0 16px 36px rgba(0,0,0,.5); }
+  .pass .art { height: 120px; position: relative; background: linear-gradient(120deg, #2b5876 0%, #4e4376 45%, #c06c84 100%); overflow: hidden; }
+  .pass .art pre { position: absolute; inset: 0; font: 500 9px/1.05 var(--mono); color: rgba(255,255,255,.8); padding: 8px; mix-blend-mode: screen; white-space: pre; overflow: hidden; }
+  .pass .pn { padding: 14px 16px; } .pass .nm { font: 600 22px/1.1 var(--sys); } .pass .sb { font: 500 10.5px/1 var(--mono); letter-spacing: .08em; margin-top: 8px; }
+  .pass .r { height: 1px; background: rgba(255,255,255,.14); margin: 12px 0 8px; }
+  .pass .m { display: flex; justify-content: space-between; font: 400 10.5px/1 var(--mono); color: rgba(255,255,255,.45); }
+  .pass .ft { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 18px; font: 400 10px/1 var(--mono); color: rgba(255,255,255,.45); }
+  .appicon { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; }
+  .ai1 { background: #111214; } .ai2 { background: linear-gradient(135deg, #9bf0e1, #b7a4ff 45%, #ffd59a); }
+  .ai2 .mark i { background: #16161a; }
+  .icons { display: flex; gap: 22px; align-items: flex-end; }
+  .icons figure { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 11px; color: #9a9ca3; }
+  .bigicon { width: 96px; height: 96px; border-radius: 22px; display: grid; place-items: center; box-shadow: 0 10px 26px rgba(0,0,0,.45); }
+  .bigicon .mark { height: 46px; gap: 7px; } .bigicon .mark i { width: 10px; border-radius: 3px; } .bigicon .mark i:first-child { height: 46px; } .bigicon .mark i:last-child { height: 23px; }
+  .light { background: #f6f5f2; color: #16161a; border-radius: 18px; padding: 14px; }
+  .light .card { background: #fff; } .light .chip { background: #efede8; color: #16161a; } .light .chip.on { background: #16161a; color: #fff; }
+  .light .muted { color: #6b6a66; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .note { font-size: 12px; color: #9a9ca3; line-height: 1.6; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <h1><span class="mark"><i></i><i></i></span>Halftick — デザインのルールの見本</h1>
+  <div class="sub">親しみやすい・知的・ライブ感 ／ 暗い画面が基本、操作部分は Liquid Glass、強調はオレンジ1色、赤は速報だけ</div>
+  <div class="grid">
+    <!-- 1列目 -->
+    <div style="display:flex;flex-direction:column;gap:26px">
+      <section class="panel"><h2>Liquid Glass（操作部分だけ）</h2>
+        <div class="scene"><div class="streak"></div><div class="big">日銀 据置</div><div class="en">Bank of Japan holds</div>
+          <div class="rnd glass">‹</div><div class="pill glass"><span>⇪</span><span>文A</span><span>•••</span></div>
+          <div class="tabs glass"><span class="on">⌂<br>最新</span><span>▦<br>ライブラリ</span><span>☺<br>みんな</span><span>▭<br>チャット</span></div>
+          <div class="srch glass">⌕</div></div>
+        <div class="note">ガラスは少し暗くして、明るい絵の上でも文字が読めるようにする。カードや本文にはガラスを使わない。</div></section>
+      <section class="panel"><h2>シグネチャー</h2>
+        <div class="lbl" style="margin-top:0">4本の目盛り（1日4回の配信）</div>
+        <div class="ticks"><div class="tick"><i></i><b>7:00</b><small>米国引け後</small></div><div class="tick"><i></i><b>11:30</b><small>アジア昼</small></div><div class="tick now"><i></i><b>15:30</b><small>欧州寄り付き</small></div><div class="tick next"><i></i><b>22:00</b><small>あと5時間50分</small></div></div>
+        <div class="lbl">配信の番号 ／ 速報の帯</div>
+        <div class="row"><span style="font:600 15px var(--mono)">HT-1104-3</span><div class="brk" style="flex:1"><span class="dot"></span><b>BREAKING</b><span>12:18 · 発表から3時間 · 214人が話しています</span></div></div>
+        <div class="lbl">アプリのアイコン（案）</div>
+        <div class="icons"><figure><div class="bigicon ai1"><span class="mark"><i></i><i></i></span></div>案1 黒にオレンジの印</figure><figure><div class="bigicon ai2"><span class="mark"><i></i><i></i></span></div>案2 虹色に黒い印</figure></div></section>
+    </div>
+    <!-- 2列目 -->
+    <div style="display:flex;flex-direction:column;gap:26px">
+      <section class="panel"><h2>色（暗い画面）</h2>
+        <div class="sw">
+          <div class="s" style="background:#111214"><b>地</b>#111214</div><div class="s" style="background:#1c1d20"><b>面</b>#1C1D20</div><div class="s" style="background:#26272b"><b>面2</b>#26272B</div><div class="s" style="background:#34363b"><b>線</b>#34363B</div>
+          <div class="s" style="background:#ff6a1a;color:#fff"><b>強調</b>#FF6A1A</div><div class="s" style="background:#ff3b30;color:#fff"><b>速報</b>#FF3B30</div><div class="s" style="background:#7cc0ff;color:#0b1a2a"><b>リンク</b>#7CC0FF</div><div class="s" style="background:#3ddc84;color:#062"><b>よい</b>#3DDC84</div>
+        </div>
+        <div class="lbl">明るい画面</div>
+        <div class="sw">
+          <div class="s" style="background:#f6f5f2;color:#16161a"><b>地</b>#F6F5F2</div><div class="s" style="background:#fff;color:#16161a"><b>面</b>#FFFFFF</div><div class="s" style="background:#efede8;color:#16161a"><b>面2</b>#EFEDE8</div><div class="s" style="background:#e8590c;color:#fff"><b>強調</b>#E8590C</div>
+        </div></section>
+      <section class="panel type"><h2>文字（端末の書体＋数字は Geist Mono）</h2>
+        <div><span class="k">display</span><span style="font:800 30px/1.3 var(--mincho)">経済のニュースを、</span></div>
+        <div><span class="k">title 21</span><span style="font:700 21px/1.35 var(--sys)">日銀は金利0.75%で据え置き</span></div>
+        <div><span class="k">headline 16</span><span style="font:600 16px/1.45 var(--sys)">住宅ローンの金利、じわっと上昇</span></div>
+        <div><span class="k">body 14.5</span><span style="font:400 14.5px/1.75 var(--sys)">前回よりちょっと踏み込みました。</span></div>
+        <div><span class="k">caption 11.5</span><span style="font:400 11.5px/1.4 var(--sys);color:#9a9ca3">債券ストラテジスト · 18分前</span></div>
+        <div><span class="k">label 11</span><span style="font:700 11px/1 var(--sys);letter-spacing:.04em">US CLOSE · BREAKING</span></div>
+        <div style="border:0"><span class="k">number</span><span style="font:600 15px/1.2 var(--mono)">7:00 · 3.1% · 152.40</span></div></section>
+      <section class="panel"><h2>ボタンとチップ</h2>
+        <div class="row"><span class="btn b-pri">議論をのぞく</span><span class="btn b-acc glass">＋ グループを作る</span><span class="btn b-gh">今はやめておく</span></div>
+        <div class="row" style="margin-top:12px"><span class="chip on">人気順</span><span class="chip">新しい順</span><span class="chip">物価</span><span class="chip">仕事</span><span class="chip">為替</span></div>
+        <div class="note">ボタン・チップはカプセル。オレンジは「書く・送る・作る」だけ。</div></section>
+    </div>
+    <!-- 3列目 -->
+    <div style="display:flex;flex-direction:column;gap:26px">
+      <section class="panel"><h2>カードとサムネの型（紙面）</h2>
+        <div class="card"><div class="poster"><div class="h">日銀 据置</div>
+          <svg viewBox="0 0 400 80" preserveAspectRatio="none"><path d="M0 10 Q50 0 100 12 T200 10 T300 14 T400 8 V40 H0Z" fill="#c8452d" opacity=".9"/><path d="M0 34 Q60 22 120 36 T240 32 T400 36 V64 H0Z" fill="#c8452d" opacity=".7"/><path d="M0 58 Q70 46 140 60 T280 56 T400 60 V80 H0Z" fill="#c8452d" opacity=".5"/></svg>
+          <div class="e">BOJ HOLDS</div><div class="no">HT-1104-2</div><div class="seal">半</div></div>
+          <div class="meta"><span>BOJ DECISION <span style="color:#4aa3ff">#中央銀行</span></span><span class="t">12:18</span></div>
+          <div style="font:600 15px/1.45 var(--sys)">日銀は金利0.75%で据え置き。でも声明にちょっと変化あり</div></div></section>
+      <section class="panel"><h2>議論（コメント）</h2>
+        <div class="cm"><div class="h"><b>s.tanaka</b> <span>債券ストラテジスト · 18分前</span></div>「一部に」から「広がり」へ。12月を織り込みに行く動きは自然だと思う。<div class="f"><span class="on">▲ 49</span><span>返信する</span><span>返信 6</span></div>
+          <div class="kids"><div class="cm" style="border:0"><div class="h"><b>Mia Chen</b> <span>FX Sales, Singapore · 12分前</span></div>Agree, but JPY barely moved — Dec is ~60% priced already.<div class="f"><span>▲ 21</span><span>返信する</span></div></div></div></div></section>
+      <section class="panel"><h2>メンバーカード ／ 明るい画面</h2>
+        <div class="two">
+          <div class="pass"><div class="art"><pre>#X8  /M  S4 |_ =:
+ H/ #  X8 M  /S
+X  4|  #M  8 /_ X
+ =: #X 8 H /  M4
+S /  X8 #  |_ 4H</pre></div><div class="pn"><div class="nm">kenta_fx</div><div class="sb">為替ディーラー</div><div class="r"></div><div class="m"><span>#002141</span><span>MEMBER</span></div><div class="ft"><span>SINCE 04 NOV 2026</span><span class="appicon ai2"><span class="mark" style="height:14px"><i style="width:3px;height:14px"></i><i style="width:3px;height:7px"></i></span></span></div></div></div>
+          <div class="light"><div class="row" style="gap:6px"><span class="chip on">最新</span><span class="chip">速報</span></div>
+            <div class="card" style="margin-top:10px;padding:12px"><div style="font:700 11px var(--sys);letter-spacing:.04em">WORK <span style="color:#1f6feb">#賃金</span></div><div style="font:600 14px/1.45 var(--sys);margin-top:6px">最低賃金、全国平均がはじめて1,100円台に</div><div class="muted" style="font-size:11px;margin-top:6px">184件の声</div></div>
+            <div class="row" style="margin-top:10px"><span class="btn" style="background:#e8590c;color:#fff;height:38px;font-size:12px">送る</span><span class="btn gl-light" style="height:38px;font-size:12px">保存</span></div></div>
+        </div></section>
+    </div>
+  </div>
+</body>
+</html>
