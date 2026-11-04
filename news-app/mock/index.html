@@ -255,29 +255,7 @@ svg { display: block; }
 .dtitle { font-size: 18.5px; font-weight: 800; line-height: 1.42; margin-top: 12px; letter-spacing: -.01em; }
 .dlead { font-size: 13px; color: var(--muted); line-height: 1.6; margin-top: 4px; }
 .deepstrip { background: #6a4fd6; }
-.scrub { margin: 0 16px 10px; border-radius: 20px; background: var(--surface); overflow: hidden; }
-.scard { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px 4px; min-height: 54px; }
-.stime { font: 600 26px/1 var(--mono); letter-spacing: -.02em; min-width: 78px; flex: none; }
-.sinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; font-size: 12.5px; }
-.stitle { display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
-.sruler { position: relative; height: 54px; overflow: hidden; cursor: grab; touch-action: pan-y; -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
-.sruler:active { cursor: grabbing; }
-.strack { position: absolute; left: 0; top: 0; height: 100%; will-change: transform; }
-.tk { position: absolute; top: 10px; width: 2px; height: 10px; margin-left: -1px; border-radius: 1px; background: var(--muted); opacity: .55; font-style: normal; }
-.tk.hr { height: 16px; top: 7px; opacity: .9; background: var(--text); }
-.tk.slot { height: 22px; top: 4px; width: 3px; opacity: 1; background: var(--text); }
-.tk.future { opacity: .2; }
-.tk b { position: absolute; top: 26px; left: 50%; transform: translateX(-50%); font: 500 10px/1 var(--mono); color: var(--muted); white-space: nowrap; }
-.tk.slot b { color: var(--text); font-weight: 600; }
-.sdot { position: absolute; top: 2px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; }
-.sdot.r-note { background: #2ec4b6; } .sdot.r-breaking { background: #ff3b30; } .sdot.r-deep { background: #9b7bff; }
-.snow { position: absolute; top: 40px; transform: translateX(-50%); font: 700 9.5px/1 var(--font); color: var(--accent); }
-.sneedle { position: absolute; left: 50%; top: 0; bottom: 14px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--accent); box-shadow: 0 0 0 3px rgba(255,106,26,.15); }
-.slide2 { position: relative; height: 56px; border-radius: 28px; background: rgba(255,59,48,.16); border: 1px solid rgba(255,59,48,.45); overflow: hidden; flex: 1; touch-action: none; user-select: none; }
-.slide2 .lbl2 { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 700; font-size: 14px; color: #ffb3ad; letter-spacing: .02em; }
-.slide2 .fill { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(255,59,48,.35); width: 56px; }
-.slide2 .knob { position: absolute; left: 4px; top: 4px; width: 46px; height: 46px; border-radius: 50%; background: #ff3b30; color: #fff; display: grid; place-items: center; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,.35); cursor: grab; }
-.slide2.done .lbl2 { color: #fff; }
+.rhythm { position: relative; height: 40px; margin: 0 22px 8px; }
 .rline { position: absolute; left: 0; right: 0; top: 14px; height: 1px; background: var(--line); }
 .rtick { position: absolute; top: 4px; transform: translateX(-1px); display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
 .rtick i { width: 3px; height: 20px; border-radius: 1px; background: var(--text); }
@@ -625,7 +603,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         </div>
         <div id="brkbar"></div>
         <div class="chips rel" id="chips"></div>
-        <div class="scrub rel" id="rhythm"></div>
+        <div class="rhythm rel" id="rhythm"></div>
         <div id="feed"></div>
       </div>
     </section>
@@ -888,57 +866,12 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   }
   // 今日のリズム（4本の目盛り＋不定期の点）
   const toPct = t => { const [h, m] = t.split(':').map(Number); return Math.max(0, Math.min(100, ((h + m / 60) - 6) / 18 * 100)); };
-  // 今日のリズム＝タイムスクラバー（bencho.dev の Time scrubber を参考に自作）
-  // 目盛りをドラッグして今日をさかのぼる。はじくと惰性で動き、近くの投稿か15分の目盛りに止まる
-  const STEP = 14, T0 = 6 * 60, T1 = 24 * 60, NOW = 16 * 60 + 10;
-  const mins = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-  const hhmm = m => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, '0')}`;
-  const sc = { t: NOW, raf: 0 };
-  const todayPosts = () => A.filter(a => /^\d+:\d+$/.test(a.tm)).map(a => ({ a, m: mins(a.tm) })).sort((x, y) => x.m - y.m);
   function renderRhythm() {
-    const el = $('#rhythm'), posts = todayPosts();
-    let ticks = '';
-    for (let m = T0; m <= T1; m += 15) {
-      const slot = ['7:00', '11:30', '15:30', '22:00'].includes(hhmm(m));
-      ticks += `<i class="tk ${m % 60 === 0 ? 'hr' : ''} ${slot ? 'slot' : ''} ${m > NOW ? 'future' : ''}" style="left:${(m - T0) / 15 * STEP}px">${slot || (m % 180 === 0 && !['7:00', '11:30', '15:30', '22:00'].some(x => Math.abs(mins(x) - m) <= 60)) ? `<b>${hhmm(m)}</b>` : ''}</i>`;
-    }
-    const dots = posts.filter(p => tp(p.a) !== 'slot').map(p => `<span class="sdot r-${tp(p.a)}" style="left:${(p.m - T0) / 15 * STEP}px"></span>`).join('');
-    el.innerHTML = `<button class="scard" id="scard"><span class="stime mono" id="stime"></span><span class="sinfo" id="sinfo"></span></button>
-      <div class="sruler" id="sruler" aria-label="今日の時刻をドラッグして選ぶ" role="slider" tabindex="0"><div class="strack" id="strack" style="width:${(T1 - T0) / 15 * STEP}px">${ticks}${dots}<span class="snow" style="left:${(NOW - T0) / 15 * STEP}px">いま</span></div><span class="sneedle"></span></div>
-      <span class="note" style="right:0;top:-18px">目盛りをドラッグ・はじいて今日をさかのぼる</span>`;
-    setScrub(sc.t, false); bindScrub();
-  }
-  function nearest(t) {
-    const p = todayPosts().reduce((best, x) => Math.abs(x.m - t) < Math.abs((best?.m ?? 1e9) - t) ? x : best, null);
-    return p && Math.abs(p.m - t) <= 60 ? p : null;
-  }
-  function setScrub(t, snapInfo = true) {
-    sc.t = Math.max(T0, Math.min(NOW, t));
-    const w = $('#sruler').clientWidth || 340;
-    $('#strack').style.transform = `translateX(${w / 2 - (sc.t - T0) / 15 * STEP}px)`;
-    const p = nearest(sc.t);
-    $('#stime').textContent = Math.abs(sc.t - NOW) < 3 ? 'いま' : hhmm(sc.t);
-    $('#sinfo').innerHTML = p ? `<span class="tchip ${TYPE[tp(p.a)][1]}" style="margin:0">${TYPE[tp(p.a)][0]} · ${p.a.tm}</span><span class="stitle">${esc(p.a.title)}</span>` : `<span class="muted">この時間の投稿はありません</span>`;
-    $('#scard').dataset.open = p ? p.a.id : '';
-  }
-  function bindScrub() {
-    const r = $('#sruler'); let down = false, sx = 0, st = 0, lx = 0, lt = 0, v = 0, lastTick = Math.round(sc.t / 15);
-    const tick = () => { const k = Math.round(sc.t / 15); if (k !== lastTick) { lastTick = k; navigator.vibrate?.(3); } };
-    r.onpointerdown = e => { down = true; cancelAnimationFrame(sc.raf); sx = lx = e.clientX; st = sc.t; lt = performance.now(); v = 0; r.setPointerCapture(e.pointerId); };
-    r.onpointermove = e => { if (!down) return; const now = performance.now(); v = (e.clientX - lx) / Math.max(1, now - lt); lx = e.clientX; lt = now; setScrub(st - (e.clientX - sx) / STEP * 15); tick(); };
-    r.onpointerup = () => {
-      if (!down) return; down = false;
-      let vel = -v / STEP * 15 * 16; // 分/フレーム
-      const coast = () => {
-        if (Math.abs(vel) > 0.4) { vel *= 0.93; setScrub(sc.t + vel); tick(); sc.raf = requestAnimationFrame(coast); return; }
-        const p = nearest(sc.t), target = p && Math.abs(p.m - sc.t) <= 45 ? p.m : Math.round(sc.t / 15) * 15;
-        const from = sc.t, t0 = performance.now();
-        const snap = now => { const k = Math.min(1, (now - t0) / 220); setScrub(from + (target - from) * (1 - Math.pow(1 - k, 3))); if (k < 1) sc.raf = requestAnimationFrame(snap); };
-        sc.raf = requestAnimationFrame(snap);
-      };
-      sc.raf = requestAnimationFrame(coast);
-    };
-    r.onkeydown = e => { if (e.key === 'ArrowLeft') setScrub(sc.t - 15); if (e.key === 'ArrowRight') setScrub(sc.t + 15); };
+    const today = A.filter(a => /^\d+:\d+$/.test(a.tm));
+    $('#rhythm').innerHTML = `<div class="rline"></div>
+      ${['7:00', '11:30', '15:30', '22:00'].map(t => { const done = today.some(a => tp(a) === 'slot' && a.tm === t); return `<span class="rtick ${done ? 'done' : 'next'}" style="left:${toPct(t)}%"><i></i><b>${t}</b></span>`; }).join('')}
+      ${today.filter(a => tp(a) !== 'slot').map(a => `<button class="rdot r-${tp(a)}" style="left:${toPct(a.tm)}%" ${tp(a) === 'note' ? `data-note="${a.id}"` : `data-article="${a.id}"`} aria-label="${esc(a.tm)} ${TYPE[tp(a)][0]}"></button>`).join('')}
+      <span class="note" style="right:0;top:-18px">今日のリズム：棒＝定時、点＝ひとこと・速報</span>`;
   }
   function openNote(id) { const a = byId(id); state.cur = { id: a.id, title: a.title, note: a }; openComments(); setTimeout(() => setSheet('full'), 30); }
 
@@ -1603,19 +1536,10 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <button class="ck2 self ${D.selfOk ? 'ok' : ''}" data-selfok><i>${D.selfOk ? '✓' : ''}</i>特定の銘柄の売買をすすめていない（自分で確認）</button></div>
         <span class="note" style="right:12px;top:10px">CLAUDE.md のニュースのルール</span></div>
 
-      <div class="pubbar"><button class="ghost" data-dpreview style="width:auto;padding:0 16px">見え方</button>${D.breaking ? `<div class="slide2 rel ${ready ? '' : 'off'}" id="slide2" style="${ready ? '' : 'opacity:.4'}"><span class="fill"></span><span class="lbl2">スライドして速報を出す</span><span class="knob">→</span><span class="note" style="right:10px;top:-20px">うっかり出さないようスライドで</span></div>` : `<button class="primary" data-publish ${ready ? '' : 'disabled'}>${D.breaking ? '速報として今すぐ出す' : D.type === 'deep' ? '深掘りをいま出す' : `${D.slot} に予約する`}</button>`}</div>
+      <div class="pubbar"><button class="ghost" data-dpreview style="width:auto;padding:0 16px">見え方</button><button class="primary" data-publish ${ready ? '' : 'disabled'}>${D.breaking ? '速報として今すぐ出す' : D.type === 'deep' ? '深掘りをいま出す' : `${D.slot} に予約する`}</button></div>
       <p class="muted" style="font-size:11.5px;text-align:center;padding:8px 16px">下書きは自動で保存されます</p>`;
-    bindSlide();
   }
   let fontsReady = false;
-  function bindSlide() {
-    const el = $('#slide2'); if (!el || el.classList.contains('off')) return;
-    const knob = el.querySelector('.knob'), fill = el.querySelector('.fill'); let down = false, sx = 0, x = 0;
-    const max = () => el.clientWidth - 50;
-    knob.onpointerdown = e => { down = true; sx = e.clientX - x; knob.setPointerCapture(e.pointerId); };
-    knob.onpointermove = e => { if (!down) return; x = Math.max(0, Math.min(max(), e.clientX - sx)); knob.style.transform = `translateX(${x}px)`; fill.style.width = `${x + 56}px`; };
-    knob.onpointerup = () => { down = false; if (x > max() * 0.88) { el.classList.add('done'); el.querySelector('.lbl2').textContent = '速報を出しました'; navigator.vibrate?.(20); setTimeout(publishDraft, 250); } else { x = 0; knob.style.transition = fill.style.transition = 'all .25s'; knob.style.transform = ''; fill.style.width = '56px'; setTimeout(() => { knob.style.transition = fill.style.transition = ''; }, 260); } };
-  }
   function openAdmin(tab) {
     if (!fontsReady && document.fonts) Promise.all(['800 40px "Shippori Mincho B1"', '40px "Instrument Serif"', '700 40px "Zen Kaku Gothic New"', '500 14px "Geist Mono"'].map(f => document.fonts.load(f))).then(() => { fontsReady = true; DRAFT.poster = null; renderAdmin(); }).catch(() => {});
     if (tab) state.atab = tab; renderAdmin(); $('#admin').classList.add('open'); $('#admin').setAttribute('aria-hidden', 'false'); }
@@ -1963,7 +1887,6 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
-    if (t.id === 'scard') { const id = t.dataset.open; if (!id) return; byId(id).type === 'note' ? openNote(id) : openArticle(id); return; }
     if (d.note) { openNote(d.note); return; }
     if (d.cmenu) { openCommentMenu(+d.cmenu); return; }
     if (d.report) { openReport(d.report); return; }
@@ -2105,8 +2028,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (e.target.id === 'd-notelink') { DRAFT.noteLink = e.target.value; return; }
     if (e.target.id === 'd-read') { DRAFT.readMin = +e.target.value || 6; return; }
     const dm = { 'd-ja': 'ja', 'd-jab': 'jaBody', 'd-en': 'enTitle', 'd-enb': 'enBody', 'd-max': 'max', 'd-big': 'big', 'd-enbig': 'en' }[e.target.id];
-    if (dm) { DRAFT[dm] = e.target.value; if (dm === 'big' || dm === 'en') { DRAFT.poster = posterOf(DRAFT.tplName); document.querySelector('.tprev img').src = DRAFT.poster; } if (DRAFT.breaking) { const ok = DRAFT.links.length && DRAFT.enTitle.trim() && DRAFT.enBody.trim() && (!DRAFT.max || DRAFT.ai) && DRAFT.selfOk && DRAFT.ja.trim(); const sl = $('#slide2'); if (sl) { sl.classList.toggle('off', !ok); sl.style.opacity = ok ? '' : '.4'; if (ok) bindSlide(); } return; }
-    const btn = document.querySelector('[data-publish]'); if (btn) { const ok = DRAFT.links.length && DRAFT.enTitle.trim() && DRAFT.enBody.trim() && (!DRAFT.max || DRAFT.ai) && DRAFT.selfOk && DRAFT.ja.trim(); btn.disabled = !ok; } return; }
+    if (dm) { DRAFT[dm] = e.target.value; if (dm === 'big' || dm === 'en') { DRAFT.poster = posterOf(DRAFT.tplName); document.querySelector('.tprev img').src = DRAFT.poster; } const btn = document.querySelector('[data-publish]'); if (btn) { const ok = DRAFT.links.length && DRAFT.enTitle.trim() && DRAFT.enBody.trim() && (!DRAFT.max || DRAFT.ai) && DRAFT.selfOk && DRAFT.ja.trim(); btn.disabled = !ok; } return; }
     if (e.target.id === 'q-text') { qdraft.text = e.target.value; $('#q-count').textContent = `${qdraft.text.length} / 1000`; $('#q-post').disabled = !qdraft.text.trim(); return; }
     if (e.target.id === 'q-link') { qdraft.link = e.target.value; return; }
     if (e.target.id === 'del-confirm') { $('#del-go').disabled = e.target.value.trim() !== '削除'; return; }
