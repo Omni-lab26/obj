@@ -243,6 +243,57 @@ svg { display: block; }
 .pc small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
 .pc .t { font-size: 13.5px; line-height: 1.55; }
 .pc .f { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.brkbar { position: relative; margin: 0 16px 6px; }
+.brkbar .bx { display: flex; gap: 10px; align-items: center; width: 100%; padding: 11px 40px 11px 12px; border-radius: 16px; background: linear-gradient(90deg, rgba(255,59,48,.28), rgba(255,59,48,.1)); border: 1px solid rgba(255,59,48,.45); font-size: 13px; line-height: 1.45; }
+.brkbar .x { flex: 1; min-width: 0; } .brkbar b { display: block; font-size: 11px; color: #ff8a80; letter-spacing: .06em; }
+.brkbar small { display: block; color: rgba(255,255,255,.6); font-size: 11px; }
+.brkbar .close { position: absolute; right: 8px; top: 8px; width: 26px; height: 26px; border-radius: 50%; font-size: 11px; color: rgba(255,255,255,.6); }
+.pulse { width: 9px; height: 9px; border-radius: 50%; background: #ff3b30; flex: none; box-shadow: 0 0 0 0 rgba(255,59,48,.6); animation: pulse 1.6s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 9px rgba(255,59,48,0); } 100% { box-shadow: 0 0 0 0 rgba(255,59,48,0); } }
+.brkcard { box-shadow: inset 3px 0 0 #ff3b30; }
+.brkstrip { display: flex; align-items: center; gap: 8px; margin: -30px 18px 30px; padding: 8px 12px; border-radius: 12px; background: #ff3b30; color: #fff; font-size: 11.5px; position: relative; z-index: 3; }
+.brkstrip b { letter-spacing: .12em; font: 700 11px/1 var(--mono); }
+.brkstrip .pulse { background: #fff; box-shadow: none; animation: none; }
+.dropalert { position: absolute; left: 12px; right: 12px; top: calc(50px + env(safe-area-inset-top, 0px)); z-index: 59; display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 20px; text-align: left; font-size: 13px; line-height: 1.45; transform: translateY(-160%); transition: transform .45s cubic-bezier(.2,.9,.2,1.1); background: rgba(40,14,12,.78); border-color: rgba(255,59,48,.5); }
+.dropalert.on { transform: none; }
+.dropalert .x { flex: 1; min-width: 0; } .dropalert b { display: block; font-size: 11px; color: #ff8a80; letter-spacing: .06em; }
+.dropalert img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex: none; }
+.cmenu-prev { padding: 10px 12px; border-radius: 12px; background: var(--surface2); font-size: 13px; line-height: 1.55; margin-bottom: 8px; }
+.cmenu-prev small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 2px; }
+.mrow { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 2px; border-bottom: 1px solid var(--line); font-size: 14.5px; text-align: left; }
+.mrow .ico { width: 28px; text-align: center; font-size: 16px; }
+.mrow.danger { color: #ff6b6b; }
+.inv { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; text-align: center; padding: calc(60px + env(safe-area-inset-top, 0px)) 24px calc(26px + env(safe-area-inset-bottom, 0px)); background: radial-gradient(120% 70% at 50% 0%, rgba(76,141,255,.25), transparent 60%), var(--bg); }
+.inv .gi { width: 108px; height: 108px; border-radius: 30px; background-size: cover; background-position: center; margin-top: 30px; box-shadow: 0 18px 40px rgba(0,0,0,.5); }
+.inv h2 { font-size: 24px; margin: 18px 0 6px; } .inv p { color: rgba(255,255,255,.75); font-size: 13.5px; line-height: 1.7; margin: 0; }
+.inv .by2 { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 12.5px; color: var(--muted); }
+.inv .by2 .av { width: 26px; height: 26px; border-radius: 50%; background-size: cover; }
+.inv .faces2 { display: flex; margin-top: 18px; } .inv .faces2 i { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--bg); margin-left: -10px; background-size: cover; } .inv .faces2 i:first-child { margin-left: 0; }
+.inv .rules2 { margin-top: 20px; padding: 12px 14px; border-radius: 14px; background: var(--surface); font-size: 12px; line-height: 1.7; color: var(--muted); text-align: left; width: 100%; }
+.inv .actions { margin-top: auto; width: 100%; }
+.wb-chrome { display: flex; align-items: center; gap: 8px; padding: calc(50px + env(safe-area-inset-top, 0px)) 12px 8px; background: #e7e4de; }
+.wb-url { flex: 1; min-width: 0; height: 34px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; font: 500 12.5px/1 var(--mono); color: #444; }
+.wb-x { width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #333; display: grid; place-items: center; }
+.wb { flex: 1; overflow-y: auto; scrollbar-width: none; }
+.wb-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(244,242,238,.9); backdrop-filter: blur(10px); border-bottom: 1px solid #e0ddd6; }
+.wb-head .wm2 { display: flex; align-items: center; gap: 6px; font: 700 17px/1 var(--font); }
+.wb-head .open { padding: 8px 14px; border-radius: 999px; background: #16161a; color: #fff; font-weight: 700; font-size: 12px; }
+.wb img.hero2 { width: 100%; aspect-ratio: 16/10; object-fit: cover; }
+.wb .wbody { padding: 18px 18px 0; } .wb h1 { font-size: 23px; line-height: 1.4; margin: 0 0 6px; text-wrap: balance; }
+.wb .meta2 { font-size: 12px; color: #6b6a66; margin-bottom: 14px; }
+.wb p { font-size: 15px; line-height: 1.85; color: #2a2a2e; margin: 0 0 14px; }
+.wb .fig2 { border-radius: 16px; overflow: hidden; margin: 6px 0 16px; border: 1px solid #e0ddd6; }
+.wb .refs2 a { display: block; padding: 12px 14px; border-radius: 12px; background: #fff; margin-bottom: 8px; color: #16161a; font-size: 13px; text-decoration: none; border: 1px solid #e6e3dc; }
+.wb .refs2 small { display: block; color: #8a8882; font-size: 11px; }
+.wb .wc { margin: 10px 0 0; padding: 16px 18px 6px; background: #fff; border-top: 1px solid #e6e3dc; }
+.wb .wc h3 { font-size: 16px; margin: 0 0 6px; }
+.wb .wcm { padding: 10px 0; border-bottom: 1px solid #efece6; font-size: 13.5px; line-height: 1.65; }
+.wb .wcm b { font-size: 12.5px; } .wb .wcm small { color: #8a8882; font-size: 11px; }
+.wb .fade { position: relative; height: 70px; margin-top: -70px; background: linear-gradient(to bottom, rgba(255,255,255,0), #fff); }
+.wb .cta { margin: 6px 18px 18px; padding: 18px; border-radius: 20px; background: #16161a; color: #fff; text-align: center; }
+.wb .cta b { display: block; font-size: 17px; margin-bottom: 6px; } .wb .cta p { color: rgba(255,255,255,.75); font-size: 13px; margin: 0 0 12px; }
+.wb .cta .primary { margin: 0; } .wb .cta .ghost { border-color: rgba(255,255,255,.25); }
+.wb .wfoot { padding: 20px 18px 40px; font-size: 11.5px; color: #8a8882; line-height: 1.9; }
 .ob { z-index: 58; background: #0c0c0e; transition: opacity .35s, transform .35s; }
 .ob.gone { opacity: 0; transform: scale(1.03); pointer-events: none; }
 .wall { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 10px; overflow: hidden; }
@@ -496,6 +547,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
 .invite { margin-top: 14px; padding: 14px; border-radius: 16px; background: var(--surface2); font-size: 13px; line-height: 1.5; }
 .invite .link { font-family: var(--mono); font-size: 13px; margin-top: 6px; color: #7cc0ff; word-break: break-all; }
 .sys { align-self: center; max-width: 86%; text-align: center; font-size: 11.5px; color: var(--muted); background: var(--surface); padding: 7px 12px; border-radius: 999px; }
+.toast { pointer-events: none; }
+.dropalert:not(.on) { pointer-events: none; visibility: hidden; }
 .toast { position: absolute; left: 50%; top: 60px; transform: translate(-50%, -20px); opacity: 0; transition: all .25s; z-index: 60; padding: 10px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 .simple { padding: 54px 16px 20px; }
@@ -527,6 +580,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
           </div>
           <span class="note" style="left:16px;top:92px">自分・配信を作る・通知</span>
         </div>
+        <div id="brkbar"></div>
         <div class="chips rel" id="chips"></div>
         <div id="feed"></div>
       </div>
@@ -603,6 +657,15 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div class="scroller"><div class="msgs" id="msgs"></div></div>
       <div class="composer"><input id="room-input" placeholder="メッセージ" aria-label="メッセージ"><button id="room-send" aria-label="送信">➤</button></div>
     </section>
+
+    <!-- 招待リンクから開いたとき -->
+    <section class="screen rise" id="invite" aria-hidden="true" style="z-index:47"></section>
+
+    <!-- サイトの公開ページ（ログインしていない人） -->
+    <section class="screen rise" id="web" aria-hidden="true" style="z-index:48;background:#f4f2ee;color:#16161a"></section>
+
+    <!-- 上から降りてくる速報の知らせ -->
+    <button class="dropalert glass" id="dropalert" aria-live="polite"></button>
 
     <!-- 最初の起動（ようこそ → ログイン → プロフィール作成） -->
     <section class="screen ob" id="onboard" aria-hidden="false"></section>
@@ -722,13 +785,16 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     $('#chips').innerHTML = CHIPS.map(c => `<button class="chip ${c === state.chip ? 'on' : ''}" data-chip="${c}">${c}</button>`).join('') +
       '<span class="note" style="left:16px;top:44px">絞り込み（最新・速報・盛り上がり中・ジャンル）</span>';
   }
+  state.brkClosed = false;
   function renderFeed() {
+    const nb = A.find(a => a.brk && !/^\d+\/\d+$/.test(a.tm));
+    $('#brkbar').innerHTML = nb && !state.brkClosed ? `<div class="brkbar rel"><button class="bx" data-article="${nb.id}" data-comments="1"><span class="pulse"></span><span class="x"><b>速報 · ${esc(nb.tm)}</b>${esc(nb.title)}<small>${nb.c}人が話しています</small></span>›</button><button class="close" data-brkclose aria-label="閉じる">✕</button><span class="note" style="right:10px;bottom:-10px">速報の帯（その日だけ）</span></div>` : '';
     let list = A.slice(0, 5);
     if (state.chip === '速報') list = A.filter(a => a.brk);
     else if (state.chip === '盛り上がり中') list = [...A].sort((a, b) => b.c - a.c).slice(0, 4);
     else if (state.chip !== '最新') list = A.filter(a => a.tag.includes(state.chip === '株式' ? '株式' : state.chip === '為替' ? '為替' : '債券'));
     $('#feed').innerHTML = list.map((a, i) => `
-      <article class="feed-item rel">
+      <article class="feed-item rel ${a.brk ? 'brkcard' : ''}">
         <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · いつもの配信</div></div><span class="more">•••</span></div>
         <div class="lab"><span>${esc(a.lab)} <span class="tag">${esc(a.tag)}</span></span><span class="tm">${esc(a.tm)}</span></div>
         <button class="thumb" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${imgOf(a, 'sq')}" alt="">${a.brk ? '<span class="brk">速報</span>' : ''}</button>
@@ -812,7 +878,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   function postHTML(p, full) {
     const q = p.quote && byId(p.quote);
     return `<article class="upost">
-      <div class="by"><button class="av" style="background:${FACE(p.who)}" data-person="${esc(p.who)}" aria-label="${esc(p.who)} のプロフィール"></button><div><div class="nm">${esc(p.who)}<span class="ver" title="認証済み">✓</span></div><div class="hd">${esc(ROLE[p.who] || '')} · ${p.min === 0 ? 'たった今' : ago(p.min)}</div></div><button class="more" data-toast="通報・ミュート・ブロック（ワイヤー）" aria-label="その他">•••</button></div>
+      <div class="by"><button class="av" style="background:${FACE(p.who)}" data-person="${esc(p.who)}" aria-label="${esc(p.who)} のプロフィール"></button><div><div class="nm">${esc(p.who)}<span class="ver" title="認証済み">✓</span></div><div class="hd">${esc(ROLE[p.who] || '')} · ${p.min === 0 ? 'たった今' : ago(p.min)}</div></div><button class="more" data-postmenu="${p.id}" aria-label="その他">•••</button></div>
       <div class="tx ${full ? '' : 'clamp'}">${esc(p.t)}</div>
       ${!full && (p.t.length > 160 || (p.t.match(/\n/g) || []).length >= 3) ? `<button class="more2" data-post="${p.id}">続きを読む</button>` : ''}
       ${p.link ? `<a class="lcard" href="https://${p.link.dom}/" target="_blank" rel="noopener"><span class="lg">↗</span><span class="x">${esc(p.link.title)}<small>${esc(p.link.dom)}</small></span></a>` : ''}
@@ -891,7 +957,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   function openRoom(id) {
     const r = ROOMS.find(x => x.id === id); state.room = r; r.n = 0; renderRooms();
     $('#room-name').textContent = r.name;
-    $('#msgs').innerHTML = r.msgs.map(m => m.sys ? `<div class="sys">${esc(m.sys)}</div>` : `<div class="mg ${m.me ? 'me' : ''}">${m.who ? `<div class="who">${esc(m.who)}</div>` : ''}${m.share ? `<button class="shared" data-article="${m.share}"><img src="${R}cover1.jpg" alt="共有された配信の表紙"></button>` : ''}<div class="bub">${esc(m.t)}</div></div>`).join('');
+    $('#msgs').innerHTML = r.msgs.map(m => m.sys ? `<div class="sys">${esc(m.sys)}</div>` : `<div class="mg ${m.me ? 'me' : ''}">${m.who ? `<div class="who">${esc(m.who)}</div>` : ''}${m.share ? `<button class="shared" data-article="${m.share}"><img src="${R}cover1.jpg" alt="共有された配信の表紙"></button>` : ''}<div class="bub" ${m.me ? '' : `data-msgwho="${esc(m.who || '')}"`}>${esc(m.t)}</div></div>`).join('');
     $('#room').classList.add('open'); $('#room').setAttribute('aria-hidden', 'false');
   }
 
@@ -1004,11 +1070,109 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div class="stats"><div><b>${cs.length + (me ? 0 : 40)}</b>コメント</div><div><b>${up + (me ? 0 : 300)}</b>もらった ▲</div><div><b>${me ? ROOMS.filter(r => r.kind === 'group').length : 2}</b>グループ</div></div>
       <div class="pbtns">${me
         ? '<button class="primary" data-editprofile>プロフィールを編集</button><button class="ghost" data-toast="プロフィールのリンクをコピーしました">⇪</button>'
-        : `<button class="primary" ${shares ? `data-dm="${esc(name)}"` : `data-toast="同じグループに入ると、${esc(name)} さんと1対1で話せます"`}>メッセージを送る</button><button class="ghost" data-toast="ブロック・通報（ワイヤー）">•••</button>`}</div>
+        : `<button class="primary" ${shares ? `data-dm="${esc(name)}"` : `data-toast="同じグループに入ると、${esc(name)} さんと1対1で話せます"`}>メッセージを送る</button><button class="ghost" data-pmenu="${esc(name)}">•••</button>`}</div>
       <div class="ptabs">${tabs.map(([k, l]) => `<button class="chip ${state.ptab === k ? 'on' : ''}" data-ptab="${k}">${l}</button>`).join('')}</div>
       <div>${list}</div>`;
     $('#p-scroll').scrollTop = 0;
     $('#profile').classList.add('open'); $('#profile').setAttribute('aria-hidden', 'false');
+  }
+
+  // ---------- 通報・ブロック・メニュー ----------
+  const REASONS = [['attack', '人を傷つける・攻撃している'], ['spam', '宣伝・スパム'], ['pump', '特定の銘柄の売買をあおっている'], ['fake', 'なりすまし'], ['false', 'まちがった情報を広めている'], ['other', 'その他']];
+  const rep = { target: null, reason: '', note: '' };
+  function menuSheet(prev, rows) { openSheet(head('メニュー') + `<div class="past">${prev}${rows.map(([ico, l, attr, danger]) => `<button class="mrow ${danger ? 'danger' : ''}" ${attr}><span class="ico">${ico}</span>${l}</button>`).join('')}</div>`, 'half'); }
+  function openCommentMenu(id) {
+    const c = findC(discFor(state.cur.id), id); if (!c) return;
+    const mine = c.who === 'あなた';
+    menuSheet(`<div class="cmenu-prev"><small>${esc(c.who)} のコメント</small>${esc(c.t)}</div>`, [
+      ['↩', '返信する', `data-reply="${esc(c.who)}" data-afterclose`],
+      ['⧉', 'コピー', `data-copy="${esc(c.t)}"`],
+      ...(mine ? [['✎', '編集する（5分以内）', 'data-toast="編集できます（ワイヤー）"'], ['🗑︎', '削除する', `data-delc="${c.id}"`, 1]]
+        : [['⚑', '通報する', `data-report="c:${c.id}:${esc(c.who)}"`, 1], ['⊘', `${esc(c.who)} さんをブロック`, `data-block="${esc(c.who)}"`, 1]]),
+    ]);
+  }
+  function openReport(target) {
+    rep.target = target; rep.reason = ''; rep.note = '';
+    renderReport();
+  }
+  function renderReport() {
+    const [kind, , who] = rep.target.split(':');
+    openSheet(head('通報する') + `<div class="past" style="overflow-y:auto;padding-bottom:30px"><p class="muted" style="font-size:12.5px;line-height:1.6;margin:0 0 6px">${{ c: 'このコメント', p: 'この投稿', m: 'このメッセージ', u: 'この人' }[kind]}のどこが気になりましたか？通報したことは相手には分かりません。</p>
+      ${REASONS.map(([k, l]) => `<button class="opt ${rep.reason === k ? 'on' : ''}" data-reason="${k}"><span class="x">${l}</span><span class="rd"></span></button>`).join('')}
+      <label class="lbl" for="rep-note">くわしく（任意）</label><textarea class="field" id="rep-note" style="height:80px;padding:10px 12px;resize:none" maxlength="300" placeholder="運営に伝えたいことがあれば">${esc(rep.note)}</textarea>
+      <button class="primary" data-sendreport ${rep.reason ? '' : 'disabled'}>送る</button></div>`, 'full');
+  }
+  function reportDone() {
+    const who = rep.target.split(':')[2];
+    REPORTS.unshift({ who, where: 'アプリからの通報', t: rep.note || '（くわしい内容なし）', why: REASONS.find(r => r[0] === rep.reason)[1], n: 1 });
+    openSheet(head('送りました') + `<div class="past"><p style="font-size:14px;line-height:1.7;margin:0">知らせてくれてありがとうございます。運営ができるだけ早く確認します。</p>
+      ${who && who !== 'あなた' && !SET.blocked.includes(who) ? `<button class="primary" data-block="${esc(who)}">${esc(who)} さんをブロックする</button><p class="muted" style="font-size:11.5px;line-height:1.6;margin-top:8px">ブロックすると、お互いのコメントとメッセージが見えなくなります。相手には知らされません。</p>` : ''}
+      <button class="ghost" data-close="sheet">閉じる</button></div>`, 'half');
+  }
+  function doBlock(who) {
+    if (!SET.blocked.includes(who)) SET.blocked.push(who);
+    setSheet('closed'); toast(`${who} さんをブロックしました。設定からいつでも解除できます`);
+    if (state.cur && byId(state.cur.id) && $('#article').classList.contains('open')) openArticle(state.cur.id);
+    renderPosts(); renderSettings && renderSettings();
+  }
+  // 長押し
+  (() => {
+    let tm = null, sx = 0, sy = 0;
+    document.addEventListener('pointerdown', e => {
+      const cm = e.target.closest('.cm[data-cmid]'), bub = e.target.closest('.bub[data-msgwho]');
+      if (!cm && !bub) return;
+      sx = e.clientX; sy = e.clientY;
+      tm = setTimeout(() => {
+        tm = null; navigator.vibrate?.(10);
+        if (cm) openCommentMenu(+cm.dataset.cmid);
+        else { const w = bub.dataset.msgwho; menuSheet(`<div class="cmenu-prev"><small>${esc(w)} のメッセージ</small>${esc(bub.textContent)}</div>`, [['⧉', 'コピー', `data-copy="${esc(bub.textContent)}"`], ['⚑', '通報する', `data-report="m:0:${esc(w)}"`, 1], ['⊘', `${esc(w)} さんをブロック`, `data-block="${esc(w)}"`, 1]]); }
+      }, 480);
+    });
+    const cancel = e => { if (tm && (e.type !== 'pointermove' || Math.hypot(e.clientX - sx, e.clientY - sy) > 8)) { clearTimeout(tm); tm = null; } };
+    ['pointerup', 'pointercancel', 'pointermove'].forEach(ev => document.addEventListener(ev, cancel));
+  })();
+
+  // ---------- 招待リンクから開いたとき ----------
+  const INVITE = { name: 'London macro desk', by: 'David Ruiz', members: 9, icon: 4, about: 'ロンドンの朝に、欧州の金利と為替の話をするグループです。英語と日本語どちらでも。', faces: ['David Ruiz', 'Mia Chen', 'h.kato', 'a.ishii'] };
+  function openInvite() {
+    const I = INVITE;
+    $('#invite').innerHTML = `<div class="inv"><button class="round glass" style="position:absolute;left:16px;top:calc(54px + env(safe-area-inset-top, 0px))" data-close="invite" aria-label="閉じる">✕</button>
+      <span class="muted" style="font-size:12px;margin-top:4px">グループへの招待</span>
+      <span class="gi" style="background-image:url(${ICONS[I.icon - 1]})"></span>
+      <h2>${esc(I.name)}</h2><p>${esc(I.about)}</p>
+      <div class="by2"><span class="av" style="background:${FACE(I.by)}"></span>${esc(I.by)} さんが招待しています</div>
+      <div class="faces2">${I.faces.map(f => `<i style="background:${FACE(f)}"></i>`).join('')}</div><div class="muted" style="font-size:12px;margin-top:6px">${I.members}人が参加しています</div>
+      <div class="rules2">参加すると、グループのメンバーとチャットで話したり、同じグループの人と1対1で話したりできます。あなたのプロフィール（名前・職種）がメンバーに見えます。</div>
+      <div class="actions">${state.joinedLondon ? '<button class="primary" data-room="london">チャットを開く</button>' : '<button class="primary" data-joininvite>参加する</button>'}<button class="ghost" data-close="invite">${state.joinedLondon ? '閉じる' : '今はやめておく'}</button></div></div>`;
+    $('#invite').classList.add('open'); $('#invite').setAttribute('aria-hidden', 'false');
+  }
+
+  // ---------- サイトの公開ページ ----------
+  function openWeb() {
+    const a = state.cur || byId('boj'); const cs = [...discFor(a.id)].sort((x, y) => y.up - x.up).slice(0, 3);
+    $('#web').innerHTML = `<div class="wb-chrome"><span class="wb-url">🔒︎ halftick.app/p/${a.id}</span><button class="wb-x" data-close="web" aria-label="閉じる">✕</button></div>
+      <div class="wb">
+        <div class="wb-head"><span class="wm2"><span class="mark"><i></i><i></i></span>Halftick</span><button class="open" data-close="web">アプリで開く</button></div>
+        <img class="hero2" src="${imgOf(a, 'sq')}" alt="">
+        <div class="wbody"><h1>${esc(a.title)}</h1><div class="meta2">${esc(a.when)} · Halftick の配信</div>
+          <p>${a.brk ? '今回の声明では、賃金について「上昇の広がりがみられる」と、前回よりちょっと踏み込みました。総裁の会見は15:30から。市場は12月の利上げを6割くらい見込んでいます。' : 'ここに本文が入ります。オーナーが数字や見出しを見ながら、かみくだいて書いた解説です。'}</p>
+          <div class="fig2"><img src="${R}chart1.jpg" alt="グラフ"></div>
+          <div class="refs2"><a href="https://www.boj.or.jp/" target="_blank" rel="noopener">当面の金融政策運営について<small>日本銀行 · boj.or.jp</small></a></div></div>
+        <div class="wc"><h3>みんなの声 ${count(discFor(a.id))}件</h3>
+          ${cs.map(c => `<div class="wcm"><b>${esc(c.who)}</b> <small>${esc(ROLE[c.who] || '')}</small><br>${esc(c.t)}<br><small>▲ ${c.up}${c.kids.length ? ` · 返信 ${count(c.kids)}` : ''}</small></div>`).join('')}
+          <div class="fade"></div></div>
+        <div class="cta"><b>この議論に参加しませんか？</b><p>金融で働く人たちが、配信のたびに語り合っています。読むだけでも大丈夫です。</p><button class="primary" data-close="web">アプリで開く</button><button class="ghost" data-close="web">ログインして書く</button></div>
+        <div class="wfoot">Halftick · 1日4回、世界の市場のニュースと、その下の議論<br>利用規約 · プライバシーポリシー · 投稿とコメントのルール · 問い合わせ<br>※ このページはログインしていない人向けのサイトの見え方です（ワイヤー）</div>
+      </div>`;
+    $('#web').classList.add('open'); $('#web').setAttribute('aria-hidden', 'false');
+  }
+
+  // ---------- 速報の知らせ ----------
+  function dropAlert(a) {
+    const el = $('#dropalert');
+    el.innerHTML = `<span class="pulse"></span><span class="x"><b>速報 · Halftick</b>${esc(a.title)}</span><img src="${imgOf(a, 'sq')}" alt="">`;
+    el.dataset.article = a.id; el.dataset.comments = '';
+    el.classList.add('on'); clearTimeout(dropAlert.t); dropAlert.t = setTimeout(() => el.classList.remove('on'), 5200);
   }
 
   // ---------- 最初の起動 ----------
@@ -1287,6 +1451,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (!D.breaking) { const s2 = SLOTS.find(s => s[0] === D.slot); if (s2) s2[2] = id; }
     Object.assign(D, { ja: '', jaBody: '', enTitle: '', enBody: '', max: '', links: [], used: new Set(), selfOk: false, ai: false, poster: null });
     renderFeed(); renderLib(); state.atab = 'today'; renderAdmin();
+    if (a.brk) { state.brkClosed = false; renderFeed(); setTimeout(() => dropAlert(a), 300); }
     toast(a.brk ? '速報を出しました。全員にお知らせが届きます' : `${a.tm} に予約しました`);
   }
 
@@ -1452,10 +1617,10 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       ${days.map((d, i) => `<div class="nday"><span>${d}</span>${i === 0 && unread ? `<button data-readall>すべて既読にする</button>` : ''}</div>` + list.filter(n => n.day === d).map(n => {
         const [ic, col] = NTYPE[n.type];
         const face = n.who ? `<span class="av" style="background:${FACE(n.who)}"></span>` : n.room ? `<span class="av sq" style="background:${roomIcon(ROOMS.find(r => r.id === n.room))}"></span>` : `<span class="av" style="background:#26272b;display:grid;place-items:center"><span class="mark"><i></i><i></i></span></span>`;
-        const act = n.type === 'invite' ? 'data-toast="グループに参加しました（ワイヤー）"' : n.room ? `data-room="${n.room}"` : n.art ? `data-article="${n.art}" data-comments="${['reply', 'react', 'mention'].includes(n.type) ? 1 : ''}"` : `data-tab-go="people"`;
+        const act = n.type === 'invite' ? 'data-invite' : n.room ? `data-room="${n.room}"` : n.art ? `data-article="${n.art}" data-comments="${['reply', 'react', 'mention'].includes(n.type) ? 1 : ''}"` : `data-tab-go="people"`;
         return `<button class="ni ${n.unread ? 'unread' : ''}" ${act}><span class="who">${face}<span class="badge" style="background:${col}">${ic}</span></span>
           <span class="x">${n.text}${n.q ? `<span class="q">${esc(n.q)}</span>` : ''}<small>${n.at}</small></span>
-          ${n.type === 'invite' ? '<span class="join">参加する</span>' : n.art ? `<img class="th" src="${imgOf(byId(n.art), 'sq')}" alt="">` : ''}</button>`;
+          ${n.type === 'invite' ? (state.joinedLondon ? '<span class="pill2">参加済み</span>' : '<span class="join">見る</span>') : n.art ? `<img class="th" src="${imgOf(byId(n.art), 'sq')}" alt="">` : ''}</button>`;
       }).join('')).join('') || '<p class="muted" style="padding:20px 16px;font-size:13px">ここに入るお知らせはまだありません</p>'}
       <p class="muted" style="text-align:center;font-size:11.5px;padding:18px 16px 0">30日より前のお知らせは消えます</p>`;
   }
@@ -1486,6 +1651,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <div class="hero-btns"><button class="round glass" data-close="article" aria-label="閉じる">⌄</button>
           <div class="pillbtns glass"><button class="iconbtn" data-share aria-label="共有">⇪</button><button class="iconbtn" data-toast="表示の切り替え：日本語 / English">文A</button><button class="iconbtn" data-toast="通報・ミュートなど">•••</button></div></div>
         <span class="note" style="left:14px;bottom:30px">最初のサムネを全画面のトップに</span></div>
+      ${a.brk ? `<div class="brkstrip rel"><span class="pulse"></span><b>BREAKING</b><span>${esc(a.tm)} · 発表から3時間 · ${a.c}人が話しています</span><span class="note" style="right:0;top:-20px">速報の記事は赤い帯</span></div>` : ''}
       <div class="head rel"><div style="flex:1;min-width:0"><h2>${esc(a.title)}</h2><div class="when">${esc(a.when)} · 日本語で表示中 ⌃</div></div>
         <div class="btns"><button class="round glass" data-share aria-label="グループに共有">⤴︎</button><button class="round glass save ${state.saved.has(id) ? 'on' : ''}" data-save="${id}" aria-label="記事を保存">✓</button></div>
         <span class="note" style="right:18px;top:-24px">✓ ＝ 記事を保存</span></div>
@@ -1527,10 +1693,11 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   function openSheet(html, pos = 'half') { $('#sheet-body').innerHTML = html; requestAnimationFrame(() => setSheet(pos)); }
 
   function commentHTML(list, depth) {
-    return list.map(c => `
-      <div class="cm"><div class="h"><button class="who-btn" data-person="${esc(c.who)}">${esc(c.who)}</button><span class="muted">${esc(ROLE[c.who] || '')} · ${c.min === 0 ? 'たった今' : c.min + '分前'}</span></div>
+    return list.map(c => SET.blocked.includes(c.who) ? `<div class="cm"><div class="t muted" style="font-size:12.5px">ブロックした人のコメントです</div></div>` : c.deleted ? `
+      <div class="cm"><div class="t muted" style="font-size:12.5px">削除されたコメント</div>${c.kids.length ? `<div class="kids">${commentHTML(c.kids, depth + 1)}</div>` : ''}</div>` : `
+      <div class="cm" data-cmid="${c.id}"><div class="h"><button class="who-btn" data-person="${esc(c.who)}">${esc(c.who)}</button><span class="muted">${esc(ROLE[c.who] || '')} · ${c.min === 0 ? 'たった今' : c.min + '分前'}</span></div>
         <div class="t">${esc(c.t)}</div>
-        <div class="f"><button data-like="${c.id}" class="${c.liked ? 'liked' : ''}">▲ ${c.up + (c.liked ? 1 : 0)}</button><button data-reply="${esc(c.who)}">返信する</button>${c.kids.length ? `<span>返信 ${count(c.kids)}</span>` : ''}</div>
+        <div class="f"><button data-like="${c.id}" class="${c.liked ? 'liked' : ''}">▲ ${c.up + (c.liked ? 1 : 0)}</button><button data-reply="${esc(c.who)}">返信する</button>${c.kids.length ? `<span>返信 ${count(c.kids)}</span>` : ''}<button data-cmenu="${c.id}" aria-label="メニュー" style="margin-left:auto">•••</button></div>
         ${c.kids.length ? (depth >= 4 ? `<button class="deeper" data-toast="この枝だけを広い幅で表示（返信の続き）">続きを読む（${count(c.kids)}件）›</button>` : `<div class="kids">${commentHTML(c.kids, depth + 1)}</div>`) : ''}
       </div>`).join('');
   }
@@ -1555,7 +1722,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div class="share-wrap">
         <div class="cover-pick"><button class="chip ${state.cover === 1 ? 'on' : ''}" data-cover="1">表紙 1（カード）</button><button class="chip ${state.cover === 2 ? 'on' : ''}" data-cover="2">表紙 2（ポスター）</button></div>
         <div class="cover rel"><img src="${R}cover${state.cover}.jpg" alt="記事の表紙の見本"><span class="note" style="left:8px;top:8px">記事の表紙（共有・SNS用の画像）</span></div>
-        <div class="send-list">${ROOMS.map(r => `<button data-send="${r.id}">${esc(r.name)}${r.kind === 'dm' ? '（1対1）' : ''}<span>送る</span></button>`).join('')}<button data-toast="リンクをコピーしました">リンクをコピー<span>halftick.app/p/1104-2</span></button></div>
+        <div class="send-list">${ROOMS.map(r => `<button data-send="${r.id}">${esc(r.name)}${r.kind === 'dm' ? '（1対1）' : ''}<span>送る</span></button>`).join('')}<button data-web>サイトでの見え方を見る<span>ログインしていない人の画面</span></button><button data-toast="リンクをコピーしました">リンクをコピー<span>halftick.app/p/1104-2</span></button></div>
       </div>`, 'full');
   }
   function openSimple(kind) {
@@ -1595,6 +1762,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (t.id === 'cbar') { openComments(); return; }
     if (d.sort) { state.sort = d.sort; openComments(); return; }
     if (d.like) { const c = findC(discFor(state.cur.id), +d.like); c.liked = !c.liked; t.classList.toggle('liked', c.liked); t.textContent = `▲ ${c.up + (c.liked ? 1 : 0)}`; return; }
+    if (d.reply && d.afterclose !== undefined) { const who = d.reply; openComments(); setTimeout(() => { const i = $('#c-input'); if (i) { i.placeholder = `${who} さんに返信`; i.focus(); } }, 50); return; }
     if (d.reply) { const i = $('#c-input'); i.placeholder = `${d.reply} さんに返信`; i.focus(); return; }
     if (t.id === 'c-send') { const i = $('#c-input'); if (!i.value.trim()) return; discFor(state.cur.id).unshift(C('あなた', i.value.trim(), 0, 0)); state.sort = 'new'; openComments(); toast('コメントしました。返信が来たらお知らせします'); return; }
     if (d.share !== undefined) { openShare(); return; }
@@ -1607,6 +1775,21 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
+    if (d.cmenu) { openCommentMenu(+d.cmenu); return; }
+    if (d.report) { openReport(d.report); return; }
+    if (d.reason) { rep.reason = d.reason; renderReport(); return; }
+    if (d.sendreport !== undefined) { reportDone(); return; }
+    if (d.block) { doBlock(d.block); return; }
+    if (d.delc) { const c = findC(discFor(state.cur.id), +d.delc); c.deleted = true; setSheet('closed'); toast('コメントを削除しました'); setTimeout(openComments, 350); return; }
+    if (d.pmenu) { const w = d.pmenu; menuSheet(`<div class="cmenu-prev"><small>プロフィール</small>${esc(w)}</div>`, [['⇪', 'プロフィールを共有', 'data-toast="リンクをコピーしました"'], ['⚑', '通報する', `data-report="u:0:${esc(w)}"`, 1], ['⊘', SET.blocked.includes(w) ? 'ブロックを解除' : `${esc(w)} さんをブロック`, SET.blocked.includes(w) ? `data-unblock="${esc(w)}"` : `data-block="${esc(w)}"`, 1]]); return; }
+    if (d.postmenu) { const p = findPost(d.postmenu); menuSheet(`<div class="cmenu-prev"><small>${esc(p.who)} の投稿</small>${esc(p.t.slice(0, 80))}${p.t.length > 80 ? '…' : ''}</div>`, [['⧉', 'リンクをコピー', 'data-toast="リンクをコピーしました"'], ...(p.who === 'あなた' ? [['🗑︎', '削除する', `data-delpost="${p.id}"`, 1]] : [['⚑', '通報する', `data-report="p:${p.id}:${esc(p.who)}"`, 1], ['⊘', `${esc(p.who)} さんをブロック`, `data-block="${esc(p.who)}"`, 1]])]); return; }
+    if (d.delpost) { POSTS.splice(POSTS.findIndex(p => p.id === d.delpost), 1); renderPosts(); setSheet('closed'); toast('投稿を削除しました'); return; }
+    if (d.invite !== undefined) { if ($('#notif').classList.contains('open')) closeNotif(); openInvite(); return; }
+    if (d.joininvite !== undefined) { state.joinedLondon = true; ROOMS.unshift({ id: 'london', kind: 'group', name: INVITE.name, members: INVITE.members + 1, icon: INVITE.icon, at: 0, n: 0, sub: 'あなたが参加しました', msgs: [{ sys: `${INVITE.by} さんの招待で参加しました` }, { who: 'David Ruiz', t: 'Welcome! ようこそ。毎朝ロンドンの寄り付きで話してます' }] }); renderRooms(); $('#invite').classList.remove('open'); openRoom('london'); toast('参加しました'); return; }
+    if (d.close === 'invite') { $('#invite').classList.remove('open'); $('#invite').setAttribute('aria-hidden', 'true'); return; }
+    if (d.web !== undefined) { setSheet('closed'); openWeb(); return; }
+    if (d.close === 'web') { $('#web').classList.remove('open'); $('#web').setAttribute('aria-hidden', 'true'); return; }
+    if (d.brkclose !== undefined) { state.brkClosed = true; renderFeed(); return; }
     if (d.obgo) { if (d.obmode) OB.mode = d.obmode; else if (d.obgo === 'login' && !d.obmode) OB.mode = 'new'; if (d.obperm !== undefined) toast('（ここで iPhone のお知らせの許可が出ます）'); OB.step = d.obgo; renderOnboard(); return; }
     if (d.obauth) { OB.method = d.obauth; OB.step = OB.mode === 'login' ? 'done' : 'profile'; if (OB.mode === 'login') { OB.name = OB.name || 'あなた'; } renderOnboard(); return; }
     if (d.obsendmail !== undefined) { OB.step = 'code'; renderOnboard(); return; }
@@ -1710,6 +1893,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (d.toast) { toast(d.toast); return; }
   });
   scrim.addEventListener('click', () => setSheet('closed'));
+  $('#dropalert').addEventListener('click', () => $('#dropalert').classList.remove('on'));
   document.addEventListener('change', e => {
     if (e.target.id === 'ob-photo' && e.target.files[0]) { const fr = new FileReader(); fr.onload = () => { OB.icon = fr.result; renderOnboard(); }; fr.readAsDataURL(e.target.files[0]); return; }
     if (e.target.id === 'd-ai') { DRAFT.ai = e.target.checked; renderAdmin(); return; }
@@ -1720,6 +1904,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     fr.readAsDataURL(e.target.files[0]);
   });
   document.addEventListener('input', e => {
+    if (e.target.id === 'rep-note') { rep.note = e.target.value; return; }
     if (e.target.id === 'ob-name') { OB.name = e.target.value; $('#ob-next1').disabled = !OB.name.trim(); return; }
     if (e.target.id === 'ob-role') { OB.role = e.target.value; return; }
     if (e.target.id === 'ob-mail') { OB.email = e.target.value; document.querySelector('[data-obsendmail]').disabled = !/.+@.+\..+/.test(OB.email); return; }
