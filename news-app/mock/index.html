@@ -243,6 +243,53 @@ svg { display: block; }
 .pc small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
 .pc .t { font-size: 13.5px; line-height: 1.55; }
 .pc .f { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.ob { z-index: 58; background: #0c0c0e; transition: opacity .35s, transform .35s; }
+.ob.gone { opacity: 0; transform: scale(1.03); pointer-events: none; }
+.wall { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 10px; overflow: hidden; }
+.wall .col { display: flex; flex-direction: column; gap: 10px; animation: wallup 38s linear infinite; }
+.wall .col:nth-child(2) { animation-duration: 46s; animation-direction: reverse; }
+.wall .col:nth-child(3) { animation-duration: 42s; }
+.wall img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 16px; }
+@keyframes wallup { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+.wall::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(12,12,14,.35) 0%, rgba(12,12,14,.2) 30%, rgba(12,12,14,.92) 62%, #0c0c0e 78%); }
+.wel { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 24px calc(30px + env(safe-area-inset-bottom, 0px)); }
+.wel .wm { display: flex; align-items: center; gap: 8px; font: 700 30px/1 var(--font); }
+.wel .wm .mark { height: 24px; } .wel .wm .mark i { width: 5px; } .wel .wm .mark i:first-child { height: 24px; } .wel .wm .mark i:last-child { height: 12px; }
+.wel h1 { font: 800 30px/1.3 "Shippori Mincho B1", serif; margin: 18px 0 10px; text-wrap: balance; }
+.wel p { margin: 0; font-size: 14px; line-height: 1.75; color: rgba(255,255,255,.78); }
+.wel .live { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 12px; border-radius: 999px; font-size: 12px; }
+.wel .live i { width: 7px; height: 7px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 0 4px rgba(61,220,132,.2); }
+.wel .agree { font-size: 11px; color: rgba(255,255,255,.5); text-align: center; margin-top: 12px; line-height: 1.6; }
+.ob-lang { position: absolute; top: calc(54px + env(safe-area-inset-top, 0px)); right: 16px; z-index: 2; padding: 8px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.ob-skip { position: absolute; top: calc(58px + env(safe-area-inset-top, 0px)); left: 16px; z-index: 2; font-size: 11px; color: rgba(255,255,255,.55); }
+.obs { position: absolute; inset: 0; display: flex; flex-direction: column; padding: calc(54px + env(safe-area-inset-top, 0px)) 22px calc(26px + env(safe-area-inset-bottom, 0px)); }
+.obs .tb { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+.dots { display: flex; gap: 6px; } .dots i { width: 22px; height: 4px; border-radius: 2px; background: var(--wire); } .dots i.on { background: var(--accent); }
+.obs h2 { font-size: 24px; line-height: 1.35; margin: 18px 0 6px; text-wrap: balance; }
+.obs .lead { font-size: 13.5px; line-height: 1.7; color: var(--muted); margin: 0 0 16px; }
+.obs .body2 { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: none; margin: 0 -22px; padding: 0 22px; }
+.obs .foot2 { padding-top: 12px; }
+.obs .foot2 .primary { margin-top: 0; }
+.authbtn { width: 100%; height: 52px; border-radius: 26px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 15px; margin-top: 10px; }
+.authbtn.apple { background: #fff; color: #000; } .authbtn.google { background: var(--surface2); } .authbtn.mail { border: 1px solid var(--line); }
+.code { display: flex; gap: 8px; justify-content: space-between; margin-top: 8px; }
+.code input { width: 46px; height: 56px; text-align: center; font: 700 22px var(--mono); border-radius: 14px; border: 1px solid var(--line); background: var(--surface2); color: var(--text); }
+.rolechips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.gpick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gpick button { position: relative; height: 96px; border-radius: 16px; overflow: hidden; background-size: cover; background-position: center; border: 2px solid transparent; }
+.gpick button::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,.7), rgba(0,0,0,.1)); }
+.gpick button span { position: absolute; left: 12px; bottom: 10px; z-index: 1; font: 700 15px/1 var(--font); }
+.gpick button i { position: absolute; right: 10px; top: 10px; z-index: 1; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; display: grid; place-items: center; font-style: normal; font-size: 12px; }
+.gpick button.on { border-color: var(--accent); } .gpick button.on i { background: var(--accent); border-color: var(--accent); }
+.nrow { display: flex; gap: 12px; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.nrow .x { flex: 1; font-size: 14px; } .nrow small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.nrow b.t { font: 700 15px/1 var(--mono); width: 54px; flex: none; }
+.done-card { margin: 8px auto 0; width: 100%; }
+.coach { position: absolute; z-index: 57; left: 16px; right: 16px; padding: 14px 16px; border-radius: 18px; font-size: 13px; line-height: 1.6; }
+.coach b { display: block; font-size: 14px; margin-bottom: 2px; }
+.coach button { margin-top: 8px; padding: 7px 12px; border-radius: 999px; background: #fff; color: #111; font-weight: 700; font-size: 12px; }
+.coach::after { content: ""; position: absolute; bottom: -8px; right: 46px; width: 16px; height: 16px; background: inherit; transform: rotate(45deg); border-right: 1px solid var(--glass-line); border-bottom: 1px solid var(--glass-line); }
+@media (prefers-reduced-motion: reduce) { .wall .col { animation: none; } }
 .atabs { display: flex; gap: 6px; padding: 0 16px 10px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line); }
 .atabs .chip b { display: inline-block; min-width: 16px; padding: 1px 5px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 10px; margin-left: 4px; }
 .acard { margin: 12px 16px 0; padding: 14px; border-radius: 18px; background: var(--surface); }
@@ -557,6 +604,9 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div class="composer"><input id="room-input" placeholder="メッセージ" aria-label="メッセージ"><button id="room-send" aria-label="送信">➤</button></div>
     </section>
 
+    <!-- 最初の起動（ようこそ → ログイン → プロフィール作成） -->
+    <section class="screen ob" id="onboard" aria-hidden="false"></section>
+
     <!-- 管理画面（オーナーだけ） -->
     <section class="screen rise" id="admin" aria-hidden="true" style="z-index:44">
       <div class="top"><button class="round glass" data-close="admin" aria-label="閉じる">✕</button><b>管理画面 <span class="chip" style="padding:4px 8px;font-size:10px;margin-left:4px">オーナーだけ</span></b><span style="width:40px"></span></div>
@@ -627,7 +677,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   const PEOPLE = ['s.tanaka', 'Mia Chen', 'k.mori', 'y.okada', 'David Ruiz', 'a.ishii', 'h.kato', 'n.sato'];
   const ROLE = { 's.tanaka': '債券ストラテジスト', 'Mia Chen': 'FX Sales, Singapore', 'k.mori': '為替ディーラー', 'y.okada': '地銀 運用部', 'David Ruiz': 'Macro PM, London', 'a.ishii': '生保 運用', 'h.kato': 'メガバンク 為替', 'n.sato': '個人投資家', 'あなた': '為替・金利ウォッチャー' };
   const FACEIMG = { 's.tanaka': 5, 'Mia Chen': 1, 'k.mori': 8, 'y.okada': 2, 'David Ruiz': 4, 'a.ishii': 6, 'h.kato': 9, 'n.sato': 10, 'あなた': 3 };
-  const FACE = n => `url(${R}sq${FACEIMG[n] || 7}.jpg) center/cover`;
+  const FACE = n => n === 'あなた' && ICONS_ME ? `url(${ICONS_ME}) center/cover` : `url(${R}sq${FACEIMG[n] || 7}.jpg) center/cover`;
   const ICONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => `${R}sq${i}.jpg`);
 
   // 議論（返信は何段でも。字下げは4段まで、それより深いと「続きを読む」）
@@ -961,6 +1011,116 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     $('#profile').classList.add('open'); $('#profile').setAttribute('aria-hidden', 'false');
   }
 
+  // ---------- 最初の起動 ----------
+  const OB = { step: 'welcome', method: '', email: '', name: '', role: '', showRole: true, icon: null, genres: new Set(), notif: { slot7: true, slot1130: false, slot1530: false, slot22: true, breaking: true, reply: true } };
+  const ROLES = ['証券', '銀行', '運用・ファンド', '保険', 'FP', '会計・税務', 'コンサル', '事業会社の財務', '学生', '個人投資家'];
+  const STEPS = ['profile', 'genres', 'notif'];
+  function obTop(back) {
+    const i = STEPS.indexOf(OB.step);
+    return `<div class="tb">${back ? `<button class="round glass" data-obgo="${back}" aria-label="戻る">‹</button>` : '<span></span>'}${i >= 0 ? `<div class="dots" aria-label="${i + 1} / 3">${STEPS.map((x, k) => `<i class="${k <= i ? 'on' : ''}"></i>`).join('')}</div>` : '<span></span>'}<span style="width:40px"></span></div>`;
+  }
+  function renderOnboard() {
+    const el = $('#onboard'), st = OB.step;
+    if (st === 'welcome') {
+      const col = (k) => { const ids = [[7, 1, 9, 5, 11, 2], [8, 3, 10, 6, 4, 7], [5, 9, 2, 11, 1, 8]][k]; const imgs = ids.map(i => `<img src="${R}th${i}.jpg" alt="">`).join(''); return `<div class="col">${imgs}${imgs}</div>`; };
+      el.innerHTML = `<div class="wall" aria-hidden="true">${col(0)}${col(1)}${col(2)}</div>
+        <button class="ob-skip" data-obskip>（ワイヤー用）スキップ</button>
+        <button class="ob-lang glass" data-toast="English の画面に切り替えます（ワイヤーでは日本語のまま）">English</button>
+        <div class="wel">
+          <div class="wm"><span class="mark"><i></i><i></i></span>Halftick</div>
+          <h1>ニュースを、<br>仲間と話そう。</h1>
+          <p>1日4回、世界の市場のニュースが届きます。<br>その下で、金融で働く人たちが語り合っています。</p>
+          <span class="live glass"><i></i>いま 214人が「日銀は金利0.75%で据え置き」で話しています</span>
+          <button class="primary" data-obgo="login" style="margin-top:22px">はじめる</button>
+          <button class="ghost" data-obgo="login" data-obmode="login">ログインする</button>
+          <div class="agree">はじめると、<u>利用規約</u>と<u>プライバシーポリシー</u>に同意したことになります</div>
+        </div>`;
+      return;
+    }
+    if (st === 'login') {
+      el.innerHTML = `<div class="obs">${obTop('welcome')}
+        <h2>${OB.mode === 'login' ? 'おかえりなさい' : 'アカウントを作りましょう'}</h2>
+        <p class="lead">${OB.mode === 'login' ? '前に使ったログイン方法を選んでください。' : '30秒で終わります。本名を出さなくても使えます。'}</p>
+        <div class="body2">
+          <button class="authbtn apple" data-obauth="apple"> Appleで続ける</button>
+          <button class="authbtn google" data-obauth="google">G　Googleで続ける</button>
+          <button class="authbtn mail" data-obgo="mail">✉　メールで続ける</button>
+          <p class="muted" style="font-size:11.5px;line-height:1.7;margin-top:18px">Halftick があなたの許可なく投稿したり、連絡先を読んだりすることはありません。</p>
+        </div></div>`;
+      return;
+    }
+    if (st === 'mail') {
+      el.innerHTML = `<div class="obs">${obTop('login')}
+        <h2>メールアドレスを教えてください</h2><p class="lead">確認のためのコードを送ります。</p>
+        <div class="body2"><label class="vis-hidden" for="ob-mail">メールアドレス</label><input class="field" id="ob-mail" type="email" inputmode="email" placeholder="you@example.com" value="${esc(OB.email)}"></div>
+        <div class="foot2"><button class="primary" data-obsendmail ${/.+@.+\..+/.test(OB.email) ? '' : 'disabled'}>コードを送る</button></div></div>`;
+      return;
+    }
+    if (st === 'code') {
+      el.innerHTML = `<div class="obs">${obTop('mail')}
+        <h2>届いたコードを入れてください</h2><p class="lead">${esc(OB.email)} に6けたのコードを送りました。<br><span class="muted">（ワイヤーなので、どの数字でも進めます）</span></p>
+        <div class="body2"><div class="code">${[0, 1, 2, 3, 4, 5].map(i => `<input inputmode="numeric" maxlength="1" class="ob-code" aria-label="${i + 1}けた目">`).join('')}</div>
+          <button class="ghost" data-toast="もう一度送りました" style="margin-top:16px">コードを送り直す</button></div></div>`;
+      setTimeout(() => el.querySelector('.ob-code')?.focus(), 50);
+      return;
+    }
+    if (st === 'profile') {
+      const ic = OB.icon || ICONS[2];
+      el.innerHTML = `<div class="obs">${obTop('login')}
+        <h2>どんな人か、少しだけ</h2><p class="lead">議論のときに、みんなに見える名前です。あとからいつでも変えられます。</p>
+        <div class="body2">
+          <label class="photo-pick" for="ob-photo"><span class="pv" style="background-image:url(${ic});width:64px;height:64px;border-radius:50%"></span><span>アイコン<small>写真フォルダから選ぶか、下から選んでください</small></span></label><input type="file" accept="image/*" id="ob-photo" class="vis-hidden">
+          <div class="icon-grid" style="grid-template-columns:repeat(6,1fr)">${ICONS.slice(0, 6).map(u => `<button class="icon-opt ${u === ic ? 'on' : ''}" style="background-image:url(${u});border-radius:50%" data-obicon="${u}" aria-label="サンプルのアイコン"></button>`).join('')}</div>
+          <label class="lbl" for="ob-name">表示名（本名でなくて大丈夫です）</label><input class="field" id="ob-name" maxlength="20" placeholder="例：kenta_fx、マクロ好きの会社員" value="${esc(OB.name)}">
+          <label class="lbl" for="ob-role">職種（任意）</label><input class="field" id="ob-role" maxlength="24" placeholder="例：為替ディーラー" value="${esc(OB.role)}">
+          <div class="rolechips">${ROLES.map(r => `<button class="chip ${OB.role === r ? 'on' : ''}" data-obrole="${r}">${r}</button>`).join('')}</div>
+          <div class="setrow" style="margin-top:10px"><span class="x">職種をプロフィールに出す<small>勤め先が分かりそうなときはオフにできます</small></span><button class="toggle ${OB.showRole ? 'on' : ''}" data-obshowrole aria-label="職種をプロフィールに出す"></button></div>
+        </div>
+        <div class="foot2"><button class="primary" data-obgo="genres" ${OB.name.trim() ? '' : 'disabled'} id="ob-next1">次へ</button></div></div>`;
+      return;
+    }
+    if (st === 'genres') {
+      el.innerHTML = `<div class="obs">${obTop('profile')}
+        <h2>気になるジャンルは？</h2><p class="lead">選んだジャンルの配信を、ホームで先に出します。いくつでも選べます。</p>
+        <div class="body2"><div class="gpick">${GENRES.map(([g, i]) => `<button class="${OB.genres.has(g) ? 'on' : ''}" style="background-image:url(${R}sq${i}.jpg)" data-obgenre="${g}"><span>${g}</span><i>${OB.genres.has(g) ? '✓' : ''}</i></button>`).join('')}</div></div>
+        <div class="foot2"><button class="primary" data-obgo="notif">${OB.genres.size ? `次へ（${OB.genres.size}つ選びました）` : 'あとで選ぶ'}</button></div></div>`;
+      return;
+    }
+    if (st === 'notif') {
+      const N = OB.notif, rows = [['slot7', '7:00', '米国の引け後'], ['slot1130', '11:30', 'アジアの昼'], ['slot1530', '15:30', 'アジアの引け・欧州の寄り付き'], ['slot22', '22:00', '米国の寄り付き前']];
+      el.innerHTML = `<div class="obs">${obTop('genres')}
+        <h2>どの配信をお知らせしますか？</h2><p class="lead">ぜんぶ受け取ってもいいし、朝と夜だけでも大丈夫。あとから設定で変えられます。</p>
+        <div class="body2">${rows.map(([k, t, n]) => `<div class="nrow"><b class="t">${t}</b><span class="x">${n}</span><button class="toggle ${N[k] ? 'on' : ''}" data-obnotif="${k}" aria-label="${t} の配信"></button></div>`).join('')}
+          <div class="nrow"><b class="t" style="color:#ff6b6b">速報</b><span class="x">日銀・FRBの発表、雇用統計など<small>大事なときだけ届きます</small></span><button class="toggle ${N.breaking ? 'on' : ''}" data-obnotif="breaking" aria-label="速報"></button></div>
+          <div class="nrow"><b class="t">返信</b><span class="x">あなたのコメントに返信が来たとき</span><button class="toggle ${N.reply ? 'on' : ''}" data-obnotif="reply" aria-label="返信"></button></div></div>
+        <div class="foot2"><button class="primary" data-obgo="done" data-obperm>お知らせを受け取る</button><button class="ghost" data-obgo="done">あとで</button></div></div>`;
+      return;
+    }
+    if (st === 'done') {
+      const nm = OB.name.trim() || 'あなた';
+      el.innerHTML = `<div class="obs">${obTop('')}
+        <h2>ようこそ、${esc(nm)} さん</h2><p class="lead">あなたのメンバーカードができました。</p>
+        <div class="body2"><div class="pass done-card"><div class="art"><img src="${OB.icon || ICONS[2]}" alt=""><div class="ascii">${ascii()}</div></div>
+          <div class="panel"><div class="nm">${esc(nm)}</div><div class="sub">${esc(OB.showRole && OB.role ? OB.role : 'MEMBER')}</div><div class="rule"></div>
+          <div class="meta"><span>#002141</span><span>MEMBER</span></div><div class="foot"><span>SINCE TUE 04 NOV, 2026</span><span class="appicon"><span class="mark"><i></i><i></i></span></span></div></div></div></div>
+        <div class="foot2"><button class="primary" data-obfinish>最初の配信を読む</button></div></div>`;
+    }
+  }
+  function finishOnboard(coach) {
+    if (OB.name.trim()) { ROLE['あなた'] = OB.showRole ? (OB.role || '') : ''; }
+    if (OB.icon) { FACEIMG['あなた'] = 0; ICONS_ME = OB.icon; document.documentElement.style.setProperty('--me-face', `url(${OB.icon})`); }
+    OB.genres.forEach(g => state.gfollow.add(g));
+    $('#onboard').classList.add('gone'); $('#onboard').setAttribute('aria-hidden', 'true');
+    if (coach) setTimeout(() => {
+      const c = document.createElement('div'); c.className = 'coach glass'; c.id = 'coach';
+      const r = document.querySelector('.feed-item .act.go').getBoundingClientRect(), dr = $('#device').getBoundingClientRect();
+      c.style.top = `${r.top - dr.top - 118}px`;
+      c.innerHTML = '<b>ここから議論に参加できます</b>配信の下で、みんなが話しています。まずは読むだけでも大丈夫です。<br><button data-coachok>わかった</button>';
+      $('#device').appendChild(c);
+    }, 420);
+  }
+  let ICONS_ME = null;
+
   // ---------- 管理画面（オーナーだけ） ----------
   const SLOTS = [['7:00', '米国の引け後', 'fomc'], ['11:30', 'アジアの昼', 'yen'], ['15:30', 'アジアの引け・欧州の寄り付き', 'nikkei'], ['22:00', '米国の寄り付き前', null]];
   const MATS = {
@@ -1202,7 +1362,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <button class="primary" data-toast="窓口のフォームを開きます（ワイヤー）">運営に相談する</button><p class="muted" style="font-size:11.5px;line-height:1.6;margin-top:12px">こわい思いをしたときは、ためらわずに相談してください。できるだけ早く確認します。</p></div>`, 'half');
     if (kind === 'contact') return openSheet(head('問い合わせ・不具合の報告') + `<div class="past"><label class="lbl" for="contact-text" style="margin-top:0">どんなことですか？</label><textarea class="field" id="contact-text" style="height:120px;padding:12px 14px;resize:none" placeholder="例：通知が届かない、表示がおかしい"></textarea>
       <p class="muted" style="font-size:11.5px;margin:8px 0 0">アプリのバージョンと端末の種類は、いっしょに送られます。</p><button class="primary" data-sendcontact>送る</button></div>`, 'full');
-    if (kind === 'logout') return openSheet(head('ログアウトしますか？') + `<div class="past"><p class="muted" style="font-size:13px;line-height:1.6;margin:0">保存した記事やグループは消えません。もう一度ログインすれば元どおりです。</p><button class="primary" data-toast="ログアウトしました（ワイヤー）">ログアウト</button><button class="ghost" data-close="sheet">やめる</button></div>`, 'half');
+    if (kind === 'logout') return openSheet(head('ログアウトしますか？') + `<div class="past"><p class="muted" style="font-size:13px;line-height:1.6;margin:0">保存した記事やグループは消えません。もう一度ログインすれば元どおりです。</p><button class="primary" data-logout>ログアウト</button><button class="ghost" data-close="sheet">やめる</button></div>`, 'half');
     if (kind === 'delete') return openSheet(head('アカウントを削除') + `<div class="past"><div class="warn">削除すると、プロフィール、保存した記事、グループへの参加、1対1のメッセージが消えて、元に戻せません。<br>書いたコメントは「削除されたユーザー」として残ります。</div>
       <label class="lbl" for="del-confirm">確認のため「削除」と入力してください</label><input class="field" id="del-confirm" placeholder="削除" autocomplete="off">
       <button class="primary" id="del-go" style="background:#ff3b30;color:#fff" disabled>アカウントを削除する</button><button class="ghost" data-close="sheet">やめる</button></div>`, 'full');
@@ -1447,6 +1607,18 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
+    if (d.obgo) { if (d.obmode) OB.mode = d.obmode; else if (d.obgo === 'login' && !d.obmode) OB.mode = 'new'; if (d.obperm !== undefined) toast('（ここで iPhone のお知らせの許可が出ます）'); OB.step = d.obgo; renderOnboard(); return; }
+    if (d.obauth) { OB.method = d.obauth; OB.step = OB.mode === 'login' ? 'done' : 'profile'; if (OB.mode === 'login') { OB.name = OB.name || 'あなた'; } renderOnboard(); return; }
+    if (d.obsendmail !== undefined) { OB.step = 'code'; renderOnboard(); return; }
+    if (d.obicon) { OB.icon = d.obicon; renderOnboard(); return; }
+    if (d.obrole) { OB.role = OB.role === d.obrole ? '' : d.obrole; renderOnboard(); return; }
+    if (d.obshowrole !== undefined) { OB.showRole = !OB.showRole; t.classList.toggle('on', OB.showRole); return; }
+    if (d.obgenre) { OB.genres.has(d.obgenre) ? OB.genres.delete(d.obgenre) : OB.genres.add(d.obgenre); renderOnboard(); return; }
+    if (d.obnotif) { OB.notif[d.obnotif] = !OB.notif[d.obnotif]; t.classList.toggle('on', OB.notif[d.obnotif]); return; }
+    if (d.obfinish !== undefined) { finishOnboard(true); return; }
+    if (d.obskip !== undefined) { finishOnboard(false); return; }
+    if (d.coachok !== undefined) { $('#coach')?.remove(); return; }
+    if (d.logout !== undefined) { setSheet('closed'); ['settings', 'profile'].forEach(id => $('#' + id).classList.remove('open')); Object.assign(OB, { step: 'welcome', mode: 'new' }); renderOnboard(); $('#onboard').classList.remove('gone'); $('#onboard').setAttribute('aria-hidden', 'false'); return; }
     if (d.admin !== undefined) { openAdmin(); return; }
     if (d.close === 'admin') { $('#admin').classList.remove('open'); $('#admin').setAttribute('aria-hidden', 'true'); return; }
     if (d.atab) { state.atab = d.atab; renderAdmin(); $('#a-body').scrollTop = 0; return; }
@@ -1539,6 +1711,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   });
   scrim.addEventListener('click', () => setSheet('closed'));
   document.addEventListener('change', e => {
+    if (e.target.id === 'ob-photo' && e.target.files[0]) { const fr = new FileReader(); fr.onload = () => { OB.icon = fr.result; renderOnboard(); }; fr.readAsDataURL(e.target.files[0]); return; }
     if (e.target.id === 'd-ai') { DRAFT.ai = e.target.checked; renderAdmin(); return; }
     if (e.target.id === 'saved-sort') { state.savedSort = e.target.value; openProfile(state.person); return; }
     if (e.target.id !== 'g-photo' || !e.target.files[0]) return;
@@ -1547,6 +1720,10 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     fr.readAsDataURL(e.target.files[0]);
   });
   document.addEventListener('input', e => {
+    if (e.target.id === 'ob-name') { OB.name = e.target.value; $('#ob-next1').disabled = !OB.name.trim(); return; }
+    if (e.target.id === 'ob-role') { OB.role = e.target.value; return; }
+    if (e.target.id === 'ob-mail') { OB.email = e.target.value; document.querySelector('[data-obsendmail]').disabled = !/.+@.+\..+/.test(OB.email); return; }
+    if (e.target.classList.contains('ob-code')) { const all = [...document.querySelectorAll('.ob-code')]; const i = all.indexOf(e.target); if (e.target.value && all[i + 1]) all[i + 1].focus(); if (all.every(x => x.value)) { OB.step = 'profile'; setTimeout(renderOnboard, 250); } return; }
     const dm = { 'd-ja': 'ja', 'd-jab': 'jaBody', 'd-en': 'enTitle', 'd-enb': 'enBody', 'd-max': 'max', 'd-big': 'big', 'd-enbig': 'en' }[e.target.id];
     if (dm) { DRAFT[dm] = e.target.value; if (dm === 'big' || dm === 'en') { DRAFT.poster = posterOf(DRAFT.tplName); document.querySelector('.tprev img').src = DRAFT.poster; } const btn = document.querySelector('[data-publish]'); if (btn) { const ok = DRAFT.links.length && DRAFT.enTitle.trim() && DRAFT.enBody.trim() && (!DRAFT.max || DRAFT.ai) && DRAFT.selfOk && DRAFT.ja.trim(); btn.disabled = !ok; } return; }
     if (e.target.id === 'q-text') { qdraft.text = e.target.value; $('#q-count').textContent = `${qdraft.text.length} / 1000`; $('#q-post').disabled = !qdraft.text.trim(); return; }
@@ -1566,7 +1743,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
 
   document.documentElement.style.setProperty('--me-face', FACE('あなた').replace(' center/cover', ''));
   document.fonts && document.fonts.ready.then(() => { DRAFT.poster = null; });
-  renderChips(); renderFeed(); renderLib(); renderPosts(); renderRooms();
+  renderChips(); renderFeed(); renderLib(); renderPosts(); renderRooms(); renderOnboard();
   setSheet('closed');
 })();
 </script>
