@@ -264,6 +264,63 @@ svg { display: block; }
 .rtick.done b { color: var(--text); }
 .rdot { position: absolute; top: 8px; width: 12px; height: 12px; border-radius: 50%; transform: translateX(-6px); border: 2px solid var(--bg); }
 .rdot.r-note { background: #2ec4b6; } .rdot.r-breaking { background: #ff3b30; } .rdot.r-deep { background: #9b7bff; }
+.obj { background: #f3f2ef; color: #16161a; border-radius: 24px; padding: 16px 16px 14px; box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 10px 30px rgba(0,0,0,.25); }
+.obj .ohd { display: flex; justify-content: space-between; align-items: center; gap: 10px; font: 600 14px/1.4 var(--font); }
+.obj .otag { font: 600 9.5px/1 var(--mono); letter-spacing: .12em; color: #8d8a83; flex: none; }
+.obj .osub { font-size: 11.5px; color: #8d8a83; margin-top: 10px; line-height: 1.5; }
+.roll { display: flex; align-items: flex-end; margin-top: 14px; font: 600 46px/1 var(--mono); letter-spacing: -.03em; color: #16161a; height: 1em; }
+.dg { display: inline-block; height: 1em; overflow: hidden; }
+.dgc { display: flex; flex-direction: column; transition: transform 1.1s cubic-bezier(.2,.9,.2,1); }
+.dgc span { height: 1em; line-height: 1; }
+.dgs { display: inline-block; line-height: 1; }
+.seg2 { position: relative; display: grid; grid-template-columns: 1fr 1fr; margin-top: 12px; padding: 4px; border-radius: 999px; background: #e4e1da; }
+.seg2 button { position: relative; z-index: 1; height: 34px; border-radius: 999px; font: 600 12.5px/1 var(--font); color: #6b6a66; transition: color .25s; }
+.seg2 button.on { color: #16161a; }
+.segk { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.12); transition: transform .35s cubic-bezier(.2,.9,.2,1.1); }
+.seg2.r .segk { transform: translateX(100%); }
+.cmp2 { position: relative; display: grid; margin-top: 10px; }
+.cmp2 p { grid-area: 1 / 1; margin: 0; padding: 14px 16px; border-radius: 16px; background: #fff; font-size: 14.5px; line-height: 1.75; color: #16161a; opacity: 0; transform: translateY(6px); transition: opacity .3s, transform .35s cubic-bezier(.2,.9,.2,1); }
+.cmp2 p.on { opacity: 1; transform: none; }
+.cmp2 mark { background: rgba(255,106,26,.2); color: #b4410a; border-radius: 4px; padding: 0 2px; }
+.cmp { position: relative; margin-top: 12px; border-radius: 16px; overflow: hidden; background: #fff; touch-action: pan-y; cursor: ew-resize; --p: 50%; user-select: none; }
+.cmp > div { padding: 14px 16px; min-height: 110px; } .cmp small { font: 600 10.5px/1 var(--mono); letter-spacing: .08em; color: #8d8a83; }
+.cmp p { margin: 8px 0 0; font-size: 14px; line-height: 1.7; color: #16161a; }
+.cmp mark { background: rgba(255,106,26,.18); color: #b4410a; border-radius: 4px; padding: 0 2px; }
+.cmp-b { position: absolute; inset: 0; background: #16161a; clip-path: inset(0 0 0 var(--p)); }
+.cmp-b p { color: #f2f2f3; } .cmp-b mark { background: rgba(255,106,26,.35); color: #ffb98f; }
+.cmp-h { position: absolute; top: 0; bottom: 0; left: var(--p); width: 2px; margin-left: -1px; background: #ff6a1a; }
+.cmp-h i { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #16161a; display: grid; place-items: center; font: 700 11px/1 var(--mono); font-style: normal; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+.oplay { width: 32px; height: 32px; border-radius: 50%; background: #16161a; color: #fff; font-size: 11px; display: grid; place-items: center; flex: none; }
+.stp { margin-top: 10px; display: flex; flex-direction: column; }
+.st { display: flex; gap: 12px; align-items: stretch; width: 100%; padding: 2px 0; color: #16161a; }
+.st .sb2 { width: 14px; display: flex; justify-content: center; position: relative; flex: none; }
+.st .sb2::before { content: ""; position: absolute; top: 0; bottom: 0; width: 2px; background: #dcd9d2; }
+.st .sb2 i { position: relative; margin-top: 8px; width: 10px; height: 10px; border-radius: 50%; background: #dcd9d2; transition: all .25s; }
+.st.past .sb2 i { background: #16161a; } .st.on .sb2 i { background: #ff6a1a; box-shadow: 0 0 0 4px rgba(255,106,26,.2); transform: scale(1.15); }
+.st .sx { padding: 4px 0 10px; font-size: 13px; line-height: 1.55; color: #6b6a66; transition: color .25s; } .st .sx b { display: block; font: 600 12px/1.3 var(--mono); color: #8d8a83; }
+.st.on .sx { color: #16161a; } .st.on .sx b { color: #ff6a1a; }
+.pl { position: relative; display: flex; align-items: center; width: 100%; height: 44px; margin-top: 8px; border-radius: 14px; background: #fff; overflow: hidden; padding: 0 14px; font-size: 13.5px; color: #16161a; border: 1.5px solid transparent; transition: border-color .2s; }
+.pl:not(.shown):active { transform: scale(.98); }
+.pl .pf { position: absolute; left: 0; top: 0; bottom: 0; background: #e4e1da; transition: width .8s cubic-bezier(.2,.9,.2,1); }
+.pl.mine { border-color: #ff6a1a; } .pl.mine .pf { background: rgba(255,106,26,.25); }
+.pl .pt, .pl .pp { position: relative; } .pl .pp { margin-left: auto; font: 600 13px/1 var(--mono); }
+.sbars { display: flex; gap: 10px; align-items: flex-end; height: 150px; margin-top: 14px; }
+.sbc { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; }
+.sbs { display: flex; flex-direction: column-reverse; border-radius: 10px; overflow: hidden; transition: transform .2s; }
+.sbs i { display: block; min-height: 3px; }
+.sbc.on .sbs { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+.sbc small { font: 500 10.5px/1 var(--mono); color: #8d8a83; text-align: center; }
+.slg { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: 11px; color: #6b6a66; } .slg i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.clab { display: flex; justify-content: space-between; font-size: 12.5px; color: #6b6a66; margin-top: 14px; } .clab b { font: 600 13px var(--mono); color: #16161a; }
+.crange { width: 100%; margin: 10px 0 4px; accent-color: #ff6a1a; height: 28px; }
+.cres { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; font-size: 13px; color: #6b6a66; } .cres b { font: 600 30px/1 var(--mono); color: #16161a; letter-spacing: -.02em; }
+.hm { display: grid; gap: 5px; margin-top: 12px; align-items: center; }
+.hm small { font: 500 10.5px/1 var(--mono); color: #8d8a83; text-align: center; } .hm .hr2 { text-align: left; font-family: var(--font); font-size: 11.5px; color: #6b6a66; }
+.hc { height: 30px; border-radius: 8px; background: rgba(255,106,26, calc(.12 + var(--h) * .78)); transition: transform .15s; }
+.hc.on { outline: 2px solid #16161a; transform: scale(1.06); }
+.cstack { position: relative; height: 150px; margin-top: 12px; }
+.cc { position: absolute; left: 0; right: 0; top: 0; height: 132px; border-radius: 18px; background: #fff; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; text-align: left; color: #16161a; box-shadow: 0 6px 18px rgba(0,0,0,.12); transform: translateY(calc(var(--i) * 8px)) scale(calc(1 - var(--i) * .04)); z-index: calc(10 - var(--i)); transition: transform .35s cubic-bezier(.2,.9,.2,1), opacity .25s; }
+.cc small { font: 600 10px/1 var(--mono); color: #8d8a83; letter-spacing: .08em; } .cc b { font-size: 15px; } .cc span { font-size: 13px; line-height: 1.6; color: #4a4945; }
 .brkbar { position: relative; margin: 0 16px 6px; }
 .brkbar .bx { display: flex; gap: 10px; align-items: center; width: 100%; padding: 11px 40px 11px 12px; border-radius: 16px; background: linear-gradient(90deg, rgba(255,59,48,.28), rgba(255,59,48,.1)); border: 1px solid rgba(255,59,48,.45); font-size: 13px; line-height: 1.45; }
 .brkbar .x { flex: 1; min-width: 0; } .brkbar b { display: block; font-size: 11px; color: #ff8a80; letter-spacing: .06em; }
@@ -767,7 +824,57 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     { id: 'imf', img: 1, lab: 'World', tag: '#世界経済', tm: '10/3', when: '10月3日（金）22:00 · 米国の寄り付き前', title: 'IMFの見通し、世界の成長は3%前後で横ばいです', c: 63, r: 240, tint: '#16243f', min: 3 },
   ];
   const byId = id => A.find(a => a.id === id);
+  // ---- サンプル記事の本文（数字はすべてサンプル）----
+  const BLOCKS = {
+    boj: [
+      { t: 'video', img: 11, len: '4:12', title: '3分でわかる、声明どこが変わった？' },
+      { t: 'p', x: '日銀は今回、政策金利を0.75%のまま据え置きました。ここまでは予想どおり。注目は、声明の中の「賃金」についての書き方が、前回よりちょっと前向きになったことです。' },
+      { t: 'count', label: '政策金利', value: 0.75, dec: 2, suf: '%', sub: '前回と同じ · 次の会合は12月18–19日' },
+      { t: 'compare', title: '声明の書き方をくらべる', a: ['前回（9月）', '賃金の上昇は<mark>一部に</mark>みられる。物価の見通しには<mark>不確かさが大きい</mark>。'], b: ['今回（11月）', '賃金の上昇は<mark>広がりがみられる</mark>。物価の見通しは<mark>おおむね想定どおり</mark>。'] },
+      { t: 'p', x: '言葉がひとつ変わるだけで、市場は「次は上げるかも」と受け取ります。12月に上げるかどうかの見方は、きのうより少し増えました。' },
+      { t: 'steps', title: 'これから何が起きる？', items: [['今日 15:30', '総裁の会見。「データ次第」をくり返すかに注目'], ['11月下旬', '東京の物価（CPI）が出る。サービスの値段がカギ'], ['12月中旬', '日銀の短観。企業が賃上げを続けるつもりか'], ['12月18–19日', '次の会合。ここで上げるかどうか決まる']] },
+      { t: 'poll', id: 'boj', q: '12月に利上げすると思う？', opts: [['する', 46], ['1月以降', 38], ['しばらくしない', 16]], n: 1284 },
+      { t: 'refs', items: [['当面の金融政策運営について', '日本銀行', 'boj.or.jp'], ['消費者物価指数', '総務省統計局', 'stat.go.jp']] },
+    ],
+    power: [
+      { t: 'p', x: 'この冬の電気代は、ふつうの家庭で月300円ほど上がりそうです。理由は、国の補助が終わることと、燃料の値段が少し上がっていること。' },
+      { t: 'count', label: '1か月の電気代の増え方（平均的な家庭）', value: 300, dec: 0, pre: '+', suf: '円', sub: '使用量 260kWh で計算 · サンプルの数字' },
+      { t: 'bars', title: '電気代の中身（1か月・円）', unit: '円', series: [['基本料金・電力量', '#16161a'], ['燃料費の調整', '#ff6a1a'], ['再エネの賦課金', '#b9b6ae']], cols: [['9月', [6100, 900, 1040]], ['10月', [6100, 1000, 1040]], ['11月', [6100, 1150, 1040]], ['12月', [6100, 1300, 1040]], ['1月', [6100, 1400, 1040]]] },
+      { t: 'calc', kind: 'power', title: 'あなたの家だと？', min: 120, max: 600, val: 260, unit: 'kWh', label: '1か月の使用量' },
+      { t: 'heat', title: '地域ごとの上がり方（前年比 %）', rows: ['北海道', '東北', '関東', '中部', '関西', '九州'], cols: ['11月', '12月', '1月'], vals: [[3.1, 4.2, 4.8], [2.8, 3.9, 4.4], [2.2, 3.0, 3.6], [2.0, 2.7, 3.1], [1.8, 2.5, 2.9], [1.5, 2.1, 2.6]] },
+      { t: 'p', x: '寒い地域ほど上がり方が大きくなります。暖房を電気でまかなう家が多いからです。' },
+      { t: 'poll', id: 'power', q: 'この冬、電気代のために何かする？', opts: [['設定温度を下げる', 41], ['電力会社を見直す', 23], ['とくに何もしない', 36]], n: 2210 },
+      { t: 'refs', items: [['電気料金の見通し', '資源エネルギー庁', 'enecho.meti.go.jp'], ['小売物価統計', '総務省統計局', 'stat.go.jp']] },
+    ],
+    wage: [
+      { t: 'p', x: '最低賃金の全国平均が、はじめて1,100円を超えました。上がり幅は過去いちばん。それでも、地域による差はまだ大きめです。' },
+      { t: 'count', label: '最低賃金の全国平均（1時間）', value: 1121, dec: 0, suf: '円', sub: '前年より +66円 · サンプルの数字' },
+      { t: 'cards', title: 'ポイントは3つ', items: [['上がり幅は過去最大', '物価が上がったぶんを、賃金でも追いかける形になりました。'], ['地方との差は約220円', 'いちばん高い東京といちばん低い県の差は、まだ縮まりきっていません。'], ['中小企業の負担', '人手不足で上げざるを得ない一方、値上げできない会社もあります。']] },
+      { t: 'heat', title: '地域ごとの最低賃金（円）', rows: ['北海道', '東北', '関東', '中部', '関西', '中国・四国', '九州'], cols: ['2023', '2024', '2025'], vals: [[960, 1010, 1075], [900, 952, 1015], [1072, 1120, 1180], [975, 1025, 1090], [1010, 1060, 1125], [905, 955, 1020], [895, 948, 1012]], money: true },
+      { t: 'poll', id: 'wage', q: 'あなたの職場、今年は賃上げした？', opts: [['した（3%以上）', 34], ['した（3%未満）', 29], ['していない', 37]], n: 3105 },
+      { t: 'refs', items: [['地域別最低賃金の全国一覧', '厚生労働省', 'mhlw.go.jp']] },
+    ],
+    home: [
+      { t: 'p', x: '住宅ローンの変動金利が、じわっと上がり始めました。日銀の利上げに合わせて、銀行が「基準になる金利」を上げているからです。' },
+      { t: 'count', label: '変動金利の平均（大手銀行）', value: 0.68, dec: 2, suf: '%', sub: '半年前は 0.43% · サンプルの数字' },
+      { t: 'calc', kind: 'loan', title: '金利が0.25%上がると、毎月いくら増える？', min: 1000, max: 8000, val: 4000, unit: '万円', label: '借りている額（35年・元利均等）' },
+      { t: 'steps', title: '金利が上がると、返済はこう変わる', items: [['すぐ', '多くの銀行は年2回、金利を見直します'], ['半年後', '新しい金利で、利息の割合が増えます'], ['5年ごと', '月の返済額が見直されます（上がり幅には上限あり）']] },
+      { t: 'poll', id: 'home', q: '住宅ローン、どうしてる？', opts: [['変動のまま', 52], ['固定に借りかえ検討', 21], ['もう固定', 27]], n: 1876 },
+      { t: 'refs', items: [['住宅ローン金利の推移', '住宅金融支援機構', 'jhf.go.jp']] },
+    ],
+    d1: [
+      { t: 'p', x: '「日本の給料はなぜ上がらなかったのか」。よく聞く問いを、30年分のグラフで、ゆっくり読み解きます。答えはひとつではありません。' },
+      { t: 'steps', title: '30年をかけ足で', items: [['1995年', '景気のピークを過ぎ、会社は人件費をおさえ始める'], ['2000年代', '非正規で働く人が増え、平均の賃金が下がる'], ['2010年代', '人手不足でも、物価が上がらず賃上げは小さいまま'], ['2020年代', '物価が上がり、ようやく賃上げが広がり始める']] },
+      { t: 'compare', title: '1995年と2025年の家計（月・サンプル）', a: ['1995年', '手取り <mark>32.1万円</mark> · 食費 7.8万円 · 住まい 5.0万円 · 貯金 4.2万円'], b: ['2025年', '手取り <mark>33.4万円</mark> · 食費 8.9万円 · 住まい 6.1万円 · 貯金 2.9万円'] },
+      { t: 'bars', title: '賃金が上がりにくかった理由（説明できる割合）', unit: '%', series: [['生産性', '#16161a'], ['働き方の変化', '#ff6a1a'], ['物価', '#b9b6ae']], cols: [['1995–2005', [40, 35, 25]], ['2005–2015', [30, 45, 25]], ['2015–2025', [35, 25, 40]]] },
+      { t: 'p', x: 'グラフを見ると、時期によって理由の重さが変わっているのが分かります。みなさんの職場では、どれがいちばん当てはまりますか？' },
+      { t: 'poll', id: 'd1', q: 'いちばん大きい理由はどれだと思う？', opts: [['生産性', 31], ['働き方の変化', 44], ['物価', 25]], n: 942 },
+      { t: 'refs', items: [['毎月勤労統計調査', '厚生労働省', 'mhlw.go.jp'], ['国民経済計算', '内閣府', 'esri.cao.go.jp']] },
+    ],
+  };
+  const POLL = {};
   const NOTE_TILE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#123b38"/><text x="50" y="68" font-size="60" text-anchor="middle" fill="#5fe0d3" font-family="Georgia,serif">“</text></svg>');
+  A.forEach(a => { if (BLOCKS[a.id]) a.blocks = BLOCKS[a.id]; });
   const imgOf = (a, k) => a.src || (a.type === 'note' ? NOTE_TILE : `${R}${k}${a.img}.jpg`);
   const PEOPLE = ['s.tanaka', 'Mia Chen', 'k.mori', 'y.okada', 'David Ruiz', 'a.ishii', 'h.kato', 'n.sato'];
   const ROLE = { 's.tanaka': '債券ストラテジスト', 'Mia Chen': 'FX Sales, Singapore', 'k.mori': '為替ディーラー', 'y.okada': '地銀 運用部', 'David Ruiz': 'Macro PM, London', 'a.ishii': '生保 運用', 'h.kato': 'メガバンク 為替', 'n.sato': '個人投資家', 'あなた': '為替・金利ウォッチャー' };
@@ -874,6 +981,64 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <span class="note" style="right:0;top:-18px">今日のリズム：棒＝定時、点＝ひとこと・速報</span>`;
   }
   function openNote(id) { const a = byId(id); state.cur = { id: a.id, title: a.title, note: a }; openComments(); setTimeout(() => setSheet('full'), 30); }
+
+  // ---------- 記事の中の部品（bencho.dev の雰囲気を参考にしたオリジナル）----------
+  function digits(v, dec, pre = '', suf = '') {
+    const str = pre + (dec ? v.toFixed(dec) : Math.round(v).toLocaleString('ja-JP')) + suf;
+    return [...str].map((ch, i) => /[0-9]/.test(ch) ? `<span class="dg"><span class="dgc" data-d="${ch}" style="transition-delay:${i * 60}ms">${'0123456789'.split('').map(n => `<span>${n}</span>`).join('')}</span></span>` : `<span class="dgs">${ch}</span>`).join('');
+  }
+  function renderBlocks(a) {
+    return a.blocks.map((b, bi) => {
+      const k = `${a.id}-${bi}`;
+      if (b.t === 'p') return `<p>${esc(b.x)}</p>`;
+      if (b.t === 'video') return `<div class="video rel"><img src="${R}th${b.img}.jpg" alt=""><span class="play glass">▶</span><span class="len glass">動画でサクッと · ${b.len}</span></div>`;
+      if (b.t === 'count') return `<div class="obj"><div class="ohd"><span>${esc(b.label)}</span><span class="otag">KEY NUMBER</span></div><div class="roll" data-roll>${digits(b.value, b.dec, b.pre, b.suf)}</div><div class="osub">${esc(b.sub)}</div></div>`;
+      if (b.t === 'compare') return `<div class="obj" data-cmpbox="${k}"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">SWITCH</span></div>
+        <div class="seg2" role="tablist"><span class="segk"></span><button class="on" data-cmp="${k}:0" role="tab">${b.a[0]}</button><button data-cmp="${k}:1" role="tab">${b.b[0]}</button></div>
+        <div class="cmp2"><p class="on">${b.a[1]}</p><p>${b.b[1]}</p></div>
+        <div class="osub">切りかえると、変わったところが色で分かります</div></div>`;
+      if (b.t === 'steps') return `<div class="obj" data-steps="${k}"><div class="ohd"><span>${esc(b.title)}</span><button class="oplay" data-stepplay="${k}" aria-label="順に見る">▶</button></div>
+        <div class="stp">${b.items.map((it, i) => `<button class="st ${i === 0 ? 'on' : ''}" data-step="${k}:${i}"><span class="sb2"><i></i></span><span class="sx"><b>${esc(it[0])}</b><span>${esc(it[1])}</span></span></button>`).join('')}</div></div>`;
+      if (b.t === 'poll') { const v = POLL[b.id]; const tot = b.n + (v != null ? 1 : 0);
+        return `<div class="obj" data-poll="${b.id}"><div class="ohd"><span>${esc(b.q)}</span><span class="otag">${v != null ? 'みんなの答え' : 'VOTE'}</span></div>
+        ${b.opts.map(([l, pct], i) => `<button class="pl ${v === i ? 'mine' : ''} ${v != null ? 'shown' : ''}" data-vote="${b.id}:${i}" ${v != null ? 'disabled' : ''}><span class="pf" style="width:${v != null ? pct : 0}%"></span><span class="pt">${esc(l)}</span>${v != null ? `<span class="pp">${pct}%</span>` : ''}</button>`).join('')}
+        <div class="osub">${v != null ? `あなたを含む ${tot.toLocaleString()}人が答えました · 理由をコメントで聞かせてください` : `${b.n.toLocaleString()}人が答えています。答えると結果が見られます`}</div></div>`; }
+      if (b.t === 'bars') { const max = Math.max(...b.cols.map(c => c[1].reduce((x, y) => x + y, 0)));
+        return `<div class="obj" data-bars="${k}"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">TAP</span></div>
+        <div class="sbars">${b.cols.map(([l, vs], i) => `<button class="sbc" data-bar="${k}:${i}"><span class="sbs" style="height:${vs.reduce((x, y) => x + y, 0) / max * 100}%">${vs.map((v, j) => `<i style="flex:${v};background:${b.series[j][1]}"></i>`).join('')}</span><small>${esc(l)}</small></button>`).join('')}</div>
+        <div class="slg">${b.series.map(([n, c]) => `<span><i style="background:${c}"></i>${esc(n)}</span>`).join('')}</div>
+        <div class="osub" id="bar-${k}">棒をタップすると中身の数字が出ます</div></div>`; }
+      if (b.t === 'calc') return `<div class="obj"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">TRY</span></div>
+        <label class="clab" for="calc-${k}">${esc(b.label)} <b id="calcv-${k}">${b.val.toLocaleString()}${b.unit}</b></label>
+        <input type="range" class="crange" id="calc-${k}" min="${b.min}" max="${b.max}" step="${b.kind === 'loan' ? 100 : 10}" value="${b.val}" data-calc="${k}:${b.kind}:${b.unit}">
+        <div class="cres"><span>${b.kind === 'loan' ? '毎月の返済が' : '1か月の電気代が'}</span><b class="mono" id="calcr-${k}">${calcOut(b.kind, b.val)}</b><span>増えます</span></div>
+        <div class="osub">${b.kind === 'loan' ? '金利 0.68% → 0.93% で計算 · 目安です' : '1kWh あたり 約1.15円上がるとして計算 · 目安です'}</div></div>`;
+      if (b.t === 'heat') { const all = b.vals.flat(), lo = Math.min(...all), hi = Math.max(...all);
+        return `<div class="obj" data-heat="${k}"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">TAP</span></div>
+        <div class="hm" style="grid-template-columns:76px repeat(${b.cols.length},1fr)"><span></span>${b.cols.map(c => `<small>${esc(c)}</small>`).join('')}
+        ${b.rows.map((r, ri) => `<small class="hr2">${esc(r)}</small>` + b.vals[ri].map((v, ci) => `<button class="hc" data-hcell="${k}:${ri}:${ci}" style="--h:${(v - lo) / (hi - lo || 1)}">${b.money ? '' : ''}</button>`).join('')).join('')}</div>
+        <div class="osub" id="heat-${k}">マスをタップすると数字が出ます · 濃いほど高い</div></div>`; }
+      if (b.t === 'cards') return `<div class="obj"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">${b.items.length} CARDS</span></div>
+        <div class="cstack" data-cstack="${k}">${b.items.map((it, i) => `<button class="cc" data-cswap="${k}" style="--i:${i}"><small>${i + 1} / ${b.items.length}</small><b>${esc(it[0])}</b><span>${esc(it[1])}</span></button>`).join('')}</div>
+        <div class="osub">カードをタップすると次へ</div></div>`;
+      if (b.t === 'refs') return `<div class="refs"><h3>もっと詳しく知りたい人へ</h3>${b.items.map(([t, src, dom]) => `<a class="ref" href="https://${dom}/" target="_blank" rel="noopener"><span>${esc(t)}<small>${esc(src)} · ${esc(dom)}</small></span>↗</a>`).join('')}</div>`;
+      return '';
+    }).join('') + '<p class="cap" style="margin-top:4px">※ この記事の数字はワイヤー用のサンプルです</p>';
+  }
+  function calcOut(kind, v) {
+    if (kind === 'loan') { const pay = (P, r) => { const i = r / 12, n = 420; return P * i * Math.pow(1 + i, n) / (Math.pow(1 + i, n) - 1); }; const P = v * 10000; return '+' + Math.round(pay(P, 0.0093) - pay(P, 0.0068)).toLocaleString() + '円'; }
+    return '+' + Math.round(v * 1.15).toLocaleString() + '円';
+  }
+  function armBlocks() {
+    const root = $('#art-scroll');
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.querySelectorAll('.dgc').forEach(c => c.style.transform = `translateY(-${c.dataset.d}em)`); io.unobserve(e.target); } }), { root, threshold: 0.6 });
+    root.querySelectorAll('[data-roll]').forEach(r => io.observe(r));
+  }
+  const stepTimers = {};
+  function setStep(k, i) {
+    const box = document.querySelector(`[data-steps="${k}"]`); if (!box) return;
+    box.querySelectorAll('.st').forEach((el, n) => { el.classList.toggle('on', n === i); el.classList.toggle('past', n < i); });
+  }
 
   // ---------- ライブラリ ----------
   const GENRES = [['マクロ', 1], ['物価と家計', 9], ['仕事と賃金', 2], ['中央銀行', 7], ['為替', 8], ['株式', 9], ['債券', 5], ['不動産', 11], ['エネルギー', 6], ['テック', 3], ['決算', 10], ['政策と財政', 4], ['世界経済', 1]];
@@ -1516,7 +1681,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
           : `<label class="vis-hidden" for="d-en">Headline</label><input class="field" id="d-en" placeholder="Headline" value="${esc(D.enTitle)}"><label class="vis-hidden" for="d-enb">Body</label><textarea class="field" id="d-enb" placeholder="Body">${esc(D.enBody)}</textarea>`}
         <div class="muted" style="font-size:11.5px;margin:4px 0 6px">本文の途中に入れるもの</div>
         <div class="blocks">${D.blocks.map(([k, l], i) => `<span class="blk">${l}<button data-delblk="${i}" aria-label="外す">✕</button></span>`).join('')}${D.video ? '<span class="blk">▶ 解説動画（題名のすぐ下）<button data-delvideo aria-label="外す">✕</button></span>' : ''}</div>
-        <div class="qbtns"><button data-addblk="chart">＋ グラフ</button><button data-addblk="card">＋ 要点カード</button><button data-addvideo>＋ 解説動画</button></div>
+        <div class="qbtns">${[['count', '大きな数字'], ['compare', 'くらべる'], ['steps', 'これからの流れ'], ['poll', 'みんなの予想'], ['bars', '積み上げグラフ'], ['calc', 'あなたの場合（試算）'], ['heat', '地域の色分け'], ['cards', 'ポイントのカード']].map(([k, l]) => `<button data-addblk="${k}">＋ ${l}</button>`).join('')}<button data-addvideo>＋ 解説動画</button></div>
         <label class="ck2 self" style="margin-top:12px"><input type="checkbox" id="d-ai" ${D.ai ? 'checked' : ''}> AIで下書きした文を含む（記事に表示が付きます）</label></div>
 
       <div class="acard rel"><h4>サムネ（型に言葉を入れるだけ）</h4>
@@ -1767,6 +1932,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <div class="btns"><button class="round glass" data-share aria-label="グループに共有">⤴︎</button><button class="round glass save ${state.saved.has(id) ? 'on' : ''}" data-save="${id}" aria-label="記事を保存">✓</button></div>
         <span class="note" style="right:18px;top:-24px">✓ ＝ 記事を保存</span></div>
       <div class="body">
+        ${a.blocks ? renderBlocks(a) : `
         <div class="video rel"><img src="${imgOf(byId('nfp'), 'th')}" alt=""><span class="play glass">▶</span><span class="len glass">動画でサクッと · 4:12</span><span class="note" style="right:10px;top:10px">解説動画（本文の前、題名のすぐ下）</span></div>
         <p>${a.brk ? '今回の声明では、賃金について「上昇の広がりがみられる」と、前回よりちょっと踏み込みました。総裁の会見は15:30から。市場は12月の利上げを6割くらい見込んでいます。' : 'ここに本文が入ります。オーナーが数字や見出しを見ながら、かみくだいて書いた解説を置きます。'}</p>
         <div class="wbar" style="width:96%"></div><div class="wbar" style="width:88%"></div><div class="wbar" style="width:64%"></div>
@@ -1780,12 +1946,13 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <div class="refs rel"><h3>もっと詳しく知りたい人へ</h3>
           <a class="ref" href="https://www.boj.or.jp/" target="_blank" rel="noopener"><span>当面の金融政策運営について<small>日本銀行 · boj.or.jp</small></span>↗</a>
           <a class="ref" href="https://www.stat.go.jp/" target="_blank" rel="noopener"><span>消費者物価指数<small>総務省統計局 · stat.go.jp</small></span>↗</a>
-          <span class="note" style="right:0;top:6px">記事の一番下に参考リンク</span></div>
+          <span class="note" style="right:0;top:6px">記事の一番下に参考リンク</span></div>`}
       </div>`;
     $('#cbar').innerHTML = `<span class="faces"><i style="background:${FACE('s.tanaka')}"></i><i style="background:${FACE('Mia Chen')}"></i><i style="background:${FACE('k.mori')}"></i></span>
       <span class="txt"><b>みんなの声 ${total}件</b><span>s.tanaka「一部に」から「広がり」へ。12月を…</span></span><span class="round glass" style="width:38px;height:38px">⌃</span>
       <span class="note" style="left:10px;top:-22px">下のバー＝コメント欄（タップで半分まで開く）</span>`;
     $('#art-scroll').scrollTop = 0;
+    setTimeout(armBlocks, 380);
     el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
     if (withComments) setTimeout(openComments, 380);
   }
@@ -1887,6 +2054,13 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       setSheet('closed'); if (state.person !== d.person) state.ptab = 'comments'; openProfile(d.person); return; }
     if (d.ptab) { state.ptab = d.ptab; openProfile(state.person); return; }
     if (d.close === 'profile') { $('#profile').classList.remove('open'); $('#profile').setAttribute('aria-hidden', 'true'); state.person = null; return; }
+    if (d.vote) { const [id, i] = d.vote.split(':'); POLL[id] = +i; const a = state.cur; const y = $('#art-scroll').scrollTop; openArticle(a.id); $('#art-scroll').scrollTop = y; navigator.vibrate?.(8); toast('答えました。理由もコメントで聞かせてください'); return; }
+    if (d.bar) { const [k, i] = [d.bar.slice(0, d.bar.lastIndexOf(':')), +d.bar.split(':').pop()]; const [aid, bi] = [k.slice(0, k.lastIndexOf('-')), +k.split('-').pop()]; const b = byId(aid).blocks[bi]; const vs = b.cols[i][1]; document.querySelectorAll(`[data-bars="${k}"] .sbc`).forEach((el, n) => el.classList.toggle('on', n === i)); $(`#bar-${k}`).innerHTML = `<b style="color:#16161a">${esc(b.cols[i][0])}</b>　` + b.series.map((sr, j) => `${esc(sr[0])} ${vs[j].toLocaleString()}${b.unit}`).join(' · ') + ` · 合計 <b style="color:#16161a">${vs.reduce((x, y) => x + y, 0).toLocaleString()}${b.unit}</b>`; return; }
+    if (d.hcell) { const p = d.hcell.split(':'); const [ci, ri] = [+p.pop(), +p.pop()]; const k = p.join(':'); const [aid, bi] = [k.slice(0, k.lastIndexOf('-')), +k.split('-').pop()]; const b = byId(aid).blocks[bi]; document.querySelectorAll(`[data-heat="${k}"] .hc`).forEach(el => el.classList.toggle('on', el === t)); const v = b.vals[ri][ci]; $(`#heat-${k}`).innerHTML = `<b style="color:#16161a">${esc(b.rows[ri])} · ${esc(b.cols[ci])}</b>　${b.money ? v.toLocaleString() + '円' : '+' + v + '%'}`; return; }
+    if (d.cswap) { const st = document.querySelector(`[data-cstack="${d.cswap}"]`); const cards = [...st.children]; const n = cards.length; cards.forEach(c => c.style.setProperty('--i', (+getComputedStyle(c).getPropertyValue('--i') - 1 + n) % n)); return; }
+    if (d.cmp) { const p = d.cmp.split(':'); const i = +p.pop(); const box = document.querySelector(`[data-cmpbox="${p.join(':')}"]`); box.querySelector('.seg2').classList.toggle('r', i === 1); box.querySelectorAll('.seg2 button').forEach((el, n) => el.classList.toggle('on', n === i)); box.querySelectorAll('.cmp2 p').forEach((el, n) => el.classList.toggle('on', n === i)); navigator.vibrate?.(5); return; }
+    if (d.step) { const p = d.step.split(':'); const i = +p.pop(); setStep(p.join(':'), i); return; }
+    if (d.stepplay) { const k = d.stepplay; clearInterval(stepTimers[k]); const box = document.querySelector(`[data-steps="${k}"]`); const n = box.querySelectorAll('.st').length; let i = 0; setStep(k, 0); t.textContent = '■'; stepTimers[k] = setInterval(() => { i++; if (i >= n) { clearInterval(stepTimers[k]); t.textContent = '▶'; return; } setStep(k, i); navigator.vibrate?.(4); }, 1600); return; }
     if (d.note) { openNote(d.note); return; }
     if (d.cmenu) { openCommentMenu(+d.cmenu); return; }
     if (d.report) { openReport(d.report); return; }
@@ -1928,7 +2102,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (d.usehead !== undefined) { const h = MATS.heads[+d.usehead]; DRAFT.used.add('h' + d.usehead); DRAFT.links.push([`${h[0]}（${h[1]}）`, h[2]]); renderAdmin(); return; }
     if (d.usemax !== undefined) { if (!DRAFT.max.trim()) return toast('先に下書きを貼ってください'); DRAFT.jaBody = DRAFT.max.trim(); DRAFT.ai = true; renderAdmin(); toast('本文に流し込みました。AIの表示もオンにしました'); return; }
     if (d.dlang) { DRAFT.lang = d.dlang; renderAdmin(); return; }
-    if (d.addblk) { DRAFT.blocks.push(d.addblk === 'chart' ? ['chart', 'グラフ：材料の数字から'] : ['card', '要点カード']); renderAdmin(); return; }
+    if (d.addblk) { DRAFT.blocks.push([d.addblk, { count: '大きな数字', compare: 'くらべる', steps: 'これからの流れ', poll: 'みんなの予想', bars: '積み上げグラフ', calc: 'あなたの場合（試算）', heat: '地域の色分け', cards: 'ポイントのカード' }[d.addblk] + '（材料の数字から）']); renderAdmin(); return; }
     if (d.delblk !== undefined) { DRAFT.blocks.splice(+d.delblk, 1); renderAdmin(); return; }
     if (d.addvideo !== undefined) { DRAFT.video = true; renderAdmin(); return; }
     if (d.delvideo !== undefined) { DRAFT.video = false; renderAdmin(); return; }
@@ -2019,6 +2193,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     fr.readAsDataURL(e.target.files[0]);
   });
   document.addEventListener('input', e => {
+    if (e.target.dataset.calc) { const [k, kind, unit] = e.target.dataset.calc.split(':'); const v = +e.target.value; $(`#calcv-${k}`).textContent = v.toLocaleString() + unit; $(`#calcr-${k}`).textContent = calcOut(kind, v); return; }
     if (e.target.id === 'rep-note') { rep.note = e.target.value; return; }
     if (e.target.id === 'ob-name') { OB.name = e.target.value; $('#ob-next1').disabled = !OB.name.trim(); return; }
     if (e.target.id === 'ob-role') { OB.role = e.target.value; return; }
