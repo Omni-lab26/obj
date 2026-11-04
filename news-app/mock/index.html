@@ -469,6 +469,15 @@ svg { display: block; }
 .coach button { margin-top: 8px; padding: 7px 12px; border-radius: 999px; background: #fff; color: #111; font-weight: 700; font-size: 12px; }
 .coach::after { content: ""; position: absolute; bottom: -8px; right: 46px; width: 16px; height: 16px; background: inherit; transform: rotate(45deg); border-right: 1px solid var(--glass-line); border-bottom: 1px solid var(--glass-line); }
 @media (prefers-reduced-motion: reduce) { .wall .col { animation: none; } }
+.osdim { position: absolute; inset: 0; z-index: 5; background: rgba(0,0,0,.42); display: grid; place-items: center; animation: osin .2s ease-out; }
+@keyframes osin { from { opacity: 0; } }
+.osalert { width: 270px; border-radius: 16px; background: rgba(40,40,44,.86); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%); text-align: center; overflow: hidden; animation: osup .25s cubic-bezier(.2,.9,.2,1.15); }
+@keyframes osup { from { transform: scale(1.15); opacity: 0; } }
+.osalert > b { display: block; padding: 18px 16px 4px; font-size: 15px; line-height: 1.35; }
+.osalert p { margin: 0; padding: 0 16px 16px; font-size: 12.5px; line-height: 1.45; color: rgba(255,255,255,.8); }
+.osbtns { display: grid; grid-template-columns: 1fr 1fr; border-top: .5px solid rgba(255,255,255,.18); }
+.osbtns button { height: 44px; font-size: 15.5px; color: #3e9bff; text-align: center; }
+.osbtns button + button { border-left: .5px solid rgba(255,255,255,.18); }
 .atabs { display: flex; gap: 6px; padding: 0 16px 10px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line); }
 .atabs .chip b { display: inline-block; min-width: 16px; padding: 1px 5px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 10px; margin-left: 4px; }
 .acard { margin: 12px 16px 0; padding: 14px; border-radius: 18px; background: var(--surface); }
@@ -710,7 +719,6 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         </div>
         <div id="brkbar"></div>
         <div class="chips rel" id="chips"></div>
-        <div class="rhythm rel" id="rhythm"></div>
         <div id="feed"></div>
       </div>
     </section>
@@ -1061,7 +1069,6 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (tmap[state.chip]) list = A.filter(a => tp(a) === tmap[state.chip]).slice(0, 8);
     else if (state.chip === '盛り上がり中') list = [...A].sort((a, b) => b.c - a.c).slice(0, 5);
     else if (state.chip !== '最新') list = A.filter(a => ({ '物価': ['#物価', '#エネルギー', '#不動産'], '仕事': ['#賃金', '#雇用統計'], '株式': ['#株式', '#半導体'], '為替': ['#為替', '#人民元'], '債券': ['#債券', '#国債'] }[state.chip] || []).includes(a.tag));
-    renderRhythm();
     $('#feed').innerHTML = list.map((a, i) => tp(a) === 'note' ? noteCard(a) : tp(a) === 'deep' ? deepCard(a) : `
       <article class="feed-item rel ${a.brk ? 'brkcard' : ''}">
         <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · ${a.brk ? '速報' : `${esc(a.tm)} の定時配信`}</div></div><span class="tchip ${TYPE[tp(a)][1]}">${TYPE[tp(a)][0]}</span></div>
@@ -1634,7 +1641,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   // ---------- 最初の起動 ----------
   const OB = { step: 'welcome', method: '', email: '', name: '', role: '', showRole: true, icon: null, genres: new Set(), notif: { slot7: true, slot1130: false, slot1530: false, slot22: true, breaking: true, note: false, deep: true, reply: true } };
   const ROLES = ['証券', '銀行', '運用・ファンド', '保険', '会計・税務', '事業会社（企画・財務）', '営業', 'エンジニア', 'コンサル', '経営者', '公務員', '研究・教育', '学生', '個人投資家'];
-  const STEPS = ['profile', 'genres', 'notif'];
+  const STEPS = ['profile', 'genres'];
   function obTop(back) {
     const i = STEPS.indexOf(OB.step);
     return `<div class="tb">${back ? `<button class="round glass" data-obgo="${back}" aria-label="戻る">‹</button>` : '<span></span>'}${i >= 0 ? `<div class="dots" aria-label="${i + 1} / 3">${STEPS.map((x, k) => `<i class="${k <= i ? 'on' : ''}"></i>`).join('')}</div>` : '<span></span>'}<span style="width:40px"></span></div>`;
@@ -1703,7 +1710,16 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       el.innerHTML = `<div class="obs">${obTop('profile')}
         <h2>気になるジャンルは？</h2><p class="lead">選んだジャンルの配信を、ホームで先に出します。いくつでも選べます。</p>
         <div class="body2"><div class="gpick">${GENRES.map(([g, i]) => `<button class="${OB.genres.has(g) ? 'on' : ''}" style="background-image:url(${R}sq${i}.jpg)" data-obgenre="${g}"><span>${g}</span><i>${OB.genres.has(g) ? '✓' : ''}</i></button>`).join('')}</div></div>
-        <div class="foot2"><button class="primary" data-obgo="notif">${OB.genres.size ? `次へ（${OB.genres.size}つ選びました）` : 'あとで選ぶ'}</button></div></div>`;
+        <div class="foot2"><button class="primary" data-obperm>${OB.genres.size ? `次へ（${OB.genres.size}つ選びました）` : 'あとで選ぶ'}</button></div></div>`;
+      return;
+    }
+    if (st === 'perm') {
+      OB.step = 'genres'; renderOnboard(); OB.step = 'perm';
+      el.insertAdjacentHTML('beforeend', `<div class="osdim"><div class="osalert" role="alertdialog" aria-label="通知の許可">
+        <b>“Halftick”は通知を送信します。よろしいですか？</b>
+        <p>通知方法には、アラート、サウンド、アイコンバッジが含まれる可能性があります。これらは“設定”で構成できます。</p>
+        <div class="osbtns"><button data-obnotifok="0">許可しない</button><button data-obnotifok="1"><b>許可</b></button></div></div>
+        <span class="note" style="left:50%;top:18%;transform:translateX(-50%)">スマホの許可のポップだけ（中身は選ばせない）</span></div>`);
       return;
     }
     if (st === 'notif') {
@@ -1721,7 +1737,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (st === 'done') {
       const nm = OB.name.trim() || 'あなた';
       el.innerHTML = `<div class="obs">${obTop('')}
-        <h2>ようこそ、${esc(nm)} さん</h2><p class="lead">あなたのメンバーカードができました。</p>
+        <h2>ようこそ、${esc(nm)} さん</h2><p class="lead">あなたのメンバーカードができました。${OB.notifOk === false ? 'お知らせはオフです。' : ''}どのお知らせを受け取るかは、<b>設定</b>からいつでも変えられます。</p>
         <div class="body2"><div class="pass done-card"><div class="art"><img src="${OB.icon || ICONS[2]}" alt=""><div class="ascii">${ascii()}</div></div>
           <div class="panel"><div class="nm">${esc(nm)}</div><div class="sub">${esc(OB.showRole && OB.role ? OB.role : 'MEMBER')}</div><div class="rule"></div>
           <div class="meta"><span>#002141</span><span>MEMBER</span></div><div class="foot"><span>SINCE TUE 04 NOV, 2026</span><span class="appicon"><span class="mark"><i></i><i></i></span></span></div></div></div></div>
@@ -2094,7 +2110,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     { day: '今週', type: 'approve', text: '<b>投稿の申請</b>が通りました。「みんな」に書けるようになりました', q: '', at: '11月1日', unread: false },
   ];
   const NTYPE = { reply: ['↩', '#4c8dff', '返信'], react: ['▲', '#ff6a1a', 'リアクション'], mention: ['@', '#ae3ec9', 'メンション'], post: ['◷', '#3ddc84', '配信'], breaking: ['!', '#ff3b30', '配信'], group: ['#', '#0c8599', 'グループ'], invite: ['＋', '#0c8599', 'グループ'], approve: ['✓', '#3ddc84', 'そのほか'] };
-  const NSET = { slot7: true, slot1130: false, slot1530: true, slot22: true, breaking: true, note: false, deep: true, reply: true, react: false, group: true };
+  const NSET = { slot7: true, slot1130: false, slot1530: false, slot22: true, breaking: true, note: false, deep: true, reply: true, react: false, group: true };
   function renderNotif() {
     const f = state.notifFilter;
     const pass = n => f === 'all' || (f === 'reply' ? ['reply', 'mention', 'react'].includes(n.type) : f === 'post' ? ['post', 'breaking'].includes(n.type) : ['group', 'invite'].includes(n.type));
@@ -2296,6 +2312,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (d.web !== undefined) { setSheet('closed'); openWeb(); return; }
     if (d.close === 'web') { $('#web').classList.remove('open'); $('#web').setAttribute('aria-hidden', 'true'); return; }
     if (d.brkclose !== undefined) { state.brkClosed = true; renderFeed(); return; }
+    if (d.obperm !== undefined && !d.obgo) { OB.step = 'perm'; renderOnboard(); return; }
+    if (d.obnotifok !== undefined) { OB.notifOk = d.obnotifok === '1'; if (!OB.notifOk) Object.keys(NSET).forEach(k => NSET[k] = false); OB.step = 'done'; renderOnboard(); return; }
     if (d.obgo) { if (d.obmode) OB.mode = d.obmode; else if (d.obgo === 'login' && !d.obmode) OB.mode = 'new'; if (d.obperm !== undefined) toast('（ここで iPhone のお知らせの許可が出ます）'); OB.step = d.obgo; renderOnboard(); return; }
     if (d.obauth) { OB.method = d.obauth; OB.step = OB.mode === 'login' ? 'done' : 'profile'; if (OB.mode === 'login') { OB.name = OB.name || 'あなた'; } renderOnboard(); return; }
     if (d.obsendmail !== undefined) { OB.step = 'code'; renderOnboard(); return; }
