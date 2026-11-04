@@ -734,6 +734,12 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     { id: 'chip', img: 9, lab: 'Equity', tag: '#半導体', tm: '10/24', when: '10月24日（金）7:00 · 米国の引け後', title: '米半導体株が反発。決算の数字は「思ったより悪くない」', c: 77, r: 290, tint: '#1f2a1c', min: 5 },
     { id: 'aipow', img: 3, lab: 'Tech', tag: '#テック', tm: '10/22', when: '10月22日（水）22:00 · 米国の寄り付き前', title: 'AIの電力不足で、電力会社の株にも注目が集まっています', c: 49, r: 180, tint: '#2a1f2a', min: 4 },
     { id: 'bank', img: 10, lab: 'Earnings', tag: '#銀行', tm: '10/17', when: '10月17日（金）15:30 · 週末のまとめ', title: '米大手銀行の決算、金利が高いおかげで利ざやは好調', c: 41, r: 150, tint: '#121212', min: 3 },
+    { id: 'wage', img: 2, lab: 'Work', tag: '#賃金', tm: '10/15', when: '10月15日（水）15:30 · アジアの引け', title: '最低賃金、全国平均がはじめて1,100円台に。地方との差はまだ大きめです', c: 184, r: 690, tint: '#1f2a24', min: 4 },
+    { id: 'power', img: 6, lab: 'Energy', tag: '#エネルギー', tm: '10/14', when: '10月14日（火）11:30 · アジアの昼', title: 'この冬の電気代、平均で月300円ほど上がりそうです', c: 152, r: 540, tint: '#2b1f1a', min: 3 },
+    { id: 'home', img: 11, lab: 'Housing', tag: '#不動産', tm: '10/10', when: '10月10日（金）15:30 · 週末のまとめ', title: '住宅ローンの金利、変動型もじわっと上がり始めました', c: 211, r: 820, tint: '#0f1a24', min: 4 },
+    { id: 'rice', img: 9, lab: 'Prices', tag: '#物価', tm: '10/8', when: '10月8日（水）7:00 · 米国の引け後', title: 'お米の値段、去年より2割高いまま。家計への影響は？', c: 167, r: 610, tint: '#1f2a1c', min: 3 },
+    { id: 'budget', img: 4, lab: 'Policy', tag: '#財政', tm: '10/6', when: '10月6日（月）22:00 · 米国の寄り付き前', title: '来年度の予算案、過去最大の見通し。どこにお金が使われる？', c: 98, r: 330, tint: '#2a2421', min: 4 },
+    { id: 'imf', img: 1, lab: 'World', tag: '#世界経済', tm: '10/3', when: '10月3日（金）22:00 · 米国の寄り付き前', title: 'IMFの見通し、世界の成長は3%前後で横ばいです', c: 63, r: 240, tint: '#16243f', min: 3 },
   ];
   const byId = id => A.find(a => a.id === id);
   const imgOf = (a, k) => a.src || `${R}${k}${a.img}.jpg`;
@@ -780,7 +786,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   let saveSeq = 10;
 
   // ---------- ホーム ----------
-  const CHIPS = ['最新', '速報', '盛り上がり中', '株式', '為替', '債券'];
+  const CHIPS = ['最新', '速報', '盛り上がり中', '物価', '仕事', '株式', '為替', '債券'];
   function renderChips() {
     $('#chips').innerHTML = CHIPS.map(c => `<button class="chip ${c === state.chip ? 'on' : ''}" data-chip="${c}">${c}</button>`).join('') +
       '<span class="note" style="left:16px;top:44px">絞り込み（最新・速報・盛り上がり中・ジャンル）</span>';
@@ -792,7 +798,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     let list = A.slice(0, 5);
     if (state.chip === '速報') list = A.filter(a => a.brk);
     else if (state.chip === '盛り上がり中') list = [...A].sort((a, b) => b.c - a.c).slice(0, 4);
-    else if (state.chip !== '最新') list = A.filter(a => a.tag.includes(state.chip === '株式' ? '株式' : state.chip === '為替' ? '為替' : '債券'));
+    else if (state.chip !== '最新') list = A.filter(a => ({ '物価': ['#物価', '#エネルギー', '#不動産'], '仕事': ['#賃金', '#雇用統計'], '株式': ['#株式', '#半導体'], '為替': ['#為替', '#人民元'], '債券': ['#債券', '#国債'] }[state.chip] || []).includes(a.tag));
     $('#feed').innerHTML = list.map((a, i) => `
       <article class="feed-item rel ${a.brk ? 'brkcard' : ''}">
         <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · いつもの配信</div></div><span class="more">•••</span></div>
@@ -810,7 +816,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   }
 
   // ---------- ライブラリ ----------
-  const GENRES = [['マクロ', 1], ['中央銀行', 7], ['為替', 8], ['株式', 9], ['債券', 5], ['決算', 10], ['テック', 3]];
+  const GENRES = [['マクロ', 1], ['物価と家計', 9], ['仕事と賃金', 2], ['中央銀行', 7], ['為替', 8], ['株式', 9], ['債券', 5], ['不動産', 11], ['エネルギー', 6], ['テック', 3], ['決算', 10], ['政策と財政', 4], ['世界経済', 1]];
   const GMAP = {
     'マクロ': { ids: ['fomc', 'nfp', 'gdp', 'ust', 'ecb'], tint: '#16243f', about: '景気・物価・雇用など、世界の経済の大きな流れ。', vids: ['nfp'] },
     '中央銀行': { ids: ['boj', 'fomc', 'ecb', 'jgb'], tint: '#3a1a14', about: '日銀・FRB・ECBの金利の決定と、その読み方。', vids: ['boj'] },
@@ -818,6 +824,12 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     '株式': { ids: ['nikkei', 'chip', 'earn', 'aipow'], tint: '#1f2a1c', about: '日本と米国の株の動き。半導体とテックが中心です。', vids: [] },
     '債券': { ids: ['ust', 'jgb', 'fomc'], tint: '#3d1210', about: '国債の利回りと入札。金利の土台になる市場です。', vids: ['ust'] },
     '決算': { ids: ['earn', 'chip', 'bank'], tint: '#121212', about: '企業の決算のポイントを、短く分かりやすく。', vids: [] },
+    '物価と家計': { ids: ['rice', 'power', 'home'], tint: '#1f2a1c', about: 'スーパーの値段、電気代、家賃。暮らしの目線で見る経済。', vids: [] },
+    '仕事と賃金': { ids: ['wage', 'nfp'], tint: '#1f2a24', about: '給料、雇用、働き方。仕事の現場から見る経済。', vids: ['nfp'] },
+    '不動産': { ids: ['home', 'jgb'], tint: '#0f1a24', about: '住宅ローン、家の値段、オフィス。住まいとお金の話。', vids: [] },
+    'エネルギー': { ids: ['power', 'aipow'], tint: '#2b1f1a', about: '電気・ガス・原油。エネルギーの値段が経済を動かす理由。', vids: [] },
+    '政策と財政': { ids: ['budget', 'boj'], tint: '#2a2421', about: '予算、税、国の借金。政治の決定が暮らしに届くまで。', vids: [] },
+    '世界経済': { ids: ['imf', 'ecb', 'cny', 'gdp'], tint: '#16243f', about: '米国・欧州・中国・新興国。世界のつながりで見る経済。', vids: [] },
     'テック': { ids: ['aipow', 'chip', 'nikkei'], tint: '#2a1f2a', about: 'AI・半導体・電力など、テクノロジーとお金の話。', vids: [] },
   };
   state.gfollow = new Set(['為替']); state.gnotify = new Set(['為替']); state.gview = 'all'; state.gsort = 'new';
@@ -870,6 +882,10 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       t: '地方銀行の現場から。\n日銀が据え置きでも、預金の金利を上げる競争はじわじわ続いています。ネット銀行のキャンペーンに合わせて動くお客さんが、思ったより多いです。' },
     { id: 'p4', who: 'k.mori', min: 190, tag: '#日銀', up: 19, liked: false, saved: false,
       t: '今日の声明、「広がり」の一語でここまで議論が伸びるのは面白い。配信の議論、まだ読んでない人はぜひ。', quote: 'boj' },
+    { id: 'p6', who: 'n.sato', min: 75, tag: '#物価', up: 22, liked: false, saved: false,
+      t: '電気代の配信を読んで、うちの明細を見直しました。去年の同じ月より 1,200円高い…。みなさんの家はどうですか？' },
+    { id: 'p7', who: 'h.kato', min: 240, tag: '#仕事', up: 17, liked: false, saved: false,
+      t: '取引先の中小企業でも、今年は賃上げが3%を超えたところが多いです。人手が足りないのが一番の理由みたい。' },
     { id: 'p5', who: 'David Ruiz', min: 300, tag: '#マクロ', up: 12, liked: false, saved: false,
       t: 'London open take: gilts calmer than expected. Watching whether the BoE minutes next week lean dovish.' },
   ];
@@ -888,7 +904,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     </article>`;
   }
   function renderPosts() {
-    const F = [['hot', '人気'], ['new', '新しい'], ['#債券', '債券'], ['#為替', '為替'], ['#日銀', '日銀'], ['#銀行', '銀行']];
+    const F = [['hot', '人気'], ['new', '新しい'], ['#物価', '物価'], ['#仕事', '仕事'], ['#債券', '債券'], ['#為替', '為替'], ['#日銀', '日銀'], ['#銀行', '銀行']];
     $('#pfilter').innerHTML = F.map(([k, l]) => `<button class="chip ${state.pfilter === k ? 'on' : ''}" data-pfilter="${k}">${l}</button>`).join('');
     $('#pgate').innerHTML = SET.apply === 'ok'
       ? `<button class="ucompose" data-compose><span class="av" style="background:${FACE('あなた')}"></span>いま気になっていること、書いてみませんか？</button>`
@@ -909,7 +925,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <label class="lbl" for="ap-why">書きたいこと</label><textarea class="field" id="ap-why" style="height:90px;padding:12px 14px;resize:none" placeholder="例：地銀の現場で見ている預金の動き"></textarea>
         <button class="primary" data-sendapply>申請する</button></div>`, 'full');
     }
-    const tags = ['#マクロ', '#日銀', '#為替', '#債券', '#株式', '#銀行'];
+    const tags = ['#マクロ', '#物価', '#仕事', '#日銀', '#為替', '#債券', '#株式', '#テック', '#エネルギー'];
     openSheet(head('投稿する') + `<div class="past" style="overflow-y:auto;padding-bottom:30px">
       <div class="by" style="margin:2px 0 10px"><span class="av" style="background:${FACE('あなた')};width:36px;height:36px;border-radius:50%;display:block"></span><div><div class="nm">あなた</div><div class="hd">みんなの投稿に載ります</div></div></div>
       <label class="vis-hidden" for="q-text">本文</label><textarea class="field" id="q-text" style="height:150px;padding:12px 14px;resize:none;line-height:1.7" maxlength="1000" placeholder="気づいたこと、現場の空気、読んだ資料のこと…">${esc(qdraft.text)}</textarea>
@@ -1161,8 +1177,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <div class="wc"><h3>みんなの声 ${count(discFor(a.id))}件</h3>
           ${cs.map(c => `<div class="wcm"><b>${esc(c.who)}</b> <small>${esc(ROLE[c.who] || '')}</small><br>${esc(c.t)}<br><small>▲ ${c.up}${c.kids.length ? ` · 返信 ${count(c.kids)}` : ''}</small></div>`).join('')}
           <div class="fade"></div></div>
-        <div class="cta"><b>この議論に参加しませんか？</b><p>金融で働く人たちが、配信のたびに語り合っています。読むだけでも大丈夫です。</p><button class="primary" data-close="web">アプリで開く</button><button class="ghost" data-close="web">ログインして書く</button></div>
-        <div class="wfoot">Halftick · 1日4回、世界の市場のニュースと、その下の議論<br>利用規約 · プライバシーポリシー · 投稿とコメントのルール · 問い合わせ<br>※ このページはログインしていない人向けのサイトの見え方です（ワイヤー）</div>
+        <div class="cta"><b>この議論に参加しませんか？</b><p>経済に関心のある人たちが、配信のたびに語り合っています。読むだけでも大丈夫です。</p><button class="primary" data-close="web">アプリで開く</button><button class="ghost" data-close="web">ログインして書く</button></div>
+        <div class="wfoot">Halftick · 1日4回、世界の経済のニュースと、その下の議論<br>利用規約 · プライバシーポリシー · 投稿とコメントのルール · 問い合わせ<br>※ このページはログインしていない人向けのサイトの見え方です（ワイヤー）</div>
       </div>`;
     $('#web').classList.add('open'); $('#web').setAttribute('aria-hidden', 'false');
   }
@@ -1177,7 +1193,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
 
   // ---------- 最初の起動 ----------
   const OB = { step: 'welcome', method: '', email: '', name: '', role: '', showRole: true, icon: null, genres: new Set(), notif: { slot7: true, slot1130: false, slot1530: false, slot22: true, breaking: true, reply: true } };
-  const ROLES = ['証券', '銀行', '運用・ファンド', '保険', 'FP', '会計・税務', 'コンサル', '事業会社の財務', '学生', '個人投資家'];
+  const ROLES = ['証券', '銀行', '運用・ファンド', '保険', '会計・税務', '事業会社（企画・財務）', '営業', 'エンジニア', 'コンサル', '経営者', '公務員', '研究・教育', '学生', '個人投資家'];
   const STEPS = ['profile', 'genres', 'notif'];
   function obTop(back) {
     const i = STEPS.indexOf(OB.step);
@@ -1192,8 +1208,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         <button class="ob-lang glass" data-toast="English の画面に切り替えます（ワイヤーでは日本語のまま）">English</button>
         <div class="wel">
           <div class="wm"><span class="mark"><i></i><i></i></span>Halftick</div>
-          <h1>ニュースを、<br>仲間と話そう。</h1>
-          <p>1日4回、世界の市場のニュースが届きます。<br>その下で、金融で働く人たちが語り合っています。</p>
+          <h1>経済のニュースを、<br>みんなと話そう。</h1>
+          <p>1日4回、世界の経済のニュースが届きます。<br>その下で、経済に関心のある人たちが語り合っています。</p>
           <span class="live glass"><i></i>いま 214人が「日銀は金利0.75%で据え置き」で話しています</span>
           <button class="primary" data-obgo="login" style="margin-top:22px">はじめる</button>
           <button class="ghost" data-obgo="login" data-obmode="login">ログインする</button>
@@ -1544,7 +1560,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   // ---------- 検索 ----------
   state.recent = ['日銀', '利回り', 'Mia Chen'];
   state.stab = 'all';
-  const TRENDS = [['#日銀', 'boj', '214件の声 · 3時間前から'], ['#雇用統計', 'nfp', '302件の声'], ['#米国債', 'ust', '133件の声'], ['#ドル円152円', 'yen', '41件の声'], ['#半導体', 'nikkei', '86件の声']];
+  const TRENDS = [['#日銀', 'boj', '214件の声 · 3時間前から'], ['#住宅ローン金利', 'home', '211件の声'], ['#最低賃金', 'wage', '184件の声'], ['#お米の値段', 'rice', '167件の声'], ['#雇用統計', 'nfp', '302件の声']];
   const VIDEOS = [['boj', '3分でわかる、日銀の声明どこが変わった？', '4:12'], ['nfp', 'はじめての雇用統計の読み方', '6:40'], ['ust', '国債の入札、人気がないと何が起きる？', '5:05']];
   const hl = (text, q) => { const t = esc(text); if (!q) return t; const i = text.toLowerCase().indexOf(q.toLowerCase()); return i < 0 ? t : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length)); };
   function allComments() { const out = []; const walk = (l, a) => l.forEach(c => { out.push({ c, a }); walk(c.kids, a); }); A.forEach(a => walk(discFor(a.id), a)); return out; }
