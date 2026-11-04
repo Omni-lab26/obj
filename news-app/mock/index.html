@@ -95,7 +95,12 @@ svg { display: block; }
 .article.open { transform: none; }
 .hero { position: relative; }
 .hero img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-.hero::after { content: ""; position: absolute; inset: auto 0 0; height: 90px; background: linear-gradient(to bottom, transparent, var(--paper)); }
+.hero img { -webkit-mask-image: linear-gradient(to bottom, #000 55%, rgba(0,0,0,.82) 68%, rgba(0,0,0,.5) 80%, rgba(0,0,0,.18) 91%, transparent 100%); mask-image: linear-gradient(to bottom, #000 55%, rgba(0,0,0,.82) 68%, rgba(0,0,0,.5) 80%, rgba(0,0,0,.18) 91%, transparent 100%); }
+/* 境界：下へいくほど強くなるぼかし＋地の色へのなめらかなフェード */
+.hero::after { content: ""; position: absolute; inset: auto 0 0; height: 42%; pointer-events: none;
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 70%); mask-image: linear-gradient(to bottom, transparent, #000 70%);
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,.25) 45%, rgba(0,0,0,.7) 80%, var(--paper)); }
 .hero-btns { position: absolute; top: calc(54px + env(safe-area-inset-top, 0px)); left: 14px; right: 14px; display: flex; justify-content: space-between; z-index: 2; }
 .pillbtns { display: flex; border-radius: 999px; }
 .pillbtns .iconbtn { width: 40px; height: 40px; }
