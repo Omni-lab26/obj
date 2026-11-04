@@ -691,6 +691,28 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
 .simple { padding: 54px 16px 20px; }
 .simple h2 { margin: 6px 0 14px; font-size: 26px; }
 @media (prefers-reduced-motion: reduce) { .article, .sheet, .room, .toast, .scrim, .slide, .rise, .profile, .profile * { transition: none !important; } }
+/* 記事の部品をコンパクトに（2026-11-04 オーナー：「グラフとか図はコンパクトに」） */
+.body { gap: 12px; }
+.ah { margin: 10px 0 -2px; font-size: 16px; font-weight: 700; line-height: 1.45; color: #fff; letter-spacing: .01em; }
+.obj { padding: 11px 12px 10px; border-radius: 18px; box-shadow: 0 6px 18px rgba(0,0,0,.22); }
+.obj .ohd { font-size: 12.5px; } .obj .otag { font-size: 9px; } .obj .osub { font-size: 10.5px; margin-top: 6px; }
+.roll { font-size: 30px !important; margin-top: 8px; }
+.bigv { margin-top: 6px; } .bigv b { font-size: 20px; } .bigv span { font-size: 11.5px; }
+.chg { font-size: 11px; margin-top: 4px; }
+.tbars { height: 70px; margin-top: 8px; } .tbx { margin-top: 4px; font-size: 9.5px; } .slg { margin-top: 6px; font-size: 10.5px; }
+.lchart { height: 72px; margin-top: 8px; } .seg3 { margin-top: 6px; } .seg3 button { height: 26px; font-size: 11px; }
+.icmp { margin-top: 8px; aspect-ratio: 300 / 120; border-radius: 14px; } .ipill { font-size: 10px; padding: 4px 8px; top: 8px; } .ich i { width: 28px; height: 28px; }
+.acc { height: 140px; margin-top: 8px; gap: 4px; } .apt { font-size: 11.5px; } .apt b { font-size: 13px; }
+.stp { margin-top: 6px; } .st .sx { font-size: 12px; padding: 2px 0 6px; } .st .sx b { font-size: 11px; } .st .sb2 i { margin-top: 6px; width: 8px; height: 8px; }
+.oplay { width: 26px; height: 26px; font-size: 10px; }
+.pl { height: 34px; margin-top: 5px; font-size: 12.5px; border-radius: 11px; }
+.seg2 { margin-top: 8px; } .seg2 button { height: 28px; font-size: 11.5px; } .cmp2 { margin-top: 6px; } .cmp2 p { font-size: 13px; padding: 10px 12px; line-height: 1.65; }
+.clab { margin-top: 8px; font-size: 11.5px; } .crange { margin: 6px 0 2px; height: 22px; } .cres b { font-size: 22px; } .cres { font-size: 12px; }
+.swp { margin-top: 8px; gap: 4px; } .sw1, .sw2 { padding: 9px 12px; border-radius: 14px; } .swin, .swr b { font-size: 20px; } .swr { margin: 4px 0 2px; } .swbtn { width: 32px; height: 32px; margin: -16px 0 0 -16px; font-size: 13px; }
+.hm { margin-top: 8px; gap: 3px; } .hc { height: 20px; border-radius: 5px; } .hm small { font-size: 9.5px; } .hm .hr2 { font-size: 10.5px; }
+.cstack { height: 104px; margin-top: 8px; } .cc { height: 90px; padding: 10px 12px; gap: 3px; border-radius: 14px; } .cc b { font-size: 13.5px; } .cc span { font-size: 12px; line-height: 1.5; }
+.video img { aspect-ratio: 2 / 1; } .video .play { width: 50px; height: 50px; }
+.car { height: 206px; } .cri { height: 192px; width: 58%; margin-left: -29%; } .cri img { height: 118px; } .crt { font-size: 12px; padding: 8px 10px; }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -1006,6 +1028,152 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     cols: ['11月', '12月', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月'].map((m, i) => [m, [4.2 + (i % 4) * 0.6, 1.5 + (i % 3) * 0.6, 3.5 + ((i * 7) % 6)]]) });
   BLOCKS.power.splice(BLOCKS.power.findIndex(b => b.t === 'bars'), 1, { t: 'bars', title: '電気代の中身（1か月）', sub: '平均的な家庭・この1年', unit: '円', series: [['基本料金・電力量', '#16161a'], ['燃料費の調整', '#ff6a1a'], ['再エネの賦課金', '#b9b6ae']],
     cols: ['2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月', '1月'].map((m, i) => [m, [6100 + (i < 6 ? 300 - i * 50 : (i - 6) * 40), [1500, 1300, 900, 700, 650, 800, 950, 900, 1000, 1150, 1300, 1400][i], 1040]]) });
+  // ---- 本文を長くする：小見出し（h）と段落（p）を足し、部品（#種類）をあいだに置く ----
+  function weave(id, plan) {
+    const old = [...BLOCKS[id]].filter(b => b.t !== 'p');
+    const take = t => { const i = old.findIndex(b => b.t === t); return i < 0 ? null : old.splice(i, 1)[0]; };
+    const out = [];
+    plan.forEach(x => { if (x.startsWith('h:')) out.push({ t: 'h', x: x.slice(2) }); else if (x.startsWith('p:')) out.push({ t: 'p', x: x.slice(2) }); else { const b = take(x.slice(1)); if (b) out.push(b); } });
+    BLOCKS[id] = out.concat(old);
+  }
+  weave('boj', ['#video',
+    'p:日銀は今回の会合で、政策金利を0.75%のまま変えないと決めました。ここまでは、多くの人が予想していたとおりです。それでも市場がざわついたのは、決定といっしょに出た「声明」の書き方が、前回と少し変わっていたからです。',
+    '#count',
+    'h:どこが変わったの？',
+    'p:声明は、日銀が「いまの景気や物価をどう見ているか」をまとめた文章です。毎回ほとんど同じ言い回しが続くので、ひとつの言葉が変わるだけでも大きな意味を持ちます。今回いちばん注目されたのは、賃金についての書き方でした。',
+    '#compare',
+    'p:前回は「一部に」だった賃金の上昇が、今回は「広がりがみられる」になりました。日銀は、賃金と物価がいっしょに上がっていく形を目指しています。その条件がそろってきた、と言っているようにも読めます。',
+    'h:市場はどう受け止めた？',
+    'p:発表のあと、「12月に利上げするかも」と見る人が少し増えました。ただ、ドル円は大きくは動いていません。すでに多くの人がそう考えていた、ということでもあります。株価も、銀行の株が少し上がったくらいで落ち着いています。',
+    '#steps',
+    'h:わたしたちの暮らしには？',
+    'p:利上げが進むと、預金の金利は少しずつ上がり、住宅ローンの変動金利も上がりやすくなります。一方で、円高に向かえば輸入品の値段が落ち着く可能性もあります。良いことと気になることが、同時に起きるのが金利の難しいところです。',
+    'p:12月の会合まで、あと1か月半。それまでに出る物価や賃金のデータで、日銀の判断が見えてきそうです。みなさんは、どう読みましたか？',
+    '#poll', '#refs']);
+  weave('power', [
+    'p:この冬の電気代は、ふつうの家庭で月300円ほど上がりそうです。冬はもともと暖房で電気をたくさん使う季節。そこに値上がりが重なるので、明細を見て「あれ？」と思う人が多くなりそうです。',
+    '#count',
+    'h:なぜ上がるの？',
+    'p:理由は大きく2つあります。ひとつは、国が出していた電気代の補助が終わること。もうひとつは、発電に使う燃料（LNGや石炭）の値段が、少し上がっていることです。燃料の値段は、数か月おくれて電気代に反映されます。',
+    '#bars',
+    'p:グラフを見ると、基本料金や使った分の料金はあまり変わっていません。動いているのは「燃料費の調整」の部分です。ここが、世界の燃料の値段と為替（円安）の影響を受けるところです。',
+    'h:あなたの家だといくら？',
+    'p:使う量が多い家ほど、上がる金額も大きくなります。一人暮らしで月150kWhくらいなら170円ほど、家族4人で400kWhなら460円ほどが目安です。',
+    '#calc',
+    'h:地域によって差がある',
+    'p:寒い地域ほど上がり方が大きくなります。暖房を電気でまかなう家が多いことに加えて、電力会社ごとに燃料の買い方がちがうからです。',
+    '#heat',
+    'p:できることは、設定温度を1度下げる、使っていない部屋の電気を切る、電力会社やプランを見直す、など。小さなことでも、冬の3か月で見るとちがいが出ます。',
+    '#poll', '#refs']);
+  weave('wage', [
+    'p:最低賃金の全国平均が、はじめて1,100円を超えました。前の年からの上がり幅は66円で、これまででいちばん大きくなりました。パートやアルバイトで働く人の時給にも、そのまま関わってくる数字です。',
+    '#count',
+    'h:どうしてこんなに上がった？',
+    'p:物価が上がり続けているので、時給も上げないと暮らしが苦しくなります。そこで国は「早く1,500円に近づける」という目標をかかげています。人手が足りない会社が増えていることも、追い風になりました。',
+    '#cards',
+    'h:地域の差はどうなった？',
+    'p:いちばん高い東京と、いちばん低い県の差は、まだ220円ほどあります。同じ時間働いても、住む場所で月に3〜4万円のちがいが出ることもあります。この差が、若い人が都市に集まる理由のひとつだとも言われています。',
+    '#heat',
+    'h:会社にとっては',
+    'p:大きな会社は値上げで吸収しやすい一方、小さなお店や中小企業には負担が重くなります。人を減らしたり、営業時間を短くしたりする動きが出ないか、これからが注目です。',
+    'p:みなさんの職場では、今年どれくらい時給や給料が上がりましたか？　働く立場でも、雇う立場でも、ぜひ聞かせてください。',
+    '#poll', '#refs']);
+  weave('home', [
+    'p:住宅ローンの変動金利が、じわっと上がり始めました。日銀が利上げを進めているので、銀行も「基準になる金利（短期プライムレート）」を上げているからです。日本では、住宅ローンを借りている人の7割以上が変動金利を選んでいます。',
+    '#count',
+    'h:これからどうなりそう？',
+    'p:半年前は「ゆっくり上がる」と見られていた金利が、いまは「もう少し早く上がる」と見られています。日銀があと1〜2回利上げすると、変動金利も1%に近づくかもしれません。',
+    '#icompare',
+    'h:毎月の返済はいくら増える？',
+    'p:金利が0.25%上がると、4,000万円を35年で借りている人なら、毎月の返済は5,000円ほど増えます。借りている額が大きいほど、影響も大きくなります。',
+    '#calc',
+    'p:ただし、変動金利は上がってもすぐに返済額が変わるわけではありません。多くの銀行では、5年ごとに返済額を見直す仕組みと、上がり幅の上限があります。',
+    '#steps',
+    'h:固定に借りかえるべき？',
+    'p:固定金利はすでに上がっているので、いま借りかえると、返済が増えることも多いです。「金利が上がっても払えるか」「あと何年借りるか」で答えは変わります。迷ったら、銀行やFPに相談してみてください。',
+    '#poll', '#refs']);
+  weave('d1', [
+    'p:「日本の給料はなぜ上がらなかったのか」。よく聞く問いを、30年分のデータで、ゆっくり読み解きます。答えはひとつではありません。時代ごとに、理由の重さも変わってきました。',
+    '#accordion',
+    'h:1990年代：がまんの始まり',
+    'p:バブルが終わったあと、会社は借金を返すことと、仕事を守ることを優先しました。給料を上げるより、首を切らないことが大事だった時代です。この「給料より雇用」という考え方が、その後も長く続きます。',
+    'h:2000年代：働き方が変わった',
+    'p:派遣や契約社員など、正社員ではない働き方が増えました。一人ひとりの時給は上がっていても、働く人全体の平均で見ると給料は下がって見えます。グラフの「働き方の変化」が大きいのはこの時期です。',
+    '#bars',
+    'h:2010年代：人手不足なのに',
+    'p:人手が足りなくなっても、物価がほとんど上がらなかったので、会社は給料を上げる理由が弱いままでした。「物価が上がらないから給料も上がらない、給料が上がらないから物を買わない」という輪が回っていました。',
+    'h:2020年代：輪が逆に回り始めた',
+    'p:物価が上がり始め、人手不足も深刻になって、ようやく賃上げが広がり始めました。ただ、物価に追いつけているかというと、まだ微妙なところです。',
+    '#compare',
+    'p:30年前と今の家計をくらべると、手取りはほとんど変わらず、食費や住まいのお金が増え、貯金にまわせる額が減っています。みなさんの職場では、どの理由がいちばん当てはまりますか？',
+    '#poll', '#refs']);
+  weave('nikkei', [
+    'p:日経平均は3日ぶりに下がりました。ここ数日上がり続けていた半導体の会社の株に、「いったん利益を確定しておこう」という売りが出たのが大きな理由です。',
+    '#line',
+    'h:なぜ半導体だけで大きく動く？',
+    'p:日経平均は、225の会社の株価をもとに計算されています。ただ、株価の高い一部の会社の影響がとても大きい作りです。今日は、下げの6割以上が半導体に関わる会社でした。',
+    'p:会社の数で見ると、上がった会社と下がった会社はほぼ半々です。指数の数字ほど、市場全体が落ちこんでいるわけではありません。',
+    '#bars',
+    'h:今日のポイント',
+    '#cards',
+    'p:今夜はECBの理事の講演があります。欧州の金利の見通しが変われば、為替を通じて明日の東京の株にも影響しそうです。',
+    '#poll', '#refs']);
+  weave('yen', [
+    'p:お昼のドル円は152円台。朝から、海外から物を買う会社（輸入企業）の「ドルを買って円を売る」注文が多く入っています。月末に向けて、支払いのためにドルが必要になるからです。',
+    '#line',
+    'h:午前中の動き',
+    'p:東京の取引が始まると、10時前の「仲値（なかね）」に向けてドルを買う注文が集まりました。仲値は、銀行がその日の両替のレートを決める時間です。月末や五と十のつく日は、この時間にドル買いが増えやすいと言われています。',
+    '#steps',
+    'h:旅行や買い物への影響',
+    'p:1ドル＝150円のときと比べると、同じ10万円で受け取れるドルは10ドルほど減ります。旅行の両替や、海外から届く物の値段に、じわじわ効いてきます。',
+    '#swap',
+    'p:このあと11:30以降は、中国の経済指標と、夜の米国の発表が気になるところです。年末にかけて、ドル円はどのあたりにいると思いますか？',
+    '#poll', '#refs']);
+  weave('fomc', [
+    'p:米国の中央銀行（FRB）が、前回の会合での話し合いのメモ（議事要旨）を出しました。12月にもう一度利下げするかについて、「急がなくていい」という声が多かったようです。',
+    'h:メモの書き方の変化',
+    '#compare',
+    'p:9月は「あと2回」の利下げが適切という見方が多かったのに対し、10月は「慎重に判断する」という書き方に変わりました。言葉の温度が、少し下がった形です。',
+    '#icompare',
+    '#count',
+    'h:なぜ慎重になったの？',
+    '#cards',
+    'p:米国の金利が下がりにくくなると、日米の金利の差が縮まりにくく、円安が続きやすくなります。日本で暮らす私たちにとっても、遠い話ではありません。',
+    '#poll', '#refs']);
+  weave('nfp', ['#video',
+    'p:米国の10月の雇用統計が出ました。会社で働く人（農業以外）の数は、前の月より18.7万人増えました。予想の16.5万人を上回る、強めの結果です。',
+    '#count',
+    'h:どんな仕事で増えた？',
+    'p:いちばん増えたのは医療・介護、次が飲食・宿泊でした。人の手が必要な仕事で、人手が足りない状態が続いています。',
+    '#bars',
+    'h:雇用統計の読み方',
+    'p:雇用統計は、毎月はじめの金曜日の夜（日本時間）に出ます。世界中の投資家が注目する数字で、発表の直後はドル円や株が大きく動くことがあります。',
+    '#steps',
+    'p:時給の伸びが物価を少し上回っているので、米国の人たちの暮らしは少しずつ楽になっています。そのぶん、FRBが利下げを急ぐ理由は弱くなりました。',
+    '#poll', '#refs']);
+  weave('rice', [
+    'p:スーパーで売られているお米の値段は、去年の同じ時期より2割ほど高いままです。新米が出てきても、なかなか下がりません。毎日食べるものだけに、家計への影響を感じている人も多いはずです。',
+    '#count',
+    'h:1年前とくらべると',
+    '#compare',
+    'p:お米だけでなく、野菜やお肉も少しずつ上がっています。ある家の食費をくらべると、1年で5,000円ほど増えていました。',
+    'h:あなたの家だと？',
+    '#calc',
+    'h:なぜ下がらないの？',
+    '#cards',
+    'p:お米は、作る量・集める量・売る量のどこかで足りなくなると、すぐ値段に表れます。来年の作付けがどうなるかで、値段の行方も変わりそうです。',
+    '#poll', '#refs']);
+  weave('budget', [
+    'p:国の来年度の予算案は、今年より大きく、過去最大になりそうです。いちばん大きいのは年金や医療などの「社会保障」。次が、借りたお金を返すための「国債費」です。',
+    '#count',
+    'h:お金の使いみち',
+    '#bars',
+    'p:社会保障が増えるのは、お年寄りが増えて、医療や介護にかかるお金が増えているからです。毎年少しずつ大きくなる、いわば「自然に増えるお金」です。',
+    'h:金利が上がると、国も苦しくなる',
+    'p:国はたくさんお金を借りています。金利が上がると、その利息の支払いも増えます。国債費が増えているのは、そのためでもあります。日銀の利上げは、国の予算にも関わってくるのです。',
+    '#steps',
+    'p:予算は、私たちの税金と、国の借金でまかなわれています。どこにお金を使ってほしいか、みなさんの考えを聞かせてください。',
+    '#poll', '#refs']);
   const POLL = {};
   A.forEach(a => { if (BLOCKS[a.id]) a.blocks = BLOCKS[a.id]; });
   const NOTE_TILE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#123b38"/><text x="50" y="68" font-size="60" text-anchor="middle" fill="#5fe0d3" font-family="Georgia,serif">“</text></svg>');
@@ -1124,6 +1292,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     return a.blocks.map((b, bi) => {
       const k = `${a.id}-${bi}`;
       if (b.t === 'p') return `<p>${esc(b.x)}</p>`;
+      if (b.t === 'h') return `<h3 class="ah">${esc(b.x)}</h3>`;
       if (b.t === 'video') return `<div class="video rel"><img src="${R}th${b.img}.jpg" alt=""><span class="play glass">▶</span><span class="len glass">動画でサクッと · ${b.len}</span></div>`;
       if (b.t === 'count') return `<div class="obj"><div class="ohd"><span>${esc(b.label)}</span><span class="otag">KEY NUMBER</span></div><div class="roll" data-roll>${digits(b.value, b.dec, b.pre, b.suf)}</div><div class="osub">${esc(b.sub)}</div></div>`;
       if (b.t === 'compare') return `<div class="obj" data-cmpbox="${k}"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">SWITCH</span></div>
@@ -1161,6 +1330,19 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       if (b.t === 'accordion') return `<div class="obj"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">TAP</span></div>
         <div class="acc" data-acc="${k}">${b.items.map((it, i) => `<button class="ap ${i === 0 ? 'on' : ''}" data-ap="${k}:${i}" style="background-image:url(${R}th${it.img}.jpg)"><span class="apy mono">${esc(it.h)}</span><span class="apt"><b>${esc(it.h)}</b>${esc(it.x)}</span></button>`).join('')}</div>
         <div class="osub">時代をタップすると広がります</div></div>`;
+      if (b.t === 'calc') return `<div class="obj"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">TRY</span></div>
+        <label class="clab" for="calc-${k}">${esc(b.label)} <b id="calcv-${k}">${b.val.toLocaleString()}${b.unit}</b></label>
+        <input type="range" class="crange" id="calc-${k}" min="${b.min}" max="${b.max}" step="${{ loan: 100, power: 10, fx: 1, rice: 1 }[b.kind]}" value="${b.val}" data-calc="${k}:${b.kind}:${b.unit}">
+        <div class="cres"><span>${{ loan: '毎月の返済が', power: '1か月の電気代が', fx: '受け取れるのは', rice: '1年で' }[b.kind]}</span><b class="mono" id="calcr-${k}">${calcOut(b.kind, b.val)}</b><span>${b.kind === 'fx' ? '' : '増えます'}</span></div>
+        <div class="osub">${{ loan: '金利 0.68% → 0.93% で計算 · 目安です', power: '1kWh あたり 約1.15円上がるとして計算 · 目安です', fx: '1ドル＝152.40円で計算。手数料は入っていません · 目安です', rice: '1袋あたり 720円高いとして計算 · 目安です' }[b.kind]}</div></div>`;
+      if (b.t === 'heat') { const all = b.vals.flat(), lo = Math.min(...all), hi = Math.max(...all);
+        return `<div class="obj" data-heat="${k}"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">TAP</span></div>
+        <div class="hm" style="grid-template-columns:76px repeat(${b.cols.length},1fr)"><span></span>${b.cols.map(c => `<small>${esc(c)}</small>`).join('')}
+        ${b.rows.map((r, ri) => `<small class="hr2">${esc(r)}</small>` + b.vals[ri].map((v, ci) => `<button class="hc" data-hcell="${k}:${ri}:${ci}" style="--h:${(v - lo) / (hi - lo || 1)}">${b.money ? '' : ''}</button>`).join('')).join('')}</div>
+        <div class="osub" id="heat-${k}">マスをタップすると数字が出ます · 濃いほど高い</div></div>`; }
+      if (b.t === 'cards') return `<div class="obj"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">${b.items.length} CARDS</span></div>
+        <div class="cstack" data-cstack="${k}">${b.items.map((it, i) => `<button class="cc" data-cswap="${k}" style="--i:${i}"><small>${i + 1} / ${b.items.length}</small><b>${esc(it[0])}</b><span>${esc(it[1])}</span></button>`).join('')}</div>
+        <div class="osub">カードをタップすると次へ</div></div>`;
       if (b.t === 'refs') return `<div class="refs"><h3>もっと詳しく知りたい人へ</h3>${b.items.map(([t, src, dom]) => `<a class="ref" href="https://${dom}/" target="_blank" rel="noopener"><span>${esc(t)}<small>${esc(src)} · ${esc(dom)}</small></span>↗</a>`).join('')}</div>`;
       return '';
     }).join('') + relatedHTML(a) + '<p class="cap" style="margin-top:4px">※ この記事の数字はワイヤー用のサンプルです</p>';
@@ -1180,11 +1362,11 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="lsvg"><path d="${d} L${W} ${H} L0 ${H}Z" fill="rgba(255,106,26,.08)"/><path d="${d}" fill="none" stroke="#ff6a1a" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/><line class="lx" x1="0" x2="0" y1="0" y2="${H}" stroke="#16161a" stroke-width="1" vector-effect="non-scaling-stroke" opacity="0"/></svg><span class="ldot" style="left:100%;top:${y(pts[pts.length - 1]) / H * 100}%"></span>`;
   }
   function cmpSVG(b, side, color) {
-    const W = 300, H = 170, all = [...b.a.pts, ...b.b.pts], lo = Math.min(...all), hi = Math.max(...all);
-    const y = v => H - 26 - (v - lo) / (hi - lo || 1) * (H - 50), x = i => 24 + i / (side.pts.length - 1) * (W - 48);
+    const W = 300, H = 120, all = [...b.a.pts, ...b.b.pts], lo = Math.min(...all), hi = Math.max(...all);
+    const y = v => H - 22 - (v - lo) / (hi - lo || 1) * (H - 46), x = i => 24 + i / (side.pts.length - 1) * (W - 48);
     const d = side.pts.map((v, i) => `${i ? 'L' : 'M'}${x(i)} ${y(v)}`).join(' ');
     const fg = color ? '#ff6a1a' : '#8d8a83', bg = color ? '#16161a' : '#e8e6e1', tx = color ? '#f2f2f3' : '#6b6a66';
-    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><rect width="${W}" height="${H}" fill="${bg}"/>
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><rect width="${W}" height="${H}" fill="${bg}"/>
       ${[0, 1, 2].map(i => `<line x1="24" x2="${W - 24}" y1="${24 + i * ((H - 50) / 2)}" y2="${24 + i * ((H - 50) / 2)}" stroke="${tx}" stroke-opacity=".15"/>`).join('')}
       <path d="${d}" fill="none" stroke="${fg}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
       ${side.pts.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${fg}"/><text x="${x(i)}" y="${y(v) - 10}" font-size="11" text-anchor="middle" fill="${tx}" font-family="Geist Mono, monospace">${v}${b.ylab}</text>`).join('')}
