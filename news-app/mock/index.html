@@ -11,7 +11,7 @@
 /* 簡単なワイヤーフレーム。画像は ref/（オーナーが送った参考画像の切り抜き。リポジトリには入れない）
    レイアウト：スマホ1台分の枠。広い画面では中央に枠、狭い画面では全面 */
 :root {
-  --ground: #2a2b2e; --bg: #111214; --surface: #1c1d20; --surface2: #26272b; --line: #34363b;
+  --ground: #2a2b2e; --paper: #000; --bg: #111214; --surface: #1c1d20; --surface2: #26272b; --line: #34363b;
   --text: #f2f2f3; --muted: #9a9ca3; --wire: #3a3c42; --note: #ffd25c; --accent: #ff6a1a; --ok: #3ddc84;
   --glass: rgba(28,28,32,.48); --glass-line: rgba(255,255,255,.2);
   --font: "Geist", "Zen Kaku Gothic New", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
@@ -91,11 +91,11 @@ svg { display: block; }
 .searchbtn { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; }
 
 /* 記事（全画面。上にサムネ、題名、保存、本文、参考リンク） */
-.article { z-index: 30; transform: translateY(100%); transition: transform .35s cubic-bezier(.2,.8,.2,1); background: var(--tint, #1b1d22); }
+.article { z-index: 30; transform: translateY(100%); transition: transform .35s cubic-bezier(.2,.8,.2,1); background: var(--paper); }
 .article.open { transform: none; }
 .hero { position: relative; }
 .hero img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-.hero::after { content: ""; position: absolute; inset: auto 0 0; height: 90px; background: linear-gradient(to bottom, transparent, var(--tint, #1b1d22)); }
+.hero::after { content: ""; position: absolute; inset: auto 0 0; height: 90px; background: linear-gradient(to bottom, transparent, var(--paper)); }
 .hero-btns { position: absolute; top: calc(54px + env(safe-area-inset-top, 0px)); left: 14px; right: 14px; display: flex; justify-content: space-between; z-index: 2; }
 .pillbtns { display: flex; border-radius: 999px; }
 .pillbtns .iconbtn { width: 40px; height: 40px; }
@@ -830,7 +830,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     </section>
 
     <!-- ジャンル -->
-    <section class="screen slide" id="genre" aria-hidden="true" style="z-index:25;background:var(--tint,#1b1d22)">
+    <section class="screen slide" id="genre" aria-hidden="true" style="z-index:25;background:var(--paper)">
       <div class="scroller" id="g-scroll"></div>
     </section>
 
@@ -1843,7 +1843,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (state.gview !== 'all') items = items.filter(x => x.kind === state.gview);
     const order = A.map(a => a.id);
     items.sort((x, y) => state.gsort === 'hot' ? y.a.c - x.a.c : order.indexOf(x.a.id) - order.indexOf(y.a.id));
-    const el = $('#genre'); el.style.setProperty('--tint', G.tint);
+    const el = $('#genre'); 
     $('#g-scroll').innerHTML = `
       <div class="hero rel"><img src="${R}sq${img}.jpg" alt="">
         <div class="hero-btns"><button class="round glass" data-close="genre" aria-label="戻る">‹</button><div class="pillbtns glass"><button class="iconbtn" data-search aria-label="このジャンルを検索">⌕</button><button class="iconbtn" data-gsortbtn aria-label="並び替え">⇅</button><button class="iconbtn" data-toast="このジャンルをシェア（ワイヤー）" aria-label="その他">•••</button></div></div>
@@ -2706,7 +2706,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   // ---------- 記事 ----------
   function openArticle(id, withComments) {
     const a = byId(id); state.cur = a;
-    const el = $('#article'); el.style.setProperty('--tint', a.tint);
+    const el = $('#article'); 
     const total = count(discFor(id));
     $('#art-scroll').innerHTML = `
       <div class="hero rel"><img src="${imgOf(a, 'sq')}" alt="">
