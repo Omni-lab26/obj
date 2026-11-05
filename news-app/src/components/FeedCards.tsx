@@ -80,7 +80,7 @@ export function SlotCard({ a }: { a: Article }) {
       style={[styles.item, KIND_STYLE[k].line ? { borderLeftWidth: 3, borderLeftColor: KIND_STYLE[k].line } : null]}>
       <By a={a} />
       <Pressable accessibilityRole="link" accessibilityLabel={a.title} onPress={() => open(a.id)} style={styles.thumb}>
-        <Poster a={a} />
+        <Poster a={a} img={`sq${a.img}`} />
         {k === 'slot' && a.vlen ? (
           <View style={styles.yt}>
             <Icon name="play" size={11} color={colors.white} />
@@ -130,7 +130,7 @@ export function DeepCard({ a }: { a: Article }) {
     <View style={[styles.item, { borderLeftWidth: 3, borderLeftColor: colors.deep }]}>
       <By a={a} />
       <Pressable accessibilityRole="link" accessibilityLabel={a.title} onPress={() => open(a.id)} style={styles.thumb}>
-        <Poster a={a} aspect={16 / 9} compact />
+        <Poster a={a} img={`th${a.img}`} aspect={16 / 9} compact />
         <View style={styles.band}>
           <Text style={styles.bandT}>
             {t('kind.deep')} · {t('article.readMin', { n: readingMinutes(a) })}

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Face } from '@/components/Face';
 import { Page } from '@/components/Page';
 import { toast } from '@/components/Toast';
 import { useShrinkOnScroll } from '@/hooks/useTabBar';
@@ -31,9 +32,7 @@ export default function Chat() {
         </View>
         {rooms.map((r) => (
           <Pressable key={r.id} onPress={() => toast(t('chat.soon'))} style={styles.row}>
-            <View style={[styles.ic, r.kind === 'group' ? { borderRadius: 14 } : { borderRadius: 24 }]}>
-              <Text style={styles.icT}>{r.name.slice(0, 1).toUpperCase()}</Text>
-            </View>
+            <Face who={r.name} size={48} img={r.icon ? `sq${r.icon}` : undefined} square={r.kind === 'group'} />
             <View style={{ flex: 1 }}>
               <Text style={styles.name} numberOfLines={1}>
                 {r.name}

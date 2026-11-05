@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Face } from '@/components/Face';
 import { Icon } from '@/components/Icon';
 import { Page } from '@/components/Page';
 import { useShrinkOnScroll } from '@/hooks/useTabBar';
@@ -23,9 +24,7 @@ export default function People() {
         {getPosts().map((p) => (
           <View key={p.id} style={styles.post}>
             <View style={styles.by}>
-              <View style={styles.av}>
-                <Text style={styles.avT}>{p.who.slice(0, 1).toUpperCase()}</Text>
-              </View>
+              <Face who={p.who} size={34} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.who}>{p.who}</Text>
                 <Text style={styles.meta}>

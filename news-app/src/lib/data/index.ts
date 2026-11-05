@@ -12,6 +12,7 @@ const notices = demo.notifications as unknown as Notice[];
 const genres = demo.genres as unknown as Genre[];
 const roles = demo.roles as Record<string, string>;
 const bios = demo.bios as Record<string, string>;
+const faces = demo.faces as Record<string, number>;
 
 // ---- 変わる値（保存・コメント・投票）は小さな入れ物に入れ、変わったら画面に知らせる
 type State = {
@@ -64,6 +65,8 @@ export const getNotices = (): Notice[] => notices;
 export const getGenres = (): Genre[] => genres;
 export const roleOf = (who: string): string => roles[who] ?? '';
 export const bioOf = (who: string): string => bios[who] ?? '';
+/** 人のアイコン（見本の画像の名前）。ないときは undefined */
+export const faceOf = (who: string): string | undefined => (faces[who] ? `sq${faces[who]}` : undefined);
 
 export const getComments = (id: string): Comment[] =>
   state.discussions[id] ??

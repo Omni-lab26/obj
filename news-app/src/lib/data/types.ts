@@ -5,7 +5,8 @@ export type PostKind = 'slot' | 'breaking' | 'note' | 'deep';
 export type Block =
   | { t: 'p'; x: string }
   | { t: 'h'; x: string }
-  | { t: 'video'; len: string; title: string }
+  | { t: 'video'; len: string; title: string; img?: number }
+  | { t: 'fig'; img: string; cap?: string }
   | { t: 'count'; label: string; value: number; dec: number; suf: string; sub?: string }
   | { t: 'compare'; title: string; a: [string, string]; b: [string, string] }
   | { t: 'steps'; title: string; items: [string, string][] }
@@ -51,10 +52,12 @@ export type Block =
       label: string;
     }
   | { t: 'swap'; title: string; rate: number; amt: number }
-  | { t: 'accordion'; title: string; items: { h: string; x: string }[] };
+  | { t: 'accordion'; title: string; items: { h: string; x: string; img?: number }[] };
 
 export type Article = {
   id: string;
+  img?: number; // 見本の画像の番号（sq / th）
+  placeholder?: boolean; // 本文がまだ見本の記事
   type?: 'note' | 'deep';
   brk?: boolean;
   vlen?: string;
@@ -87,6 +90,7 @@ export type UserPost = {
 export type Room = {
   id: string;
   kind: 'dm' | 'group';
+  icon?: number;
   name: string;
   at: number;
   sub: string;
@@ -106,4 +110,4 @@ export type Notice = {
   unread?: boolean;
 };
 
-export type Genre = { name: string; ids?: string[]; about?: string };
+export type Genre = { name: string; img?: number; ids?: string[]; about?: string };

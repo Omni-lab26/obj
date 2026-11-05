@@ -33,7 +33,7 @@ export default function Library() {
             const a = feed.find((x) => g.ids?.includes(x.id)) ?? feed[0];
             return (
               <Pressable key={g.name} style={styles.genre} onPress={() => a && open(a.id)}>
-                <Poster a={{ ...a, tag: g.name }} compact style={styles.genreImg} />
+                <Poster a={{ ...a, tag: g.name }} img={`sq${g.img}`} compact style={styles.genreImg} />
                 <Text style={styles.genreT}>{g.name}</Text>
               </Pressable>
             );
@@ -44,7 +44,7 @@ export default function Library() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
           {feed.slice(0, 6).map((a) => (
             <Pressable key={a.id} style={styles.big} onPress={() => open(a.id)}>
-              <Poster a={a} />
+              <Poster a={a} img={`sq${a.img}`} />
               <View style={{ padding: 10 }}>
                 <Text style={styles.small}>{a.when.split(' · ')[0]}</Text>
                 <Text style={styles.bigT} numberOfLines={2}>
@@ -59,7 +59,7 @@ export default function Library() {
         <View style={styles.grid}>
           {saved.map((a) => (
             <Pressable key={a.id} style={styles.cell} onPress={() => open(a.id)}>
-              <Poster a={a} aspect={16 / 10} compact style={{ borderRadius: 12 }} />
+              <Poster a={a} img={`th${a.img}`} aspect={16 / 10} compact style={{ borderRadius: 12 }} />
               <Text style={styles.cellT} numberOfLines={2}>
                 {a.title}
               </Text>

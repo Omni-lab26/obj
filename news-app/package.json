@@ -56,7 +56,12 @@
     "preflight": "node scripts/preflight-build.mjs",
     "build:dev": "eas build --profile development",
     "build:ios": "npm run preflight && eas build --platform ios --profile production",
-    "submit:ios": "eas submit --platform ios --latest"
+    "submit:ios": "eas submit --platform ios --latest",
+    "refs": "node scripts/gen-ref-images.mjs",
+    "postinstall": "node scripts/gen-ref-images.mjs",
+    "prestart": "node scripts/gen-ref-images.mjs",
+    "preverify": "node scripts/gen-ref-images.mjs",
+    "preshot": "node scripts/gen-ref-images.mjs"
   },
   "private": true,
   "jest": {

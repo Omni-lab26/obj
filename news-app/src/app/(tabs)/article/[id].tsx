@@ -96,7 +96,12 @@ export default function ArticleScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 200 }}>
           <View>
-            <Poster a={a} aspect={k === 'deep' ? 4 / 3 : 1} padTop={insets.top + 64} />
+            <Poster
+              a={a}
+              img={k === 'deep' ? `th${a.img}` : `sq${a.img}`}
+              aspect={k === 'deep' ? 4 / 3 : 1}
+              padTop={insets.top + 64}
+            />
             {/* サムネと地の境目は線を見せず、なめらかに黒へ */}
             <LinearGradient
               colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.8)', colors.paper]}
@@ -153,7 +158,7 @@ export default function ArticleScreen() {
                       key={r.id}
                       onPress={() => router.replace({ pathname: '/article/[id]', params: { id: r.id } })}
                       style={styles.rel}>
-                      <Poster a={r} aspect={4 / 3} compact />
+                      <Poster a={r} img={`sq${r.img}`} aspect={4 / 3} compact />
                       <Text style={styles.relT} numberOfLines={3}>
                         {r.title}
                       </Text>

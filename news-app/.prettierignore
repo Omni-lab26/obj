@@ -9,3 +9,4 @@ supabase/.temp/
 mock/
 docs/
 src/lib/data/demo.json
+src/lib/data/refImages.generated.ts

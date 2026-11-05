@@ -5,6 +5,6 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['dist/*', 'mock/**', '.artifacts/**', 'docs/**', '.expo/**'],
+    ignores: ['dist/*', 'mock/**', '.artifacts/**', 'docs/**', '.expo/**', 'src/lib/data/refImages.generated.ts'],
   },
 ]);

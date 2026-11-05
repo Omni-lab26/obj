@@ -1,10 +1,12 @@
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { refImage } from '@/lib/data/images';
 import type { Article } from '@/lib/data/types';
 import { colors, fonts } from '@theme';
 
-// サムネ：雑誌・ポスターの文字組みで、記事ごとに自動で作る（第三者の絵は使わない）。
+// サムネ。見本の画像（assets/ref、手元だけ）があればそれを使い、なければ雑誌・ポスターの文字組みで自動で作る。
 // 型は4つ：紙面（paper）・計器（gauge）・光（light）・墨（ink）
 type Tpl = 'paper' | 'gauge' | 'light' | 'ink';
 const TPLS: Tpl[] = ['paper', 'ink', 'gauge', 'light'];
@@ -41,8 +43,10 @@ export function Poster({
   aspect = 1,
   compact,
   padTop = 0,
+  img,
 }: {
   a: Article;
+  img?: string; // 見本の画像の名前（sq3、th5 など）
   style?: StyleProp<ViewStyle>;
   aspect?: number;
   compact?: boolean;
@@ -58,6 +62,21 @@ export function Poster({
   // 大きな文字は、サムネの幅に1行で収まる大きさにする
   const fs = Math.max(14, Math.min(w * 0.3, (w * 0.84) / Math.max(1, word.length)));
   const P = PAL[tpl];
+  const photo = refImage(img);
+
+  if (photo) {
+    return (
+      <View style={[{ aspectRatio: aspect, backgroundColor: colors.surface, overflow: 'hidden' }, style]}>
+        <Image
+          source={photo}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          transition={150}
+          accessibilityIgnoresInvertColors
+        />
+      </View>
+    );
+  }
 
   return (
     <View

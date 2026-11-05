@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { Face } from '@/components/Face';
 import { FeedCard } from '@/components/FeedCards';
 import { Icon } from '@/components/Icon';
 import { Mark } from '@/components/Mark';
@@ -28,9 +29,9 @@ export default function Home() {
   const unread = getNotices().some((n) => n.unread);
 
   const list = (() => {
-    if (chip === 'latest') return feed;
-    if (chip === 'hot') return [...feed].sort((a, b) => b.c - a.c).slice(0, 6);
-    return feed.filter((a) => kindOf(a) === chip);
+    if (chip === 'latest') return feed.slice(0, 8);
+    if (chip === 'hot') return [...feed].sort((a, b) => b.c - a.c).slice(0, 5);
+    return feed.filter((a) => kindOf(a) === chip).slice(0, 8);
   })();
 
   return (
@@ -90,7 +91,9 @@ export default function Home() {
       </Animated.ScrollView>
 
       <TopBar>
-        <View style={styles.me} accessibilityLabel="プロフィール" />
+        <View style={styles.me} accessibilityLabel="プロフィール">
+          <Face who="あなた" size={30} />
+        </View>
         <View style={styles.wm}>
           <Mark height={15} />
           <Text style={styles.wmT}>Orchard</Text>
@@ -147,9 +150,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#3A3B40',
+    overflow: 'hidden',
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   wm: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   wmT: { color: colors.text, fontSize: 18, fontWeight: '700' },

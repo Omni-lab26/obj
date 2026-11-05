@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -5,6 +6,7 @@ import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 
 import { useDataVersion, vote, voteOf } from '@/lib/data';
+import { refImage } from '@/lib/data/images';
 import type { Block } from '@/lib/data/types';
 import { calcOut, linePoints, num, splitMarks } from '@/lib/format';
 import { t } from '@/i18n';
@@ -408,6 +410,22 @@ function Heat({ b }: { b: Extract<Block, { t: 'heat' }> }) {
   );
 }
 
+/** 図の画像：横幅いっぱい、縦は画像の比率のまま。長押しでメニュー */
+function FigImage({ src }: { src: number }) {
+  const onFigure = useContext(FigureCtx);
+  const [ratio, setRatio] = useState(1.6);
+  return (
+    <Pressable delayLongPress={450} onLongPress={() => onFigure('図')}>
+      <Image
+        source={src}
+        onLoad={(e) => setRatio(e.source.width / e.source.height)}
+        style={{ width: '100%', aspectRatio: ratio, borderRadius: 20, backgroundColor: '#E8E5E1' }}
+        contentFit="cover"
+      />
+    </Pressable>
+  );
+}
+
 function Accordion({ b }: { b: Extract<Block, { t: 'accordion' }> }) {
   const [on, setOn] = useState(b.items.length - 1);
   return (
@@ -420,6 +438,9 @@ function Accordion({ b }: { b: Extract<Block, { t: 'accordion' }> }) {
         ))}
       </View>
       <Animated.View key={on} entering={FadeIn.duration(240)} style={s.cmp}>
+        {refImage(`sq${b.items[on].img}`) ? (
+          <Image source={refImage(`sq${b.items[on].img}`)} style={s.accImg} contentFit="cover" />
+        ) : null}
         <Text style={s.cmpT}>{b.items[on].x}</Text>
       </Animated.View>
     </Obj>
@@ -447,18 +468,36 @@ export function BlockView({ b }: { b: Block }) {
           accessibilityLabel={b.title}
           onPress={() => toast(t('blocks.videoOpen'))}
           style={s.video}>
+          {refImage(`th${b.img}`) ? (
+            <>
+              <Image source={refImage(`th${b.img}`)} style={StyleSheet.absoluteFill} contentFit="cover" />
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.3)' }]} />
+            </>
+          ) : null}
           <View style={s.play}>
             <Icon name="play" size={22} color={colors.white} />
           </View>
-          <Text style={s.videoT} numberOfLines={2}>
-            {b.title}
-          </Text>
+          {refImage(`th${b.img}`) ? null : (
+            <Text style={s.videoT} numberOfLines={2}>
+              {b.title}
+            </Text>
+          )}
           <View style={s.len}>
             <Icon name="play" size={10} color={colors.youtube} />
             <Text style={s.lenT}>{t('blocks.video', { len: b.len })}</Text>
           </View>
         </Pressable>
       );
+    case 'fig': {
+      const src = refImage(b.img);
+      if (!src) return null;
+      return (
+        <View>
+          <FigImage src={src} />
+          {b.cap ? <Text style={s.cap}>{b.cap}</Text> : null}
+        </View>
+      );
+    }
     case 'count':
       return (
         <Obj title={b.label} tag="KEY NUMBER">
@@ -662,6 +701,8 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)',
   },
   lenT: { color: colors.white, fontSize: 11, fontWeight: '600' },
+  cap: { color: 'rgba(255,255,255,0.6)', fontSize: 11, marginTop: 6 },
+  accImg: { width: '100%', aspectRatio: 16 / 9, borderRadius: 12, marginBottom: 10 },
   refsH: {
     color: 'rgba(255,255,255,0.7)',
     fontSize: 13,

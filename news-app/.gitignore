@@ -51,3 +51,7 @@ yarn-error.*
 
 # Web 書き出し
 dist/
+
+# 見本の画像（第三者の作品。公開リポジトリに入れない）と、その対応表（自動で作る）
+assets/ref/
+src/lib/data/refImages.generated.ts
