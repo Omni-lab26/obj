@@ -862,7 +862,7 @@ button.act:active { background: rgba(255,255,255,.06); }
         <div class="row" id="genres"></div>
         <div class="sec rel">新しく届いた記事 ›</div>
         <div class="row" id="newest"></div>
-        <div class="sec rel">動画でサクッと ›<span class="note" style="left:110px;top:16px">記事に付ける解説動画</span></div>
+        <div class="sec rel">YouTube の解説 ›<span class="note" style="left:110px;top:16px">YouTube の10〜20分の解説。記事はその深掘り</span></div>
         <div class="row" id="videos"></div>
         <div class="sec">保存した記事 ›</div>
         <div class="past" id="saved"></div>
@@ -1014,7 +1014,7 @@ button.act:active { background: rgba(255,255,255,.06); }
   // ---- サンプル記事の本文（数字はすべてサンプル）----
   const BLOCKS = {
     boj: [
-      { t: 'video', img: 11, len: '4:12', title: '3分でわかる、声明どこが変わった？' },
+      { t: 'video', img: 11, len: '14:32', title: '日銀の声明、どこが変わった？' },
       { t: 'p', x: '日銀は今回、政策金利を0.75%のまま据え置きました。ここまでは予想どおり。注目は、声明の中の「賃金」についての書き方が、前回よりちょっと前向きになったことです。' },
       { t: 'count', label: '政策金利', value: 0.75, dec: 2, suf: '%', sub: '前回と同じ · 次の会合は12月18–19日' },
       { t: 'compare', title: '声明の書き方をくらべる', a: ['前回（9月）', '賃金の上昇は<mark>一部に</mark>みられる。物価の見通しには<mark>不確かさが大きい</mark>。'], b: ['今回（11月）', '賃金の上昇は<mark>広がりがみられる</mark>。物価の見通しは<mark>おおむね想定どおり</mark>。'] },
@@ -1087,7 +1087,7 @@ button.act:active { background: rgba(255,255,255,.06); }
       { t: 'refs', items: [['FOMC Minutes', 'Federal Reserve', 'federalreserve.gov']] },
     ],
     nfp: [
-      { t: 'video', img: 11, len: '6:40', title: 'はじめての雇用統計の読み方' },
+      { t: 'video', img: 11, len: '17:05', title: 'はじめての雇用統計の読み方' },
       { t: 'p', x: '米国の10月の雇用統計が出ました。会社で働く人（農業以外）の数は、前の月より18.7万人増えました。予想の16.5万人を上回る、強めの結果です。' },
       { t: 'count', label: '働く人の増え方（農業以外）', value: 187000, dec: 0, pre: '+', suf: '人', sub: '予想 +16.5万人 · 前回 +14.2万人 · サンプルの数字' },
       { t: 'bars', title: 'どの仕事で増えた？（万人）', unit: '万人', series: [['医療・介護', '#ff6a1a'], ['飲食・宿泊', '#16161a'], ['そのほか', '#b9b6ae']], cols: [['8月', [5.1, 2.0, 6.1]], ['9月', [5.6, 2.4, 6.2]], ['10月', [6.3, 3.1, 9.3]]] },
@@ -1758,7 +1758,7 @@ button.act:active { background: rgba(255,255,255,.06); }
       if (b.t === 'p' && b.x.startsWith('Q. ') && b.x.includes('　A. ')) { const [q, ans] = b.x.slice(3).split('　A. '); return `<div class="qa"><p class="q">${esc(q)}</p><p>${esc(ans)}</p></div>`; }
       if (b.t === 'p') return `<p>${esc(b.x)}</p>`;
       if (b.t === 'h') return `<h3 class="ah">${esc(b.x)}</h3>`;
-      if (b.t === 'video') return `<div class="video rel"><img src="${R}th${b.img}.jpg" alt=""><span class="play glass">▶</span><span class="len glass">動画でサクッと · ${b.len}</span></div>`;
+      if (b.t === 'video') return `<div class="video rel"><img src="${R}th${b.img}.jpg" alt=""><span class="play glass">▶</span><span class="len glass">YouTube の解説 · ${b.len}</span></div>`;
       if (b.t === 'count') return `<div class="obj"><div class="ohd"><span>${esc(b.label)}</span><span class="otag">KEY NUMBER</span></div><div class="roll" data-roll>${digits(b.value, b.dec, b.pre, b.suf)}</div><div class="osub">${esc(b.sub)}</div></div>`;
       if (b.t === 'compare') return `<div class="obj" data-cmpbox="${k}"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">SWITCH</span></div>
         <div class="seg2" role="tablist"><span class="segk"></span><button class="on" data-cmp="${k}:0" role="tab">${b.a[0]}</button><button data-cmp="${k}:1" role="tab">${b.b[0]}</button></div>
@@ -1957,7 +1957,7 @@ button.act:active { background: rgba(255,255,255,.06); }
   function renderLib() {
     $('#genres').innerHTML = GENRES.map(([g, i]) => `<button class="genre" data-genre="${g}"><img src="${R}sq${i}.jpg" alt=""><span>${g}</span></button>`).join('');
     $('#newest').innerHTML = A.filter(a => a.type !== 'note').slice(0, 5).map(a => `<button class="big" data-article="${a.id}"><img src="${imgOf(a, 'sq')}" alt=""><div class="m"><small>${esc(a.tm)} · 記事 3分</small>${esc(a.title)}</div></button>`).join('');
-    $('#videos').innerHTML = [['boj', '3分でわかる、日銀の声明どこが変わった？', '4:12'], ['nfp', 'はじめての雇用統計の読み方', '6:40'], ['ust', '国債の入札、人気がないと何が起きる？', '5:05']].map(([id, t, l]) => `
+    $('#videos').innerHTML = [['boj', '日銀の声明、どこが変わった？', '14:32'], ['nfp', 'はじめての雇用統計の読み方', '17:05'], ['ust', '国債の入札、人気がないと何が起きる？', '5:05']].map(([id, t, l]) => `
       <button class="vid" data-article="${id}"><div class="vb"><img src="${imgOf(byId(id), 'th')}" alt=""><span class="play glass">▶</span></div><p>${t}<br><span class="muted">${l}</span></p></button>`).join('');
     const item = a => `<button class="pi" data-article="${a.id}" style="width:100%;text-align:left"><img src="${imgOf(a, 'sq')}" alt=""><div class="x"><small>${esc(a.when)}</small>${esc(a.title)}</div><span class="kind">${a.id === 'nfp' ? '▶ 動画' : '記事'}</span></button>`;
     const sv = A.filter(a => state.saved.has(a.id));
@@ -2700,7 +2700,7 @@ button.act:active { background: rgba(255,255,255,.06); }
   state.recent = ['日銀', '利回り', 'Mia Chen'];
   state.stab = 'all';
   const TRENDS = [['#日銀', 'boj', '214件の声 · 3時間前から'], ['#住宅ローン金利', 'home', '211件の声'], ['#最低賃金', 'wage', '184件の声'], ['#お米の値段', 'rice', '167件の声'], ['#雇用統計', 'nfp', '302件の声']];
-  const VIDEOS = [['boj', '3分でわかる、日銀の声明どこが変わった？', '4:12'], ['nfp', 'はじめての雇用統計の読み方', '6:40'], ['ust', '国債の入札、人気がないと何が起きる？', '5:05']];
+  const VIDEOS = [['boj', '日銀の声明、どこが変わった？', '14:32'], ['nfp', 'はじめての雇用統計の読み方', '17:05'], ['ust', '国債の入札、人気がないと何が起きる？', '5:05']];
   const hl = (text, q) => { const t = esc(text); if (!q) return t; const i = text.toLowerCase().indexOf(q.toLowerCase()); return i < 0 ? t : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length)); };
   function allComments() { const out = []; const walk = (l, a) => l.forEach(c => { out.push({ c, a }); walk(c.kids, a); }); A.forEach(a => walk(discFor(a.id), a)); return out; }
   function renderSearch() {
@@ -2814,7 +2814,7 @@ button.act:active { background: rgba(255,255,255,.06); }
         <span class="note" style="right:18px;top:-24px">✓ ＝ 記事を保存</span></div>
       <div class="body">
         ${a.blocks ? renderBlocks(a) : `
-        <div class="video rel"><img src="${imgOf(byId('nfp'), 'th')}" alt=""><span class="play glass">▶</span><span class="len glass">動画でサクッと · 4:12</span><span class="note" style="right:10px;top:10px">解説動画（本文の前、題名のすぐ下）</span></div>
+        <div class="video rel"><img src="${imgOf(byId('nfp'), 'th')}" alt=""><span class="play glass">▶</span><span class="len glass">YouTube の解説 · 14:32</span><span class="note" style="right:10px;top:10px">解説動画（本文の前、題名のすぐ下）</span></div>
         <p>${a.brk ? '今回の声明では、賃金について「上昇の広がりがみられる」と、前回よりちょっと踏み込みました。総裁の会見は15:30から。市場は12月の利上げを6割くらい見込んでいます。' : 'ここに本文が入ります。オーナーが数字や見出しを見ながら、かみくだいて書いた解説を置きます。'}</p>
         <div class="wbar" style="width:96%"></div><div class="wbar" style="width:88%"></div><div class="wbar" style="width:64%"></div>
         <div class="fig rel"><img src="${R}chart1.jpg" alt="棒グラフの見本"><span class="note" style="left:10px;top:10px">グラフ：月ごとの推移（棒）</span></div>
