@@ -93,7 +93,7 @@ export default function Home() {
         <View style={styles.me} accessibilityLabel="プロフィール" />
         <View style={styles.wm}>
           <Mark height={15} />
-          <Text style={styles.wmT}>Halftick</Text>
+          <Text style={styles.wmT}>Orchard</Text>
         </View>
         <Pressable
           accessibilityRole="button"

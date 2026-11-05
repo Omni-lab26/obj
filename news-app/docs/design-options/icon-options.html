@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Orchard アイコン案</title>
+<style>
+  body { margin: 0; background: #e9e7e2; font-family: system-ui, "Hiragino Sans", sans-serif; color: #16161a; }
+  .wrap { padding: 36px 40px 40px; width: 1240px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .lead { font-size: 13px; color: #6b6a66; margin: 0 0 26px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px; }
+  .card { background: #fff; border-radius: 22px; padding: 22px 20px 20px; }
+  .big { width: 220px; height: 220px; display: block; margin: 0 auto; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,.18); overflow: hidden; }
+  .name { font-weight: 700; font-size: 16px; margin: 18px 0 4px; }
+  .why { font-size: 12.5px; line-height: 1.7; color: #4a4945; margin: 0; min-height: 86px; }
+  .small { display: flex; gap: 14px; align-items: flex-end; margin-top: 16px; padding: 14px; border-radius: 16px; background: #1c1d20; }
+  .small svg { border-radius: 13px; overflow: hidden; }
+  .small span { color: #9a9ca3; font-size: 11px; margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Orchard アイコン案（4つ）</h1>
+  <p class="lead">モットー「たとえ明日、世界が滅びようとも、私は今日リンゴの木を植える」から。リンゴの形（かじったリンゴ）は Apple 社の印と近いので使わない。下の黒い帯は、ホーム画面の大きさ（60px・40px）で見たときの見え方。</p>
+  <div class="grid" id="grid"></div>
+</div>
+<script>
+const A = '#FF6A1A';
+const icons = [
+  {
+    name: '① 木と苗木',
+    why: '今の印（長い棒と半分の棒）を受け継ぐ。長い棒＝育った木、短い棒＝今日植えた苗木。Halftick から続けて使える。',
+    svg: `<rect width="100" height="100" fill="#111214"/>
+      <rect x="35" y="38" width="9" height="40" rx="2" fill="${A}"/>
+      <circle cx="39.5" cy="32" r="15" fill="${A}"/>
+      <rect x="58" y="58" width="9" height="20" rx="2" fill="${A}"/>
+      <circle cx="62.5" cy="54" r="8" fill="${A}"/>`,
+  },
+  {
+    name: '② 果樹園の列',
+    why: '上から見た果樹園。白い木が並び、1本だけオレンジ＝今日植えた1本。一人ひとりが集まってみんなの場所になる、コミュニティの形。',
+    svg: `<rect width="100" height="100" fill="#111214"/>
+      ${[0,1,2].map(r => [0,1,2].map(c => `<circle cx="${30+c*20}" cy="${30+r*20}" r="7" fill="${r===2&&c===2 ? A : 'rgba(242,242,243,.88)'}"/>`).join('')).join('')}`,
+  },
+  {
+    name: '③ 芽',
+    why: '土から出た小さな芽。いちばん素直に「今日、植える」を表す。やわらかく、親しみやすい。',
+    svg: `<rect width="100" height="100" fill="#111214"/>
+      <path d="M50 76 V48" stroke="${A}" stroke-width="7" stroke-linecap="round"/>
+      <path d="M50 52 C 50 36, 36 28, 24 30 C 24 44, 36 52, 50 52 Z" fill="${A}"/>
+      <path d="M50 46 C 50 30, 64 22, 77 24 C 77 38, 64 46, 50 46 Z" fill="${A}"/>
+      <rect x="28" y="76" width="44" height="5" rx="2.5" fill="rgba(242,242,243,.35)"/>`,
+  },
+  {
+    name: '④ 年輪の O',
+    why: 'Orchard の O を、木の年輪で描く。毎日の議論が輪のように重なって育つ。右上に小さな葉。文字のロゴとも合わせやすい。',
+    svg: `<rect width="100" height="100" fill="#111214"/>
+      <circle cx="50" cy="52" r="27" fill="none" stroke="${A}" stroke-width="7"/>
+      <circle cx="50" cy="52" r="15" fill="none" stroke="rgba(255,106,26,.55)" stroke-width="4"/>
+      <circle cx="50" cy="52" r="5" fill="rgba(255,106,26,.35)"/>
+      <path d="M66 26 C 68 16, 78 12, 86 13 C 85 22, 77 28, 66 26 Z" fill="${A}"/>`,
+  },
+];
+const svg = (s, size) => `<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
+document.getElementById('grid').innerHTML = icons.map(i => `
+  <div class="card">
+    <div class="big">${svg(i.svg, 220)}</div>
+    <div class="name">${i.name}</div>
+    <p class="why">${i.why}</p>
+    <div class="small">${svg(i.svg, 60)}${svg(i.svg, 40)}<span>ホーム画面</span></div>
+  </div>`).join('');
+</script>
+</body>
+</html>

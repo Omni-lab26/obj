@@ -52,8 +52,8 @@ export function Poster({
   const h = hash(a.id);
   const tpl = BY_TAG[a.tag.replace('#', '')] ?? TPLS[h % TPLS.length];
   const word = posterWord(a);
-  const code = `HT-1104-${(h % 4) + 1}`;
-  const en = (a.lab ?? (a.type === 'deep' ? 'Deep dive' : 'Halftick')).toUpperCase();
+  const code = `OR-1104-${(h % 4) + 1}`;
+  const en = (a.lab ?? (a.type === 'deep' ? 'Deep dive' : 'Orchard')).toUpperCase();
   const big = compact ? 0.55 : 1;
   // 大きな文字は、サムネの幅に1行で収まる大きさにする
   const fs = Math.max(14, Math.min(w * 0.3, (w * 0.84) / Math.max(1, word.length)));

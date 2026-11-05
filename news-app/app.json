@@ -1,22 +1,22 @@
 {
   "expo": {
-    "name": "Halftick",
-    "slug": "halftick",
-    "scheme": "halftick",
+    "name": "Orchard",
+    "slug": "orchard",
+    "scheme": "orchard",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#111214",
     "ios": {
-      "bundleIdentifier": "app.halftick",
+      "bundleIdentifier": "app.orchard",
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "app.halftick",
+      "package": "app.orchard",
       "adaptiveIcon": {
         "backgroundColor": "#111214",
         "foregroundImage": "./assets/android-icon-foreground.png",

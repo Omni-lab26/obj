@@ -28,7 +28,7 @@ function By({ a }: { a: Article }) {
       <View style={styles.av}>
         <Mark height={11} />
       </View>
-      <Text style={styles.nm}>Halftick</Text>
+      <Text style={styles.nm}>Orchard</Text>
       <Text style={styles.hd}>· {a.tm}</Text>
       <View style={[styles.chip, { backgroundColor: KIND_STYLE[k].bg }]}>
         <Text style={[styles.chipT, { color: KIND_STYLE[k].fg }]}>{t(`kind.${k}`)}</Text>

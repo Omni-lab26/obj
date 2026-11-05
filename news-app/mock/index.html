@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Halftick Wireframe</title>
+<title>Orchard Wireframe</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Shippori+Mincho+B1:wght@700;800&family=Instrument+Serif&display=swap" rel="stylesheet">
@@ -888,7 +888,7 @@ button.act:active { background: rgba(255,255,255,.06); }
 
 <div class="stage">
   <aside class="side">
-    <h1>Halftick ワイヤーフレーム</h1>
+    <h1>Orchard ワイヤーフレーム</h1>
     <p>送ってもらった参考画像を切り抜いて、仮の絵として入れています（本番では差し替え）。</p>
     <p>試せること：ホームの記事をタップ → 全画面の記事 → 下の「議論」バーをタップすると半分まで開き、上に引くと全体に。チェックで保存、上の共有で表紙カード。</p>
     <label><input type="checkbox" id="notes-toggle"> 各部分の説明を表示</label>
@@ -900,7 +900,7 @@ button.act:active { background: rgba(255,255,255,.06); }
       <div class="scroller">
         <div class="top rel">
           <button class="avatar" aria-label="自分のプロフィール" data-person="あなた"></button>
-          <div class="wordmark"><span class="mark"><i></i><i></i></span>Halftick</div>
+          <div class="wordmark"><span class="mark"><i></i><i></i></span>Orchard</div>
           <div style="display:flex;gap:4px">
             <button class="iconbtn" aria-label="管理画面（オーナーだけ）" data-admin>＋</button>
             <button class="iconbtn" aria-label="通知" data-notif><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="dot"></span></button>
@@ -1365,7 +1365,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:利上げが進むと、まず預金の金利が少しずつ上がります。ネット銀行などでは、すでに年0.3〜0.5%ほどの金利をつけるところも出てきました。100万円を1年預けて、数千円の利息がつくイメージです。',
     'p:一方で、住宅ローンの変動金利は上がりやすくなります。借りている額が大きい家ほど、毎月の返済への影響は大きくなります。また、円高に向かえば輸入品の値段が落ち着く可能性もあります。良いことと気になることが同時に起きるのが、金利の難しいところです。',
     'h:次に見ておきたいこと',
-    'p:12月の会合まで、あと1か月半。それまでに出る東京の物価、企業の短観、そして年末のボーナスの動きで、日銀の判断はかなり見えてきそうです。Halftick でも、出るたびに配信でお伝えします。',
+    'p:12月の会合まで、あと1か月半。それまでに出る東京の物価、企業の短観、そして年末のボーナスの動きで、日銀の判断はかなり見えてきそうです。Orchard でも、出るたびに配信でお伝えします。',
     'p:「広がり」という一語を、あなたはどう読みましたか？　金融の現場にいる人も、暮らしの目線で見ている人も、ぜひ下の議論で聞かせてください。',
     '#poll', '#refs']);
   weave('power', [
@@ -1554,7 +1554,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'h:あなたなら、どこに使う？',
     'p:子育てや教育、医療や介護、研究や新しい産業。どれも大事ですが、お金には限りがあります。あなたなら、どこを増やしてほしいですか？　理由といっしょに、ぜひ聞かせてください。',
     '#poll', '#refs']);
-  // ---- さらに読みごたえを：見方のちがい・よくある疑問・用語メモ・Halftick のひとこと（投票の前に入れる） ----
+  // ---- さらに読みごたえを：見方のちがい・よくある疑問・用語メモ・Orchard のひとこと（投票の前に入れる） ----
   function extend(id, items) {
     const L = BLOCKS[id], at = L.findIndex(b => b.t === 'poll');
     L.splice(at < 0 ? L.length : at, 0, ...items.map(x => x.startsWith('h:') ? { t: 'h', x: x.slice(2) } : { t: 'p', x: x.slice(2) }));
@@ -1569,7 +1569,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:Q. なぜ日銀は、ほかの国より金利を低くしてきたの？　A. 長いあいだ物価がほとんど上がらず、むしろ下がる心配があったからです。金利を低くして、お金を借りやすくすることで、景気と物価を支えようとしてきました。',
     'h:用語メモ',
     'p:政策金利：日銀が決める、銀行どうしがお金を貸し借りするときの金利の目安。ほかのいろいろな金利のもとになります。／声明：会合のあとに出る、日銀の判断と見方をまとめた文章。／春闘：毎年春に、会社と働く人の代表が賃上げを話し合う場。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:「据え置き」という見出しだけ見ると、何も起きなかった日に見えます。でも今回は、言葉がひとつ動いた日でした。数字だけでなく言葉も追いかけると、ニュースはぐっとおもしろくなります。次の配信でも、変化があればすぐお伝えします。',
   ]);
   extend('power', [
@@ -1581,7 +1581,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:「家計を守るために補助を続けるべき」という声がある一方で、「補助で値段を下げると、電気を節約しようという気持ちが弱まる」「その分の税金は将来の負担になる」という意見もあります。エネルギーの値段をどう分かち合うかは、暮らしと国の財政、両方に関わる問題です。',
     'h:用語メモ',
     'p:燃料費調整額：燃料の値段の変化を、数か月おくれで電気代に反映するしくみ。／再エネ発電賦課金：太陽光や風力の電気を広げるために、電気を使う人みんなで少しずつ負担するお金。／kWh（キロワットアワー）：電気を使った量の単位。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:電気代は、世界の燃料、為替、国の政策が、ひとつの明細にまとまって届くものです。数字の内訳を知ると、どこが変えられて、どこが変えられないのかが見えてきます。今月の明細、ぜひ一度ながめてみてください。',
   ]);
   extend('wage', [
@@ -1593,7 +1593,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:Q. 「年収の壁」と関係ある？　A. あります。時給が上がると、同じ時間働いても年収が増え、扶養や社会保険の基準（いわゆる壁）を超えやすくなります。そのため、働く時間をおさえる人もいて、人手不足の一因になっていると指摘されています。',
     'h:用語メモ',
     'p:最低賃金：法律で決められた、これより低くしてはいけない時給。地域ごとに決まります。／目安：国の審議会が示す、引き上げ額の目安。各地域はこれをもとに金額を決めます。／年収の壁：扶養や社会保険の基準になる年収のライン。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:同じ「時給が上がった」というニュースでも、働く人、雇う人、お客さんで、見え方はまったくちがいます。いろいろな立場の声が集まるのが、この議論のいいところです。あなたの現場の話を、ぜひ聞かせてください。',
   ]);
   extend('home', [
@@ -1605,7 +1605,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:「金利はゆっくりしか上がらないので、変動のままでいい」という専門家もいれば、「これまでの低金利が特別だった。固定で安心を買うのも立派な選択」という専門家もいます。正解はひとつではなく、家計の事情によって変わります。',
     'h:用語メモ',
     'p:短期プライムレート：銀行が、信用の高い会社に1年未満でお金を貸すときの金利。変動金利のもとになります。／5年ルール・125%ルール：返済額の急な増加をおさえるしくみ。／元利均等返済：毎月の返済額（元本＋利息）が同じになる返し方。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:住宅ローンは、多くの人にとって人生でいちばん大きな借金です。金利のニュースを「自分の返済」に置きかえて考えられるよう、これからも試算をつけてお届けします。',
   ]);
   extend('d1', [
@@ -1618,7 +1618,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:また、「名目」と「実質」のちがいも大切です。名目は額面の金額、実質は物価の上がり方を差し引いた金額です。給料が3%上がっても、物価が3%上がっていれば、実質ではほとんど変わっていないことになります。',
     'h:用語メモ',
     'p:実質賃金：物価の変化を差し引いた賃金。暮らしの豊かさに近い数字です。／非正規雇用：派遣・契約・パートなど、正社員ではない働き方。／生産性：一人あたり、1時間あたりに生み出す価値。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:30年の話は、どうしても大きな言葉になりがちです。でも、その中にはひとりひとりの職場の判断と、働く人の選択が積み重なっています。あなたの職場の30年の記憶も、ぜひ聞かせてください。この議論そのものが、次の30年を考える材料になると思っています。',
   ]);
   extend('nikkei', [
@@ -1630,7 +1630,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:Q. 「利益確定の売り」って何？　A. 株が上がったところで売って、もうけを確かなものにすることです。悪いニュースがなくても起きるので、「上がった後の下げ」はよく見られる動きです。',
     'h:用語メモ',
     'p:日経平均：日本経済新聞社が計算する、225社の株価の指数。／TOPIX：東証プライム市場の会社を対象にした指数。／利益確定：上がった株を売って、もうけを確定させること。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:指数の数字は、ニュースの見出しになりやすい一方で、中身が見えにくいものです。今日のように「何が下げたのか」まで分けて見ると、慌てずにすむことも多いと思います。',
   ]);
   extend('yen', [
@@ -1642,7 +1642,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:Q. 旅行の両替は、いつするのがお得？　A. 為替の動きを前もって読むのは、プロでも難しいものです。何回かに分けて両替すると、高いときと安いときがならされて、大きく損をしにくくなります。',
     'h:用語メモ',
     'p:仲値：銀行がその日の両替の基準のレートを決める時間（10時前）。／為替介入：国が円やドルを売り買いして、急な値動きをおさえること。／金利差：国どうしの金利のちがい。お金は金利の高い方に流れやすくなります。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:為替は、ニュースの中でもいちばん「暮らしに遅れて届く」数字かもしれません。今日の152円が、半年後のスーパーの値札にどう表れるのか。これからも、そのつながりを追いかけていきます。',
   ]);
   extend('fomc', [
@@ -1653,7 +1653,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:Q. ドットチャートって何？　A. FRBの参加者一人ひとりが、将来の金利の見通しを点で示した図です。今回の記事の比較グラフは、その真ん中の値（中央値）をもとにしています。',
     'h:用語メモ',
     'p:FRB：米国の中央銀行（連邦準備制度理事会）。／FOMC：FRBが政策金利を決める会合。年に8回開かれます。／議事要旨：会合での議論をまとめたメモ。約3週間後に公表されます。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:「急がなくていい」という言葉は、決して「下げない」という意味ではありません。どのデータを見て判断するのか、その手がかりを議事要旨から拾っていくのが、次の会合を読むコツです。',
   ]);
   extend('nfp', [
@@ -1664,7 +1664,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:Q. 予想とくらべるのは、なぜ？　A. 市場は、予想をもとにあらかじめ値段をつけています。結果が予想どおりなら大きくは動きませんが、予想から外れると、その差の分だけ値段が動きます。',
     'h:用語メモ',
     'p:非農業部門雇用者数：農業以外の会社で働く人の数。雇用統計でいちばん注目される数字。／失業率：働く意思があるのに仕事がない人の割合。／平均時給：働く人の1時間あたりの賃金の平均。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:雇用統計の夜は、為替や株の画面がいちばん動く時間のひとつです。数字が出た直後こそ、慌てずに「どの仕事で増えたのか」を見る。それだけで、ニュースの見え方がずいぶん変わります。',
   ]);
   extend('rice', [
@@ -1676,7 +1676,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:Q. 外国のお米を輸入すればいいのでは？　A. 日本は、輸入するお米に高い関税をかけて、国内の農家を守ってきました。輸入を増やすと値段は下がるかもしれませんが、農家への影響も大きくなるので、簡単には決められません。',
     'h:用語メモ',
     'p:相対取引価格：お米を集める団体と、卸売りの業者のあいだで決まる値段。店の値段のもとになります。／備蓄米：不作のときにそなえて、国が蓄えているお米。／作付け：その年にお米を植える計画の面積。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:毎日食べるものの値段は、どんな経済の数字よりも実感があります。だからこそ、買う人と作る人の両方の声を聞いてみたいと思っています。農家の方の参加も、ぜひお待ちしています。',
   ]);
   extend('budget', [
@@ -1688,7 +1688,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     'p:Q. 予算が増えると、税金も上がるの？　A. すぐに上がるわけではありません。ただ、増えたお金の一部は借金でまかなわれるので、将来、税金や社会保険料という形で負担が回ってくる可能性があります。',
     'h:用語メモ',
     'p:一般会計：国の基本的な収入と支出をまとめた予算。／国債費：国債（国の借金）の返済と利息の支払い。／社会保障費：年金・医療・介護・子育てなどに使うお金。',
-    'h:Halftick のひとこと',
+    'h:Orchard のひとこと',
     'p:118兆円と聞いても、大きすぎて実感がわきにくいかもしれません。一人あたりにすると、およそ95万円です。そう置きかえると、少し身近に感じられませんか。',
   ]);
   const POLL = {};
@@ -1772,7 +1772,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     else if (state.chip !== '最新') list = A.filter(a => ({ '物価': ['#物価', '#エネルギー', '#不動産'], '仕事': ['#賃金', '#雇用統計'], '株式': ['#株式', '#半導体'], '為替': ['#為替', '#人民元'], '債券': ['#債券', '#国債'] }[state.chip] || []).includes(a.tag));
     $('#feed').innerHTML = list.map((a, i) => tp(a) === 'note' ? noteCard(a) : tp(a) === 'deep' ? deepCard(a) : `
       <article class="feed-item rel ${a.brk ? 'brkcard' : ''}">
-        <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div class="nm">Halftick</div><div class="hd">${esc(a.tm)}</div><span class="tchip ${TYPE[tp(a)][1]}">${TYPE[tp(a)][0]}</span></div>
+        <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div class="nm">Orchard</div><div class="hd">${esc(a.tm)}</div><span class="tchip ${TYPE[tp(a)][1]}">${TYPE[tp(a)][0]}</span></div>
         <button class="thumb" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${imgOf(a, 'sq')}" alt="">${a.brk ? '<span class="brk">速報</span>' : ''}${tp(a) === 'slot' ? `<span class="ytb">▶ YouTube の解説${vlenOf(a) ? ' · ' + vlenOf(a) : ''}</span>` : ''}</button>
         <div class="lab"><span>${esc(a.lab)}</span><span class="tag">${esc(a.tag)}</span></div>
         <div class="title-line">${esc(a.title)}</div>
@@ -1783,7 +1783,7 @@ button.act:active { background: rgba(255,255,255,.06); }
 
   function noteCard(a, inSheet) {
     return `<article class="feed-item k-note rel">
-      <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div class="nm">Halftick</div><div class="hd">${esc(a.tm)}</div><span class="tchip t-note">ひとこと</span></div>
+      <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div class="nm">Orchard</div><div class="hd">${esc(a.tm)}</div><span class="tchip t-note">ひとこと</span></div>
       <button class="notebody" ${inSheet ? '' : `data-note="${a.id}"`}><span class="q">“</span>${esc(a.text)}</button>
       ${a.link ? `<a class="lcard" href="https://${a.link[1]}/" target="_blank" rel="noopener"><span class="lg">↗</span><span class="x">${esc(a.link[0])}<small>${esc(a.link[1])}</small></span></a>` : ''}
       <div class="tags"><span style="font-size:12px;color:#4aa3ff">${esc(a.tag)}</span></div>
@@ -1793,7 +1793,7 @@ button.act:active { background: rgba(255,255,255,.06); }
   }
   function deepCard(a) {
     return `<article class="feed-item k-deep rel">
-      <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div class="nm">Halftick</div><div class="hd">${esc(a.tm)}</div><span class="tchip t-deep">深掘り</span></div>
+      <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div class="nm">Orchard</div><div class="hd">${esc(a.tm)}</div><span class="tchip t-deep">深掘り</span></div>
       <button class="dcover" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${imgOf(a, 'th')}" alt=""><span class="dband glass">深掘り · 読む時間 ${a.read}分</span></button>
       <div class="dtitle">${esc(a.title)}</div><div class="dlead">${esc(a.lead)}</div>
       ${actsRow(a.id, a.r, a.c, `<button class="act go" data-article="${a.id}">じっくり読む</button>`)}
@@ -2057,7 +2057,7 @@ button.act:active { background: rgba(255,255,255,.06); }
       <div class="tx ${full ? '' : 'clamp'}">${esc(p.t)}</div>
       ${!full && (p.t.length > 160 || (p.t.match(/\n/g) || []).length >= 3) ? `<button class="more2" data-post="${p.id}">続きを読む</button>` : ''}
       ${p.link ? `<a class="lcard" href="https://${p.link.dom}/" target="_blank" rel="noopener"><span class="lg">↗</span><span class="x">${esc(p.link.title)}<small>${esc(p.link.dom)}</small></span></a>` : ''}
-      ${q ? `<button class="qcard" data-article="${q.id}"><img src="${imgOf(q, 'sq')}" alt=""><span><small>Halftick の配信 · ${esc(q.tm)}</small>${esc(q.title)}</span></button>` : ''}
+      ${q ? `<button class="qcard" data-article="${q.id}"><img src="${imgOf(q, 'sq')}" alt=""><span><small>Orchard の配信 · ${esc(q.tm)}</small>${esc(q.title)}</span></button>` : ''}
       <div class="tags"><span>${esc(p.tag)}</span></div>
       <div class="acts"><button class="act ${p.liked ? 'on' : ''}" data-plike="${p.id}">${IC.up}${p.up + (p.liked ? 1 : 0)}</button><button class="act" data-post="${p.id}">${IC.talk}${count(discFor(p.id))}</button><button class="act ${p.saved ? 'on' : ''}" data-psave="${p.id}" aria-label="保存">${p.saved ? IC.saved : IC.save}</button><button class="act go" data-pshare="${p.id}">グループに送る</button></div>
     </article>`;
@@ -2155,7 +2155,7 @@ button.act:active { background: rgba(255,255,255,.06); }
   }
   function createGroup() {
     const id = 'g' + Date.now().toString(36), code = Math.random().toString(36).slice(2, 8);
-    const r = { id, kind: 'group', at: 0, name: draft.name.trim(), icon: draft.icon, members: draft.who.size + 1, n: 0, sub: 'グループができました', link: `halftick.app/g/${code}`,
+    const r = { id, kind: 'group', at: 0, name: draft.name.trim(), icon: draft.icon, members: draft.who.size + 1, n: 0, sub: 'グループができました', link: `orchard.app/g/${code}`,
       msgs: [{ sys: `グループ「${draft.name.trim()}」ができました` }, ...(draft.who.size ? [{ sys: `${[...draft.who].join('、')} さんを誘いました` }] : []), { sys: '招待リンクを送ると、ほかの仲間も入れます' }] };
     ROOMS.unshift(r); renderRooms();
     draft.name = ''; draft.who = new Set(); draft.icon = ICONS[1];
@@ -2174,7 +2174,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     openSheet(`
       <div class="sh-head"><b>${esc(r.name)}</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
       <div class="past" style="overflow-y:auto;padding-bottom:30px">
-        ${r.kind === 'dm' ? '' : `<div class="invite">招待リンク<div class="link">${r.link || 'halftick.app/g/m4cr0x'}</div></div><button class="primary" data-copy="${r.link || 'halftick.app/g/m4cr0x'}">招待リンクをコピー</button>`}
+        ${r.kind === 'dm' ? '' : `<div class="invite">招待リンク<div class="link">${r.link || 'orchard.app/g/m4cr0x'}</div></div><button class="primary" data-copy="${r.link || 'orchard.app/g/m4cr0x'}">招待リンクをコピー</button>`}
         <span class="lbl">メンバー</span>
         <div class="pick"><span class="av" style="background:${FACE('あなた')}"></span><span class="x">あなた<small>${r.kind === 'dm' ? '' : '作った人'}</small></span></div>
         ${names.map(n => `<div class="pick"><button class="av" style="background:${FACE(n)}" data-person="${esc(n)}" aria-label="${esc(n)} のプロフィール"></button><span class="x">${esc(n)}<small>${esc(ROLE[n])}</small></span>${r.kind === 'dm' ? '' : `<button class="act" data-dm="${esc(n)}">話す</button>`}</div>`).join('')}
@@ -2325,11 +2325,11 @@ button.act:active { background: rgba(255,255,255,.06); }
   // ---------- サイトの公開ページ ----------
   function openWeb() {
     const a = state.cur || byId('boj'); const cs = [...discFor(a.id)].sort((x, y) => y.up - x.up).slice(0, 3);
-    $('#web').innerHTML = `<div class="wb-chrome"><span class="wb-url">🔒︎ halftick.app/p/${a.id}</span><button class="wb-x" data-close="web" aria-label="閉じる">✕</button></div>
+    $('#web').innerHTML = `<div class="wb-chrome"><span class="wb-url">🔒︎ orchard.app/p/${a.id}</span><button class="wb-x" data-close="web" aria-label="閉じる">✕</button></div>
       <div class="wb">
-        <div class="wb-head"><span class="wm2"><span class="mark"><i></i><i></i></span>Halftick</span><button class="open" data-close="web">アプリで開く</button></div>
+        <div class="wb-head"><span class="wm2"><span class="mark"><i></i><i></i></span>Orchard</span><button class="open" data-close="web">アプリで開く</button></div>
         <img class="hero2" src="${imgOf(a, 'sq')}" alt="">
-        <div class="wbody"><h1>${esc(a.title)}</h1><div class="meta2">${esc(a.when)} · Halftick の配信</div>
+        <div class="wbody"><h1>${esc(a.title)}</h1><div class="meta2">${esc(a.when)} · Orchard の配信</div>
           <p>${a.brk ? '今回の声明では、賃金について「上昇の広がりがみられる」と、前回よりちょっと踏み込みました。総裁の会見は15:30から。市場は12月の利上げを6割くらい見込んでいます。' : 'ここに本文が入ります。オーナーが数字や見出しを見ながら、かみくだいて書いた解説です。'}</p>
           <div class="fig2"><img src="${R}chart1.jpg" alt="グラフ"></div>
           <div class="refs2"><a href="https://www.boj.or.jp/" target="_blank" rel="noopener">当面の金融政策運営について<small>日本銀行 · boj.or.jp</small></a></div></div>
@@ -2337,7 +2337,7 @@ button.act:active { background: rgba(255,255,255,.06); }
           ${cs.map(c => `<div class="wcm"><b>${esc(c.who)}</b> <small>${esc(ROLE[c.who] || '')}</small><br>${esc(c.t)}<br><small>▲ ${c.up}${c.kids.length ? ` · 返信 ${count(c.kids)}` : ''}</small></div>`).join('')}
           <div class="fade"></div></div>
         <div class="cta"><b>この議論に参加しませんか？</b><p>経済に関心のある人たちが、配信のたびに語り合っています。読むだけでも大丈夫です。</p><button class="primary" data-close="web">アプリで開く</button><button class="ghost" data-close="web">ログインして書く</button></div>
-        <div class="wfoot">Halftick · YouTube の解説を、もっと深く。その下で議論<br>利用規約 · プライバシーポリシー · 投稿とコメントのルール · 問い合わせ<br>※ このページはログインしていない人向けのサイトの見え方です（ワイヤー）</div>
+        <div class="wfoot">Orchard · YouTube の解説を、もっと深く。その下で議論<br>利用規約 · プライバシーポリシー · 投稿とコメントのルール · 問い合わせ<br>※ このページはログインしていない人向けのサイトの見え方です（ワイヤー）</div>
       </div>`;
     $('#web').classList.add('open'); $('#web').setAttribute('aria-hidden', 'false');
   }
@@ -2345,7 +2345,7 @@ button.act:active { background: rgba(255,255,255,.06); }
   // ---------- 速報の知らせ ----------
   function dropAlert(a) {
     const el = $('#dropalert');
-    el.innerHTML = `<span class="pulse"></span><span class="x"><b>速報 · Halftick</b>${esc(a.title)}</span><img src="${imgOf(a, 'sq')}" alt="">`;
+    el.innerHTML = `<span class="pulse"></span><span class="x"><b>速報 · Orchard</b>${esc(a.title)}</span><img src="${imgOf(a, 'sq')}" alt="">`;
     el.dataset.article = a.id; el.dataset.comments = '';
     el.classList.add('on'); clearTimeout(dropAlert.t); dropAlert.t = setTimeout(() => el.classList.remove('on'), 5200);
   }
@@ -2366,7 +2366,7 @@ button.act:active { background: rgba(255,255,255,.06); }
         <button class="ob-skip" data-obskip>（ワイヤー用）スキップ</button>
         <button class="ob-lang glass" data-toast="English の画面に切り替えます（ワイヤーでは日本語のまま）">English</button>
         <div class="wel">
-          <div class="wm"><span class="mark"><i></i><i></i></span>Halftick</div>
+          <div class="wm"><span class="mark"><i></i><i></i></span>Orchard</div>
           <h1>経済のニュースを、<br>みんなと話そう。</h1>
           <p>YouTube で解説した経済のニュースを、ここでもっと深く。<br>その下で、経済に関心のある人たちが語り合っています。</p>
           <span class="live glass"><i></i>いま 214人が「日銀は金利0.75%で据え置き」で話しています</span>
@@ -2384,7 +2384,7 @@ button.act:active { background: rgba(255,255,255,.06); }
           <button class="authbtn apple" data-obauth="apple"> Appleで続ける</button>
           <button class="authbtn google" data-obauth="google">G　Googleで続ける</button>
           <button class="authbtn mail" data-obgo="mail">✉　メールで続ける</button>
-          <p class="muted" style="font-size:11.5px;line-height:1.7;margin-top:18px">Halftick があなたの許可なく投稿したり、連絡先を読んだりすることはありません。</p>
+          <p class="muted" style="font-size:11.5px;line-height:1.7;margin-top:18px">Orchard があなたの許可なく投稿したり、連絡先を読んだりすることはありません。</p>
         </div></div>`;
       return;
     }
@@ -2428,7 +2428,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     if (st === 'perm') {
       OB.step = 'genres'; renderOnboard(); OB.step = 'perm';
       el.insertAdjacentHTML('beforeend', `<div class="osdim"><div class="osalert" role="alertdialog" aria-label="通知の許可">
-        <b>“Halftick”は通知を送信します。よろしいですか？</b>
+        <b>“Orchard”は通知を送信します。よろしいですか？</b>
         <p>通知方法には、アラート、サウンド、アイコンバッジが含まれる可能性があります。これらは“設定”で構成できます。</p>
         <div class="osbtns"><button data-obnotifok="0">許可しない</button><button data-obnotifok="1"><b>許可</b></button></div></div>
         <span class="note" style="left:50%;top:18%;transform:translateX(-50%)">スマホの許可のポップだけ（中身は選ばせない）</span></div>`);
@@ -2544,7 +2544,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     x.putImageData(img, 0, 0);
     return c.toDataURL('image/jpeg', 0.86);
   }
-  const posterOf = tpl => drawPoster(tpl, DRAFT.big || 'Halftick', DRAFT.en || 'TODAY', `HT-1104-${DRAFT.breaking ? 'B' : SLOTS.findIndex(s => s[0] === DRAFT.slot) + 1}`);
+  const posterOf = tpl => drawPoster(tpl, DRAFT.big || 'Orchard', DRAFT.en || 'TODAY', `OR-1104-${DRAFT.breaking ? 'B' : SLOTS.findIndex(s => s[0] === DRAFT.slot) + 1}`);
   function renderAdmin() {
     const T = [['today', '今日'], ['make', '配信を作る'], ['apply', '申請', APPLIES.length], ['report', '通報', REPORTS.length]];
     $('#atabs').innerHTML = T.map(([k, l, n]) => `<button class="chip ${state.atab === k ? 'on' : ''}" data-atab="${k}">${l}${n ? `<b>${n}</b>` : ''}</button>`).join('');
@@ -2723,7 +2723,7 @@ button.act:active { background: rgba(255,255,255,.06); }
         ${row('⇥', '#5c5f66', 'ログアウト', '', '', 'data-sheet="logout"')}
         <button class="srow danger" data-sheet="delete"><span class="ico" style="background:#3a1a1a;color:#ff6b6b">✕</span><span class="x">アカウントを削除</span><span class="chev">›</span></button>
       </div>
-      <div class="sfoot">Halftick 0.1（ワイヤーフレーム）<br>11月4日（火）16:10 · いまの表示：${SET.time === 'jst' ? '日本時間' : 'いる地域の時間'}</div>`;
+      <div class="sfoot">Orchard 0.1（ワイヤーフレーム）<br>11月4日（火）16:10 · いまの表示：${SET.time === 'jst' ? '日本時間' : 'いる地域の時間'}</div>`;
   }
   function openSettings() {
     renderSettings();
@@ -3036,7 +3036,7 @@ button.act:active { background: rgba(255,255,255,.06); }
       <div class="share-wrap">
         <div class="cover-pick"><button class="chip ${state.cover === 1 ? 'on' : ''}" data-cover="1">表紙 1（カード）</button><button class="chip ${state.cover === 2 ? 'on' : ''}" data-cover="2">表紙 2（ポスター）</button></div>
         <div class="cover rel"><img src="${R}cover${state.cover}.jpg" alt="記事の表紙の見本"><span class="note" style="left:8px;top:8px">記事の表紙（共有・SNS用の画像）</span></div>
-        <div class="send-list">${ROOMS.map(r => `<button data-send="${r.id}">${esc(r.name)}${r.kind === 'dm' ? '（1対1）' : ''}<span>送る</span></button>`).join('')}<button data-web>サイトでの見え方を見る<span>ログインしていない人の画面</span></button><button data-toast="リンクをコピーしました">リンクをコピー<span>halftick.app/p/1104-2</span></button></div>
+        <div class="send-list">${ROOMS.map(r => `<button data-send="${r.id}">${esc(r.name)}${r.kind === 'dm' ? '（1対1）' : ''}<span>送る</span></button>`).join('')}<button data-web>サイトでの見え方を見る<span>ログインしていない人の画面</span></button><button data-toast="リンクをコピーしました">リンクをコピー<span>orchard.app/p/1104-2</span></button></div>
       </div>`, 'full');
   }
   function openSimple(kind) {
@@ -3159,7 +3159,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     if (d.tpl) { DRAFT.tplName = d.tpl; DRAFT.poster = null; renderAdmin(); return; }
     if (d.dgenre) { DRAFT.genres.has(d.dgenre) ? DRAFT.genres.delete(d.dgenre) : DRAFT.genres.add(d.dgenre); if (!DRAFT.genres.size) DRAFT.genres.add(d.dgenre); renderAdmin(); return; }
     if (d.selfok !== undefined) { DRAFT.selfOk = !DRAFT.selfOk; renderAdmin(); return; }
-    if (d.dpreview !== undefined) { openSheet(head('ホームでの見え方') + `<div class="past"><div class="feed-item" style="padding:0;border:0"><div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · いつもの配信</div></div></div><div class="lab"><span>${DRAFT.breaking ? 'Breaking' : 'US pre-open'} <span class="tag">#${[...DRAFT.genres][0]}</span></span><span class="tm">${DRAFT.breaking ? '今' : DRAFT.slot}</span></div><div class="thumb"><img src="${DRAFT.poster}" alt="">${DRAFT.breaking ? '<span class="brk">速報</span>' : ''}</div><div class="title-line">${esc(DRAFT.ja || '（見出しを入れてください）')}</div></div></div>`, 'full'); return; }
+    if (d.dpreview !== undefined) { openSheet(head('ホームでの見え方') + `<div class="past"><div class="feed-item" style="padding:0;border:0"><div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Orchard</div><div class="hd">@orchard · いつもの配信</div></div></div><div class="lab"><span>${DRAFT.breaking ? 'Breaking' : 'US pre-open'} <span class="tag">#${[...DRAFT.genres][0]}</span></span><span class="tm">${DRAFT.breaking ? '今' : DRAFT.slot}</span></div><div class="thumb"><img src="${DRAFT.poster}" alt="">${DRAFT.breaking ? '<span class="brk">速報</span>' : ''}</div><div class="title-line">${esc(DRAFT.ja || '（見出しを入れてください）')}</div></div></div>`, 'full'); return; }
     if (d.publish !== undefined) { publishDraft(); return; }
     if (d.approveapp !== undefined) { const a = APPLIES.splice(+d.approveapp, 1)[0]; renderAdmin(); toast(`${a.who} さんをOKしました。お知らせが届きます`); return; }
     if (d.rejectapp !== undefined) { const a = APPLIES.splice(+d.rejectapp, 1)[0]; renderAdmin(); toast(`${a.who} さんに、今回は見送る旨を伝えました`); return; }
