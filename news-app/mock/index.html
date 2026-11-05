@@ -832,6 +832,23 @@ button.act:active { background: rgba(255,255,255,.06); }
 .vrow .vst.done { background: transparent; border: 1px solid var(--line); color: var(--text); }
 .vrow .vst:empty { display: none; } .vrow .vst.vpick { background: #fff; color: #111; }
 .vrow.sel { background: rgba(255,106,26,.1); border-radius: 12px; padding-inline: 8px; margin-inline: -8px; width: calc(100% + 16px); border-top-color: transparent; }
+
+/* 記事を読んでいる間も下のタブを出す。
+   上にスクロール：タブを全部出し、みんなの声はその上にコンパクトに
+   下にスクロール：小さくなったタブと検索の丸の間に、みんなの声を並べる */
+#device.art-open .tabbar { z-index: 35; }
+.tabbar { pointer-events: none; } .tabbar > * { pointer-events: auto; }
+.cbar { transition: left .38s cubic-bezier(.2,.9,.2,1), right .38s cubic-bezier(.2,.9,.2,1), bottom .38s cubic-bezier(.2,.9,.2,1), height .3s, border-radius .3s; }
+.cbar .faces { transition: opacity .2s, width .3s; overflow: hidden; }
+#device.art-open .cbar { left: 14px; right: 14px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); height: 46px; border-radius: 23px; padding: 0 5px 0 10px; }
+#device.art-open .cbar .faces i { width: 22px; height: 22px; }
+#device.art-open .cbar .round { width: 34px !important; height: 34px !important; }
+#device.art-open .cbar .txt { font-size: 12px; } #device.art-open .cbar .txt b { display: inline; margin-right: 6px; } #device.art-open .cbar .txt span { display: inline; }
+#device.art-open .cbar .txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#device.art-open.tb-mini .cbar { left: 80px; right: 70px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); height: 48px; border-radius: 24px; }
+#device.art-open.tb-mini .cbar .faces { width: 0; opacity: 0; margin-right: -10px; }
+#device.art-open.tb-mini .cbar .txt span { display: none; }
+#art-scroll { padding-bottom: 170px; }
 </style>
 </head>
 <body>
@@ -2851,6 +2868,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     $('#art-scroll').scrollTop = 0;
     setTimeout(armBlocks, 380);
     el.classList.add('open'); el.setAttribute('aria-hidden', 'false');
+    $('#device').classList.add('art-open'); $('#tabbar').classList.remove('mini');
     if (withComments) setTimeout(openComments, 380);
   }
 
@@ -2931,6 +2949,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     const t = e.target.closest('button, a'); if (!t) return;
     const d = t.dataset;
     if (d.tab && $('#tabbar').classList.contains('mini')) { $('#tabbar').classList.remove('mini'); if (t.classList.contains('on')) return; }
+    if (d.tab && $('#device').classList.contains('art-open')) { setSheet('closed'); $('#device').classList.remove('art-open'); $('#article').classList.remove('open'); $('#article').setAttribute('aria-hidden', 'true'); }
     if (d.tab) { state.tab = d.tab; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === t)); ['home', 'lib', 'people', 'chat'].forEach(k => $('#tab-' + k).hidden = k !== d.tab); if (d.tab === 'lib') renderLib(); return; }
     if (d.chip) { state.chip = d.chip; renderChips(); renderFeed(); return; }
     if (d.article && byId(d.article)?.type === 'note') { e.preventDefault(); ['search', 'profile', 'notif'].forEach(k => $('#' + k).classList.remove('open')); openNote(d.article); return; }
@@ -3083,16 +3102,17 @@ button.act:active { background: rgba(255,255,255,.06); }
     if (d.room) { if ($('#search').classList.contains('open')) closeSearch(); setSheet('closed'); $('#profile').classList.remove('open'); if ($('#notif').classList.contains('open')) closeNotif(); openRoom(d.room); return; }
     if (t.id === 'room-send') { const i = $('#room-input'); if (!i.value.trim()) return; state.room.msgs.push({ me: 1, t: i.value.trim() }); i.value = ''; openRoom(state.room.id); return; }
     if (d.open) { openSimple(d.open); return; }
-    if (d.close === 'article') { setSheet('closed'); $('#article').classList.remove('open'); $('#article').setAttribute('aria-hidden', 'true'); return; }
+    if (d.close === 'article') { setSheet('closed'); $('#device').classList.remove('art-open'); $('#article').classList.remove('open'); $('#article').setAttribute('aria-hidden', 'true'); return; }
     if (d.close === 'room') { $('#room').classList.remove('open'); $('#room').setAttribute('aria-hidden', 'true'); return; }
     if (d.close === 'sheet') { setSheet('closed'); return; }
     if (d.toast) { toast(d.toast); return; }
   });
   scrim.addEventListener('click', () => setSheet('closed'));
+  new MutationObserver(() => $('#device').classList.toggle('tb-mini', $('#tabbar').classList.contains('mini'))).observe($('#tabbar'), { attributes: true, attributeFilter: ['class'] });
   // 下にスクロールするとタブを小さく、上に戻すと元の大きさに
   const lastY = new WeakMap();
   document.addEventListener('scroll', e => {
-    const sc = e.target; if (!(sc instanceof Element) || !sc.closest('#tab-home, #tab-lib, #tab-people, #tab-chat')) return;
+    const sc = e.target; if (!(sc instanceof Element) || !(sc.closest('#tab-home, #tab-lib, #tab-people, #tab-chat') || sc.id === 'art-scroll')) return;
     const y = sc.scrollTop, prev = lastY.get(sc) ?? 0; lastY.set(sc, y);
     if (y < 40) $('#tabbar').classList.remove('mini');
     else if (y - prev > 6) $('#tabbar').classList.add('mini');
