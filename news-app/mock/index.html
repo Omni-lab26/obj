@@ -849,6 +849,10 @@ button.act:active { background: rgba(255,255,255,.06); }
 #device.art-open.tb-mini .cbar .faces { width: 0; opacity: 0; margin-right: -10px; }
 #device.art-open.tb-mini .cbar .txt span { display: none; }
 #art-scroll { padding-bottom: 170px; }
+
+/* みんなの声のシート：バーからふくらむ間は中身を少し遅れて出す。開いている間はバーを隠す */
+.sheet > * { transition: opacity .25s .12s; } .sheet.morph-in > * { opacity: 0; transition: opacity .12s; }
+#device.cm-open .cbar { opacity: 0; pointer-events: none; transition: opacity .15s; }
 </style>
 </head>
 <body>
@@ -2875,10 +2879,39 @@ button.act:active { background: rgba(255,255,255,.06); }
   // ---------- シート ----------
   const sheet = $('#sheet'), scrim = $('#scrim');
   let sheetPos = 'closed';
+  // みんなの声は、下のバーからふくらんで出てきて、閉じるとバーへ縮んで戻る
+  function barMorph() { return $('#device').classList.contains('art-open') && $('#sheet-body #clist') && $('#article').classList.contains('open'); }
+  function insetToBar(sheetTop) {
+    const dr = $('#device').getBoundingClientRect(), r = $('#cbar').getBoundingClientRect();
+    const t = r.top - sheetTop, b = dr.bottom - r.bottom, l = r.left - dr.left, rr = dr.right - r.right;
+    return `inset(${t}px ${rr}px ${b}px ${l}px round ${r.height / 2}px)`;
+  }
   function setSheet(pos) {
+    const prev = sheetPos;
     sheetPos = pos;
     const h = sheet.offsetHeight;
     const y = pos === 'full' ? 0 : pos === 'half' ? h - $('#device').offsetHeight * 0.5 : h;
+    const dTop = $('#device').getBoundingClientRect().top + $('#device').offsetHeight - h; // シートを動かしていないときの上端
+    if (barMorph() && prev === 'closed' && pos !== 'closed') {
+      sheet.style.transition = 'none'; sheet.style.transform = `translateY(${y}px)`;
+      sheet.style.clipPath = insetToBar(dTop + y); sheet.classList.add('morph-in');
+      $('#device').classList.add('cm-open');
+      sheet.getBoundingClientRect();
+      sheet.style.transition = 'clip-path .48s cubic-bezier(.2,.9,.2,1)';
+      sheet.style.clipPath = 'inset(0px 0px 0px 0px round 28px 28px 0px 0px)'; sheet.classList.remove('morph-in');
+      setTimeout(() => { if (sheetPos !== 'closed') { sheet.style.transition = ''; sheet.style.clipPath = ''; } }, 500);
+      scrim.classList.add('on'); sheet.setAttribute('aria-hidden', 'false');
+      return;
+    }
+    if (barMorph() && prev !== 'closed' && pos === 'closed') {
+      const curY = new DOMMatrix(getComputedStyle(sheet).transform).m42 || 0;
+      sheet.style.transition = 'clip-path .4s cubic-bezier(.4,0,.2,1)';
+      sheet.style.clipPath = insetToBar(dTop + curY); sheet.classList.add('morph-in');
+      setTimeout(() => { if (sheetPos === 'closed') { sheet.style.transition = 'none'; sheet.style.transform = `translateY(${h}px)`; sheet.getBoundingClientRect(); sheet.style.transition = ''; sheet.style.clipPath = ''; sheet.classList.remove('morph-in'); $('#device').classList.remove('cm-open'); } }, 400);
+      scrim.classList.remove('on'); sheet.setAttribute('aria-hidden', 'true');
+      return;
+    }
+    if (pos === 'closed') $('#device').classList.remove('cm-open');
     sheet.style.transform = `translateY(${y}px)`;
     scrim.classList.toggle('on', pos !== 'closed');
     sheet.setAttribute('aria-hidden', pos === 'closed' ? 'true' : 'false');
