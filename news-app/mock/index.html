@@ -793,6 +793,32 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
 .cri { background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
 .ref { background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.1); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 [hidden] { display: none !important; }
+
+/* ---------- 投稿をシュッと：線を細く、余白をそろえ、題名を主役に ---------- */
+.feed-item { padding: 18px 16px 18px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.by { gap: 8px; }
+.by .av { width: 26px; height: 26px; }
+.by .av .mark { height: 11px; } .by .av .mark i { width: 2.5px; } .by .av .mark i:first-child { height: 11px; } .by .av .mark i:last-child { height: 6px; }
+.by .nm { font-size: 13px; font-weight: 700; letter-spacing: .01em; }
+.by .hd { font: 500 11.5px/1 var(--mono); color: var(--muted); }
+.by .hd::before { content: "·"; margin-right: 6px; color: rgba(255,255,255,.25); font-family: var(--font); }
+.tchip { padding: 4px 7px; font-size: 9.5px; letter-spacing: .08em; }
+.thumb { margin-top: 12px; border-radius: 16px; }
+.lab { justify-content: flex-start; gap: 8px; margin: 14px 0 4px; font: 600 10.5px/1 var(--mono); letter-spacing: .1em; color: rgba(255,255,255,.5); }
+.lab .tag { text-transform: none; letter-spacing: .02em; font-family: var(--font); font-weight: 600; }
+.title-line { font-size: 17px; font-weight: 700; line-height: 1.42; letter-spacing: -.005em; margin-top: 6px; text-wrap: pretty; }
+.acts { gap: 2px; margin-top: 12px; margin-left: -8px; }
+.act { gap: 5px; padding: 7px 8px; background: transparent; border-radius: 10px; font: 500 12.5px/1 var(--mono); color: rgba(255,255,255,.62); }
+.act svg { flex: none; }
+button.act:active { background: rgba(255,255,255,.06); }
+.act.on { color: var(--accent); }
+.act.go { margin-left: auto; padding: 8px 13px; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; font: 600 11.5px/1 var(--font); letter-spacing: .02em; text-transform: none; color: #f2f2f3; }
+.notebody { margin-top: 12px; font-size: 16px; }
+.dtitle { font-size: 17px; font-weight: 700; letter-spacing: -.005em; }
+.dcover { border-radius: 16px; }
+/* 最初の案内：読みやすさ優先で、ガラスではなく面の色で出す */
+.coach { background: rgba(30,31,35,.97); border: 1px solid rgba(255,255,255,.14); box-shadow: 0 18px 40px rgba(0,0,0,.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.coach::after { background: rgba(30,31,35,.97); border-color: rgba(255,255,255,.14); }
 </style>
 </head>
 <body>
@@ -1658,6 +1684,19 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     $('#chips').innerHTML = CHIPS.map(c => `<button class="chip ${c === state.chip ? 'on' : ''}" data-chip="${c}">${c}</button>`).join('') +
       '<span class="note" style="left:16px;top:44px">絞り込み（最新・速報・盛り上がり中・ジャンル）</span>';
   }
+  const IC = {
+    up: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 5l7 12H5z"/></svg>',
+    talk: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg>',
+    save: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M7 4h10v16l-5-3.5L7 20z"/></svg>',
+    saved: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M7 4h10v16l-5-3.5L7 20z"/></svg>',
+  };
+  const kfmt = n => n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n;
+  const actsRow = (id, r, c, go) => `<div class="acts">
+          <span class="act" aria-label="反応 ${r}">${IC.up}${kfmt(r)}</span>
+          <span class="act" aria-label="声 ${c}">${IC.talk}${kfmt(c)}</span>
+          <button class="act ${state.saved.has(id) ? 'on' : ''}" data-save="${id}" aria-label="保存">${state.saved.has(id) ? IC.saved : IC.save}</button>
+          ${go}
+        </div>`;
   state.brkClosed = false;
   function renderFeed() {
     const nb = A.find(a => a.brk && !/^\d+\/\d+$/.test(a.tm));
@@ -1669,36 +1708,31 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     else if (state.chip !== '最新') list = A.filter(a => ({ '物価': ['#物価', '#エネルギー', '#不動産'], '仕事': ['#賃金', '#雇用統計'], '株式': ['#株式', '#半導体'], '為替': ['#為替', '#人民元'], '債券': ['#債券', '#国債'] }[state.chip] || []).includes(a.tag));
     $('#feed').innerHTML = list.map((a, i) => tp(a) === 'note' ? noteCard(a) : tp(a) === 'deep' ? deepCard(a) : `
       <article class="feed-item rel ${a.brk ? 'brkcard' : ''}">
-        <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · ${a.brk ? '速報' : `${esc(a.tm)} の定時配信`}</div></div><span class="tchip ${TYPE[tp(a)][1]}">${TYPE[tp(a)][0]}</span></div>
-        <div class="lab"><span>${esc(a.lab)} <span class="tag">${esc(a.tag)}</span></span><span class="tm">${esc(a.tm)}</span></div>
+        <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div class="nm">Halftick</div><div class="hd">${esc(a.tm)}</div><span class="tchip ${TYPE[tp(a)][1]}">${TYPE[tp(a)][0]}</span></div>
         <button class="thumb" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${imgOf(a, 'sq')}" alt="">${a.brk ? '<span class="brk">速報</span>' : ''}</button>
+        <div class="lab"><span>${esc(a.lab)}</span><span class="tag">${esc(a.tag)}</span></div>
         <div class="title-line">${esc(a.title)}</div>
-        <div class="acts">
-          <span class="act">🔥 ${a.r >= 1000 ? (a.r / 1000).toFixed(1) + 'k' : a.r}</span>
-          <span class="act">💬 ${a.c}</span>
-          <button class="act" data-save="${a.id}" aria-label="保存">${state.saved.has(a.id) ? '✓ 保存した' : '＋ 保存'}</button>
-          <button class="act go" data-article="${a.id}" data-comments="1">議論をのぞく</button>
-        </div>
+        ${actsRow(a.id, a.r, a.c, `<button class="act go" data-article="${a.id}" data-comments="1">議論をのぞく</button>`)}
         ${i === 0 ? '<span class="note" style="left:16px;top:96px">定時配信＝正方形のサムネの記事</span><span class="note" style="right:16px;bottom:52px">議論をのぞく＝記事を開いてコメント欄も出す</span>' : ''}
       </article>`).join('') || '<p class="muted" style="padding:20px 16px">ここに入る配信はまだありません。次の配信をお楽しみに</p>';
   }
 
   function noteCard(a, inSheet) {
     return `<article class="feed-item k-note rel">
-      <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · ${esc(a.tm)}</div></div><span class="tchip t-note">ひとこと</span></div>
+      <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div class="nm">Halftick</div><div class="hd">${esc(a.tm)}</div><span class="tchip t-note">ひとこと</span></div>
       <button class="notebody" ${inSheet ? '' : `data-note="${a.id}"`}><span class="q">“</span>${esc(a.text)}</button>
       ${a.link ? `<a class="lcard" href="https://${a.link[1]}/" target="_blank" rel="noopener"><span class="lg">↗</span><span class="x">${esc(a.link[0])}<small>${esc(a.link[1])}</small></span></a>` : ''}
       <div class="tags"><span style="font-size:12px;color:#4aa3ff">${esc(a.tag)}</span></div>
-      ${inSheet ? '' : `<div class="acts"><span class="act">▲ ${a.r}</span><span class="act">💬 ${a.c}</span><button class="act" data-save="${a.id}" aria-label="保存">${state.saved.has(a.id) ? '✓ 保存した' : '＋ 保存'}</button><button class="act go" data-note="${a.id}">話す</button></div>`}
+      ${inSheet ? '' : actsRow(a.id, a.r, a.c, `<button class="act go" data-note="${a.id}">話す</button>`)}
       ${inSheet ? '' : '<span class="note" style="right:16px;top:52px">ひとこと＝絵なし・文字が主役（青緑）</span>'}
     </article>`;
   }
   function deepCard(a) {
     return `<article class="feed-item k-deep rel">
-      <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div><div class="nm">Halftick</div><div class="hd">@halftick · ${esc(a.tm)}</div></div><span class="tchip t-deep">深掘り</span></div>
+      <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div class="nm">Halftick</div><div class="hd">${esc(a.tm)}</div><span class="tchip t-deep">深掘り</span></div>
       <button class="dcover" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${imgOf(a, 'th')}" alt=""><span class="dband glass">深掘り · 読む時間 ${a.read}分</span></button>
       <div class="dtitle">${esc(a.title)}</div><div class="dlead">${esc(a.lead)}</div>
-      <div class="acts"><span class="act">▲ ${a.r}</span><span class="act">💬 ${a.c}</span><button class="act" data-save="${a.id}" aria-label="保存">${state.saved.has(a.id) ? '✓ 保存した' : '＋ 保存'}</button><button class="act go" data-article="${a.id}">じっくり読む</button></div>
+      ${actsRow(a.id, a.r, a.c, `<button class="act go" data-article="${a.id}">じっくり読む</button>`)}
       <span class="note" style="right:16px;top:52px">深掘り＝横長の表紙・長めの記事（紫）</span>
     </article>`;
   }
@@ -1912,7 +1946,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       <div class="gsort rel">${[['new', '新しい順'], ['hot', 'みんなの声が多い順']].map(([k, l]) => `<button class="chip ${state.gsort === k ? 'on' : ''}" data-gsort="${k}">${l}</button>`).join('')}</div>
       <div class="eps">${items.map(x => x.kind === 'vid'
         ? `<button class="ep" data-article="${x.a.id}"><span class="x"><small>${esc(x.a.tm)} · 動画</small><b>${esc(x.v[1])}</b><span class="sn">${esc(x.a.title)}</span><span class="eb"><span class="muted">•••</span><span class="pill2">▶ ${x.v[2]}</span></span></span><img src="${imgOf(x.a, 'th')}" alt=""></button>`
-        : `<button class="ep" data-article="${x.a.id}"><span class="x"><small>${esc(x.a.when.split(' · ')[0])}</small><b>${esc(x.a.title)}</b><span class="sn">${esc(x.a.when.split(' · ')[1] || '')}の配信。${x.a.c}件の声が集まっています</span><span class="eb"><span class="muted">💬 ${x.a.c}</span><span class="pill2">記事 ${x.a.min || 3}分</span></span></span><img src="${imgOf(x.a, 'sq')}" alt=""></button>`).join('') || '<p class="muted" style="padding:16px;font-size:13px">ここに入るものはまだありません</p>'}</div>
+        : `<button class="ep" data-article="${x.a.id}"><span class="x"><small>${esc(x.a.when.split(' · ')[0])}</small><b>${esc(x.a.title)}</b><span class="sn">${esc(x.a.when.split(' · ')[1] || '')}の配信。${x.a.c}件の声が集まっています</span><span class="eb"><span class="muted" style="display:inline-flex;gap:4px;align-items:center">${IC.talk}${x.a.c}</span><span class="pill2">記事 ${x.a.min || 3}分</span></span></span><img src="${imgOf(x.a, 'sq')}" alt=""></button>`).join('') || '<p class="muted" style="padding:16px;font-size:13px">ここに入るものはまだありません</p>'}</div>
       <div class="sec" style="padding-top:22px">ほかのジャンル</div>
       <div class="recent" style="padding:0 16px 20px">${GENRES.filter(x => x[0] !== g).map(([n]) => `<button class="chip" data-genre="${n}">${n}</button>`).join('')}</div>`;
   }
@@ -1960,7 +1994,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       ${p.link ? `<a class="lcard" href="https://${p.link.dom}/" target="_blank" rel="noopener"><span class="lg">↗</span><span class="x">${esc(p.link.title)}<small>${esc(p.link.dom)}</small></span></a>` : ''}
       ${q ? `<button class="qcard" data-article="${q.id}"><img src="${imgOf(q, 'sq')}" alt=""><span><small>Halftick の配信 · ${esc(q.tm)}</small>${esc(q.title)}</span></button>` : ''}
       <div class="tags"><span>${esc(p.tag)}</span></div>
-      <div class="acts"><button class="act ${p.liked ? 'on' : ''}" data-plike="${p.id}">▲ ${p.up + (p.liked ? 1 : 0)}</button><button class="act" data-post="${p.id}">💬 ${count(discFor(p.id))}</button><button class="act ${p.saved ? 'on' : ''}" data-psave="${p.id}" aria-label="保存">${p.saved ? '✓' : '＋'}</button><button class="act go" data-pshare="${p.id}">グループに送る</button></div>
+      <div class="acts"><button class="act ${p.liked ? 'on' : ''}" data-plike="${p.id}">${IC.up}${p.up + (p.liked ? 1 : 0)}</button><button class="act" data-post="${p.id}">${IC.talk}${count(discFor(p.id))}</button><button class="act ${p.saved ? 'on' : ''}" data-psave="${p.id}" aria-label="保存">${p.saved ? IC.saved : IC.save}</button><button class="act go" data-pshare="${p.id}">グループに送る</button></div>
     </article>`;
   }
   function renderPosts() {
@@ -2363,9 +2397,12 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     OB.genres.forEach(g => state.gfollow.add(g));
     $('#onboard').classList.add('gone'); $('#onboard').setAttribute('aria-hidden', 'true');
     if (coach) setTimeout(() => {
-      const c = document.createElement('div'); c.className = 'coach glass'; c.id = 'coach';
-      const r = document.querySelector('.feed-item .act.go').getBoundingClientRect(), dr = $('#device').getBoundingClientRect();
-      c.style.top = `${r.top - dr.top - 118}px`;
+      const c = document.createElement('div'); c.className = 'coach'; c.id = 'coach';
+      // 案内は下のタブと重ならないよう、最初の投稿の「議論をのぞく」を画面の真ん中あたりまで動かしてから出す
+      const go = document.querySelector('#tab-home .feed-item .act.go'), sc = $('#tab-home .scroller'), dr = $('#device').getBoundingClientRect();
+      sc.scrollTop += go.getBoundingClientRect().top - dr.top - dr.height * 0.55; $('#tabbar').classList.remove('mini');
+      const r = go.getBoundingClientRect();
+      c.style.top = `${r.top - dr.top - 12}px`; c.style.transform = 'translateY(-100%)';
       c.innerHTML = '<b>ここから議論に参加できます</b>配信の下で、みんなが話しています。まずは読むだけでも大丈夫です。<br><button data-coachok>わかった</button>';
       $('#device').appendChild(c);
     }, 420);
@@ -2882,7 +2919,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (d.chip) { state.chip = d.chip; renderChips(); renderFeed(); return; }
     if (d.article && byId(d.article)?.type === 'note') { e.preventDefault(); ['search', 'profile', 'notif'].forEach(k => $('#' + k).classList.remove('open')); openNote(d.article); return; }
     if (d.article) { e.preventDefault(); if ($('#search').classList.contains('open')) { remember($('#s-input').value); closeSearch(); } setSheet('closed'); $('#profile').classList.remove('open'); if ($('#notif').classList.contains('open')) closeNotif(); if ($('#room').classList.contains('open') && t.classList.contains('shared')) {} openArticle(d.article, !!d.comments); return; }
-    if (d.save) { const id = d.save; state.saved.has(id) ? state.saved.delete(id) : (state.saved.add(id), state.savedAt[id] = ++saveSeq); toast(state.saved.has(id) ? '保存しました。ライブラリからいつでも読めます' : '保存を外しました'); document.querySelectorAll(`[data-save="${id}"]`).forEach(b => { if (b.classList.contains('save')) b.classList.toggle('on', state.saved.has(id)); else b.textContent = state.saved.has(id) ? '✓ 保存した' : '＋ 保存'; }); renderLib(); return; }
+    if (d.save) { const id = d.save; state.saved.has(id) ? state.saved.delete(id) : (state.saved.add(id), state.savedAt[id] = ++saveSeq); toast(state.saved.has(id) ? '保存しました。ライブラリからいつでも読めます' : '保存を外しました'); document.querySelectorAll(`[data-save="${id}"]`).forEach(b => { if (b.classList.contains('save')) b.classList.toggle('on', state.saved.has(id)); else if (b.classList.contains('act')) { b.classList.toggle('on', state.saved.has(id)); b.innerHTML = state.saved.has(id) ? IC.saved : IC.save; } else b.textContent = state.saved.has(id) ? '✓ 保存した' : '＋ 保存'; }); renderLib(); return; }
     if (t.id === 'cbar') { openComments(); return; }
     if (d.sort) { state.sort = d.sort; openComments(); return; }
     if (d.like) { const c = findC(discFor(state.cur.id), +d.like); c.liked = !c.liked; t.classList.toggle('liked', c.liked); t.textContent = `▲ ${c.up + (c.liked ? 1 : 0)}`; return; }
