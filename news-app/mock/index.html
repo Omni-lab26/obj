@@ -63,10 +63,12 @@ img { display: block; max-width: 100%; }
     inset 3px 3px 4px -3px rgba(255,255,255,var(--g-hl3, .22)),
     inset -3px -3px 4px -3px rgba(255,255,255,calc(var(--g-hl3, .22) * .6)),
     0 10px 28px rgba(0,0,0,.32), 0 2px 6px rgba(0,0,0,.22); }
-.glass.g-light { --g-rgb: 255 255 255; --g-sat: 180%; --g-bri: 1.06; --g-hl1: .7; --g-hl2: .35; --g-hl3: .4; color: #2b2b30; }
-.glass.g-light > :not(img):not(.faces):not(canvas) { mix-blend-mode: multiply; }
-.glass.g-dark { color: rgba(255,255,255,.9); }
-.glass.g-dark > :not(img):not(.faces):not(canvas) { mix-blend-mode: plus-lighter; }
+.glass.g-light { --g-rgb: 255 255 255; --g-sat: 180%; --g-bri: 1.06; --g-hl1: .7; --g-hl2: .35; --g-hl3: .4; color: #000; }
+.glass.g-dark { color: #fff; }
+/* アイコンと文字は、白っぽい背景では黒、暗い背景では白（はっきり見えることを優先） */
+.glass.g-light .tab, .glass.g-light .tab.on, .glass.g-light .iconbtn { color: #000; }
+.glass.g-dark .tab, .glass.g-dark .tab.on, .glass.g-dark .iconbtn { color: #fff; }
+.glass.g-light .tab.on { background: rgba(0,0,0,.1); }
 .wbar { height: 10px; border-radius: 5px; background: var(--wire); }
 .muted { color: var(--muted); }
 .mono { font-family: var(--mono); }
@@ -3095,7 +3097,8 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     defs.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
     document.body.appendChild(defs);
     // 屈折は Chrome 系だけが対応。対応していないブラウザでは、ぼかしまでで止める（宣言ごと無効にならないように）
-    const canRefract = CSS.supports('backdrop-filter', 'url(#x) blur(2px)') && !/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    // iPhone の Safari・アプリ内表示は url() を受け付けても正しく描けない（ぼやけた四角が残る）ので、Chromium だけで使う
+    const canRefract = !!navigator.userAgentData?.brands?.some(b => /Chromium/.test(b.brand)) && CSS.supports('backdrop-filter', 'url(#x) blur(2px)');
     const FIXED = '.fab, .dropalert, .dband, .save.on, .pl';
     const EDGE = 44, MAPS = new Map();
 
@@ -3192,13 +3195,20 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
       const sd = L.length ? Math.sqrt(L.reduce((a, b) => a + (b - avg) ** 2, 0) / L.length) : 0;
       const txt = S.length ? S.filter(v => v.text).length / S.length : 0;
       const busy = Math.min(1, Math.max(sd / 0.22, txt * 0.9)); // にぎやかさ 0〜1（明るさのばらつき・後ろの文字）
-      const light = avg > 0.5;
+      const was = el.classList.contains('g-light'); const light = was ? avg > 0.45 : avg > 0.55;
       el.classList.toggle('g-light', light); el.classList.toggle('g-dark', !light);
       el.style.setProperty('--g-a', (light ? 0.06 + 0.16 * busy : 0.16 + 0.22 * busy).toFixed(3));
     }
 
     let raf = 0;
-    const run = () => { raf = 0; dev.querySelectorAll('.glass').forEach(tune); };
+    const run = () => { raf = 0; dev.querySelectorAll('.glass').forEach(g => { if (!g.dataset.gObs) { g.dataset.gObs = 1; ro.observe(g); } tune(g); }); };
+    // 大きさが変わる途中は古い屈折マップがはみ出すので外し、落ち着いてから作り直す
+    const SIZE = new WeakMap(); let settle = 0;
+    const ro = new ResizeObserver(es => {
+      let changed = false;
+      es.forEach(e => { const k = Math.round(e.contentRect.width) + 'x' + Math.round(e.contentRect.height); if (SIZE.has(e.target) && SIZE.get(e.target) !== k) { e.target.style.removeProperty('--g-refr'); changed = true; } SIZE.set(e.target, k); });
+      if (changed) { clearTimeout(settle); settle = setTimeout(later, 160); }
+    });
     const later = () => { if (!raf) raf = requestAnimationFrame(run); };
     new MutationObserver(later).observe(dev, { childList: true, subtree: true });
     document.addEventListener('scroll', later, true);
