@@ -875,6 +875,13 @@ button.act:active { background: rgba(255,255,255,.06); }
 /* 「あわせて読みたい」のカードが下のバーの上に出ないよう、カードの重なりはカードの中だけで決める */
 .car { isolation: isolate; }
 #device.art-open .cbar { z-index: 6; }
+
+/* 2026-11-05 オーナー指定：下のタブはアイコンだけ／ページ左上の題名と説明は出さない／ホームの速報は上のバーのぼかしにかからないよう少し下げる */
+.tabs .tab { font-size: 0; gap: 0; padding: 9px 0; }
+#tab-lib .lib-title { display: none; }
+#tab-people .simple, #tab-chat .simple { display: none; }
+#tab-people .scroller, #tab-chat .scroller { padding-top: var(--safe-top); }
+#tab-home .brkbar { margin-top: 14px; }
 </style>
 </head>
 <body>
