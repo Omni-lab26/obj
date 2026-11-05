@@ -61,7 +61,10 @@
     "postinstall": "node scripts/gen-ref-images.mjs",
     "prestart": "node scripts/gen-ref-images.mjs",
     "preverify": "node scripts/gen-ref-images.mjs",
-    "preshot": "node scripts/gen-ref-images.mjs"
+    "preshot": "node scripts/gen-ref-images.mjs",
+    "live": "node scripts/gen-ref-images.mjs && expo start --port 8093",
+    "live:tunnel": "node scripts/gen-ref-images.mjs && expo start --port 8093 --tunnel",
+    "live:web": "node scripts/gen-ref-images.mjs && expo start --port 8093 --web"
   },
   "private": true,
   "jest": {

@@ -7,8 +7,12 @@
 ```bash
 cd news-app
 npm install
-npx expo start
+npm run live
 ```
+
+- `npm run live`：見本の画像の表を作ってから起動（開発サーバーは 8093 番）
+- `npm run live:tunnel`：スマホと PC が同じ Wi-Fi でないとき
+- `npm run live:web`：ブラウザで開く
 
 - スマホに **Expo Go**（SDK 58 に対応した最新版）を入れ、表示された QR コードを読む
 - PC とスマホは同じ Wi-Fi に。つながらないときは `npx expo start --tunnel`
