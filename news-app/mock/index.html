@@ -104,6 +104,7 @@ svg { display: block; }
   -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
   -webkit-mask-image: linear-gradient(to bottom, transparent, #000 70%); mask-image: linear-gradient(to bottom, transparent, #000 70%);
   background: linear-gradient(to bottom, transparent, rgba(0,0,0,.25) 45%, rgba(0,0,0,.7) 80%, var(--paper)); }
+#art-btns .hero-btns, #g-btns .hero-btns { z-index: 4; }
 .hero-btns { position: absolute; top: var(--safe-top); left: 14px; right: 14px; display: flex; justify-content: space-between; z-index: 2; }
 .pillbtns { display: flex; border-radius: 999px; }
 .pillbtns .iconbtn { width: 40px; height: 40px; }
@@ -732,6 +733,9 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
 .hm .hr2, .st .sx, .cc span, .slg { color: rgba(242,242,243,.72) !important; }
 .pl, .sw1, .sw2, .cc, .cmp2 p, .cur, .seg2 { background: rgba(255,255,255,.07) !important; color: #f2f2f3 !important; box-shadow: none !important; border: 1px solid rgba(255,255,255,.08); }
 .cc { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+/* 今日のポイント：重なったカードが透けて読めなくならないよう、カードだけは地を不透明に近くする */
+.cstack { height: 136px; } .cc { height: 120px; overflow: hidden; background: #17171a !important; border: 1px solid rgba(255,255,255,.12); transition: transform .35s cubic-bezier(.2,.9,.2,1), opacity .25s; }
+.cc > * { transition: opacity .2s; } .cc.back > * { opacity: 0; } .cc.back { background: #121214 !important; }
 .pl .pf { background: rgba(255,255,255,.12) !important; } .pl.mine { border-color: #ff6a1a !important; } .pl.mine .pf { background: rgba(255,106,26,.28) !important; }
 .seg2 button { color: rgba(242,242,243,.6) !important; } .seg2 button.on { color: #16161a !important; } .segk { background: rgba(255,255,255,.92) !important; }
 .cmp2 mark { background: rgba(255,106,26,.28) !important; color: #ffc29e !important; }
@@ -834,12 +838,14 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     <!-- 記事（全画面） -->
     <section class="screen article" id="article" aria-hidden="true">
       <div class="scroller" id="art-scroll"></div>
+      <div id="art-btns"></div>
       <button class="cbar glass" id="cbar" aria-label="議論を開く"></button>
     </section>
 
     <!-- ジャンル -->
     <section class="screen slide" id="genre" aria-hidden="true" style="z-index:25;background:var(--paper)">
       <div class="scroller" id="g-scroll"></div>
+      <div id="g-btns"></div>
     </section>
 
     <!-- チャットルーム -->
@@ -1723,7 +1729,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
         ${b.rows.map((r, ri) => `<small class="hr2">${esc(r)}</small>` + b.vals[ri].map((v, ci) => `<button class="hc" data-hcell="${k}:${ri}:${ci}" style="--h:${(v - lo) / (hi - lo || 1)}">${b.money ? '' : ''}</button>`).join('')).join('')}</div>
         <div class="osub" id="heat-${k}">マスをタップすると数字が出ます · 濃いほど高い</div></div>`; }
       if (b.t === 'cards') return `<div class="obj"><div class="ohd"><span>${esc(b.title)}</span><span class="otag">${b.items.length} CARDS</span></div>
-        <div class="cstack" data-cstack="${k}">${b.items.map((it, i) => `<button class="cc" data-cswap="${k}" style="--i:${i}"><small>${i + 1} / ${b.items.length}</small><b>${esc(it[0])}</b><span>${esc(it[1])}</span></button>`).join('')}</div>
+        <div class="cstack" data-cstack="${k}">${b.items.map((it, i) => `<button class="cc${i ? ' back' : ''}" data-cswap="${k}" style="--i:${i}"><small>${i + 1} / ${b.items.length}</small><b>${esc(it[0])}</b><span>${esc(it[1])}</span></button>`).join('')}</div>
         <div class="osub">カードをタップすると次へ</div></div>`;
       if (b.t === 'refs') return `<div class="refs"><h3>もっと詳しく知りたい人へ</h3>${b.items.map(([t, src, dom]) => `<a class="ref" href="https://${dom}/" target="_blank" rel="noopener"><span>${esc(t)}<small>${esc(src)} · ${esc(dom)}</small></span>↗</a>`).join('')}</div>`;
       return '';
@@ -1852,9 +1858,9 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     const order = A.map(a => a.id);
     items.sort((x, y) => state.gsort === 'hot' ? y.a.c - x.a.c : order.indexOf(x.a.id) - order.indexOf(y.a.id));
     const el = $('#genre'); 
+    $('#g-btns').innerHTML = `<div class="hero-btns"><button class="round glass" data-close="genre" aria-label="戻る">‹</button><div class="pillbtns glass"><button class="iconbtn" data-search aria-label="このジャンルを検索">⌕</button><button class="iconbtn" data-gsortbtn aria-label="並び替え">⇅</button><button class="iconbtn" data-toast="このジャンルをシェア（ワイヤー）" aria-label="その他">•••</button></div></div>`;
     $('#g-scroll').innerHTML = `
       <div class="hero rel"><img src="${R}sq${img}.jpg" alt="">
-        <div class="hero-btns"><button class="round glass" data-close="genre" aria-label="戻る">‹</button><div class="pillbtns glass"><button class="iconbtn" data-search aria-label="このジャンルを検索">⌕</button><button class="iconbtn" data-gsortbtn aria-label="並び替え">⇅</button><button class="iconbtn" data-toast="このジャンルをシェア（ワイヤー）" aria-label="その他">•••</button></div></div>
         <span class="note" style="left:14px;bottom:30px">ジャンルの絵を全画面のトップに</span></div>
       <div class="head rel"><div style="flex:1;min-width:0"><h2>${esc(g)}</h2><div class="when">記事 ${arts.length} · 動画 ${G.vids.length} · 毎日更新 · <button data-gviewbtn style="color:inherit;font-weight:600">表示：${{ all: 'すべて', art: '記事だけ', vid: '動画だけ' }[state.gview]} ⌃</button></div></div>
         <div class="btns"><button class="round glass ${state.gnotify.has(g) ? 'save on' : ''}" data-gnotify aria-label="新着を知らせる">${state.gnotify.has(g) ? '🔔︎' : '🔕︎'}</button><button class="round glass save ${state.gfollow.has(g) ? 'on' : ''}" data-gfollow aria-label="フォロー">✓</button></div>
@@ -2716,10 +2722,10 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     const a = byId(id); state.cur = a;
     const el = $('#article'); 
     const total = count(discFor(id));
+    $('#art-btns').innerHTML = `<div class="hero-btns"><button class="round glass" data-close="article" aria-label="閉じる">⌄</button>
+          <div class="pillbtns glass"><button class="iconbtn" data-share aria-label="共有">⇪</button><button class="iconbtn" data-toast="表示の切り替え：日本語 / English">文A</button><button class="iconbtn" data-toast="通報・ミュートなど">•••</button></div></div>`;
     $('#art-scroll').innerHTML = `
       <div class="hero rel"><img src="${imgOf(a, 'sq')}" alt="">
-        <div class="hero-btns"><button class="round glass" data-close="article" aria-label="閉じる">⌄</button>
-          <div class="pillbtns glass"><button class="iconbtn" data-share aria-label="共有">⇪</button><button class="iconbtn" data-toast="表示の切り替え：日本語 / English">文A</button><button class="iconbtn" data-toast="通報・ミュートなど">•••</button></div></div>
         <span class="note" style="left:14px;bottom:30px">最初のサムネを全画面のトップに</span></div>
       ${a.type === 'deep' ? `<div class="brkstrip deepstrip rel"><b>DEEP DIVE</b><span>深掘り · 読む時間 ${a.read}分 · ${a.c}人が話しています</span><span class="note" style="right:0;top:-20px">深掘りの記事は紫の帯</span></div>` : ''}
       ${a.brk ? `<div class="brkstrip rel"><span class="pulse"></span><b>BREAKING</b><span>${esc(a.tm)} · 発表から3時間 · ${a.c}人が話しています</span><span class="note" style="right:0;top:-20px">速報の記事は赤い帯</span></div>` : ''}
@@ -2852,7 +2858,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (d.vote) { const [id, i] = d.vote.split(':'); POLL[id] = +i; const a = state.cur; const y = $('#art-scroll').scrollTop; openArticle(a.id); $('#art-scroll').scrollTop = y; navigator.vibrate?.(8); toast('答えました。理由もコメントで聞かせてください'); return; }
     if (d.bar) { const [k, i] = [d.bar.slice(0, d.bar.lastIndexOf(':')), +d.bar.split(':').pop()]; const [aid, bi] = [k.slice(0, k.lastIndexOf('-')), +k.split('-').pop()]; const b = byId(aid).blocks[bi]; const vs = b.cols[i][1]; document.querySelectorAll(`[data-bars="${k}"] .sbc`).forEach((el, n) => el.classList.toggle('on', n === i)); $(`#bar-${k}`).innerHTML = `<b style="color:#16161a">${esc(b.cols[i][0])}</b>　` + b.series.map((sr, j) => `${esc(sr[0])} ${vs[j].toLocaleString()}${b.unit}`).join(' · ') + ` · 合計 <b style="color:#16161a">${vs.reduce((x, y) => x + y, 0).toLocaleString()}${b.unit}</b>`; return; }
     if (d.hcell) { const p = d.hcell.split(':'); const [ci, ri] = [+p.pop(), +p.pop()]; const k = p.join(':'); const [aid, bi] = [k.slice(0, k.lastIndexOf('-')), +k.split('-').pop()]; const b = byId(aid).blocks[bi]; document.querySelectorAll(`[data-heat="${k}"] .hc`).forEach(el => el.classList.toggle('on', el === t)); const v = b.vals[ri][ci]; $(`#heat-${k}`).innerHTML = `<b style="color:#16161a">${esc(b.rows[ri])} · ${esc(b.cols[ci])}</b>　${b.money ? v.toLocaleString() + '円' : '+' + v + '%'}`; return; }
-    if (d.cswap) { const st = document.querySelector(`[data-cstack="${d.cswap}"]`); const cards = [...st.children]; const n = cards.length; cards.forEach(c => c.style.setProperty('--i', (+getComputedStyle(c).getPropertyValue('--i') - 1 + n) % n)); return; }
+    if (d.cswap) { const st = document.querySelector(`[data-cstack="${d.cswap}"]`); const cards = [...st.children]; const n = cards.length; cards.forEach(c => { const v = (+getComputedStyle(c).getPropertyValue('--i') - 1 + n) % n; c.style.setProperty('--i', v); c.classList.toggle('back', v > 0); }); return; }
     if (d.frame) { const [k, fr] = d.frame.split('|'); const [aid, bi] = [k.slice(0, k.lastIndexOf('-')), +k.split('-').pop()]; const b = byId(aid).blocks[bi]; const el = document.querySelector(`[data-lchart="${k}"]`); el.dataset.fr = fr; const pts = series(b.frames[fr]); el.innerHTML = lineSVG(pts) + `<span class="lt" id="linet-${k}"></span>`; $(`#linev-${k}`).textContent = fmtN(pts[pts.length - 1], b.dec); $(`#linec-${k}`).innerHTML = chg(pts, b.dec); t.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === t)); bindLine(el, kk => { const [a2, b2] = [kk.slice(0, kk.lastIndexOf('-')), +kk.split('-').pop()]; return byId(a2).blocks[b2]; }); return; }
     if (d.swapflip) { const k = d.swapflip, box = document.querySelector(`[data-swap="${k}"]`); const outv = $(`#swout-${k}`).textContent; box.classList.toggle('flip'); $(`#swin-${k}`).value = outv; swapCalc(k); t.style.transform = box.classList.contains('flip') ? 'rotate(180deg)' : ''; navigator.vibrate?.(6); return; }
     if (d.ap) { const p = d.ap.split(':'); const i = +p.pop(); document.querySelectorAll(`[data-acc="${p.join(':')}"] .ap`).forEach((el, n) => el.classList.toggle('on', n === i)); return; }
