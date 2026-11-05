@@ -853,6 +853,28 @@ button.act:active { background: rgba(255,255,255,.06); }
 /* みんなの声のシート：バーからふくらむ間は中身を少し遅れて出す。開いている間はバーを隠す */
 .sheet > * { transition: opacity .25s .12s; } .sheet.morph-in > * { opacity: 0; transition: opacity .12s; }
 #device.cm-open .cbar { opacity: 0; pointer-events: none; transition: opacity .15s; }
+
+/* 図をコメントに付ける */
+#art-scroll .obj, #art-scroll .fig, #art-scroll .video, #art-scroll .hero { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; transition: transform .25s cubic-bezier(.2,.9,.2,1); }
+#art-scroll .lp { transform: scale(.975); transition-duration: .45s; }
+.cfig { position: relative; display: block; overflow: hidden; border-radius: 14px; margin-top: 8px; background: #0d0d0f; border: 1px solid rgba(255,255,255,.1); text-align: left; flex: none; }
+.cfig-in { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; }
+.cfig-in > * { margin: 0 !important; }
+.cfig-t { position: absolute; left: 0; right: 0; bottom: 0; height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; font: 600 11px/1 var(--font); color: rgba(255,255,255,.75); background: #141417; border-top: 1px solid rgba(255,255,255,.08); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cfig-t::before { content: "図"; font: 700 9.5px/1 var(--mono); padding: 3px 5px; border-radius: 4px; background: rgba(255,255,255,.12); color: #fff; }
+.cfig.sm { margin: 0; border-radius: 10px; }
+.cattach { position: absolute; left: 12px; right: 12px; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 8px; border-radius: 16px; background: rgba(40,41,46,.96); border: 1px solid rgba(255,255,255,.1); z-index: 2; }
+.cattach .x { flex: 1; min-width: 0; font-size: 12.5px; } .cattach .x small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mfig .cfig { margin: 0 0 6px; }
+
+/* コメント欄：半分のときも最後までスクロールでき、右下の「書く」から書き始められる */
+.clist { padding-bottom: calc(var(--sh-hidden, 0px) + 96px) !important; overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+.cwrite { position: absolute; right: 16px; bottom: calc(var(--sh-hidden, 0px) + 18px + env(safe-area-inset-bottom, 0px)); z-index: 3; display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 18px 0 15px; border-radius: 23px; background: var(--accent); color: #fff; font: 700 14px/1 var(--font); box-shadow: 0 10px 24px rgba(0,0,0,.4); transition: bottom .32s cubic-bezier(.2,.8,.2,1), opacity .2s; }
+.sheet.is-full .cwrite { opacity: 0; pointer-events: none; }
+.sheet.dragging .cwrite { transition: none; }
+/* 「あわせて読みたい」のカードが下のバーの上に出ないよう、カードの重なりはカードの中だけで決める */
+.car { isolation: isolate; }
+#device.art-open .cbar { z-index: 6; }
 </style>
 </head>
 <body>
@@ -2103,7 +2125,7 @@ button.act:active { background: rgba(255,255,255,.06); }
   function openRoom(id) {
     const r = ROOMS.find(x => x.id === id); state.room = r; r.n = 0; renderRooms();
     $('#room-name').textContent = r.name;
-    $('#msgs').innerHTML = r.msgs.map(m => m.sys ? `<div class="sys">${esc(m.sys)}</div>` : `<div class="mg ${m.me ? 'me' : ''}">${m.who ? `<div class="who">${esc(m.who)}</div>` : ''}${m.share ? `<button class="shared" data-article="${m.share}"><img src="${R}cover1.jpg" alt="共有された配信の表紙"></button>` : ''}<div class="bub" ${m.me ? '' : `data-msgwho="${esc(m.who || '')}"`}>${esc(m.t)}</div></div>`).join('');
+    $('#msgs').innerHTML = r.msgs.map(m => m.sys ? `<div class="sys">${esc(m.sys)}</div>` : `<div class="mg ${m.me ? 'me' : ''}">${m.who ? `<div class="who">${esc(m.who)}</div>` : ''}${m.share ? `<button class="shared" data-article="${m.share}"><img src="${R}cover1.jpg" alt="共有された配信の表紙"></button>` : ''}${m.fig != null ? `<div class="mfig">${figCard(m.fig)}</div>` : ''}<div class="bub" ${m.me ? '' : `data-msgwho="${esc(m.who || '')}"`}>${esc(m.t)}</div></div>`).join('');
     $('#room').classList.add('open'); $('#room').setAttribute('aria-hidden', 'false');
   }
 
@@ -2834,6 +2856,55 @@ button.act:active { background: rgba(255,255,255,.06); }
       <p class="muted" style="font-size:11.5px;line-height:1.6;margin-top:14px">夜中（0:00〜6:00）は、速報以外のお知らせを鳴らさずに届けます。</p></div>`, 'full');
   }
 
+
+  // ---------- 図・グラフ・写真を長押し → コメントに付ける・送る ----------
+  const FIGS = []; state.pendingFig = null; state.figSeeded = {};
+  const FIGSEL = '.body .obj, .body .fig, .body .video, .hero';
+  function figTitle(fe) {
+    if (fe.classList.contains('hero')) return '記事の写真';
+    if (fe.classList.contains('video')) return 'YouTube の解説';
+    return fe.querySelector('.ohd span')?.textContent?.trim() || fe.querySelector('img')?.alt || '図';
+  }
+  function clipFig(fe) {
+    const c = fe.cloneNode(true);
+    c.querySelectorAll('[id]').forEach(x => x.removeAttribute('id'));
+    c.querySelectorAll('.note, .osub').forEach(x => x.remove());
+    c.querySelectorAll('*').forEach(x => { for (const a of [...x.attributes]) if (a.name.startsWith('data-')) x.removeAttribute(a.name); });
+    // 図の中のボタンや入力欄は、ただの文字にする（ボタンの中にボタンは置けないため）
+    const origs = [...fe.querySelectorAll('button, a, input')];
+    [...c.querySelectorAll('button, a, input')].forEach((x, n) => { const sp = document.createElement('span'); sp.className = x.className; sp.setAttribute('style', (x.getAttribute('style') || '') + ';display:' + (origs[n] ? getComputedStyle(origs[n]).display : 'inline-block')); sp.innerHTML = x.tagName === 'INPUT' ? esc(x.value) : x.innerHTML; x.replaceWith(sp); });
+    const w = fe.offsetWidth, h = Math.min(fe.offsetHeight, w * 1.1);
+    FIGS.push({ html: c.outerHTML, title: figTitle(fe), aid: state.cur?.id, top: fe.getBoundingClientRect().top - $('#art-scroll').getBoundingClientRect().top + $('#art-scroll').scrollTop, w, h });
+    return FIGS.length - 1;
+  }
+  function figCard(i, small) {
+    const f = FIGS[i]; if (!f) return '';
+    const W = small ? 64 : 220, k = W / f.w;
+    return `<button class="cfig ${small ? 'sm' : ''}" ${small ? '' : `data-figjump="${i}"`} aria-label="図：${esc(f.title)}" style="width:${W}px;height:${Math.round(f.h * k) + (small ? 0 : 26)}px"><span class="cfig-in" style="width:${f.w}px;transform:scale(${k})">${f.html}</span>${small ? '' : `<span class="cfig-t">${esc(f.title)}</span>`}</button>`;
+  }
+  function figMenu(i) {
+    const f = FIGS[i];
+    openSheet(`<div class="sh-head"><b>${esc(f.title)}</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
+      <div class="past" style="padding-bottom:24px"><div style="display:flex;justify-content:center;margin:2px 0 14px">${figCard(i)}</div>
+        <button class="mrow" data-figcomment="${i}"><span class="ico">✎</span>コメントに付けて話す</button>
+        <button class="mrow" data-figshare="${i}"><span class="ico">⤴︎</span>グループ・個人に送る</button>
+        <button class="mrow" data-toast="画像として保存しました（ワイヤー）"><span class="ico">↓</span>画像として保存</button></div>`, 'half');
+  }
+  (function longPress() {
+    const root = $('#art-scroll'); let timer = 0, sx = 0, sy = 0, fe = null;
+    const stop = () => { clearTimeout(timer); timer = 0; fe?.classList.remove('lp'); fe = null; };
+    root.addEventListener('pointerdown', e => {
+      const f = e.target.closest(FIGSEL); if (!f || e.target.closest('button.pl, input, .seg2 button, .seg3 button, .swbtn')) return;
+      fe = f; sx = e.clientX; sy = e.clientY; fe.classList.add('lp');
+      timer = setTimeout(() => { const el = fe; stop(); navigator.vibrate?.(12); state.lpFired = Date.now(); figMenu(clipFig(el)); }, 480);
+    });
+    root.addEventListener('pointermove', e => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 8) stop(); });
+    ['pointerup', 'pointercancel', 'scroll'].forEach(k => root.addEventListener(k, () => timer && stop(), true));
+    root.addEventListener('contextmenu', e => { if (e.target.closest(FIGSEL)) e.preventDefault(); });
+    // 長押しのあとに続けて起きるタップは無視する
+    root.addEventListener('click', e => { if (Date.now() - (state.lpFired || 0) < 400) { e.stopPropagation(); e.preventDefault(); } }, true);
+  })();
+
   // ---------- 記事 ----------
   function openArticle(id, withComments) {
     const a = byId(id); state.cur = a;
@@ -2893,6 +2964,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     const y = pos === 'full' ? 0 : pos === 'half' ? h - $('#device').offsetHeight * 0.5 : h;
     const dTop = $('#device').getBoundingClientRect().top + $('#device').offsetHeight - h; // シートを動かしていないときの上端
     if (barMorph() && prev === 'closed' && pos !== 'closed') {
+      sheet.style.setProperty('--sh-hidden', (pos === 'half' ? y : 0) + 'px'); sheet.classList.toggle('is-full', pos === 'full');
       sheet.style.transition = 'none'; sheet.style.transform = `translateY(${y}px)`;
       sheet.style.clipPath = insetToBar(dTop + y); sheet.classList.add('morph-in');
       $('#device').classList.add('cm-open');
@@ -2912,6 +2984,7 @@ button.act:active { background: rgba(255,255,255,.06); }
       return;
     }
     if (pos === 'closed') $('#device').classList.remove('cm-open');
+    sheet.style.setProperty('--sh-hidden', (pos === 'half' ? y : 0) + 'px'); sheet.classList.toggle('is-full', pos === 'full');
     sheet.style.transform = `translateY(${y}px)`;
     scrim.classList.toggle('on', pos !== 'closed');
     sheet.setAttribute('aria-hidden', pos === 'closed' ? 'true' : 'false');
@@ -2922,7 +2995,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     return list.map(c => SET.blocked.includes(c.who) ? `<div class="cm"><div class="t muted" style="font-size:12.5px">ブロックした人のコメントです</div></div>` : c.deleted ? `
       <div class="cm"><div class="t muted" style="font-size:12.5px">削除されたコメント</div>${c.kids.length ? `<div class="kids">${commentHTML(c.kids, depth + 1)}</div>` : ''}</div>` : `
       <div class="cm" data-cmid="${c.id}"><div class="h"><button class="who-btn" data-person="${esc(c.who)}">${esc(c.who)}</button><span class="muted">${esc(ROLE[c.who] || '')} · ${c.min === 0 ? 'たった今' : c.min + '分前'}</span></div>
-        <div class="t">${esc(c.t)}</div>
+        ${c.t ? `<div class="t">${esc(c.t)}</div>` : ''}${c.fig != null ? figCard(c.fig) : ''}
         <div class="f"><button data-like="${c.id}" class="${c.liked ? 'liked' : ''}">▲ ${c.up + (c.liked ? 1 : 0)}</button><button data-reply="${esc(c.who)}">返信する</button>${c.kids.length ? `<span>返信 ${count(c.kids)}</span>` : ''}<button data-cmenu="${c.id}" aria-label="メニュー" style="margin-left:auto">•••</button></div>
         ${c.kids.length ? (depth >= 4 ? `<button class="deeper" data-toast="この枝だけを広い幅で表示（返信の続き）">続きを読む（${count(c.kids)}件）›</button>` : `<div class="kids">${commentHTML(c.kids, depth + 1)}</div>`) : ''}
       </div>`).join('');
@@ -2932,6 +3005,11 @@ button.act:active { background: rgba(255,255,255,.06); }
     return state.sort === 'top' ? list.sort((a, b) => (b.up + count(b.kids) * 2) - (a.up + count(a.kids) * 2)) : list.sort((a, b) => a.min - b.min);
   }
   function openComments() {
+    const list0 = discFor(state.cur.id);
+    if (!state.figSeeded[state.cur.id] && list0[1] && list0[1].fig == null) {
+      const fe = $('#art-scroll')?.querySelector('.body .obj');
+      if (fe) { list0[1].fig = clipFig(fe); state.figSeeded[state.cur.id] = 1; }
+    }
     const total = count(discFor(state.cur.id));
     openSheet(`
       <div class="sh-head rel"><b>みんなの声 <span class="muted" style="font-weight:500">${total}</span></b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button>
@@ -2940,7 +3018,10 @@ button.act:active { background: rgba(255,255,255,.06); }
         <span class="note" style="right:16px;top:6px">YouTube のような並び替え（設定に保存）</span></div>
       ${state.cur.post || state.cur.note ? '' : '<div class="newc">↑ 新しいコメントが5件あります</div>'}
       <div class="clist" id="clist">${state.cur.post ? `<div style="margin:0 -16px 6px">${postHTML(state.cur.post, true)}</div>` : state.cur.note ? `<div style="margin:0 -16px 6px">${noteCard(state.cur.note, true)}</div>` : ''}${commentHTML(sorted(), 1)}</div>
-      <div class="composer"><input id="c-input" placeholder="あなたはどう思う？" aria-label="コメントを書く"><button id="c-send" aria-label="送信">➤</button></div>`, sheetPos === 'full' ? 'full' : 'half');
+      <button class="cwrite" data-cwrite aria-label="コメントを書く"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>書く</button>
+      ${state.pendingFig != null ? `<div class="cattach">${figCard(state.pendingFig, true)}<span class="x"><b>この図をコメントに付けます</b><small>${esc(FIGS[state.pendingFig].title)}</small></span><button class="round glass" style="width:30px;height:30px" data-figclear aria-label="図を外す">✕</button></div>` : ''}
+      <div class="composer"><input id="c-input" placeholder="${state.pendingFig != null ? '図について、ひとこと' : 'あなたはどう思う？'}" aria-label="コメントを書く"><button id="c-send" aria-label="送信">➤</button></div>`, sheetPos === 'full' || state.pendingFig != null ? 'full' : 'half');
+    if (state.pendingFig != null) setTimeout(() => $('#c-input')?.focus(), 420);
   }
   function openShare() {
     openSheet(`
@@ -2993,9 +3074,15 @@ button.act:active { background: rgba(255,255,255,.06); }
     if (d.like) { const c = findC(discFor(state.cur.id), +d.like); c.liked = !c.liked; t.classList.toggle('liked', c.liked); t.textContent = `▲ ${c.up + (c.liked ? 1 : 0)}`; return; }
     if (d.reply && d.afterclose !== undefined) { const who = d.reply; openComments(); setTimeout(() => { const i = $('#c-input'); if (i) { i.placeholder = `${who} さんに返信`; i.focus(); } }, 50); return; }
     if (d.reply) { const i = $('#c-input'); i.placeholder = `${d.reply} さんに返信`; i.focus(); return; }
-    if (t.id === 'c-send') { const i = $('#c-input'); if (!i.value.trim()) return; discFor(state.cur.id).unshift(C('あなた', i.value.trim(), 0, 0)); state.sort = 'new'; openComments(); toast('コメントしました。返信が来たらお知らせします'); return; }
+    if (t.id === 'c-send') { const i = $('#c-input'); if (!i.value.trim() && state.pendingFig == null) return; const nc = C('あなた', i.value.trim(), 0, 0); if (state.pendingFig != null) { nc.fig = state.pendingFig; state.pendingFig = null; } discFor(state.cur.id).unshift(nc); state.sort = 'new'; openComments(); toast('コメントしました。返信が来たらお知らせします'); return; }
     if (d.share !== undefined) { openShare(); return; }
     if (d.cover) { state.cover = +d.cover; openShare(); return; }
+    if (d.cwrite !== undefined) { setSheet('full'); setTimeout(() => $('#c-input')?.focus(), 360); return; }
+    if (d.figcomment !== undefined) { state.pendingFig = +d.figcomment; setSheet('closed'); setTimeout(openComments, 420); return; }
+    if (d.figclear !== undefined) { state.pendingFig = null; openComments(); return; }
+    if (d.figshare !== undefined) { const i = +d.figshare; openSheet(`<div class="sh-head"><b>この図を送る</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div><div class="past" style="padding-bottom:24px"><div style="display:flex;justify-content:center;margin:2px 0 12px">${figCard(i)}</div><div class="send-list">${ROOMS.map(r => `<button data-sendfig="${r.id}:${i}">${esc(r.name)}${r.dm ? '（1対1）' : ''}<span>送る</span></button>`).join('')}</div></div>`, 'full'); return; }
+    if (d.sendfig) { const [rid, i] = d.sendfig.split(':'); const r = ROOMS.find(x => x.id === rid); r.msgs.push({ me: 1, fig: +i, t: 'この図、どう見る？' }); setSheet('closed'); toast(`${r.name} に図を送りました`); return; }
+    if (d.figjump !== undefined) { const f = FIGS[+d.figjump]; if (f && state.cur?.id === f.aid && $('#article').classList.contains('open')) { setSheet('closed'); setTimeout(() => $('#art-scroll').scrollTo({ top: Math.max(0, f.top - 120), behavior: 'smooth' }), 420); } else toast('この図は、元の記事の中にあります'); return; }
     if (d.send) { const r = ROOMS.find(x => x.id === d.send); r.msgs.push({ me: 1, share: state.cur ? state.cur.id : 'boj', t: 'これどう思う？' }); setSheet('closed'); toast(`${r.name} に送りました`); return; }
     if (d.person) {
       if ($('#search').classList.contains('open')) remember($('#s-input').value);
