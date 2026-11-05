@@ -92,6 +92,17 @@ svg { display: block; }
 .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 9.5px; color: #c4c5ca; width: 62px; padding: 6px 0; border-radius: 20px; }
 .tab.on { color: #fff; background: rgba(255,255,255,.14); }
 .searchbtn { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; }
+/* 下にスクロールするとタブを小さくまとめる（今いるタブだけ残す）。上にスクロールかタップで元に戻る */
+.tabs { max-width: 420px; overflow: hidden; transition: max-width .38s cubic-bezier(.2,.9,.2,1), height .3s cubic-bezier(.2,.9,.2,1); }
+.tab { overflow: hidden; white-space: nowrap; transition: width .32s cubic-bezier(.2,.9,.2,1), opacity .2s, font-size .25s, gap .25s; }
+.searchbtn { transition: width .3s cubic-bezier(.2,.9,.2,1), height .3s cubic-bezier(.2,.9,.2,1); }
+.tabbar { transition: left .3s; }
+.tabbar.mini .tabs { max-width: 58px; height: 48px; justify-content: center; padding: 0 5px; }
+.tabbar.mini .tab { font-size: 0; gap: 0; width: 46px; padding: 6px 0; }
+.tabbar.mini .tab:not(.on) { width: 0; opacity: 0; padding: 0; }
+.tabbar.mini .searchbtn { width: 48px; height: 48px; margin-left: auto; }
+/* ホームの上のバーはスクロールしても残す */
+#tab-home .top { position: sticky; top: 0; z-index: 12; background: rgba(17,18,20,.72); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); }
 
 /* 記事（全画面。上にサムネ、題名、保存、本文、参考リンク） */
 .article { z-index: 30; transform: translateY(100%); transition: transform .35s cubic-bezier(.2,.8,.2,1); background: var(--paper); }
@@ -225,6 +236,11 @@ svg { display: block; }
 /* プロフィールは、タップしたアイコンの位置から広がって出てくる */
 .profile { z-index: 45; clip-path: circle(0px at var(--ox, 30px) var(--oy, 70px)); transition: clip-path .5s cubic-bezier(.3,.8,.2,1); pointer-events: none; }
 .profile.open { clip-path: circle(140% at var(--ox, 30px) var(--oy, 70px)); pointer-events: auto; }
+/* お知らせも、押したベルの位置から広がって出てくる */
+.reveal { z-index: 45; clip-path: circle(0px at var(--ox, calc(100% - 32px)) var(--oy, 32px)); transition: clip-path .5s cubic-bezier(.3,.8,.2,1); pointer-events: none; }
+.reveal.open { clip-path: circle(150% at var(--ox, calc(100% - 32px)) var(--oy, 32px)); pointer-events: auto; }
+.reveal .scroller { transform-origin: var(--ox, 100%) 0; transform: scale(.9) translateY(-12px); opacity: 0; transition: transform .5s cubic-bezier(.3,.8,.2,1), opacity .3s; }
+.reveal.open .scroller { transform: none; opacity: 1; }
 .profile .pass, .profile .bio, .profile .stats, .profile .pbtns { transform-origin: var(--ox, 30px) 0; transform: scale(.82) translateY(-14px); opacity: 0; transition: transform .5s cubic-bezier(.3,.8,.2,1), opacity .3s; }
 .profile.open .pass, .profile.open .bio, .profile.open .stats, .profile.open .pbtns { transform: none; opacity: 1; }
 .profile.open .bio { transition-delay: .06s; } .profile.open .stats { transition-delay: .1s; } .profile.open .pbtns { transition-delay: .14s; }
@@ -887,7 +903,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     </section>
 
     <!-- お知らせ -->
-    <section class="screen slide" id="notif" aria-hidden="true">
+    <section class="screen reveal" id="notif" aria-hidden="true">
       <div class="top"><button class="round glass" data-close="notif" aria-label="戻る">‹</button><b>お知らせ</b><button class="round glass" data-notifset aria-label="お知らせの設定">⚙︎</button></div>
       <div class="scroller" id="n-scroll"></div>
     </section>
@@ -2834,6 +2850,7 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   document.addEventListener('click', e => {
     const t = e.target.closest('button, a'); if (!t) return;
     const d = t.dataset;
+    if (d.tab && $('#tabbar').classList.contains('mini')) { $('#tabbar').classList.remove('mini'); if (t.classList.contains('on')) return; }
     if (d.tab) { state.tab = d.tab; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === t)); ['home', 'lib', 'people', 'chat'].forEach(k => $('#tab-' + k).hidden = k !== d.tab); if (d.tab === 'lib') renderLib(); return; }
     if (d.chip) { state.chip = d.chip; renderChips(); renderFeed(); return; }
     if (d.article && byId(d.article)?.type === 'note') { e.preventDefault(); ['search', 'profile', 'notif'].forEach(k => $('#' + k).classList.remove('open')); openNote(d.article); return; }
@@ -2965,7 +2982,10 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (d.delrecent) { state.recent = state.recent.filter(r => r !== d.delrecent); renderSearch(); return; }
     if (d.clearrecent !== undefined) { state.recent = []; renderSearch(); return; }
     if (d.stab) { state.stab = d.stab; renderSearch(); $('#s-body').scrollTop = 0; return; }
-    if (d.notif !== undefined) { openNotif(); return; }
+    if (d.notif !== undefined) {
+      const dr = $('#device').getBoundingClientRect(), tr = t.getBoundingClientRect();
+      if (!$('#notif').classList.contains('open')) { $('#notif').style.setProperty('--ox', `${tr.left + tr.width / 2 - dr.left}px`); $('#notif').style.setProperty('--oy', `${tr.top + tr.height / 2 - dr.top}px`); }
+      openNotif(); return; }
     if (d.close === 'notif') { closeNotif(); return; }
     if (d.nfilter) { state.notifFilter = d.nfilter; renderNotif(); return; }
     if (d.readall !== undefined) { NOTIFS.forEach(n => n.unread = false); renderNotif(); toast('すべて既読にしました'); return; }
@@ -2989,6 +3009,15 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
     if (d.toast) { toast(d.toast); return; }
   });
   scrim.addEventListener('click', () => setSheet('closed'));
+  // 下にスクロールするとタブを小さく、上に戻すと元の大きさに
+  const lastY = new WeakMap();
+  document.addEventListener('scroll', e => {
+    const sc = e.target; if (!(sc instanceof Element) || !sc.closest('#tab-home, #tab-lib, #tab-people, #tab-chat')) return;
+    const y = sc.scrollTop, prev = lastY.get(sc) ?? 0; lastY.set(sc, y);
+    if (y < 40) $('#tabbar').classList.remove('mini');
+    else if (y - prev > 6) $('#tabbar').classList.add('mini');
+    else if (prev - y > 10) $('#tabbar').classList.remove('mini');
+  }, true);
   $('#dropalert').addEventListener('click', () => $('#dropalert').classList.remove('on'));
   document.addEventListener('change', e => {
     if (e.target.id === 'ob-photo' && e.target.files[0]) { const fr = new FileReader(); fr.onload = () => { OB.icon = fr.result; renderOnboard(); }; fr.readAsDataURL(e.target.files[0]); return; }
