@@ -819,6 +819,19 @@ button.act:active { background: rgba(255,255,255,.06); }
 /* 最初の案内：読みやすさ優先で、ガラスではなく面の色で出す */
 .coach { background: rgba(30,31,35,.97); border: 1px solid rgba(255,255,255,.14); box-shadow: 0 18px 40px rgba(0,0,0,.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
 .coach::after { background: rgba(30,31,35,.97); border-color: rgba(255,255,255,.14); }
+
+/* 解説（YouTube の動画の深掘り）の印と、管理画面の動画の行 */
+.ytb { position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; border-radius: 999px; font: 600 11px/1 var(--font); color: #fff; background: rgba(12,12,14,.62); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); letter-spacing: .02em; }
+.vrow { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0; border-top: 1px solid var(--line); text-align: left; }
+.vrow:first-of-type { border-top: 0; }
+.vrow:disabled { opacity: .5; }
+.vrow .vth { flex: none; width: 64px; height: 38px; border-radius: 8px; background: #2a1414; color: #ff4d4d; display: grid; place-items: center; font-size: 13px; position: relative; }
+.vrow .vth small { position: absolute; right: 4px; bottom: 3px; font: 500 9px/1 var(--mono); color: #fff; }
+.vrow .x { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; } .vrow .x small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+.vrow .vst { flex: none; font: 600 11.5px/1 var(--font); padding: 7px 10px; border-radius: 999px; background: var(--accent); color: #fff; }
+.vrow .vst.done { background: transparent; border: 1px solid var(--line); color: var(--text); }
+.vrow .vst:empty { display: none; } .vrow .vst.vpick { background: #fff; color: #111; }
+.vrow.sel { background: rgba(255,106,26,.1); border-radius: 12px; padding-inline: 8px; margin-inline: -8px; width: calc(100% + 16px); border-top-color: transparent; }
 </style>
 </head>
 <body>
@@ -986,29 +999,29 @@ button.act:active { background: rgba(255,255,255,.06); }
 
   // 仮データ（すべてサンプル）
   const A = [
-    { id: 'nikkei', img: 9, lab: 'Asia close', tag: '#株式', tm: '15:30', when: '11月4日（火）15:30 · アジア引け・欧州寄り付き', title: '日経平均は3日ぶりにひと休み。半導体株で利益確定の売りが出ました', c: 86, r: 412, tint: '#1f2a1c' },
+    { id: 'nikkei', vlen: '12:48', img: 9, lab: 'Asia close', tag: '#株式', tm: '15:30', when: '11月4日（火）15:30 · アジア引け・欧州寄り付き', title: '日経平均は3日ぶりにひと休み。半導体株で利益確定の売りが出ました', c: 86, r: 412, tint: '#1f2a1c' },
     { id: 'n1', type: 'note', tm: '14:05', when: '11月4日（火）14:05 · ひとこと', tag: '#中央銀行', title: '会見で「データ次第」が7回', text: '15:30 の配信の前にひとこと。さっきの総裁会見、「データ次第」が7回出てきました。数えてた人いますか？笑　12月に動くかは、やっぱり来月の賃金のデータ次第っぽいです。', c: 38, r: 160 },
     { id: 'boj', img: 7, brk: true, lab: 'BOJ decision', tag: '#日銀', tm: '12:18', when: '11月4日（火）12:18 · 速報', title: '日銀は金利0.75%で据え置き。でも声明にちょっと変化あり', c: 214, r: 1200, tint: '#3a1a14' },
-    { id: 'yen', img: 8, lab: 'Midday', tag: '#為替', tm: '11:30', when: '11月4日（火）11:30 · アジアの昼', title: 'ドル円は152円台へ。お昼に輸入企業の買いがまた増えてきました', c: 41, r: 188, tint: '#2a2826' },
+    { id: 'yen', vlen: '11:05', img: 8, lab: 'Midday', tag: '#為替', tm: '11:30', when: '11月4日（火）11:30 · アジアの昼', title: 'ドル円は152円台へ。お昼に輸入企業の買いがまた増えてきました', c: 41, r: 188, tint: '#2a2826' },
     { id: 'n2', type: 'note', tm: '9:40', when: '11月4日（火）9:40 · ひとこと', tag: '#為替', title: 'ドル円152.80まで', text: '朝のドル円、152.80まで上がって少し戻しています。輸入企業の買いが多そう。11:30 の配信でくわしく書きますね。', link: ['日本銀行 · 外国為替市況', 'boj.or.jp'], c: 21, r: 95 },
-    { id: 'fomc', img: 1, lab: 'US close', tag: '#FRB', tm: '7:00', when: '11月4日（火）7:00 · 米国の大引け後', title: 'FOMCの議事要旨、12月の利下げには慎重な人が多めでした', c: 57, r: 301, tint: '#172441' },
+    { id: 'fomc', vlen: '18:22', img: 1, lab: 'US close', tag: '#FRB', tm: '7:00', when: '11月4日（火）7:00 · 米国の大引け後', title: 'FOMCの議事要旨、12月の利下げには慎重な人が多めでした', c: 57, r: 301, tint: '#172441' },
     { id: 'd1', type: 'deep', img: 2, read: 8, lab: 'Deep dive', tag: '#仕事と賃金', tm: '昨日 20:00', when: '11月3日（月）20:00 · 深掘り', title: 'なぜ日本の賃金は30年上がりにくかったのか。グラフで振り返る', lead: '物価、生産性、働き方の3つから、ゆっくり読み解きます。週末に読みたい長めの記事です。', c: 126, r: 520, tint: '#1f1d2e' },
-    { id: 'ust', img: 5, lab: 'US pre-open', tag: '#債券', tm: '昨日 22:00', when: '11月3日（月）22:00 · 米国の寄り付き前', title: '米10年債の利回りが4.4%台に。入札の人気がいまひとつでした', c: 133, r: 640, tint: '#3d1210' },
+    { id: 'ust', vlen: '13:40', img: 5, lab: 'US pre-open', tag: '#債券', tm: '昨日 22:00', when: '11月3日（月）22:00 · 米国の寄り付き前', title: '米10年債の利回りが4.4%台に。入札の人気がいまひとつでした', c: 133, r: 640, tint: '#3d1210' },
     { id: 'nfp', img: 11, lab: 'Breaking', tag: '#雇用統計', tm: '11/1', when: '11月1日（土）22:30 · 速報', title: '米雇用統計は+18.7万人。予想より強めの結果に', c: 302, r: 1800, tint: '#0f1a24' },
-    { id: 'earn', img: 10, lab: 'Weekly', tag: '#決算', tm: '10/31', when: '10月31日（金）15:30 · 週末のまとめ', title: '来週の決算、注目は半導体と銀行です', c: 64, r: 220, tint: '#121212' },
-    { id: 'gdp', img: 2, lab: 'Macro', tag: '#GDP', tm: '10/30', when: '10月30日（木）22:00 · 米国の寄り付き前', title: '米GDPは年率2.8%。個人消費がまだ強いみたいです', c: 92, r: 340, tint: '#1d2b1a', min: 6 },
+    { id: 'earn', vlen: '16:10', img: 10, lab: 'Weekly', tag: '#決算', tm: '10/31', when: '10月31日（金）15:30 · 週末のまとめ', title: '来週の決算、注目は半導体と銀行です', c: 64, r: 220, tint: '#121212' },
+    { id: 'gdp', vlen: '12:30', img: 2, lab: 'Macro', tag: '#GDP', tm: '10/30', when: '10月30日（木）22:00 · 米国の寄り付き前', title: '米GDPは年率2.8%。個人消費がまだ強いみたいです', c: 92, r: 340, tint: '#1d2b1a', min: 6 },
     { id: 'ecb', img: 6, lab: 'Central bank', tag: '#ECB', tm: '10/29', when: '10月29日（水）22:00 · 速報', title: 'ECBは据え置き。ラガルド総裁「データ次第」をくり返す', c: 71, r: 260, tint: '#2b1f1a', min: 3 },
-    { id: 'jgb', img: 4, lab: 'Bonds', tag: '#国債', tm: '10/28', when: '10月28日（火）15:30 · アジアの引け', title: '日本の10年債利回り1.7%台に。20年ぶりの高さが続いています', c: 58, r: 210, tint: '#2a2421', min: 4 },
-    { id: 'cny', img: 8, lab: 'FX', tag: '#人民元', tm: '10/27', when: '10月27日（月）11:30 · アジアの昼', title: '人民元はじわっと元安。中国の基準値がヒントになっています', c: 33, r: 120, tint: '#24221f', min: 3 },
-    { id: 'chip', img: 9, lab: 'Equity', tag: '#半導体', tm: '10/24', when: '10月24日（金）7:00 · 米国の引け後', title: '米半導体株が反発。決算の数字は「思ったより悪くない」', c: 77, r: 290, tint: '#1f2a1c', min: 5 },
-    { id: 'aipow', img: 3, lab: 'Tech', tag: '#テック', tm: '10/22', when: '10月22日（水）22:00 · 米国の寄り付き前', title: 'AIの電力不足で、電力会社の株にも注目が集まっています', c: 49, r: 180, tint: '#2a1f2a', min: 4 },
-    { id: 'bank', img: 10, lab: 'Earnings', tag: '#銀行', tm: '10/17', when: '10月17日（金）15:30 · 週末のまとめ', title: '米大手銀行の決算、金利が高いおかげで利ざやは好調', c: 41, r: 150, tint: '#121212', min: 3 },
-    { id: 'wage', img: 2, lab: 'Work', tag: '#賃金', tm: '10/15', when: '10月15日（水）15:30 · アジアの引け', title: '最低賃金、全国平均がはじめて1,100円台に。地方との差はまだ大きめです', c: 184, r: 690, tint: '#1f2a24', min: 4 },
-    { id: 'power', img: 6, lab: 'Energy', tag: '#エネルギー', tm: '10/14', when: '10月14日（火）11:30 · アジアの昼', title: 'この冬の電気代、平均で月300円ほど上がりそうです', c: 152, r: 540, tint: '#2b1f1a', min: 3 },
-    { id: 'home', img: 11, lab: 'Housing', tag: '#不動産', tm: '10/10', when: '10月10日（金）15:30 · 週末のまとめ', title: '住宅ローンの金利、変動型もじわっと上がり始めました', c: 211, r: 820, tint: '#0f1a24', min: 4 },
-    { id: 'rice', img: 9, lab: 'Prices', tag: '#物価', tm: '10/8', when: '10月8日（水）7:00 · 米国の引け後', title: 'お米の値段、去年より2割高いまま。家計への影響は？', c: 167, r: 610, tint: '#1f2a1c', min: 3 },
-    { id: 'budget', img: 4, lab: 'Policy', tag: '#財政', tm: '10/6', when: '10月6日（月）22:00 · 米国の寄り付き前', title: '来年度の予算案、過去最大の見通し。どこにお金が使われる？', c: 98, r: 330, tint: '#2a2421', min: 4 },
-    { id: 'imf', img: 1, lab: 'World', tag: '#世界経済', tm: '10/3', when: '10月3日（金）22:00 · 米国の寄り付き前', title: 'IMFの見通し、世界の成長は3%前後で横ばいです', c: 63, r: 240, tint: '#16243f', min: 3 },
+    { id: 'jgb', vlen: '14:05', img: 4, lab: 'Bonds', tag: '#国債', tm: '10/28', when: '10月28日（火）15:30 · アジアの引け', title: '日本の10年債利回り1.7%台に。20年ぶりの高さが続いています', c: 58, r: 210, tint: '#2a2421', min: 4 },
+    { id: 'cny', vlen: '10:50', img: 8, lab: 'FX', tag: '#人民元', tm: '10/27', when: '10月27日（月）11:30 · アジアの昼', title: '人民元はじわっと元安。中国の基準値がヒントになっています', c: 33, r: 120, tint: '#24221f', min: 3 },
+    { id: 'chip', vlen: '15:35', img: 9, lab: 'Equity', tag: '#半導体', tm: '10/24', when: '10月24日（金）7:00 · 米国の引け後', title: '米半導体株が反発。決算の数字は「思ったより悪くない」', c: 77, r: 290, tint: '#1f2a1c', min: 5 },
+    { id: 'aipow', vlen: '19:10', img: 3, lab: 'Tech', tag: '#テック', tm: '10/22', when: '10月22日（水）22:00 · 米国の寄り付き前', title: 'AIの電力不足で、電力会社の株にも注目が集まっています', c: 49, r: 180, tint: '#2a1f2a', min: 4 },
+    { id: 'bank', vlen: '13:15', img: 10, lab: 'Earnings', tag: '#銀行', tm: '10/17', when: '10月17日（金）15:30 · 週末のまとめ', title: '米大手銀行の決算、金利が高いおかげで利ざやは好調', c: 41, r: 150, tint: '#121212', min: 3 },
+    { id: 'wage', vlen: '17:40', img: 2, lab: 'Work', tag: '#賃金', tm: '10/15', when: '10月15日（水）15:30 · アジアの引け', title: '最低賃金、全国平均がはじめて1,100円台に。地方との差はまだ大きめです', c: 184, r: 690, tint: '#1f2a24', min: 4 },
+    { id: 'power', vlen: '12:20', img: 6, lab: 'Energy', tag: '#エネルギー', tm: '10/14', when: '10月14日（火）11:30 · アジアの昼', title: 'この冬の電気代、平均で月300円ほど上がりそうです', c: 152, r: 540, tint: '#2b1f1a', min: 3 },
+    { id: 'home', vlen: '15:00', img: 11, lab: 'Housing', tag: '#不動産', tm: '10/10', when: '10月10日（金）15:30 · 週末のまとめ', title: '住宅ローンの金利、変動型もじわっと上がり始めました', c: 211, r: 820, tint: '#0f1a24', min: 4 },
+    { id: 'rice', vlen: '11:45', img: 9, lab: 'Prices', tag: '#物価', tm: '10/8', when: '10月8日（水）7:00 · 米国の引け後', title: 'お米の値段、去年より2割高いまま。家計への影響は？', c: 167, r: 610, tint: '#1f2a1c', min: 3 },
+    { id: 'budget', vlen: '18:05', img: 4, lab: 'Policy', tag: '#財政', tm: '10/6', when: '10月6日（月）22:00 · 米国の寄り付き前', title: '来年度の予算案、過去最大の見通し。どこにお金が使われる？', c: 98, r: 330, tint: '#2a2421', min: 4 },
+    { id: 'imf', vlen: '14:30', img: 1, lab: 'World', tag: '#世界経済', tm: '10/3', when: '10月3日（金）22:00 · 米国の寄り付き前', title: 'IMFの見通し、世界の成長は3%前後で横ばいです', c: 63, r: 240, tint: '#16243f', min: 3 },
   ];
   const byId = id => A.find(a => a.id === id);
   // ---- サンプル記事の本文（数字はすべてサンプル）----
@@ -1677,9 +1690,9 @@ button.act:active { background: rgba(255,255,255,.06); }
   let saveSeq = 10;
 
   // ---------- ホーム ----------
-  const CHIPS = ['最新', '定時', '速報', 'ひとこと', '深掘り', '盛り上がり中', '物価', '仕事', '株式', '為替', '債券'];
+  const CHIPS = ['最新', '解説', '速報', 'ひとこと', '深掘り', '盛り上がり中', '物価', '仕事', '株式', '為替', '債券'];
   const tp = a => a.type || (a.brk ? 'breaking' : 'slot');
-  const TYPE = { slot: ['定時', 't-slot'], breaking: ['速報', 't-brk'], note: ['ひとこと', 't-note'], deep: ['深掘り', 't-deep'] };
+  const TYPE = { slot: ['解説', 't-slot'], breaking: ['速報', 't-brk'], note: ['ひとこと', 't-note'], deep: ['深掘り', 't-deep'] };
   function renderChips() {
     $('#chips').innerHTML = CHIPS.map(c => `<button class="chip ${c === state.chip ? 'on' : ''}" data-chip="${c}">${c}</button>`).join('') +
       '<span class="note" style="left:16px;top:44px">絞り込み（最新・速報・盛り上がり中・ジャンル）</span>';
@@ -1690,6 +1703,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     save: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M7 4h10v16l-5-3.5L7 20z"/></svg>',
     saved: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M7 4h10v16l-5-3.5L7 20z"/></svg>',
   };
+  const vlenOf = a => (a.blocks || BLOCKS[a.id] || []).find(b => b.t === 'video')?.len || a.vlen || '';
   const kfmt = n => n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n;
   const actsRow = (id, r, c, go) => `<div class="acts">
           <span class="act" aria-label="反応 ${r}">${IC.up}${kfmt(r)}</span>
@@ -1702,18 +1716,18 @@ button.act:active { background: rgba(255,255,255,.06); }
     const nb = A.find(a => a.brk && !/^\d+\/\d+$/.test(a.tm));
     $('#brkbar').innerHTML = nb && !state.brkClosed ? `<div class="brkbar rel"><button class="bx" data-article="${nb.id}" data-comments="1"><span class="pulse"></span><span class="x"><b>速報 · ${esc(nb.tm)}</b>${esc(nb.title)}<small>${nb.c}人が話しています</small></span>›</button><button class="close" data-brkclose aria-label="閉じる">✕</button><span class="note" style="right:10px;bottom:-10px">速報の帯（その日だけ）</span></div>` : '';
     let list = A.slice(0, 8);
-    const tmap = { '定時': 'slot', '速報': 'breaking', 'ひとこと': 'note', '深掘り': 'deep' };
+    const tmap = { '解説': 'slot', '速報': 'breaking', 'ひとこと': 'note', '深掘り': 'deep' };
     if (tmap[state.chip]) list = A.filter(a => tp(a) === tmap[state.chip]).slice(0, 8);
     else if (state.chip === '盛り上がり中') list = [...A].sort((a, b) => b.c - a.c).slice(0, 5);
     else if (state.chip !== '最新') list = A.filter(a => ({ '物価': ['#物価', '#エネルギー', '#不動産'], '仕事': ['#賃金', '#雇用統計'], '株式': ['#株式', '#半導体'], '為替': ['#為替', '#人民元'], '債券': ['#債券', '#国債'] }[state.chip] || []).includes(a.tag));
     $('#feed').innerHTML = list.map((a, i) => tp(a) === 'note' ? noteCard(a) : tp(a) === 'deep' ? deepCard(a) : `
       <article class="feed-item rel ${a.brk ? 'brkcard' : ''}">
         <div class="by"><div class="av"><span class="mark"><i></i><i></i></span></div><div class="nm">Halftick</div><div class="hd">${esc(a.tm)}</div><span class="tchip ${TYPE[tp(a)][1]}">${TYPE[tp(a)][0]}</span></div>
-        <button class="thumb" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${imgOf(a, 'sq')}" alt="">${a.brk ? '<span class="brk">速報</span>' : ''}</button>
+        <button class="thumb" data-article="${a.id}" aria-label="${esc(a.title)}"><img src="${imgOf(a, 'sq')}" alt="">${a.brk ? '<span class="brk">速報</span>' : ''}${tp(a) === 'slot' ? `<span class="ytb">▶ YouTube の解説${vlenOf(a) ? ' · ' + vlenOf(a) : ''}</span>` : ''}</button>
         <div class="lab"><span>${esc(a.lab)}</span><span class="tag">${esc(a.tag)}</span></div>
         <div class="title-line">${esc(a.title)}</div>
         ${actsRow(a.id, a.r, a.c, `<button class="act go" data-article="${a.id}" data-comments="1">議論をのぞく</button>`)}
-        ${i === 0 ? '<span class="note" style="left:16px;top:96px">定時配信＝正方形のサムネの記事</span><span class="note" style="right:16px;bottom:52px">議論をのぞく＝記事を開いてコメント欄も出す</span>' : ''}
+        ${i === 0 ? '<span class="note" style="left:16px;top:96px">解説＝YouTube の動画の深掘り（正方形のサムネ＋動画の印）</span><span class="note" style="right:16px;bottom:52px">議論をのぞく＝記事を開いてコメント欄も出す</span>' : ''}
       </article>`).join('') || '<p class="muted" style="padding:20px 16px">ここに入る配信はまだありません。次の配信をお楽しみに</p>';
   }
 
@@ -1753,6 +1767,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     return [...str].map((ch, i) => /[0-9]/.test(ch) ? `<span class="dg"><span class="dgc" data-d="${ch}" style="transition-delay:${i * 60}ms">${'0123456789'.split('').map(n => `<span>${n}</span>`).join('')}</span></span>` : `<span class="dgs">${ch}</span>`).join('');
   }
   function renderBlocks(a) {
+    if (tp(a) === 'slot' && !(a.blocks || []).some(b => b.t === 'video')) a.blocks = [{ t: 'video', img: a.img || 1, len: a.vlen || '15:20', title: a.title }, ...(a.blocks || [])];
     return a.blocks.map((b, bi) => {
       const k = `${a.id}-${bi}`;
       if (b.t === 'p' && b.x.startsWith('Q. ') && b.x.includes('　A. ')) { const [q, ans] = b.x.slice(3).split('　A. '); return `<div class="qa"><p class="q">${esc(q)}</p><p>${esc(ans)}</p></div>`; }
@@ -2272,7 +2287,7 @@ button.act:active { background: rgba(255,255,255,.06); }
           ${cs.map(c => `<div class="wcm"><b>${esc(c.who)}</b> <small>${esc(ROLE[c.who] || '')}</small><br>${esc(c.t)}<br><small>▲ ${c.up}${c.kids.length ? ` · 返信 ${count(c.kids)}` : ''}</small></div>`).join('')}
           <div class="fade"></div></div>
         <div class="cta"><b>この議論に参加しませんか？</b><p>経済に関心のある人たちが、配信のたびに語り合っています。読むだけでも大丈夫です。</p><button class="primary" data-close="web">アプリで開く</button><button class="ghost" data-close="web">ログインして書く</button></div>
-        <div class="wfoot">Halftick · 1日4回、世界の経済のニュースと、その下の議論<br>利用規約 · プライバシーポリシー · 投稿とコメントのルール · 問い合わせ<br>※ このページはログインしていない人向けのサイトの見え方です（ワイヤー）</div>
+        <div class="wfoot">Halftick · YouTube の解説を、もっと深く。その下で議論<br>利用規約 · プライバシーポリシー · 投稿とコメントのルール · 問い合わせ<br>※ このページはログインしていない人向けのサイトの見え方です（ワイヤー）</div>
       </div>`;
     $('#web').classList.add('open'); $('#web').setAttribute('aria-hidden', 'false');
   }
@@ -2286,7 +2301,7 @@ button.act:active { background: rgba(255,255,255,.06); }
   }
 
   // ---------- 最初の起動 ----------
-  const OB = { step: 'welcome', method: '', email: '', name: '', role: '', showRole: true, icon: null, genres: new Set(), notif: { slot7: true, slot1130: false, slot1530: false, slot22: true, breaking: true, note: false, deep: true, reply: true } };
+  const OB = { step: 'welcome', method: '', email: '', name: '', role: '', showRole: true, icon: null, genres: new Set(), notif: { video: true, breaking: true, note: false, deep: true, reply: true } };
   const ROLES = ['証券', '銀行', '運用・ファンド', '保険', '会計・税務', '事業会社（企画・財務）', '営業', 'エンジニア', 'コンサル', '経営者', '公務員', '研究・教育', '学生', '個人投資家'];
   const STEPS = ['profile', 'genres'];
   function obTop(back) {
@@ -2303,7 +2318,7 @@ button.act:active { background: rgba(255,255,255,.06); }
         <div class="wel">
           <div class="wm"><span class="mark"><i></i><i></i></span>Halftick</div>
           <h1>経済のニュースを、<br>みんなと話そう。</h1>
-          <p>1日4回、世界の経済のニュースが届きます。<br>その下で、経済に関心のある人たちが語り合っています。</p>
+          <p>YouTube で解説した経済のニュースを、ここでもっと深く。<br>その下で、経済に関心のある人たちが語り合っています。</p>
           <span class="live glass"><i></i>いま 214人が「日銀は金利0.75%で据え置き」で話しています</span>
           <button class="primary" data-obgo="login" style="margin-top:22px">はじめる</button>
           <button class="ghost" data-obgo="login" data-obmode="login">ログインする</button>
@@ -2370,10 +2385,10 @@ button.act:active { background: rgba(255,255,255,.06); }
       return;
     }
     if (st === 'notif') {
-      const N = OB.notif, rows = [['slot7', '7:00', '米国の引け後'], ['slot1130', '11:30', 'アジアの昼'], ['slot1530', '15:30', 'アジアの引け・欧州の寄り付き'], ['slot22', '22:00', '米国の寄り付き前']];
+      const N = OB.notif;
       el.innerHTML = `<div class="obs">${obTop('genres')}
-        <h2>どの配信をお知らせしますか？</h2><p class="lead">受け取るものは、あなたが選べます。ぜんぶでも、朝と夜だけでも大丈夫。あとから設定で変えられます。</p>
-        <div class="body2">${rows.map(([k, t, n]) => `<div class="nrow"><b class="t">${t}</b><span class="x">${n}</span><button class="toggle ${N[k] ? 'on' : ''}" data-obnotif="${k}" aria-label="${t} の配信"></button></div>`).join('')}
+        <h2>どの配信をお知らせしますか？</h2><p class="lead">受け取るものは、あなたが選べます。あとから設定で変えられます。</p>
+        <div class="body2"><div class="nrow"><b class="t">解説</b><span class="x">YouTube の動画の深掘り<small>新しい動画が出たとき。不定期です</small></span><button class="toggle ${N.video ? 'on' : ''}" data-obnotif="video" aria-label="解説"></button></div>
           <div class="nrow"><b class="t" style="color:#ff6b6b">速報</b><span class="x">日銀・FRBの発表、雇用統計など<small>大事なときだけ届きます</small></span><button class="toggle ${N.breaking ? 'on' : ''}" data-obnotif="breaking" aria-label="速報"></button></div>
           <div class="nrow"><b class="t" style="color:#5fe0d3">ひとこと</b><span class="x">オーナーの短い投稿<small>不定期。1日に何回か届くことがあります</small></span><button class="toggle ${N.note ? 'on' : ''}" data-obnotif="note" aria-label="ひとこと"></button></div>
           <div class="nrow"><b class="t" style="color:#c4b0ff">深掘り</b><span class="x">長めの解説記事<small>不定期。週に1〜2本くらい</small></span><button class="toggle ${N.deep ? 'on' : ''}" data-obnotif="deep" aria-label="深掘り"></button></div>
@@ -2410,7 +2425,9 @@ button.act:active { background: rgba(255,255,255,.06); }
   let ICONS_ME = null;
 
   // ---------- 管理画面（オーナーだけ） ----------
-  const SLOTS = [['7:00', '米国の引け後', 'fomc'], ['11:30', 'アジアの昼', 'yen'], ['15:30', 'アジアの引け・欧州の寄り付き', 'nikkei'], ['22:00', '米国の寄り付き前', null]];
+  // YouTube に上げた動画と、その解説（アプリの記事）。[鍵, 動画の題名, 解説の記事, 長さ]
+  const SLOTS = [['v1', 'FOMC 議事要旨、利下げに慎重な人が多い理由', 'fomc', '18:22'], ['v2', 'ドル円152円、輸入企業の買いが止まらない', 'yen', '11:05'], ['v3', '日経平均ひと休み、半導体だけが重かった', 'nikkei', '12:48'], ['v4', '米CPI（10月）をどう読むか', null, '16:30']];
+  const vt = k => (SLOTS.find(s => s[0] === k) || [])[1] || '';
   const MATS = {
     data: [
       ['米CPI（10月）前年比', '3.1%', '予想 3.0% · 前回 2.9% · 米労働統計局 · 22:30 発表', 'bls.gov'],
@@ -2433,7 +2450,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     { who: 'n.sato', where: '配信「米10年債の利回りが4.4%台に」のコメント', t: '初心者ですが、債券ってなんで下がると利回りが上がるんですか？', why: 'その他', n: 1 },
   ];
   const TPLS = [['paper', '紙面'], ['gauge', '計器'], ['light', '光'], ['ink', '墨']];
-  const DRAFT = { type: 'slot', note: '', noteLink: '', readMin: 6, slot: '22:00', breaking: false, tplName: 'paper', big: 'CPI 発表', en: 'US CPI', ja: '', jaBody: '', enTitle: '', enBody: '', lang: 'ja', genres: new Set(['マクロ']), links: [], used: new Set(), blocks: [['chart', 'グラフ：米CPIの推移（棒）']], video: false, ai: false, selfOk: false, max: '' };
+  const DRAFT = { type: 'slot', note: '', noteLink: '', readMin: 6, slot: 'v4', breaking: false, tplName: 'paper', big: 'CPI 発表', en: 'US CPI', ja: '', jaBody: '', enTitle: '', enBody: '', lang: 'ja', genres: new Set(['マクロ']), links: [], used: new Set(), blocks: [['chart', 'グラフ：米CPIの推移（棒）']], video: false, ai: false, selfOk: false, max: '' };
   state.atab = 'today';
   // サムネの型を描く（見出しの言葉を入れるだけで作れる）
   function drawPoster(tpl, big, en, code) {
@@ -2484,14 +2501,14 @@ button.act:active { background: rgba(255,255,255,.06); }
     const B = $('#a-body');
     if (state.atab === 'today') {
       B.innerHTML = `
-        <div class="acard rel"><h4>今日の配信 · 11月4日（火）</h4>
-          <div class="slots">${SLOTS.map(([t, n, id]) => `<button class="slot2 ${id ? 'done' : 'next'}" ${id ? `data-article="${id}"` : `data-makeslot="${t}"`}><b>${t}</b>${id ? '公開済み' : 'あと5時間50分'}</button>`).join('')}</div>
-          <span class="note" style="right:12px;top:10px">4つの枠の進み具合</span></div>
+        <div class="acard rel"><h4>YouTube の動画と解説</h4>
+          ${SLOTS.map(([k, t, id, len]) => `<button class="vrow" ${id ? `data-article="${id}"` : `data-makeslot="${k}"`}><span class="vth">▶<small>${len}</small></span><span class="x">${esc(t)}<small>${id ? '解説を公開済み' : '解説はまだです'}</small></span><span class="vst ${id ? 'done' : ''}">${id ? '見る' : '解説を書く'}</span></button>`).join('')}
+          <span class="note" style="right:12px;top:10px">動画1本に、解説1本</span></div>
         <div class="acard"><h4>いつでも出せる</h4><div class="qbtns" style="margin-top:0"><button class="yes" data-dtype="note" data-gomake>＋ ひとことを書く</button><button data-dtype="deep" data-gomake>＋ 深掘りを書く</button></div></div>
         <div class="acard"><h4>速報の材料がそろいました</h4>
           <div class="alert"><span class="x"><b>米CPI（10月）が 22:30 に出ます</b><small>予想 3.0% · 出たら数字が自動で入ります</small></span><button data-makebreaking>下書きを作る</button></div></div>
         <div class="acard"><h4>出した配信の反応</h4>
-          ${SLOTS.filter(s => s[2]).map(([t, , id]) => { const a = byId(id); return `<button class="statrow" style="width:100%;text-align:left" data-article="${id}"><img src="${imgOf(a, 'sq')}" alt=""><span class="x">${esc(a.title)}<small>${t} · 読まれた数 ${(a.r * 7).toLocaleString()} · 声 ${a.c} · 保存 ${Math.round(a.r / 9)}</small></span></button>`; }).join('')}</div>
+          ${SLOTS.filter(s => s[2]).map(([t, , id]) => { const a = byId(id); return `<button class="statrow" style="width:100%;text-align:left" data-article="${id}"><img src="${imgOf(a, 'sq')}" alt=""><span class="x">${esc(a.title)}<small>解説 · 読まれた数 ${(a.r * 7).toLocaleString()} · 声 ${a.c} · 保存 ${Math.round(a.r / 9)}</small></span></button>`; }).join('')}</div>
         <div class="acard"><h4>今日の予定</h4>${MATS.cal.map(([t, n]) => `<div class="mat"><span class="num" style="width:76px">${t}</span><span class="x">${n}</span></div>`).join('')}</div>
         <div class="acard"><h4>見ておきたいこと</h4>
           <div class="mat"><span class="x">投稿の申請が ${APPLIES.length}件 届いています</span><button data-atab="apply">見る</button></div>
@@ -2518,8 +2535,8 @@ button.act:active { background: rgba(255,255,255,.06); }
     ];
     const ready = checks.every(c => c[1]) && D.selfOk && D.ja.trim();
     if (!D.poster) D.poster = posterOf(D.tplName);
-    const typeBar = `<div class="acard rel"><h4>投稿の種類</h4><div class="slots">${[['slot', '定時配信', '4つの時刻'], ['breaking', '速報', '今すぐ・赤'], ['note', 'ひとこと', 'いつでも・短く'], ['deep', '深掘り', 'いつでも・長く']].map(([k, l, sub]) => `<button class="slot2 ${D.type === k ? 'on' : ''}" data-dtype="${k}"><b style="font-family:var(--font);font-size:13px">${l}</b>${sub}</button>`).join('')}</div>
-      <p class="muted" style="font-size:11.5px;line-height:1.6;margin:10px 0 0">種類ごとに、ホームでの形と色が変わります（定時＝正方形のサムネ、速報＝赤、ひとこと＝青緑の文字だけ、深掘り＝紫の横長の表紙）。お知らせは、受け取る設定にしている人にだけ届きます。</p>
+    const typeBar = `<div class="acard rel"><h4>投稿の種類</h4><div class="slots">${[['slot', '解説', 'YouTube の動画1本に1本'], ['breaking', '速報', '今すぐ・赤'], ['note', 'ひとこと', 'いつでも・短く'], ['deep', '深掘り', 'いつでも・長く']].map(([k, l, sub]) => `<button class="slot2 ${D.type === k ? 'on' : ''}" data-dtype="${k}"><b style="font-family:var(--font);font-size:13px">${l}</b>${sub}</button>`).join('')}</div>
+      <p class="muted" style="font-size:11.5px;line-height:1.6;margin:10px 0 0">種類ごとに、ホームでの形と色が変わります（解説＝正方形のサムネと動画の印、速報＝赤、ひとこと＝青緑の文字だけ、深掘り＝紫の横長の表紙）。お知らせは、受け取る設定にしている人にだけ届きます。</p>
       <span class="note" style="right:12px;top:10px">種類で形・色・内容を分ける</span></div>`;
     if (D.type === 'note') {
       const okN = D.note.trim() && D.selfOk;
@@ -2539,9 +2556,9 @@ button.act:active { background: rgba(255,255,255,.06); }
     B.innerHTML = typeBar + `
       ${D.type === 'deep' ? `<div class="acard rel"><h4>出す時刻</h4><div class="slots" style="grid-template-columns:1fr 1fr"><button class="slot2 on"><b style="font-family:var(--font);font-size:13px">いま出す</b>すぐに公開</button><button class="slot2" data-toast="時刻を選んで予約できます（ワイヤー）"><b style="font-family:var(--font);font-size:13px">時刻を決める</b>週末の朝など</button></div>
         <label class="lbl" for="d-read">読む時間（目安）</label><input class="field" id="d-read" type="number" min="3" max="30" value="${D.readMin}" style="width:120px"></div>` : `
-      <div class="acard rel"><h4>出す枠</h4>
-        <div class="slots">${SLOTS.map(([t, , id]) => `<button class="slot2 ${D.slot === t && !D.breaking ? 'on' : ''} ${id ? 'done' : ''}" data-dslot="${t}"><b>${t}</b>${id ? '公開済み' : '予約できます'}</button>`).join('')}</div>
-        ${D.breaking ? '<p class="muted" style="font-size:11.5px;margin:10px 0 0;color:#ff8a80">速報として今すぐ出します（枠は使いません）</p>' : ''}</div>`}
+      <div class="acard rel"><h4>${D.breaking ? '速報' : 'もとの YouTube 動画'}</h4>
+        ${D.breaking ? '<p class="muted" style="font-size:11.5px;margin:0;color:#ff8a80">速報として今すぐ出します。動画はあとから付けられます</p>' : SLOTS.map(([k, t, id, len]) => `<button class="vrow ${D.slot === k ? 'sel' : ''}" ${id ? 'disabled' : `data-dslot="${k}"`}><span class="vth">▶<small>${len}</small></span><span class="x">${esc(t)}<small>${id ? '解説を公開済み' : 'この動画の解説を書く'}</small></span><span class="vst ${D.slot === k ? 'vpick' : ''}">${D.slot === k ? '選択中' : ''}</span></button>`).join('')}
+        <span class="note" style="right:12px;top:10px">解説は動画に結びつける</span></div>`}
 
       <div class="acard rel"><h4>材料（サーバーが集めたもの）<span class="muted" style="font-size:11px;font-weight:400">15:58 更新</span></h4>
         <div class="muted" style="font-size:11.5px;margin-bottom:4px">公式データの数字</div>
@@ -2582,7 +2599,7 @@ button.act:active { background: rgba(255,255,255,.06); }
         <button class="ck2 self ${D.selfOk ? 'ok' : ''}" data-selfok><i>${D.selfOk ? '✓' : ''}</i>特定の銘柄の売買をすすめていない（自分で確認）</button></div>
         <span class="note" style="right:12px;top:10px">CLAUDE.md のニュースのルール</span></div>
 
-      <div class="pubbar"><button class="ghost" data-dpreview style="width:auto;padding:0 16px">見え方</button><button class="primary" data-publish ${ready ? '' : 'disabled'}>${D.breaking ? '速報として今すぐ出す' : D.type === 'deep' ? '深掘りをいま出す' : `${D.slot} に予約する`}</button></div>
+      <div class="pubbar"><button class="ghost" data-dpreview style="width:auto;padding:0 16px">見え方</button><button class="primary" data-publish ${ready ? '' : 'disabled'}>${D.breaking ? '速報として今すぐ出す' : D.type === 'deep' ? '深掘りをいま出す' : '解説を公開する'}</button></div>
       <p class="muted" style="font-size:11.5px;text-align:center;padding:8px 16px">下書きは自動で保存されます</p>`;
   }
   let fontsReady = false;
@@ -2600,7 +2617,7 @@ button.act:active { background: rgba(255,255,255,.06); }
   }
   function publishDraft() {
     const D = DRAFT, id = 'n' + Date.now();
-    const a = { id, img: 1, src: D.poster, type: D.type === 'deep' ? 'deep' : undefined, read: D.readMin, lead: D.jaBody.slice(0, 60), brk: D.breaking, lab: D.breaking ? 'Breaking' : 'US pre-open', tag: '#' + [...D.genres][0], tm: D.breaking ? '今' : D.slot, when: D.breaking ? '11月4日（火）16:12 · 速報' : `11月4日（火）${D.slot} · 予約`, title: D.ja.trim(), c: 0, r: 0, tint: '#1d2238' };
+    const a = { id, img: 1, src: D.poster, type: D.type === 'deep' ? 'deep' : undefined, read: D.readMin, lead: D.jaBody.slice(0, 60), brk: D.breaking, lab: D.breaking ? 'Breaking' : 'US pre-open', tag: '#' + [...D.genres][0], tm: '今', vlen: (SLOTS.find(s => s[0] === D.slot) || [])[3], when: D.breaking ? '11月4日（火）16:12 · 速報' : `11月4日（火）16:12 · 解説 · 動画「${vt(D.slot)}」`, title: D.ja.trim(), c: 0, r: 0, tint: '#1d2238' };
     A.unshift(a); DISC[id] = [];
     if (D.type === 'deep') { a.tm = '16:12'; a.when = '11月4日（火）16:12 · 深掘り'; }
     if (D.type === 'slot') { const s2 = SLOTS.find(s => s[0] === D.slot); if (s2) s2[2] = id; }
@@ -2760,7 +2777,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     { day: '今週', type: 'approve', text: '<b>投稿の申請</b>が通りました。「みんな」に書けるようになりました', q: '', at: '11月1日', unread: false },
   ];
   const NTYPE = { reply: ['↩', '#4c8dff', '返信'], react: ['▲', '#ff6a1a', 'リアクション'], mention: ['@', '#ae3ec9', 'メンション'], post: ['◷', '#3ddc84', '配信'], breaking: ['!', '#ff3b30', '配信'], group: ['#', '#0c8599', 'グループ'], invite: ['＋', '#0c8599', 'グループ'], approve: ['✓', '#3ddc84', 'そのほか'] };
-  const NSET = { slot7: true, slot1130: false, slot1530: false, slot22: true, breaking: true, note: false, deep: true, reply: true, react: false, group: true };
+  const NSET = { video: true, breaking: true, note: false, deep: true, reply: true, react: false, group: true };
   function renderNotif() {
     const f = state.notifFilter;
     const pass = n => f === 'all' || (f === 'reply' ? ['reply', 'mention', 'react'].includes(n.type) : f === 'post' ? ['post', 'breaking'].includes(n.type) : ['group', 'invite'].includes(n.type));
@@ -2789,8 +2806,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     $('#notif').classList.remove('open'); $('#notif').setAttribute('aria-hidden', 'true');
   }
   function openNotifSettings() {
-    const rows = [['いつもの配信', [['slot7', '7:00　米国の引け後'], ['slot1130', '11:30　アジアの昼'], ['slot1530', '15:30　アジアの引け・欧州の寄り付き'], ['slot22', '22:00　米国の寄り付き前']]],
-      ['不定期の配信', [['breaking', '速報'], ['note', 'ひとこと（短い投稿）'], ['deep', '深掘り（長めの記事）']]],
+    const rows = [['配信', [['video', '解説（YouTube の動画の深掘り）'], ['breaking', '速報'], ['note', 'ひとこと（短い投稿）'], ['deep', '深掘り（長めの記事）']]],
       ['みんなとのやりとり', [['reply', '返信とメンション'], ['react', 'リアクション'], ['group', 'グループの新しいメッセージ']]]];
     openSheet(`<div class="sh-head"><b>お知らせの設定</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div>
       <div class="past" style="overflow-y:auto;padding-bottom:30px">${rows.map(([h, rs]) => `<span class="lbl">${h}</span>` + rs.map(([k, l]) => `<div class="setrow"><span class="x">${l}${k === 'breaking' ? '<small>日銀・FRBの発表や雇用統計など</small>' : ''}</span><button class="toggle ${NSET[k] ? 'on' : ''}" data-nset="${k}" aria-label="${l}" aria-pressed="${NSET[k]}"></button></div>`).join('')).join('')}
@@ -2814,7 +2830,7 @@ button.act:active { background: rgba(255,255,255,.06); }
         <span class="note" style="right:18px;top:-24px">✓ ＝ 記事を保存</span></div>
       <div class="body">
         ${a.blocks ? renderBlocks(a) : `
-        <div class="video rel"><img src="${imgOf(byId('nfp'), 'th')}" alt=""><span class="play glass">▶</span><span class="len glass">YouTube の解説 · 14:32</span><span class="note" style="right:10px;top:10px">解説動画（本文の前、題名のすぐ下）</span></div>
+        <div class="video rel"><img src="${imgOf(byId('nfp'), 'th')}" alt=""><span class="play glass">▶</span><span class="len glass">YouTube の解説 · ${vlenOf(a) || '14:32'}</span><span class="note" style="right:10px;top:10px">解説動画（本文の前、題名のすぐ下）</span></div>
         <p>${a.brk ? '今回の声明では、賃金について「上昇の広がりがみられる」と、前回よりちょっと踏み込みました。総裁の会見は15:30から。市場は12月の利上げを6割くらい見込んでいます。' : 'ここに本文が入ります。オーナーが数字や見出しを見ながら、かみくだいて書いた解説を置きます。'}</p>
         <div class="wbar" style="width:96%"></div><div class="wbar" style="width:88%"></div><div class="wbar" style="width:64%"></div>
         <div class="fig rel"><img src="${R}chart1.jpg" alt="棒グラフの見本"><span class="note" style="left:10px;top:10px">グラフ：月ごとの推移（棒）</span></div>
@@ -2888,7 +2904,7 @@ button.act:active { background: rgba(255,255,255,.06); }
     const body = kind === 'notif'
       ? [['返信', 'Mia Chen さんから返信が来ました', 'boj'], ['新しい配信', '15:30 の配信が届きました', 'nikkei'], ['速報', '日銀は金利0.75%で据え置き', 'boj'], ['リアクション', 'あなたのコメントに ▲ が12件ついています', 'fomc']]
         .map(([k, t, id]) => `<button class="pi" style="width:100%;text-align:left" data-article="${id}" data-comments="1"><span class="kind">${k}</span><span class="x">${t}</span></button>`).join('')
-      : `<div class="pi"><span class="avatar"></span><span class="x"><b>あなた</b><small>職種（任意）· 日本語</small></span></div>` + ['お知らせの種類（いつもの配信・速報・返信）', '言語（日本語 / English）', 'コメントの並び順', 'ブロックした人', '利用規約・プライバシー', 'アカウントを削除'].map(t => `<div class="pi"><span class="x">${t}</span>›</div>`).join('');
+      : `<div class="pi"><span class="avatar"></span><span class="x"><b>あなた</b><small>職種（任意）· 日本語</small></span></div>` + ['お知らせの種類（解説・速報・返信）', '言語（日本語 / English）', 'コメントの並び順', 'ブロックした人', '利用規約・プライバシー', 'アカウントを削除'].map(t => `<div class="pi"><span class="x">${t}</span>›</div>`).join('');
     openSheet(`<div class="sh-head"><b>${kind === 'notif' ? '通知' : '自分'}</b><button class="round glass" style="width:34px;height:34px" data-close="sheet" aria-label="閉じる">✕</button></div><div class="past" style="overflow-y:auto">${body}</div>`, 'full');
   }
 
