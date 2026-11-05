@@ -17,6 +17,9 @@
   --font: "Geist", "Zen Kaku Gothic New", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
   color-scheme: dark;
 }
+/* 表示する側（Claude のアプリなど）が上下にセーフエリアの余白を足すことがある。ここで 0 に戻し、
+   セーフエリアは各画面の env() で1回だけ数える（2重に空くのを防ぐ） */
+html:root { padding: 0 !important; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--ground); color: var(--text); font-family: var(--font);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); box-sizing: border-box; }
