@@ -4,3 +4,6 @@ node_modules/
 
 # 参考画像（第三者の作品。リポジトリには入れない）
 news-app/mock/ref/
+
+# lefthook install が自動で作る見本（中身はコメントだけ）。設定は news-app/lefthook.yml
+/lefthook.yml
