@@ -45,8 +45,28 @@ img { display: block; max-width: 100%; }
 .screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg); overflow: clip; }
 .scroller { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-bottom: 110px; }
 .scroller::-webkit-scrollbar { display: none; }
-.glass { background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 8px 24px rgba(0,0,0,.35); }
+/* 液体ガラス（6つの層を重ねる）
+   1 投影：浮いて見える影
+   2 ぼかしと明るさ：背景を少しだけぼかし、彩度と明るさを上げ下げして透明感を出す
+   3 縁の屈折：縁のまわりの背景を内側へ押し込む（端ほど強く、真ん中は平ら）。赤を青より少し多く曲げて色をにじませる（Chrome 系だけ。ほかは 2 までで表示）
+   4 色の膜：半透明の色を1枚。背景がにぎやかなほど濃くする
+   5 縁の光：左上と右下に1本ずつ、内側にもう1本
+   6 文字の色：明るいガラスは掛け合わせ、暗いガラスは足して明るく。背景の色が少し混ざる
+   さらに、後ろの明るさを何か所か測り、明るい背景では明るいガラス、暗い背景では暗いガラスに切り替える */
+.glass { --g-rgb: 20 20 24; --g-a: .26; --g-sat: 160%; --g-bri: .8;
+  background: rgb(var(--g-rgb) / var(--g-a)); border: 0;
+  -webkit-backdrop-filter: blur(2px) saturate(var(--g-sat)) brightness(var(--g-bri));
+  backdrop-filter: var(--g-refr,) blur(2px) saturate(var(--g-sat)) brightness(var(--g-bri));
+  box-shadow:
+    inset 1px 1px 0 0 rgba(255,255,255,var(--g-hl1, .42)),
+    inset -1px -1px 0 0 rgba(255,255,255,var(--g-hl2, .2)),
+    inset 3px 3px 4px -3px rgba(255,255,255,var(--g-hl3, .22)),
+    inset -3px -3px 4px -3px rgba(255,255,255,calc(var(--g-hl3, .22) * .6)),
+    0 10px 28px rgba(0,0,0,.32), 0 2px 6px rgba(0,0,0,.22); }
+.glass.g-light { --g-rgb: 255 255 255; --g-sat: 180%; --g-bri: 1.06; --g-hl1: .7; --g-hl2: .35; --g-hl3: .4; color: #2b2b30; }
+.glass.g-light > :not(img):not(.faces):not(canvas) { mix-blend-mode: multiply; }
+.glass.g-dark { color: rgba(255,255,255,.9); }
+.glass.g-dark > :not(img):not(.faces):not(canvas) { mix-blend-mode: plus-lighter; }
 .wbar { height: 10px; border-radius: 5px; background: var(--wire); }
 .muted { color: var(--muted); }
 .mono { font-family: var(--mono); }
@@ -3065,6 +3085,128 @@ mark { background: rgba(255,106,26,.28); color: #fff; border-radius: 3px; paddin
   document.fonts && document.fonts.ready.then(() => { DRAFT.poster = null; });
   renderChips(); renderFeed(); renderLib(); renderPosts(); renderRooms(); renderOnboard();
   setSheet('closed');
+
+  // ---------- 液体ガラス：縁の屈折マップと、後ろの明るさで明るい・暗いを切り替える ----------
+  (function liquidGlass() {
+    const dev = $('#device');
+    const NS = 'http://www.w3.org/2000/svg';
+    const defs = document.createElementNS(NS, 'svg');
+    defs.setAttribute('width', '0'); defs.setAttribute('height', '0'); defs.setAttribute('aria-hidden', 'true');
+    defs.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+    document.body.appendChild(defs);
+    // 屈折は Chrome 系だけが対応。対応していないブラウザでは、ぼかしまでで止める（宣言ごと無効にならないように）
+    const canRefract = CSS.supports('backdrop-filter', 'url(#x) blur(2px)') && !/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const FIXED = '.fab, .dropalert, .dband, .save.on, .pl';
+    const EDGE = 44, MAPS = new Map();
+
+    // 角の丸い四角の、縁からの距離と外向きの向きを1画素ずつ求めて、ずらす量の地図を作る
+    function filterFor(w, h, r) {
+      w = Math.round(w); h = Math.round(h); r = Math.round(Math.min(r, w / 2, h / 2));
+      const edge = Math.max(6, Math.min(EDGE, Math.min(w, h) / 2));
+      const key = `${w}x${h}r${r}`;
+      if (MAPS.has(key)) return MAPS.get(key);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const g = c.getContext('2d'), img = g.createImageData(w, h), D = img.data;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const px = x + .5 - w / 2, py = y + .5 - h / 2;
+        const qx = Math.abs(px) - (w / 2 - r), qy = Math.abs(py) - (h / 2 - r);
+        let dist, nx, ny;
+        if (qx > 0 && qy > 0) { const l = Math.hypot(qx, qy) || 1; dist = r - l; nx = qx / l; ny = qy / l; }
+        else if (qx > qy) { dist = r - qx; nx = 1; ny = 0; } else { dist = r - qy; nx = 0; ny = 1; }
+        nx *= Math.sign(px) || 1; ny *= Math.sign(py) || 1;
+        const t = Math.max(0, 1 - Math.max(0, dist) / edge), m = t * t; // 端ほど強く、真ん中は 0
+        const i = (y * w + x) * 4;
+        D[i] = 128 + nx * m * 127; D[i + 1] = 128 + ny * m * 127; D[i + 2] = 128; D[i + 3] = 255;
+      }
+      g.putImageData(img, 0, 0);
+      const id = 'lg-' + key, sc = edge * 1.1; // ずらす量の最大は縁の幅の 1.1 倍 ×½
+      const f = document.createElementNS(NS, 'filter');
+      f.setAttribute('id', id); f.setAttribute('x', '0'); f.setAttribute('y', '0'); f.setAttribute('width', '100%'); f.setAttribute('height', '100%');
+      f.setAttribute('color-interpolation-filters', 'sRGB');
+      const ch = (n, k) => `<feDisplacementMap in="SourceGraphic" in2="map" scale="${(sc * k).toFixed(1)}" xChannelSelector="R" yChannelSelector="G" result="d${n}"/>
+        <feColorMatrix in="d${n}" type="matrix" values="${n === 'r' ? '1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0' : n === 'g' ? '0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0' : '0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0'}" result="${n}"/>`;
+      f.innerHTML = `<feImage href="${c.toDataURL()}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="map"/>
+        ${ch('r', 1.15)}${ch('g', 1)}${ch('b', .85)}
+        <feBlend in="r" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="b" mode="screen"/>`;
+      defs.appendChild(f);
+      MAPS.set(key, id); return id;
+    }
+
+    // 後ろの明るさを測る（画像は縮小コピーから、それ以外は背景色から）
+    const PIX = new Map();
+    function pixelsOf(im) {
+      const k = im.currentSrc || im.src; if (!k) return null;
+      if (PIX.has(k)) return PIX.get(k);
+      let data = null;
+      try {
+        if (!im.complete || !im.naturalWidth) return null;
+        const c = document.createElement('canvas'); c.width = c.height = 48;
+        const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0, 48, 48);
+        data = g.getImageData(0, 0, 48, 48).data;
+      } catch (e) { data = null; }
+      PIX.set(k, data); return data;
+    }
+    const lum = (r, g, b) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    function sampleAt(x, y, self) {
+      let text = false;
+      for (const el of document.elementsFromPoint(x, y)) {
+        if (el === self || self.contains(el) || el.closest('.glass') || el.classList.contains('note')) continue;
+        if (el.tagName === 'IMG') {
+          const d = pixelsOf(el); if (!d) return null;
+          const r = el.getBoundingClientRect(), iw = el.naturalWidth, ih = el.naturalHeight;
+          const s = getComputedStyle(el).objectFit === 'cover' ? Math.max(r.width / iw, r.height / ih) : null;
+          let u, v;
+          if (s) { u = (x - r.left - (r.width - iw * s) / 2) / (iw * s); v = (y - r.top - (r.height - ih * s) / 2) / (ih * s); }
+          else { u = (x - r.left) / r.width; v = (y - r.top) / r.height; }
+          const px = Math.min(47, Math.max(0, Math.floor(u * 48))), py = Math.min(47, Math.max(0, Math.floor(v * 48))), i = (py * 48 + px) * 4;
+          // 下へ消えていくサムネ（マスク付き）は、見えている濃さに合わせて暗くする
+          const vy = (y - r.top) / r.height, fade = getComputedStyle(el).maskImage !== 'none' && vy > .55 ? Math.max(0, 1 - (vy - .55) / .45) ** 1.5 : 1;
+          return { l: lum(d[i], d[i + 1], d[i + 2]) * fade, text: false };
+        }
+        if (!text && [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) text = true; // 後ろに文字がある
+        const cs = getComputedStyle(el);
+        if (cs.backgroundImage !== 'none') return null;
+        const m = cs.backgroundColor.match(/[\d.]+/g);
+        if (m && (m[3] === undefined || +m[3] > .5)) return { l: lum(+m[0], +m[1], +m[2]), text };
+      }
+      return null;
+    }
+
+    function tune(el) {
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height || el.closest('[hidden]')) return;
+      const dr = dev.getBoundingClientRect();
+      if (r.bottom < dr.top || r.top > dr.bottom) return;
+      // 屈折
+      if (canRefract) {
+        const br = getComputedStyle(el).borderTopLeftRadius;
+        const rad = br.endsWith('%') ? Math.min(r.width, r.height) * parseFloat(br) / 100 : parseFloat(br) || 0;
+        el.style.setProperty('--g-refr', `url(#${filterFor(r.width, r.height, rad)})`);
+      }
+      if (el.matches(FIXED)) { el.classList.remove('g-light', 'g-dark'); return; }
+      // 後ろの明るさ：中心と四隅の内側、5か所
+      const ix = Math.min(10, r.width / 4), iy = Math.min(10, r.height / 4);
+      const pts = [[r.left + r.width / 2, r.top + r.height / 2], [r.left + ix, r.top + iy], [r.right - ix, r.top + iy], [r.left + ix, r.bottom - iy], [r.right - ix, r.bottom - iy]];
+      const S = pts.map(([x, y]) => sampleAt(x, y, el)).filter(v => v !== null), L = S.map(v => v.l);
+      const avg = L.length ? L.reduce((a, b) => a + b, 0) / L.length : 0.1;
+      const sd = L.length ? Math.sqrt(L.reduce((a, b) => a + (b - avg) ** 2, 0) / L.length) : 0;
+      const txt = S.length ? S.filter(v => v.text).length / S.length : 0;
+      const busy = Math.min(1, Math.max(sd / 0.22, txt * 0.9)); // にぎやかさ 0〜1（明るさのばらつき・後ろの文字）
+      const light = avg > 0.5;
+      el.classList.toggle('g-light', light); el.classList.toggle('g-dark', !light);
+      el.style.setProperty('--g-a', (light ? 0.06 + 0.16 * busy : 0.16 + 0.22 * busy).toFixed(3));
+    }
+
+    let raf = 0;
+    const run = () => { raf = 0; dev.querySelectorAll('.glass').forEach(tune); };
+    const later = () => { if (!raf) raf = requestAnimationFrame(run); };
+    new MutationObserver(later).observe(dev, { childList: true, subtree: true });
+    document.addEventListener('scroll', later, true);
+    dev.addEventListener('transitionend', later);
+    window.addEventListener('resize', later);
+    document.addEventListener('load', e => { if (e.target.tagName === 'IMG') later(); }, true);
+    later();
+  })();
 })();
 </script>
 </body>
