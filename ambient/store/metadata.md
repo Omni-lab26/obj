@@ -24,7 +24,7 @@ Lento — 動く背景の時計
 **プロモーションテキスト**（170文字まで・審査なしで後から変更可）
 
 ```
-鯉の泳ぐ夜の池、サメの浅瀬、すりガラス越しの通行人。ゆっくり動く背景の上に、時計・タイマー・ストップウォッチを置いておけるアプリです。
+鯉の泳ぐ夜の池、深い海のマンタ、秋の神社、すりガラス越しの通行人。ゆっくり動く背景の上に、時計・タイマー・ストップウォッチを置いておけるアプリです。
 ```
 
 **説明**（4000文字まで）
@@ -35,6 +35,9 @@ Lento（レント）は、動く背景の上に大きな時計を置いておく
 ■ 背景
 ・夜の鯉：黒い池を文字でできた錦鯉が泳ぎ、蓮の葉が浮かびます。タップするとエサが落ちて、鯉が寄ってきます。鯉のすぐそばをタップすると、驚いて逃げます。
 ・浅瀬のサメ：白い浅瀬をシュモクザメやトラフザメが回遊します。
+・深い海のマンタ：紺色の海で、マンタが大きな翼をゆっくり羽ばたかせます。
+・夜のサメ：夜の海を、ところどころ光る文字のサメが泳ぎます。
+・秋の神社：イチョウの木々、赤い鳥居とキツネ、灯籠の石畳を高いところから見下ろします。タップすると落ち葉が舞います。
 ・通りすがり：すりガラスの床を下から見上げたように、靴底だけがくっきり見える人たちが行き交います。タップすると驚いて走り去ります。
 ・白紙：何もない一枚の紙。
 
@@ -92,7 +95,7 @@ A quiet clock on living scenes
 **Promotional Text**
 
 ```
-Koi in a pond at night, sharks in the shallows, passersby seen through frosted glass: slow, living backgrounds with a clock, timer and stopwatch on top.
+Koi in a pond at night, mantas in the deep, a shrine in autumn, passersby seen through frosted glass: slow, living backgrounds with a clock, timer and stopwatch on top.
 ```
 
 **Description**
@@ -103,6 +106,9 @@ Lento puts a large clock over a slowly moving scene: something to stand on your 
 SCENES
 • Night koi: koi drawn in type swim a dark pond among lotus leaves. Tap to drop food and they gather; tap right by one and it darts away.
 • Sharks in the shallows: hammerheads and a leopard shark circle a bright sandy bay.
+• Mantas in the deep: mantas beat their broad wings slowly through dark blue water.
+• Sharks at night: sharks drawn in type, a few letters glowing, cruise a night sea.
+• Shrine in autumn: ginkgo trees, a red torii with a fox, a lantern-lined path, seen from high above. Tap to scatter the leaves.
 • Passing by: people seen from under a frosted glass floor, only their soles sharp. Tap and they startle and run off.
 • Blank: a plain sheet of paper.
 
@@ -132,6 +138,26 @@ clock,desk clock,bedside,timer,stopwatch,koi,aquarium,ambient,screensaver,big cl
 **Category**: Primary Utilities, secondary Lifestyle
 
 ---
+
+## このバージョンの新機能（1.0.1）
+
+App Store Connect で新しいバージョン 1.0.1 を作ると出てくる「このバージョンの新機能」（What's New）の欄に入れます。説明とプロモーションテキストも、上の新しい背景入りのものに差し替えます。
+
+日本語
+
+```
+・新しい背景を3つ追加しました：深い海のマンタ、夜のサメ、秋の神社。
+・タイマーの目盛りが、iPhone のタイマーのように指に吸い付いて回り、ぴたりと止まるようになりました。
+・数字の拡大縮小で、ちらつきをなくし、止まったあとの数字をくっきりさせました。
+```
+
+English (U.S.)
+
+```
+• Three new scenes: mantas in the deep, sharks at night, and a shrine in autumn.
+• The timer rulers now turn under your finger like the iPhone timer's wheels and settle exactly on each step.
+• Resizing the digits no longer flickers, and they stay crisp once you let go.
+```
 
 ## 年齢制限（App Store Connect の質問）
 

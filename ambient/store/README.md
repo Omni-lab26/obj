@@ -67,6 +67,18 @@
      - ビルド：いちばん新しいビルド番号を選びます。
    - 最後に「審査に提出」を押します。審査は通常 1〜3日です。
 
+## アップデートを出す（例：1.0.1）
+
+1. `git pull` で最新にします。`app.json` の `version` が出したいバージョン（`1.0.1`）になっているか確かめます。ビルド番号は EAS が自動で上げます。
+2. ビルドして TestFlight に上げます。
+   ```sh
+   npx eas-cli@latest build --platform ios --profile production
+   npx eas-cli@latest submit --platform ios --latest
+   ```
+3. TestFlight で実機を確かめます。とくに新しい背景（重さ・見え方）と、前のバージョンで直したところ。
+4. App Store Connect のアプリのページで、左の「iOS App」の横の「＋」から新しいバージョン（`1.0.1`）を作ります。
+5. 「このバージョンの新機能」に `metadata.md` の文面を入れ、説明やプロモーションテキストを変えるならここで直し、ビルドを選んで「審査に提出」します。
+
 ## 気をつけること
 
 - **名前の重複**（2026年11月1日に App Store を検索した結果）
