@@ -53,7 +53,8 @@ export function stopwatchElapsed(s: Stopwatch, now: number): number {
 }
 
 export function toggleStopwatch(s: Stopwatch, now: number): Stopwatch {
-  return s.startAt != null ? { startAt: null, elapsed: s.elapsed + (now - s.startAt) } : { ...s, startAt: now };
+  // (The clock set back since the start would otherwise bank a negative run.)
+  return s.startAt != null ? { startAt: null, elapsed: s.elapsed + Math.max(0, now - s.startAt) } : { ...s, startAt: now };
 }
 
 export function resetStopwatch(): Stopwatch {

@@ -430,22 +430,26 @@ const Digits = memo(function Digits({
           );
         })}
         {small ? (
-          <Text
-            style={[
-              font.time,
-              styles.time,
-              {
-                fontSize: drawn * font.secondsScale,
-                lineHeight: drawn * font.secondsScale * 1.1,
-                color: inkSoft,
-                letterSpacing: 0,
-                marginLeft: drawn * 0.06,
-                marginBottom: drawn * 0.16,
-              },
-            ]}
-          >
-            {small}
-          </Text>
+          // In a box of fixed width too (two digits of seconds, or a point and a tenth),
+          // so a font whose digits differ in width never moves the row as they change.
+          <View style={cell ? { width: cell * font.secondsScale * (mode === 'clock' ? 2 : 1.6), marginLeft: drawn * 0.06 } : { marginLeft: drawn * 0.06 }}>
+            <Text
+              style={[
+                font.time,
+                styles.time,
+                {
+                  fontSize: drawn * font.secondsScale,
+                  lineHeight: drawn * font.secondsScale * 1.1,
+                  color: inkSoft,
+                  letterSpacing: 0,
+                  marginBottom: drawn * 0.16,
+                  textAlign: 'left',
+                },
+              ]}
+            >
+              {small}
+            </Text>
+          </View>
         ) : null}
       </View>
     </View>
@@ -712,6 +716,12 @@ export function Clock(props: Props) {
   // once it is on screen: the two look the same, so no swap shows). It is gone the
   // moment the digits move again, and the moving drawing takes over.
   const [restK, setRestK] = useState<number | null>(null);
+  // (Each spell of editing starts without one.)
+  const [wasEdit, setWasEdit] = useState(edit);
+  if (edit !== wasEdit) {
+    setWasEdit(edit);
+    if (!edit) setRestK(null);
+  }
   const stillK = useSharedValue(0);
   const stillOn = useSharedValue(0);
   useAnimatedReaction(
@@ -913,7 +923,13 @@ export function Clock(props: Props) {
     }, 500);
   };
   useEffect(() => {
-    if (edit || !pending.current) return;
+    if (edit) return;
+    // Editing over: the copy at rest goes with it, and the moving digits show again.
+    // (Left on, a release that changed nothing but the place kept them hidden: the
+    // zoom never moved off the size the copy was shown at, so nothing turned it off.)
+    cancelAnimation(stillOn);
+    stillOn.set(0);
+    if (!pending.current) return;
     fade.set(
       withTiming(0, { duration: 90 }, (finished) => {
         if (finished) runOnJS(commitEdit)();

@@ -6,7 +6,7 @@ import type { Scene } from './scenes';
 
 // The package types its class as Component<WebViewProps & undefined>, which
 // collapses to `never` under current TypeScript; re-type it with what we use.
-type WebViewHandle = { injectJavaScript: (script: string) => void };
+type WebViewHandle = { injectJavaScript: (script: string) => void; reload: () => void };
 const WebView = RNWebView as unknown as ComponentType<WebViewProps & { ref?: Ref<WebViewHandle> }>;
 
 export type SceneViewProps = {
@@ -27,6 +27,12 @@ export function SceneView({ scene, paused, digital, onReady, onTap, onLongPress,
   const ref = useRef<WebViewHandle>(null);
   // Read once: settings at load time; later changes go through injectJavaScript.
   const [initScript] = useState(() => `window.__ambientInit = ${JSON.stringify({ digital })}; true;`);
+  // What the page should be doing now, for when it (re)loads: a call made before the
+  // page was up found no window.__ambient and was lost.
+  const latest = useRef({ paused, digital });
+  useEffect(() => {
+    latest.current = { paused, digital };
+  });
 
   useEffect(() => {
     ref.current?.injectJavaScript(`window.__ambient && window.__ambient.${paused ? 'pause' : 'resume'}(); true;`);
@@ -43,8 +49,11 @@ export function SceneView({ scene, paused, digital, onReady, onTap, onLongPress,
     } catch {
       return;
     }
-    if (msg.type === 'ready') onReady();
-    else if (msg.type === 'tap') onTap();
+    if (msg.type === 'ready') {
+      const { paused: p, digital: d } = latest.current;
+      ref.current?.injectJavaScript(`window.__ambient && (window.__ambient.setDigital(${d}), window.__ambient.${p ? 'pause' : 'resume'}()); true;`);
+      onReady();
+    } else if (msg.type === 'tap') onTap();
     else if (msg.type === 'longpress') onLongPress();
     else if (msg.type === 'tone' && msg.tone) onTone?.(msg.tone);
   };
@@ -56,6 +65,10 @@ export function SceneView({ scene, paused, digital, onReady, onTap, onLongPress,
       originWhitelist={['*']}
       injectedJavaScriptBeforeContentLoaded={initScript}
       onMessage={onMessage}
+      // iOS ends a web page's process now and then (short of memory, or after a long
+      // while in the background) and leaves the view blank: load the scene again.
+      onContentProcessDidTerminate={() => ref.current?.reload()}
+      onRenderProcessGone={() => ref.current?.reload()}
       style={{ backgroundColor: scene.background }}
       containerStyle={[StyleSheet.absoluteFill, { backgroundColor: scene.background }]}
       scrollEnabled={false}

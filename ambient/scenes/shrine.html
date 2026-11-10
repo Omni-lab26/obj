@@ -118,7 +118,7 @@ uniform sampler2D uAtlas;  // glyphs in a row, white on clear
 uniform sampler2D uTable;  // 8 levels x 4 variants per family, then gain/boost/rate
 uniform sampler2D uNoise;  // smooth tiling noise
 uniform vec2 uRes, uCellPx, uGrid, uCellCss;
-uniform float uT, uGlyphs, uPlain;
+uniform float uT, uTs, uGlyphs, uPlain;  // uT: the long clock (the glyphs' beats); uTs: a short one (flicker)
 uniform vec2 uWind, uCloud;
 uniform vec4 uGust0, uGust1, uGust2;
 
@@ -171,7 +171,7 @@ void main() {
   // Lantern flames flicker; their glow spills a little warmth around them.
   if (ax.r > 0.0) {
     float id = ax.r * 255.0;
-    float fl = 0.72 + 0.16 * sin(uT * 7.3 + id * 2.1) + 0.1 * sin(uT * 17.9 + id * 5.3) * sin(uT * 3.1 + id);
+    float fl = 0.72 + 0.16 * sin(uTs * 7.3 + id * 2.1) + 0.1 * sin(uTs * 17.9 + id * 5.3) * sin(uTs * 3.1 + id);
     vec3 warm = vec3(1.0, 0.62, 0.22);
     if (fam > 11.5 && fam < 12.5) {
       col *= 0.5 + 0.8 * fl;
@@ -189,7 +189,8 @@ void main() {
   float rate = tab(34.0, fam) / 40.0 * (1.0 + g * 3.0 + sway * max(w, 0.0) * 1.5);
   float lum = dot(col, vec3(0.32, 0.5, 0.18));
   float ph = hash13(vec3(cell, 3.7)) * 6.0;
-  float k = floor(uT * rate + ph);
+  // (Counted modulo 4096: see where uT is set.)
+  float k = mod(floor(uT * rate + ph), 4096.0);
   float r1 = hash13(vec3(cell, k));
   float r2 = hash13(vec3(cell + 17.0, k));
   float level = clamp(floor(lum * gain * 8.0 + (r2 - 0.5) * 0.9), 0.0, 7.0);
@@ -279,7 +280,7 @@ void main() {
   }
 
   function initGL() {
-    [progGlyph, U1] = program(FS_GLYPH, ['uCell', 'uAux', 'uOver', 'uAtlas', 'uTable', 'uNoise', 'uRes', 'uCellPx', 'uGrid', 'uCellCss', 'uT', 'uGlyphs', 'uPlain', 'uWind', 'uCloud', 'uGust0', 'uGust1', 'uGust2']);
+    [progGlyph, U1] = program(FS_GLYPH, ['uCell', 'uAux', 'uOver', 'uAtlas', 'uTable', 'uNoise', 'uRes', 'uCellPx', 'uGrid', 'uCellCss', 'uT', 'uTs', 'uGlyphs', 'uPlain', 'uWind', 'uCloud', 'uGust0', 'uGust1', 'uGust2']);
     [progTilt, U2] = program(FS_TILT, ['uImg', 'uRes', 'uBlur', 'uBand']);
     quad = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, quad);
@@ -1220,7 +1221,14 @@ void main() {
     gl.uniform2f(U1.uCellPx, cwD, chD);
     gl.uniform2f(U1.uGrid, cols, rows);
     gl.uniform2f(U1.uCellCss, cw, ch);
-    gl.uniform1f(U1.uT, t % 1000);
+    // The shader's clock has to wrap (a float loses its fractions past a few hours), and
+    // every glyph re-rolls on the beat floor(uT * rate), so a wrap that moves the beat
+    // count re-rolls the whole screen at once. The rates are multiples of 1/40 (see
+    // uploadTable), so over 163840 s (= 4096 x 40) every count moves on by a multiple of
+    // 4096, and counted modulo 4096 (as the shader does) nothing changes at the wrap.
+    // The flames' flicker only needs a short clock.
+    gl.uniform1f(U1.uT, t % 163840);
+    gl.uniform1f(U1.uTs, t % 1000);
     gl.uniform1f(U1.uGlyphs, GLYPHS.length);
     gl.uniform1f(U1.uPlain, PLAIN ? 1 : 0);
     gl.uniform2f(U1.uWind, (t * 0.021) % 1, (t * 0.009) % 1);

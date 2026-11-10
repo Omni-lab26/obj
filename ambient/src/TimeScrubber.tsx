@@ -71,6 +71,8 @@ const MIN_SEC: Ruler = {
 };
 
 const ROW = 46;
+// The caption beside each ruler ("時間", "Hours"): wide enough for the English on one line.
+const CAPTION_W = 52;
 // An iPhone list slows by this factor every millisecond after a flick, so it travels
 // v·k/(1-k) further (≈ half a second's worth of its speed) before it stops.
 const DECELERATION = 0.998;
@@ -326,7 +328,7 @@ export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, on
   const h = Math.floor(seconds / 3600) % 24;
   const q = Math.round((seconds % 3600) / 15) % 240;
   const total = (hh: number, qq: number) => hh * 3600 + qq * 15;
-  const inner = width - 52;
+  const inner = width - CAPTION_W - 8;
   const t = useT();
   return (
     <View style={[styles.panel, { width }]} accessibilityRole="adjustable" accessibilityLabel={t.timerLength}>
@@ -334,7 +336,9 @@ export function TimeScrubber({ seconds, width, tone, ink, inkSoft, onPreview, on
       <FaceBackdrop tone={tone} spread={{ x: 64, y: 56 }} />
       {[0, 1].map((r) => (
         <View key={r} style={styles.line}>
-          <Text style={[styles.caption, { color: inkSoft }]}>{r === 0 ? t.hours : t.minutes}</Text>
+          <Text style={[styles.caption, { color: inkSoft }]} numberOfLines={1}>
+            {r === 0 ? t.hours : t.minutes}
+          </Text>
           {r === 0 ? (
             <RulerView
               ruler={HOURS}
@@ -374,7 +378,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   caption: {
-    width: 44,
+    width: CAPTION_W,
     paddingLeft: 12,
     fontSize: 11,
     fontWeight: '700',
