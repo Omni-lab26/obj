@@ -47,6 +47,17 @@ export async function pickPlanIcon(): Promise<string | null> {
   }
 }
 
+/** Removes every photo copied for plan icons (when the account and its data are deleted). */
+export function clearPlanIcons() {
+  if (WEB) return; // kept inline with the plans there: gone with them
+  try {
+    const dir = new Directory(Paths.document, DIR);
+    if (dir.exists) dir.delete();
+  } catch {
+    // nothing to remove, or the system keeps it: the plans that pointed at them are gone either way
+  }
+}
+
 /** Where to load a saved icon from. */
 export function iconUri(icon: string): string {
   if (WEB || icon.includes(':')) return icon;

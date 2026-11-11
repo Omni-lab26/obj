@@ -95,7 +95,10 @@ Expo Go が対応する SDK とプロジェクトの SDK（いまは 58）が合
 この節の下の説明は、前の見た目＝**クラシック**のもの。地は、やわらかい灰色（`#ECEDF0`）に、上から光がさすような白いもや（`Chrome.Screen` の `Haze`）。少し透けて見えるような軽さにしている。背景（鯉の池など）を選ぶと、地の代わりにそれがすべてのページのうしろで動き、カードはすりガラスになる（下の「背景」）。
 
 - **科目の絵**: 科目は頭文字ではなく絵で出す（`src/ui/SubjectGlyph.tsx`）。化学＝フラスコ、物理＝原子、生物＝葉、地学＝山、数学＝π、英語＝吹き出しのA（リスニング＝ヘッドホン、英作文＝ペン）、国語＝開いた本（古文＝巻物、漢文＝筆）、世界史＝神殿、日本史＝鳥居、地理＝地図、政経・公共・倫理＝天秤、情報＝ノートパソコン。科目名から、なければ教科から決まり、どれにも当たらない科目は頭文字のまま。勉強バー・ホーム・科目と色・記録・タイマーのカードの表紙（大きく、うっすら）に出る
-- **アプリのアイコン**: 左上のロゴと同じ、高さの上がっていく5本の目盛りを白地に。色は1本ずつ 赤 `#E5484D`・黄 `#F2C46D`・水色 `#9AB8DB`・青 `#5B8DEF`・紫 `#9D7BF5`（参考にした積み上げグラフの5色。`src/ui/Brand.tsx` の `BRAND_TICKS`）。`assets/images/` の `icon.png`・Android の3枚（白い背景・目盛り・単色）・`splash-icon.png`・`favicon.png`
+- **アプリのアイコン**: スタンダードのヘッダーのロゴ（`src/themes/standard/pixel.tsx` の `LogoMark`）と同じ絵を、ドット絵で描いたもの。高さの上がっていく5本の目盛り（少しずつ前へ）を 2ドットのインクの輪郭で囲み、いちばん高い1本の上にライムの1段。色は1本ずつ 赤 `#E5484D`・黄 `#F2C46D`・水色 `#9AB8DB`・青 `#5B8DEF`・紫 `#9D7BF5`（`S.ticks`、`src/ui/Brand.tsx` の `BRAND_TICKS`）で、ぺたっと平ら。地は紙 `#F3EEE3`、絵の右下にライムのぼかしのない影（主役のカードと同じ斜め）。参考にした piixpal の絵は使っていない
+  - ファイル（`assets/images/`）: `icon.png`（1024・透明なし・角丸なし。角は iOS が切る）、Android の3枚（紙の背景・絵・単色。絵は真ん中の安全な円の中）、`splash-icon.png`（起動の画面。紙の地に 128pt で出て、1ドットが 3pt）、`favicon.png`（絵だけ・地は透明）。紹介サイトの `site/favicon.svg` と `site/img/` の `favicon.png`・`apple-touch-icon.png`・`icon-256.png` も同じ絵
+  - 作り直すとき: 絵は `scripts/icons.mjs` に入っている（パッケージなし。1ドットがいつも整数のピクセルになるように描くので、にじまない）。`node scripts/icons.mjs` で上のファイルをぜんぶ書き出す。ヘッダーのロゴの形や色を変えたら、ここも合わせる
+  - 起動の画面と地の色（`app.json`）: 起動の画面・アプリのいちばん下の地・Android のアイコンの背景は、どれも紙 `#F3EEE3`。見た目は明るいほうだけ（`userInterfaceStyle: light`）なので、暗いときの起動の画面は持たない
 
 - **フォント**: Apple のシステムフォント（英数字は SF Pro、日本語はヒラギノ角ゴ）。iPhone では何も読み込まずにそのまま使い、
   20pt 以上は SF Pro Display、それ未満は SF Pro Text に切り替わります。数字は等幅（tabular）で、カウンターが揺れません。
@@ -254,3 +257,45 @@ Expo Go が対応する SDK とプロジェクトの SDK（いまは 58）が合
 
 ロック画面や iPhone の Dynamic Island に勉強時間を出す機能（Live Activities）は、Expo Go では作れません。
 開発ビルド（`eas build --profile development`）が必要なので、このモックではタブの真ん中のボタンと、勉強バーで代わりにしています。
+
+## ビルドと提出（EAS。オーナーが自分のパソコンでやる）
+
+Expo Go を使わずに iPhone に入れる・App Store に出すときは、Expo のクラウド（EAS Build / EAS Submit）で作ります。Mac や Xcode はいりません。
+設定は `eas.json` に入れてあります。まだ一度もビルドしていません（Apple のアカウントでのサインインが要るので、オーナーの手元でしかできません）。
+
+| プロファイル | 何ができるか | 入れ方 |
+| --- | --- | --- |
+| `development` | 開発ビルド（Expo Go の代わり。ウィジェットなど Expo Go にない機能を試すとき） | 登録した iPhone に直接 |
+| `preview` | 本番と同じ中身を、登録した iPhone に直接入れる（起動の画面とアイコンはここで確かめる） | 登録した iPhone に直接 |
+| `production` | App Store に出すもの（TestFlight もここから）。ビルド番号は EAS が毎回1つ上げる | App Store Connect 経由 |
+
+用意するもの
+
+- **Expo のアカウント**（無料。https://expo.dev/signup ）
+- **Apple Developer Program**（年 99 ドル）。iPhone に入れるビルドは、`preview` も `development` も、これがないと作れません
+- バンドル ID は `app.inchly`（`app.json`）。Apple の側でほかの人が先に使っていたら、`app.json` の `ios.bundleIdentifier` と `android.package` を変えます
+
+手順（このフォルダで。コマンドは https://docs.expo.dev/build/setup/ のとおり）
+
+```bash
+npm install --global eas-cli     # 入れない場合は、下の eas を npx eas-cli@latest に読みかえる
+eas login                        # Expo のアカウントで
+eas init                         # 初回だけ。Expo にプロジェクトを作り、app.json に projectId が書き足される（コミットする）
+
+# 自分の iPhone に入れて確かめる
+eas device:create                # 初回だけ。出てきた QR を iPhone で開いて、端末を登録
+eas build --platform ios --profile preview
+
+# App Store に出す
+eas build --platform ios --profile production
+eas submit --platform ios        # できたビルドを App Store Connect に送る（10〜15分で TestFlight に出る）
+```
+
+- はじめての `eas build` で、Apple ID でのサインインを求められます。証明書とプロビジョニングは EAS に任せられます（聞かれたら Yes）
+- 「プッシュ通知を設定しますか？」と聞かれたら No で大丈夫です（お知らせは、スマホの中で予約する通知だけ）
+- 暗号について聞かれたら（輸出の届けのための質問。eas か App Store Connect が聞きます）：このアプリに自前の暗号は入っていないので、「標準の暗号だけ」のほうです
+- `development` を作るときは、先に `npx expo install expo-dev-client`（いまは入れていません）
+- `eas submit` は、はじめに App Store Connect にアプリを作ります。審査に出すのは App Store Connect の画面から。そのときに、スクリーンショット・説明・年齢の区分・プライバシーポリシーの URL が要ります（紹介サイトの「公開の前に埋めるところ」）
+- `app.json` の `ios.supportsTablet` が `true` なので、iPad でも動く扱いになり、iPad のスクリーンショットも求められます。iPhone だけにするなら `false` に
+- 版（`app.json` の `version`、いま 1.0.0）は、出し直すときに自分で上げます。ビルド番号は EAS が持っています（`eas.json` の `appVersionSource: remote` と `autoIncrement`）
+- Android も同じ流れです（`--platform android`。`preview` は APK がそのまま入り、Apple の登録はいりません。Google Play に出すには 25 ドルの登録）

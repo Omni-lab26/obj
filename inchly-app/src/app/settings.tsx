@@ -7,6 +7,7 @@ import { backdropOf, BACKDROPS, BACKDROPS_OPEN, THEMES_OPEN } from '@/design';
 import { subj } from '@/data';
 import { recordsCsv } from '@/lib/csv';
 import { gradeNow, OTHER_GRADES, SCHOOL } from '@/lib/grade';
+import { clearPlanIcons } from '@/lib/planIcon';
 import { DmFrom, gradeOf, getState, setGrade, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
 import { Pix } from '@/themes/standard/pixel';
@@ -106,6 +107,7 @@ export default function Settings() {
         <Btn kind="primary" wide label="削除する" style={std ? { marginTop: 18 } : { marginTop: 18, backgroundColor: t.red }} onPress={() => {
           close();
           wipe();
+          clearPlanIcons(); // the photos copied for plan icons go too
           router.replace('/welcome');
           toast('削除しました');
         }} />
