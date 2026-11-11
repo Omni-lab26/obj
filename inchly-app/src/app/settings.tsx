@@ -102,7 +102,7 @@ export default function Settings() {
       <View>
         <Txt size={18} w="700">アカウントとデータを削除</Txt>
         <Txt size={13.5} tone="ink2" lh={21} style={{ marginTop: 6 }}>
-          記録、ToDo、締切、フォロー、グループへの参加がすべて消えます。元には戻せません。先にデータを書き出しておくこともできます。
+          記録、ToDo、締切、予定のアイコンの写真、フォロー、グループへの参加がすべて消えます。元には戻せません。先にデータを書き出しておくこともできます。
         </Txt>
         <Btn kind="primary" wide label="削除する" style={std ? { marginTop: 18 } : { marginTop: 18, backgroundColor: t.red }} onPress={() => {
           close();

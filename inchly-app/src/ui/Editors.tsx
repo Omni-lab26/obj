@@ -167,8 +167,9 @@ function Person({ name, color, close }: { name: string; color: string; close: ()
           { v: 'adult', title: '不適切な内容', sub: '性的・暴力的な内容、出会い目的' },
           { v: 'other', title: 'その他', sub: '運営に伝えたいこと' },
         ]} />
-        <Txt size={12} tone="ink3" lh={18}>通報したことは相手に伝わりません。内容を確認して、必要なら運営が対応します。</Txt>
-        <Btn kind="primary" wide label="通報する" onPress={() => { block(name); haptic.success(); close(); toast('通報しました', `${name} はブロックもしました`); }} />
+        {/* said as it is: nothing is sent anywhere yet, the person is only blocked on this phone */}
+        <Txt size={13} tone="ink2" lh={20}>運営に通報を送る仕組みは、まだありません（上で選んだ内容も送られません）。いまできるのはブロックです。ブロックすると、この人は勉強中・投稿・チャットに表示されなくなります。</Txt>
+        <Btn kind="primary" wide label="ブロックする" onPress={() => { block(name); haptic.success(); close(); toast(`${name} をブロックしました`, '勉強中・投稿・チャットに表示されません'); }} />
       </View>
     );
   }

@@ -136,9 +136,10 @@ export function files() {
   out.push(['assets/images/android-icon-monochrome.png', png(stamp(canvas(full, full), 13, { shadow: true, mono: '#000000' }))]);
   // the splash: 24px a dot, every edge on a multiple of 8 — at app.json's imageWidth 128 (1/8) a dot is 3pt on every screen
   out.push(['assets/images/splash-icon.png', png(stamp(canvas(full, full), 24, { shadow: true, snap: 8 }))]);
-  // favicons: the mark alone on nothing (the tab's own color shows through). 48 = 3px a unit, so 16 and 32 stay whole too
-  out.push(['assets/images/favicon.png', png(stamp(canvas(48, 48), 3, { unit: true }))]);
-  out.push(['../site/img/favicon.png', png(stamp(canvas(64, 64), 2))]);
+  // favicons: the mark alone on nothing (the tab's own color shows through), a row of the 16 grid free above it —
+  // every edge on that grid (48 = 3px a unit, 64 = 4px), so the 16 and 32 a browser makes of them stay whole
+  out.push(['assets/images/favicon.png', png(stamp(canvas(48, 48), 3, { unit: true, snap: 3 }))]);
+  out.push(['../site/img/favicon.png', png(stamp(canvas(64, 64), 2, { snap: 4 }))]);
   out.push(['../site/img/apple-touch-icon.png', png(stamp(canvas(180, 180, PAPER), 4, { shadow: true }), { alpha: false })]);
   out.push(['../site/img/icon-256.png', png(stamp(canvas(256, 256, PAPER), 5, { shadow: true }), { alpha: false })]);
   out.push(['../site/favicon.svg', Buffer.from(svg())]);
