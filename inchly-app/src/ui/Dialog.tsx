@@ -33,12 +33,13 @@ export function Dialog({ open, close, title, aside, children }: { open: boolean;
   useEffect(() => {
     if (open) {
       back.set(timed(1, 330));
-      card.set(withDelay(40, present(1)));
+      // スタンダード: at once (its dim has no blur to wait for), so the question is there as the finger lifts
+      card.set(std ? present(1) : withDelay(40, present(1)));
     } else {
       card.set(dismiss(0));
       back.set(withTiming(0, M.leave, (done) => { if (done) scheduleOnRN(setShown, false); }));
     }
-  }, [open, back, card]);
+  }, [open, back, card, std]);
 
   const blurIn = useAnimatedStyle(() => ({ opacity: back.value }));
   const tint = useAnimatedStyle(() => ({ opacity: back.value }));
@@ -51,8 +52,9 @@ export function Dialog({ open, close, title, aside, children }: { open: boolean;
   });
   const inner = useAnimatedStyle(() => {
     const v = card.value;
-    return { opacity: interpolate(v, [0.35, 0.9], [0, 1], 'clamp'), transform: [{ translateY: (1 - Math.min(v, 1)) * 8 }] };
-  });
+    // スタンダード: the words come with the card, not a beat behind it (they were readable only a quarter second after the tap)
+    return { opacity: interpolate(v, std ? [0.05, 0.5] : [0.35, 0.9], [0, 1], 'clamp'), transform: [{ translateY: (1 - Math.min(v, 1)) * (std ? 4 : 8) }] };
+  }, [std]);
 
   return (
     <Modal visible={shown} transparent animationType="none" onRequestClose={close} statusBarTranslucent>

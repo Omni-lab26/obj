@@ -91,8 +91,8 @@ export function Growth() {
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginTop: 4 }}>
               <Rolling value={shown ? g.total.toFixed(1) : '000.0'} size={34} weight="700" />
               <Txt size={13} w="600" tone="ink3" style={{ marginBottom: 6 }}>時間</Txt>
-              <Txt num size={11.5} w="700" color={g.vsLastWeek >= 0 ? t.greenInk : t.red} style={{ marginBottom: 7, marginLeft: 4 }}>
-                {`${g.vsLastWeek >= 0 ? '▲' : '▼'} ${Math.abs(g.vsLastWeek).toFixed(1)}`}<Txt size={10} tone="ink3">{' 先週より'}</Txt>
+              <Txt num size={std ? 12 : 11.5} w="700" color={g.vsLastWeek >= 0 ? t.greenInk : t.red} style={{ marginBottom: 7, marginLeft: 4 }}>
+                {`${g.vsLastWeek >= 0 ? '▲' : '▼'} ${Math.abs(g.vsLastWeek).toFixed(1)}`}<Txt size={std ? 11 : 10} tone="ink3">{' 先週より'}</Txt>
               </Txt>
             </View>
           </View>
@@ -133,7 +133,8 @@ export function Growth() {
         {/* you vs. your past self */}
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Versus label="昨日より" up={g.vsYesterday >= 0} flat={Math.round(g.vsYesterday) === 0} value={hm(g.vsYesterday)} />
-          <Versus label="先週より" up={g.vsLastWeek >= 0} flat={Math.abs(g.vsLastWeek) < 0.05} value={`${Math.abs(g.vsLastWeek).toFixed(1)}h`} />
+          {/* スタンダード: 時間, as the card above says it (not h) */}
+          <Versus label="先週より" up={g.vsLastWeek >= 0} flat={Math.abs(g.vsLastWeek) < 0.05} value={`${Math.abs(g.vsLastWeek).toFixed(1)}${std ? '時間' : 'h'}`} />
           <Versus label="1日平均 · 先月より" up={g.avgNow >= g.avgThen} flat={Math.round(Math.abs(g.avgNow - g.avgThen)) === 0} value={`${Math.round(Math.abs(g.avgNow - g.avgThen))}分`} />
         </View>
 
@@ -169,7 +170,7 @@ function FrameSlider({ value, onChange }: { value: Frame; onChange: (f: Frame) =
         {FRAMES.map((f, i) => (
           <Press key={f.id} onPress={() => set(i)} haptics={false} scale={0.9} hitSlop={{ left: 6, right: 6 }} accessibilityLabel={`${f.label}足`}
             style={{ height: STOP, alignItems: 'center', justifyContent: 'center' }}>
-            <Txt size={11.5} w={i === at ? '700' : '500'} tone={i === at ? 'ink' : 'ink3'}>{f.label}</Txt>
+            <Txt size={std ? 12 : 11.5} w={i === at ? '700' : std ? '600' : '500'} tone={i === at ? 'ink' : std ? 'ink2' : 'ink3'}>{f.label}</Txt>
           </Press>
         ))}
       </View>
@@ -180,6 +181,9 @@ function FrameSlider({ value, onChange }: { value: Frame; onChange: (f: Frame) =
 /** The running total as a rising line, with the milestone you passed and the one ahead. */
 function Climb({ curve, next, prev, from }: { curve: number[]; next: number; prev: number; from: string }) {
   const t = useT();
+  const std = useStd();
+  // スタンダード: the small words on the plot a size up and darker (10pt grey was hard to read)
+  const sz = std ? 11 : 10, lh = std ? 13 : 12, up = std ? -15 : -14;
   const [w, setW] = useState(0);
   // the milestones are drawn when they are near the line (a month of days rises only a little)
   const first = curve[0], last = curve[curve.length - 1], span = Math.max(1, last - first);
@@ -191,7 +195,8 @@ function Climb({ curve, next, prev, from }: { curve: number[]; next: number; pre
   const line = curve.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
   const reveal = useSharedValue(0);
   const replay = useReplay();
-  useEffect(() => { if (w) { reveal.value = 0; reveal.value = withDelay(150, timed(1, 500)); } }, [w, reveal, replay]);
+  // スタンダード: 100 + 500ms, inside the 0.6s MOTION.md allows
+  useEffect(() => { if (w) { reveal.value = 0; reveal.value = withDelay(std ? 100 : 150, timed(1, 500)); } }, [w, reveal, replay, std]);
   // drawn left to right by a window sliding open (moved, not resized): the window comes in from the left, and the line in it goes the other way
   const clip = useAnimatedStyle(() => ({ transform: [{ translateX: w * (reveal.value - 1) }] }));
   const counter = useAnimatedStyle(() => ({ transform: [{ translateX: w * (1 - reveal.value) }] }));
@@ -203,7 +208,7 @@ function Climb({ curve, next, prev, from }: { curve: number[]; next: number; pre
         <>
           <Svg width={w} height={PLOT_H} style={{ position: 'absolute' }}>
             {[...(showPrev ? [prev] : []), ...(showNext ? [next] : [])].filter((m) => m > lo && m < hi).map((m) => (
-              <Line key={m} x1={0} x2={w} y1={Y(m)} y2={Y(m)} stroke={m === next ? t.ink2 : t.line2} strokeWidth={0.75} strokeDasharray="3 4" />
+              <Line key={m} x1={0} x2={w} y1={Y(m)} y2={Y(m)} stroke={m === next ? t.ink2 : t.line2} strokeWidth={std ? 1.5 : 0.75} strokeDasharray="3 4" />
             ))}
           </Svg>
           <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, width: w, overflow: 'hidden' }, clip]}>
@@ -221,10 +226,10 @@ function Climb({ curve, next, prev, from }: { curve: number[]; next: number; pre
             </Svg>
             </Animated.View>
           </Animated.View>
-          {showNext ? <Txt num size={10} w="600" lh={12} tone="ink2" style={{ position: 'absolute', left: 0, top: Y(next) - 14 }}>{`${next}時間`}</Txt> : null}
-          {showPrev && prev > lo ? <Txt num size={10} lh={12} tone="ink3" style={{ position: 'absolute', left: 0, top: Y(prev) - 14 }}>{`${prev}時間 達成`}</Txt> : null}
-          <Txt size={10} lh={12} tone="ink3" style={{ position: 'absolute', left: 0, bottom: -14 }}>{from}</Txt>
-          <Txt size={10} lh={12} tone="ink3" style={{ position: 'absolute', right: 0, bottom: -14 }}>今日</Txt>
+          {showNext ? <Txt num size={sz} w={std ? '700' : '600'} lh={lh} tone="ink2" style={{ position: 'absolute', left: 0, top: Y(next) + up }}>{`${next}時間`}</Txt> : null}
+          {showPrev && prev > lo ? <Txt num size={sz} w={std ? '600' : '400'} lh={lh} tone={std ? 'ink2' : 'ink3'} style={{ position: 'absolute', left: 0, top: Y(prev) + up }}>{`${prev}時間 達成`}</Txt> : null}
+          <Txt size={sz} w={std ? '600' : '400'} lh={lh} tone="ink3" style={{ position: 'absolute', left: 0, bottom: up }}>{from}</Txt>
+          <Txt size={sz} w={std ? '700' : '400'} lh={lh} tone={std ? 'ink' : 'ink3'} style={{ position: 'absolute', right: 0, bottom: up }}>今日</Txt>
         </>
       ) : null}
     </View>
@@ -236,7 +241,8 @@ function Meter({ p }: { p: number }) {
   const std = useStd();
   const v = useSharedValue(0);
   const replay = useReplay();
-  useEffect(() => { v.value = 0; v.value = withDelay(400, timed(Math.max(0, Math.min(1, p)), 500)); }, [p, v, replay]);
+  // スタンダード: with the bars above it (100 + 500ms), not 0.4s after them
+  useEffect(() => { v.value = 0; v.value = withDelay(std ? 100 : 400, timed(Math.max(0, Math.min(1, p)), 500)); }, [p, v, replay, std]);
   // fills by scaling from the left, not by its width (no layout each frame)
   const a = useAnimatedStyle(() => ({ transform: [{ scaleX: v.value }] }));
   // スタンダード: square, 8 tall, on paper 2 inside a thin ink outline (on a view of its own, so the clipping doesn't take it)
@@ -254,10 +260,12 @@ function Meter({ p }: { p: number }) {
 function Versus({ label, up, flat, value }: { label: string; up: boolean; /** no change */ flat?: boolean; value: string }) {
   const t = useT();
   // スタンダード: no change is neither up nor down (± in grey)
-  const even = useStd() && flat;
+  const std = useStd();
+  const even = std && flat;
   return (
     <Card pad={10} style={{ flex: 1 }}>
-      <Txt size={10.5} tone="ink3" numberOfLines={1}>{label}</Txt>
+      {/* スタンダード: the label darker and a touch bolder (10.5pt grey was hard to read); it shrinks rather than lose its end on a narrow phone */}
+      <Txt size={std ? 11 : 10.5} w={std ? '600' : '400'} tone={std ? 'ink2' : 'ink3'} numberOfLines={1} adjustsFontSizeToFit={std} minimumFontScale={0.85}>{label}</Txt>
       <Txt num size={16} w="700" lh={21} color={even ? t.ink3 : up ? t.greenInk : t.red} style={{ marginTop: 2 }}>{`${even ? '±' : up ? '▲' : '▼'} ${value}`}</Txt>
     </Card>
   );

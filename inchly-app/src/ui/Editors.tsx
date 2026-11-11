@@ -8,7 +8,7 @@ import { Block } from '../lib/timetable';
 import { addSession, addTodo, block, getState, moveTodo, removeDeadline, removeSession, removeTodo, Session, Todo, toggleFollow, updateSession, updateTodo, useStore, useSubjects } from '../store';
 import { hair, useT } from '../theme';
 import { ring, S, SR, useStd } from './stdLook';
-import { Avatar, Btn, haptic, Txt } from './base';
+import { Avatar, Btn, haptic, StdKey, Txt } from './base';
 import { DatePick, DurationPick, Opens, PickChip, SMOOTH } from './DateTime';
 import { openDm } from './DmParts';
 import { Choice, Field, Label, RadioCards } from './Form';
@@ -137,13 +137,23 @@ export function deadlineSheet() {
   planSheet({ kind: 'deadline' });
 }
 export function deadlineActions(id: string, name: string) {
-  openSheet((close) => (
+  openSheet((close) => <DeadlineActions id={id} name={name} close={close} />);
+}
+function DeadlineActions({ id, name, close }: { id: string; name: string; close: () => void }) {
+  const std = useStd();
+  const remove = () => { removeDeadline(id); haptic.warn(); close(); toast('締切を削除しました', 'ひも付いていたToDoは残ります'); };
+  return (
     <View style={{ gap: 12 }}>
       <Txt size={18} w="700">{name}</Txt>
-      <Btn kind="quiet" wide label="この締切を削除" onPress={() => { removeDeadline(id); haptic.warn(); close(); toast('締切を削除しました', 'ひも付いていたToDoは残ります'); }} />
+      {std ? (
+        // スタンダード: a key whose words are crimson (taking something away), as a plan's 削除
+        <StdKey onPress={remove} label="この締切を削除" style={{ minHeight: 48, marginBottom: 4 }} face={{ minHeight: 48 }}>
+          <Txt size={15} w="700" color={S.pause}>この締切を削除</Txt>
+        </StdKey>
+      ) : <Btn kind="quiet" wide label="この締切を削除" onPress={remove} />}
       <Btn kind="ghost" wide label="やめる" onPress={close} />
     </View>
-  ));
+  );
 }
 
 // ---------- a person: follow, block, report ----------
@@ -153,6 +163,7 @@ export function personSheet(name: string, color: string) {
 type Reason = 'spam' | 'harass' | 'adult' | 'other';
 function Person({ name, color, close }: { name: string; color: string; close: () => void }) {
   const t = useT();
+  const std = useStd();
   const p = ROOM.find((x) => x.n === name);
   const following = useStore((s) => (p ? s.following.includes(p.h) : false));
   const [reporting, setReporting] = useState(false);
@@ -177,7 +188,7 @@ function Person({ name, color, close }: { name: string; color: string; close: ()
     <View style={{ alignItems: 'center', gap: 4 }}>
       <Avatar name={name} color={color} size={64} />
       <Txt size={17} w="700" style={{ marginTop: 6 }}>{name}</Txt>
-      {p ? <Txt size={12.5} tone="ink3">{`@${p.h} · ${p.g} 志望`}</Txt> : null}
+      {p ? <Txt size={std ? 13 : 12.5} tone="ink3">{`@${p.h} · ${p.g} 志望`}</Txt> : null}
       <View style={{ alignSelf: 'stretch', gap: 8, marginTop: 16 }}>
         {p ? <Btn kind={following ? 'quiet' : 'primary'} wide label={following ? 'フォロー中' : 'フォローする'} onPress={() => { toggleFollow(p.h); haptic.soft(); }} /> : null}
         <Btn kind="line" wide label="メッセージを送る" onPress={() => { close(); openDm(name); }} />
@@ -186,8 +197,8 @@ function Person({ name, color, close }: { name: string; color: string; close: ()
           <Btn kind="line" label="通報" style={{ flex: 1 }} onPress={() => setReporting(true)} />
         </View>
       </View>
-      <View style={{ alignSelf: 'stretch', marginTop: 12, paddingTop: 10, borderTopWidth: hair, borderTopColor: t.line }}>
-        <Txt size={11.5} tone="ink3" style={{ textAlign: 'center' }}>ブロックは 設定 › ブロック中の人 から解除できます</Txt>
+      <View style={{ alignSelf: 'stretch', marginTop: 12, paddingTop: 10, borderTopWidth: std ? 1.5 : hair, borderTopColor: t.line }}>
+        <Txt size={std ? 12 : 11.5} tone="ink3" style={{ textAlign: 'center' }}>ブロックは 設定 › ブロック中の人 から解除できます</Txt>
       </View>
     </View>
   );

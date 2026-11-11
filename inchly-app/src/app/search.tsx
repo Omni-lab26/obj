@@ -7,7 +7,7 @@ import { PEOPLE, Uni, UNIS } from '@/data';
 import { minutesIn } from '@/lib/history';
 import { getState, toggleFollow, toggleIn, useStore } from '@/store';
 import { font, hair, noOutline, radius, useT } from '@/theme';
-import { Avatar, Btn, Empty, haptic, Press, Txt } from '@/ui/base';
+import { Avatar, Btn, Empty, haptic, Press, StdIcon, Txt } from '@/ui/base';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { dismiss, fadeIn, present } from '@/ui/motion';
 import { Checkbox } from '@/ui/Form';
@@ -16,7 +16,8 @@ import { openSheet } from '@/ui/Sheet';
 import { Segmented } from '@/ui/Tabs';
 import { toast } from '@/ui/Toast';
 import { Pane } from '@/ui/Glass';
-import { useStd } from '@/ui/stdLook';
+import { Pix } from '@/themes/standard/pixel';
+import { LIFT, ring, S, SR, useStd } from '@/ui/stdLook';
 
 type Kind = 'uni' | 'user';
 const RECENT = ['東京大学 理科一類', '青チャート 数III', 'もくもく会'];
@@ -24,11 +25,12 @@ const COLS = [56, 64, 54, 30];
 
 function Skeleton() {
   const t = useT();
+  const std = useStd();
   // still gray bars, not breathing (nothing loops: MOTION.md)
   return (
     <View accessibilityLabel="読み込み中">
       {[0, 1, 2, 3].map((i) => (
-        <View key={i} style={{ paddingHorizontal: 20, paddingVertical: 14, gap: 8, borderBottomWidth: hair, borderBottomColor: t.line }}>
+        <View key={i} style={{ paddingHorizontal: 20, paddingVertical: 14, gap: 8, borderBottomWidth: std ? 1.5 : hair, borderBottomColor: t.line }}>
           <View style={{ width: '60%', height: 12, borderRadius: 6, backgroundColor: t.sunken }} />
           <View style={{ width: '35%', height: 12, borderRadius: 6, backgroundColor: t.sunken }} />
         </View>
@@ -38,6 +40,16 @@ function Skeleton() {
 }
 
 function NumCell({ v, unit, w }: { v: string; unit?: string; w: number }) {
+  const std = useStd();
+  // スタンダード: the figure bold with its unit beside it on one line (a 10pt grey unit under it was hard to read)
+  if (std) {
+    return (
+      <View style={{ width: w, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'flex-end', gap: 1 }}>
+        <Txt num size={14} w="700" lh={20}>{v}</Txt>
+        {unit ? <Txt size={11} w="600" tone="ink3" lh={20}>{unit}</Txt> : null}
+      </View>
+    );
+  }
   return (
     <View style={{ width: w, alignItems: 'flex-end' }}>
       <Txt num size={14} w="600">{v}</Txt>
@@ -62,23 +74,23 @@ function CompareTable({ us, close }: { us: Uni[]; close: () => void }) {
     { k: 'あなたとの差', cells: us.map((u) => { const d = me - u.avg; return { v: `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}時間`, best: u.avg === minAvg }; }) },
     { k: '二次試験まで', cells: us.map((u) => ({ v: `${u.days}日` })) },
   ];
-  const line = { borderBottomWidth: hair, borderBottomColor: t.line };
+  const line = { borderBottomWidth: std ? 1.5 : hair, borderBottomColor: t.line };
   return (
     <View>
       <Txt size={18} w="700">{us.length}校を比べる</Txt>
-      <Txt size={12.5} tone="ink3">いちばん良い値を緑で示しています</Txt>
+      <Txt size={std ? 13 : 12.5} tone="ink3">いちばん良い値を緑で示しています</Txt>
       <View style={[{ flexDirection: 'row', marginTop: 12, paddingVertical: 10 }, line]}>
         <View style={{ flex: 1.2 }} />
         {us.map((u) => (
           <View key={u.n} style={{ flex: 1, alignItems: 'flex-end' }}>
             <Txt size={13} w="700" numberOfLines={1}>{u.n}</Txt>
-            <Txt size={11.5} tone="ink3" numberOfLines={1}>{u.f}</Txt>
+            <Txt size={std ? 12 : 11.5} tone="ink3" numberOfLines={1}>{u.f}</Txt>
           </View>
         ))}
       </View>
       {rows.map((r) => (
         <View key={r.k} style={[{ flexDirection: 'row', alignItems: 'center', paddingVertical: 11 }, line]}>
-          <Txt size={13} tone="ink3" style={{ flex: 1.2 }}>{r.k}</Txt>
+          <Txt size={13} w={std ? '600' : '400'} tone={std ? 'ink2' : 'ink3'} style={{ flex: 1.2 }}>{r.k}</Txt>
           {r.cells.map((c, i) => (
             <Txt key={i} num size={13.5} w={c.best ? '700' : '500'} color={c.best ? t.greenInk : t.ink} style={{ flex: 1, textAlign: 'right' }}>{c.v}</Txt>
           ))}
@@ -91,11 +103,25 @@ function CompareTable({ us, close }: { us: Uni[]; close: () => void }) {
 
 function Tray({ picked, onGo }: { picked: string[]; onGo: () => void }) {
   const t = useT();
+  const std = useStd();
   const insets = useSafeAreaInsets();
   const show = picked.length >= 2;
   const y = useSharedValue(200);
   useEffect(() => { y.value = show ? present(0) : dismiss(200); }, [show, y]);
   const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+  if (std) {
+    // スタンダード: it floats — paper with the ink outline and the lime shadow (6 clear on the right); 比べる is its one decision, an ink key
+    return (
+      <Animated.View pointerEvents={show ? 'auto' : 'none'}
+        style={[{ position: 'absolute', left: 12, right: 18, bottom: insets.bottom + 18, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 60, paddingVertical: 8, paddingRight: 12, paddingLeft: 16, borderRadius: 16, backgroundColor: S.card, boxShadow: LIFT }, a]}>
+        <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
+          <Txt size={15} w="700" lh={20}>{picked.length}校を比べる</Txt>
+          <Txt size={12} tone="ink2" lh={16} numberOfLines={1}>{picked.join(' · ')}</Txt>
+        </View>
+        <Btn small kind="primary" label="比べる" onPress={onGo} />
+      </Animated.View>
+    );
+  }
   return (
     <Animated.View pointerEvents={show ? 'auto' : 'none'}
       style={[{ position: 'absolute', left: 12, right: 12, bottom: insets.bottom + 12, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingRight: 8, paddingLeft: 14, borderRadius: radius.card, backgroundColor: t.ink }, a]}>
@@ -143,12 +169,13 @@ export default function Search() {
   if (!q && kind !== 'uni' && !text) {
     body = (
       <View style={{ paddingHorizontal: 20, paddingTop: 6 }}>
-        <Txt size={12} w="600" tone="ink2" style={{ paddingTop: 12, paddingBottom: 4 }}>最近の検索</Txt>
-        {RECENT.map((r) => (
+        <Txt size={std ? 13 : 12} w={std ? '700' : '600'} tone="ink2" style={{ paddingTop: 12, paddingBottom: 4 }}>最近の検索</Txt>
+        {RECENT.map((r, i) => (
           <Pressable key={r} onPress={() => { haptic.tap(); changeText(r.split(' ')[0]); }}
-            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, borderBottomWidth: hair, borderBottomColor: t.line, opacity: pressed ? 0.6 : 1 })}>
-            <Icon name="clock" size={14} color={t.ink3} />
-            <Txt size={13.5} tone="ink2">{r}</Txt>
+            style={({ pressed }) => [{ flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, borderBottomWidth: hair, borderBottomColor: t.line, opacity: pressed ? 0.6 : 1 },
+              std && { height: 48, gap: 12, borderBottomWidth: i < RECENT.length - 1 ? 1.5 : 0 }]}>
+            {std ? <Pix name="clock" px={1} color={S.ink2} /> : <Icon name="clock" size={14} color={t.ink3} />}
+            <Txt size={std ? 15 : 13.5} tone={std ? 'ink' : 'ink2'}>{r}</Txt>
           </Pressable>
         ))}
       </View>
@@ -160,10 +187,10 @@ export default function Search() {
     body = list.length ? (
       <Animated.View entering={fadeIn()}>
         {list.map((u) => (
-          <View key={u.n} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: hair, borderBottomColor: t.line }}>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Txt size={13.5} w="600" numberOfLines={1}>{u.n}</Txt>
-              <Txt size={11} tone="ink3" numberOfLines={1}>{u.f} · {u.p}</Txt>
+          <View key={u.n} style={[{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: hair, borderBottomColor: t.line }, std && { minHeight: 62, paddingVertical: 10, borderBottomWidth: 1.5 }]}>
+            <View style={{ flex: 1, minWidth: 0, gap: std ? 2 : 0 }}>
+              <Txt size={std ? 15 : 13.5} w={std ? '700' : '600'} lh={std ? 20 : undefined} numberOfLines={1}>{u.n}</Txt>
+              <Txt size={std ? 12 : 11} tone="ink3" lh={std ? 16 : undefined} numberOfLines={1}>{u.f} · {u.p}</Txt>
             </View>
             <NumCell w={COLS[0]} v={u.dev.toFixed(1)} />
             <NumCell w={COLS[1]} v={u.fans.toLocaleString()} unit="人" />
@@ -173,7 +200,7 @@ export default function Search() {
             </View>
           </View>
         ))}
-        <Txt size={11} tone="ink3" style={{ paddingHorizontal: 20, paddingVertical: 12 }}>偏差値は河合塾の目安（サンプル）</Txt>
+        <Txt size={std ? 12 : 11} tone="ink3" style={{ paddingHorizontal: 20, paddingVertical: 12 }}>偏差値は河合塾の目安（サンプル）</Txt>
       </Animated.View>
     ) : <Empty title={`「${q}」に合う大学はありません`} sub={std ? '「東大」「工学部」みたいに\n短くすると見つかりやすい' : '「東大」「工学部」みたいに短くすると見つかりやすい'} />;
   } else {
@@ -183,11 +210,11 @@ export default function Search() {
         {list.map((p) => {
           const on = following.includes(p.h);
           return (
-            <View key={p.h} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 }}>
-              <Avatar name={p.n} color={p.c} size={32} />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Txt size={13.5} w="600">{p.n}</Txt>
-                <Txt size={11} tone="ink3" numberOfLines={1}>@{p.h} · {p.g} · 今週 {(p.t / 400).toFixed(1)}時間</Txt>
+            <View key={p.h} style={[{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 }, std && { minHeight: 60, paddingVertical: 8 }]}>
+              <Avatar name={p.n} color={p.c} size={std ? 40 : 32} />
+              <View style={{ flex: 1, minWidth: 0, gap: std ? 2 : 0 }}>
+                <Txt size={std ? 15 : 13.5} w={std ? '700' : '600'} lh={std ? 20 : undefined} numberOfLines={1}>{p.n}</Txt>
+                <Txt size={std ? 12 : 11} tone="ink3" lh={std ? 16 : undefined} numberOfLines={1}>@{p.h} · {p.g} · 今週 {(p.t / 400).toFixed(1)}時間</Txt>
               </View>
               <Btn small kind={on || std ? 'quiet' : 'primary'} label={on ? 'フォロー中' : 'フォロー'} onPress={() => toggleFollow(p.h)} />
             </View>
@@ -202,31 +229,33 @@ export default function Search() {
   return (
     <Screen>
       <NavBar title="さがす" />
-      <View style={{ marginHorizontal: 16, marginTop: 2, height: 42, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, borderRadius: radius.inner, backgroundColor: t.surface,
-        borderWidth: focused ? 1.25 : hair, borderColor: focused ? t.ink : t.line2 }}>
-        <Icon name="search" size={16} color={t.ink3} />
+      <View style={[{ marginHorizontal: 16, marginTop: 2, height: 42, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, borderRadius: radius.inner, backgroundColor: t.surface,
+        borderWidth: focused ? 1.25 : hair, borderColor: focused ? t.ink : t.line2 },
+        // スタンダード: a field like the others — the card's color, a thin ink outline, the full 2pt one while you type; the pixel lens
+        std && { height: 48, gap: 10, paddingHorizontal: 14, borderRadius: SR.key, borderWidth: 0, backgroundColor: S.card, boxShadow: ring(focused ? 2 : 1.5) }]}>
+        {std ? <StdIcon name="search" color={S.ink2} /> : <Icon name="search" size={16} color={t.ink3} />}
         <TextInput ref={inputRef} value={text} onChangeText={changeText} autoFocus placeholder="大学・ユーザー" placeholderTextColor={t.ink3}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} returnKeyType="search" clearButtonMode="never" autoCorrect={false}
           accessibilityLabel="検索" style={[{ flex: 1, minWidth: 0, fontSize: 16, color: t.ink, fontFamily: font.text, height: 42 }, noOutline]} />
         {text ? (
           <Pressable onPress={() => { changeText(''); inputRef.current?.focus(); }} hitSlop={10} accessibilityLabel="消す"
-            style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="x" size={11} color={t.ink3} width={2.6} />
+            style={[{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.sunken, alignItems: 'center', justifyContent: 'center' }, std && { width: 28, height: 28, borderRadius: 8, backgroundColor: S.paper2 }]}>
+            {std ? <Pix name="x" px={1.5} /> : <Icon name="x" size={11} color={t.ink3} width={2.6} />}
           </Pressable>
         ) : null}
       </View>
-      <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 }}>
+      {/* スタンダード: on the page's 16 margin, like the field above it */}
+      <View style={{ paddingHorizontal: std ? 16 : 20, paddingTop: 12, paddingBottom: 4 }}>
         <Segmented value={kind} onChange={changeKind} options={[{ v: 'uni', label: '大学' }, { v: 'user', label: 'ユーザー' }]} />
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" stickyHeaderIndices={showHeader ? [0] : undefined}
         contentContainerStyle={{ paddingBottom: insets.bottom + (picked.length >= 2 ? 96 : 24) }}>
         {showHeader ? (
-          <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6, backgroundColor: t.backdrop !== 'none' ? t.surface : t.canvas, borderBottomWidth: hair, borderBottomColor: t.line }}>
+          <View style={[{ flexDirection: 'row', gap: 6, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6, backgroundColor: t.backdrop !== 'none' ? t.surface : t.canvas, borderBottomWidth: hair, borderBottomColor: t.line }, std && { paddingBottom: 8, borderBottomWidth: 2, borderBottomColor: S.ink }]}>
             <Pane radius={0} />
-            <Txt size={11.5} tone="ink3" style={{ flex: 1 }}>大学・学部</Txt>
-            <Txt size={11.5} tone="ink3" style={{ width: COLS[0], textAlign: 'right' }}>偏差値</Txt>
-            <Txt size={11.5} tone="ink3" style={{ width: COLS[1], textAlign: 'right' }}>志望者</Txt>
-            <Txt size={11.5} tone="ink3" style={{ width: COLS[2], textAlign: 'right' }}>二次まで</Txt>
+            {(['大学・学部', '偏差値', '志望者', '二次まで'] as const).map((h, i) => (
+              <Txt key={h} size={std ? 12 : 11.5} w={std ? '700' : '400'} tone={std ? 'ink2' : 'ink3'} numberOfLines={1} style={i ? { width: COLS[i - 1], textAlign: 'right' } : { flex: 1 }}>{h}</Txt>
+            ))}
             <View style={{ width: COLS[3] }} />
           </View>
         ) : null}

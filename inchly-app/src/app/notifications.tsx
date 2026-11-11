@@ -56,7 +56,7 @@ function Row({ n, unread, joined, onJoin }: { n: Notif; unread: boolean; joined:
       )}
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Txt size={13.5} w={unread ? '600' : '500'} lh={19} style={{ flex: 1 }}>{n.title}</Txt>
+          <Txt size={std ? 14 : 13.5} w={unread ? (std ? '700' : '600') : '500'} lh={std ? 20 : 19} style={{ flex: 1 }}>{n.title}</Txt>
           {unread ? <View style={[{ width: 7, height: 7, borderRadius: 4, backgroundColor: t.blue, alignSelf: 'flex-start', marginTop: 6 }, std && { width: 8, height: 8, borderRadius: 0, backgroundColor: S.unread, boxShadow: ring(1.5) }]} /> : null}
         </View>
         {n.kind === 'imp' ? (
@@ -73,7 +73,7 @@ function Row({ n, unread, joined, onJoin }: { n: Notif; unread: boolean; joined:
           </View>
           )
         ) : null}
-        <Txt size={11.5} tone="ink3" lh={16} style={{ marginTop: 2 }}>{n.sub} · {n.time}</Txt>
+        <Txt size={std ? 12 : 11.5} tone="ink3" lh={std ? 17 : 16} style={{ marginTop: std ? 3 : 2 }}>{n.sub} · {n.time}</Txt>
         {n.cta || n.join || n.follow ? (
           <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
             {/* スタンダード: starting is lime (start); the rest are plain keys */}
@@ -157,11 +157,11 @@ export default function Notifications() {
           </View>
         ))}
         {list.length ? (
-          <Txt size={11} tone="ink3" style={{ textAlign: 'center', marginTop: 16 }}>右へスワイプで既読、左へスワイプで削除</Txt>
+          <Txt size={std ? 12 : 11} tone="ink3" style={{ textAlign: 'center', marginTop: 16 }}>右へスワイプで既読、左へスワイプで削除</Txt>
         ) : null}
         {off.length ? (
           <Pressable onPress={() => router.push('/settings')} hitSlop={6} style={{ alignSelf: 'center', marginTop: 8, paddingVertical: 6 }}>
-            <Txt size={11.5} tone="ink3">{`${off.join('・')}のお知らせはオフです `}<Txt size={11.5} w="600" color={t.blue}>設定</Txt></Txt>
+            <Txt size={std ? 12 : 11.5} tone="ink3">{`${off.join('・')}のお知らせはオフです `}<Txt size={std ? 12 : 11.5} w={std ? '700' : '600'} color={t.blue} style={std ? { textDecorationLine: 'underline' } : null}>設定</Txt></Txt>
           </Pressable>
         ) : null}
       </ScrollView>

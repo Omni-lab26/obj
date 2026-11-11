@@ -503,6 +503,8 @@ function StdTimetable({ day, setDay, today, isToday, stops, rows, now }: { day: 
         </Pressable>
       ) : (
         <Card pad={0}>
+          {/* clipped to the card's corners: a row slid aside (削除) keeps inside them; the outline is the card's, outside this */}
+          <View style={{ borderRadius: SR.card, overflow: 'hidden' }}>
           {isToday ? (
             <View style={{ paddingVertical: 8 }}>
               {stops.map((st, i) => st.kind === 'free' ? <StdStopRow key={st.x.id} st={st} first={i === 0} />
@@ -511,10 +513,11 @@ function StdTimetable({ day, setDay, today, isToday, stops, rows, now }: { day: 
               {rows.map(({ block: b, state }, i) => <Slide key={b.id} b={b}><StdAheadRow b={b} live={state === 'now'} next={state === 'next'} last={i === rows.length - 1} /></Slide>)}
             </View>
           ) : (
-            <View style={{ paddingVertical: 2, paddingHorizontal: 12 }}>
+            <View style={{ paddingVertical: 2 }}>
               {rows.map(({ block: b }, i) => <Slide key={b.id} b={b}><StdPlainRow b={b} first={!i} /></Slide>)}
             </View>
           )}
+          </View>
         </Card>
       )}
     </View>
@@ -599,7 +602,7 @@ function StdStopRow({ st, first }: { st: Stop; first: boolean }) {
       </Txt>
       {st.finished ? <StdMeter min={st.min} plan={plan} color={sj.c} /> : (
         <View style={{ minHeight: 20, paddingHorizontal: 7, justifyContent: 'center', borderRadius: 7, backgroundColor: S.paper2, boxShadow: ring(1.5, 'rgba(23,18,31,0.16)') }}>
-          <Txt size={11} w="600" tone="ink3" lh={14}>やらなかった</Txt>
+          <Txt size={11} w="700" tone="ink2" lh={14}>やらなかった</Txt>
         </View>
       )}
     </Press>
@@ -662,7 +665,8 @@ function StdPlainRow({ b, first }: { b: Block; first: boolean }) {
   const sj = subj(b.s);
   return (
     <Press onPress={() => blockSheet(b)} scale={0.99} {...delA11y(b)} accessibilityLabel={`${b.start ? `${b.start}から` : '時刻なし'} ${sj.name} ${b.t ?? ''}。編集`}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 62, paddingVertical: 8, borderTopWidth: first ? 0 : 1.5, borderTopColor: S.line }}>
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 62, paddingVertical: 8, paddingHorizontal: 12 }}>
+      {first ? null : <View pointerEvents="none" style={{ position: 'absolute', left: 12, right: 12, top: 0, height: 1.5, backgroundColor: S.line }} />}
       <View style={{ width: TIME_W, alignItems: 'flex-end', justifyContent: 'center' }}><StdTimes b={b} /></View>
       <View style={{ borderRadius: 10, boxShadow: ring() }}><StdArt b={b} size={40} r={10} /></View>
       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>

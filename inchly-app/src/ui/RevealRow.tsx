@@ -5,9 +5,9 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { useT } from '../theme';
-import { haptic, Txt } from './base';
+import { haptic, StdKey, Txt } from './base';
 import { move } from './motion';
-import { ring, S, SR, useStd } from './stdLook';
+import { S, useStd } from './stdLook';
 
 // A row that slides right under the finger to show 削除 at its left. Past half
 // the button it stays open (or a quick flick), short of that it goes back; the
@@ -64,12 +64,17 @@ export function RevealRow({ children, onDelete, label }: { children: ReactNode; 
       {/* closed, the button is not there for touch or VoiceOver (VoiceOver deletes with the row's own 削除 action) */}
       <Animated.View style={[{ position: 'absolute', left: 0, top: 0, bottom: 0, width: W }, under]} pointerEvents={open ? 'auto' : 'none'}
         accessibilityElementsHidden={!open} importantForAccessibility={open ? 'auto' : 'no-hide-descendants'}>
+        {std ? (
+          // スタンダード: a crimson key on its ink floor (pressed, only its face sinks), like every other thing you press
+          <StdKey onPress={() => { haptic.soft(); onDelete(shut); }} haptics={false} label={`${label}を削除`} fill={S.pause} kd={3} style={{ flex: 1, marginLeft: 10, marginRight: 8, marginTop: 8, marginBottom: 11 }}>
+            <Txt size={14} w="700" lh={18} color="#FFFFFF">削除</Txt>
+          </StdKey>
+        ) : (
         <Pressable onPress={() => { haptic.soft(); onDelete(shut); }} accessibilityRole="button" accessibilityLabel={`${label}を削除`}
-          style={({ pressed }) => std
-            ? { flex: 1, margin: 8, borderRadius: SR.key, backgroundColor: S.pause, boxShadow: ring(), alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1 }
-            : { flex: 1, backgroundColor: t.red, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1 }}>
+          style={({ pressed }) => ({ flex: 1, backgroundColor: t.red, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1 })}>
           <Txt size={14} w="700" color="#FFFFFF">削除</Txt>
         </Pressable>
+        )}
       </Animated.View>
       <GestureDetector gesture={pan}>
         <Animated.View style={content}>

@@ -89,7 +89,7 @@ export function GraphDeck({ last }: { last: ReactNode }) {
             </View>
           </GestureDetector>
           <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 6 }} pointerEvents="none">
-            {Array.from({ length: PAGES }, (_, i) => <Dot key={i} i={i} x={x} step={step} />)}
+            {Array.from({ length: PAGES }, (_, i) => <Dot key={i} i={i} n={PAGES} x={x} step={step} />)}
           </View>
         </>
       ) : null}
@@ -97,14 +97,24 @@ export function GraphDeck({ last }: { last: ReactNode }) {
   );
 }
 
-function Dot({ i, x, step }: { i: number; x: SharedValue<number>; step: number }) {
+const DOT_W = 18, DOT_MIN = 6;
+/** How wide dot j looks while the deck is at x: 18 on its card, 6 away from it. */
+const dotW = (x: number, step: number, j: number) => { 'worklet'; return DOT_MIN + (DOT_W - DOT_MIN) * (1 - Math.min(1, Math.abs(-x / step - j))); };
+function Dot({ i, n, x, step }: { i: number; n: number; x: SharedValue<number>; step: number }) {
   const t = useT();
   const std = useStd();
   const a = useAnimatedStyle(() => {
     const d = Math.min(1, Math.abs(-x.value / step - i));
+    // スタンダード: every dot keeps its 18pt slot and is scaled from its left edge, then moved to where a row of
+    // resized dots would put it (the row stays centered) — transform only, no layout while the deck is dragged
+    if (std) {
+      let before = 0, all = 0;
+      for (let j = 0; j < n; j++) { const s = dotW(x.value, step, j) - DOT_W; all += s; if (j < i) before += s; }
+      return { opacity: 0.25 + 0.75 * (1 - d), transform: [{ translateX: before - all / 2 }, { scaleX: dotW(x.value, step, i) / DOT_W }] };
+    }
     return { width: 6 + 12 * (1 - d), opacity: 0.25 + 0.75 * (1 - d) };
   });
-  return <Animated.View style={[{ height: 6, borderRadius: std ? 0 : 3, backgroundColor: t.ink }, a]} />;
+  return <Animated.View style={[{ height: 6, borderRadius: std ? 0 : 3, backgroundColor: t.ink }, std && { width: DOT_W, transformOrigin: 'left' }, a]} />;
 }
 
 /** The head every card shares: a label, one big number, how it compares. */
@@ -130,7 +140,7 @@ function Head({ label, aside, value, unit, delta, up = true, size = 34 }: { labe
         {delta ? (
           <View style={{ alignItems: 'flex-end', marginBottom: 4 }}>
             <Txt num size={12} w="700" lh={15} color={up ? t.greenInk : t.red}>{delta}</Txt>
-            <Txt size={10.5} tone="ink3" lh={13}>先週より</Txt>
+            <Txt size={std ? 11 : 10.5} tone="ink3" lh={std ? 14 : 13}>先週より</Txt>
           </View>
         ) : null}
       </View>
@@ -201,14 +211,14 @@ function WeekPage({ w, h }: { w: number; h: number }) {
           ))}
         </View>
         {day && sel !== null ? (
-          <View pointerEvents="none" style={{ position: 'absolute', top: Math.max(0, ch - (day.min / top) * ch - 26), left: Math.min(w - 86, Math.max(0, sel * (bw + gap) + bw / 2 - 43)), width: 86, alignItems: 'center' }}>
+          <View pointerEvents="none" style={{ position: 'absolute', top: Math.max(std ? -16 : 0, ch - (day.min / top) * ch - 26), left: Math.min(w - 86, Math.max(0, sel * (bw + gap) + bw / 2 - 43)), width: 86, alignItems: 'center' }}>
             <View style={{ backgroundColor: t.ink, borderRadius: 7, paddingHorizontal: 8, paddingVertical: 3 }}>
               <Txt num size={11.5} w="700" lh={15} color={t.onInk}>{`${label(sel)} ${hmc(day.min)}`}</Txt>
             </View>
           </View>
         ) : null}
         <View style={{ flexDirection: 'row', gap, marginTop: 4 }}>
-          {days.map((_, i) => <Txt key={i} size={11} w={i === sel || (sel === null && i === 6) ? '700' : '500'} tone={i === sel || (sel === null && i === 6) ? 'ink' : 'ink3'} style={{ width: bw, textAlign: 'center' }}>{label(i)}</Txt>)}
+          {days.map((_, i) => <Txt key={i} size={11} w={i === sel || (sel === null && i === 6) ? '700' : std ? '600' : '500'} tone={i === sel || (sel === null && i === 6) ? 'ink' : 'ink3'} style={{ width: bw, textAlign: 'center' }}>{label(i)}</Txt>)}
         </View>
       </View>
       <View style={{ flex: 1 }} />
@@ -217,13 +227,13 @@ function WeekPage({ w, h }: { w: number; h: number }) {
         <Press onPress={() => breakdownSheet(day.date)} disabled={!day.min} scale={0.98} accessibilityRole="button" accessibilityLabel={`${label(sel!)}に勉強した内容を見る`} style={{ gap: 4 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Txt size={12} w="700" lh={16} style={{ flex: 1 }}>{`${day.date.getMonth() + 1}月${day.date.getDate()}日（${WD[day.date.getDay()]}）· ${day.min ? jpHm(day.min) : '記録なし'}`}</Txt>
-            {day.min ? <Txt size={11.5} w="600" color={t.blue}>内訳 ›</Txt> : null}
+            {day.min ? <Txt size={std ? 12 : 11.5} w={std ? '700' : '600'} color={t.blue} style={std ? { textDecorationLine: 'underline' } : null}>{std ? '内訳' : '内訳 ›'}</Txt> : null}
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 10, rowGap: 2 }}>
             {used.filter((s) => (day.parts[s.key] ?? 0) > 0).map((s) => (
               <View key={s.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <SubjTile name={s.name} color={s.c} area={s.area} size={13} radius={3} />
-                <Txt num size={11} tone="ink2">{`${s.name} ${hmc(day.parts[s.key] ?? 0)}`}</Txt>
+                <Txt num size={11} w={std ? '600' : '400'} tone="ink2">{`${s.name} ${hmc(day.parts[s.key] ?? 0)}`}</Txt>
               </View>
             ))}
           </View>
@@ -233,12 +243,12 @@ function WeekPage({ w, h }: { w: number; h: number }) {
           {used.map((s) => (
             <View key={s.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <SubjTile name={s.name} color={s.c} area={s.area} size={13} radius={3} />
-              <Txt size={11} tone="ink3">{s.name}</Txt>
+              <Txt size={11} w={std ? '600' : '400'} tone={std ? 'ink2' : 'ink3'}>{s.name}</Txt>
             </View>
           ))}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <View style={{ width: std ? 12 : 10, height: 0, borderTopWidth: std ? 1.5 : 1, borderStyle: 'dashed', borderColor: std ? S.ink : t.amber }} />
-            <Txt size={11} tone="ink3">目標</Txt>
+            <Txt size={11} w={std ? '600' : '400'} tone={std ? 'ink2' : 'ink3'}>目標</Txt>
           </View>
         </View>
       )}

@@ -16,7 +16,7 @@ import { Pix } from './pixel';
 
 // Today's plans in another order (the timer's cards follow it), スタンダード's way: the plans as rows in
 // one card (the subject's square, 1.5pt lines between), ≡ to hold and move one up or down — held, it
-// rises on the lime shadow and the others slide out of its way (ui/motion move: no bounce). Plans done
+// rises onto the lime shadow (not grown) and the others slide out of its way (ui/motion move: no bounce). Plans done
 // and waiting to be recorded, and the one under way, stay first with a lock. The same as ui/OrderSheet.
 
 export function orderSheet() {
@@ -24,6 +24,8 @@ export function orderSheet() {
 }
 
 const ROW = 64;
+/** The card's room above and below its rows: a row held at either end keeps its lime shadow inside the card. */
+const PAD = 4;
 
 function Order({ close }: { close: () => void }) {
   const all = useStore((s) => s.timetable);
@@ -59,9 +61,9 @@ function Order({ close }: { close: () => void }) {
         <J size={12.5} lh={18} color={S.ink3}>終わった予定と勉強中の予定は動かせません</J>
       </View>
       {/* the rows are clear on the card, the lines between them under them (a row held covers them as it passes) */}
-      <View style={{ backgroundColor: S.card, borderRadius: R.card, boxShadow: ring() }}>
+      <View style={{ backgroundColor: S.card, borderRadius: R.card, boxShadow: ring(), paddingVertical: PAD }}>
         {list.slice(1).map((b, i) => (
-          <View key={b.id} pointerEvents="none" style={{ position: 'absolute', left: 14, right: 14, top: (i + 1) * ROW - 0.75, height: 1.5, backgroundColor: S.line }} />
+          <View key={b.id} pointerEvents="none" style={{ position: 'absolute', left: 14, right: 14, top: PAD + (i + 1) * ROW - 0.75, height: 1.5, backgroundColor: S.line }} />
         ))}
         {fixed.map((b) => <Line key={b.id} b={b} locked note={held.some((h) => h.blockId === b.id) ? '記録まち' : '勉強中'} />)}
         {movable.length ? <DragList items={movable} onDrop={drop} /> : null}
@@ -109,7 +111,7 @@ function DragRow({ b, pos, n, onDrop }: { b: Block; pos: SharedValue<Record<stri
   const [pan] = useState(() => Gesture.Pan().minDistance(1)
     .onStart(() => { from.value = pos.value[b.id] * ROW; y.value = from.value; lifted.value = true; scheduleOnRN(haptic.tap); })
     .onUpdate((e) => {
-      y.value = Math.max(-8, Math.min((n - 1) * ROW + 8, from.value + e.translationY));
+      y.value = Math.max(0, Math.min((n - 1) * ROW, from.value + e.translationY));
       const to = Math.max(0, Math.min(n - 1, Math.round(y.value / ROW)));
       const was = pos.value[b.id];
       if (to !== was) {
@@ -127,13 +129,14 @@ function DragRow({ b, pos, n, onDrop }: { b: Block; pos: SharedValue<Record<stri
     }));
   const a = useAnimatedStyle(() => {
     const at = (pos.value[b.id] ?? 0) * ROW;
-    return { zIndex: lifted.value ? 10 : 0, transform: [{ translateY: lifted.value ? y.value : move(at) }, { scale: micro(lifted.value ? 1.03 : 1) }] };
+    return { zIndex: lifted.value ? 10 : 0, transform: [{ translateY: lifted.value ? y.value : move(at) }] };
   });
-  // held: its own ground, the outline and the lime shadow fade in under it (the shadow itself never changes)
+  // held: its own ground, the outline and the lime shadow fade in under it (the shadow itself never changes);
+  // 8 in from the card's sides and not grown, so the edge and the shadow stay inside the card (as home's friends)
   const up = useAnimatedStyle(() => ({ opacity: micro(lifted.value ? 1 : 0) }));
   return (
     <Animated.View style={[{ position: 'absolute', left: 0, right: 0, top: 0 }, a]}>
-      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 4, right: 4, top: 2, bottom: 2, borderRadius: R.mid, backgroundColor: S.card, boxShadow: LIFT }, up]} />
+      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 8, right: 8, top: 3, bottom: 3, borderRadius: R.mid, backgroundColor: S.card, boxShadow: LIFT }, up]} />
       <Line b={b} />
       <GestureDetector gesture={pan}>
         <View accessible accessibilityLabel={`${sj.name}を動かす`} accessibilityHint="押したまま上下に動かします"

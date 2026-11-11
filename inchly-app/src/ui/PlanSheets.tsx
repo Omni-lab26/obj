@@ -8,7 +8,7 @@ import { pickPlanIcon } from '../lib/planIcon';
 import { Block, toClock, toMin } from '../lib/timetable';
 import { addDeadline, addSubject, dropFavorite, dropIcon, type Fav, keepIcon, removeBlock, saveBlock, useStore, useSubjects } from '../store';
 import { font, hair, noOutline, useT } from '../theme';
-import { haptic, Press, StdKey, SubjTile, Txt } from './base';
+import { Btn, haptic, Press, StdKey, StdLink, SubjTile, Txt } from './base';
 import { ContentHints } from './ContentHints';
 import { DatePick, Opens, PickChip, SMOOTH, TimePick } from './DateTime';
 import { Icon } from './Icon';
@@ -44,6 +44,8 @@ const shortDate = (d: Date) => `${d.getMonth() + 1}月${d.getDate()}日（${DOW[
 // the day in its chip, as compact as Calendar's
 const chipDate = (d: Date) => `${d.getMonth() + 1}月${d.getDate()}日(${DOW[mondayIndex(d)]})`;
 const DEADLINE_RED = '#FF3B30';
+/** スタンダード: what's picked among pictures, a lime ring between two ink ones (as the plan's own icon while its list is open). */
+const PICKED = `0px 0px 0px 2px ${S.ink}, 0px 0px 0px 5px ${S.lime}, 0px 0px 0px 7px ${S.ink}`;
 
 type Kind = 'plan' | 'deadline';
 /** noDay: no 曜日 row (the plan being studied, edited from its timer card: it stays on its day). */
@@ -54,6 +56,8 @@ export function planSheet(o: { date?: Date; existing?: Block; kind?: Kind; noDay
 export const planCalendar = () => planSheet({ date: new Date() });
 
 type Open = 'date' | 'start' | 'end' | 'subject' | 'new' | null;
+/** スタンダード: a cell of the icon grid (room around the tile for the picked one's ring). */
+const TILE_CELL = { gap: 9, paddingTop: 9, paddingBottom: 5 };
 const DAY = 24 * 60;
 
 function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => void; date?: Date; existing?: Block; kind: Kind; noDay?: boolean }) {
@@ -203,7 +207,7 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
                 {name.trim() || icon ? (
                   std ? (
                     // スタンダード: the subject's square in ink (a photo edged in ink); open, a lime ring around it
-                    <View style={{ margin: 3, borderRadius: 13, boxShadow: open === 'subject' ? `0px 0px 0px 2px ${S.ink}, 0px 0px 0px 5px ${S.lime}, 0px 0px 0px 7px ${S.ink}` : ring() }}>
+                    <View style={{ margin: 3, borderRadius: 13, boxShadow: open === 'subject' ? PICKED : ring() }}>
                       {icon ? <PlanArt icon={icon} name={name.trim() || '？'} color={color} size={56} radius={13} /> : <SubjTile name={name.trim() || '？'} color={color} size={56} radius={13} />}
                     </View>
                   ) : (
@@ -222,7 +226,8 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
                 <Press onPress={() => toggle('subject')} scale={0.98} accessibilityLabel={name.trim() ? `教科：${name.trim()}。変える` : '教科を選ぶ'}
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 34, paddingRight: 8 }}>
                   <Txt size={18} w="700" tone={name.trim() ? 'ink' : 'ink3'} numberOfLines={1} style={{ flexShrink: 1 }}>{name.trim() || '教科'}</Txt>
-                  <View style={{ transform: [{ rotate: open === 'subject' ? '-90deg' : '90deg' }] }}><Icon name="chev" size={13} color={t.ink3} /></View>
+                  {std ? <View style={{ marginLeft: 2, transform: [{ rotate: open === 'subject' ? '180deg' : '0deg' }] }}><Pix name="down" color={name.trim() ? S.ink : S.ink3} /></View>
+                    : <View style={{ transform: [{ rotate: open === 'subject' ? '-90deg' : '90deg' }] }}><Icon name="chev" size={13} color={t.ink3} /></View>}
                 </Press>
                 <View style={{ height: std ? 1.5 : hair, backgroundColor: t.line }} />
                 <TextInput value={title} onChangeText={(v) => setTitle(v.slice(0, 40))} placeholder={std ? 'メモ（例：例題41〜50）' : 'メモ（例：青チャート 例題41〜50）'}
@@ -231,22 +236,25 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
               </View>
             </View>
             {/* what you've written before (plans' メモ, records' contents), one row: a tap puts it in */}
-            <View style={{ paddingHorizontal: 12, paddingBottom: 10, marginTop: -4 }}>
+            <View style={{ paddingHorizontal: 12, marginTop: -4, marginBottom: 4 }}>
               <ContentHints s={match?.id ?? null} typed={title} onPick={(w) => setTitle(w.slice(0, 40))} />
             </View>
               {/* the subjects as the icons to pick; a photo can stand in for the picture */}
               {open === 'subject' ? (
                 <Opens>
-                  <View style={{ alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8, paddingTop: 8, paddingBottom: 4 }} accessibilityRole="radiogroup">
+                  <View style={{ alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8, paddingTop: 8, paddingBottom: std ? 6 : 4 }} accessibilityRole="radiogroup">
                     {subjects.map((x) => {
                       const on = match?.id === x.id;
                       return (
                         <Press key={x.id} onPress={() => { haptic.tap(); setName(x.name); setColor(x.c); setOpen(null); }} scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`${x.name}にする`}
-                          style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
+                          style={[{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }, std && TILE_CELL]}>
+                          {std ? <View style={{ borderRadius: 10, boxShadow: on ? PICKED : undefined }}><SubjTile name={x.name} color={x.c} area={x.area} size={40} radius={10} /></View> : (
                           <View style={{ padding: 2, borderRadius: 8, borderWidth: 2, borderColor: on ? t.blue : 'transparent' }}>
                             <SubjTile name={x.name} color={x.c} area={x.area} size={38} radius={5} />
                           </View>
-                          <Txt size={11.5} w={on ? '600' : '400'} color={on ? t.blue : t.ink2} numberOfLines={1}>{x.name}</Txt>
+                          )}
+                          {std ? <Txt size={12} w={on ? '700' : '500'} lh={16} tone={on ? 'ink' : 'ink2'} numberOfLines={1}>{x.name}</Txt>
+                            : <Txt size={11.5} w={on ? '600' : '400'} color={on ? t.blue : t.ink2} numberOfLines={1}>{x.name}</Txt>}
                         </Press>
                       );
                     })}
@@ -258,25 +266,42 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
                         <Press key={x.id} onPress={() => { haptic.tap(); setIcon(x.icon); if (xs) { setName(xs.name); setColor(xs.c); } setOpen(null); }}
                           onLongPress={() => { haptic.warn(); dropIcon(x.id); toast('アイコンを外しました', 'この予定の写真はそのまま'); }}
                           scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`自分のアイコン${xs ? `（${xs.name}）` : ''}にする。長押しで外す`}
-                          style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
+                          style={[{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }, std && TILE_CELL]}>
+                          {std ? <View style={{ borderRadius: 10, boxShadow: on ? PICKED : ring() }}><PlanArt icon={x.icon} name={xs?.name ?? '？'} color={xs?.c ?? color} size={40} radius={10} /></View> : (
                           <View style={{ padding: 2, borderRadius: 8, borderWidth: 2, borderColor: on ? t.blue : 'transparent' }}>
                             <PlanArt icon={x.icon} name={xs?.name ?? '？'} color={xs?.c ?? color} size={38} radius={5} />
                           </View>
-                          <Txt size={11.5} w={on ? '600' : '400'} color={on ? t.blue : t.ink2} numberOfLines={1}>{xs?.name ?? '写真'}</Txt>
+                          )}
+                          {std ? <Txt size={12} w={on ? '700' : '500'} lh={16} tone={on ? 'ink' : 'ink2'} numberOfLines={1}>{xs?.name ?? '写真'}</Txt>
+                            : <Txt size={11.5} w={on ? '600' : '400'} color={on ? t.blue : t.ink2} numberOfLines={1}>{xs?.name ?? '写真'}</Txt>}
                         </Press>
                       );
                     })}
                     {/* 足す, always last: a photo of your own, kept as an icon to use again */}
                     <Press onPress={choose} scale={0.92} accessibilityLabel="写真からアイコンを作る"
-                      style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
+                      style={[{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }, std && TILE_CELL]}>
+                      {std ? (
+                        // スタンダード: the same dashed ink square as the plan's empty icon, a pixel ＋ in it
+                        <View style={{ width: 40, height: 40, borderRadius: 10, borderWidth: 2, borderStyle: 'dashed', borderColor: 'rgba(23,18,31,0.4)', backgroundColor: S.card, alignItems: 'center', justifyContent: 'center' }}>
+                          <Pix name="plus" />
+                        </View>
+                      ) : (
                       <View style={{ padding: 2 }}>
                         <View style={{ width: 38, height: 38, borderRadius: 5, borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line2, alignItems: 'center', justifyContent: 'center' }}>
                           <Icon name="plus" size={15} color={t.ink2} />
                         </View>
                       </View>
-                      <Txt size={11.5} tone="ink2">足す</Txt>
+                      )}
+                      <Txt size={std ? 12 : 11.5} w={std ? '500' : '400'} lh={std ? 16 : undefined} tone="ink2">足す</Txt>
                     </Press>
                   </View>
+                  {std ? (
+                    // スタンダード: a line as thick as the other rows', the words a link, 写真を外す a small key
+                    <View style={{ alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 52, paddingHorizontal: 14, borderTopWidth: 1.5, borderTopColor: S.line }}>
+                      <View style={{ flex: 1, alignItems: 'flex-start' }}><StdLink label="新しい科目をつくる" onPress={() => toggle('new')} /></View>
+                      {icon ? <Btn small label="写真を外す" onPress={() => { haptic.tap(); setIcon(undefined); }} /> : null}
+                    </View>
+                  ) : (
                   <View style={{ alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: hair, borderTopColor: t.line }}>
                     <Press onPress={() => toggle('new')} hitSlop={8} scale={0.94} accessibilityLabel="科目を足す" style={{ flex: 1, height: 30, justifyContent: 'center' }}>
                       <Txt size={13} w="500" color={t.blue}>新しい科目をつくる</Txt>
@@ -288,6 +313,7 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
                       </Press>
                     ) : null}
                   </View>
+                  )}
                 </Opens>
               ) : null}
               {open === 'new' ? <Opens><NewSubject onAdd={(x) => { setName(x.name); setColor(x.c); setOpen(null); }} /></Opens> : null}
@@ -304,7 +330,7 @@ function Editor({ close, date, existing, kind: kind0, noDay }: { close: () => vo
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 16, paddingRight: 10, minHeight: 52 }}>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Txt size={16}>時刻</Txt>
-                  {len ? <Txt num size={12} tone="ink3" numberOfLines={1}>{`${nextDay ? '翌日まで · ' : ''}${lenLabel}`}</Txt> : null}
+                  {len ? <Txt num size={12} w={std ? '600' : '400'} tone="ink3" numberOfLines={1}>{`${nextDay ? '翌日まで · ' : ''}${lenLabel}`}</Txt> : null}
                 </View>
                 {/* neither is needed: なし until you tap it (then the next hour, or an hour after the start) */}
                 <PickChip label={start === null ? 'なし' : toClock(start)} on={open === 'start'} a11y={start === null ? '始める時刻を入れる' : '始める時刻を変える'}
@@ -395,7 +421,8 @@ function WeekRow({ d, today, calendar, onPick, onCalendar }: { d: Date; today: D
         return (
           <Press key={i} onPress={() => onPick(x)} scale={0.92} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`${i === 0 ? '今日 ' : ''}${shortDate(x)}`}
             style={[cell, on ? pick : { backgroundColor: 'transparent' }, std && { borderRadius: 10 }]}>
-            <Txt size={10.5} w={std && i === 0 ? '800' : '600'} lh={13} color={on ? onFg : i === 0 ? t.blue : mondayIndex(x) >= 5 ? t.ink2 : t.ink3}>{i === 0 ? '今日' : DOW[mondayIndex(x)]}</Txt>
+            {/* スタンダード: the weekday a size up and in ink 2 (the pale grey at 10pt was hard to read) */}
+            <Txt size={std ? 11 : 10.5} w={std ? (i === 0 || on ? '800' : '700') : '600'} lh={13} color={on ? onFg : i === 0 ? t.blue : std ? S.ink2 : mondayIndex(x) >= 5 ? t.ink2 : t.ink3}>{i === 0 ? '今日' : DOW[mondayIndex(x)]}</Txt>
             <Txt num size={17} w={on ? '700' : '600'} lh={21} color={on ? onFg : t.ink}>{String(x.getDate())}</Txt>
           </Press>
         );
@@ -404,7 +431,7 @@ function WeekRow({ d, today, calendar, onPick, onCalendar }: { d: Date; today: D
         style={[cell, later ? pick : { backgroundColor: t.sunken }, std && { borderRadius: 10 }, std && !later && calendar && { backgroundColor: S.lime, boxShadow: ring() }]}>
         {later ? (
           <>
-            <Txt size={10.5} w="600" lh={13} color={onFg}>{`${d.getMonth() + 1}月`}</Txt>
+            <Txt size={std ? 11 : 10.5} w={std ? '800' : '600'} lh={13} color={onFg}>{`${d.getMonth() + 1}月`}</Txt>
             <Txt num size={17} w="700" lh={21} color={onFg}>{String(d.getDate())}</Txt>
           </>
         ) : std ? <Pix name="cal" /> : <Icon name="cal" size={18} color={calendar ? t.blue : t.ink2} />}
@@ -416,6 +443,7 @@ function WeekRow({ d, today, calendar, onPick, onCalendar }: { d: Date; today: D
 /** Adds a subject on the spot, and hands it back to put on the plan. Its 教科 comes from its name (日本史 → 社会) and with it its fixed color; only one in その他 has a color to pick. */
 function NewSubject({ onAdd }: { onAdd: (x: { name: string; c: string }) => void }) {
   const t = useT();
+  const std = useStd();
   const subjects = useSubjects();
   const [name, setName] = useState('');
   const area = guessArea(name);
@@ -431,6 +459,30 @@ function NewSubject({ onAdd }: { onAdd: (x: { name: string; c: string }) => void
     toast(`科目に「${n}」を足しました`, `${AREAS.find((a) => a.id === area)!.name}の色 · 設定 › 科目と色 から直せます`);
     onAdd({ name: n, c: subj(id).c });
   };
+  if (std) {
+    // スタンダード: the color's square and the field edged in ink, 足す a small key, the colors ink-edged squares (the picked one in the lime ring)
+    return (
+      <View style={{ alignSelf: 'stretch', padding: 14, gap: 14 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ width: 16, height: 16, borderRadius: 4, backgroundColor: c, boxShadow: ring(1.5) }} />
+          <TextInput value={name} onChangeText={(v) => setName(v.slice(0, 12))} placeholder="新しい科目（例：日本史）" placeholderTextColor={S.ink3} accessibilityLabel="新しい科目の名前"
+            onSubmitEditing={add} returnKeyType="done"
+            style={[{ flex: 1, minWidth: 0, height: 44, fontSize: 16, fontFamily: font.text, color: S.ink, paddingVertical: 0, paddingHorizontal: 12, borderRadius: SR.key, backgroundColor: S.card, boxShadow: ring(1.5) }, noOutline]} />
+          <Btn small label="足す" onPress={add} />
+        </View>
+        {area === 'other' ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14, paddingHorizontal: 5, paddingBottom: 5 }} accessibilityRole="radiogroup">
+            {OTHER_COLORS.map((x) => (
+              <Press key={x} onPress={() => { haptic.tap(); setMine(x); }} scale={0.92} hitSlop={7} accessibilityRole="radio" accessibilityState={{ checked: x === c }} accessibilityLabel={`色 ${x}`}
+                style={{ width: 30, height: 30, borderRadius: 8, backgroundColor: x, boxShadow: x === c ? PICKED : ring() }} />
+            ))}
+          </View>
+        ) : (
+          <Txt size={12} tone="ink2" lh={18}>{`${AREAS.find((a) => a.id === area)!.name}の科目として、${AREAS.find((a) => a.id === area)!.name}の色になります`}</Txt>
+        )}
+      </View>
+    );
+  }
   return (
     <View style={{ alignSelf: 'stretch', padding: 14, gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

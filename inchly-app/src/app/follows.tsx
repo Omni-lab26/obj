@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PEOPLE } from '@/data';
 import { toggleFollow, useStore } from '@/store';
 import { hair, useT } from '@/theme';
-import { Avatar, Btn, haptic, Press, Txt } from '@/ui/base';
+import { Avatar, Btn, Empty, haptic, Press, Txt } from '@/ui/base';
 import { useStd } from '@/ui/stdLook';
 import { NavBar, Screen } from '@/ui/Chrome';
 import { personSheet } from '@/ui/Editors';
@@ -53,13 +53,13 @@ export default function Follows() {
             {i ? <View style={{ position: 'absolute', top: 0, left: 68, right: 0, height: std ? 1.5 : hair, backgroundColor: t.line }} /> : null}
             <Avatar name={p.n} color={p.c} size={40} />
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Txt size={14} w="700">{p.n}</Txt>
+              <Txt size={std ? 15 : 14} w="700" numberOfLines={1}>{p.n}</Txt>
               <Txt size={12} tone="ink3" numberOfLines={1}>{`@${p.h} · ${p.g}`}</Txt>
             </View>
             <FollowBtn h={p.h} back={tab === 'followers'} />
           </Press>
         ))}
-        {list.length ? null : <Txt size={13} tone="ink3" style={{ textAlign: 'center', paddingTop: 40 }}>まだいません</Txt>}
+        {list.length ? null : std ? <Empty title="まだいません" /> : <Txt size={13} tone="ink3" style={{ textAlign: 'center', paddingTop: 40 }}>まだいません</Txt>}
       </ScrollView>
       </View>
     </Screen>

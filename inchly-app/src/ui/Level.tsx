@@ -6,7 +6,7 @@ import { hair, useT } from '../theme';
 import { Btn, Press, Txt } from './base';
 import { openSheet } from './Sheet';
 import { Sticker } from './Sticker';
-import { useStd } from './stdLook';
+import { ring, RING_SOFT, useStd } from './stdLook';
 
 // Level and EXP: a small chip in home's header, and a sheet that says how far
 // you are and how EXP is earned. Everything is worked out from your records.
@@ -53,15 +53,18 @@ function LevelSheet({ close }: { close: () => void }) {
         </View>
       </View>
       <View style={{ gap: 6 }}>
-        <View style={{ height: 10, borderRadius: 5, backgroundColor: t.sunken, overflow: 'hidden' }}>
-          <View style={{ width: `${l.p * 100}%`, height: 10, borderRadius: 5, backgroundColor: t.ink }} />
+        {/* スタンダード: the meter as everywhere else — square, on paper 2, inside a thin ink outline */}
+        <View style={std ? { boxShadow: ring(1.5) } : null}>
+          <View style={[{ height: 10, borderRadius: 5, backgroundColor: t.sunken, overflow: 'hidden' }, std && { height: 8, borderRadius: 0 }]}>
+            <View style={[{ width: `${l.p * 100}%`, height: 10, borderRadius: 5, backgroundColor: t.ink }, std && { height: 8, borderRadius: 0 }]} />
+          </View>
         </View>
         <View style={{ flexDirection: 'row' }}>
           <Txt num size={12} tone="ink2" style={{ flex: 1 }}>{`${n(l.into)} / ${n(l.into + l.need)} EXP`}</Txt>
           <Txt num size={12} w="700">{`Lv.${l.lv + 1} まで あと ${n(l.need)}`}</Txt>
         </View>
       </View>
-      <View style={{ borderRadius: 14, backgroundColor: t.sunken, padding: 12, gap: 8 }}>
+      <View style={[{ borderRadius: 14, backgroundColor: t.sunken, padding: 12, gap: 8 }, std && { boxShadow: RING_SOFT }]}>
         <Txt size={13} w="700">EXP のもらい方</Txt>
         {[['勉強 1分', '+1 EXP'], [`1日の目標（${goalMin / 60}時間）を達成した日`, `+${GOAL_BONUS} EXP`], [`ToDoを1つ完了（1日${TODO_CAP}つまで）`, `+${TODO_EXP} EXP`]].map(([k, v]) => (
           <View key={k} style={{ flexDirection: 'row' }}>
@@ -69,7 +72,7 @@ function LevelSheet({ close }: { close: () => void }) {
             <Txt num size={13} w="700">{v}</Txt>
           </View>
         ))}
-        <Txt size={11.5} tone="ink3">記録と完了したToDoから計算するので、記録を直すとEXPも変わります。上のレベルほど、次までに少し多く必要です</Txt>
+        <Txt size={std ? 12 : 11.5} lh={std ? 18 : undefined} tone="ink3">記録と完了したToDoから計算するので、記録を直すとEXPも変わります。上のレベルほど、次までに少し多く必要です</Txt>
       </View>
       <Txt num size={12} tone="ink3">{`これまでの合計 ${n(l.exp)} EXP`}</Txt>
       <Btn kind={std ? 'quiet' : 'primary'} wide label="閉じる" onPress={close} />

@@ -93,20 +93,38 @@ function BaseSegmented<K extends string>({ options, value, onChange, style, smal
 
 /** Underline tabs for switching sections of a screen, centered. Scrolls if labels overflow. */
 type UnderProps<K extends string> = { options: Opt<K>[]; value: K; onChange: (v: K) => void };
-/** スタンダード's page tabs: as wide as the page, each a share of it; the picked one bold with a 3pt ink line under it. */
+/**
+ * スタンダード's page tabs: as wide as the page, each a share of it; the picked one bold with a 3pt ink line under it.
+ * The line slides to the tab you pick (ui/motion move: it's moved, never resized — every tab is the same width).
+ */
+const TAB_GAP = 4;
 function StdUnderTabs<K extends string>({ options, value, onChange }: UnderProps<K>) {
+  const [w, setW] = useState(0);
+  const n = options.length;
+  const item = w ? (w - TAB_GAP * (n - 1)) / n : 0;
+  const index = Math.max(0, options.findIndex((o) => o.v === value));
+  const x = useSharedValue(0);
+  const placed = useRef(false);
+  useEffect(() => {
+    if (!item) return;
+    const to = index * (item + TAB_GAP) + item * 0.18;
+    // first measured: in place at once; after that it slides
+    if (!placed.current) { x.set(to); placed.current = true; } else x.set(move(to));
+  }, [index, item, x]);
+  const a = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   return (
-    <View style={{ flexDirection: 'row', gap: 4, marginHorizontal: 16, borderBottomWidth: 2, borderBottomColor: S.line }} accessibilityRole="tablist">
+    <View style={{ flexDirection: 'row', gap: TAB_GAP, marginHorizontal: 16, borderBottomWidth: 2, borderBottomColor: S.line }} accessibilityRole="tablist"
+      onLayout={(e) => setW(e.nativeEvent.layout.width)}>
       {options.map((o) => {
         const on = o.v === value;
         return (
           <Pressable key={o.v} onPress={() => { if (!on) { haptic.tap(); onChange(o.v); } }} accessibilityRole="tab" accessibilityState={{ selected: on }}
             style={{ flex: 1, minWidth: 0, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
             <Text numberOfLines={1} style={{ fontSize: 15, lineHeight: 19, fontWeight: on ? '700' : '600', color: on ? S.ink : S.ink3, fontFamily: font.text }}>{o.label}</Text>
-            {on ? <View pointerEvents="none" style={{ position: 'absolute', left: '18%', right: '18%', bottom: -2, height: 3, backgroundColor: S.ink }} /> : null}
           </Pressable>
         );
       })}
+      {item ? <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, bottom: -2, width: item * 0.64, height: 3, backgroundColor: S.ink }, a]} /> : null}
     </View>
   );
 }

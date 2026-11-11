@@ -43,7 +43,7 @@ export default function Subjects() {
         </Press>
       )} />
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
-        <Txt size={12.5} tone="ink2" lh={19} style={{ paddingHorizontal: 20, paddingTop: 6 }}>
+        <Txt size={std ? 13 : 12.5} tone="ink2" lh={std ? 21 : 19} style={{ paddingHorizontal: 20, paddingTop: 6 }}>
           科目は細かく分けられます。色は教科で決まっていて（同じ教科の科目は同じ色の濃淡）、グラフでもどこでも同じ色です。グラフは「科目ごと」でも、教科ごとにまとめても見られます（グラフの歯車から切り替え）。
         </Txt>
 
@@ -54,18 +54,23 @@ export default function Subjects() {
             <View key={a.id} style={{ paddingHorizontal: 16, paddingTop: 18 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 4, paddingBottom: 8 }}>
                 <View style={[{ width: 8, height: 8, borderRadius: 2, backgroundColor: areaC[a.id] }, std && { borderRadius: 0, boxShadow: ring(1.5) }]} />
-                <Txt size={12} w="700" tone="ink2">{a.name}</Txt>
+                <Txt size={std ? 13 : 12} w="700" tone="ink2">{a.name}</Txt>
               </View>
               <View style={[{ backgroundColor: t.surface, borderRadius: radius.card }, lift(t)]}>
                 <Pane radius={radius.card} />
                 {list.map((x, i) => (
                   <Press key={x.id} onPress={() => (editing ? askDelete(x) : subjectSheet(x))} scale={0.99} accessibilityLabel={editing ? `${x.name}を削除` : `${x.name}。編集`}
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: std ? 56 : 50, paddingHorizontal: 14, borderTopWidth: i ? (std ? 1.5 : hair) : 0, borderTopColor: t.line }}>
-                    {editing ? (
+                    {editing ? (std ? (
+                      // スタンダード: the − in an ink-edged crimson square (taking something away), not iOS's red disc
+                      <View style={{ width: 24, height: 24, borderRadius: 7, backgroundColor: S.pause, boxShadow: ring(), alignItems: 'center', justifyContent: 'center' }}>
+                        <Pix name="minus" color="#FFFFFF" />
+                      </View>
+                    ) : (
                       <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: RED, alignItems: 'center', justifyContent: 'center' }}>
                         <Icon name="minus" size={13} color="#fff" width={2.6} />
                       </View>
-                    ) : null}
+                    )) : null}
                     <SubjCoin name={x.name} color={x.c} area={x.area} size={28} />
                     <Txt size={15} w="600" style={{ flex: 1 }}>{x.name}</Txt>
                     {editing ? null : std ? <StdIcon name="chev" color={S.ink3} /> : <Icon name="chev" size={13} color={t.ink3} />}
@@ -83,7 +88,7 @@ export default function Subjects() {
 
         {presets.length ? (
           <View style={{ paddingHorizontal: 20, paddingTop: 22, gap: 10 }}>
-            <Txt size={12} w="700" tone="ink2">よくある分け方（押すと追加）</Txt>
+            <Txt size={std ? 13 : 12} w="700" tone="ink2">よくある分け方（押すと追加）</Txt>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {presets.map((p) => std ? (
                 <StdChip key={p.name} role="button" a11y={`${p.name}を追加`} label={p.name}
@@ -104,11 +109,11 @@ export default function Subjects() {
 
         {hidden.length ? (
           <View style={{ paddingHorizontal: 16, paddingTop: 22 }}>
-            <Txt size={12} w="700" tone="ink2" style={{ paddingHorizontal: 4, paddingBottom: 8 }}>しまった科目（記録はグラフに残ります）</Txt>
+            <Txt size={std ? 13 : 12} w="700" tone="ink2" style={{ paddingHorizontal: 4, paddingBottom: 8 }}>しまった科目（記録はグラフに残ります）</Txt>
             <View style={[{ backgroundColor: t.surface, borderRadius: radius.card }, lift(t)]}>
               <Pane radius={radius.card} />
               {hidden.map((x, i) => (
-                <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 14, borderTopWidth: i ? hair : 0, borderTopColor: t.line }}>
+                <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: std ? 56 : 50, paddingHorizontal: 14, borderTopWidth: i ? (std ? 1.5 : hair) : 0, borderTopColor: t.line }}>
                   <View style={{ opacity: 0.5 }}><SubjCoin name={x.name} color={x.c} area={x.area} size={28} /></View>
                   <Txt size={15} w="500" tone="ink2" style={{ flex: 1 }}>{x.name}</Txt>
                   <Btn small kind="line" label="戻す" onPress={() => { updateSubject(x.id, { hidden: false }); toast(`「${x.name}」を戻しました`); }} />
@@ -153,6 +158,7 @@ function subjectSheet(existing?: Subject) {
 }
 function SubjectForm({ close, existing }: { close: () => void; existing?: Subject }) {
   const t = useT();
+  const std = useStd();
   const subjects = useStore((s) => s.subjects);
   const [name, setName] = useState(existing?.name ?? '');
   const [short, setShort] = useState(existing?.short ?? '');
@@ -202,9 +208,11 @@ function SubjectForm({ close, existing }: { close: () => void; existing?: Subjec
               const on = k === c;
               return (
                 <Press key={k} onPress={() => { haptic.tap(); setMine(k); }} scale={0.88} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`色 ${k}`}
-                  style={{ width: '16%', aspectRatio: 1, borderRadius: 999, backgroundColor: k, alignItems: 'center', justifyContent: 'center',
-                    borderWidth: on ? 3 : 0, borderColor: t.surface, boxShadow: on ? `0px 0px 0px 2px ${k}` : undefined }}>
-                  {on ? <Icon name="check" size={16} color="#fff" width={3} /> : taken.has(k) ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.85)' }} /> : null}
+                  style={[{ width: '16%', aspectRatio: 1, borderRadius: 999, backgroundColor: k, alignItems: 'center', justifyContent: 'center',
+                    borderWidth: on ? 3 : 0, borderColor: t.surface, boxShadow: on ? `0px 0px 0px 2px ${k}` : undefined },
+                    // スタンダード: a coin with the ink edge like the subjects'; the picked one in the lime ring (between two ink ones)
+                    std && { width: 44, aspectRatio: 1, margin: 5, borderWidth: 0, boxShadow: on ? `0px 0px 0px 2px ${S.ink}, 0px 0px 0px 5px ${S.lime}, 0px 0px 0px 7px ${S.ink}` : ring() }]}>
+                  {on ? <Icon name="check" size={std ? 18 : 16} color="#fff" width={3} /> : taken.has(k) ? <View style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.85)' }, std && { borderRadius: 0, backgroundColor: '#FFFFFF' }]} /> : null}
                 </Press>
               );
             })}
@@ -212,7 +220,7 @@ function SubjectForm({ close, existing }: { close: () => void; existing?: Subjec
         ) : (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <SubjCoin name={name.trim() || AREAS.find((a) => a.id === area)!.name} color={c} area={area} size={30} />
-            <Txt size={13} tone="ink2">{`${AREAS.find((a) => a.id === area)!.name}の色`}</Txt>
+            <Txt size={std ? 14 : 13} w={std ? '600' : '400'} tone="ink2">{`${AREAS.find((a) => a.id === area)!.name}の色`}</Txt>
           </View>
         )}
       </View>
@@ -224,8 +232,9 @@ function SubjectForm({ close, existing }: { close: () => void; existing?: Subjec
         </View>
       ) : null}
       {existing ? (
-        <Press onPress={remove} hitSlop={6} accessibilityLabel={`${existing.name}を削除`} style={{ alignSelf: 'center', paddingVertical: 6 }}>
-          <Txt size={15} w="600" color={RED}>この科目を削除</Txt>
+        <Press onPress={remove} hitSlop={6} accessibilityLabel={`${existing.name}を削除`} style={{ alignSelf: 'center', paddingVertical: 6, minHeight: std ? 44 : undefined, justifyContent: 'center' }}>
+          {/* スタンダード: the app's crimson, bold, as the other words that take something away */}
+          <Txt size={15} w={std ? '700' : '600'} color={std ? S.pause : RED}>この科目を削除</Txt>
         </Press>
       ) : null}
     </View>

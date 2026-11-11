@@ -25,7 +25,8 @@ function SubjRow({ s, week, i }: { s: Subject; week: number; i: number }) {
   const p = goal ? Math.min(100, Math.round((week / goal) * 100)) : 100;
   const low = p < 80;
   const w = useSharedValue(0);
-  useEffect(() => { w.value = withDelay(i * 50, timed(p, 500)); }, [p, i, w]);
+  // スタンダード: the rows a beat apart but all landed inside 0.6s (MOTION.md)
+  useEffect(() => { w.value = withDelay(std ? Math.min(i * 20, 100) : i * 50, timed(p, 500)); }, [p, i, w, std]);
   // grown by scaling from the left, not by its width (no layout each frame)
   const a = useAnimatedStyle(() => ({ transform: [{ scaleX: w.value / 100 }] }));
   if (std) {
@@ -232,6 +233,7 @@ const sec = { paddingHorizontal: 16, paddingTop: 22 } as const;
 
 /** One sentence instead of a dashboard header: this week, and how it compares. */
 function Summary() {
+  const std = useStd();
   const sessions = useStore((s) => s.sessions);
   const week = (from: number) => Array.from({ length: 7 }, (_, i) => dayOf(sessions, from + i).min).reduce((x, y) => x + y, 0) / 60;
   const now = week(0);
@@ -240,7 +242,8 @@ function Summary() {
   return (
     <Txt size={13} tone="ink2" lh={19}>
       {'今週は '}<Txt size={13} w="700" num>{now.toFixed(1)}時間</Txt>
-      {'。先週より '}<Txt size={13} w="700" num tone={d >= 0 ? 'greenInk' : 'amber'}>{`${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}時間`}</Txt>
+      {/* スタンダード: nothing to compare yet (no records these two weeks), no green ▲ 0.0 */}
+      {std && !now && !prev ? '。' : <>{'。先週より '}<Txt size={13} w="700" num tone={d >= 0 ? 'greenInk' : 'amber'}>{`${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}時間`}</Txt></>}
     </Txt>
   );
 }

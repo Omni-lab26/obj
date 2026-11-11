@@ -83,11 +83,14 @@ export function StackedBars() {
   const [w, setW] = useState(0);
   const [hot, setHot] = useState<number | null>(null);
   const colW = w ? (w - GAP * (N - 1)) / N : 0;
-  const maxUp = Math.max(...cols.map((c) => c.total));
+  // (never 0: with no records every height would be 0 / 0)
+  const maxUp = Math.max(1, ...cols.map((c) => c.total));
   const maxShort = Math.max(1, ...cols.map((c) => c.short));
   const up = (m: number) => (m / maxUp) * UP;
   const down = (m: number) => (m / maxShort) * DOWN;
   const total = cols.reduce((a, c) => a + c.total, 0) / 60;
+  // スタンダード: the wave across the 20 columns in 0.1s, so the last one has landed inside 0.6s (MOTION.md)
+  const wave = std ? 5 : 14;
 
   // Tooltip glides between columns; it flips to the left near the right edge.
   const tipX = useSharedValue(0);
@@ -167,9 +170,10 @@ export function StackedBars() {
                       const h = Math.max(0, up(m) - 2);
                       const bottom = PLOT - BASE + 1 + up(acc);
                       acc += m;
-                      return <Seg key={k} h={h} bottom={bottom} color={series.list[k].c} delay={i * 14} dim={dim} />;
+                      return <Seg key={k} h={h} bottom={bottom} color={series.list[k].c} delay={i * wave} dim={dim} />;
                     })}
-                    <Seg below h={col.short ? Math.max(3, down(col.short)) : 0} bottom={PLOT - BASE - 2 - (col.short ? Math.max(3, down(col.short)) : 0)} color={t.red} delay={i * 14} dim={dim} />
+                    {/* スタンダード: no records in the whole chart (a first-timer): no row of red shortfalls to greet them */}
+                    {std && !total ? null : <Seg below h={col.short ? Math.max(3, down(col.short)) : 0} bottom={PLOT - BASE - 2 - (col.short ? Math.max(3, down(col.short)) : 0)} color={t.red} delay={i * wave} dim={dim} />}
                   </View>
                 );
               })
@@ -206,20 +210,20 @@ export function StackedBars() {
       </View>
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: -6 }} pointerEvents="none">
-        <Txt size={10} tone="ink3" num lh={12}>{cols[0].label}</Txt>
-        <Txt size={10} tone="ink3" num lh={12}>{cols[N - 1].label}</Txt>
+        <Txt size={std ? 11 : 10} w={std ? '600' : '400'} tone="ink3" num lh={std ? 14 : 12}>{cols[0].label}</Txt>
+        <Txt size={std ? 11 : 10} w={std ? '600' : '400'} tone="ink3" num lh={std ? 14 : 12}>{cols[N - 1].label}</Txt>
       </View>
       {/* legend, storage-style */}
       <View style={[{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4, paddingTop: 10, borderTopWidth: hair, borderTopColor: t.line }, std && { borderTopWidth: 1.5, rowGap: 6 }]} pointerEvents="none">
         {series.list.filter((x, k) => cols.some((c) => c.parts[k] > 0)).map((x) => (
           <View key={x.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
             <View style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: x.c }, std && { width: 8, height: 8, borderRadius: 0, boxShadow: ring(1.5) }]} />
-            <Txt size={11} tone="ink2" lh={14}>{x.name}</Txt>
+            <Txt size={11} w={std ? '600' : '400'} tone="ink2" lh={14}>{x.name}</Txt>
           </View>
         ))}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
           <View style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.red }, std && { width: 8, height: 8, borderRadius: 0, boxShadow: ring(1.5) }]} />
-          <Txt size={11} tone="ink2" lh={14}>目標に足りない分</Txt>
+          <Txt size={11} w={std ? '600' : '400'} tone="ink2" lh={14}>目標に足りない分</Txt>
         </View>
       </View>
     </View>

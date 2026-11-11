@@ -20,7 +20,7 @@ import { TIME_FONTS, timeFontOf } from '@/ui/timeFonts';
 import { toast } from '@/ui/Toast';
 import type { IconId } from './art';
 import { R, ring, S } from './look';
-import { Dot, J, Key, Num } from './parts';
+import { Dot, J, Key, Num, useSink } from './parts';
 import { orderSheet } from './order';
 import { Pix } from './pixel';
 
@@ -247,22 +247,29 @@ function TimeFaceChoice({ close }: { close: () => void }) {
         <Key label="決定" onPress={close} fill={S.ink} under={S.limeDeep} kd={3} style={{ width: 44, height: 36 }}><Pix name="check" color={S.onInk} /></Key>
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 12, columnGap: '2.66%' }} accessibilityRole="radiogroup">
-        {tiles.map((f) => {
-          const on = f.id === cur;
-          return (
-            <Pressable key={f.id ?? 'standard'} onPress={() => pick(f.id)} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={f.name}
-              style={{ width: '23%', alignItems: 'center', gap: 6 }}>
-              <View style={{ alignSelf: 'stretch', height: 62, borderRadius: R.key, backgroundColor: on ? S.lime : S.card, boxShadow: ring(), alignItems: 'center', justifyContent: 'center' }}>
-                {f.family ? <Text style={{ fontFamily: f.family, fontSize: 28, lineHeight: 34, color: S.ink, letterSpacing: f.spacing * 28 }}>39</Text>
-                  : <Num size={28} lh={32}>39</Num>}
-              </View>
-              <J size={11} w={on ? '700' : '500'} color={on ? S.ink : S.ink3} numberOfLines={1}>{f.name}</J>
-            </Pressable>
-          );
-        })}
+        {tiles.map((f) => <FaceTile key={f.id ?? 'standard'} name={f.name} family={f.family} spacing={f.spacing} on={f.id === cur} onPress={() => pick(f.id)} />)}
       </View>
       <J size={12} color={S.ink3} style={{ textAlign: 'center' }}>選ぶとすぐカードに反映されます</J>
     </View>
+  );
+}
+
+/** A face to pick: a tile on its floor that sinks while pressed; the one picked is lime and pressed in (no floor), as the chips are. */
+function FaceTile({ name, family, spacing, on, onPress }: { name: string; family?: string; spacing: number; on: boolean; onPress: () => void }) {
+  const s = useSink(2);
+  return (
+    <Pressable onPress={onPress} onPressIn={s.down} onPressOut={s.up} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={name}
+      style={{ width: '23%', alignItems: 'center', gap: 8 }}>
+      <View style={{ alignSelf: 'stretch', height: 60 }}>
+        {on ? null : <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: 1, bottom: -5, borderRadius: R.key + 2, backgroundColor: S.ink }} />}
+        <Animated.View style={[{ flex: 1, borderRadius: R.key, backgroundColor: on ? S.lime : S.card, boxShadow: ring(), alignItems: 'center', justifyContent: 'center' },
+          on ? { transform: [{ translateY: 2 }] } : s.style]}>
+          {family ? <Text style={{ fontFamily: family, fontSize: 28, lineHeight: 34, color: S.ink, letterSpacing: spacing * 28 }}>39</Text>
+            : <Num size={28} lh={32}>39</Num>}
+        </Animated.View>
+      </View>
+      <J size={11} w={on ? '700' : '500'} color={on ? S.ink : S.ink3} numberOfLines={1}>{name}</J>
+    </Pressable>
   );
 }
 

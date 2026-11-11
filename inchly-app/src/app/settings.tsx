@@ -12,7 +12,7 @@ import { DmFrom, gradeOf, getState, setGrade, LiveScope, setState, unblock, useN
 import { hair, lift, radius, useT } from '@/theme';
 import { Pix } from '@/themes/standard/pixel';
 import { ring, S, useStd } from '@/ui/stdLook';
-import { Btn, haptic, Press, Txt } from '@/ui/base';
+import { Btn, haptic, Press, StdLink, Txt } from '@/ui/base';
 import { backdropSheet, CardFillControl, FrostControl } from '@/ui/BackdropSheet';
 import { ThemeCard } from '@/screens/ThemeCard';
 import { NavBar, Screen } from '@/ui/Chrome';
@@ -29,7 +29,7 @@ function Section({ title, foot, children }: { title: string; foot?: string; chil
     <View style={{ paddingHorizontal: 16, paddingTop: 22 }}>
       <Txt size={std ? 13 : 12} w={std ? '700' : '600'} tone="ink2" style={{ paddingHorizontal: 4, paddingBottom: 8 }}>{title}</Txt>
       <View style={[{ backgroundColor: t.surface, borderRadius: radius.card, paddingHorizontal: 14 }, lift(t)]}><Pane radius={radius.card} />{children}</View>
-      {foot ? <Txt size={11.5} tone="ink3" lh={17} style={{ paddingHorizontal: 4, paddingTop: 6 }}>{foot}</Txt> : null}
+      {foot ? <Txt size={std ? 12 : 11.5} tone="ink3" lh={std ? 18 : 17} style={{ paddingHorizontal: 4, paddingTop: std ? 8 : 6 }}>{foot}</Txt> : null}
     </View>
   );
 }
@@ -39,6 +39,7 @@ function gradeSheet() {
 }
 function GradeForm({ close }: { close: () => void }) {
   const t = useT();
+  const std = useStd();
   const a = useStore((s) => s.account);
   if (!a) return null;
   const auto = gradeNow({ birthYear: a.birthYear, birthMonth: a.birthMonth });
@@ -46,9 +47,12 @@ function GradeForm({ close }: { close: () => void }) {
     <View style={{ gap: 14 }}>
       <Txt size={17} w="700">学年</Txt>
       <Choice value={gradeOf(a)} onChange={(g) => { haptic.tap(); setGrade(g); }} options={[...SCHOOL, ...OTHER_GRADES].map((g) => ({ v: g, label: g }))} />
+      {/* スタンダード: words you can press are underlined (plain ink words read as a note) */}
+      {std ? <View style={{ alignSelf: 'flex-start', minHeight: 28, justifyContent: 'center' }}><StdLink label={`生まれた年月に合わせる（${auto}）`} onPress={() => { setGrade(auto); close(); }} /></View> : (
       <Press onPress={() => { haptic.tap(); setGrade(auto); close(); }} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
         <Txt size={13} w="600" color={t.blue}>{`生まれた年月に合わせる（${auto}）`}</Txt>
       </Press>
+      )}
       <Btn kind="primary" wide label="完了" onPress={close} />
     </View>
   );
@@ -229,7 +233,7 @@ export default function Settings() {
             right={<Btn small kind="line" label="見る" onPress={() => Linking.openURL('https://kanjivg.tagaini.net')} />} />
           <Row label="字" sub="Chakra Petch・Share Tech Mono・DotGothic16 ほか、アプリの字はすべて SIL Open Font License 1.1。サイバーの「済」のはんこは Noto Serif CJK JP（© Adobe · SIL OFL 1.1）の字の形です" />
         </Section>
-        <Txt size={11.5} tone="ink3" style={{ textAlign: 'center', marginTop: 18 }}>Inchly 2.0（モック）</Txt>
+        <Txt size={std ? 12 : 11.5} tone="ink3" style={{ textAlign: 'center', marginTop: 18 }}>Inchly 2.0（モック）</Txt>
       </ScrollView>
     </Screen>
   );

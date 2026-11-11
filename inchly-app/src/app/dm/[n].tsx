@@ -131,7 +131,7 @@ export default function DmScreen() {
 function Bubble({ m, n, color, gap }: { m: DmMsg; n: string; color: string; gap: number }) {
   const t = useT();
   const std = useStd();
-  const time = <Txt num size={10.5} tone="ink3" style={{ marginBottom: 2 }}>{clockAt(m.at)}</Txt>;
+  const time = <Txt num size={std ? 11 : 10.5} w={std ? '600' : '400'} tone="ink3" style={{ marginBottom: 2 }}>{clockAt(m.at)}</Txt>;
   const body = m.stamp ? <Stamp id={m.stamp} size={100} /> : (
     <View style={[{ paddingHorizontal: 13, paddingVertical: 8, borderRadius: 18, maxWidth: 260, backgroundColor: m.me ? t.ink : t.surface }, m.me ? null : lift(t), std && { borderRadius: 16, marginHorizontal: 2 }]}>
       <Txt size={15} lh={21} color={m.me ? t.onInk : t.ink} selectable>{m.t}</Txt>

@@ -121,8 +121,8 @@ function Chat({ g }: { g: Group }) {
         <LiveDot size={6} />
         <AvatarStack people={present.map((p) => ({ n: p[0], c: p[1] }))} size={24} ring={t.surface} max={3} />
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Txt size={12.5} w="600" lh={17}>{present.length}人が勉強中</Txt>
-          <Txt size={11} tone="ink3" numberOfLines={1} lh={15}>{present.map((p) => `${p[0]} ${p[2]}`).join(' · ')}</Txt>
+          <Txt size={std ? 13 : 12.5} w={std ? '700' : '600'} lh={17}>{present.length}人が勉強中</Txt>
+          <Txt size={std ? 12 : 11} tone="ink3" numberOfLines={1} lh={std ? 16 : 15}>{present.map((p) => `${p[0]} ${p[2]}`).join(' · ')}</Txt>
         </View>
       </View>
       <ScrollView ref={scroll} style={{ flex: 1 }} contentContainerStyle={{ padding: 14, gap: 10 }}
@@ -191,11 +191,11 @@ function Msg({ m, i, g, onJoin }: { m: ChatMsg; i: number; g: Group; onJoin: (w:
         // スタンダード: a tag (paper 2, a faint edge); room under the key's floor
         std && { borderRadius: 9, backgroundColor: S.paper2, boxShadow: ring(1.5, 'rgba(23,18,31,0.16)'), paddingVertical: m.join ? 5 : 4, paddingRight: m.join ? 5 : 10 }]}>
         {m.join ? <View style={[{ width: 5, height: 5, borderRadius: 3, backgroundColor: t.green }, std && { width: 8, height: 8, borderRadius: 0, boxShadow: ring(1.5) }]} /> : null}
-        <Txt size={11.5} tone="ink2">{m.t}</Txt>
+        <Txt size={std ? 12 : 11.5} w={std ? '600' : '400'} tone="ink2">{m.t}</Txt>
         {m.join ? (std ? (
           // スタンダード: starting together is lime (start)
           <StdKey onPress={() => onJoin(m.join!)} label="一緒に始める" fill={S.lime} kd={2} radius={9} haptics={false} hitSlop={8} style={{ minHeight: 26, marginBottom: 2 }} face={{ minHeight: 26, paddingHorizontal: 10 }}>
-            <Txt size={11.5} w="700" lh={15}>一緒に始める</Txt>
+            <Txt size={12} w="700" lh={15}>一緒に始める</Txt>
           </StdKey>
         ) : (
           <Press onPress={() => onJoin(m.join!)} scale={0.92} haptics={false} hitSlop={8} style={{ height: 26, paddingHorizontal: 10, borderRadius: 13, backgroundColor: t.ink, justifyContent: 'center' }}>
@@ -221,7 +221,7 @@ function Msg({ m, i, g, onJoin }: { m: ChatMsg; i: number; g: Group; onJoin: (w:
         <Avatar name={who.n} color={who.c} size={26} />
       </Press>
       <View>
-        <Txt size={11} tone="ink3" style={{ marginLeft: 4, marginBottom: 2 }}>{who.n}</Txt>
+        <Txt size={std ? 12 : 11} w={std ? '600' : '400'} tone={std ? 'ink2' : 'ink3'} style={{ marginLeft: 4, marginBottom: std ? 3 : 2 }}>{who.n}</Txt>
         {body}
       </View>
     </Animated.View>
@@ -307,24 +307,25 @@ function EventRow({ e, onToggle }: { e: GEvent; onToggle: () => void }) {
       style={[{ flexDirection: 'row', gap: 12, marginHorizontal: 16, marginBottom: 10, padding: 14, borderRadius: radius.card, backgroundColor: t.surface }, lift(t)]}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: t.greenSoft, borderRadius: radius.card }, ga]} />
       <View style={{ width: 42, height: 46, borderRadius: 10, backgroundColor: t.canvas, borderWidth: hair, borderColor: t.line, alignItems: 'center', justifyContent: 'center' }}>
-        <Txt size={9.5} w="700" lh={11} color={t.red}>{`${e.mo}月`}</Txt>
-        <Txt num size={17} w="700" lh={20}>{e.d}</Txt>
-        <Txt size={9.5} tone="ink3" lh={11}>{e.w}</Txt>
+        {/* スタンダード: the month and weekday a size up and bolder (9.5pt was hard to read) */}
+        <Txt size={std ? 10.5 : 9.5} w={std ? '800' : '700'} lh={std ? 12 : 11} color={t.red}>{`${e.mo}月`}</Txt>
+        <Txt num size={17} w="700" lh={std ? 19 : 20}>{e.d}</Txt>
+        <Txt size={std ? 10.5 : 9.5} w={std ? '700' : '400'} tone={std ? 'ink2' : 'ink3'} lh={std ? 12 : 11}>{e.w}</Txt>
       </View>
       <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
         <Txt size={14} w="600">{e.t}</Txt>
-        <Txt size={11.5} tone="ink3">{e.type} · {e.time} · 定員{e.cap}人</Txt>
+        <Txt size={std ? 12 : 11.5} tone="ink3">{e.type} · {e.time} · 定員{e.cap}人</Txt>
         {e.goal ? (
           <View style={{ marginTop: 6, gap: 5 }}>
             <Bar pct={((e.done ?? 0) / e.goal) * 100} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Txt size={11} tone="ink2">みんなの合計 {e.done}時間</Txt>
-              <Txt num size={11} tone="ink3">{e.goal}時間</Txt>
+              <Txt size={std ? 12 : 11} w={std ? '600' : '400'} tone="ink2">みんなの合計 {e.done}時間</Txt>
+              <Txt num size={std ? 12 : 11} tone="ink3">{e.goal}時間</Txt>
             </View>
           </View>
         ) : null}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-          {names.length ? <PeoplePill names={names} ring={t.sunken} /> : <Txt size={11.5} tone="ink3">まだ誰も参加していません</Txt>}
+          {names.length ? <PeoplePill names={names} ring={t.sunken} /> : <Txt size={std ? 12 : 11.5} tone="ink3">まだ誰も参加していません</Txt>}
           <Btn small kind={e.me || std ? 'quiet' : 'primary'} icon={std && e.me ? 'check' : undefined} label={e.me ? '参加中' : '参加する'} onPress={onToggle} />
         </View>
       </View>

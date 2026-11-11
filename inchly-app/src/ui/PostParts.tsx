@@ -63,9 +63,12 @@ export function PostRow({ p, first }: { p: Post; first?: boolean }) {
   return (
     <View style={[{ flexDirection: 'row', gap: 10, paddingTop: 12, paddingBottom: 6, paddingHorizontal: 16, borderTopWidth: first ? 0 : hair, borderTopColor: t.line },
       std && { paddingTop: 14, paddingBottom: 4, borderTopWidth: first ? 0 : 1.5 }]}>
+      {/* スタンダード: your own isn't a button — drawn at full strength, not faded like a disabled one */}
+      {p.mine && std ? <View><Avatar name={name} color={color} size={40} /></View> : (
       <Press onPress={who} disabled={p.mine} scale={0.92} accessibilityLabel={`${name}のプロフィール`}>
         <Avatar name={name} color={color} size={40} />
       </Press>
+      )}
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <Txt size={std ? 14.5 : 14} w="700" lh={19} numberOfLines={1} style={{ flexShrink: 1 }}>{name}</Txt>

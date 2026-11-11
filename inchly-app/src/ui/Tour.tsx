@@ -70,19 +70,20 @@ export function TourHost() {
   const done = useStore((s) => s.tourDone);
   const signedIn = useStore((s) => !!s.account);
   const home = usePathname() === '/';
-  const [steps, setSteps] = useState<{ step: Step; rect: Rect | null }[] | null>(null);
+  const [steps, setSteps] = useState<{ step: Step; rect: Rect | null; snug?: boolean }[] | null>(null);
   const [i, setI] = useState(0);
   // on home, once signed in and not seen yet: look for the places, then begin
   useEffect(() => {
     if (done || !signedIn || !home || steps) return;
     let off = false;
     const id = setTimeout(async () => {
-      const list: { step: Step; rect: Rect | null }[] = [];
+      const list: { step: Step; rect: Rect | null; snug?: boolean }[] = [];
       for (const s of STEPS) {
         if (!s.at) { list.push({ step: s, rect: null }); continue; }
-        let rect: Rect | null = null;
-        for (const a of s.at) { rect = await measure(a); if (rect) break; }
-        if (rect) list.push({ step: s, rect });
+        let rect: Rect | null = null, snug = false;
+        // a tab is lit inside the tab bar's own outline (a hole wider than the bar looked like a white tab sticking out of it)
+        for (const a of s.at) { rect = await measure(a); if (rect) { snug = a.startsWith('tab-'); break; } }
+        if (rect) list.push({ step: s, rect, snug });
       }
       if (!off) { setI(0); setSteps(list); }
     }, 700);
@@ -100,17 +101,18 @@ export function TourHost() {
   const end = () => { haptic.tap(); setSteps(null); setState({ tourDone: true }); };
   const next = () => { if (i + 1 >= steps.length) end(); else { haptic.tap(); setI(i + 1); } };
   // each step is its own still picture, faded in
-  return <Bubble key={i} step={steps[i].step} rect={steps[i].rect} n={steps.length} i={i} next={next} skip={end} />;
+  return <Bubble key={i} step={steps[i].step} rect={steps[i].rect} snug={steps[i].snug} n={steps.length} i={i} next={next} skip={end} />;
 }
 
 const PAD = 6;
-function Bubble({ step, rect, n, i, next, skip }: { step: Step; rect: Rect | null; n: number; i: number; next: () => void; skip: () => void }) {
+function Bubble({ step, rect, snug, n, i, next, skip }: { step: Step; rect: Rect | null; /** スタンダード: the hole a little inside the place (a tab in its bar) */ snug?: boolean; n: number; i: number; next: () => void; skip: () => void }) {
   const t = useT();
   const std = useStd();
   const { width: W, height: H } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   // the hole around the place (none: the whole screen dimmed)
-  const r = rect ? { x: rect.x - PAD, y: rect.y - PAD, w: rect.w + PAD * 2, h: rect.h + PAD * 2 } : { x: W / 2, y: H / 2, w: 0, h: 0 };
+  const px = std && snug ? -3 : PAD, py = std && snug ? -5 : PAD;
+  const r = rect ? { x: rect.x - px, y: rect.y - py, w: rect.w + px * 2, h: rect.h + py * 2 } : { x: W / 2, y: H / 2, w: 0, h: 0 };
   // the dim: one still view whose thick border is the dim and whose inside is the hole, so the hole has round corners
   // thick enough that its rounded outer corners still cover the far corners of the screen (W + H: a hole in one corner
   // leaves the opposite corner about W + H away; max(W, H) left a light triangle at the bottom left)

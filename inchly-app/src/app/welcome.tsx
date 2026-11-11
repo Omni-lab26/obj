@@ -193,7 +193,7 @@ export default function Welcome() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 14 }}>
                   <View style={{ flex: 1 }}>
                     <Txt size={15.5}>生まれた年月</Txt>
-                    <Txt size={11.5} tone="ink3">ほかの人には見えません</Txt>
+                    <Txt size={std ? 12 : 11.5} tone="ink3">ほかの人には見えません</Txt>
                   </View>
                   <PickChip on={open === 'birth'} onPress={() => toggle('birth')} label={`${year}年${month}月`} a11y="生まれた年月を変える" />
                 </View>
@@ -201,7 +201,7 @@ export default function Welcome() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 14, borderTopWidth: std ? 1.5 : hair, borderTopColor: t.line }}>
                   <View style={{ flex: 1 }}>
                     <Txt size={15.5}>学年</Txt>
-                    <Txt size={11.5} tone="ink3">{picked ? '自分で選んだ学年（毎年4月に上がります）' : '生まれた年月から自動（毎年4月に上がります）'}</Txt>
+                    <Txt size={std ? 12 : 11.5} tone="ink3">{picked ? '自分で選んだ学年（毎年4月に上がります）' : '生まれた年月から自動（毎年4月に上がります）'}</Txt>
                   </View>
                   <PickChip on={open === 'grade'} onPress={() => toggle('grade')} label={grade} a11y="学年を変える" />
                 </View>
@@ -209,11 +209,11 @@ export default function Welcome() {
                   <Opens>
                     <View style={{ alignSelf: 'stretch', padding: 12, gap: 10 }}>
                       <Choice value={grade} onChange={(g) => { haptic.tap(); setPicked(g === auto ? null : g); }} options={[...SCHOOL, ...OTHER_GRADES].map((g) => ({ v: g, label: g }))} />
-                      {picked ? (
+                      {picked ? (std ? <View style={{ alignSelf: 'flex-start', minHeight: 28, justifyContent: 'center' }}><StdLink label={`生まれた年月に合わせる（${auto}）`} onPress={() => setPicked(null)} /></View> : (
                         <Press onPress={() => { haptic.tap(); setPicked(null); }} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
                           <Txt size={13} w="600" color={t.blue}>{`生まれた年月に合わせる（${auto}）`}</Txt>
                         </Press>
-                      ) : null}
+                      )) : null}
                     </View>
                   </Opens>
                 ) : null}
@@ -246,7 +246,7 @@ export default function Welcome() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 14 }}>
                   <View style={{ flex: 1 }}>
                     <Txt size={15.5}>1日の目標</Txt>
-                    <Txt size={11.5} tone="ink3">今日のバーの目標の線になります</Txt>
+                    <Txt size={std ? 12 : 11.5} tone="ink3">今日のバーの目標の線になります</Txt>
                   </View>
                   <PickChip on={open === 'goal'} onPress={() => toggle('goal')} label={goalLabel(goal)} a11y="1日の目標を変える" />
                 </View>

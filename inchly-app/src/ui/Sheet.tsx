@@ -156,11 +156,12 @@ export function SheetHost() {
             </View>
           ) : null}
           <GestureDetector gesture={pan}>
-            <View style={{ paddingTop: 8, paddingBottom: 6, alignItems: 'center' }}>
+            <View style={{ paddingTop: 8, paddingBottom: std ? 3 : 6, alignItems: 'center' }}>
               <View style={{ width: std ? 40 : 38, height: 5, borderRadius: 3, backgroundColor: std ? 'rgba(23,18,31,0.25)' : t.line2 }} />
             </View>
           </GestureDetector>
-          <ScrollView bounces={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 20 }}>
+          {/* スタンダード: 3 of the room over the content is inside the scroller, so an outline drawn around the first thing (a coin's 2pt ring) isn't cut at its top */}
+          <ScrollView bounces={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingHorizontal: 20, paddingTop: std ? 3 : 0, paddingBottom: insets.bottom + 20 }}>
             {render(close)}
           </ScrollView>
         </Animated.View>

@@ -156,10 +156,10 @@ function RoomSearch({ close, pick }: { close: () => void; pick: (v: string) => v
           const on = following.includes(p.h);
           return (
             <View key={p.h} style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderTopWidth: i ? hair : 0, borderTopColor: t.line }, std && { minHeight: 60, gap: 12, borderTopWidth: i ? 1.5 : 0 }]}>
-              <Avatar name={p.n} color={p.c} size={32} />
+              <Avatar name={p.n} color={p.c} size={std ? 40 : 32} />
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Txt size={13.5} w="600">{p.n}</Txt>
-                <Txt size={11.5} tone="ink3" numberOfLines={1}>{`@${p.h} · ${p.g}`}</Txt>
+                <Txt size={std ? 15 : 13.5} w={std ? '700' : '600'} numberOfLines={1}>{p.n}</Txt>
+                <Txt size={std ? 12 : 11.5} tone="ink3" numberOfLines={1}>{`@${p.h} · ${p.g}`}</Txt>
               </View>
               <Btn small kind={on || std ? 'quiet' : 'primary'} label={on ? 'フォロー中' : 'フォロー'} onPress={() => { haptic.soft(); toggleFollow(p.h); }} />
             </View>
@@ -243,32 +243,32 @@ function Rank() {
       {/* スタンダード: the page's lead card (the lime shadow; it keeps 6 more clear on the right) */}
       <Card style={[{ marginHorizontal: 16, marginTop: 12, flexDirection: 'row', alignItems: 'flex-end', gap: 12 }, std && { marginTop: 14, marginRight: 22, boxShadow: LIFT }]} pad={14}>
         <View style={{ flex: 1 }}>
-          <Txt size={12} tone="ink2">東大志望 312人の中で</Txt>
+          <Txt size={std ? 13 : 12} tone="ink2">東大志望 312人の中で</Txt>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 4 }}>
             <Rolling value={String(r.rank)} size={type.hero} weight="700" />
             <Txt size={13} w="600" tone="ink3" style={{ marginBottom: 5 }}>位</Txt>
           </View>
           {/* スタンダード on a narrow phone: the two halves on two lines (one line would leave a lone た) */}
-          <Txt size={11} w="600" tone="greenInk">{std && narrow ? `▲ ${r.delta.replace(' · ', '\n')}` : `▲ ${r.delta}`}</Txt>
+          <Txt size={std ? 12 : 11} w={std ? '700' : '600'} lh={std ? 18 : undefined} tone="greenInk">{std && narrow ? `▲ ${r.delta.replace(' · ', '\n')}` : `▲ ${r.delta}`}</Txt>
         </View>
         <Dist pos={Math.round(14 - (r.rank - 57) / 12)} />
       </Card>
       <Card style={{ marginHorizontal: 16, marginTop: 10, paddingVertical: 4 }} pad={0}>
         {RANK.filter((x) => !blocked.includes(x.n)).map((x, i) => (
           <Press key={x.n} onPress={() => personSheet(x.n, x.c)} scale={0.99} style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 7 }, std && { minHeight: 54, marginHorizontal: 14, paddingHorizontal: 0, gap: 12, borderTopWidth: i ? 1.5 : 0, borderTopColor: S.line }]}>
-            {i < 3 ? (std ? <View style={{ width: 40, alignItems: 'center' }}><PixSticker name={i === 0 ? 'trophy' : 'star'} tilt={i === 2 ? 6 : -6} /></View> : <Sticker name={i === 0 ? 'trophy' : 'star'} size={24} tilt={i === 2 ? 8 : -6} />) : <Txt num size={12} w="600" tone="ink3" style={{ width: std ? 40 : 24, textAlign: 'center' }}>{i + 1}</Txt>}
-            <Avatar name={x.n} color={x.c} size={30} />
-            <Txt size={13.5} w="600" style={{ flex: 1 }}>{x.n}</Txt>
-            <Txt num size={13.5} w="600">{(x.h * r.scale).toFixed(1)}<Txt size={11} tone="ink3"> 時間</Txt></Txt>
+            {i < 3 ? (std ? <View style={{ width: 40, alignItems: 'center' }}><PixSticker name={i === 0 ? 'trophy' : 'star'} tilt={i === 2 ? 6 : -6} /></View> : <Sticker name={i === 0 ? 'trophy' : 'star'} size={24} tilt={i === 2 ? 8 : -6} />) : <Txt num size={std ? 14 : 12} w={std ? '700' : '600'} tone={std ? 'ink2' : 'ink3'} style={{ width: std ? 40 : 24, textAlign: 'center' }}>{i + 1}</Txt>}
+            <Avatar name={x.n} color={x.c} size={std ? 34 : 30} />
+            <Txt size={std ? 15 : 13.5} w={std ? '700' : '600'} numberOfLines={1} style={{ flex: 1 }}>{x.n}</Txt>
+            <Txt num size={std ? 15 : 13.5} w={std ? '700' : '600'}>{(x.h * r.scale).toFixed(1)}<Txt size={std ? 12 : 11} tone="ink3"> 時間</Txt></Txt>
           </Press>
         ))}
         <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10, paddingVertical: 7, marginHorizontal: 4, marginTop: 2, marginBottom: 0, borderRadius: radius.inner, backgroundColor: t.greenSoft },
           // スタンダード: you, on a pale sun ground with a faint edge
           std && { minHeight: 48, gap: 12, marginHorizontal: 8, marginBottom: 4, paddingHorizontal: 6, borderRadius: SR.key, backgroundColor: '#FBEFC6', boxShadow: ring(1.5, 'rgba(23,18,31,0.16)') }]}>
-          <Txt num size={12} w="700" tone={std ? 'ink' : 'greenInk'} style={{ width: std ? 34 : 24, textAlign: 'center' }}>{r.rank}</Txt>
-          <Avatar name={myName} color={PERSON_COLOR['はる']} size={30} />
-          <Txt size={13.5} w="600" style={{ flex: 1 }}>あなた</Txt>
-          <Txt num size={13.5} w="700">{r.me.toFixed(1)}<Txt size={11} tone="ink3"> 時間</Txt></Txt>
+          <Txt num size={std ? 14 : 12} w="700" tone={std ? 'ink' : 'greenInk'} style={{ width: std ? 34 : 24, textAlign: 'center' }}>{r.rank}</Txt>
+          <Avatar name={myName} color={PERSON_COLOR['はる']} size={std ? 34 : 30} />
+          <Txt size={std ? 15 : 13.5} w={std ? '700' : '600'} style={{ flex: 1 }}>あなた</Txt>
+          <Txt num size={std ? 15 : 13.5} w="700">{r.me.toFixed(1)}<Txt size={std ? 12 : 11} tone={std ? 'ink2' : 'ink3'}> 時間</Txt></Txt>
         </View>
       </Card>
     </Animated.View>
@@ -280,7 +280,8 @@ function Dist({ pos }: { pos: number }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 1.5, height: 44, width: 110 }} accessibilityLabel="分布の中のあなたの位置">
       {/* スタンダード: no green in a chart; the others in the paper's line color, you in ink */}
-      {DIST.map((x, i) => <DistBar key={i} h={(x / 33) * 44} on={i === pos} color={i === pos ? (std ? S.ink : t.green) : std ? S.line2 : t.sunken} delay={i * 18} />)}
+      {/* スタンダード: the wave in 0.19s, so the last bar has landed inside 0.6s (MOTION.md) */}
+      {DIST.map((x, i) => <DistBar key={i} h={(x / 33) * 44} on={i === pos} color={i === pos ? (std ? S.ink : t.green) : std ? S.line2 : t.sunken} delay={i * (std ? 10 : 18)} />)}
     </View>
   );
 }
