@@ -228,7 +228,8 @@ const RANK_BY: Record<'w' | 'm' | 't', { rank: number; delta: string; me: number
 function Rank() {
   const t = useT();
   const std = useStd();
-  const narrow = useWindowDimensions().width < 390;
+  // the lead card's last line fits on one line only from about 420 wide (at 390 it left a lone た)
+  const narrow = useWindowDimensions().width < 420;
   const [p, setP] = useState<'w' | 'm' | 't'>('w');
   const weekH = useStore((s) => minutesIn(s.sessions, 7)) / 60;
   const todayH = useStore((s) => s.todayMin) / 60;

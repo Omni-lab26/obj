@@ -8,6 +8,7 @@ import type { Moment } from '@/moments';
 import type { MomentKit } from '@/themes/types';
 import { dismiss, micro, present } from '@/ui/motion';
 import { TextureFill } from '@/ui/Texture';
+import { START_NOTE_MS } from '@/ui/Toast';
 import type { CreatureId, Face } from './art';
 import { LIFT, mix, ring, S } from './look';
 import { Dots, J, Num } from './parts';
@@ -94,7 +95,7 @@ const Unit = ({ u }: { u: string }) => <J size={13} w="700" lh={18} color={S.ink
 /** Started: only a note at the top (it happens most), ジリ waking up. */
 function Start({ moment, done }: { moment: Extract<Moment, { kind: 'start' }>; done: () => void }) {
   const insets = useSafeAreaInsets();
-  const a = useInOut(2800, done, { y: -12 });
+  const a = useInOut(START_NOTE_MS, done, { y: -12 });
   const face = useFace('sleep', 'ring');
   const text = `${subj(moment.subject).name}をはじめました`;
   return (

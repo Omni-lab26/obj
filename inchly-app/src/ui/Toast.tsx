@@ -153,9 +153,9 @@ const hosts: number[] = [];
 const hostSubs = new Set<() => void>();
 const hostsChanged = () => hostSubs.forEach((f) => f());
 
-// スタンダード's 始めた note (its kit's moment, ジリ) sits where the toasts do, for 2.8s:
+// スタンダード's 始めた note (its kit's moment, ジリ) sits where the toasts do, for 2s:
 // the toasts step down under it meanwhile, and back up once it's gone (ui/motion move).
-const START_NOTE_MS = 2800;
+export const START_NOTE_MS = 2000;
 const START_NOTE_H = 56 + 16; // the note, its lime shadow and a gap
 function useUnderStartNote(on: boolean) {
   const y = useSharedValue(0);

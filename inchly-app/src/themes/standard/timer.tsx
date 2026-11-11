@@ -246,7 +246,8 @@ function TimeFaceChoice({ close }: { close: () => void }) {
         <J size={17} w="700" style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">時間のフォント</J>
         <Key label="決定" onPress={close} fill={S.ink} under={S.limeDeep} kd={3} hitSlop={{ top: 4, bottom: 4 }} style={{ width: 44, height: 36 }}><Pix name="check" color={S.onInk} /></Key>
       </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 12, columnGap: '2.66%' }} accessibilityRole="radiogroup">
+      {/* nine faces, three by three (four across left the last one alone on its row) */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 12, columnGap: '3.5%' }} accessibilityRole="radiogroup">
         {tiles.map((f) => <FaceTile key={f.id ?? 'standard'} name={f.name} family={f.family} spacing={f.spacing} on={f.id === cur} onPress={() => pick(f.id)} />)}
       </View>
       <J size={12} color={S.ink3} style={{ textAlign: 'center' }}>選ぶとすぐカードに反映されます</J>
@@ -259,7 +260,7 @@ function FaceTile({ name, family, spacing, on, onPress }: { name: string; family
   const s = useSink(2);
   return (
     <Pressable onPress={onPress} onPressIn={s.down} onPressOut={s.up} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={name}
-      style={{ width: '23%', alignItems: 'center', gap: 8 }}>
+      style={{ width: '31%', alignItems: 'center', gap: 8 }}>
       <View style={{ alignSelf: 'stretch', height: 60 }}>
         {on ? null : <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: 1, bottom: -5, borderRadius: R.key + 2, backgroundColor: S.ink }} />}
         <Animated.View style={[{ flex: 1, borderRadius: R.key, backgroundColor: on ? S.lime : S.card, boxShadow: ring(), alignItems: 'center', justifyContent: 'center' },
@@ -314,7 +315,8 @@ function Top({ state, name, close, onBackdrop, onLook }: { state: 'idle' | 'live
         style={{ width: 96, height: 22, alignItems: 'center', paddingTop: 7 }}>
         <View style={{ width: 40, height: 5, borderRadius: 3, backgroundColor: INK_FAINT }} />
       </Pressable>
-      <View pointerEvents="box-none" style={{ alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginTop: 4, marginBottom: 6, minHeight: 30 }}>
+      {/* 14 under the tag: what's said at the top (a toast, the 始めた note: 6 down, 57 tall, a 6pt shadow) covers the grabber and the tag whole and ends 8 clear of the heading */}
+      <View pointerEvents="box-none" style={{ alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginTop: 4, marginBottom: 14, minHeight: 30 }}>
         <View style={{ flex: 1, alignItems: 'flex-start' }}>{onBackdrop ? <Small label="背景" a11y="背景を選ぶ" onPress={onBackdrop} /> : null}</View>
         <View pointerEvents="none" accessibilityLiveRegion="polite" style={{ flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 26, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8, backgroundColor: S.card, boxShadow: ring(1.5) }}>
           {state === 'live' ? <Dot c={S.run} /> : null}

@@ -52,8 +52,9 @@ export function Dialog({ open, close, title, aside, children }: { open: boolean;
   });
   const inner = useAnimatedStyle(() => {
     const v = card.value;
-    // スタンダード: the words come with the card, not a beat behind it (they were readable only a quarter second after the tap)
-    return { opacity: interpolate(v, std ? [0.05, 0.5] : [0.35, 0.9], [0, 1], 'clamp'), transform: [{ translateY: (1 - Math.min(v, 1)) * (std ? 4 : 8) }] };
+    // スタンダード: the words are the card's (one fade, one rise), not a beat behind it
+    if (std) return { opacity: 1, transform: [{ translateY: 0 }] };
+    return { opacity: interpolate(v, [0.35, 0.9], [0, 1], 'clamp'), transform: [{ translateY: (1 - Math.min(v, 1)) * 8 }] };
   }, [std]);
 
   return (

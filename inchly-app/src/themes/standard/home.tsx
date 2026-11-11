@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent, PanResponder, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { cancelAnimation, makeMutable, useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
@@ -12,7 +12,7 @@ import { T } from '@/themes/kit';
 import { useDmUnread, useLevel, useStore, useStreak } from '@/store';
 import { haptic } from '@/ui/base';
 import { Screen, useTabPad, useUnread } from '@/ui/Chrome';
-import { replayCharts, useReplay } from '@/ui/appear';
+import { replayCharts } from '@/ui/appear';
 import { useGrowth } from '@/ui/Growth';
 import { Heatmap } from '@/ui/Heatmap';
 import { levelSheet } from '@/ui/Level';
@@ -38,6 +38,21 @@ const hm = (m: number) => `${Math.floor(m / 60)}:${pad(Math.round(m % 60))}`;
 /** The page has scrolled (0 / 1, fading): the header draws its ink line. */
 const scrolled = makeMutable(0);
 
+// The lead card's entrance (the figures rolling up, the tape drawing in) plays as the app opens, when today's
+// minutes change and on a pull to refresh: not each time home comes back from another tab.
+let pulls = 0;
+const pullSubs = new Set<() => void>();
+const onPull = (f: () => void) => { pullSubs.add(f); return () => { pullSubs.delete(f); }; };
+const usePulls = () => useSyncExternalStore(onPull, () => pulls, () => pulls);
+function refresh() {
+  pulls += 1;
+  pullSubs.forEach((f) => f());
+  replayCharts();
+}
+/** What the entrance last played for (the pull; the tape: its minutes too), kept while the app is open. */
+let rolledFor: number | null = null;
+let tapeFor: string | null = null;
+
 // ---------- page, header ----------
 function Page({ header, children }: { header: ReactNode; children: ReactNode }) {
   const tabPad = useTabPad();
@@ -50,7 +65,7 @@ function Page({ header, children }: { header: ReactNode; children: ReactNode }) 
   return (
     <Screen>
       {header}
-      <RefreshScroll onRefresh={replayCharts} onScroll={onScroll} scrollEventThrottle={32} showsVerticalScrollIndicator={false}
+      <RefreshScroll onRefresh={refresh} onScroll={onScroll} scrollEventThrottle={32} showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: tabPad, gap: GAP }}>
         {children}
       </RefreshScroll>
@@ -226,14 +241,15 @@ const Peers = () => <Friends look={FRIENDS} />;
 function Today() {
   const today = useToday();
   const next = useDeadlines()[0];
-  // the figures roll up from zero when the screen is shown (and when home comes back)
-  const [shown, setShown] = useState(false);
-  const replay = useReplay();
+  // the figures roll up from zero as the app opens and on a pull to refresh; a new record rolls them on from where they were
+  const pull = usePulls();
+  const [shown, setShown] = useState(rolledFor === pull);
   useEffect(() => {
+    if (rolledFor === pull) return;
     const a = setTimeout(() => setShown(false), 0);
-    const b = setTimeout(() => setShown(true), 120);
+    const b = setTimeout(() => { rolledFor = pull; setShown(true); }, 120);
     return () => { clearTimeout(a); clearTimeout(b); };
-  }, [replay]);
+  }, [pull]);
   const diff = today.diff;
   return (
     <Card hero>
@@ -273,13 +289,16 @@ function Tape({ minutes, goal, parts }: { minutes: number; goal: number; parts: 
   const x = (m: number) => (m / end) * w;
   const starts = segs.map((_, i) => segs.slice(0, i).reduce((a, p) => a + p.min, 0));
   const reached = minutes >= goal;
-  const reveal = useSharedValue(0);
-  const replay = useReplay();
+  const key = `${minutes}/${usePulls()}`;
+  const reveal = useSharedValue(tapeFor === key ? 1 : 0);
+  const played = useRef(tapeFor === key ? key : null);
   useEffect(() => {
-    if (!w) return;
+    if (!w || played.current === key) return;
+    played.current = key;
+    tapeFor = key;
     reveal.set(0);
     reveal.set(withDelay(150, present(1)));
-  }, [w, minutes, replay, reveal]);
+  }, [w, key, reveal]);
   const grow = useAnimatedStyle(() => ({ transform: [{ scaleX: reveal.value }] }));
 
   const geo = useRef({ w, starts, segs, end });
