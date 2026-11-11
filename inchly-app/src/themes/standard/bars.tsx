@@ -11,7 +11,7 @@ import type { TabBarProps, TabItem } from '@/themes/types';
 import { elapsedOf, startFree, startFrom, togglePause, useStore } from '@/store';
 import { haptic } from '@/ui/base';
 import { STUDY_BAR_H, studyBarBottom, TAB_BAR_H, tabBarBottom } from '@/ui/Chrome';
-import { micro } from '@/ui/motion';
+import { micro, press } from '@/ui/motion';
 import { TourSpot } from '@/ui/Tour';
 import type { IconId } from './art';
 import { floor, KD, R, ring, S } from './look';
@@ -36,6 +36,8 @@ export function TabBar({ items, running, paused, mins, insets }: TabBarProps) {
     {/* under the bar's floor, paper: what scrolls under the bars doesn't show below them */}
     <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: tabBarBottom(insets.bottom) + 2, backgroundImage: `linear-gradient(to bottom, rgba(243,238,227,0), ${S.paper} 8px)` }} />
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: tabBarBottom(insets.bottom), paddingHorizontal: 16 }}>
+      {/* behind the bar and its floor, paper to their corners: what scrolls under doesn't show round them */}
+      <View pointerEvents="none" style={{ position: 'absolute', left: 14, right: 14, top: 0, bottom: -6, backgroundColor: S.paper }} />
       <View accessibilityRole="tablist" style={{ height: TAB_BAR_H, borderRadius: R.bar, backgroundColor: S.card, boxShadow: `${ring()}, ${floor()}`, flexDirection: 'row', paddingHorizontal: 4 }}>
         {items.map((it) => (
           <TourSpot key={it.key} id={`tab-${it.name}`} style={{ flex: 1 }}>
@@ -88,8 +90,8 @@ function Place({ insets, children }: { insets: EdgeInsets; children: ReactNode }
 function Shell({ children, sink }: { children: ReactNode; sink: ReturnType<typeof useSink>['style'] }) {
   return (
     <View style={{ height: STUDY_BAR_H }}>
-      {/* between the two bars, paper (from the middle of this one to the middle of the tab bar, 10 below): what scrolls under them doesn't show in the gap */}
-      <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: STUDY_BAR_H / 2, bottom: -(10 + TAB_BAR_H / 2), backgroundColor: S.paper }} />
+      {/* between the two bars, paper (from the middle of this one to just under the tab bar's top, 10 below): what scrolls under them doesn't show in the gap */}
+      <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: STUDY_BAR_H / 2, bottom: -18, backgroundColor: S.paper }} />
       <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: KD - 2, bottom: -KD - 2, borderRadius: R.bar + 2, backgroundColor: S.ink }} />
       <Animated.View style={[{ flex: 1, borderRadius: R.bar, backgroundColor: S.card, boxShadow: ring(), flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, gap: 8 }, sink]}>
         {children}
@@ -190,7 +192,8 @@ function BarTime({ color, rest }: { color: string; rest: string }) {
 function PauseBtn({ paused }: { paused: boolean }) {
   const g = useSharedValue(0);
   const ground = useAnimatedStyle(() => ({ opacity: g.value }));
-  const tap = useTap(() => { haptic.soft(); togglePause(); }, () => g.set(micro(1)));
+  // the ground comes at once (0.09s), and goes as a color does (0.2s)
+  const tap = useTap(() => { haptic.soft(); togglePause(); }, () => g.set(press(1)));
   return (
     <Pressable onPress={tap.onPress} onPressIn={tap.onPressIn} onPressOut={() => g.set(micro(0))}
       accessibilityRole="button" accessibilityLabel={paused ? '再開' : '一時停止'} hitSlop={6}

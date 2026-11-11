@@ -69,8 +69,8 @@ export type FriendsLook = {
   Row: ComponentType<{ f: Friend }>;
   /** a row's ground (it covers what a swipe shows under it) and the line between rows */
   ground: string; line: string;
-  /** the grip's (≡) color, when not the theme's faint ink */
-  grip?: string;
+  /** the grip's (≡) color, when not the theme's faint ink; and how wide its place is (else 40) */
+  grip?: string; gripWidth?: number;
   /** the red a left swipe shows: inset from the row's top and bottom, and rounded (else the row's full height, square) */
   swipeInset?: number; swipeRadius?: number;
   /** the row lifted by a drag: an edge and shadow drawn over it, rounded (else a soft shadow under it) */
@@ -82,7 +82,7 @@ export type FriendsLook = {
  * スタンダード's, when its kit doesn't say: the grip in line 2, the swipe's red inset and rounded, the lifted row
  * in the ink outline and the lime shadow, 8 in from the card's sides so both stay inside it (it clips), not grown.
  */
-const STD_ROW = { grip: S.line2, swipeInset: 3, swipeRadius: 12, liftShadow: LIFT, liftRadius: 14, liftInset: 8, liftScale: 1 };
+const STD_ROW = { grip: S.line2, gripWidth: 44, swipeInset: 3, swipeRadius: 12, liftShadow: LIFT, liftRadius: 14, liftInset: 8, liftScale: 1 };
 
 const hide = (f: Friend) => {
   setFriendHidden(f.h, true);
@@ -249,7 +249,7 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f
           </Press>
           {/* the grip: drag from here at once */}
           <GestureDetector gesture={drag.grip}>
-            <View accessibilityRole="adjustable" accessibilityLabel={`${f.n}を並べ替える`} style={{ width: 40, height: ROW, alignItems: 'center', justifyContent: 'center' }}>
+            <View accessibilityRole="adjustable" accessibilityLabel={`${f.n}を並べ替える`} style={{ width: dress.gripWidth ?? 40, height: ROW, alignItems: 'center', justifyContent: 'center' }}>
               {dress.grip ? <Pix name="grip" color={dress.grip} /> : <Grip />}
             </View>
           </GestureDetector>
@@ -259,7 +259,7 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f
       {dress.liftShadow ? (
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: dress.liftInset ?? 4, right: dress.liftInset ?? 4, top: 3, bottom: 3, borderRadius: dress.liftRadius ?? 0, boxShadow: dress.liftShadow }, shadow]}>
           {/* the row's own line (along its top) would ride just over the edge: covered while it's lifted */}
-          <View style={{ position: 'absolute', left: 16 - (dress.liftInset ?? 4), right: 16 - (dress.liftInset ?? 4), top: -3, height: 1, backgroundColor: look?.ground ?? t.surface }} />
+          <View style={{ position: 'absolute', left: 16 - (dress.liftInset ?? 4), right: 16 - (dress.liftInset ?? 4), top: -3, height: 2, backgroundColor: look?.ground ?? t.surface }} />
         </Animated.View>
       ) : null}
       {first ? null : <View pointerEvents="none" style={{ position: 'absolute', left: 61, right: 14, top: 0, height: hair, backgroundColor: look?.line ?? t.line }} />}

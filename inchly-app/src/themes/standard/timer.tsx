@@ -10,7 +10,7 @@ import { type CardFaceProps, type CardLook, clock } from '@/screens/timer/cards'
 import { elapsedOf, type Held, sameFav, setDesign, toggleFavorite, togglePause, useStore } from '@/store';
 import { T } from '@/themes/kit';
 import { haptic } from '@/ui/base';
-import { micro, move } from '@/ui/motion';
+import { fadeIn, micro, move, press } from '@/ui/motion';
 import { PlanArt } from '@/ui/PlanArt';
 import { planSheet } from '@/ui/PlanSheets';
 import { openSheet } from '@/ui/Sheet';
@@ -215,12 +215,12 @@ function CardClock({ state, plan, over, held, k, cw }: { state: CardFaceProps['s
   );
 }
 
-/** A button on the card with no floor (only the round key has one): pressed, a faint ground. */
+/** A button on the card with no floor (only the round key has one): pressed, a faint ground (there in 0.09s, gone in 0.2s). */
 function Ghost({ onPress, label, selected, size, style, children }: { onPress: () => void; label: string; selected?: boolean; size: number; style?: object; children: ReactNode }) {
   const g = useSharedValue(0);
   const ground = useAnimatedStyle(() => ({ opacity: g.value }));
   return (
-    <Pressable onPress={onPress} onPressIn={() => g.set(micro(1))} onPressOut={() => g.set(micro(0))} hitSlop={4}
+    <Pressable onPress={onPress} onPressIn={() => g.set(press(1))} onPressOut={() => g.set(micro(0))} hitSlop={4}
       accessibilityRole="button" accessibilityLabel={label} accessibilityState={selected === undefined ? undefined : { selected }}
       style={[{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }, style]}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 12, backgroundColor: 'rgba(23,18,31,0.08)' }, ground]} />
@@ -244,7 +244,7 @@ function TimeFaceChoice({ close }: { close: () => void }) {
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <Ghost onPress={() => { setDesign({ timeFont: first }); close(); }} label="やめる（元のフォントに戻す）" size={44}><Pix name="x" /></Ghost>
         <J size={17} w="700" style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">時間のフォント</J>
-        <Key label="決定" onPress={close} fill={S.ink} under={S.limeDeep} kd={3} style={{ width: 44, height: 36 }}><Pix name="check" color={S.onInk} /></Key>
+        <Key label="決定" onPress={close} fill={S.ink} under={S.limeDeep} kd={3} hitSlop={{ top: 4, bottom: 4 }} style={{ width: 44, height: 36 }}><Pix name="check" color={S.onInk} /></Key>
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 12, columnGap: '2.66%' }} accessibilityRole="radiogroup">
         {tiles.map((f) => <FaceTile key={f.id ?? 'standard'} name={f.name} family={f.family} spacing={f.spacing} on={f.id === cur} onPress={() => pick(f.id)} />)}
@@ -268,7 +268,7 @@ function FaceTile({ name, family, spacing, on, onPress }: { name: string; family
             : <Num size={28} lh={32}>39</Num>}
         </Animated.View>
       </View>
-      <J size={11} w={on ? '700' : '500'} color={on ? S.ink : S.ink3} numberOfLines={1}>{name}</J>
+      <J size={11} w={on ? '700' : '600'} color={on ? S.ink : S.ink3} numberOfLines={1}>{name}</J>
     </Pressable>
   );
 }
@@ -363,6 +363,8 @@ function Pager({ n, shown }: { n: number; shown: number }) {
   const at = useSharedValue(shown);
   useEffect(() => { at.set(move(shown)); }, [shown, at]);
   const thumb = useAnimatedStyle(() => ({ transform: [{ translateX: at.value * 14 }] }));
+  // over the ＋ the thumb wears it (fading as it slides off), so the card that adds still reads as ＋
+  const plus = useAnimatedStyle(() => ({ opacity: Math.max(0, 1 - at.value) }));
   return (
     <View pointerEvents="none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, minHeight: 24, marginTop: 2 }}
       accessible accessibilityLabel={shown ? `${n - 1}つのうち ${shown}つ目` : '予定を追加のカード'}>
@@ -372,7 +374,12 @@ function Pager({ n, shown }: { n: number; shown: number }) {
           <View style={{ position: 'absolute', width: 2, height: 8, backgroundColor: S.ink2 }} />
         </View>
         {Array.from({ length: n - 1 }, (_, i) => <View key={i} style={{ width: 8, height: 8, backgroundColor: S.card, boxShadow: ring(1.5) }} />)}
-        <Animated.View style={[{ position: 'absolute', left: 0, top: 0, width: 8, height: 8, backgroundColor: S.ink, boxShadow: ring(1.5) }, thumb]} />
+        <Animated.View style={[{ position: 'absolute', left: 0, top: 0, width: 8, height: 8, backgroundColor: S.ink, boxShadow: ring(1.5), alignItems: 'center', justifyContent: 'center' }, thumb]}>
+          <Animated.View style={[{ width: 8, height: 8, alignItems: 'center', justifyContent: 'center' }, plus]}>
+            <View style={{ position: 'absolute', width: 6, height: 2, backgroundColor: S.onInk }} />
+            <View style={{ position: 'absolute', width: 2, height: 6, backgroundColor: S.onInk }} />
+          </Animated.View>
+        </Animated.View>
       </View>
       <J size={12} w="700" lh={14} num color={S.ink2} style={{ minWidth: 36 }}>{shown ? `${shown} / ${n - 1}` : '追加'}</J>
     </View>
@@ -383,7 +390,7 @@ function Pager({ n, shown }: { n: number; shown: number }) {
 function Waiting({ held, onPress }: { held: Held[]; onPress: () => void }) {
   const min = held.reduce((n, h) => n + Math.max(1, Math.round(h.sec / 60)), 0);
   return (
-    <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 10, paddingTop: 6, paddingBottom: 10, paddingLeft: 12, paddingRight: 8,
+    <Animated.View entering={fadeIn()} pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 10, paddingTop: 6, paddingBottom: 10, paddingLeft: 12, paddingRight: 8,
       borderRadius: R.mid, backgroundColor: S.card, boxShadow: ring() }}>
       <View pointerEvents="none" style={{ flexDirection: 'row' }}>
         {held.slice(0, 4).map((h, i) => <View key={h.id} style={{ width: 10, height: 10, marginLeft: i ? -1 : 0, backgroundColor: subj(h.s).c, boxShadow: ring(1.5) }} />)}
@@ -392,7 +399,7 @@ function Waiting({ held, onPress }: { held: Held[]; onPress: () => void }) {
         {'記録まち '}<J size={13} w="700">{`${held.length}つ`}</J>{` · ${jpHm(min)}`}
       </J>
       <View style={{ marginTop: 4 }}><Small label="まとめて記録" a11y={`まとめて記録（${held.length}つ）`} onPress={onPress} quiet /></View>
-    </View>
+    </Animated.View>
   );
 }
 

@@ -50,7 +50,7 @@ function Order({ close }: { close: () => void }) {
         <View style={{ width: 72 }} />
         <J size={17} w="700" lh={22} style={{ flex: 1, textAlign: 'center' }} accessibilityRole="header">今日の順番</J>
         <View style={{ width: 72, alignItems: 'flex-end' }}>
-          <Key label="できた" onPress={close} fill={S.ink} under={S.limeDeep} kd={3} style={{ height: 36 }} face={{ paddingHorizontal: 14 }}>
+          <Key label="できた" onPress={close} fill={S.ink} under={S.limeDeep} kd={3} hitSlop={{ top: 4, bottom: 4 }} style={{ height: 36 }} face={{ paddingHorizontal: 14 }}>
             <J size={14} w="800" lh={18} color={S.onInk}>できた</J>
           </Key>
         </View>

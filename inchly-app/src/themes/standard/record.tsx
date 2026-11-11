@@ -35,8 +35,10 @@ export function Record({ r }: { r: RecordSheet }) {
   const memoSize = useWindowDimensions().width < 385 ? 17 : 18;
   // today's total as the sheet opened: saved, the record is in the store's total, and the band would count it twice
   const [before] = useState(r.before);
+  // and the plan it was studied under: saved, the session's plan is gone, and the line about it would leave (the rows under it jumping up behind the stamp)
+  const [plan] = useState(r.plan);
   if (r.empty) return <Empty />;
-  const { plan, free, subjects, pick, setPick, keepFree, what, setWhat, sj, min, adjust, start, end, note, setNote, share, setShare, phase, todayPart, left, tooLong, back, save } = r;
+  const { free, subjects, pick, setPick, keepFree, what, setWhat, sj, min, adjust, start, end, note, setNote, share, setShare, phase, todayPart, left, tooLong, back, save } = r;
   const idle = phase === 'idle';
   return (
     <Screen>
@@ -47,7 +49,7 @@ export function Record({ r }: { r: RecordSheet }) {
             {({ pressed }) => <J size={15} w="600" lh={20} style={{ opacity: pressed ? 0.6 : 1 }}>続ける</J>}
           </Pressable>
           <Key label={idle ? (tooLong ? `メモが${-left}字多いので記録できません` : `${sj.name} ${min}分を記録する`) : '記録しました'} onPress={save} haptics={false} disabled={!idle}
-            fill={S.ink} under={S.limeDeep} kd={4} style={{ height: 40, opacity: tooLong ? 0.5 : 1 }} face={{ paddingHorizontal: 20 }}>
+            fill={S.ink} under={S.limeDeep} kd={4} hitSlop={{ top: 2, bottom: 6 }} style={{ height: 40, opacity: tooLong ? 0.5 : 1 }} face={{ paddingHorizontal: 20 }}>
             <J size={14.5} w="800" lh={18} color={idle ? S.onInk : S.ink3}>{idle ? '記録する' : '記録しました'}</J>
           </Key>
         </View>
@@ -59,7 +61,7 @@ export function Record({ r }: { r: RecordSheet }) {
               <View style={{ gap: 10, paddingBottom: 14, marginBottom: 14, borderBottomWidth: 1.5, borderBottomColor: S.line }}>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 8, rowGap: 2 }}>
                   <J size={13} w="700" lh={17} color={S.ink2}>{pick ? '科目' : '何の科目を勉強した？'}</J>
-                  {pick ? null : <J size={11.5} lh={15} color={S.ink3}>選ばなければ、あとで仕分けに</J>}
+                  {pick ? null : <J size={11.5} w="500" lh={15} color={S.ink3}>選ばなければ、あとで仕分けに</J>}
                 </View>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, rowGap: 10, paddingBottom: 4 }} accessibilityRole="radiogroup">
                   {/* 自習のまま: several subjects at once, or nothing worth writing — kept as 自習, not sorted later */}
@@ -219,7 +221,7 @@ function Chip({ on, label, a11y, color, onPress }: { on: boolean; label: string;
   const s = useSink(2);
   return (
     <Pressable onPress={() => { haptic.tap(); onPress(); }} onPressIn={s.down} onPressOut={s.up} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={a11y ?? label}
-      hitSlop={{ top: 4, bottom: 4 }} style={{ height: 34 }}>
+      hitSlop={{ top: 5, bottom: 5 }} style={{ height: 34 }}>
       {on ? null : <View pointerEvents="none" style={{ position: 'absolute', left: -2, right: -2, top: 1, bottom: -5, borderRadius: R.chip + 2, backgroundColor: S.ink }} />}
       <Animated.View style={[{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: R.chip, backgroundColor: on ? S.lime : S.card, boxShadow: ring() },
         on ? { transform: [{ translateY: 2 }] } : s.style]}>

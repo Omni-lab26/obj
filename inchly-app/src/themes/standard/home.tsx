@@ -182,8 +182,8 @@ function FriendRow({ f }: { f: Friend }) {
   const up = f.diff >= 0;
   return (
     <>
-      {/* the line over each row: 1.5pt across the card's inside, as the cards' own lines (the list's hairline is left clear); the heading covers the top one's */}
-      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 16, right: -24, height: 1.5, backgroundColor: S.line }} />
+      {/* the line over each row: 1.5pt across the card's inside (on under the grip, 44 wide here), as the cards' own lines (the list's hairline is left clear); the heading covers the top one's */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 16, right: -28, height: 1.5, backgroundColor: S.line }} />
       {/* the row starts 14 in: 2 more, to sit under the heading's square */}
       <View style={{ marginLeft: 2 }}><Person name={f.n} color={f.c} /></View>
       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
@@ -249,7 +249,7 @@ function Today() {
         <View style={{ alignItems: 'flex-end', gap: 2, marginBottom: 2 }}>
           {/* no change: neither up nor down */}
           <J size={12} w="700" lh={15} num color={!diff ? S.ink3 : diff > 0 ? S.up : S.down}>{`${!diff ? '±' : diff > 0 ? '▲' : '▼'} ${hm(Math.abs(diff))}`}</J>
-          <J size={11} lh={13} color={S.ink3}>昨日より</J>
+          <J size={11} w="600" lh={13} color={S.ink3}>昨日より</J>
         </View>
       </View>
       <View style={{ marginTop: 18 }}>
@@ -333,7 +333,7 @@ function Tape({ minutes, goal, parts }: { minutes: number; goal: number; parts: 
                 return <View key={i} style={{ position: 'absolute', top: 0, left: x(i * 15) - (h ? 1 : 0.75), width: h ? 2 : 1.5, height: h ? 8 : 4, backgroundColor: S.ink, opacity: h ? 0.85 : 0.45 }} />;
               })}
               {hours.map((h) => (
-                <J key={h} size={10} w="500" lh={12} num color={S.ink3}
+                <J key={h} size={11} w="600" lh={13} num color={S.ink3}
                   style={{ position: 'absolute', top: 11, width: 30, left: h === 0 ? 0 : h * 60 === end ? w - 30 : x(h * 60) - 15, textAlign: h === 0 ? 'left' : h * 60 === end ? 'right' : 'center' }}>
                   {h === 0 ? '0' : `${h}h`}
                 </J>
@@ -411,7 +411,7 @@ function Badges() {
           <View key={b.label} style={{ width: 76, alignItems: 'center', gap: 6 }} accessible accessibilityLabel={b.got ? `${b.label} 達成` : `${b.label} ${b.left}`}>
             <View style={{ height: 48, justifyContent: 'center' }}><PixSticker name={b.s} locked={!b.got} tilt={b.got ? -6 : 0} /></View>
             <J size={12} w="700" lh={15}>{b.label}</J>
-            <J size={11} w={b.got ? '700' : '500'} lh={13} color={b.got ? S.runInk : S.ink3}>{b.got ? '達成' : b.left}</J>
+            <J size={11} w={b.got ? '700' : '600'} lh={13} color={b.got ? S.runInk : S.ink3}>{b.got ? '達成' : b.left}</J>
           </View>
         ))}
       </ScrollView>
