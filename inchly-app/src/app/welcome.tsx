@@ -5,7 +5,7 @@ import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SUBJ } from '@/data';
-import { ageOf, gradeNow, OTHER_GRADES, pickGrade, SCHOOL } from '@/lib/grade';
+import { ageOf, GRADE_ROWS, gradeNow, OTHER_GRADES, pickGrade, SCHOOL } from '@/lib/grade';
 import { notificationsAllowed } from '@/lib/notify';
 import { Account, setState, signIn } from '@/store';
 import { bundledFace, font, hair, useT } from '@/theme';
@@ -201,14 +201,20 @@ export default function Welcome() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 52, paddingHorizontal: 14, borderTopWidth: std ? 1.5 : hair, borderTopColor: t.line }}>
                   <View style={{ flex: 1 }}>
                     <Txt size={15.5}>学年</Txt>
-                    <Txt size={std ? 12 : 11.5} tone="ink3">{picked ? '自分で選んだ学年（毎年4月に上がります）' : '生まれた年月から自動（毎年4月に上がります）'}</Txt>
+                    {std ? (
+                      // スタンダード: the second half goes to the next line whole where the line is too short (beside 未就学 it left す） alone)
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                        <Txt size={12} tone="ink3">{picked ? '自分で選んだ学年' : '生まれた年月から自動'}</Txt>
+                        <Txt size={12} tone="ink3">（毎年4月に上がります）</Txt>
+                      </View>
+                    ) : <Txt size={11.5} tone="ink3">{picked ? '自分で選んだ学年（毎年4月に上がります）' : '生まれた年月から自動（毎年4月に上がります）'}</Txt>}
                   </View>
                   <PickChip on={open === 'grade'} onPress={() => toggle('grade')} label={grade} a11y="学年を変える" />
                 </View>
                 {open === 'grade' ? (
                   <Opens>
                     <View style={{ alignSelf: 'stretch', padding: 12, gap: 10 }}>
-                      <Choice value={grade} onChange={(g) => { haptic.tap(); setPicked(g === auto ? null : g); }} options={[...SCHOOL, ...OTHER_GRADES].map((g) => ({ v: g, label: g }))} />
+                      <Choice value={grade} onChange={(g) => { haptic.tap(); setPicked(g === auto ? null : g); }} options={[...SCHOOL, ...OTHER_GRADES].map((g) => ({ v: g, label: g }))} rows={GRADE_ROWS} />
                       {picked ? (std ? <View style={{ alignSelf: 'flex-start', minHeight: 28, justifyContent: 'center' }}><StdLink label={`生まれた年月に合わせる（${auto}）`} onPress={() => setPicked(null)} /></View> : (
                         <Press onPress={() => { haptic.tap(); setPicked(null); }} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
                           <Txt size={13} w="600" color={t.blue}>{`生まれた年月に合わせる（${auto}）`}</Txt>

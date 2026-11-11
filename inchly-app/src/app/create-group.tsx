@@ -114,7 +114,8 @@ function ThemeTile({ label, icon, on, dim, onPress }: { label: string; icon: Ico
   }, [on, dim, s, o]);
   const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ scale: s.value }] }));
   return (
-    <Animated.View style={[{ width: '31.8%' }, a]}>
+    // スタンダード: three across on every phone, each row filled (at 375 wide, 31.8% and the gaps came to a hair over the row: two across, a blank beside them)
+    <Animated.View style={[std ? { flexBasis: '30%', flexGrow: 1 } : { width: '31.8%' }, a]}>
       <Press onPress={onPress} scale={0.95} accessibilityRole="radio" accessibilityState={{ checked: on }}
         style={[{ height: 64, borderRadius: radius.inner, alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: on ? t.ink : t.surface,
           borderWidth: hair, borderColor: on ? t.ink : t.line2 },

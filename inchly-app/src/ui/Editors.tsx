@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { ROOM, subj } from '../data';
@@ -46,6 +46,7 @@ function SessionForm({ close, existing }: { close: () => void; existing?: Sessio
     close();
     toast(existing ? '記録を直しました' : `${subj(s).name} ${min}分を追加しました`, date === today ? '今日の合計に入りました' : `${date === yesterday ? '昨日' : jpDate(parseKey(date), false)}の記録に入りました`);
   };
+  const del = () => { if (!existing) return; removeSession(existing.id); haptic.warn(); close(); toast('記録を削除しました'); };
   return (
     <View style={{ gap: 18 }}>
       <Txt size={18} w="700">{existing ? '記録を直す' : '記録を手で追加'}</Txt>
@@ -70,7 +71,13 @@ function SessionForm({ close, existing }: { close: () => void; existing?: Sessio
       <Field label="メモ（任意）" value={note} onChangeText={setNote} max={40} />
       <Btn kind="primary" wide label={existing ? '保存する' : '追加する'} onPress={save} />
       {existing ? (
-        <Btn kind="ghost" wide label="この記録を削除" onPress={() => { removeSession(existing.id); haptic.warn(); close(); toast('記録を削除しました'); }} />
+        // スタンダード: the app's crimson, as the other words that take something away (この科目を削除, アカウントとデータを削除)
+        std ? (
+          <Pressable onPress={del} accessibilityRole="button" accessibilityLabel="この記録を削除"
+            style={({ pressed }) => ({ minHeight: 44, borderRadius: SR.key, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? 'rgba(23,18,31,0.08)' : 'transparent' })}>
+            <Txt size={15} w="700" color={S.pause}>この記録を削除</Txt>
+          </Pressable>
+        ) : <Btn kind="ghost" wide label="この記録を削除" onPress={del} />
       ) : null}
     </View>
   );

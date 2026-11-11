@@ -101,7 +101,8 @@ function Start({ moment, done }: { moment: Extract<Moment, { kind: 'start' }>; d
   return (
     <Animated.View accessible accessibilityRole="alert" accessibilityLabel={text}
       style={[{ position: 'absolute', top: insets.top + 6, left: 12, right: 12, minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 12,
-        paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, backgroundColor: S.card, boxShadow: LIFT }, a]}>
+        // as tall as a toast (57: ジリ is 45), so it ends where they do — clear of what's under it (the timer's heading)
+        paddingVertical: 6, paddingHorizontal: 12, borderRadius: 16, backgroundColor: S.card, boxShadow: LIFT }, a]}>
       <Creature id="jiri" face={face} px={3} />
       <J size={15} w="700" lh={20} style={{ flex: 1 }} numberOfLines={2}>{text}</J>
     </Animated.View>

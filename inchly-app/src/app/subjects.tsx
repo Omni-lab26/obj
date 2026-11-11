@@ -198,7 +198,8 @@ function SubjectForm({ close, existing }: { close: () => void; existing?: Subjec
         helper="看板などで、長い名前の代わりに使います" />
       <View>
         <Label sub="「教科ごと」のグラフでまとめる先。色もこれで決まります">教科</Label>
-        <Choice value={area} onChange={setPicked} options={AREAS.map((a) => ({ v: a.id, label: a.name }))} />
+        {/* スタンダード: four and three (wrapping freely left その他 alone on its line) */}
+        <Choice value={area} onChange={setPicked} options={AREAS.map((a) => ({ v: a.id, label: a.name }))} rows={AREAS.length === 7 ? [4, 3] : undefined} />
       </View>
       <View>
         <Label sub={area === 'other' ? 'その他の科目だけ、教科にない色から選べます' : '教科の色で決まっています（同じ教科の科目は濃淡で分かれます）'}>色</Label>

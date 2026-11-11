@@ -139,16 +139,18 @@ export function ScoreCard() {
                     <Stop offset="1" stopColor={t.ink} stopOpacity={0} />
                   </LinearGradient>
                 </Defs>
-                {grid.map((g) => <Line key={g.v} x1={0} x2={w - AXIS + 2} y1={g.y} y2={g.y} stroke={t.line2} strokeWidth={0.75} strokeDasharray="2 4" />)}
-                <Path d={`${path}L${xy[xy.length - 1][0]} ${PLOT_H}L${xy[0][0]} ${PLOT_H}Z`} fill="url(#pullArea)" />
+                {grid.map((g) => <Line key={g.v} x1={0} x2={w - AXIS + 2} y1={g.y} y2={g.y} stroke={t.line2} strokeWidth={std ? 1 : 0.75} strokeDasharray="2 4" />)}
+                {/* スタンダード: flat under the line (no fade) */}
+                <Path d={`${path}L${xy[xy.length - 1][0]} ${PLOT_H}L${xy[0][0]} ${PLOT_H}Z`} fill={std ? 'rgba(23,18,31,0.06)' : 'url(#pullArea)'} />
                 <Path d={path} fill="none" stroke={t.ink} strokeWidth={std ? 2 : 1.75} strokeLinecap="round" strokeLinejoin="round" />
                 {hot !== null ? <Line x1={xy[idx][0]} x2={xy[idx][0]} y1={0} y2={PLOT_H} stroke={t.ink} strokeWidth={0.75} strokeDasharray="2 3" opacity={0.5} /> : null}
               </Svg>
               {grid.map((g) => (
-                <Txt key={g.v} num size={10} lh={12} tone="ink3" style={{ position: 'absolute', right: 0, top: g.y - 6, width: AXIS - 4, textAlign: 'right' }}>{g.v.toFixed(1)}</Txt>
+                <Txt key={g.v} num size={std ? 11 : 10} w={std ? '600' : undefined} lh={12} tone="ink3" style={{ position: 'absolute', right: 0, top: g.y - 6, width: AXIS - 4, textAlign: 'right' }}>{g.v.toFixed(1)}</Txt>
               ))}
-              <View style={{ position: 'absolute', left: xy[idx][0] - 4, top: xy[idx][1] - 4, width: 8, height: 8, borderRadius: 4, backgroundColor: t.ink, borderWidth: 1.5, borderColor: t.surface,
-                boxShadow: '0px 0px 0px 3px rgba(18,20,23,0.12)' }} />
+              {/* スタンダード: the point is an ink square in a paper rim (as the small lines' today), no halo */}
+              <View style={[{ position: 'absolute', left: xy[idx][0] - 4, top: xy[idx][1] - 4, width: 8, height: 8, borderRadius: 4, backgroundColor: t.ink, borderWidth: 1.5, borderColor: t.surface,
+                boxShadow: '0px 0px 0px 3px rgba(18,20,23,0.12)' }, std && { borderRadius: 0, borderWidth: 0, boxShadow: `0px 0px 0px 1.5px ${t.surface}` }]} />
               {/* the value under your finger, in a small dark tag */}
               {hot !== null ? (
                 <View pointerEvents="none" style={{ position: 'absolute', top: Math.max(-14, xy[idx][1] - 34), left: Math.max(0, Math.min(w - AXIS - 104, xy[idx][0] - 52)), width: 104, alignItems: 'center' }}>
@@ -163,7 +165,7 @@ export function ScoreCard() {
         </View>
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginRight: AXIS }} pointerEvents="none">
-          {[pts.length - 1, Math.floor((pts.length - 1) / 2), 0].map((b) => <Txt key={b} size={10} lh={12} tone="ink3">{weekLabel(b)}</Txt>)}
+          {[pts.length - 1, Math.floor((pts.length - 1) / 2), 0].map((b) => <Txt key={b} size={std ? 11 : 10} w={std ? '600' : undefined} lh={std ? 14 : 12} tone="ink3">{weekLabel(b)}</Txt>)}
         </View>
         {/* スタンダード: the window as the switch plate (the picked one lime) */}
         {std ? <Segmented value={win} onChange={(v) => { setHot(null); setWin(v); }} options={WINS.map((x) => ({ v: x.v, label: x.label }))} style={{ marginTop: 14 }} /> : (

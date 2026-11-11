@@ -9,6 +9,8 @@
 export const SCHOOL = ['小1', '小2', '小3', '小4', '小5', '小6', '中1', '中2', '中3', '高1', '高2', '高3'] as const;
 /** What you can pick that isn't a school grade (it stays as picked). */
 export const OTHER_GRADES = ['浪人', '大学生', '社会人', 'その他'] as const;
+/** How SCHOOL then OTHER_GRADES sit as lines of chips: 小, 中 and 高, the rest. */
+export const GRADE_ROWS = [6, 6, 4];
 export type GradeChoice = (typeof SCHOOL)[number] | (typeof OTHER_GRADES)[number];
 
 /** The school year a day falls in (April to March): 2026 for 2026-04-01 … 2027-03-31. */

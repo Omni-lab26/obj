@@ -205,8 +205,9 @@ export const ease = { press: IOS, out: IOS, ios: IOS };
 // Separators: two device pixels on iOS, and the same on a retina browser.
 export const hair = Platform.OS === 'web' ? 0.75 : StyleSheet.hairlineWidth * 2;
 
-// Web only: the field draws its own focus border, so drop the browser outline.
-export const noOutline: TextStyle | null = Platform.OS === 'web' ? { outlineWidth: 0 } : null;
+// Web only: the field draws its own focus border, so drop the browser outline
+// (its style, not its width: a browser draws `outline: auto` at any width).
+export const noOutline: TextStyle | null = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null;
 
 /** Text color for a filled button: white on deep colors, ink on light ones (国語's yellow, 数学's orange). */
 export function onColor(hex: string) {

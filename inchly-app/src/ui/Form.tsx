@@ -71,7 +71,7 @@ export function Stepper({ value, min, max, onChange, unit, label = '数' }: { va
 }
 
 // ---------- radio cards ----------
-export function RadioCards<K extends string>({ options, value, onChange }: { options: { v: K; title: string; sub: string }[]; value: K; onChange: (v: K) => void }) {
+export function RadioCards<K extends string>({ options, value, onChange }: { options: { v: K; title: string; sub?: string }[]; value: K; onChange: (v: K) => void }) {
   const t = useT();
   const std = useStd();
   return (
@@ -83,13 +83,15 @@ export function RadioCards<K extends string>({ options, value, onChange }: { opt
             style={[{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 11, paddingHorizontal: 12, borderRadius: radius.inner, backgroundColor: t.surface,
               borderWidth: on ? 1.25 : hair, borderColor: on ? t.ink : t.line2 },
               // スタンダード: the card with a thin ink outline; the picked one outlined in full and lime behind its words
-              std && { borderWidth: 0, borderRadius: SR.mid, backgroundColor: on ? S.lime : S.card, boxShadow: ring(on ? 2 : 1.5) }]}>
+              std && { borderWidth: 0, borderRadius: SR.mid, backgroundColor: on ? S.lime : S.card, boxShadow: ring(on ? 2 : 1.5) },
+              // a title alone: one line, 44 to the finger
+              std && !o.sub && { minHeight: 44, alignItems: 'center' }]}>
             <Pane radius={radius.inner} small />
             <Dot on={on} />
             <View style={{ flex: 1 }}>
               <Txt size={std ? 14 : 13.5} w={std ? '700' : '600'} lh={19}>{o.title}</Txt>
               {/* スタンダード: on lime the grey is too pale; ink 2 there */}
-              <Txt size={std ? 12 : 11.5} tone={std && on ? 'ink2' : 'ink3'} lh={std ? 17 : 16}>{o.sub}</Txt>
+              {o.sub ? <Txt size={std ? 12 : 11.5} tone={std && on ? 'ink2' : 'ink3'} lh={std ? 17 : 16}>{o.sub}</Txt> : null}
             </View>
           </Press>
         );
@@ -113,11 +115,12 @@ function Dot({ on }: { on: boolean }) {
 }
 
 // ---------- chips (single choice) ----------
-export function Choice<K extends string>({ options, value, onChange }: { options: { v: K; label: string }[]; value: K; onChange: (v: K) => void }) {
+export function Choice<K extends string>({ options, value, onChange, rows }: { options: { v: K; label: string }[]; value: K; onChange: (v: K) => void;
+  /** スタンダード: how many chips go on each line, each line filled edge to edge (so a narrow phone never leaves one chip alone on the next line) */ rows?: number[] }) {
   const t = useT();
   const std = useStd();
   // スタンダード: chips on a 2pt floor; the picked one lime, down on its floor
-  if (std) return <StdChips options={options} value={value} onChange={onChange} />;
+  if (std) return <StdChips options={options} value={value} onChange={onChange} rows={rows} />;
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       {options.map((o) => {
@@ -154,17 +157,31 @@ export function StdSwitch({ value, onChange, label }: { value: boolean; onChange
   );
 }
 
-export function StdChip({ label, on, onPress, role = 'radio', children, a11y }: { label?: string; on?: boolean; onPress: () => void; role?: 'radio' | 'button' | 'checkbox' | 'tab'; children?: ReactNode; a11y?: string }) {
+export function StdChip({ label, on, onPress, role = 'radio', children, a11y, fill }: { label?: string; on?: boolean; onPress: () => void; role?: 'radio' | 'button' | 'checkbox' | 'tab'; children?: ReactNode; a11y?: string;
+  /** takes an equal share of its line (StdChips' rows) */ fill?: boolean }) {
   return (
     <StdKey onPress={onPress} label={a11y ?? label} kd={2} radius={SR.chip} fill={on ? S.lime : S.card} held={on} role={role}
       state={role === 'tab' ? { selected: !!on } : role === 'button' ? undefined : { checked: !!on }} hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
-      style={{ minHeight: 32, marginBottom: 2 }} face={{ minHeight: 32, paddingHorizontal: 12, gap: 6 }}>
+      style={[{ minHeight: 32, marginBottom: 2 }, fill && { flex: 1, minWidth: 0 }]} face={{ minHeight: 32, paddingHorizontal: fill ? 4 : 12, gap: 6 }}>
       {children}
       {label ? <Txt size={13} w={on ? '700' : '600'} lh={17} color={S.ink} numberOfLines={1}>{label}</Txt> : null}
     </StdKey>
   );
 }
-function StdChips<K extends string>({ options, value, onChange }: { options: { v: K; label: string }[]; value: K; onChange: (v: K) => void }) {
+function StdChips<K extends string>({ options, value, onChange, rows }: { options: { v: K; label: string }[]; value: K; onChange: (v: K) => void; rows?: number[] }) {
+  if (rows) {
+    // lines of equal chips, filled edge to edge: the same block on every phone
+    const starts = rows.map((_, i) => rows.slice(0, i).reduce((a, n) => a + n, 0));
+    return (
+      <View style={{ gap: 10 }} accessibilityRole="radiogroup">
+        {rows.map((n, i) => (
+          <View key={i} style={{ flexDirection: 'row', gap: 8 }}>
+            {options.slice(starts[i], starts[i] + n).map((o) => <StdChip key={o.v} fill label={o.label} on={o.v === value} onPress={() => onChange(o.v)} />)}
+          </View>
+        ))}
+      </View>
+    );
+  }
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, columnGap: 8 }} accessibilityRole="radiogroup">
       {options.map((o) => <StdChip key={o.v} label={o.label} on={o.v === value} onPress={() => onChange(o.v)} />)}

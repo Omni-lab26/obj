@@ -413,7 +413,8 @@ function SortForm({ x, close }: { x: Session; close: () => void }) {
       <View style={[{ flexDirection: 'row', flexWrap: 'wrap', borderRadius: 10, paddingVertical: 6 }, box, std && { borderRadius: SR.mid, paddingVertical: 8 }]} accessibilityRole="radiogroup">
         {subjects.map((s) => (
           <Press key={s.id} onPress={() => put(s.id)} scale={0.92} accessibilityLabel={`${s.name}に仕分ける`}
-            style={{ width: '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
+            // スタンダード: five across where four would leave the last subject alone on its row (5, 9, 13 of them)
+            style={{ width: std && subjects.length % 4 === 1 ? '20%' : '25%', alignItems: 'center', gap: 4, paddingVertical: 6 }}>
             <SubjTile name={s.name} color={s.c} area={s.area} size={40} radius={8} />
             <Txt size={11.5} tone="ink2" numberOfLines={1}>{s.name}</Txt>
           </Press>

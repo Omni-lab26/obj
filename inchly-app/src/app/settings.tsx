@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { backdropOf, BACKDROPS, BACKDROPS_OPEN, THEMES_OPEN } from '@/design';
 import { subj } from '@/data';
 import { recordsCsv } from '@/lib/csv';
-import { gradeNow, OTHER_GRADES, SCHOOL } from '@/lib/grade';
+import { GRADE_ROWS, gradeNow, OTHER_GRADES, SCHOOL } from '@/lib/grade';
 import { clearPlanIcons } from '@/lib/planIcon';
 import { DmFrom, gradeOf, getState, setGrade, LiveScope, setState, unblock, useNow, useStore, wipe } from '@/store';
 import { hair, lift, radius, useT } from '@/theme';
@@ -46,7 +46,7 @@ function GradeForm({ close }: { close: () => void }) {
   return (
     <View style={{ gap: 14 }}>
       <Txt size={17} w="700">学年</Txt>
-      <Choice value={gradeOf(a)} onChange={(g) => { haptic.tap(); setGrade(g); }} options={[...SCHOOL, ...OTHER_GRADES].map((g) => ({ v: g, label: g }))} />
+      <Choice value={gradeOf(a)} onChange={(g) => { haptic.tap(); setGrade(g); }} options={[...SCHOOL, ...OTHER_GRADES].map((g) => ({ v: g, label: g }))} rows={GRADE_ROWS} />
       {/* スタンダード: words you can press are underlined (plain ink words read as a note) */}
       {std ? <View style={{ alignSelf: 'flex-start', minHeight: 28, justifyContent: 'center' }}><StdLink label={`生まれた年月に合わせる（${auto}）`} onPress={() => { setGrade(auto); close(); }} /></View> : (
       <Press onPress={() => { haptic.tap(); setGrade(auto); close(); }} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
@@ -58,14 +58,16 @@ function GradeForm({ close }: { close: () => void }) {
   );
 }
 
-function Row({ label, sub, right, first }: { label: string; sub?: string; right?: ReactNode; first?: boolean }) {
+function Row({ label, sub, right, first }: { label: string; /** in parts: スタンダード breaks the line only between them */ sub?: string | string[]; right?: ReactNode; first?: boolean }) {
   const t = useT();
   const std = useStd();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingVertical: 10, borderTopWidth: first ? 0 : std ? 1.5 : hair, borderTopColor: t.line }}>
       <View style={{ flex: 1 }}>
         <Txt size={14} w="500">{label}</Txt>
-        {sub ? <Txt size={12} tone="ink3">{sub}</Txt> : null}
+        {Array.isArray(sub) && std ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>{sub.map((x) => <Txt key={x} size={12} tone="ink3">{x}</Txt>)}</View>
+        ) : sub ? <Txt size={12} tone="ink3">{Array.isArray(sub) ? sub.join('') : sub}</Txt> : null}
       </View>
       {right}
     </View>
@@ -126,7 +128,7 @@ export default function Settings() {
         <Section title="アカウント">
           <Row first label={a?.name ?? '—'} sub={`@${a?.handle ?? ''} · ${gradeOf(a ?? null)}${a?.aim ? ` · ${a.aim} 志望` : ''}`} />
           {a ? (
-            <Row label="学年" sub={`${a.gradeFixed || a.gradeShift ? '自分で選んだ学年' : '生まれた年月から自動'}・毎年4月に上がります`}
+            <Row label="学年" sub={[`${a.gradeFixed || a.gradeShift ? '自分で選んだ学年' : '生まれた年月から自動'}・`, '毎年4月に上がります']}
               right={<Btn kind="line" small label={gradeOf(a)} onPress={gradeSheet} />} />
           ) : null}
           <Row label="ログイン" sub={a?.via === 'apple' ? 'Appleでサインイン' : a?.via === 'google' ? 'Googleでサインイン' : a?.via === 'mail' ? 'メールアドレス' : 'サンプルのアカウント'} />
@@ -146,8 +148,14 @@ export default function Settings() {
 
         <Section title="メッセージを受け取る相手">
           <View style={{ paddingVertical: 12 }}>
+            {/* スタンダード: a line each, as 勉強中を見せる相手 above (as chips, 全員 fell alone onto the next line on most phones) */}
+            {std ? (
+              <RadioCards<DmFrom> value={s.dmFrom} onChange={(v) => setState({ dmFrom: v })}
+                options={[{ v: 'following', title: 'フォロー中の人' }, { v: 'groups', title: 'グループのメンバーまで' }, { v: 'all', title: '全員' }]} />
+            ) : (
             <Choice<DmFrom> value={s.dmFrom} onChange={(v) => setState({ dmFrom: v })}
               options={[{ v: 'following', label: 'フォロー中の人' }, { v: 'groups', label: 'グループのメンバーまで' }, { v: 'all', label: '全員' }]} />
+            )}
           </View>
         </Section>
 
@@ -209,7 +217,7 @@ export default function Settings() {
 
         <Section title="1日の目標">
           <View style={{ paddingVertical: 12 }}>
-            <Choice value={String(s.goalMin)} onChange={(v) => setState({ goalMin: Number(v) })} options={[60, 120, 180, 240, 300].map((m) => ({ v: String(m), label: `${m / 60}時間` }))} />
+            <Choice value={String(s.goalMin)} onChange={(v) => setState({ goalMin: Number(v) })} options={[60, 120, 180, 240, 300].map((m) => ({ v: String(m), label: `${m / 60}時間` }))} rows={[5]} />
           </View>
         </Section>
 

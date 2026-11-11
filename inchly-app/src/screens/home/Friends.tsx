@@ -1,5 +1,5 @@
 import { ComponentType, ReactNode, useEffect, useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { SharedValue, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -339,6 +339,7 @@ function Everyone({ open, close }: { open: boolean; close: () => void }) {
 function Line({ f, onPress, right, dim, first }: { f: Friend; onPress?: () => void; right?: ReactNode; dim?: boolean; first?: boolean }) {
   const t = useT();
   const std = useStd();
+  const stack = useWindowDimensions().width < 420;
   const up = f.diff >= 0;
   return (
     <Press onPress={onPress} disabled={!onPress} scale={0.99} accessibilityLabel={`${f.n} ${f.s}を勉強中。今日${hm(f.today)}`}
@@ -349,8 +350,9 @@ function Line({ f, onPress, right, dim, first }: { f: Friend; onPress?: () => vo
       <View style={{ flex: 1, minWidth: 0 }}>
         <Txt size={14.5} w="600" lh={19} numberOfLines={1}>{f.n}</Txt>
         {std ? (
-          // スタンダード: what they study, then where they aim — the second goes to its own line where one is too short (never cut to 志…)
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 8 }}>
+          // スタンダード: what they study, then where they aim — never cut to 志…; on all but the widest phones each on its own line
+          // (wrapping only where one line was too short left the rows at two heights)
+          <View style={stack ? undefined : { flexDirection: 'row', flexWrap: 'wrap', columnGap: 8 }}>
             <Txt size={11.5} tone="ink3" lh={15} numberOfLines={1}>{`${f.s}を勉強中`}</Txt>
             <Txt size={11.5} tone="ink3" lh={15} numberOfLines={1}>{`${f.g} 志望`}</Txt>
           </View>
