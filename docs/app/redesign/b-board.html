@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inchly ならべる盤</title>
+<meta name="theme-color" content="#151D40">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ならべる盤：紺の盤に、生成りのタイルと朱。影は使わない。マス目は十字の目印で見せる */
+:root{
+  --board:#151D40; --raise:#232D5C; --raise-line:rgba(243,239,228,.10);
+  --bone:#F3EFE4; --bone-2:#E3DDCC; --ink:#151D40; --ink-2:#4A5378; --dim:#AEB6D6;
+  --shu:#D23B1B; --shu-hi:#F4674A; --shu-ink:#B5300F; --shu-deep:#BA3315;
+  --en:#5856D6; --ma:#FF9500; --ja:#D9A300; --sci:#30B0C7; --chem:#1F7FB0;
+  --g1:#2F7A5A; --g2:#45AE78; --g3:#7BDA9C; --g4:#C4F6D0;
+  --row:85px; --gap:10px; --side:14px; --r:16px;
+  --f-jp:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  --f-num:"Big Shoulders Display","Zen Kaku Gothic New",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font:500 14px/1.4 var(--f-jp);color:var(--ink);background:#E8E4D8;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+svg{display:block}
+i,b{font-style:normal}
+:focus{outline:none}
+:focus-visible{outline:3px solid #8FC0FF;outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.num{font-family:var(--f-num);font-weight:800;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+
+/* ---------- 広い画面：2台と、この案の考え ---------- */
+.stage{display:flex;flex-wrap:wrap;gap:44px;justify-content:center;align-items:flex-start;padding:24px 28px;min-height:100vh}
+.phone{flex:none;border-radius:46px;box-shadow:0 0 0 9px #0A0F27;overflow:hidden;background:var(--board)}
+.phone.is-hit{box-shadow:0 0 0 9px #0A0F27,0 0 0 13px var(--shu)}
+.screen{position:relative;width:390px;height:844px;display:flex;flex-direction:column;background:var(--board);color:var(--bone);overflow:hidden;padding-top:40px}
+.notes{flex:none;width:320px;padding-top:40px}
+.notes .kicker{font-weight:700;font-size:12px;color:var(--ink-2);letter-spacing:.08em}
+.notes h1{font-weight:900;font-size:34px;line-height:1.15;margin:4px 0 18px}
+.notes ul{list-style:none;display:grid;gap:14px}
+.notes li{font-size:14px;line-height:1.75;padding-left:18px;position:relative}
+.notes li::before{content:"";position:absolute;left:0;top:.62em;width:9px;height:9px;background:
+  linear-gradient(var(--shu),var(--shu)) center/100% 1.6px no-repeat,linear-gradient(var(--shu),var(--shu)) center/1.6px 100% no-repeat}
+.notes li b{font-weight:900}
+.notes .keys{display:flex;gap:6px;margin-top:22px;flex-wrap:wrap}
+.notes .keys span{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-2)}
+.notes .keys i{width:14px;height:14px;border-radius:4px;display:block;box-shadow:inset 0 0 0 1px rgba(21,29,64,.18)}
+.notes .keys span + span{margin-left:8px}
+.swap{display:none}
+
+/* ---------- 盤とタイル ---------- */
+.scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:12px 0;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.board{position:relative;margin:0 var(--side);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:var(--row);gap:var(--gap)}
+/* マス目の交点に十字。タイルを置いた所はかくれる */
+.board::before{content:"";position:absolute;pointer-events:none;
+  left:calc(-5px - (100% + 10px) / 8);width:calc(125% + 12.5px);
+  top:calc(-5px - (var(--row) + var(--gap)) / 2);height:calc(100% + (var(--row) + var(--gap)) / 2 + 15px);
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 93 93'%3E%3Cpath d='M46.5 42.5v8M42.5 46.5h8' stroke='%23F3EFE4' stroke-opacity='.5' stroke-width='1.4'/%3E%3C/svg%3E") 0 0/20% calc(var(--row) + var(--gap))}
+.tile{position:relative;border-radius:var(--r);overflow:hidden;text-align:left;display:block;width:100%;height:100%;
+  transition:transform .14s ease-out,filter .14s ease-out}
+.tile:active,.press:active{transform:scale(.975);filter:brightness(.94);transition-duration:.06s}
+.t-bone{background:var(--bone);color:var(--ink)}
+.t-dark{background:var(--raise);color:var(--bone);box-shadow:inset 0 0 0 1px var(--raise-line)}
+.t-shu{background:var(--shu);color:#fff}
+.w4{grid-column:span 4}.w2{grid-column:span 2}.h2{grid-row:span 2}.h5{grid-row:span 5}
+.cap{font-size:12px;font-weight:700;line-height:16px;display:flex;align-items:center;gap:6px}
+.t-bone .cap{color:var(--ink-2)}
+.t-dark .cap{color:var(--dim)}
+
+/* ---------- ホームの上 ---------- */
+.top{flex:none;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 var(--side)}
+.logo{display:flex;align-items:center;gap:8px;font:900 30px/1 var(--f-num);letter-spacing:.015em;color:var(--bone)}
+.logo svg{width:22px;height:22px}
+.icons{display:flex}
+.ib{position:relative;width:44px;height:44px;display:grid;place-items:center;border-radius:12px;color:var(--bone)}
+.ib svg{width:24px;height:24px}
+.ib .dot{position:absolute;top:9px;right:8px;width:9px;height:9px;border-radius:50%;background:var(--shu-hi);box-shadow:0 0 0 2px var(--board)}
+.ic{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:square;stroke-linejoin:miter}
+
+/* ---------- 今日（主役）：3時間でひと回りのダイヤル ---------- */
+.today{display:grid;grid-template-columns:148px minmax(0,1fr);gap:14px;padding:14px}
+.dialbox{position:relative;width:148px;height:148px}
+.dial .trk{stroke:rgba(21,29,64,.11)}
+.dial .seg{stroke-dasharray:var(--l) 400}
+.dial .tick{stroke:rgba(21,29,64,.4);stroke-width:1.5}
+.dialmid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:5px}
+.dialmid .num{font-size:47px;line-height:.9}
+.dialmid small{font-size:11px;font-weight:700;color:var(--ink-2);margin-top:3px}
+.today-r{display:flex;flex-direction:column;min-width:0}
+.left{margin-top:5px;font-weight:900;font-size:14px;line-height:1;display:flex;align-items:baseline;gap:3px;white-space:nowrap}
+.left .num{font-size:50px;line-height:.84;margin:0 1px 0 3px}
+.vs{margin-top:8px;font-size:12px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.vs b{font:800 17px/1 var(--f-num);color:var(--ink);letter-spacing:.02em}
+.tri{width:0;height:0;border:5px solid transparent;border-bottom:8px solid currentColor;border-top:0;display:inline-block}
+.tri.dn{border-bottom:0;border-top:8px solid currentColor}
+.subs{margin-top:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sub{border-top:1.5px solid rgba(21,29,64,.16);padding-top:6px}
+.sub span{display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;line-height:14px}
+.sub span i{width:9px;height:9px;border-radius:2.5px;background:var(--c)}
+.sub b{display:block;font:800 21px/1 var(--f-num);margin-top:3px;letter-spacing:.02em}
+
+/* ---------- 連続：朱の札 ---------- */
+.streak{padding:12px;display:flex;flex-direction:column}
+.streak .flame{position:absolute;right:-22px;bottom:14px;width:150px;height:150px;fill:var(--shu-deep)}
+.streak > *:not(.flame){position:relative}
+.streak .cap{justify-content:space-between;color:#fff}
+.rest{display:flex;align-items:center;gap:4px;font-size:11.5px}
+.rest svg{width:18px;height:12px;fill:#fff}
+.days{margin-top:auto;display:flex;align-items:baseline;gap:4px;font-weight:900;font-size:17px}
+.days .num{font-weight:900;font-size:98px;line-height:.78;letter-spacing:0}
+.week{margin-top:12px;display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.week i{height:19px;border-radius:5px;display:grid;place-items:center;font-size:11px;font-weight:900;line-height:1}
+.week .on{background:var(--bone);color:var(--shu-ink)}
+.week .now{box-shadow:0 0 0 2px var(--shu),0 0 0 3.5px #fff}
+.week .off{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.62);color:#fff}
+
+/* ---------- 草：4週間ぶん ---------- */
+.grass{padding:10px 11px;display:flex;justify-content:space-between;gap:6px}
+.grass .lhs{display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.grass .cap{font-size:11px;line-height:14px;display:block;white-space:nowrap}
+.grass .num{font-size:35px;line-height:.9;white-space:nowrap}
+.grass .num small{font:900 12px/1 var(--f-jp);margin-left:2px}
+.cells{flex:none;display:grid;grid-template-columns:repeat(7,9px);grid-auto-rows:12px;gap:3px;align-content:center}
+.cells i{border-radius:3px;background:rgba(243,239,228,.13)}
+.cells .l1{background:var(--g1)}.cells .l2{background:var(--g2)}.cells .l3{background:var(--g3)}.cells .l4{background:var(--g4)}
+.cells .nx{background:none;box-shadow:inset 0 0 0 1px rgba(243,239,228,.24)}
+.cells .td{box-shadow:0 0 0 1.5px var(--raise),0 0 0 3px var(--bone)}
+
+/* ---------- 小さい札：レベル・バッジ ---------- */
+.mini{padding:9px 10px 10px;display:flex;flex-direction:column}
+.mini .cap{font-size:11.5px;line-height:14px}
+.mini .num{font-size:35px;line-height:.9;margin-top:auto;display:flex;align-items:baseline}
+.mini .num small{font-size:17px;color:var(--dim);margin-left:2px}
+.xp{height:6px;border-radius:2px;background:rgba(243,239,228,.16);margin-top:7px;overflow:hidden}
+.xp i{display:block;height:100%;width:38%;background:var(--bone)}
+.pips{display:grid;grid-template-columns:repeat(11,1fr);gap:2px;margin-top:6px}
+.pips i{height:7px;border-radius:1.5px;box-shadow:inset 0 0 0 1px rgba(243,239,228,.4)}
+.pips .on{background:var(--bone);box-shadow:none}
+
+/* ---------- いま勉強中の友達：レーン ---------- */
+.friends{padding:12px 14px 10px;display:flex;flex-direction:column}
+.friends .cap{justify-content:space-between}
+.friends .cap > span{display:flex;align-items:center;gap:6px}
+.live{width:8px;height:8px;border-radius:50%;background:var(--shu);animation:blink 2.4s ease-in-out infinite}
+.more{font-size:11.5px;color:var(--ink-2)}
+.lanes{position:relative;margin-top:auto;display:grid;gap:0}
+.lane{display:grid;grid-template-columns:24px 50px minmax(0,1fr) 80px;gap:6px;align-items:center;height:31px}
+.av{width:24px;height:24px;border-radius:50%;background:var(--a);display:grid;place-items:center;font-size:11.5px;font-weight:900;color:var(--ink);line-height:1}
+.who{min-width:0;line-height:1.1}
+.who b{display:block;font-size:12.5px;font-weight:900;white-space:nowrap}
+.who i{display:block;font-size:10.5px;font-weight:700;color:var(--ink-2);margin-top:1px}
+.trk2{height:15px;border-radius:3px;background:rgba(21,29,64,.075)}
+.trk2 i{display:block;height:100%;border-radius:3px;background:var(--c);width:calc(var(--m) / 270 * 100%)}
+.tm{display:flex;align-items:baseline;justify-content:flex-end;gap:5px;white-space:nowrap}
+.tm b{font:800 23px/1 var(--f-num);letter-spacing:.02em}
+.tm i{font-size:11px;font-weight:700;color:var(--ink-2);display:inline-flex;align-items:center;gap:2px;min-width:38px}
+.tm i.dn{color:var(--shu-ink)}
+.tm .tri{border-width:3.5px;border-bottom-width:6px}.tm .tri.dn{border-top-width:6px;border-bottom-width:0}
+/* 自分の位置（今日 2:45）のたて線 */
+.me{position:absolute;top:-3px;bottom:2px;width:2px;background:var(--ink);box-shadow:0 0 0 1px var(--bone);
+  left:calc(86px + (100% - 172px) * 165 / 270 - 1px)}
+.me::before{content:"じぶん";position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:3px;
+  font-size:10.5px;font-weight:900;line-height:15px;padding:0 6px;border-radius:4px;background:var(--ink);color:var(--bone);white-space:nowrap}
+
+/* ---------- 下：つぎの札とタブ ---------- */
+.foot{flex:none;padding:0 var(--side) max(22px,env(safe-area-inset-bottom));background:var(--board)}
+.dock{height:68px;border-radius:var(--r);background:var(--raise);box-shadow:inset 0 0 0 1px var(--raise-line);display:flex;align-items:center;gap:10px;padding:0 10px 0 12px}
+.chip{flex:none;width:44px;height:44px;border-radius:11px;background:var(--c);display:grid;place-items:center;font-size:20px;font-weight:900;line-height:1;color:var(--ink)}
+.chip.en{color:#fff}
+.next{flex:1;min-width:0;line-height:1.1}
+.next .when{display:flex;align-items:baseline;gap:6px;font-size:11.5px;font-weight:700;color:var(--dim)}
+.next .when .num{font-size:27px;line-height:.95;color:var(--bone)}
+.next .what{display:block;font-size:13px;font-weight:700;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.go{flex:none;height:48px;padding:0 15px 0 13px;border-radius:12px;background:var(--shu);color:#fff;font-size:15px;font-weight:900;display:flex;align-items:center;gap:7px;white-space:nowrap;
+  transition:transform .14s ease-out,filter .14s ease-out}
+.go svg{width:13px;height:15px;fill:#fff}
+.tabs{margin-top:8px;height:56px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}
+.tab{height:56px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--dim);font-size:10px;font-weight:700;line-height:1;white-space:nowrap;
+  transition:background-color .12s linear,color .12s linear}
+.tab svg{width:24px;height:24px}
+.tab[aria-current="page"]{background:var(--bone);color:var(--ink)}
+.tab:active{background:rgba(243,239,228,.14)}
+.tab[aria-current="page"]:active{background:var(--bone-2)}
+
+/* ---------- タイマー ---------- */
+.ttop{flex:none;height:50px;display:flex;align-items:center;gap:2px;padding:0 var(--side) 0 4px}
+.ttop .ttl{flex:1;min-width:0;line-height:1.15;padding-left:2px}
+.ttop .ttl b{display:block;font-size:17px;font-weight:900}
+.ttop .ttl span{display:block;font-size:12px;font-weight:700;color:var(--dim)}
+.pill{height:44px;padding:0 14px;border-radius:12px;box-shadow:inset 0 0 0 1.5px rgba(243,239,228,.5);font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.pill svg{width:16px;height:16px}
+.big{padding:14px;display:flex;flex-direction:column}
+.bighead{display:flex;align-items:center;gap:10px}
+.bighead .chip{width:46px;height:46px;border-radius:12px;font-size:22px}
+.bighead .nm{flex:1;min-width:0;line-height:1.15}
+.bighead .nm b{display:block;font-size:22px;font-weight:900}
+.bighead .nm span{display:block;font-size:13px;font-weight:700;color:var(--ink-2)}
+.plan{text-align:right;font-size:11.5px;font-weight:700;color:var(--ink-2);line-height:1.1}
+.plan b{display:block;font-size:17px;font-weight:900;color:var(--ink);margin-top:3px}
+.tdialbox{position:relative;width:330px;aspect-ratio:1;margin:auto;max-width:100%;container-type:inline-size}
+.tdial{width:100%;height:100%}
+.tdial .trk{stroke:rgba(21,29,64,.1)}
+.tdial .arc{stroke:var(--ja);stroke-dasharray:var(--e) 9999;transition:stroke-dasharray 1s linear,stroke .2s linear}
+.tdial .tick{stroke:rgba(21,29,64,.3);stroke-width:1.5}
+.tdial .tick.mj{stroke:rgba(21,29,64,.62);stroke-width:2.5}
+.tmid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding-top:6px}
+.state{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:900;height:22px}
+.state .sq{display:none;width:9px;height:10px;border-left:3px solid var(--ink);border-right:3px solid var(--ink)}
+.clock{font:900 94px/.92 var(--f-num);font-size:28.5cqw;display:flex;margin-top:6px}
+.clock span{display:inline-block;width:.53em;text-align:center}
+.clock span.c{width:.25em}
+.remain{margin-top:8px;font-size:13px;font-weight:700;color:var(--ink-2);display:flex;align-items:baseline;gap:6px}
+.remain b{font:800 22px/1 var(--f-num);color:var(--ink);letter-spacing:.02em}
+.is-paused .tdial .arc{stroke:#9399B1}
+.is-paused .state .live{display:none}
+.is-paused .state .sq{display:block}
+.is-paused .clock{color:var(--ink-2)}
+.ctl{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-size:12.5px;font-weight:900;text-align:center;line-height:1}
+.ctl svg{width:26px;height:26px}
+.ctl.w2{flex-direction:row;gap:12px;font-size:17px}
+.ctl.w2 svg{width:28px;height:28px}
+.ctl .f{fill:currentColor;stroke:none}
+.ptile{padding:0 10px 0 11px;display:flex;align-items:center;gap:10px}
+.ptile .chip{width:40px;height:40px;border-radius:10px;font-size:18px}
+.ptile .tx{min-width:0;line-height:1.1}
+.ptile .tx .num{display:block;font-size:22px;line-height:1;white-space:nowrap}
+.ptile .tx span{display:block;font-size:12px;font-weight:700;color:var(--dim);margin-top:5px;white-space:nowrap}
+.ad{flex:none;margin:0 var(--side) max(22px,env(safe-area-inset-bottom));height:50px;border-radius:12px;border:1.5px dashed rgba(243,239,228,.3);display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--dim)}
+
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes sweep{from{stroke-dasharray:0 400}}
+.dial .seg{animation:sweep var(--d) linear var(--w) backwards}
+
+/* ---------- せまい画面：ページがそのままアプリ ---------- */
+@media (max-width:430px){
+  body{background:var(--board)}
+  .stage{display:block;padding:0;min-height:0}
+  .phone{border-radius:0;box-shadow:none;display:none}
+  .phone.is-hit{box-shadow:none}
+  body[data-view="home"] #p-home,body[data-view="timer"] #p-timer{display:block}
+  .screen{width:100%;height:100vh;height:100dvh;min-height:560px}
+  .notes{display:none}
+  .swap{display:flex;position:fixed;z-index:5;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);height:32px;align-items:center;gap:2px;padding:0 3px 0 10px;border-radius:16px;border:1px dashed rgba(243,239,228,.45);color:var(--dim);font-size:11px;font-weight:700;white-space:nowrap}
+  .swap button{position:relative;height:24px;padding:0 10px;border-radius:12px;color:var(--bone);font-weight:700}
+  .swap button::after{content:"";position:absolute;inset:-10px -2px}
+  .swap button[aria-pressed="true"]{background:var(--bone);color:var(--ink)}
+}
+@media (max-width:380px){
+  .cells{grid-template-columns:repeat(7,8px)}
+  .grass .num{font-size:31px}
+  .tab{font-size:9.5px}
+  .ptile{gap:7px;padding:0 8px}
+  .ptile .chip{width:34px;height:34px;font-size:16px}
+  .ptile .tx .num{font-size:19px}
+  .ptile .tx span{font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body data-view="home">
+
+<nav class="swap" aria-label="見本の画面の切り替え">
+  <span>見本</span>
+  <button type="button" data-go="home" aria-pressed="true">ホーム</button>
+  <button type="button" data-go="timer" aria-pressed="false">タイマー</button>
+</nav>
+
+<main class="stage">
+
+<!-- ================= ホーム ================= -->
+<section class="phone" id="p-home" aria-label="ホーム">
+  <div class="screen">
+    <header class="top">
+      <div class="logo" role="img" aria-label="inchly">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M2 3v16M8 9v10M14 3v16M20 9v10" stroke="#F4674A" stroke-width="3" fill="none"/></svg>
+        <span aria-hidden="true">inchly</span>
+      </div>
+      <div class="icons">
+        <button class="ib press" type="button" aria-label="さがす"><svg class="ic" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></button>
+        <button class="ib press" type="button" aria-label="お知らせ（新着あり）"><svg class="ic" viewBox="0 0 24 24"><path d="M5 17V11a7 7 0 0 1 14 0v6M3 17h18M10 20.5h4"/></svg><i class="dot"></i></button>
+        <button class="ib press" type="button" aria-label="メッセージ（新着あり）"><svg class="ic" viewBox="0 0 24 24"><path d="M3 4h18v13H11l-5 4v-4H3z"/></svg><i class="dot"></i></button>
+      </div>
+    </header>
+
+    <div class="scroll">
+      <div class="board">
+
+        <!-- 今日（主役） -->
+        <button type="button" class="tile t-bone w4 h2 today" aria-label="今日の勉強。合計 2時間45分。目標 3時間まで あと15分。昨日より 1時間17分多い。英語 1時間35分、数学 40分、国語 30分">
+          <span class="dialbox">
+            <svg class="dial" viewBox="0 0 148 148" aria-hidden="true">
+              <g transform="rotate(-90 74 74)" fill="none" stroke-width="16">
+                <circle class="trk" cx="74" cy="74" r="60"/>
+                <circle class="seg" cx="74" cy="74" r="60" pathLength="180" stroke="#5856D6" stroke-dashoffset="0" style="--l:94;--d:.38s;--w:.1s"/>
+                <circle class="seg" cx="74" cy="74" r="60" pathLength="180" stroke="#FF9500" stroke-dashoffset="-95" style="--l:39;--d:.16s;--w:.48s"/>
+                <circle class="seg" cx="74" cy="74" r="60" pathLength="180" stroke="#D9A300" stroke-dashoffset="-135" style="--l:30;--d:.12s;--w:.64s"/>
+              </g>
+              <g id="ticks-home"></g>
+              <path d="M74 12.5 68.5 2h11z" fill="#D23B1B"/>
+            </svg>
+            <span class="dialmid"><b class="num">2:45</b><small>今日の合計</small></span>
+          </span>
+          <span class="today-r">
+            <span class="cap">今日の勉強・目標 3時間</span>
+            <span class="left">あと<b class="num">15</b>分</span>
+            <span class="vs">昨日より<i class="tri"></i><b>1:17</b></span>
+            <span class="subs">
+              <span class="sub" style="--c:var(--en)"><span><i></i>英語</span><b>1:35</b></span>
+              <span class="sub" style="--c:var(--ma)"><span><i></i>数学</span><b>0:40</b></span>
+              <span class="sub" style="--c:var(--ja)"><span><i></i>国語</span><b>0:30</b></span>
+            </span>
+          </span>
+        </button>
+
+        <!-- 連続 -->
+        <button type="button" class="tile t-shu w2 h2 streak" aria-label="23日連続。今週は月・火・水・木に勉強した。休み券 2枚">
+          <svg class="flame" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M13 1c.6 4.300 6 6.700 6 12.800a7 7 0 0 1-14 0c0-3 1.700-4.700 2.600-7.300 1.500 1 2.300 2.200 2.800 3.800C11.800 7.600 13.200 4.800 13 1zM12 19.600a3 3 0 0 0 3-3c0-1.800-1.600-2.700-2.600-4.400-.5 1.500-3.400 2.300-3.400 4.400a3 3 0 0 0 3 3z"/></svg>
+          <span class="cap"><span>連続</span><span class="rest">休み券
+            <svg viewBox="0 0 17 11" aria-hidden="true"><path d="M0 0h17v3.500a2 2 0 0 0 0 4V11H0V7.500a2 2 0 0 0 0-4z"/></svg>
+            <svg viewBox="0 0 17 11" aria-hidden="true"><path d="M0 0h17v3.500a2 2 0 0 0 0 4V11H0V7.500a2 2 0 0 0 0-4z"/></svg>
+          </span></span>
+          <span class="days"><b class="num">23</b>日</span>
+          <span class="week" aria-hidden="true"><i class="on">月</i><i class="on">火</i><i class="on">水</i><i class="on now">木</i><i class="off">金</i><i class="off">土</i><i class="off">日</i></span>
+        </button>
+
+        <!-- 草 -->
+        <button type="button" class="tile t-dark w2 grass" aria-label="勉強した日。今年 253日。ここは4週間ぶん。押すと1年ぶん">
+          <span class="lhs"><span class="cap">今年の<br>勉強した日</span><b class="num">253<small>日</small></b></span>
+          <span class="cells" id="cells" aria-hidden="true"></span>
+        </button>
+
+        <!-- レベル -->
+        <button type="button" class="tile t-dark mini" aria-label="レベル 25">
+          <span class="cap">レベル</span>
+          <b class="num">25</b>
+          <span class="xp"><i></i></span>
+        </button>
+
+        <!-- バッジ -->
+        <button type="button" class="tile t-dark mini" aria-label="バッジ 11このうち 7こ。押すと一覧">
+          <span class="cap">バッジ</span>
+          <b class="num">7<small>/11</small></b>
+          <span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></span>
+        </button>
+
+        <!-- 友達 -->
+        <button type="button" class="tile t-bone w4 h2 friends" aria-label="いま勉強中の友達。mio 英語 4時間11分、kaito 物理 3時間12分、ゆなっぴ 化学 2時間36分、そら 数学 2時間。自分は 2時間45分">
+          <span class="cap"><span><i class="live"></i>いま勉強中の友達</span><span class="more">4人</span></span>
+          <span class="lanes">
+            <span class="lane" style="--m:251;--c:var(--en);--a:#E9A886"><i class="av">m</i><span class="who"><b>mio</b><i>英語</i></span><span class="trk2"><i></i></span><span class="tm"><b>4:11</b><i><span class="tri"></span>1:04</i></span></span>
+            <span class="lane" style="--m:192;--c:var(--sci);--a:#86D2BC"><i class="av">k</i><span class="who"><b>kaito</b><i>物理</i></span><span class="trk2"><i></i></span><span class="tm"><b>3:12</b><i class="dn"><span class="tri dn"></span>0:08</i></span></span>
+            <span class="lane" style="--m:156;--c:var(--chem);--a:#DBABCF"><i class="av">ゆ</i><span class="who"><b>ゆなっぴ</b><i>化学</i></span><span class="trk2"><i></i></span><span class="tm"><b>2:36</b><i><span class="tri"></span>1:10</i></span></span>
+            <span class="lane" style="--m:120;--c:var(--ma);--a:#A9B8F2"><i class="av">そ</i><span class="who"><b>そら</b><i>数学</i></span><span class="trk2"><i></i></span><span class="tm"><b>2:00</b><i><span class="tri"></span>0:17</i></span></span>
+            <i class="me" aria-hidden="true"></i>
+          </span>
+        </button>
+
+      </div>
+    </div>
+
+    <div class="foot">
+      <!-- 勉強バー → つぎの札 -->
+      <div class="dock">
+        <span class="chip en" style="--c:var(--en)" aria-hidden="true">英</span>
+        <span class="next">
+          <span class="when">つぎ<b class="num">17:00</b></span>
+          <span class="what">英語 長文読解</span>
+        </span>
+        <button type="button" class="go press" id="start"><svg viewBox="0 0 13 15" aria-hidden="true"><path d="M0 0l13 7.500L0 15z"/></svg>勉強を開始</button>
+      </div>
+      <nav class="tabs" aria-label="タブ">
+        <button type="button" class="tab" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="8" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>ホーム</button>
+        <button type="button" class="tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h1M4 12h1M4 18h1M9 6h11M9 12h11M9 18h7"/></svg>タイムライン</button>
+        <button type="button" class="tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.500"/><path d="M12 7v5l3.500 2"/></svg>勉強</button>
+        <button type="button" class="tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.500" cy="8.500" r="3"/><circle cx="16.500" cy="9.500" r="2.500"/><path d="M3 20c0-3.500 2.300-5.500 5.500-5.500S14 16.500 14 20M17 14.500c2.400.200 4 1.900 4 5"/></svg>みんな</button>
+        <button type="button" class="tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.500"/><path d="M5 20.500c0-4 3-6 7-6s7 2 7 6"/></svg>マイページ</button>
+      </nav>
+    </div>
+  </div>
+</section>
+
+<!-- ================= タイマー（勉強中） ================= -->
+<section class="phone" id="p-timer" aria-label="タイマー（勉強中）">
+  <div class="screen">
+    <header class="ttop">
+      <button class="ib press" type="button" id="back" aria-label="ホームにもどる"><svg class="ic" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></svg></button>
+      <div class="ttl"><b>今日の時間割</b><span>10月29日（木）</span></div>
+      <button class="ib press" type="button" aria-label="予定を足す"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="pill press" type="button"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 13V3M2 6l3-3 3 3M11 3v10M8 10l3 3 3-3"/></svg>並べ替え</button>
+    </header>
+
+    <div class="scroll">
+      <div class="board" id="tboard">
+
+        <!-- 今の予定：大きい1枚。60分（予定の長さ）でひと回り -->
+        <div class="tile t-bone w4 h5 big" id="big">
+          <div class="bighead">
+            <span class="chip" style="--c:var(--ja)" aria-hidden="true">国</span>
+            <div class="nm"><b>国語</b><span>古文単語</span></div>
+            <div class="plan">予定<b>1時間</b></div>
+          </div>
+          <div class="tdialbox">
+            <svg class="tdial" viewBox="0 0 330 330" aria-hidden="true">
+              <g transform="rotate(-90 165 165)" fill="none" stroke-width="20">
+                <circle class="trk" cx="165" cy="165" r="145"/>
+                <circle class="arc" id="arc" cx="165" cy="165" r="145" pathLength="3600" style="--e:2399"/>
+              </g>
+              <g id="ticks-timer"></g>
+            </svg>
+            <div class="tmid">
+              <div class="state"><i class="live"></i><i class="sq"></i><span id="state">勉強中</span></div>
+              <div class="clock" id="clock" role="timer" aria-label="39分59秒"></div>
+              <div class="remain">のこり<b id="remain">20:01</b></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作もタイル -->
+        <button type="button" class="tile t-dark ctl" aria-label="予定を編集">
+          <svg class="ic" viewBox="0 0 26 26" aria-hidden="true"><path d="M4 22l1-5L17.500 4.500l4 4L9 21zM15 7l4 4"/></svg>編集
+        </button>
+        <button type="button" class="tile t-bone ctl w2" id="pause" aria-pressed="false">
+          <svg viewBox="0 0 28 28" aria-hidden="true"><path class="f" id="pause-ic" d="M7 5h5v18H7zM16 5h5v18h-5z"/></svg><span id="pause-tx">一時停止</span>
+        </button>
+        <button type="button" class="tile t-shu ctl" aria-label="記録する">
+          <svg class="ic" viewBox="0 0 26 26" aria-hidden="true" style="stroke-width:3"><path d="M4.500 13.500l6 6L22 7"/></svg>記録する
+        </button>
+
+        <!-- ほかの予定：小さい札 -->
+        <button type="button" class="tile t-dark w2 ptile" aria-label="これから。17時から18時、英語 長文読解">
+          <span class="chip en" style="--c:var(--en)" aria-hidden="true">英</span>
+          <span class="tx"><b class="num">17:00–18:00</b><span>英語 長文読解</span></span>
+        </button>
+        <button type="button" class="tile t-dark w2 ptile" aria-label="これから。19時から20時、数学 青チャート">
+          <span class="chip" style="--c:var(--ma)" aria-hidden="true">数</span>
+          <span class="tx"><b class="num">19:00–20:00</b><span>数学 青チャート</span></span>
+        </button>
+
+      </div>
+    </div>
+    <div class="ad" aria-label="広告のわく">広告</div>
+  </div>
+</section>
+
+<aside class="notes">
+  <p class="kicker">案 B</p>
+  <h1>ならべる盤</h1>
+  <ul>
+    <li><b>主役は「今日」。</b>目標の3時間でひと回りするダイヤルにして、科目の色でうめた。すきまが「あと15分」。</li>
+    <li><b>ひと目で4つ。</b>今日・連続（朱の札）・いま勉強中の友達（線の長さが今日の時間、たての線が自分）・つぎの予定（下の札）。スクロールなし。</li>
+    <li><b>しまった物。</b>草は4週間ぶんだけ → 押すと1年ぶん。バッジは 7/11 の小さい札 → 押すと一覧。友達の7日の線と並び順は「みんな」へ。</li>
+    <li><b>タイマーも同じ盤。</b>今の予定が大きい1枚（予定の60分でひと回り）。編集・一時停止・記録もタイル。ほかの予定は小さい札で、すべらせる代わりに押して入れかえる。</li>
+    <li><b>見た目。</b>紺の盤、生成りのタイル、朱。影は使わず、マス目の十字で「置いてある」感じを出す。数字は細長い太字。</li>
+  </ul>
+  <p class="keys" aria-hidden="true">
+    <span><i style="background:#151D40"></i>紺</span><span><i style="background:#F3EFE4"></i>生成り</span><span><i style="background:#D23B1B"></i>朱</span>
+  </p>
+</aside>
+
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const NS = 'http://www.w3.org/2000/svg';
+  const reduced = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ダイヤルの目もり */
+  function ticks(id, cx, n, r1, r2, majorEvery, r2m) {
+    const g = document.getElementById(id); if (!g) return;
+    for (let k = 0; k < n; k++) {
+      const mj = majorEvery && k % majorEvery === 0;
+      const a = k / n * Math.PI * 2 - Math.PI / 2, c = Math.cos(a), s = Math.sin(a), rb = mj ? r2m : r2;
+      const l = document.createElementNS(NS, 'line');
+      l.setAttribute('x1', (cx + c * r1).toFixed(2)); l.setAttribute('y1', (cx + s * r1).toFixed(2));
+      l.setAttribute('x2', (cx + c * rb).toFixed(2)); l.setAttribute('y2', (cx + s * rb).toFixed(2));
+      l.setAttribute('class', mj ? 'tick mj' : 'tick');
+      g.appendChild(l);
+    }
+  }
+  ticks('ticks-home', 74, 6, 48, 43.5, 0, 0);       /* 30分ごと */
+  ticks('ticks-timer', 165, 60, 129, 124, 5, 117);  /* 1分ごと、5分は長く */
+
+  /* 草：4週間（月〜日）。-1 はまだ来ていない日 */
+  const G = [2,0,1,3,2,4,3, 2,3,3,1,4,2,3, 3,2,4,3,2,1,4, 3,4,2,3,-1,-1,-1];
+  const cells = $('#cells');
+  G.forEach((v, i) => { const c = document.createElement('i'); c.className = (v < 0 ? 'nx' : v ? 'l' + v : '') + (i === 24 ? ' td' : ''); cells.appendChild(c); });
+
+  /* 画面の切り替え（せまい画面）。広い画面では相手の端末を光らせる */
+  function go(v, hit) {
+    document.body.dataset.view = v;
+    document.querySelectorAll('.swap button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.go === v)));
+    try { localStorage.setItem('inchly-b-board-view', v); } catch (e) {}
+    if (hit && window.innerWidth > 430) {
+      const p = $(v === 'timer' ? '#p-timer' : '#p-home');
+      p.classList.add('is-hit'); p.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
+      setTimeout(() => p.classList.remove('is-hit'), 900);
+    }
+  }
+  document.querySelectorAll('.swap button').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $('#start').addEventListener('click', () => { if (!running) toggle(); go('timer', true); });
+  $('#back').addEventListener('click', () => go('home', true));
+  let first = location.hash === '#timer' ? 'timer' : location.hash === '#home' ? 'home' : null;
+  if (!first) { try { first = localStorage.getItem('inchly-b-board-view'); } catch (e) {} }
+  if (first === 'timer') go('timer');
+
+  /* タブ：選んだ見た目だけ */
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.removeAttribute('aria-current'));
+    t.setAttribute('aria-current', 'page');
+  }));
+
+  /* タイマー：国語 古文単語、予定 60分、39:59 から */
+  const PLAN = 3600; let sec = 2399, running = true;
+  const clock = $('#clock'), arc = $('#arc'), big = $('#big');
+  const mmss = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  function paint() {
+    const t = mmss(sec);
+    clock.innerHTML = t.split('').map(ch => ch === ':' ? '<span class="c">:</span>' : '<span>' + ch + '</span>').join('');
+    clock.setAttribute('aria-label', Math.floor(sec / 60) + '分' + (sec % 60) + '秒');
+    $('#remain').textContent = mmss(Math.max(0, PLAN - sec));
+    arc.style.setProperty('--e', Math.min(sec, PLAN));
+  }
+  function toggle() {
+    running = !running;
+    big.classList.toggle('is-paused', !running);
+    $('#state').textContent = running ? '勉強中' : '一時停止中';
+    $('#pause-tx').textContent = running ? '一時停止' : '再開する';
+    $('#pause-ic').setAttribute('d', running ? 'M7 5h5v18H7zM16 5h5v18h-5z' : 'M8 4l15 10L8 24z');
+    $('#pause').setAttribute('aria-pressed', String(!running));
+  }
+  $('#pause').addEventListener('click', toggle);
+  paint();
+  setInterval(() => { if (running) { sec++; paint(); } }, 1000);
+
+  /* iOS で :active を効かせる */
+  document.addEventListener('touchstart', () => {}, { passive: true });
+})();
+</script>
+</body>
+</html>
