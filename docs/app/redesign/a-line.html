@@ -136,7 +136,7 @@ html.shot .demo{display:none}
 .tag{display:inline-flex;align-items:center;gap:6px;min-height:22px;padding:2px 8px;border-radius:7px;background:var(--card);box-shadow:var(--ring-thin);font:700 12px/1.3 var(--f-body);color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
 .subj{--size:30px;display:inline-grid;place-items:center;flex:none;width:var(--size);height:var(--size);border-radius:calc(var(--size) * .26);background:var(--c);box-shadow:var(--ring);color:var(--ink)}
 .subj svg{width:64%;height:64%}
-.av{--size:32px;display:inline-grid;place-items:center;flex:none;width:var(--size);height:var(--size);border-radius:calc(var(--size) * .3);
+.av{--size:32px;position:relative;display:inline-grid;place-items:center;flex:none;width:var(--size);height:var(--size);border-radius:calc(var(--size) * .3);
   background:color-mix(in oklab,var(--c) 52%,#fff);box-shadow:var(--ring);color:var(--ink);font:800 calc(var(--size) * .42)/1 var(--f-body)}
 
 /* ---------- ヘッダー ---------- */
@@ -173,12 +173,13 @@ html.shot .demo{display:none}
 
 /* --- 線の頭：きのうまで（連続・草・バッジ） --- */
 .head{position:relative;margin-top:2px}
-.hd-f{height:48px}
-.hd-f .flame{position:absolute;left:50%;bottom:0;transform:translateX(-50%)}
+.hd-f{height:50px}
+.hd-f .flame{position:absolute;left:50%;bottom:3px;transform:translateX(-50%)}
 .hd-b{height:18px}
 .hd-b > .t,.wk > .t{font:400 12px/18px var(--f-pixj);color:var(--ink-2)}
 .hd-info{position:absolute;left:102px;right:16px;top:6px;display:flex;flex-direction:column;gap:12px}
 .hd-n{display:flex;align-items:baseline;gap:2px}
+.hd-n .big{font-size:26px}
 .hd-n .tag{margin-left:8px;align-self:center}
 .hd-k{display:flex;gap:10px}
 .mini-g{display:grid;grid-template-columns:repeat(3,4px);gap:1px}
@@ -187,7 +188,8 @@ html.shot .demo{display:none}
 .mini-g i:nth-child(4),.mini-g i:nth-child(9){background:var(--g4)}
 
 /* --- きょうの始まり --- */
-.today{height:30px;align-items:center}
+.today{height:30px}
+.today > .t,.today > .c,.ms > .t,.ms > .c,.nx > .t,.nx > .c,.tm-up > .c{align-self:center}
 .today > .t{font:400 13px/1 var(--f-pixj);color:var(--ink)}
 .today > .c{display:flex;align-items:baseline;gap:8px;font:700 13px/1 var(--f-body)}
 .today > .c small{font:400 12px/1 var(--f-pixj);color:var(--ink-2)}
@@ -246,8 +248,9 @@ html.shot .demo{display:none}
 .fr-l{position:relative;display:flex;justify-content:space-between;margin-top:10px}
 .fr-l::before{content:"";position:absolute;left:-23px;right:0;top:50%;height:2px;margin-top:-1px;background:var(--ink)}
 .fr{position:relative;display:inline-flex;align-items:center;gap:0}
-.fr b{padding:0 6px 0 5px;background:var(--paper);font:700 13px/1.6 var(--f-body);font-variant-numeric:tabular-nums}
-.fr:last-child b{padding-right:0}
+.fr .av{--size:30px}
+.fr b{position:relative;margin:0 5px 0 4px;padding:0 2px;background:var(--paper);font:700 13px/1.6 var(--f-body);font-variant-numeric:tabular-nums}
+.fr:last-child b{margin-right:0;padding-right:0}
 
 /* --- これから：予定は中が白い帯（長さは予定の分） --- */
 .gap{height:var(--h,16px)}
@@ -265,7 +268,7 @@ html.shot .demo{display:none}
 
 /* --- この先：今週の残りと、線の行き先 --- */
 .wk{height:18px}
-.ms{min-height:50px;align-items:center}
+.ms{min-height:50px}
 .ms > .sp .bead{background:var(--card)}
 .ms > .c{display:flex;align-items:center;gap:10px;padding-top:5px;padding-bottom:5px}
 .ms .stk.is-locked{filter:grayscale(1);opacity:.5}
@@ -279,8 +282,7 @@ html.shot .demo{display:none}
 
 /* ---------- タブバー：5つの駅がならぶ1本の路線 ---------- */
 .tabs{z-index:40;left:16px;right:16px;bottom:calc(var(--chrome-bottom) + var(--kd));height:var(--tab-h);display:flex;padding:0 4px;border-radius:20px;background:var(--card);box-shadow:var(--ring),var(--floor)}
-.tabs::before{content:"";position:absolute;z-index:-1;left:-16px;right:-16px;bottom:calc(-1 * (var(--chrome-bottom) + var(--kd)));height:calc(var(--chrome-bottom) + var(--kd) + 30px);
-  background:linear-gradient(to bottom,rgba(243,238,227,0),var(--paper) 22px);pointer-events:none}
+.tabs-fade{z-index:39;left:0;right:0;bottom:0;height:calc(var(--chrome-bottom) + var(--kd) + 34px);background:linear-gradient(to bottom,rgba(243,238,227,0),var(--paper) 24px);pointer-events:none}
 .tabs .rail{position:absolute;left:0;right:0;top:13px;height:2px;background:var(--ink)}
 .tab{position:relative;flex:1 1 0;min-width:44px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;padding:0 0 6px;border:0;border-radius:14px;background:none;
   color:var(--ink-3);font:600 10px/1.2 var(--f-body);white-space:nowrap}
@@ -326,7 +328,7 @@ html.shot .demo{display:none}
 .gr-r > span{font:400 11px/1 var(--f-pixj);color:var(--ink-2)}
 .gc{aspect-ratio:1;background:var(--g0);box-shadow:inset 0 0 0 1px rgba(23,18,31,.10)}
 .gc[data-l="1"]{background:var(--g1)} .gc[data-l="2"]{background:var(--g2)} .gc[data-l="3"]{background:var(--g3)} .gc[data-l="4"]{background:var(--g4)}
-.gc.today{box-shadow:inset 0 0 0 2px var(--ink)}
+.gc.is-now{box-shadow:inset 0 0 0 2px var(--ink)}
 .gc.future{background:none;box-shadow:none;outline:1.5px dashed rgba(23,18,31,.3);outline-offset:-1.5px}
 .gc.s{position:relative}
 .gc.s::after{content:"";position:absolute;left:-2px;right:-2px;top:50%;height:2px;margin-top:-1px;background:var(--ink)}
@@ -350,7 +352,7 @@ html.shot .demo{display:none}
    タイマー：同じ線の、いまの駅を大きくしたもの（1時間 = 420px の定規）
    ===================================================================== */
 .tm{--H:420px}
-.tm-up{height:60px;align-items:center}
+.tm-up{height:60px}
 .tm-up > .c{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tm-state{display:inline-flex;align-items:center;gap:7px;font:700 13px/1 var(--f-body)}
 .tm[data-state="paused"] .tm-state{color:var(--pause)}
@@ -370,7 +372,7 @@ html.shot .demo{display:none}
 .st-now{position:absolute;left:calc(var(--lx) + var(--tc) - 11px);top:22px;width:76px;height:0;transform:translateY(calc(var(--p,0) * var(--H)));transition:transform 1s linear}
 .st-now::before{content:"";position:absolute;left:-13px;width:31px;top:-1px;height:2px;background:var(--ink)}
 .st-now .pix{position:absolute;left:16px;top:-11px}
-.st-body{position:absolute;left:128px;right:14px;top:18px;height:calc(var(--H) + 6px);display:flex;flex-direction:column}
+.st-body{position:absolute;left:128px;right:14px;top:18px;height:calc(var(--H) - 16px);display:flex;flex-direction:column}
 .st-h{display:flex;align-items:center;gap:10px}
 .st-h .subj{--size:44px}
 .st-h h2{font:800 22px/1.2 var(--f-body)}
@@ -383,13 +385,13 @@ html.shot .demo{display:none}
 .clock.is-long{font-size:48px}
 .rest{margin-top:10px;font:500 13px/1 var(--f-body);color:var(--ink-2);font-variant-numeric:tabular-nums}
 .rest b{margin-left:4px;font:700 16px/1 var(--f-body);color:var(--ink)}
-.st-ctl{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.st-ctl{display:flex;align-items:center;gap:14px;margin-bottom:6px}
 .st-ctl span{font:700 13px/1 var(--f-body)}
 /* 終点：ここで記録する（ホームの開始ボタンと同じく、線の上にある） */
 .rec{position:absolute;left:calc(var(--lx) + var(--tc) - 20px);right:14px;top:calc(var(--H) + 22px);height:56px;border-radius:16px;font-size:16px}
 .rec > .face{gap:10px}
 .tm-gap{height:20px}
-.nx{height:52px;align-items:center}
+.nx{height:52px}
 .nx > .t b{font-size:13px}
 .nx > .c{display:flex;align-items:center;gap:10px}
 .nx .subj{--size:30px}
@@ -514,6 +516,7 @@ html.shot .demo{display:none}
         <div class="home-pad"></div>
       </main>
 
+      <div class="tabs-fade fx" aria-hidden="true"></div>
       <nav class="tabs fx" aria-label="タブ">
         <span class="rail" aria-hidden="true"></span>
         <button class="tab" type="button" aria-current="page" data-tab="home"><i class="node"></i><i class="pi" data-pi="home"></i>ホーム</button>
@@ -758,7 +761,7 @@ kroyYYkkYYork
         let l = x < .16 ? 0 : x < .3 ? 1 : x < .55 ? 2 : x < .8 ? 3 : 4, cls = 'gc';
         if (inS && l === 0) l = 2;
         if (k === TODAY - STREAK) l = 0;
-        if (k === TODAY) { l = 3; cls += ' today'; }
+        if (k === TODAY) { l = 3; cls += ' is-now'; }
         if (k > TODAY) { cls += ' future'; l = 0; }
         if (inS) cls += ' s' + (k === TODAY - STREAK + 1 ? ' s0' : k === TODAY ? ' s1' : '');
         html += `<i class="${cls}" data-l="${l}"></i>`;
@@ -911,7 +914,7 @@ kroyYYkkYYork
     sess = null; sample = SAMPLE(); buildTimer(); setView('home');
     toast(`${s.name} ${min}分を記録しました`, '見本なので、線はのびません');
   });
-  setInterval(() => { const c = cur(); if (!c.paused) { c.sec++; paint(); } }, 1000);
+  if (!document.documentElement.classList.contains('shot')) setInterval(() => { const c = cur(); if (!c.paused) { c.sec++; paint(); } }, 1000);
   buildTimer();
 })();
 </script>

@@ -496,7 +496,6 @@ i,b{font-style:normal}
   function go(v, hit) {
     document.body.dataset.view = v;
     document.querySelectorAll('.swap button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.go === v)));
-    try { localStorage.setItem('inchly-b-board-view', v); } catch (e) {}
     if (hit && window.innerWidth > 430) {
       const p = $(v === 'timer' ? '#p-timer' : '#p-home');
       p.classList.add('is-hit'); p.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
@@ -506,9 +505,7 @@ i,b{font-style:normal}
   document.querySelectorAll('.swap button').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
   $('#start').addEventListener('click', () => { if (!running) toggle(); go('timer', true); });
   $('#back').addEventListener('click', () => go('home', true));
-  let first = location.hash === '#timer' ? 'timer' : location.hash === '#home' ? 'home' : null;
-  if (!first) { try { first = localStorage.getItem('inchly-b-board-view'); } catch (e) {} }
-  if (first === 'timer') go('timer');
+  if (location.hash === '#timer') go('timer');   /* 見本：#timer で開くとタイマーから */
 
   /* タブ：選んだ見た目だけ */
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
