@@ -17,7 +17,7 @@ import { useGrowth } from '@/ui/Growth';
 import { Heatmap } from '@/ui/Heatmap';
 import { levelSheet } from '@/ui/Level';
 import { RefreshScroll } from '@/ui/Loader';
-import { flicker, micro, present } from '@/ui/motion';
+import { fadeIn, fadeOut, flicker, micro, present } from '@/ui/motion';
 import { Rolling } from '@/ui/Rolling';
 import { TourSpot } from '@/ui/Tour';
 import type { StickerId } from './art';
@@ -348,13 +348,13 @@ function Tape({ minutes, goal, parts }: { minutes: number; goal: number; parts: 
         </View>
         {/* the subject pressed, named under the bar */}
         {hot !== null && segs[hot] && w ? (
-          <View pointerEvents="none" style={{ position: 'absolute', top: 23, left: Math.max(0, Math.min(w - 120, x(starts[hot] + segs[hot].min / 2) - 60)), width: 120, alignItems: 'center' }}>
+          <Animated.View entering={fadeIn()} exiting={fadeOut()} pointerEvents="none" style={{ position: 'absolute', top: 23, left: Math.max(0, Math.min(w - 120, x(starts[hot] + segs[hot].min / 2) - 60)), width: 120, alignItems: 'center' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 24, paddingHorizontal: 9, borderRadius: 7, backgroundColor: S.ink }}>
               <View style={{ width: 7, height: 7, backgroundColor: segs[hot].c, boxShadow: ring(1.5, S.onInk) }} />
               <J size={11} w="700" lh={13} color={S.onInk}>{segs[hot].name}</J>
               <J size={11} w="500" lh={13} num color="rgba(251,248,241,0.72)">{hm(segs[hot].min)}</J>
             </View>
-          </View>
+          </Animated.View>
         ) : null}
       </View>
       {/* the key */}

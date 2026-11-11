@@ -223,7 +223,7 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f
           boxShadow: '0px 10px 24px rgba(15,23,42,0.16), 0px 2px 6px rgba(15,23,42,0.08)' }, shadow]} />
       )}
       {/* under the row: what a left swipe does */}
-      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: 0, top: dress.swipeInset ?? 0, bottom: dress.swipeInset ?? 0, borderRadius: dress.swipeRadius ?? 0,
+      <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, right: dress.swipeInset ?? 0, top: dress.swipeInset ?? 0, bottom: dress.swipeInset ?? 0, borderRadius: dress.swipeRadius ?? 0,
         backgroundColor: t.red, alignItems: 'flex-end', justifyContent: 'center', paddingRight: 18 }, behind]}>
         <Txt size={13} w="700" color="#fff">非表示</Txt>
       </Animated.View>
@@ -257,7 +257,10 @@ function Row({ f, n, first, slots, dragging, dragY, onDrop, look }: Shared & { f
       </GestureDetector>
       {/* lifted, the row's edge and shadow drawn over it (they'd be under its ground otherwise) */}
       {dress.liftShadow ? (
-        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: dress.liftInset ?? 4, right: dress.liftInset ?? 4, top: 3, bottom: 3, borderRadius: dress.liftRadius ?? 0, boxShadow: dress.liftShadow }, shadow]} />
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: dress.liftInset ?? 4, right: dress.liftInset ?? 4, top: 3, bottom: 3, borderRadius: dress.liftRadius ?? 0, boxShadow: dress.liftShadow }, shadow]}>
+          {/* the row's own line (along its top) would ride just over the edge: covered while it's lifted */}
+          <View style={{ position: 'absolute', left: 16 - (dress.liftInset ?? 4), right: 16 - (dress.liftInset ?? 4), top: -3, height: 1, backgroundColor: look?.ground ?? t.surface }} />
+        </Animated.View>
       ) : null}
       {first ? null : <View pointerEvents="none" style={{ position: 'absolute', left: 61, right: 14, top: 0, height: hair, backgroundColor: look?.line ?? t.line }} />}
     </Animated.View>
@@ -275,14 +278,16 @@ function Grip() {
 }
 
 /** Seven days as a small line, today's point marked; on home it draws itself in when it appears, in the もっと見る card it is just there. */
-function Spark({ week, color, still }: { week: number[]; color: string; still?: boolean }) {
+function Spark({ week, color, still, std }: { week: number[]; color: string; still?: boolean; /** スタンダード: a 2pt line, today a square (as home's rows) */ std?: boolean }) {
   const W = 52, H = 26;
   const p = useAppear(260, 820);
   // drawn in from the left by moving, not by changing a width (MOTION.md): the window slides right as the drawing slides back under it
   const win = useAnimatedStyle(() => ({ transform: [{ translateX: still ? 0 : -W * (1 - p.value) }] }));
   const back = useAnimatedStyle(() => ({ transform: [{ translateX: still ? 0 : W * (1 - p.value) }] }));
   const lo = Math.min(...week), hi = Math.max(...week), span = Math.max(1, hi - lo);
-  const pts = week.map((m, i) => [(i / (week.length - 1)) * (W - 4) + 2, H - 3 - ((m - lo) / span) * (H - 6)] as const);
+  // スタンダード: 1 more clear all round, for the square
+  const e = std ? 3 : 2;
+  const pts = week.map((m, i) => [(i / (week.length - 1)) * (W - 2 * e) + e, H - e - 1 - ((m - lo) / span) * (H - 2 * e - 2)] as const);
   const d = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
   const [ex, ey] = pts[pts.length - 1];
   return (
@@ -291,8 +296,8 @@ function Spark({ week, color, still }: { week: number[]; color: string; still?: 
         <Animated.View style={[{ width: W, height: H, overflow: 'hidden' }, win]}>
           <Animated.View style={back}>
             <Svg width={W} height={H}>
-              <Path d={d} fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
-              <Circle cx={ex} cy={ey} r={2.4} fill={color} />
+              <Path d={d} fill="none" stroke={color} strokeWidth={std ? 2 : 1.6} strokeLinecap="round" strokeLinejoin="round" />
+              {std ? <Path d={`M${(ex - 3).toFixed(1)} ${(ey - 3).toFixed(1)}h6v6h-6z`} fill={color} /> : <Circle cx={ex} cy={ey} r={2.4} fill={color} />}
             </Svg>
           </Animated.View>
         </Animated.View>
@@ -343,7 +348,13 @@ function Line({ f, onPress, right, dim, first }: { f: Friend; onPress?: () => vo
       <Avatar name={f.n} color={f.c} size={38} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <Txt size={14.5} w="600" lh={19} numberOfLines={1}>{f.n}</Txt>
-        <Txt size={11.5} tone="ink3" lh={15} numberOfLines={1}>{`${f.s}を勉強中 · ${f.g} 志望`}</Txt>
+        {std ? (
+          // スタンダード: what they study, then where they aim — the second goes to its own line where one is too short (never cut to 志…)
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 8 }}>
+            <Txt size={11.5} tone="ink3" lh={15} numberOfLines={1}>{`${f.s}を勉強中`}</Txt>
+            <Txt size={11.5} tone="ink3" lh={15} numberOfLines={1}>{`${f.g} 志望`}</Txt>
+          </View>
+        ) : <Txt size={11.5} tone="ink3" lh={15} numberOfLines={1}>{`${f.s}を勉強中 · ${f.g} 志望`}</Txt>}
       </View>
       {right ?? (
         <>
@@ -351,7 +362,7 @@ function Line({ f, onPress, right, dim, first }: { f: Friend; onPress?: () => vo
             <Txt num size={15} w="700" lh={19}>{hm(f.today)}</Txt>
             <Txt num size={11} w="600" lh={14} color={up ? t.greenInk : t.red}>{`${up ? '▲' : '▼'} ${hm(Math.abs(f.diff))}`}</Txt>
           </View>
-          <Spark still week={f.week} color={up ? t.blue : t.red} />
+          <Spark still std={std} week={f.week} color={up ? t.blue : t.red} />
         </>
       )}
     </Press>

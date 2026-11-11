@@ -55,9 +55,10 @@ export function Field({
         </Animated.View>
       </View>
       {error || helper || max ? (
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 2, paddingTop: 5 }}>
-          <Txt size={11} tone={error ? 'red' : 'ink3'}>{error ?? helper ?? ''}</Txt>
-          {max ? <Txt size={11} tone="ink3" num>{value.length} / {max}</Txt> : null}
+        // one line high whether it says something or not (an error coming in doesn't push the page down)
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, paddingHorizontal: 2, paddingTop: 5, minHeight: std ? 23 : undefined }}>
+          <Txt size={std ? 12 : 11} lh={std ? 18 : undefined} w={std && error ? '700' : '400'} tone={error ? 'red' : 'ink3'} style={{ flexShrink: 1 }}>{error ?? helper ?? ''}</Txt>
+          {max ? <Txt size={std ? 12 : 11} lh={std ? 18 : undefined} tone="ink3" num>{value.length} / {max}</Txt> : null}
         </View>
       ) : null}
     </View>
@@ -86,8 +87,9 @@ export function RadioCards<K extends string>({ options, value, onChange }: { opt
             <Pane radius={radius.inner} small />
             <Dot on={on} />
             <View style={{ flex: 1 }}>
-              <Txt size={13.5} w="600" lh={19}>{o.title}</Txt>
-              <Txt size={11.5} tone="ink3" lh={16}>{o.sub}</Txt>
+              <Txt size={std ? 14 : 13.5} w={std ? '700' : '600'} lh={19}>{o.title}</Txt>
+              {/* スタンダード: on lime the grey is too pale; ink 2 there */}
+              <Txt size={std ? 12 : 11.5} tone={std && on ? 'ink2' : 'ink3'} lh={std ? 17 : 16}>{o.sub}</Txt>
             </View>
           </Press>
         );
@@ -97,11 +99,14 @@ export function RadioCards<K extends string>({ options, value, onChange }: { opt
 }
 function Dot({ on }: { on: boolean }) {
   const t = useT();
+  const std = useStd();
   const s = useSharedValue(on ? 1 : 0);
   useEffect(() => { s.value = micro(on ? 1 : 0); }, [on, s]);
   const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   return (
-    <View style={{ width: 18, height: 18, marginTop: 1, borderRadius: 9, borderWidth: 1.25, borderColor: on ? t.ink : t.ink3, alignItems: 'center', justifyContent: 'center' }}>
+    // スタンダード: the ring as thick as the outlines, on the card's color
+    <View style={[{ width: 18, height: 18, marginTop: 1, borderRadius: 9, borderWidth: 1.25, borderColor: on ? t.ink : t.ink3, alignItems: 'center', justifyContent: 'center' },
+      std && { width: 20, height: 20, marginTop: 0, borderRadius: 10, borderWidth: 2, borderColor: S.ink, backgroundColor: S.card }]}>
       <Animated.View style={[{ width: 9, height: 9, borderRadius: 5, backgroundColor: t.ink }, a]} />
     </View>
   );
@@ -172,7 +177,7 @@ export function Label({ children, sub }: { children: ReactNode; sub?: string }) 
   return (
     <View style={{ marginBottom: 8 }}>
       <Txt size={13.5} w={std ? '700' : '600'}>{children}</Txt>
-      {sub ? <Txt size={11} tone="ink3">{sub}</Txt> : null}
+      {sub ? <Txt size={std ? 12 : 11} lh={std ? 18 : undefined} tone="ink3">{sub}</Txt> : null}
     </View>
   );
 }

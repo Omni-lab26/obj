@@ -61,7 +61,8 @@ const STEPS: Step[] = [
     lines: 'マイページで、この7日間とこれまでの\n勉強時間をグラフで見られます。\n棒を押すと、何を勉強したかの\n内訳も出ます。' },
   { at: ['messages'], title: 'メッセージ', body: '右上の吹き出しから、仲間と1対1でやりとりできます。', lines: '右上の吹き出しから、仲間と1対1で\nやりとりできます。' },
   { title: 'メニューは右にスワイプ', body: `ホームを右にスワイプすると、設定・${THEMES_OPEN ? 'テーマ・' : ''}${BACKDROPS_OPEN ? '背景・' : ''}科目と色のメニューが出ます。`,
-    lines: `ホームを右にスワイプすると、\n設定・${THEMES_OPEN ? 'テーマ・' : ''}${BACKDROPS_OPEN ? '背景・' : ''}科目と色の\nメニューが出ます。` },
+    // with themes and 背景 closed the list is short: its last two lines are one
+    lines: `ホームを右にスワイプすると、\n設定・${THEMES_OPEN ? 'テーマ・' : ''}${BACKDROPS_OPEN ? '背景・' : ''}科目と色の${THEMES_OPEN || BACKDROPS_OPEN ? '\n' : ''}メニューが出ます。` },
   { title: '準備OK', body: 'さっそく下の「勉強を開始」から始めてみよう。', lines: 'さっそく下の「勉強を開始」から\n始めてみよう。' },
 ];
 
@@ -135,7 +136,8 @@ function Bubble({ step, rect, n, i, next, skip }: { step: Step; rect: Rect | nul
     const BS = W + H;
     const tailX = tail - 10;
     return (
-      <Animated.View entering={fadeIn()} exiting={fadeOut()} style={StyleSheet.absoluteFill} accessibilityViewIsModal>
+      // over the toasts (theirs is 100): a toast still up is dimmed with the page, not left bright on the dim
+      <Animated.View entering={fadeIn()} exiting={fadeOut()} style={[StyleSheet.absoluteFill, { zIndex: 200 }]} accessibilityViewIsModal>
         <Pressable style={StyleSheet.absoluteFill} onPress={next} accessibilityLabel="次へ">
           {rect ? (
             <>

@@ -79,7 +79,13 @@ export function StudyBar({ insets }: { insets: EdgeInsets }) {
 
 /** Where the bar sits: the standard place, 2 higher so its floor clears the tab bar's outline. */
 function Place({ insets, children }: { insets: EdgeInsets; children: ReactNode }) {
-  return <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: studyBarBottom(insets.bottom) + 2, paddingHorizontal: 16 }}>{children}</View>;
+  return (
+    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: studyBarBottom(insets.bottom) + 2, paddingHorizontal: 16 }}>
+      {/* between the two bars, paper (from the middle of this one to the middle of the tab bar): what scrolls under them doesn't show in the gap */}
+      <View pointerEvents="none" style={{ position: 'absolute', left: 14, right: 14, top: STUDY_BAR_H / 2, bottom: -(10 + TAB_BAR_H / 2), backgroundColor: S.paper }} />
+      {children}
+    </View>
+  );
 }
 /**
  * The bar: an ink floor, and the face on it (paper, the outline). The main part
@@ -96,12 +102,12 @@ function Shell({ children, sink }: { children: ReactNode; sink: ReturnType<typeo
   );
 }
 /** The bar's main part: what's on it, and tap for the timer. */
-function Main({ label, sink, children }: { label: string; sink: ReturnType<typeof useSink>; children: ReactNode }) {
+function Main({ label, sink, lined, children }: { label: string; sink: ReturnType<typeof useSink>; /** the plan's line runs under it: 2 higher, so the subject's square stands clear of the line */ lined?: boolean; children: ReactNode }) {
   // pulled down (to stop and record), it isn't a tap: the timer doesn't open under the question
   const tap = useTap(() => { haptic.tap(); go.timer(); }, sink.down);
   return (
     <Pressable onPress={tap.onPress} onPressIn={tap.onPressIn} onPressOut={sink.up} accessibilityRole="button" accessibilityLabel={label}
-      style={{ flex: 1, minWidth: 0, height: STUDY_BAR_H, flexDirection: 'row', alignItems: 'center', gap: 11 }}>
+      style={{ flex: 1, minWidth: 0, height: STUDY_BAR_H, paddingBottom: lined ? 2 : 0, flexDirection: 'row', alignItems: 'center', gap: 11 }}>
       {children}
     </Pressable>
   );
@@ -164,7 +170,7 @@ function Running({ insets }: { insets: EdgeInsets }) {
       <TourSpot id="bar">
         <SwipeToRecord>
           <Shell sink={sink.style}>
-            <Main sink={sink} label={`${subject.name}を${paused ? '一時停止中' : '勉強中'}${rest}。タイマーを開く`}>
+            <Main sink={sink} lined={!!plan} label={`${subject.name}を${paused ? '一時停止中' : '勉強中'}${rest}。タイマーを開く`}>
               <SubjSquare name={subject.name} color={subject.c} area={subject.area} live paused={paused} />
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <J size={15} w="700" lh={19} color={paused ? S.pause : S.ink} numberOfLines={1}>{subject.name}</J>
@@ -205,7 +211,7 @@ function BarLine({ plan, paused }: { plan: number; paused: boolean }) {
   const [w, setW] = useState(0);
   return (
     <View pointerEvents="none" onLayout={(e) => setW(e.nativeEvent.layout.width)}
-      style={{ position: 'absolute', left: 14, right: 14, bottom: 5, height: 3, borderRadius: 2, backgroundColor: 'rgba(23,18,31,0.10)', overflow: 'hidden', opacity: w ? 1 : 0 }}>
+      style={{ position: 'absolute', left: 16, right: 16, bottom: 3, height: 3, borderRadius: 2, backgroundColor: 'rgba(23,18,31,0.10)', overflow: 'hidden', opacity: w ? 1 : 0 }}>
       <View style={{ width: '100%', height: '100%', backgroundColor: paused ? S.ink3 : over ? S.over : S.run, transform: [{ translateX: -(1 - done) * w }] }} />
     </View>
   );
