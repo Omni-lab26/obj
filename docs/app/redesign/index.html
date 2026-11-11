@@ -1,0 +1,120 @@
+<title>Inchly 再デザイン4案</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap">
+<style>
+/* Layout: four proposals in reading order, each a row of two phone shots beside its idea; nothing decorates, the shots are the subject. */
+:root{
+  --bg:#F4F2EC; --card:#FFFFFF; --ink:#16181D; --ink2:#565B66; --line:#D9D5CA; --key:#16181D; --on-key:#FFFFFF; --tag:#E9E5DA;
+  --sans:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#131519;--card:#1D2026;--ink:#F1EFE9;--ink2:#A9ADB6;--line:#343842;--key:#F1EFE9;--on-key:#16181D;--tag:#2A2E37;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#131519;--card:#1D2026;--ink:#F1EFE9;--ink2:#A9ADB6;--line:#343842;--key:#F1EFE9;--on-key:#16181D;--tag:#2A2E37;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 var(--sans)}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:36px 64px}
+h1{font-size:clamp(26px,5.4vw,38px);line-height:1.3;font-weight:900;margin:0 0 10px;text-wrap:balance}
+.lead{color:var(--ink2);max-width:38em;margin:0}
+.list{display:grid;gap:22px;margin-top:30px}
+.p{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;align-items:start}
+.shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-width:0}
+.shots figure{margin:0}
+.shots img{display:block;width:100%;height:auto;border-radius:16px;border:1px solid var(--line)}
+.shots figcaption{font-size:12px;color:var(--ink2);text-align:center;margin-top:4px}
+.txt{min-width:0;display:grid;gap:12px}
+.txt h2{margin:0;font-size:24px;font-weight:900;line-height:1.3}
+.sub{margin:0;color:var(--ink2);font-size:14px}
+dl{margin:0;display:grid;gap:10px}
+dt{font-size:12px;font-weight:700;display:inline-block;background:var(--tag);border-radius:6px;padding:0 8px;line-height:1.9}
+dd{margin:4px 0 0;font-size:15px;line-height:1.7}
+.open{justify-self:start;display:inline-flex;align-items:center;min-height:48px;padding:0 22px;border-radius:999px;background:var(--key);color:var(--on-key);font-weight:700;text-decoration:none}
+.open:active{opacity:.75}
+.open:focus-visible{outline:3px solid #6B4CFF;outline-offset:3px}
+.note{margin-top:30px;border-top:1px solid var(--line);padding-top:18px;color:var(--ink2);font-size:14px}
+.note p{margin:0 0 6px}
+@media (max-width:760px){.p{grid-template-columns:minmax(0,1fr);padding:14px;gap:16px}.txt h2{font-size:22px}}
+</style>
+
+<div class="wrap">
+  <h1>アプリの作り直し、4つの方向</h1>
+  <p class="lead">雰囲気がわかる簡単な案です。どれもホームとタイマーの2画面だけで、中身はアプリにある事実（機能と見本の数字）だけを使っています。「開いてさわる」で、スマホではそのままアプリの画面として見られます。</p>
+
+  <div class="list">
+    <article class="p">
+      <div class="shots">
+        <figure><img src="shots/a-line-home.webp" width="780" height="1688" alt="今日の1本のホーム。今日が1本のたての線になり、やった科目が色の帯、線の「いま」にライムの「勉強を開始」がある。"><figcaption>ホーム</figcaption></figure>
+        <figure><img src="shots/a-line-timer.webp" width="780" height="1688" alt="今日の1本のタイマー。予定の1時間がたての定規で、えんぴつのペンタが「いま」の所にいる。"><figcaption>タイマー</figcaption></figure>
+      </div>
+      <div class="txt">
+        <h2>A　今日の1本</h2>
+        <p class="sub">見た目は今のスタンダードのまま。レイアウトだけを変えた案。</p>
+        <dl>
+          <div><dt>考え</dt><dd>カードの山をやめて、今日を1本のたての線にした。やった分は科目の色の帯、これからの予定は白い帯。</dd></div>
+          <div><dt>主役</dt><dd>線の「いま」にある「勉強を開始」。勉強バーをここに合体させた。</dd></div>
+          <div><dt>しまった物</dt><dd>草とバッジは、線の頭の「今年 253日」「バッジ 7/11」を押すと開く。友達は顔と時間だけ。</dd></div>
+          <div><dt>気になる所</dt><dd>下へ長くなる。友達の「昨日との差」が1つ奥に入る。</dd></div>
+        </dl>
+        <a class="open" href="a-line.html">開いてさわる</a>
+      </div>
+    </article>
+
+    <article class="p">
+      <div class="shots">
+        <figure><img src="shots/b-board-home.webp" width="780" height="1688" alt="ならべる盤のホーム。紺の盤に生成りのタイルが並び、今日の勉強は3時間でひと回りするダイヤル、連続は朱のタイルに大きな23。"><figcaption>ホーム</figcaption></figure>
+        <figure><img src="shots/b-board-timer.webp" width="780" height="1688" alt="ならべる盤のタイマー。大きなタイルに時計の文字盤のようなダイヤルと 39:59。"><figcaption>タイマー</figcaption></figure>
+      </div>
+      <div class="txt">
+        <h2>B　ならべる盤</h2>
+        <p class="sub">紺の盤に、大きさの違うタイルを置く。見た目も新しい案。</p>
+        <dl>
+          <div><dt>考え</dt><dd>スクロールなしで「今日・連続・友達・つぎ」が一目で見える。タイルごとに数字の見せ方を変えた。</dd></div>
+          <div><dt>主役</dt><dd>今日の勉強のダイヤル。目標の3時間でひと回りし、すきまが「あと15分」。</dd></div>
+          <div><dt>しまった物</dt><dd>草は4週間ぶんの小さなタイルに（押すと1年ぶん）。バッジは「7/11」のタイルに。</dd></div>
+          <div><dt>気になる所</dt><dd>情報が多く、にぎやか。暗い地なので、今のサイトの雰囲気からは離れる。</dd></div>
+        </dl>
+        <a class="open" href="b-board.html">開いてさわる</a>
+      </div>
+    </article>
+
+    <article class="p">
+      <div class="shots">
+        <figure><img src="shots/c-next-home.webp" width="780" height="1688" alt="次の1枚のホーム。画面全体が英語の紫で、とても大きな「英語」の字と「勉強を開始」だけがある。"><figcaption>ホーム</figcaption></figure>
+        <figure><img src="shots/c-next-timer.webp" width="780" height="1688" alt="次の1枚のタイマー。画面全体が国語の黄土色で、39 と 59 の数字が画面いっぱいに組まれている。"><figcaption>タイマー</figcaption></figure>
+      </div>
+      <div class="txt">
+        <h2>C　次の1枚</h2>
+        <p class="sub">画面には「次にやること」だけ。字が主役の案。</p>
+        <dl>
+          <div><dt>考え</dt><dd>予定は科目の色の紙1枚。画面全体がその科目の色になり、押す所は1つだけ大きく置く。</dd></div>
+          <div><dt>主役</dt><dd>ホームは科目の字、タイマーは分と秒の数字。紙の色が下から満ちて、進みを見せる。</dd></div>
+          <div><dt>しまった物</dt><dd>草・連続・友達・バッジは、下の1行を上へ引くと出る1枚にまとめた。</dd></div>
+          <div><dt>気になる所</dt><dd>友達や草が開かないと見えない。全面が色なので、長く使って疲れないかは未確認。</dd></div>
+        </dl>
+        <a class="open" href="c-next.html">開いてさわる</a>
+      </div>
+    </article>
+
+    <article class="p">
+      <div class="shots">
+        <figure><img src="shots/d-free-home.webp" width="780" height="1688" alt="各駅停車のホーム。駅名標に今日の勉強 2時間45分、その下に自分と友達4人の今日の勉強が、5本の路線として下から上へのびている。"><figcaption>ホーム</figcaption></figure>
+        <figure><img src="shots/d-free-timer.webp" width="780" height="1688" alt="各駅停車のタイマー。紺の地に白い駅名標のカード、39:59、10分ごとに1駅の進みの線。"><figcaption>タイマー</figcaption></figure>
+      </div>
+      <div class="txt">
+        <h2>D　各駅停車</h2>
+        <p class="sub">切り口を決めずに自由に作らせた案。inch by inch を「各駅停車」と読んだ。</p>
+        <dl>
+          <div><dt>考え</dt><dd>1日は1本の線路、1時間は1駅。自分と友達の今日が、同じ目盛りで並んで走る路線図になる。</dd></div>
+          <div><dt>主役</dt><dd>ならんで走る5本の線。自分の線だけ太く、科目で色が変わり、3時間の所に目標の駅がある。</dd></div>
+          <div><dt>しまった物</dt><dd>草と連続記録は、まくら木の線路1本にまとめた。炎はなくし、休み券はきっぷの形に。バッジはマイページへ。</dd></div>
+          <div><dt>気になる所</dt><dd>鉄道の世界が強い。好みが分かれる。ドット絵の住人はいなくなる。</dd></div>
+        </dl>
+        <a class="open" href="d-free.html">開いてさわる</a>
+      </div>
+    </article>
+  </div>
+
+  <div class="note">
+    <p>どの案も、記録まち・まとめて記録・ほかのタブなどはまだ作っていません。方向が決まったら、その案で全画面をしっかり作ります。</p>
+    <p>「A のレイアウトに D の友達の見せ方」のように、案をまたいで組み合わせることもできます。</p>
+  </div>
+</div>
