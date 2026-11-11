@@ -88,6 +88,7 @@ html.shot .demo{display:none}
   body[data-view="home"] .note{margin-bottom:calc(var(--tab-h) + var(--chrome-bottom) + 84px)}
   body[data-view="timer"] .note{margin-top:20px;margin-bottom:84px}
   .tm.scr{min-height:100vh;min-height:100dvh}
+  .home-pad{height:36px}
 }
 @media (min-width:431px){
   :root{--safe-top:47px;--safe-bottom:34px}
@@ -275,7 +276,7 @@ html.shot .demo{display:none}
 .ms-t{font:700 14px/1.3 var(--f-body)}
 .ms-t small{display:block;font:500 12px/1.3 var(--f-body);color:var(--ink-2)}
 .ms-v{margin-left:auto;font:800 20px/1 var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
-.ms-v small{font:700 12px/1 var(--f-body);margin-left:2px}
+.ms-v small{font:700 12px/1 var(--f-body);margin:0 2px}
 .end{height:26px}
 .end > .sp::before{bottom:auto;height:14px;background:repeating-linear-gradient(to bottom,var(--ink) 0 3px,transparent 3px 7px)}
 .home-pad{height:calc(var(--tab-h) + var(--chrome-bottom) + var(--kd) + 28px)}
@@ -508,9 +509,9 @@ html.shot .demo{display:none}
           <div class="ln wk"><div class="t">土</div><div class="sp dots"><i class="bead hollow"></i></div><div class="c"></div></div>
           <div class="ln wk"><div class="t">日</div><div class="sp dots"><i class="bead hollow"></i></div><div class="c"></div></div>
           <div class="ln ms"><div class="t"></div><div class="sp dots"><i class="bead"></i></div>
-            <div class="c"><span class="stk is-locked" data-stk="flame"></span><p class="ms-t">30日連続のバッジ<small>このまま続けると</small></p><span class="ms-v">7<small>日</small></span></div></div>
+            <div class="c"><span class="stk is-locked" data-stk="flame"></span><p class="ms-t">30日連続のバッジ<small>このまま続けると</small></p><span class="ms-v"><small>あと</small>7<small>日</small></span></div></div>
           <div class="ln ms"><div class="t"></div><div class="sp dots"><i class="bead"></i></div>
-            <div class="c"><span class="stk" data-stk="flag"></span><p class="ms-t">第4回 記述模試<small>11月8日</small></p><span class="ms-v">10<small>日</small></span></div></div>
+            <div class="c"><span class="stk" data-stk="flag"></span><p class="ms-t">第4回 記述模試<small>11月8日</small></p><span class="ms-v"><small>あと</small>10<small>日</small></span></div></div>
           <div class="ln end"><div class="t"></div><div class="sp"></div><div class="c"></div></div>
         </div>
         <div class="home-pad"></div>
@@ -596,12 +597,12 @@ html.shot .demo{display:none}
     <p class="lab">この案の考え</p>
     <h1>今日の1本</h1>
     <ul>
-      <li><b>主役は、今日という1本の線。</b>色・輪郭・影・ドット絵は今のまま、カードの山をやめた。やった分は「1分＝1px」の色の帯、これからは白い帯。合計はその線の読み、開始ボタンは「いま」の上にある。</li>
-      <li><b>しまった物と行き先。</b>草とバッジ → 線の頭の「今年 253日」「バッジ 7/11」を押すと開く。友達のくわしい行 → 「もっと見る」。勉強バー → 線の「いま」に合体。連続の今週 → 線の上の月・火・水と、先の金・土・日。締切 → 線の行き先。</li>
-      <li><b>部品の作り直し。</b>駅は四角い点、タブバーは5つの駅の路線、友達は「いま」の横線に並ぶ。友達の行は今日の時間が線の長さ。草は線を2週間ごとに折りたたみ、連続の日を1本の線が通る。</li>
-      <li><b>タイマーは同じ線の拡大。</b>予定の1時間が定規になり、えんぴつのペンタが書き進める。終点に「記録する」。横にすべらせたカードは、たての線の前後の駅に。記録まちは通りすぎた駅に札がつく。</li>
+      <li><b>主役は、今日という1本の線。</b>見た目は今のまま、カードの山をやめた。やった分は「1分＝1px」の色の帯、開始ボタンは「いま」の上。</li>
+      <li><b>しまった物。</b>草とバッジは、線の頭のボタンを押すと開く。友達のくわしい行は「もっと見る」。勉強バーは「いま」に合体。締切は線の行き先に。</li>
+      <li><b>部品。</b>駅は四角い点、タブバーは5駅の路線。友達は「いま」の横線に並び、草は折りたたんだ線に連続の1本が通る。</li>
+      <li><b>タイマーは同じ線の拡大。</b>予定の1時間が定規になり、えんぴつのペンタが書き進める。終点に「記録する」。</li>
     </ul>
-    <p class="rough">見本なので：動くのは「勉強を開始」「一時停止」「記録する」と、草・バッジ・友達のシート、タブの選択だけ。ほかのタブ、予定の編集、前後の予定へのすべらせは作っていません。</p>
+    <p class="rough">見本なので：動くのは「勉強を開始」「一時停止」「記録する」、草・バッジ・友達のシート、タブの選択だけ。前後の予定へのすべらせ（今の横のカード）と、記録まち・まとめて記録（通りすぎた駅につく札）は、まだ絵にしていません。</p>
   </aside>
 </div>
 
