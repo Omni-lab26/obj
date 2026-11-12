@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>MEGURI 巡り</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="MEGURI(巡り)MG-4。分割数と打数を決めるだけで、音が円の上にいちばん均等に並ぶ、掌サイズのユークリッド・リズムマシン。ブラウザでそのまま演奏できるコンセプトモデル。">
+<meta name="theme-color" content="#E4E6E1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23B9BFBA'/%3E%3Ccircle cx='16' cy='16' r='11' fill='%230E1214'/%3E%3Ccircle cx='16' cy='8' r='2' fill='%23FFB547'/%3E%3Ccircle cx='23' cy='20' r='2' fill='%23FF6B8B'/%3E%3Ccircle cx='9' cy='20' r='2' fill='%2363E6C4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: the page is one bar — sixteen gapless columns are the sixteen steps; the instrument sits on a seamless backdrop and a single playhead sweeps the device and the page together. */
+:root{
+  color-scheme:light;
+  --paper:#E4E6E1; --paper-hi:#EFF0EC; --paper-lo:#D5D8D2;
+  --ink:#15191A; --ink-2:#444B4C; --ink-3:#6A7170;
+  --rule:#B4B9B3; --rule-2:#CBCFC9;
+  --alu-hi:#D2D7D2; --alu:#BCC2BD; --alu-lo:#A2A9A4; --alu-edge:#858C87; --alu-print:#262B2A; --alu-engrave:#727A75;
+  --cap-hi:#F6F7F4; --cap:#D6DAD6; --cap-lo:#959C97;
+  --glass:#0C1012; --glass-hi:#1B2124; --bezel:#07090A;
+  --key-hi:#3B4144; --key:#262A2C; --key-lo:#131617; --legend:#E6E9E5; --legend-dim:#9AA19E;
+  --led-w:#FFFFFF;
+  --v1:#FFB547; --v2:#FF6B8B; --v3:#63E6C4; --v4:#8EA2FF;
+  --v1i:#A35E00; --v2i:#BF2C54; --v3i:#0A7A62; --v4i:#3A4FC0;
+  --shade:21 26 26;
+  --sans:"IBM Plex Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --mx:clamp(16px,3.4vw,56px);
+  --bar-h:44px;
+  --ease:cubic-bezier(.2,.7,.1,1);
+  --snap:cubic-bezier(.3,0,.1,1);
+}
+html{scrollbar-color:var(--rule) var(--paper);-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans)}
+.mg{font:400 15px/1.9 var(--sans);color:var(--ink);background:var(--paper);line-break:strict;overflow-wrap:anywhere;font-feature-settings:"tnum" 0;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;position:relative;overflow-x:clip}
+.mg *,.mg *::before,.mg *::after{box-sizing:border-box}
+.mg ::selection{background:var(--ink);color:var(--paper)}
+.mg a{color:inherit;text-decoration:none}
+.mg :focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+.mg h1,.mg h2,.mg h3,.mg p,.mg ul,.mg ol,.mg dl,.mg dd,.mg figure{margin:0;padding:0}
+.mg ul,.mg ol{list-style:none}
+.mg button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums;font-feature-settings:"zero" 0}
+.lab{font:500 11px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.skip{position:absolute;left:var(--mx);top:-60px;z-index:50;background:var(--ink);color:var(--paper)!important;padding:8px 14px;font-size:13px}
+.skip:focus{top:8px}
+.g{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));padding-inline:max(var(--mx),env(safe-area-inset-left)) max(var(--mx),env(safe-area-inset-right))}
+
+/* ── top bar: the bar ruler ── */
+.bar{position:sticky;top:0;z-index:20;height:var(--bar-h);background:var(--paper);border-bottom:1px solid var(--rule)}
+.bar-in{height:100%;display:flex;align-items:center;justify-content:space-between;padding-inline:max(var(--mx),env(safe-area-inset-left)) max(var(--mx),env(safe-area-inset-right))}
+.brand{font:500 13px/1 var(--mono);letter-spacing:.22em;display:flex;align-items:baseline;gap:12px}
+.brand span{font-weight:400;letter-spacing:.08em;color:var(--ink-3);font-size:11px}
+.nav{display:flex;gap:clamp(14px,2.4vw,34px);font-size:12.5px;letter-spacing:.08em}
+.nav a{position:relative;padding:12px 0;color:var(--ink-2);transition:color .18s var(--snap)}
+.nav a::after{content:"";position:absolute;left:0;right:0;bottom:7px;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .28s var(--ease)}
+.nav a:hover{color:var(--ink)}.nav a:hover::after{transform:scaleX(1)}
+.ruler{position:absolute;left:max(var(--mx),env(safe-area-inset-left));right:max(var(--mx),env(safe-area-inset-right));bottom:-1px;height:7px;display:grid;grid-template-columns:repeat(16,1fr);align-items:end;pointer-events:none}
+.ruler i{height:4px;border-left:1px solid var(--ink-3)}
+.ruler i:nth-child(4n+1){height:7px;border-left-color:var(--ink)}
+.ruler b{position:absolute;left:-1px;bottom:0;width:3px;height:13px;background:var(--ink);opacity:0;transition:opacity .2s var(--snap);will-change:transform}
+.sweep{position:fixed;top:0;bottom:0;left:max(var(--mx),env(safe-area-inset-left));width:1px;background:var(--ink);opacity:0;pointer-events:none;z-index:15;transition:opacity .3s var(--snap);will-change:transform}
+.is-playing .ruler b{opacity:1}
+.is-playing .sweep{opacity:.13}
+
+/* ── hero ── */
+.hero{position:relative;min-height:calc(100svh - var(--bar-h));background:radial-gradient(120% 95% at 62% 18%,var(--paper-hi) 0%,var(--paper) 46%,var(--paper-lo) 100%);align-items:stretch}
+.hero-t{grid-column:1/8;display:flex;flex-direction:column;padding-block:clamp(40px,8svh,84px) clamp(28px,5svh,52px)}
+.eyebrow{display:flex;gap:16px;flex-wrap:wrap}
+.eyebrow span{color:var(--ink-3)}
+.h1{margin-top:clamp(18px,4svh,40px)!important;display:flex;align-items:flex-end;gap:clamp(14px,2vw,28px);line-height:1}
+.h1-jp{font-weight:200;font-size:clamp(84px,11.2vw,184px);letter-spacing:-.02em;font-feature-settings:"palt";margin-left:-.06em;line-height:.95}
+.h1-en{font:400 12px/1 var(--mono);letter-spacing:.42em;writing-mode:vertical-rl;padding-bottom:.9em;color:var(--ink-2)}
+.lede{margin-top:clamp(20px,3.6svh,36px)!important;font-size:clamp(15px,1.25vw,18px);line-height:1.95;max-width:25em;letter-spacing:.02em;word-break:auto-phrase;text-wrap:pretty}
+.hint{margin-top:14px!important;font-size:12.5px;color:var(--ink-2);max-width:30em;line-height:1.8}
+.hint kbd{font:500 11px/1 var(--mono);border:1px solid var(--rule);border-radius:2px;padding:3px 5px;letter-spacing:.06em;background:var(--paper-hi)}
+.now{margin-top:auto;padding-top:36px}
+.now .lab{display:flex;justify-content:space-between;border-bottom:1px solid var(--ink);padding-bottom:8px;max-width:520px}
+.pats{max-width:520px}
+.pats li{display:grid;grid-template-columns:6.2em 5.8em 1fr;align-items:center;font:400 12.5px/1 var(--mono);font-variant-numeric:tabular-nums;border-bottom:1px solid var(--rule);height:34px;color:var(--ink-2);transition:color .2s}
+.pats li.sel{color:var(--ink)}
+.pats .pn{letter-spacing:.08em;display:flex;align-items:center;gap:8px}
+.pats .pn::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--vc);opacity:.35;transition:opacity .2s}
+.pats li.sel .pn::before{opacity:1}
+.pats li.mu .px{opacity:.35}
+.pats .px{display:flex;color:var(--vc);font-weight:500;white-space:nowrap}
+.pats .px i{font-style:normal;width:1.02em;text-align:center;height:16px;line-height:15px;border-radius:1px}
+.pats .px i.cur{background:var(--ink);color:var(--paper)}
+.stage{grid-column:9/17;position:relative;display:grid;place-items:center;padding-block:clamp(36px,6svh,64px)}
+.cap-note{position:absolute;right:0;bottom:clamp(36px,6svh,64px);writing-mode:vertical-rl;font:400 10.5px/1.9 var(--mono);letter-spacing:.14em;color:var(--ink-2);white-space:nowrap}
+
+/* ── the object. 1em = 1 mm ── */
+.dev{--dw:clamp(280px,calc((100svh - var(--bar-h) - 124px) * .6032),min(38vw,560px));--sc:var(--v2);width:var(--dw);height:calc(var(--dw) * 126 / 76);font-size:calc(var(--dw) / 76);position:relative;user-select:none;-webkit-user-select:none;line-height:1;scroll-margin-top:calc(var(--bar-h) + 24px)}
+.dev-body{position:absolute;inset:0;border-radius:9em;background:linear-gradient(135deg,var(--alu-hi) 0%,var(--alu) 44%,var(--alu-lo) 100%);
+  box-shadow:inset .16em .16em .08em rgb(255 255 255/.8),inset -.16em -.16em .12em rgb(var(--shade)/.3),inset 0 0 0 .06em rgb(var(--shade)/.12),
+  .5em .8em .9em rgb(var(--shade)/.36),2.2em 3.4em 4.6em rgb(var(--shade)/.24),6em 9em 13em rgb(var(--shade)/.17)}
+.dev-body::before{content:"";position:absolute;inset:0;border-radius:inherit;opacity:.5;mix-blend-mode:soft-light;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.25' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");background-size:90px 90px}
+.face{position:absolute;left:6em;top:6em;width:64em;height:64em;border-radius:50%;
+  background:conic-gradient(from 315deg,var(--cap-hi),var(--alu) 12%,var(--alu-edge) 30%,var(--alu-lo) 50%,var(--cap-hi) 62%,var(--alu-lo) 78%,var(--alu) 90%,var(--cap-hi));
+  box-shadow:0 0 0 .12em rgb(var(--shade)/.22),-.12em -.12em .2em rgb(var(--shade)/.2),.14em .14em .16em rgb(255 255 255/.75)}
+.glass{position:absolute;inset:1.3em;border-radius:50%;background:radial-gradient(circle at 34% 26%,var(--glass-hi),var(--glass) 58%);box-shadow:inset 0 0 0 .5em var(--bezel),inset .5em .7em 1.6em rgb(0 0 0/.7),0 0 0 .1em rgb(var(--shade)/.6);overflow:hidden}
+.glass::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:linear-gradient(128deg,rgb(255 255 255/.085) 0%,rgb(255 255 255/.03) 30%,transparent 30.4%)}
+.face-svg{position:absolute;inset:0;display:block}
+.face-svg svg{width:100%;height:100%;display:block;overflow:visible}
+.face-svg .trk{fill:none;stroke:var(--led-w);stroke-opacity:.07;stroke-width:.1;transition:stroke .2s,stroke-opacity .2s}
+.face-svg .ring.sel .trk{stroke:var(--vc);stroke-opacity:.55;stroke-width:.14}
+.face-svg .ring{transition:opacity .2s var(--snap)}
+.face-svg .ring.mu{opacity:.28}
+.face-svg .d{transform:rotate(0deg);transition:transform .56s var(--ease),opacity .18s var(--snap)}
+.face-svg .d.x{opacity:0}
+.face-svg .c{fill:var(--vc);opacity:.2;transition:opacity .14s var(--snap)}
+.face-svg .d.on .c{opacity:1}
+.face-svg .h{opacity:0}
+.face-svg .d.on .h{opacity:.3}
+.face-svg .w{fill:var(--led-w);opacity:0}
+.face-svg .top{fill:var(--led-w);opacity:.5}
+.face-svg .hand{stroke:var(--led-w);stroke-width:.13;stroke-linecap:round;opacity:0;transition:opacity .25s var(--snap)}
+.is-playing .face-svg .hand{opacity:.6}
+.is-playing .face-svg .d.on .c{opacity:.66}
+.face-svg.deal .ring:nth-of-type(2) .d{transition-delay:70ms}
+.face-svg.deal .ring:nth-of-type(3) .d{transition-delay:140ms}
+.face-svg.deal .ring:nth-of-type(4) .d{transition-delay:210ms}
+.face-svg.pre .d{transition:none}
+.lcd{position:absolute;left:50%;top:50%;width:18em;height:18em;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.05em;color:var(--sc);font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:center;pointer-events:none;white-space:nowrap}
+.lcd-v,.lcd-t{font-size:1.7em;letter-spacing:.1em;color:var(--legend);opacity:.72}
+.lcd-e{font-size:3.25em;font-weight:500;letter-spacing:-.01em;text-shadow:0 0 .5em color-mix(in srgb,var(--sc) 60%,transparent)}
+.keys,.encs,.row3{position:absolute;left:8em;width:60em;display:flex;gap:4em}
+.keys{top:77em;height:8em}
+.encs{top:89em}
+.row3{top:109.5em;height:9em}
+.key{position:relative;width:12em;height:100%;border-radius:1.2em;background:linear-gradient(135deg,var(--key-hi),var(--key) 46%,var(--key-lo))!important;color:var(--legend-dim)!important;
+  box-shadow:inset .1em .1em 0 rgb(255 255 255/.14),inset -.1em -.1em 0 rgb(0 0 0/.35),.25em .4em .45em rgb(var(--shade)/.42),.7em 1.1em 1.3em rgb(var(--shade)/.2),0 0 0 .14em rgb(var(--shade)/.3);
+  transition:transform .07s var(--snap),box-shadow .07s var(--snap),color .15s;touch-action:manipulation}
+.key:active,.key.dn{transform:translate(.07em,.11em);box-shadow:inset .1em .1em 0 rgb(255 255 255/.08),inset -.1em -.1em 0 rgb(0 0 0/.35),.1em .15em .2em rgb(var(--shade)/.45),0 0 0 .14em rgb(var(--shade)/.34)}
+.key:focus-visible{outline:.4em solid var(--ink);outline-offset:.5em;border-radius:1.2em}
+.key .kt{position:absolute;left:1.15em;bottom:1.2em;font:500 1.85em/1 var(--sans);letter-spacing:.09em}
+.key .pip{position:absolute;left:1.9em;top:1.5em;width:1.25em;height:1.25em;border-radius:50%;background:var(--vc);opacity:.26;transition:opacity .12s var(--snap),box-shadow .12s var(--snap)}
+.key[aria-pressed="true"]{color:var(--legend)!important}
+.key[aria-pressed="true"] .pip{opacity:1;box-shadow:0 0 1.4em .2em var(--vc)}
+.key.play{width:28em}
+.key.play .pip{background:var(--led-w);left:auto;right:2em;top:50%;margin-top:-.4em;width:3.6em;height:.8em;border-radius:.4em;opacity:.16}
+.key.play[aria-pressed="true"] .pip{opacity:1;box-shadow:0 0 1.6em .2em rgb(255 255 255/.7)}
+.key.play .kt{bottom:auto;top:50%;transform:translateY(-50%);left:6.2em}
+.key.play svg{position:absolute;left:1.9em;top:50%;width:3.2em;height:3.2em;margin-top:-1.6em;fill:currentColor}
+.key.play .i-stop{display:none}
+.key.play[aria-pressed="true"] .i-play{display:none}
+.key.play[aria-pressed="true"] .i-stop{display:block}
+.key.mute .pip{background:var(--sc)}
+.key.mute[aria-pressed="true"] .pip{box-shadow:0 0 1.4em .2em var(--sc)}
+.grille{width:12em;height:100%;border-radius:1.2em;background-image:radial-gradient(circle at 50% 50%,var(--key-lo) 0 .42em,rgb(255 255 255/.5) .46em .56em,transparent .6em);background-size:2em 2em;background-position:1em .5em;box-shadow:none;-webkit-mask:linear-gradient(#000,#000) center/10em 8em no-repeat;mask:linear-gradient(#000,#000) center/10em 8em no-repeat}
+.enc-w{width:12em;display:flex;flex-direction:column;align-items:center;gap:1.7em}
+.enc{position:relative;width:12em;height:12em;border-radius:50%;touch-action:none;cursor:ns-resize;
+  background:repeating-conic-gradient(from 0deg,var(--cap-lo) 0 2.5deg,var(--cap-hi) 2.5deg 5deg);
+  box-shadow:0 0 0 .12em rgb(var(--shade)/.35),.5em .75em .7em rgb(var(--shade)/.42),1.9em 2.9em 2.6em rgb(var(--shade)/.3),3.6em 5.4em 5em rgb(var(--shade)/.14)}
+.enc:focus-visible{outline:.4em solid var(--ink);outline-offset:.7em;border-radius:50%}
+.enc .cap{position:absolute;inset:.85em;border-radius:50%;background:conic-gradient(from 315deg,var(--cap-hi),var(--cap) 9%,var(--cap-lo) 24%,var(--cap) 40%,var(--cap-hi) 50%,var(--cap) 60%,var(--cap-lo) 76%,var(--cap) 91%,var(--cap-hi));box-shadow:inset 0 0 0 .1em rgb(255 255 255/.6),0 0 .25em rgb(var(--shade)/.6)}
+.enc .dial{position:absolute;inset:.85em;border-radius:50%;transition:transform .14s var(--ease)}
+.enc .dial::after{content:"";position:absolute;left:50%;top:.9em;width:1.3em;height:1.3em;margin-left:-.65em;border-radius:50%;background:radial-gradient(circle at 62% 66%,var(--cap-hi),var(--cap-lo) 70%);box-shadow:inset .1em .12em .15em rgb(var(--shade)/.5)}
+.enc.grab .cap{filter:brightness(1.03)}
+.lg{font:500 1.8em/1 var(--sans);letter-spacing:.12em;color:var(--alu-print)}
+.engrave{position:absolute;left:0;right:0;bottom:2.5em;text-align:center;font:500 1.55em/1 var(--mono);letter-spacing:.42em;color:var(--alu-engrave);text-shadow:.04em .05em 0 rgb(255 255 255/.5);padding-left:.42em}
+
+/* ── sections ── */
+.sec{padding-block:clamp(84px,11vw,168px) 0;row-gap:0;scroll-margin-top:var(--bar-h)}
+.sec-l{grid-column:1/4;padding-top:.9em}
+.sec-l b{display:block;font:400 13px/1.6 var(--sans);letter-spacing:.2em;color:var(--ink);margin-top:6px;text-transform:none}
+.h2{grid-column:5/17;font-weight:300;font-size:clamp(27px,3.5vw,54px);line-height:1.42;letter-spacing:.03em;font-feature-settings:"palt";word-break:auto-phrase;text-wrap:balance}
+.h2 .mono{font-weight:400;font-size:.9em;letter-spacing:0}
+.body{font-size:15px;line-height:2.05;letter-spacing:.02em;color:var(--ink);text-wrap:pretty}
+.body+.body{margin-top:1.2em}
+.note{font-size:12.5px;line-height:1.85;color:var(--ink-2)}
+
+/* principle */
+.ex-t{grid-column:5/10;margin-top:clamp(28px,4vw,56px)}
+.ex-v{grid-column:11/17;margin-top:clamp(28px,4vw,56px)}
+.ctl{margin-top:36px;border-top:1px solid var(--ink)}
+.ctl-r{display:grid;grid-template-columns:7.5em 1fr 2.6em;align-items:center;gap:14px;border-bottom:1px solid var(--rule);height:56px}
+.ctl-r label{font-size:13px;letter-spacing:.06em}
+.ctl-r label .mono{font-size:12px;color:var(--ink-2);margin-left:6px}
+.ctl-r output{font:500 20px/1 var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.rg{-webkit-appearance:none;appearance:none;width:100%;height:36px;background:transparent;cursor:ew-resize;margin:0;touch-action:pan-y}
+.rg::-webkit-slider-runnable-track{height:1px;background:var(--ink)}
+.rg::-moz-range-track{height:1px;background:var(--ink)}
+.rg::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:24px;margin-top:-12px;background:var(--ink);border-radius:1px;transition:transform .12s var(--snap)}
+.rg::-moz-range-thumb{width:12px;height:24px;border:0;border-radius:1px;background:var(--ink)}
+.rg:active::-webkit-slider-thumb{transform:scaleY(1.18)}
+.rg:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.ex-res{margin-top:26px;display:grid;grid-template-columns:auto 1fr;column-gap:22px;row-gap:6px;align-items:baseline}
+.ex-e{font:400 clamp(30px,3.2vw,46px)/1.1 var(--mono);letter-spacing:-.02em;grid-row:span 2;font-variant-numeric:tabular-nums}
+.ex-p{font:500 15px/1.3 var(--mono);letter-spacing:.2em;color:var(--v2i);overflow-wrap:normal;white-space:nowrap}
+.ex-i{font:400 12px/1.3 var(--mono);color:var(--ink-2);letter-spacing:.04em}
+.btn{display:inline-flex;align-items:center;gap:12px;min-height:44px;padding:0 18px 0 16px!important;border:1px solid var(--ink)!important;border-radius:2px;font-size:13px!important;letter-spacing:.08em;white-space:nowrap;transition:background .18s var(--snap),color .18s var(--snap)}
+.btn::after{content:"";width:7px;height:7px;border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(-45deg) translate(-1px,1px);transition:transform .22s var(--ease)}
+.btn:hover{background:var(--ink)!important;color:var(--paper)!important}
+.btn:hover::after{transform:rotate(-45deg) translate(1px,-1px)}
+.btn:active{transform:translateY(1px)}
+.ex-t .btn{margin-top:28px}
+.ex-fig{position:relative}
+.ex-fig svg{display:block;width:100%;height:auto;overflow:visible}
+.xt{fill:none;stroke:var(--rule);stroke-width:.6}
+.xi{fill:none;stroke:var(--ink-3);stroke-width:.6;stroke-dasharray:2.4 2.4}
+.xm{stroke:var(--ink-3);stroke-width:.6}
+.xa{fill:var(--v2i);fill-opacity:.07;stroke:var(--v2i);stroke-width:1.1;stroke-linejoin:round}
+.xh{fill:var(--paper);stroke:var(--ink);stroke-width:.8}
+.xh.on{fill:var(--v2i);stroke:var(--v2i)}
+.xn{font:400 6.4px var(--mono);fill:var(--ink-2);text-anchor:middle;dominant-baseline:central}
+.strip{display:flex;gap:3px;margin-top:22px}
+.strip i{flex:1;height:18px;border:1px solid var(--ink);border-radius:1px}
+.strip i.on{background:var(--v2i);border-color:var(--v2i)}
+.ex-v .note{margin-top:14px}
+
+/* library */
+.lib-in{grid-column:5/12;margin-top:clamp(22px,3vw,40px)}
+.lib{grid-column:1/17;margin-top:clamp(40px,5vw,72px);border-top:1px solid var(--ink)}
+.lib-h,.lib li{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));align-items:center}
+.lib-h{height:38px;border-bottom:1px solid var(--rule)}
+.lib-h span:nth-child(1){grid-column:1/3}.lib-h span:nth-child(2){grid-column:3/8}.lib-h span:nth-child(3){grid-column:8/10}.lib-h span:nth-child(4){grid-column:10/14}
+.lib li{border-bottom:1px solid var(--rule);min-height:104px;padding-block:14px;transition:background .2s var(--snap)}
+.lib li:hover{background:var(--paper-hi)}
+.lb-r{grid-column:1/3}
+.lb-r svg{display:block;width:72px;height:72px;overflow:visible}
+.lb-r .mt{fill:none;stroke:var(--rule);stroke-width:.5}
+.lb-r .mp{fill:var(--vc);fill-opacity:.08;stroke:var(--vc);stroke-width:.7;stroke-linejoin:round}
+.lb-r .mh{fill:var(--paper);stroke:var(--ink-3);stroke-width:.5}
+.lb-r .mh.on{fill:var(--vc);stroke:var(--vc)}
+.lib li:hover .mh:not(.on){fill:var(--paper-hi)}
+.lb-n{grid-column:3/8;padding-right:16px}
+.lb-n h3{font-weight:400;font-size:clamp(17px,1.5vw,21px);letter-spacing:.05em;line-height:1.5;font-feature-settings:"palt"}
+.lb-n p{font-size:12px;color:var(--ink-2);letter-spacing:.04em;line-height:1.6}
+.lb-n p .mono{letter-spacing:.02em}
+.lb-e{grid-column:8/10;font:400 15px/1 var(--mono);font-variant-numeric:tabular-nums}
+.lb-x{grid-column:10/14;font:500 14px/1.5 var(--mono);letter-spacing:.2em;color:var(--vc);white-space:nowrap}
+.lb-x small{display:block;font:400 11px/1.6 var(--sans);letter-spacing:.03em;color:var(--ink-2);white-space:normal;margin-top:4px}
+.lb-a{grid-column:14/17;justify-self:end}
+
+/* object */
+.obj-d{grid-column:1/11;margin-top:clamp(40px,5vw,72px);display:grid;grid-template-columns:126fr 46fr;gap:0 4%;align-items:start}
+.obj-d figcaption{font:500 11px/1.4 var(--mono);letter-spacing:.1em;color:var(--ink-2);margin-top:10px}
+.dw{display:block;width:100%;height:auto;overflow:visible}
+.dw .o *{fill:none;stroke:var(--ink);stroke-width:.32}
+.dw .o .th{stroke-width:.16}
+.dw .o .fl{fill:var(--paper-hi)}
+.dw .o .r1{stroke:var(--v1i)}.dw .o .r2{stroke:var(--v2i)}.dw .o .r3{stroke:var(--v3i)}.dw .o .r4{stroke:var(--v4i)}
+.dw .o .dot{fill:var(--ink);stroke:none}
+.dw .cl{fill:none;stroke:var(--ink-3);stroke-width:.14;stroke-dasharray:5 1 .8 1}
+.dw .dm path{fill:none;stroke:var(--ink);stroke-width:.15}
+.dw .dm text,.dw .co text{font:400 3px var(--mono);fill:var(--ink)}
+.dw .co path{fill:none;stroke:var(--ink-2);stroke-width:.15}
+.dw .co circle{fill:var(--paper);stroke:var(--ink);stroke-width:.2}
+.dw .co circle.p{fill:var(--ink);stroke:none}
+.dw .co text{font-size:2.9px;text-anchor:middle}
+.dw marker path{fill:var(--ink)}
+.obj-t{grid-column:12/17;margin-top:clamp(40px,5vw,72px)}
+.parts{margin-top:30px!important;border-top:1px solid var(--ink);counter-reset:p}
+.parts li{display:grid;grid-template-columns:30px 1fr;border-bottom:1px solid var(--rule);padding:9px 0;font-size:13px;line-height:1.65;counter-increment:p}
+.parts li::before{content:counter(p);font:400 11px/20px var(--mono);width:20px;height:20px;border:1px solid var(--ink);border-radius:50%;text-align:center;margin-top:1px}
+.parts small{display:block;font-size:11.5px;color:var(--ink-2);letter-spacing:.02em}
+
+/* spec */
+.spec{grid-column:5/17;margin-top:clamp(28px,4vw,56px);border-top:1px solid var(--ink)}
+.spec div{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));border-bottom:1px solid var(--rule);padding:13px 0;align-items:baseline}
+.spec dt{grid-column:1/4;font-size:13px;letter-spacing:.08em;color:var(--ink-2)}
+.spec dd{grid-column:4/13;font-size:14px;line-height:1.8}
+.spec dd .mono{font-size:13.5px}
+.spec dd small{display:block;font-size:12px;color:var(--ink-2)}
+
+/* footer */
+.foot{margin-top:clamp(84px,11vw,168px);border-top:1px solid var(--ink);padding-block:clamp(40px,5vw,72px) calc(clamp(32px,4vw,56px) + env(safe-area-inset-bottom));row-gap:40px}
+.av-l{grid-column:1/4}
+.av{grid-column:5/12}
+.av h2{font-weight:300;font-size:clamp(20px,2vw,28px);letter-spacing:.04em;line-height:1.6;font-feature-settings:"palt"}
+.av p{margin-top:14px;font-size:13.5px;line-height:2;color:var(--ink-2);max-width:36em}
+.ref{grid-column:13/17;font-size:11.5px;line-height:1.8;color:var(--ink-2)}
+.ref .lab{display:block;margin-bottom:8px}
+.fin{grid-column:1/17;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font:400 11px/1.6 var(--mono);letter-spacing:.08em;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:16px}
+.nb{white-space:nowrap}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+@media (max-width:1100px){
+  .hero-t{grid-column:1/9}.stage{grid-column:9/17}
+  .ex-t{grid-column:1/9}.ex-v{grid-column:10/17}
+  .lib-in{grid-column:5/15}
+  .lb-n{grid-column:3/7}.lb-e{grid-column:7/9}.lb-x{grid-column:9/14;font-size:12.5px;letter-spacing:.14em}
+  .lib-h span:nth-child(2){grid-column:3/7}.lib-h span:nth-child(3){grid-column:7/9}.lib-h span:nth-child(4){grid-column:9/14}
+  .obj-d{grid-column:1/17}.obj-t{grid-column:5/17}
+  .av{grid-column:5/17}.ref{grid-column:5/17}
+}
+@media (max-width:820px){
+  .mg{font-size:14.5px}
+  .hero{min-height:0;display:flex;flex-direction:column;padding-block:28px 40px}
+  .hero-t{display:contents}
+  .stage{order:1}.hint{order:2;margin-top:0!important}.now{order:3}
+  .h1-jp{font-size:clamp(76px,23vw,120px)}
+  .stage{display:block;padding-block:32px 28px}
+  .dev{--dw:clamp(250px,calc((100svh - 372px) * .6032),min(82vw,360px));margin-inline:auto}
+  .cap-note{position:static;writing-mode:horizontal-tb;margin-top:34px!important;text-align:center;letter-spacing:.08em}
+  .now{padding-top:22px;margin-top:0}
+  .sec-l,.h2,.ex-t,.ex-v,.lib-in,.obj-d,.obj-t,.spec,.av-l,.av,.ref{grid-column:1/17}
+  .sec-l{padding-top:0;margin-bottom:18px;display:flex;gap:14px;align-items:baseline}
+  .sec-l b{margin-top:0}
+  .ex-v{margin-top:48px}
+  .lib-h{display:none}
+  .lib li{grid-template-columns:76px 1fr;column-gap:14px;row-gap:4px;padding-block:18px;align-items:start}
+  .lb-r{grid-column:1;grid-row:1/4}.lb-r svg{width:68px;height:68px}
+  .lb-n,.lb-e,.lb-x,.lb-a{grid-column:2}
+  .lb-n{padding-right:0}
+  .lb-e{font-size:13px;margin-top:6px}
+  .lb-x{font-size:13px;letter-spacing:.12em}
+  .lb-a{justify-self:start;margin-top:10px}
+  .obj-d{grid-template-columns:126fr 46fr;gap:0 3%}
+  .dw .dm text{font-size:4.3px}.dw .co text{font-size:3.5px}.dw .co circle:not(.p){r:3.1px}
+  .spec dt{grid-column:1/13;font-size:12px}.spec dd{grid-column:1/13}
+  .nav{gap:14px;font-size:12px}
+  .brand span{display:none}
+}
+@media (max-width:380px){.nav{gap:11px;letter-spacing:.04em}.brand{letter-spacing:.16em}.pats li{grid-template-columns:5.6em 5.4em 1fr;font-size:11.5px}}
+@media (prefers-reduced-motion:reduce){
+  .mg *,.mg *::before,.mg *::after{transition-duration:.01ms!important;animation:none!important}
+  .sweep,.face-svg .hand{display:none}
+}
+</style>
+</head>
+<body>
+<div class="mg" id="mg">
+<a class="skip" href="#instrument">楽器本体へ移動</a>
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="#top" aria-label="MEGURI MG-4 ページ先頭へ">MEGURI<span>MG-4</span></a>
+    <nav class="nav" aria-label="ページ内">
+      <a href="#principle">原理</a><a href="#library">リズム帳</a><a href="#object">設計</a><a href="#spec">仕様</a>
+    </nav>
+  </div>
+  <div class="ruler" aria-hidden="true" id="ruler"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b id="rph"></b></div>
+</header>
+<div class="sweep" id="sweep" aria-hidden="true"></div>
+
+<main>
+<section class="hero g" id="top" aria-labelledby="h1">
+  <div class="hero-t">
+    <p class="lab eyebrow">Pocket Euclidean Rhythm Machine<span>MG-4</span></p>
+    <h1 class="h1" id="h1"><span class="h1-jp">巡り</span><span class="h1-en" lang="en">MEGURI</span></h1>
+    <p class="lede">分割数と打数を決めるだけで、音が円の上にいちばん均等に並ぶ、掌サイズのリズムマシン。</p>
+    <p class="hint"><kbd>PLAY</kbd> か <kbd>SPACE</kbd> で音が出ます。つまみはドラッグ、ホイール、矢印キーで回せます。</p>
+    <div class="now">
+      <p class="lab"><span>現在のパターン</span><span id="nowT">096 BPM</span></p>
+      <ol class="pats" id="pats"><!--bake:pats--><li class="" style="--vc:var(--v1i)"><span class="pn">1 LOW</span><span class="pe">E(3,8)</span><span class="px"><i>x</i><i>.</i><i>.</i><i>x</i><i>.</i><i>.</i><i>x</i><i>.</i></span></li><li class="sel" style="--vc:var(--v2i)"><span class="pn">2 RIM</span><span class="pe">E(5,16)</span><span class="px"><i>x</i><i>.</i><i>.</i><i>x</i><i>.</i><i>.</i><i>x</i><i>.</i><i>.</i><i>.</i><i>x</i><i>.</i><i>.</i><i>x</i><i>.</i><i>.</i></span></li><li class="" style="--vc:var(--v3i)"><span class="pn">3 HAT</span><span class="pe">E(7,16)</span><span class="px"><i>x</i><i>.</i><i>.</i><i>x</i><i>.</i><i>x</i><i>.</i><i>x</i><i>.</i><i>.</i><i>x</i><i>.</i><i>x</i><i>.</i><i>x</i><i>.</i></span></li><li class="" style="--vc:var(--v4i)"><span class="pn">4 BELL</span><span class="pe">E(5,12)</span><span class="px"><i>x</i><i>.</i><i>.</i><i>x</i><i>.</i><i>x</i><i>.</i><i>.</i><i>x</i><i>.</i><i>x</i><i>.</i></span></li><!--/bake:pats--></ol>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="dev" id="instrument" role="group" aria-label="MEGURI MG-4 本体。四つのリングにユークリッドのリズムを設定します。">
+      <div class="dev-body">
+        <div class="face">
+          <div class="glass">
+            <div class="face-svg" id="face"><!--bake:face--><svg viewBox="-32 -32 64 64" aria-hidden="true" focusable="false"><defs><radialGradient id="mgG0"><stop offset="0" style="stop-color:var(--v1);stop-opacity:.95"></stop><stop offset=".32" style="stop-color:var(--v1);stop-opacity:.42"></stop><stop offset="1" style="stop-color:var(--v1);stop-opacity:0"></stop></radialGradient><radialGradient id="mgG1"><stop offset="0" style="stop-color:var(--v2);stop-opacity:.95"></stop><stop offset=".32" style="stop-color:var(--v2);stop-opacity:.42"></stop><stop offset="1" style="stop-color:var(--v2);stop-opacity:0"></stop></radialGradient><radialGradient id="mgG2"><stop offset="0" style="stop-color:var(--v3);stop-opacity:.95"></stop><stop offset=".32" style="stop-color:var(--v3);stop-opacity:.42"></stop><stop offset="1" style="stop-color:var(--v3);stop-opacity:0"></stop></radialGradient><radialGradient id="mgG3"><stop offset="0" style="stop-color:var(--v4);stop-opacity:.95"></stop><stop offset=".32" style="stop-color:var(--v4);stop-opacity:.42"></stop><stop offset="1" style="stop-color:var(--v4);stop-opacity:0"></stop></radialGradient></defs><path class="top" d="M0-28.2l-.75-1.3h1.5z"></path><g class="ring" data-v="0" style="--vc:var(--v1)"><circle class="trk" r="25.6"></circle><g class="d on" style="transform: rotate(0deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d" style="transform: rotate(45deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d" style="transform: rotate(90deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d on" style="transform: rotate(135deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d" style="transform: rotate(180deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d" style="transform: rotate(225deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d on" style="transform: rotate(270deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d" style="transform: rotate(315deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-25.6" r="3.38" fill="url(#mgG0)"></circle><circle class="c" cy="-25.6" r="1.25"></circle><circle class="w" cy="-25.6" r="0.75"></circle></g></g><g class="ring sel" data-v="1" style="--vc:var(--v2)"><circle class="trk" r="21"></circle><g class="d on" style="transform: rotate(0deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(22.5deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(45deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d on" style="transform: rotate(67.5deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(90deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(112.5deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d on" style="transform: rotate(135deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(157.5deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(180deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(202.5deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d on" style="transform: rotate(225deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(247.5deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(270deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d on" style="transform: rotate(292.5deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(315deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g><g class="d" style="transform: rotate(337.5deg);"><circle class="h" cy="-21" r="3.10" fill="url(#mgG1)"></circle><circle class="c" cy="-21" r="1.15"></circle><circle class="w" cy="-21" r="0.69"></circle></g></g><g class="ring" data-v="2" style="--vc:var(--v3)"><circle class="trk" r="16.4"></circle><g class="d on" style="transform: rotate(0deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d" style="transform: rotate(22.5deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d" style="transform: rotate(45deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d on" style="transform: rotate(67.5deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d" style="transform: rotate(90deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d on" style="transform: rotate(112.5deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d" style="transform: rotate(135deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d on" style="transform: rotate(157.5deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d" style="transform: rotate(180deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d" style="transform: rotate(202.5deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d on" style="transform: rotate(225deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d" style="transform: rotate(247.5deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d on" style="transform: rotate(270deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d" style="transform: rotate(292.5deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d on" style="transform: rotate(315deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g><g class="d" style="transform: rotate(337.5deg);"><circle class="h" cy="-16.4" r="2.84" fill="url(#mgG2)"></circle><circle class="c" cy="-16.4" r="1.05"></circle><circle class="w" cy="-16.4" r="0.63"></circle></g></g><g class="ring" data-v="3" style="--vc:var(--v4)"><circle class="trk" r="11.8"></circle><g class="d on" style="transform: rotate(0deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d" style="transform: rotate(30deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d" style="transform: rotate(60deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d on" style="transform: rotate(90deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d" style="transform: rotate(120deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d on" style="transform: rotate(150deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d" style="transform: rotate(180deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d" style="transform: rotate(210deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d on" style="transform: rotate(240deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d" style="transform: rotate(270deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d on" style="transform: rotate(300deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d" style="transform: rotate(330deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g><g class="d x" style="transform: rotate(360deg);"><circle class="h" cy="-11.8" r="2.56" fill="url(#mgG3)"></circle><circle class="c" cy="-11.8" r="0.95"></circle><circle class="w" cy="-11.8" r="0.57"></circle></g></g><line class="hand" y1="-9.9" y2="-28"></line></svg><!--/bake:face--></div>
+            <div class="lcd" id="lcd" role="status" aria-live="off">
+              <span class="lcd-v" id="lcdV">RIM·R10</span>
+              <span class="lcd-e" id="lcdE">E(5,16)</span>
+              <span class="lcd-t" id="lcdT">096 BPM</span>
+            </div>
+          </div>
+        </div>
+        <div class="keys" role="group" aria-label="ボイス選択">
+          <button class="key vk" type="button" data-v="0" aria-pressed="false" aria-label="ボイス 1 LOW(キック)" style="--vc:var(--v1)"><i class="pip"></i><span class="kt">LOW</span></button>
+          <button class="key vk" type="button" data-v="1" aria-pressed="true" aria-label="ボイス 2 RIM(リム)" style="--vc:var(--v2)"><i class="pip"></i><span class="kt">RIM</span></button>
+          <button class="key vk" type="button" data-v="2" aria-pressed="false" aria-label="ボイス 3 HAT(ハイハット)" style="--vc:var(--v3)"><i class="pip"></i><span class="kt">HAT</span></button>
+          <button class="key vk" type="button" data-v="3" aria-pressed="false" aria-label="ボイス 4 BELL(ベル)" style="--vc:var(--v4)"><i class="pip"></i><span class="kt">BELL</span></button>
+        </div>
+        <div class="encs">
+          <div class="enc-w"><div class="enc" id="encN" role="slider" tabindex="0" aria-label="STEPS 分割数 n" aria-valuemin="2" aria-valuemax="16" aria-valuenow="16" aria-valuetext="16 ステップ"><span class="cap"></span><span class="dial"></span></div><span class="lg" aria-hidden="true">STEPS</span></div>
+          <div class="enc-w"><div class="enc" id="encK" role="slider" tabindex="0" aria-label="PULSES 打数 k" aria-valuemin="0" aria-valuemax="16" aria-valuenow="5" aria-valuetext="5 打"><span class="cap"></span><span class="dial"></span></div><span class="lg" aria-hidden="true">PULSES</span></div>
+          <div class="enc-w"><div class="enc" id="encR" role="slider" tabindex="0" aria-label="ROTATE 回転" aria-valuemin="0" aria-valuemax="15" aria-valuenow="10" aria-valuetext="10 ステップ回転"><span class="cap"></span><span class="dial"></span></div><span class="lg" aria-hidden="true">ROTATE</span></div>
+          <div class="enc-w"><div class="enc" id="encT" role="slider" tabindex="0" aria-label="TEMPO テンポ" aria-valuemin="40" aria-valuemax="200" aria-valuenow="96" aria-valuetext="96 BPM"><span class="cap"></span><span class="dial"></span></div><span class="lg" aria-hidden="true">TEMPO</span></div>
+        </div>
+        <div class="row3">
+          <button class="key play" type="button" id="play" aria-pressed="false" aria-label="PLAY / STOP 再生と停止"><svg viewBox="0 0 10 10" aria-hidden="true"><path class="i-play" d="M2.4 1.6 8.4 5 2.4 8.4z"/><path class="i-stop" d="M2.2 2.2h5.6v5.6H2.2z"/></svg><span class="kt">PLAY</span><i class="pip"></i></button>
+          <button class="key mute" type="button" id="mute" aria-pressed="false" aria-label="MUTE 選択中のボイスを消音"><i class="pip"></i><span class="kt">MUTE</span></button>
+          <div class="grille" aria-hidden="true"></div>
+        </div>
+        <div class="engrave" aria-hidden="true">MEGURI</div>
+      </div>
+    </div>
+    <p class="cap-note" aria-hidden="true">MG-4 — 76 × 126 × 15 mm <br>168 g / A6063 / SMOKED GLASS</p>
+  </div>
+</section>
+
+<section class="sec g" id="principle" aria-labelledby="h-pr">
+  <p class="lab sec-l">Principle<b>原理</b></p>
+  <h2 class="h2" id="h-pr"><span class="mono">k</span> 個の音を、<span class="mono">n</span> 個の刻みへ、<br>できるだけ均等に。</h2>
+  <div class="ex-t">
+    <p class="body">ユークリッドのリズムの規則は、これだけです。1 小節を n 等分し、そこへ k 個の音を置く。ぴったり等間隔にならないときは、余りをまた均等に配る。紀元前 300 年ごろにユークリッドが書き残した互除法と、同じ手順です。</p>
+    <p class="body">2005 年、計算幾何学者ゴドフリート・トゥーサンは、この規則ひとつからキューバのトレシーロ、ボサノヴァ、西アフリカのベルパターンなど、世界各地の伝統的なリズムが現れることを示しました。</p>
+    <div class="ctl">
+      <div class="ctl-r"><label for="exN">分割<span class="mono">n</span></label><input class="rg" type="range" id="exN" min="2" max="16" value="8" step="1"><output id="exNo" for="exN">8</output></div>
+      <div class="ctl-r"><label for="exK">打数<span class="mono">k</span></label><input class="rg" type="range" id="exK" min="0" max="16" value="3" step="1"><output id="exKo" for="exK">3</output></div>
+    </div>
+    <button class="btn" type="button" id="exSend">この形を本体のリングへ送る</button>
+  </div>
+  <div class="ex-v">
+    <figure class="ex-fig">
+      <div id="exViz"><!--bake:exViz--><svg viewBox="-104 -104 208 208" aria-hidden="true" focusable="false"><circle class="xt" r="84"></circle><polygon class="xi" points="0.00,-84.00 72.75,42.00 -72.75,42.00"></polygon><path class="xm" d="M0.00 -79.00L0.00 -89.00"></path><path class="xm" d="M68.42 39.50L77.08 44.50"></path><path class="xm" d="M-68.42 39.50L-77.08 44.50"></path><polygon class="xa" points="0.00,-84.00 59.40,59.40 -84.00,0.00"></polygon><circle class="xh on" cx="0.00" cy="-84.00" r="5.2"></circle><text class="xn" x="0.00" y="-97.00">1</text><circle class="xh" cx="59.40" cy="-59.40" r="3.6"></circle><text class="xn" x="68.59" y="-68.59">2</text><circle class="xh" cx="84.00" cy="-0.00" r="3.6"></circle><text class="xn" x="97.00" y="-0.00">3</text><circle class="xh on" cx="59.40" cy="59.40" r="5.2"></circle><text class="xn" x="68.59" y="68.59">4</text><circle class="xh" cx="0.00" cy="84.00" r="3.6"></circle><text class="xn" x="0.00" y="97.00">5</text><circle class="xh" cx="-59.40" cy="59.40" r="3.6"></circle><text class="xn" x="-68.59" y="68.59">6</text><circle class="xh on" cx="-84.00" cy="0.00" r="5.2"></circle><text class="xn" x="-97.00" y="0.00">7</text><circle class="xh" cx="-59.40" cy="-59.40" r="3.6"></circle><text class="xn" x="-68.59" y="-68.59">8</text></svg><!--/bake:exViz--></div>
+      <figcaption>
+        <div class="ex-res" aria-live="polite">
+          <span class="ex-e" id="exE">E(3,8)</span>
+          <span class="ex-p" id="exP">x..x..x.</span>
+          <span class="ex-i" id="exI">間隔 3 + 3 + 2 = 8</span>
+        </div>
+        <div class="strip" id="exS" aria-hidden="true"><!--bake:exS--><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><!--/bake:exS--></div>
+        <p class="note">破線は理想の正 k 角形。色の線は、n 個の刻みの上でつくれる、それにいちばん近い形です。</p>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="sec g" id="library" aria-labelledby="h-lb">
+  <p class="lab sec-l">Library<b>リズム帳</b></p>
+  <h2 class="h2" id="h-lb">同じ規則から、<br>十一の土地のリズム。</h2>
+  <p class="body lib-in">トゥーサンの論文に挙げられたリズムから十一を選びました。x は音、. は休み。どれも一回押せば本体に入り、ほかの三つのリングには相性のよいパターンが添えられます。</p>
+  <div class="lib">
+    <div class="lib-h lab" aria-hidden="true"><span>図</span><span>名称 / 起源</span><span>E(k,n)</span><span>表記</span></div>
+    <ul id="lib"><!--bake:lib--><li style="--vc:var(--v1i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 10.61,10.61 -15.00,0.00"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="10.61" cy="-10.61" r="1.5"></circle><circle class="mh" cx="15.00" cy="-0.00" r="1.5"></circle><circle class="mh on" cx="10.61" cy="10.61" r="2.1"></circle><circle class="mh" cx="0.00" cy="15.00" r="1.5"></circle><circle class="mh" cx="-10.61" cy="10.61" r="1.5"></circle><circle class="mh on" cx="-15.00" cy="0.00" r="2.1"></circle><circle class="mh" cx="-10.61" cy="-10.61" r="1.5"></circle></svg></div><div class="lb-n"><h3>トレシーロ</h3><p><span class="mono" lang="en">Tresillo</span> — キューバ</p></div><p class="lb-e">E(3,8)</p><p class="lb-x">x..x..x.</p><div class="lb-a"><button class="btn" type="button" data-id="tresillo" aria-label="トレシーロ を本体で鳴らす">本体で鳴らす</button></div></li><li style="--vc:var(--v2i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 15.00,-0.00 10.61,10.61 -10.61,10.61 -15.00,0.00"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="10.61" cy="-10.61" r="1.5"></circle><circle class="mh on" cx="15.00" cy="-0.00" r="2.1"></circle><circle class="mh on" cx="10.61" cy="10.61" r="2.1"></circle><circle class="mh" cx="0.00" cy="15.00" r="1.5"></circle><circle class="mh on" cx="-10.61" cy="10.61" r="2.1"></circle><circle class="mh on" cx="-15.00" cy="0.00" r="2.1"></circle><circle class="mh" cx="-10.61" cy="-10.61" r="1.5"></circle></svg></div><div class="lb-n"><h3>シンキージョ</h3><p><span class="mono" lang="en">Cinquillo</span> — キューバ</p></div><p class="lb-e">E(5,8)</p><p class="lb-x">x.xx.xx.</p><div class="lb-a"><button class="btn" type="button" data-id="cinquillo" aria-label="シンキージョ を本体で鳴らす">本体で鳴らす</button></div></li><li style="--vc:var(--v2i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 13.86,-5.74 10.61,10.61 -10.61,10.61 -13.86,-5.74"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="5.74" cy="-13.86" r="1.5"></circle><circle class="mh" cx="10.61" cy="-10.61" r="1.5"></circle><circle class="mh on" cx="13.86" cy="-5.74" r="2.1"></circle><circle class="mh" cx="15.00" cy="-0.00" r="1.5"></circle><circle class="mh" cx="13.86" cy="5.74" r="1.5"></circle><circle class="mh on" cx="10.61" cy="10.61" r="2.1"></circle><circle class="mh" cx="5.74" cy="13.86" r="1.5"></circle><circle class="mh" cx="0.00" cy="15.00" r="1.5"></circle><circle class="mh" cx="-5.74" cy="13.86" r="1.5"></circle><circle class="mh on" cx="-10.61" cy="10.61" r="2.1"></circle><circle class="mh" cx="-13.86" cy="5.74" r="1.5"></circle><circle class="mh" cx="-15.00" cy="0.00" r="1.5"></circle><circle class="mh on" cx="-13.86" cy="-5.74" r="2.1"></circle><circle class="mh" cx="-10.61" cy="-10.61" r="1.5"></circle><circle class="mh" cx="-5.74" cy="-13.86" r="1.5"></circle></svg></div><div class="lb-n"><h3>ボサノヴァ</h3><p><span class="mono" lang="en">Bossa nova</span> — ブラジル</p></div><p class="lb-e">E(5,16)</p><p class="lb-x">x..x..x...x..x..<small>ネックレス x..x..x..x..x... を三打目から始めた、ふだん演奏される形</small></p><div class="lb-a"><button class="btn" type="button" data-id="bossa" aria-label="ボサノヴァ を本体で鳴らす">本体で鳴らす</button></div></li><li style="--vc:var(--v4i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 12.99,-7.50 15.00,-0.00 7.50,12.99 -7.50,12.99 -12.99,7.50 -12.99,-7.50"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="7.50" cy="-12.99" r="1.5"></circle><circle class="mh on" cx="12.99" cy="-7.50" r="2.1"></circle><circle class="mh on" cx="15.00" cy="-0.00" r="2.1"></circle><circle class="mh" cx="12.99" cy="7.50" r="1.5"></circle><circle class="mh on" cx="7.50" cy="12.99" r="2.1"></circle><circle class="mh" cx="0.00" cy="15.00" r="1.5"></circle><circle class="mh on" cx="-7.50" cy="12.99" r="2.1"></circle><circle class="mh on" cx="-12.99" cy="7.50" r="2.1"></circle><circle class="mh" cx="-15.00" cy="0.00" r="1.5"></circle><circle class="mh on" cx="-12.99" cy="-7.50" r="2.1"></circle><circle class="mh" cx="-7.50" cy="-12.99" r="1.5"></circle></svg></div><div class="lb-n"><h3>ベルパターン</h3><p><span class="mono" lang="en">Bell pattern</span> — 西アフリカ</p></div><p class="lb-e">E(7,12)</p><p class="lb-x">x.xx.x.xx.x.</p><div class="lb-a"><button class="btn" type="button" data-id="bell" aria-label="ベルパターン を本体で鳴らす">本体で鳴らす</button></div></li><li style="--vc:var(--v2i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 14.77,-2.60 5.13,14.10 -12.99,7.50"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="9.64" cy="-11.49" r="1.5"></circle><circle class="mh on" cx="14.77" cy="-2.60" r="2.1"></circle><circle class="mh" cx="12.99" cy="7.50" r="1.5"></circle><circle class="mh on" cx="5.13" cy="14.10" r="2.1"></circle><circle class="mh" cx="-5.13" cy="14.10" r="1.5"></circle><circle class="mh on" cx="-12.99" cy="7.50" r="2.1"></circle><circle class="mh" cx="-14.77" cy="-2.60" r="1.5"></circle><circle class="mh" cx="-9.64" cy="-11.49" r="1.5"></circle></svg></div><div class="lb-n"><h3>アクサク</h3><p><span class="mono" lang="en">Aksak</span> — トルコ</p></div><p class="lb-e">E(4,9)</p><p class="lb-x">x.x.x.x..</p><div class="lb-a"><button class="btn" type="button" data-id="aksak" aria-label="アクサク を本体で鳴らす">本体で鳴らす</button></div></li><li style="--vc:var(--v3i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 0.00,15.00 -15.00,0.00"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="15.00" cy="-0.00" r="1.5"></circle><circle class="mh on" cx="0.00" cy="15.00" r="2.1"></circle><circle class="mh on" cx="-15.00" cy="0.00" r="2.1"></circle></svg></div><div class="lb-n"><h3>クンビア</h3><p><span class="mono" lang="en">Cumbia</span> — コロンビア</p></div><p class="lb-e">E(3,4)</p><p class="lb-x">x.xx</p><div class="lb-a"><button class="btn" type="button" data-id="cumbia" aria-label="クンビア を本体で鳴らす">本体で鳴らす</button></div></li><li style="--vc:var(--v2i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 14.62,3.34 -6.51,13.51"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="11.73" cy="-9.35" r="1.5"></circle><circle class="mh on" cx="14.62" cy="3.34" r="2.1"></circle><circle class="mh" cx="6.51" cy="13.51" r="1.5"></circle><circle class="mh on" cx="-6.51" cy="13.51" r="2.1"></circle><circle class="mh" cx="-14.62" cy="3.34" r="1.5"></circle><circle class="mh" cx="-11.73" cy="-9.35" r="1.5"></circle></svg></div><div class="lb-n"><h3>ルチェニッツァ</h3><p><span class="mono" lang="en">Ruchenitza</span> — ブルガリア</p></div><p class="lb-e">E(3,7)</p><p class="lb-x">x.x.x..</p><div class="lb-a"><button class="btn" type="button" data-id="ruchenitza" aria-label="ルチェニッツァ を本体で鳴らす">本体で鳴らす</button></div></li><li style="--vc:var(--v1i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 8.82,12.14"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="14.27" cy="-4.64" r="1.5"></circle><circle class="mh on" cx="8.82" cy="12.14" r="2.1"></circle><circle class="mh" cx="-8.82" cy="12.14" r="1.5"></circle><circle class="mh" cx="-14.27" cy="-4.64" r="1.5"></circle></svg></div><div class="lb-n"><h3>ハフィーフ・ラマル</h3><p><span class="mono" lang="en">Khafif-e-ramal</span> — 13 世紀ペルシア</p></div><p class="lb-e">E(2,5)</p><p class="lb-x">x.x..</p><div class="lb-a"><button class="btn" type="button" data-id="khafif" aria-label="ハフィーフ・ラマル を本体で鳴らす">本体で鳴らす</button></div></li><li style="--vc:var(--v2i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 15.00,-0.00 7.50,12.99 -12.99,7.50 -12.99,-7.50"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="7.50" cy="-12.99" r="1.5"></circle><circle class="mh" cx="12.99" cy="-7.50" r="1.5"></circle><circle class="mh on" cx="15.00" cy="-0.00" r="2.1"></circle><circle class="mh" cx="12.99" cy="7.50" r="1.5"></circle><circle class="mh on" cx="7.50" cy="12.99" r="2.1"></circle><circle class="mh" cx="0.00" cy="15.00" r="1.5"></circle><circle class="mh" cx="-7.50" cy="12.99" r="1.5"></circle><circle class="mh on" cx="-12.99" cy="7.50" r="2.1"></circle><circle class="mh" cx="-15.00" cy="0.00" r="1.5"></circle><circle class="mh on" cx="-12.99" cy="-7.50" r="2.1"></circle><circle class="mh" cx="-7.50" cy="-12.99" r="1.5"></circle></svg></div><div class="lb-n"><h3>ヴェンダの手拍子</h3><p><span class="mono" lang="en">Venda clapping pattern</span> — 南アフリカ</p></div><p class="lb-e">E(5,12)</p><p class="lb-x">x..x.x..x.x.</p><div class="lb-a"><button class="btn" type="button" data-id="venda" aria-label="ヴェンダの手拍子 を本体で鳴らす">本体で鳴らす</button></div></li><li style="--vc:var(--v4i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 13.86,-5.74 13.86,5.74 5.74,13.86 -10.61,10.61 -15.00,0.00 -10.61,-10.61"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="5.74" cy="-13.86" r="1.5"></circle><circle class="mh" cx="10.61" cy="-10.61" r="1.5"></circle><circle class="mh on" cx="13.86" cy="-5.74" r="2.1"></circle><circle class="mh" cx="15.00" cy="-0.00" r="1.5"></circle><circle class="mh on" cx="13.86" cy="5.74" r="2.1"></circle><circle class="mh" cx="10.61" cy="10.61" r="1.5"></circle><circle class="mh on" cx="5.74" cy="13.86" r="2.1"></circle><circle class="mh" cx="0.00" cy="15.00" r="1.5"></circle><circle class="mh" cx="-5.74" cy="13.86" r="1.5"></circle><circle class="mh on" cx="-10.61" cy="10.61" r="2.1"></circle><circle class="mh" cx="-13.86" cy="5.74" r="1.5"></circle><circle class="mh on" cx="-15.00" cy="0.00" r="2.1"></circle><circle class="mh" cx="-13.86" cy="-5.74" r="1.5"></circle><circle class="mh on" cx="-10.61" cy="-10.61" r="2.1"></circle><circle class="mh" cx="-5.74" cy="-13.86" r="1.5"></circle></svg></div><div class="lb-n"><h3>サンバ</h3><p><span class="mono" lang="en">Samba</span> — ブラジル</p></div><p class="lb-e">E(7,16)</p><p class="lb-x">x..x.x.x..x.x.x.</p><div class="lb-a"><button class="btn" type="button" data-id="samba" aria-label="サンバ を本体で鳴らす">本体で鳴らす</button></div></li><li style="--vc:var(--v2i)"><div class="lb-r"><svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="15"></circle><polygon class="mp" points="0.00,-15.00 15.00,-0.00 0.00,15.00 -15.00,0.00"></polygon><circle class="mh on" cx="0.00" cy="-15.00" r="2.1"></circle><circle class="mh" cx="7.50" cy="-12.99" r="1.5"></circle><circle class="mh" cx="12.99" cy="-7.50" r="1.5"></circle><circle class="mh on" cx="15.00" cy="-0.00" r="2.1"></circle><circle class="mh" cx="12.99" cy="7.50" r="1.5"></circle><circle class="mh" cx="7.50" cy="12.99" r="1.5"></circle><circle class="mh on" cx="0.00" cy="15.00" r="2.1"></circle><circle class="mh" cx="-7.50" cy="12.99" r="1.5"></circle><circle class="mh" cx="-12.99" cy="7.50" r="1.5"></circle><circle class="mh on" cx="-15.00" cy="0.00" r="2.1"></circle><circle class="mh" cx="-12.99" cy="-7.50" r="1.5"></circle><circle class="mh" cx="-7.50" cy="-12.99" r="1.5"></circle></svg></div><div class="lb-n"><h3>ファンダンゴの手拍子</h3><p><span class="mono" lang="en">Fandango clapping</span> — スペイン</p></div><p class="lb-e">E(4,12)</p><p class="lb-x">x..x..x..x..</p><div class="lb-a"><button class="btn" type="button" data-id="fandango" aria-label="ファンダンゴの手拍子 を本体で鳴らす">本体で鳴らす</button></div></li><!--/bake:lib--></ul>
+  </div>
+</section>
+
+<section class="sec g" id="object" aria-labelledby="h-ob">
+  <p class="lab sec-l">Object<b>設計</b></p>
+  <h2 class="h2" id="h-ob">掌に収まる、<br>ひとつの円。</h2>
+  <div class="obj-d">
+    <figure>
+      <svg class="dw" viewBox="-26 -14 126 158" role="img" aria-labelledby="dwF">
+        <title id="dwF">正面図。幅 76 mm、高さ 126 mm、前面の円は直径 64 mm、エンコーダは直径 12 mm で 16 mm 間隔。</title>
+        <defs><marker id="mgA" viewBox="0 0 6 6" refX="5.8" refY="3" markerUnits="userSpaceOnUse" markerWidth="2.6" markerHeight="2.6" orient="auto-start-reverse"><path d="M0 1.3 6 3 0 4.7z"/></marker>
+        <pattern id="mgP" x="56.5" y="110" width="2" height="2" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".4" class="dot"/></pattern></defs>
+        <g class="o">
+          <rect class="fl" width="76" height="126" rx="9"/>
+          <circle cx="38" cy="38" r="32"/><circle class="th" cx="38" cy="38" r="30.7"/><circle class="th" cx="38" cy="38" r="29"/>
+          <circle class="th r1" cx="38" cy="38" r="25.6"/><circle class="th r2" cx="38" cy="38" r="21"/><circle class="th r3" cx="38" cy="38" r="16.4"/><circle class="th r4" cx="38" cy="38" r="11.8"/>
+          <rect x="8" y="77" width="12" height="8" rx="1.2"/><rect x="24" y="77" width="12" height="8" rx="1.2"/><rect x="40" y="77" width="12" height="8" rx="1.2"/><rect x="56" y="77" width="12" height="8" rx="1.2"/>
+          <circle cx="14" cy="95" r="6"/><circle class="th" cx="14" cy="95" r="5.15"/><circle cx="30" cy="95" r="6"/><circle class="th" cx="30" cy="95" r="5.15"/><circle cx="46" cy="95" r="6"/><circle class="th" cx="46" cy="95" r="5.15"/><circle cx="62" cy="95" r="6"/><circle class="th" cx="62" cy="95" r="5.15"/>
+          <rect x="8" y="109.5" width="28" height="9" rx="1.2"/><rect x="40" y="109.5" width="12" height="9" rx="1.2"/>
+          <rect x="57" y="110" width="10" height="8" style="fill:url(#mgP);stroke:none"/>
+        </g>
+        <path class="cl" d="M38 2v72M2 38h72M14 87.5v15M30 87.5v15M46 87.5v15M62 87.5v15"/>
+        <g class="dm">
+          <path d="M0-2v-9M76-2v-9M-2 0h-17M-2 126h-17M14 102.5v4M30 102.5v4"/>
+          <path d="M0-8.5h76" marker-start="url(#mgA)" marker-end="url(#mgA)"/><text x="38" y="-9.8" text-anchor="middle">76</text>
+          <path d="M-16.5 0v126" marker-start="url(#mgA)" marker-end="url(#mgA)"/><text transform="translate(-17.8 63) rotate(-90)" text-anchor="middle">126</text>
+          <path d="M14 105.4h16" marker-start="url(#mgA)" marker-end="url(#mgA)"/><text x="22" y="104.5" text-anchor="middle" style="font-size:2.5px">16</text>
+          <path d="M65.7 22 80 9h10" marker-start="url(#mgA)"/><text x="81.5" y="7.8">φ64</text>
+          <path d="M8 95h-9" marker-start="url(#mgA)"/><text x="-2" y="94" text-anchor="end">φ12</text>
+          <path d="M73.4 123.4 81 131h7" marker-start="url(#mgA)"/><text x="82" y="129.8">R9</text>
+        </g>
+        <g class="co">
+          <path d="M54 24h34.2M68 43.3h20.2M72 62h16.2M64 81h24.2M67 97.5h21.2M22 115v15.2M46 115v15.2M62 115v15.2"/>
+          <circle class="p" cx="54" cy="24" r=".5"/><circle class="p" cx="68" cy="43.3" r=".5"/><circle class="p" cx="72" cy="62" r=".5"/><circle class="p" cx="64" cy="81" r=".5"/><circle class="p" cx="67" cy="97.5" r=".5"/><circle class="p" cx="22" cy="115" r=".5"/><circle class="p" cx="46" cy="115" r=".5"/><circle class="p" cx="62" cy="115" r=".5"/>
+          <circle cx="91" cy="24" r="2.8"/><text x="91" y="25.05">1</text>
+          <circle cx="91" cy="43.3" r="2.8"/><text x="91" y="44.35">2</text>
+          <circle cx="91" cy="62" r="2.8"/><text x="91" y="63.05">3</text>
+          <circle cx="91" cy="81" r="2.8"/><text x="91" y="82.05">4</text>
+          <circle cx="91" cy="97.5" r="2.8"/><text x="91" y="98.55">5</text>
+          <circle cx="22" cy="133" r="2.8"/><text x="22" y="134.05">6</text>
+          <circle cx="46" cy="133" r="2.8"/><text x="46" y="134.05">7</text>
+          <circle cx="62" cy="133" r="2.8"/><text x="62" y="134.05">8</text>
+        </g>
+      </svg>
+      <figcaption>FRONT — 正面図 / 単位 mm</figcaption>
+    </figure>
+    <figure>
+      <svg class="dw" viewBox="-5 -14 46 158" role="img" aria-labelledby="dwS">
+        <title id="dwS">右側面図。本体の厚さ 15 mm、エンコーダを含む高さ 24 mm。</title>
+        <g class="o">
+          <rect class="fl" x="1" y="89" width="9" height="12" rx=".7"/><path class="th" d="M2.2 89v12M3.4 89v12M4.6 89v12M5.8 89v12M7 89v12M8.2 89v12"/>
+          <rect class="fl" x="8.8" y="77" width="1.6" height="8" rx=".4"/><rect class="fl" x="8.8" y="109.5" width="1.6" height="9" rx=".4"/>
+          <rect class="fl" x="10" width="15" height="126" rx="2.2"/>
+          <path class="th" d="M10.7 7.5v61"/>
+          <rect x="15.5" y="29" width="4" height="10" rx="1.2"/><rect class="th" x="16.3" y="30" width="2.4" height="4" rx=".6"/>
+          <rect x="25" y="12" width=".8" height="7" rx=".3"/><rect x="25" y="107" width=".8" height="7" rx=".3"/>
+        </g>
+        <path class="cl" d="M-2 95h30M-2 38h30"/>
+        <g class="dm">
+          <path d="M10-2v-9M25-2v-9M1 103v34M25 128v9"/>
+          <path d="M10-8.5h15" marker-start="url(#mgA)" marker-end="url(#mgA)"/><text x="17.5" y="-9.8" text-anchor="middle">15</text>
+          <path d="M1 134.5h24" marker-start="url(#mgA)" marker-end="url(#mgA)"/><text x="13" y="133.2" text-anchor="middle">24</text>
+        </g>
+        <g class="co">
+          <path d="M18 36h14.2M25.6 110.5h6.6"/>
+          <circle class="p" cx="18" cy="36" r=".5"/><circle class="p" cx="25.6" cy="110.5" r=".5"/>
+          <circle cx="35" cy="36" r="2.8"/><text x="35" y="37.05">9</text>
+          <circle cx="35" cy="110.5" r="2.8"/><text x="35" y="111.55" style="font-size:2.5px">10</text>
+        </g>
+      </svg>
+      <figcaption>SIDE — 右側面図</figcaption>
+    </figure>
+  </div>
+  <div class="obj-t">
+    <p class="body">筐体はアルミニウム A6063 の削り出し。ビーズブラストのあと、わずかに緑を含んだ灰色でアルマイト処理しています。前面の円はスモークの強化ガラスで、電源を切るとただの黒い円に戻ります。</p>
+    <p class="body">つまみは 1 回転 24 クリックのエンコーダ。指先だけで回せるよう、外周に細かなローレットを切りました。端子は上面に 3.5 mm が三つ、下面に <span class="nb">USB-C</span> がひとつです。</p>
+    <ol class="parts">
+      <li><span>ディスプレイ窓<small>化学強化ガラス(スモーク)、表示域 φ58 mm</small></span></li>
+      <li><span>ベゼル<small>アルミニウム、ダイヤカット面取り C0.6</small></span></li>
+      <li><span>筐体<small>A6063 削り出し、ビーズブラスト+アルマイト</small></span></li>
+      <li><span>ボイスキー ×4<small>シリコーンラバー、LED インジケータ</small></span></li>
+      <li><span>エンコーダ ×4<small>アルミニウム削り出し、ローレット、24 クリック</small></span></li>
+      <li><span>PLAY / STOP キー<small>シリコーンラバー、白色 LED</small></span></li>
+      <li><span>MUTE キー<small>選択中のボイスを消音</small></span></li>
+      <li><span>スピーカーグリル<small>φ0.8 mm 穿孔、2 mm ピッチ</small></span></li>
+      <li><span>電源スライドスイッチ<small>右側面</small></span></li>
+      <li><span>ゴム脚 ×4<small>シリコーン、高さ 0.8 mm</small></span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="sec g" id="spec" aria-labelledby="h-sp">
+  <p class="lab sec-l">Specification<b>仕様</b></p>
+  <h2 class="h2" id="h-sp">MG-4 主要諸元</h2>
+  <dl class="spec">
+    <div><dt>外形寸法</dt><dd><span class="mono">76 × 126 × 15 mm</span><small>幅 × 高さ × 厚さ。エンコーダを含む高さ 24 mm</small></dd></div>
+    <div><dt>質量</dt><dd><span class="mono">168 g</span></dd></div>
+    <div><dt>筐体</dt><dd>アルミニウム A6063、ビーズブラスト+アルマイト</dd></div>
+    <div><dt>表示</dt><dd>円形 AMOLED <span class="mono">φ58 mm</span>、化学強化スモークガラス</dd></div>
+    <div><dt>ボイス</dt><dd>4 系統(LOW / RIM / HAT / BELL)<small>すべて合成音。サンプルは使いません</small></dd></div>
+    <div><dt>ステップ</dt><dd>リングごとに <span class="mono">2–16</span><small>どのリングも 1 小節でちょうど一周します</small></dd></div>
+    <div><dt>テンポ</dt><dd><span class="mono">40–200 BPM</span></dd></div>
+    <div><dt>音声出力</dt><dd><span class="mono">3.5 mm</span> ステレオ(ライン/ヘッドホン兼用)<small>内蔵スピーカー <span class="mono">15 × 11 mm、0.7 W</span></small></dd></div>
+    <div><dt>同期</dt><dd>SYNC IN / OUT(<span class="mono">3.5 mm</span>、アナログクロック <span class="mono">2 / 24 PPQN</span>)<small>USB-MIDI クロックの送受信</small></dd></div>
+    <div><dt>USB</dt><dd>USB-C(充電、MIDI、オーディオ <span class="mono">48 kHz / 24 bit</span>)</dd></div>
+    <div><dt>電源</dt><dd>リチウムポリマー <span class="mono">3.7 V / 1,800 mAh</span><small>連続約 12 時間(スピーカー使用時は約 7 時間)、充電約 2.5 時間</small></dd></div>
+    <div><dt>動作温度</dt><dd><span class="mono">0–40 ℃</span></dd></div>
+  </dl>
+</section>
+</main>
+
+<footer class="foot g">
+  <p class="lab av-l">Availability</p>
+  <div class="av">
+    <h2>販売の予定はありません。</h2>
+    <p>MEGURI MG-4 は架空の製品で、このページはデザインと実装のコンセプトです。ただし上の本体は本物で、音はすべてこのブラウザの中で合成しています。気に入ったパターンは、数字を三つ覚えておけば、いつでも呼び戻せます。</p>
+  </div>
+  <p class="ref"><span class="lab">Reference</span>Godfried Toussaint, “The Euclidean Algorithm Generates Traditional Musical Rhythms”, 2005.</p>
+  <p class="fin"><span>MEGURI MG-4 — CONCEPT MODEL</span><span>E(k,n) / 2026</span></p>
+</footer>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const root=$('#mg');
+const reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const VO=[{n:'LOW',jp:'キック'},{n:'RIM',jp:'リム'},{n:'HAT',jp:'ハイハット'},{n:'BELL',jp:'ベル'}];
+const RAD=[25.6,21,16.4,11.8], DOT=[1.25,1.15,1.05,.95];
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)), mod=(a,n)=>((a%n)+n)%n;
+
+/* ── Euclid / Bjorklund ── */
+function bjorklund(k,n){
+  n=Math.max(1,n|0);k=clamp(k|0,0,n);
+  if(k===0)return Array(n).fill(0);
+  let a=[],b=[];
+  for(let i=0;i<k;i++)a.push([1]);
+  for(let i=0;i<n-k;i++)b.push([0]);
+  if(!b.length)return Array(n).fill(1);
+  do{
+    const m=Math.min(a.length,b.length),na=[];
+    for(let i=0;i<m;i++)na.push(a[i].concat(b[i]));
+    const rest=a.length>m?a.slice(m):b.slice(m);
+    a=na;b=rest;
+  }while(b.length>1);
+  return a.concat(b).flat();
+}
+function euclid(k,n,rotation){
+  const base=bjorklund(k,n),N=base.length,r=mod(Math.round(rotation||0),N),out=new Array(N);
+  for(let i=0;i<N;i++)out[i]=base[mod(i-r,N)];
+  return out;
+}
+const str=p=>p.map(v=>v?'x':'.').join('');
+
+/* ── presets: [k,n,rotation] for LOW, RIM, HAT, BELL ── */
+const PRE=[
+ {id:'tresillo',jp:'トレシーロ',en:'Tresillo',org:'キューバ',main:0,bpm:100,rings:[[3,8,0],[2,8,2],[4,8,1],[5,16,0]]},
+ {id:'cinquillo',jp:'シンキージョ',en:'Cinquillo',org:'キューバ',main:1,bpm:104,rings:[[2,8,0],[5,8,0],[8,8,0],[3,8,0]]},
+ {id:'bossa',jp:'ボサノヴァ',en:'Bossa nova',org:'ブラジル',main:1,bpm:80,rings:[[4,16,0],[5,16,10],[8,16,0],[3,16,2]],note:'ネックレス x..x..x..x..x... を三打目から始めた、ふだん演奏される形'},
+ {id:'bell',jp:'ベルパターン',en:'Bell pattern',org:'西アフリカ',main:3,bpm:108,rings:[[4,12,0],[2,12,3],[6,12,0],[7,12,0]]},
+ {id:'aksak',jp:'アクサク',en:'Aksak',org:'トルコ',main:1,bpm:112,rings:[[2,9,0],[4,9,0],[9,9,0],[3,9,0]]},
+ {id:'cumbia',jp:'クンビア',en:'Cumbia',org:'コロンビア',main:2,bpm:184,rings:[[2,4,0],[2,8,1],[3,4,0],[3,8,0]]},
+ {id:'ruchenitza',jp:'ルチェニッツァ',en:'Ruchenitza',org:'ブルガリア',main:1,bpm:168,rings:[[1,7,0],[3,7,0],[7,7,0],[2,7,3]]},
+ {id:'khafif',jp:'ハフィーフ・ラマル',en:'Khafif-e-ramal',org:'13 世紀ペルシア',main:0,bpm:160,rings:[[2,5,0],[1,5,3],[5,5,0],[3,5,0]]},
+ {id:'venda',jp:'ヴェンダの手拍子',en:'Venda clapping pattern',org:'南アフリカ',main:1,bpm:104,rings:[[2,12,0],[5,12,0],[6,12,1],[3,12,0]]},
+ {id:'samba',jp:'サンバ',en:'Samba',org:'ブラジル',main:3,bpm:100,rings:[[2,16,4],[4,16,2],[11,16,0],[7,16,0]]},
+ {id:'fandango',jp:'ファンダンゴの手拍子',en:'Fandango clapping',org:'スペイン',main:1,bpm:116,rings:[[2,12,0],[4,12,0],[6,12,0],[3,12,1]]}
+];
+
+/* ── state ── */
+const state={bpm:96,sel:1,playing:false,rings:[[3,8,0],[5,16,10],[7,16,0],[5,12,0]].map(([k,n,r])=>({k,n,r,mute:false,pat:[],ord:[],next:0,lastT:0}))};
+function recalc(r){r.pat=euclid(r.k,r.n,r.r);let c=0;r.ord=r.pat.map(v=>v?c++:0);}
+state.rings.forEach(recalc);
+
+/* ── audio: voices and master bus (shared by live and offline contexts) ── */
+function buildGraph(c){
+  const master=c.createGain();master.gain.value=.9;
+  const comp=c.createDynamicsCompressor();comp.threshold.value=-18;comp.knee.value=12;comp.ratio.value=3;comp.attack.value=.005;comp.release.value=.18;
+  const lim=c.createDynamicsCompressor();lim.threshold.value=-6;lim.knee.value=0;lim.ratio.value=20;lim.attack.value=.001;lim.release.value=.09;
+  const sh=c.createWaveShaper(),cv=new Float32Array(1025);
+  for(let i=0;i<1025;i++){const x=i/512-1;cv[i]=Math.tanh(1.4*x)/Math.tanh(1.4)*.97;}
+  sh.curve=cv;
+  const out=c.createGain();out.gain.value=.62;
+  master.connect(comp);comp.connect(lim);lim.connect(sh);sh.connect(out);out.connect(c.destination);
+  const LV=[.95,.5,.2,.3],PAN=[0,.12,.3,-.24];
+  const vg=LV.map((g,i)=>{const n=c.createGain();n.gain.value=g;
+    if(c.createStereoPanner){const p=c.createStereoPanner();p.pan.value=PAN[i];n.connect(p);p.connect(master);}else n.connect(master);
+    return n;});
+  const mg=vg.map(v=>{const n=c.createGain();n.connect(v);return n;});
+  const nb=c.createBuffer(1,c.sampleRate,c.sampleRate),nd=nb.getChannelData(0);
+  let s=20051;for(let i=0;i<nd.length;i++){s=(s*16807)%2147483647;nd[i]=s/1073741823.5-1;}
+  const env=(g,t,a,peak,d)=>{g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+a+d);};
+  const V=[
+    function low(t){
+      const o=c.createOscillator(),g=c.createGain();o.type='sine';
+      o.frequency.setValueAtTime(170,t);o.frequency.exponentialRampToValueAtTime(46,t+.12);
+      env(g,t,.004,1,.44);o.connect(g);g.connect(mg[0]);o.start(t);o.stop(t+.5);
+      const k=c.createOscillator(),kg=c.createGain();k.type='triangle';
+      k.frequency.setValueAtTime(1400,t);k.frequency.exponentialRampToValueAtTime(240,t+.018);
+      env(kg,t,.001,.3,.028);k.connect(kg);kg.connect(mg[0]);k.start(t);k.stop(t+.05);
+    },
+    function rim(t){
+      const n=c.createBufferSource(),hp=c.createBiquadFilter(),bp=c.createBiquadFilter(),g=c.createGain();
+      n.buffer=nb;hp.type='highpass';hp.frequency.value=900;bp.type='bandpass';bp.frequency.value=2600;bp.Q.value=.8;
+      env(g,t,.001,.9,.12);n.connect(hp);hp.connect(bp);bp.connect(g);g.connect(mg[1]);n.start(t,(t*7.3)%.5);n.stop(t+.16);
+      const o=c.createOscillator(),og=c.createGain();o.type='triangle';
+      o.frequency.setValueAtTime(410,t);o.frequency.exponentialRampToValueAtTime(205,t+.05);
+      env(og,t,.001,.85,.075);o.connect(og);og.connect(mg[1]);o.start(t);o.stop(t+.1);
+      const p=c.createOscillator(),pg=c.createGain();p.type='sine';p.frequency.value=1760;
+      env(pg,t,.0008,.4,.018);p.connect(pg);pg.connect(mg[1]);p.start(t);p.stop(t+.03);
+    },
+    function hat(t,ord){
+      const bp=c.createBiquadFilter(),hp=c.createBiquadFilter(),g=c.createGain();
+      bp.type='bandpass';bp.frequency.value=10400;bp.Q.value=.7;hp.type='highpass';hp.frequency.value=7200;
+      env(g,t,.001,ord%2?.55:.9,ord%4===3?.085:.04);bp.connect(hp);hp.connect(g);g.connect(mg[2]);
+      [2,3,4.16,5.43,6.79,8.21].forEach(m=>{const o=c.createOscillator();o.type='square';o.frequency.value=40*m;o.connect(bp);o.start(t);o.stop(t+.14);});
+    },
+    function bell(t,ord){
+      const SC=[440,523.25,587.33,659.25,783.99],SQ=[0,2,1,3,0,4,2,1];
+      const f=SC[SQ[ord%8]],o=c.createOscillator(),m=c.createOscillator(),mi=c.createGain(),g=c.createGain();
+      o.type='sine';o.frequency.value=f;m.type='sine';m.frequency.value=f*3.51;
+      mi.gain.setValueAtTime(f*2.4,t);mi.gain.exponentialRampToValueAtTime(f*.08,t+.3);
+      m.connect(mi);mi.connect(o.frequency);env(g,t,.002,.9,.62);o.connect(g);g.connect(mg[3]);
+      const o2=c.createOscillator(),g2=c.createGain();o2.type='sine';o2.frequency.value=f*2.006;env(g2,t,.002,.22,.3);o2.connect(g2);g2.connect(mg[3]);
+      o.start(t);m.start(t);o2.start(t);o.stop(t+.7);m.stop(t+.7);o2.stop(t+.36);
+    }
+  ];
+  return {master,trig:(vi,t,ord)=>V[vi](t,ord||0),
+    setMute:(vi,b)=>{const now=c.currentTime;mg[vi].gain.cancelScheduledValues(now);mg[vi].gain.setTargetAtTime(b?0:1,now,.008);},
+    setMuteNow:(vi,b)=>{mg[vi].gain.value=b?0:1;}};
+}
+
+/* ── transport: lookahead scheduler on the audio clock ── */
+let ctx=null,graph=null,timer=0,barT0=0,barDur=240/state.bpm,raf=0,devVisible=true;
+function ensureCtx(){
+  if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
+    ctx=new AC({latencyHint:'interactive'});graph=buildGraph(ctx);state.rings.forEach((r,i)=>graph.setMuteNow(i,r.mute));}
+  if(ctx.state!=='running'&&ctx.resume)ctx.resume().catch(()=>{});
+  return true;
+}
+function tick(){
+  if(!state.playing||!ctx)return;
+  const now=ctx.currentTime,hor=now+(document.hidden?1.3:.13);
+  state.rings.forEach((r,vi)=>{
+    const sd=barDur/r.n;
+    let t=barT0+r.next*sd;
+    if(t<now-.25){r.next=Math.ceil((now-barT0)/sd);t=barT0+r.next*sd;}
+    while(t<hor){
+      const st=mod(r.next,r.n);
+      if(r.pat[st]&&t>=now-.01)graph.trig(vi,Math.max(t,now),r.ord[st]);
+      r.lastT=t;r.next++;t=barT0+r.next*sd;
+    }
+  });
+}
+function start(){
+  if(state.playing||!ensureCtx())return;
+  state.playing=true;
+  const go=()=>{
+    if(!state.playing)return;
+    const now=ctx.currentTime;barDur=240/state.bpm;barT0=now+.08;
+    state.rings.forEach(r=>{r.next=0;r.lastT=0;});
+    graph.master.gain.cancelScheduledValues(now);graph.master.gain.setValueAtTime(.9,now);
+    clearInterval(timer);timer=setInterval(tick,25);tick();loop();
+  };
+  if(ctx.state==='running')go();else{let done=false;const once=()=>{if(!done){done=true;go();}};
+    ctx.resume().then(once,once);setTimeout(()=>{if(ctx.state==='running')once();},400);}
+  ui();
+}
+function stop(){
+  if(!state.playing)return;
+  state.playing=false;clearInterval(timer);cancelAnimationFrame(raf);raf=0;
+  if(ctx){const now=ctx.currentTime;graph.master.gain.cancelScheduledValues(now);graph.master.gain.setTargetAtTime(0,now,.012);}
+  restFace();ui();
+}
+const toggle=()=>state.playing?stop():start();
+function setBpm(v){
+  v=clamp(Math.round(v),40,200);if(v===state.bpm)return false;
+  if(state.playing&&ctx){const now=ctx.currentTime,p=(now-barT0)/barDur;barDur=240/v;barT0=now-p*barDur;}else barDur=240/v;
+  state.bpm=v;return true;
+}
+function resync(r){ if(state.playing&&ctx){const now=Math.max(ctx.currentTime,r.lastT)+1e-4;r.next=Math.ceil((now-barT0)/(barDur/r.n));} }
+function setRing(vi,k,n,rot,noSync){
+  const r=state.rings[vi],n0=r.n;
+  r.n=clamp(Math.round(n),2,16);r.k=clamp(Math.round(k),0,r.n);r.r=mod(Math.round(rot),r.n);
+  recalc(r);if(r.n!==n0&&!noSync)resync(r);
+}
+
+/* ── face ── */
+const faceEl=$('#face');let dots=[],ringEls=[],hand=null;
+function buildFace(){
+  let s='<svg viewBox="-32 -32 64 64" aria-hidden="true" focusable="false"><defs>';
+  VO.forEach((v,i)=>{s+=`<radialGradient id="mgG${i}"><stop offset="0" style="stop-color:var(--v${i+1});stop-opacity:.95"/><stop offset=".32" style="stop-color:var(--v${i+1});stop-opacity:.42"/><stop offset="1" style="stop-color:var(--v${i+1});stop-opacity:0"/></radialGradient>`;});
+  s+='</defs><path class="top" d="M0-28.2l-.75-1.3h1.5z"/>';
+  VO.forEach((v,i)=>{
+    s+=`<g class="ring" data-v="${i}" style="--vc:var(--v${i+1})"><circle class="trk" r="${RAD[i]}"/>`;
+    for(let j=0;j<16;j++)s+=`<g class="d"><circle class="h" cy="${-RAD[i]}" r="${(DOT[i]*2.7).toFixed(2)}" fill="url(#mgG${i})"/><circle class="c" cy="${-RAD[i]}" r="${DOT[i]}"/><circle class="w" cy="${-RAD[i]}" r="${(DOT[i]*.6).toFixed(2)}"/></g>`;
+    s+='</g>';
+  });
+  s+='<line class="hand" y1="-9.9" y2="-28"/></svg>';
+  faceEl.innerHTML=s;
+  ringEls=$$('.ring',faceEl);
+  dots=ringEls.map(g=>$$('.d',g).map(d=>({g:d,h:d.children[0],w:d.children[2],ho:-1,wo:-1})));
+  hand=$('.hand',faceEl);
+}
+function drawRing(vi,collapsed){
+  const r=state.rings[vi];
+  dots[vi].forEach((d,j)=>{
+    const vis=j<r.n;
+    d.g.style.transform=`rotate(${collapsed?0:(vis?j*360/r.n:360).toFixed(3)}deg)`;
+    d.g.classList.toggle('x',!vis);
+    d.g.classList.toggle('on',vis&&!!r.pat[j]);
+  });
+  ringEls[vi].classList.toggle('sel',vi===state.sel);
+  ringEls[vi].classList.toggle('mu',r.mute);
+}
+function restFace(){
+  dots.forEach(ring=>ring.forEach(d=>{d.h.style.opacity='';d.w.style.opacity='';d.ho=d.wo=-1;}));
+  if(hand)hand.style.transform='';
+  $$('#pats i.cur').forEach(e=>e.classList.remove('cur'));
+  lastStep=[-1,-1,-1,-1];
+  rph.style.transform='';sweep.style.transform='';
+}
+let dealT=0;
+function deal(){faceEl.classList.add('deal');clearTimeout(dealT);dealT=setTimeout(()=>faceEl.classList.remove('deal'),900);}
+
+/* ── readouts ── */
+const patsEl=$('#pats'),lcdV=$('#lcdV'),lcdE=$('#lcdE'),lcdT=$('#lcdT'),nowT=$('#nowT'),dev=$('#instrument');
+const vks=$$('.vk'),playB=$('#play'),muteB=$('#mute'),rph=$('#rph'),sweep=$('#sweep'),ruler=$('#ruler');
+const pad3=n=>String(n).padStart(3,'0');
+let patI=[],lastStep=[-1,-1,-1,-1];
+function drawPats(){
+  patsEl.innerHTML=state.rings.map((r,i)=>`<li class="${i===state.sel?'sel':''}${r.mute?' mu':''}" style="--vc:var(--v${i+1}i)"><span class="pn">${i+1} ${VO[i].n}</span><span class="pe">E(${r.k},${r.n})</span><span class="px">${r.pat.map(v=>`<i>${v?'x':'.'}</i>`).join('')}</span></li>`).join('');
+  patI=$$('li',patsEl).map(li=>$$('.px i',li));lastStep=[-1,-1,-1,-1];
+}
+const encs={};
+function ui(){
+  const r=state.rings[state.sel];
+  dev.style.setProperty('--sc',`var(--v${state.sel+1})`);
+  lcdV.textContent=`${VO[state.sel].n}·R${r.r}`;lcdE.textContent=`E(${r.k},${r.n})`;
+  lcdT.textContent=nowT.textContent=`${pad3(state.bpm)} BPM`;
+  vks.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===state.sel)));
+  playB.setAttribute('aria-pressed',String(state.playing));
+  $('.kt',playB).textContent=state.playing?'STOP':'PLAY';
+  muteB.setAttribute('aria-pressed',String(r.mute));
+  root.classList.toggle('is-playing',state.playing);
+  const a=(id,now,max,txt)=>{const e=encs[id].el;e.setAttribute('aria-valuenow',now);if(max!=null)e.setAttribute('aria-valuemax',max);e.setAttribute('aria-valuetext',txt);};
+  if(encs.encN){a('encN',r.n,null,`${r.n} ステップ`);a('encK',r.k,r.n,`${r.k} 打、E(${r.k},${r.n})`);a('encR',r.r,r.n-1,`${r.r} ステップ回転`);a('encT',state.bpm,null,`${state.bpm} BPM`);}
+}
+function redraw(){state.rings.forEach((_,i)=>drawRing(i));drawPats();ui();}
+function select(i){state.sel=clamp(i,0,3);redraw();}
+function setMute(vi,b){state.rings[vi].mute=b;if(graph)graph.setMute(vi,b);redraw();}
+
+/* ── frame loop: everything derived from audioCtx.currentTime ── */
+let rulerW=0;
+const measure=()=>{rulerW=ruler.getBoundingClientRect().width;};
+function loop(){
+  cancelAnimationFrame(raf);
+  if(!state.playing||document.hidden)return;
+  raf=requestAnimationFrame(loop);
+  const t=ctx.currentTime-(ctx.outputLatency||0),ph=(t-barT0)/barDur;
+  if(ph<0)return;
+  const p=ph-Math.floor(ph);
+  state.rings.forEach((r,vi)=>{
+    const st=Math.floor(p*r.n+1e-6)%r.n;
+    if(st!==lastStep[vi]){const row=patI[vi];if(row){if(row[lastStep[vi]])row[lastStep[vi]].classList.remove('cur');if(row[st])row[st].classList.add('cur');}lastStep[vi]=st;}
+  });
+  if(reduced){const q=Math.floor(p*16)/16*rulerW;rph.style.transform=`translate3d(${q}px,0,0)`;return;}
+  const x=p*rulerW;
+  rph.style.transform=`translate3d(${x}px,0,0)`;sweep.style.transform=`translate3d(${x}px,0,0)`;
+  if(!devVisible)return;
+  hand.style.transform=`rotate(${(p*360).toFixed(2)}deg)`;
+  for(let vi=0;vi<4;vi++){
+    const r=state.rings[vi],ds=dots[vi],n=r.n;
+    for(let j=0;j<n;j++){
+      let d=p-j/n;if(d<0)d+=1;if(ph<1&&p<j/n)d=9;
+      const dt=d*barDur,hit=r.pat[j];
+      let L=hit?Math.exp(-dt/.2):Math.exp(-dt/.055);
+      if(dt<.012)L*=.35+.65*dt/.012;
+      const ho=hit?.24+.76*L:.42*L,wo=hit?.9*L:.5*L,o=ds[j];
+      if(Math.abs(ho-o.ho)>.012){o.h.style.opacity=ho.toFixed(3);o.ho=ho;}
+      if(Math.abs(wo-o.wo)>.012){o.w.style.opacity=wo.toFixed(3);o.wo=wo;}
+    }
+  }
+}
+
+/* ── encoders ── */
+function bindEnc(id,get,set,px,big,min,max){
+  const el=$('#'+id),dial=$('.dial',el),e={el,turn:0};encs[id]=e;
+  const nudge=d=>{if(!d)return;const before=get();set(before+d);const moved=id==='encR'?d:get()-before;
+    if(moved){e.turn+=moved;dial.style.transform=`rotate(${e.turn*(id==='encT'?6:15)}deg)`;}};
+  let pid=null,lx=0,ly=0,acc=0,wacc=0;
+  el.addEventListener('pointerdown',ev=>{if(ev.button)return;pid=ev.pointerId;try{el.setPointerCapture(pid);}catch(_){}
+    lx=ev.clientX;ly=ev.clientY;acc=0;el.classList.add('grab');el.focus({preventScroll:true});ev.preventDefault();});
+  el.addEventListener('pointermove',ev=>{if(ev.pointerId!==pid)return;acc+=(ly-ev.clientY)+(ev.clientX-lx);lx=ev.clientX;ly=ev.clientY;
+    const s=Math.trunc(acc/px);if(s){acc-=s*px;nudge(s);}});
+  const up=ev=>{if(ev.pointerId!==pid)return;pid=null;el.classList.remove('grab');try{el.releasePointerCapture(ev.pointerId);}catch(_){}};
+  el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+  el.addEventListener('wheel',ev=>{ev.preventDefault();wacc+=ev.deltaMode?ev.deltaY*30:ev.deltaY;const s=Math.trunc(wacc/30);if(s){wacc-=s*30;nudge(-s);}},{passive:false});
+  el.addEventListener('keydown',ev=>{
+    const k=ev.key;let d=0;
+    if(k==='ArrowUp'||k==='ArrowRight')d=1;else if(k==='ArrowDown'||k==='ArrowLeft')d=-1;
+    else if(k==='PageUp')d=big;else if(k==='PageDown')d=-big;
+    else if(k==='Home')d=min()-get();else if(k==='End')d=max()-get();else return;
+    ev.preventDefault();nudge(d);
+  });
+}
+const cur=()=>state.rings[state.sel];
+bindEnc('encN',()=>cur().n,v=>{const r=cur();setRing(state.sel,r.k,v,r.r);redraw();},15,4,()=>2,()=>16);
+bindEnc('encK',()=>cur().k,v=>{const r=cur();setRing(state.sel,v,r.n,r.r);redraw();},15,4,()=>0,()=>cur().n);
+bindEnc('encR',()=>cur().r,v=>{const r=cur();setRing(state.sel,r.k,r.n,v);redraw();},15,4,()=>0,()=>cur().n-1);
+bindEnc('encT',()=>state.bpm,v=>{if(setBpm(v))ui();},3,10,()=>40,()=>200);
+
+/* ── keys ── */
+vks.forEach((b,i)=>b.addEventListener('click',()=>select(i)));
+playB.addEventListener('click',toggle);
+muteB.addEventListener('click',()=>setMute(state.sel,!cur().mute));
+document.addEventListener('keydown',ev=>{
+  if(ev.metaKey||ev.ctrlKey||ev.altKey)return;
+  const t=ev.target,tag=t&&t.tagName;
+  if(ev.code==='Space'||ev.key===' '){
+    if(tag==='BUTTON'||tag==='A'||tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+    ev.preventDefault();if(!ev.repeat){playB.classList.add('dn');setTimeout(()=>playB.classList.remove('dn'),110);toggle();}
+    return;
+  }
+  if(tag==='INPUT'||tag==='TEXTAREA')return;
+  if(ev.key>='1'&&ev.key<='4')select(+ev.key-1);
+  else if(ev.key==='m'||ev.key==='M')setMute(state.sel,!cur().mute);
+});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.playing){tick();loop();}});
+if('IntersectionObserver'in window)new IntersectionObserver(es=>{devVisible=es[0].isIntersecting;}).observe(dev);
+if('ResizeObserver'in window)new ResizeObserver(measure).observe(ruler);else addEventListener('resize',measure,{passive:true});
+
+/* ── presets ── */
+function loadPreset(id){
+  const p=PRE.find(x=>x.id===id);if(!p)return null;
+  p.rings.forEach(([k,n,r],i)=>{setRing(i,k,n,r,true);state.rings[i].mute=false;if(graph)graph.setMute(i,false);});
+  setBpm(p.bpm);state.sel=p.main;
+  state.rings.forEach(r=>{r.lastT=0;resync(r);});
+  deal();redraw();
+  return getState();
+}
+function getState(){
+  return {playing:state.playing,bpm:state.bpm,selected:state.sel,
+    rings:state.rings.map((r,i)=>({voice:VO[i].n,k:r.k,n:r.n,rotation:r.r,muted:r.mute,steps:r.pat.slice(),pattern:str(r.pat),notation:`E(${r.k},${r.n})`}))};
+}
+function toInstrument(){dev.scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'});}
+
+/* ── library ── */
+function miniRing(pat){
+  const n=pat.length,R=15,pt=i=>{const a=i/n*Math.PI*2;return [(Math.sin(a)*R).toFixed(2),(-Math.cos(a)*R).toFixed(2)];};
+  const hits=pat.map((v,i)=>v?i:-1).filter(i=>i>=0);
+  let s=`<svg viewBox="-19 -19 38 38" aria-hidden="true" focusable="false"><circle class="mt" r="${R}"/>`;
+  if(hits.length>1)s+=`<polygon class="mp" points="${hits.map(i=>pt(i).join(',')).join(' ')}"/>`;
+  pat.forEach((v,i)=>{const [x,y]=pt(i);s+=`<circle class="mh${v?' on':''}" cx="${x}" cy="${y}" r="${v?2.1:1.5}"/>`;});
+  return s+'</svg>';
+}
+const libEl=$('#lib');
+libEl.innerHTML=PRE.map(p=>{
+  const [k,n,r]=p.rings[p.main],pat=euclid(k,n,r);
+  return `<li style="--vc:var(--v${p.main+1}i)"><div class="lb-r">${miniRing(pat)}</div><div class="lb-n"><h3>${p.jp}</h3><p><span class="mono" lang="en">${p.en}</span> — ${p.org}</p></div><p class="lb-e">E(${k},${n})</p><p class="lb-x">${str(pat)}${p.note?`<small>${p.note}</small>`:''}</p><div class="lb-a"><button class="btn" type="button" data-id="${p.id}" aria-label="${p.jp} を本体で鳴らす">本体で鳴らす</button></div></li>`;
+}).join('');
+libEl.addEventListener('click',ev=>{
+  const b=ev.target.closest('button[data-id]');if(!b)return;
+  loadPreset(b.dataset.id);start();toInstrument();
+});
+
+/* ── explainer ── */
+const exN=$('#exN'),exK=$('#exK');
+function drawEx(){
+  const n=+exN.value;exK.max=n;const k=Math.min(+exK.value,n);exK.value=k;
+  const pat=euclid(k,n,0),R=84,pt=(f,rr)=>{const a=f*Math.PI*2;return [(Math.sin(a)*rr).toFixed(2),(-Math.cos(a)*rr).toFixed(2)];};
+  const hits=pat.map((v,i)=>v?i:-1).filter(i=>i>=0);
+  let s=`<svg viewBox="-104 -104 208 208" aria-hidden="true" focusable="false"><circle class="xt" r="${R}"/>`;
+  if(k>2){s+=`<polygon class="xi" points="${Array.from({length:k},(_,i)=>pt(i/k,R).join(',')).join(' ')}"/>`;}
+  for(let i=0;i<k;i++){const a=pt(i/k,R-5),b=pt(i/k,R+5);s+=`<path class="xm" d="M${a[0]} ${a[1]}L${b[0]} ${b[1]}"/>`;}
+  if(hits.length>1)s+=`<polygon class="xa" points="${hits.map(i=>pt(i/n,R).join(',')).join(' ')}"/>`;
+  pat.forEach((v,i)=>{const [x,y]=pt(i/n,R),[tx,ty]=pt(i/n,R+13);s+=`<circle class="xh${v?' on':''}" cx="${x}" cy="${y}" r="${v?5.2:3.6}"/><text class="xn" x="${tx}" y="${ty}">${i+1}</text>`;});
+  $('#exViz').innerHTML=s+'</svg>';
+  $('#exS').innerHTML=pat.map(v=>`<i${v?' class="on"':''}></i>`).join('');
+  $('#exNo').textContent=n;$('#exKo').textContent=k;
+  $('#exE').textContent=`E(${k},${n})`;$('#exP').textContent=str(pat);
+  const iv=hits.map((h,i)=>mod((hits[(i+1)%hits.length])-h-1,n)+1);
+  $('#exI').textContent=k?`間隔 ${iv.join(' + ')} = ${n}`:'音なし';
+  exN.setAttribute('aria-valuetext',`${n} 分割`);exK.setAttribute('aria-valuetext',`${k} 打`);
+}
+exN.addEventListener('input',drawEx);exK.addEventListener('input',drawEx);
+$('#exSend').addEventListener('click',()=>{setRing(state.sel,+exK.value,+exN.value,0);redraw();toInstrument();});
+
+/* ── offline render (same voices, same bus) ── */
+function renderOffline(seconds){
+  const sec=clamp(+seconds||4,.25,60),OC=window.OfflineAudioContext||window.webkitOfflineAudioContext,sr=44100;
+  if(!OC)return Promise.reject(new Error('OfflineAudioContext unavailable'));
+  const oc=new OC(2,Math.ceil(sr*sec),sr),g=buildGraph(oc),bar=240/state.bpm;
+  state.rings.forEach((r,vi)=>{if(r.mute)return;const sd=bar/r.n;for(let i=0;i*sd<sec;i++){const st=i%r.n;if(r.pat[st])g.trig(vi,i*sd+.004,r.ord[st]);}});
+  return Promise.resolve(oc.startRendering()).then(buf=>{
+    let peak=0,sum=0,cnt=0;
+    for(let ch=0;ch<buf.numberOfChannels;ch++){const d=buf.getChannelData(ch);for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>peak)peak=a;sum+=d[i]*d[i];}cnt+=d.length;}
+    return {peak,rms:Math.sqrt(sum/cnt)};
+  });
+}
+
+/* ── init ── */
+buildFace();drawPats();drawEx();measure();
+if(reduced){redraw();}
+else{
+  faceEl.classList.add('pre');state.rings.forEach((_,i)=>drawRing(i,true));ui();
+  let dealt=false;const go=()=>{if(dealt)return;dealt=true;faceEl.classList.remove('pre');deal();redraw();};
+  requestAnimationFrame(()=>requestAnimationFrame(go));setTimeout(go,260);
+}
+window.__meguri={euclid,getState,loadPreset,renderOffline,play:start,stop};
+})();
+</script>
+</body>
+</html>

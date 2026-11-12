@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>七十二候絵巻</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="一年を七十二の候に刻んだ古い暦を、右から左へ巻きすすめる一巻の絵巻にしました。開くと、きょうの候から始まります。">
+<meta name="theme-color" content="#22262c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2322262c'/%3E%3Crect x='9' y='6' width='14' height='20' rx='1.5' fill='%23a3293a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Shippori+Mincho+B1:wght@400;500&display=swap">
+<style>
+/* Layout: one hand scroll — vertical-rl panels flowing right to left between two cloth mounting bands; type hangs from the upper edge, the ink landscape lies along the lower. */
+:root{
+  color-scheme:light;
+  --paper:#e7e8e3;
+  --paper-hi:#f6f6f2;
+  --ink:#16181b;
+  --ink-2:#3a3f44;
+  --ink-3:#575e64;
+  --ink-pale:#b4b8b6;
+  --rule:#c3c7c3;
+  --band:#22262c;
+  --band-2:#272c33;
+  --band-3:#4a525c;
+  --band-ink:#e3e4de;
+  --band-ink-2:#9ba1a6;
+  --accent:#a3293a;
+  --accent-hi:#d58f99;
+  --jp:"Shippori Mincho B1","Shippori Mincho","Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","MS PMincho",serif;
+  --en:"Newsreader","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --ease:cubic-bezier(.2,.7,.1,1);
+  --ten:44px;
+  --chi:92px;
+  --pw:clamp(340px,28vw,460px);
+  --ns:min(14.2vh,150px);
+  --top:8.5%;
+}
+@supports (height:1dvh){:root{--ns:min(14.2dvh,150px)}}
+html{background:var(--band);padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+body{margin:0;background:var(--band);color:var(--ink);font-family:var(--jp);font-size:15px;line-height:1.9;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.emaki,.emaki *,.emaki *::before,.emaki *::after{box-sizing:border-box}
+:where(.emaki) :is(h1,h2,p){margin:0;font-weight:400}
+.emaki ::selection{background:var(--ink);color:var(--paper)}
+.emaki{position:relative;height:100vh;min-height:400px;overflow:hidden;background:var(--paper);color:var(--ink);font-family:var(--jp);font-kerning:normal;isolation:isolate;-webkit-font-smoothing:antialiased;line-break:strict}
+@supports (height:1dvh){.emaki{height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}}
+
+/* ---- landscape + paper ---- */
+#sansui{position:absolute;left:0;top:var(--ten);width:100%;height:calc(100% - var(--ten) - var(--chi));z-index:0;display:block;pointer-events:none}
+.grain{position:absolute;inset:var(--ten) 0 var(--chi) 0;z-index:1;pointer-events:none;mix-blend-mode:multiply;opacity:.55;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='a' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .44 0 0 0 0 .45 0 0 0 .55 -.08'/%3E%3C/filter%3E%3Cfilter id='b' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008 .42' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .42 0 0 0 0 .43 0 0 0 .55 -.24'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23a)'/%3E%3Crect width='320' height='320' filter='url(%23b)'/%3E%3C/svg%3E")}
+
+/* ---- mounting bands ---- */
+.ten,.chi{position:absolute;left:0;right:0;z-index:3;color:var(--band-ink);background:var(--band) repeating-linear-gradient(90deg,var(--band) 0 2px,var(--band-2) 2px 3px)}
+.ten{top:0;height:var(--ten);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 max(28px,env(safe-area-inset-right)) 0 max(28px,env(safe-area-inset-left));box-shadow:0 3px 0 var(--band-3)}
+.chi{bottom:0;height:var(--chi);display:flex;align-items:stretch;gap:26px;padding:0 max(28px,env(safe-area-inset-right)) 0 max(22px,env(safe-area-inset-left));box-shadow:0 -3px 0 var(--band-3)}
+.emaki button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:0}
+.ten-title{font-size:13px;letter-spacing:.42em;line-height:1;padding:10px 0;font-weight:500;transition:color .3s}
+.ten-title:hover{color:var(--paper-hi)}
+.ten-title .sr,.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.ten-now{font-size:12px;letter-spacing:.26em;line-height:1;color:var(--band-ink-2);white-space:nowrap}
+.ten-now b{font-weight:500;color:var(--band-ink);margin-right:1.1em}
+.emaki :is(button,.meter):focus-visible{outline:1px solid var(--band-ink);outline-offset:5px}
+
+/* ---- the scroll ---- */
+.emaki main{position:absolute;inset:var(--ten) 0 var(--chi) 0;z-index:2}
+.scroll{width:100%;height:100%;overflow-x:auto;overflow-y:hidden;writing-mode:vertical-rl;scrollbar-width:none;overscroll-behavior:contain;outline:none;-webkit-overflow-scrolling:touch;cursor:default}
+.scroll::-webkit-scrollbar{display:none}
+.scroll:focus-visible{box-shadow:inset 0 5px 0 var(--accent),inset 0 -5px 0 var(--accent)}
+.panel{position:relative;width:var(--pw);height:100%;--f:1}
+.ko-in{position:absolute;inset:var(--top) 0 0 0;writing-mode:horizontal-tb;display:flex;flex-direction:row-reverse;justify-content:center;align-items:flex-start;padding:0 16px}
+.ko-in>*{writing-mode:vertical-rl;flex:none}
+.ko.first::before{content:"";position:absolute;right:0;top:0;bottom:0;width:1px;background:linear-gradient(var(--rule),var(--rule) 46%,transparent 62%)}
+
+.meta{order:1;font-size:12.5px;line-height:1.95;letter-spacing:.2em;color:var(--ink-2);margin-top:calc(var(--ns)*.07)}
+.sekki,.date{display:block}
+.pos{margin-inline-start:.9em}
+.date{font-size:11.5px;letter-spacing:.14em;color:var(--ink-3)}
+.first .sekki{font-size:21px;line-height:1.6;letter-spacing:.16em;color:var(--ink);font-weight:500}
+.first .sekki rt{font-size:8.5px;letter-spacing:.12em;font-weight:400;color:var(--ink-3)}
+.first .pos{font-size:12.5px;font-weight:400;letter-spacing:.2em;color:var(--ink-2)}
+.kana{order:2;font-size:12.5px;line-height:1;letter-spacing:.36em;color:var(--ink-2);margin:calc(var(--ns)*.1) 10px 0 14px}
+.name{order:3;font-size:var(--ns);line-height:1;letter-spacing:.05em;font-weight:500!important;font-feature-settings:"vert";color:var(--ink)}
+.note{order:4;position:relative;font-size:15.5px;line-height:2.05;letter-spacing:.07em;height:17.3em;margin:calc(var(--ns)*1.08) calc(var(--ns)*.2) 0 0;text-wrap:pretty;word-break:auto-phrase;font-feature-settings:"vert"}
+.en{order:5;font-family:var(--en);font-style:italic;font-size:12.5px;line-height:1.5;letter-spacing:.03em;color:var(--ink-3);white-space:nowrap;margin:calc(var(--ns)*1.08) 14px 0 0}
+.en-no{font-style:normal;font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-inline-end:1.5em;font-variant-numeric:lining-nums}
+.seal{position:absolute;top:100%;left:.38em;margin-top:16px;writing-mode:vertical-rl;font-size:11px;line-height:1;letter-spacing:.12em;font-weight:500;color:var(--paper-hi);background:var(--accent);padding:5px 4px 4px;border-radius:1.5px;transform:rotate(-1.5deg);white-space:nowrap}
+
+/* focus by ink density: only the ko under the reader's eye is in full ink */
+.emaki.js .panel{--f:0}
+.emaki.js .ko .name{color:color-mix(in oklab,var(--ink) calc(var(--f)*100%),var(--ink-pale));filter:blur(calc((1 - var(--f))*1.1px))}
+.emaki.js .ko :is(.meta,.kana){opacity:calc(.34 + .66*var(--f))}
+.emaki.js .ko :is(.note,.en){opacity:calc(var(--f)*var(--f))}
+.emaki.js :is(.title-p,.pref-p,.colo-p) .ko-in{opacity:calc(.4 + .6*var(--f))}
+
+/* opening + closing panels */
+.title-p{width:clamp(300px,25vw,400px)}
+.pref-p{width:clamp(470px,37vw,580px)}
+.colo-p{width:clamp(380px,30vw,480px)}
+.t-name{order:2;font-size:calc(var(--ns)*.7);line-height:1;letter-spacing:.08em;font-weight:500!important}
+.t-kana{order:1;font-size:12px;line-height:1;letter-spacing:.5em;color:var(--ink-2);margin:calc(var(--ns)*.06) 14px 0 12px}
+.t-sub{order:3;position:relative;font-size:14.5px;letter-spacing:.24em;line-height:1;margin:calc(var(--ns)*1.5) calc(var(--ns)*.22) 0 0}
+.t-en{order:4;font-family:var(--en);font-style:italic;font-size:12.5px;letter-spacing:.03em;line-height:1;color:var(--ink-3);white-space:nowrap;margin:calc(var(--ns)*1.5) 16px 0 0}
+.prose{font-size:15px;line-height:2.15;letter-spacing:.07em;height:min(33em,calc(100% - 44px));text-wrap:pretty;word-break:auto-phrase;text-align:justify}
+.prose p+p{margin-block-start:1.1em}
+.prose h2{font-size:15px;font-weight:500;letter-spacing:.5em;margin:0;margin-block-end:1.4em}
+.prose .small{font-size:12.5px;line-height:2.1;letter-spacing:.1em;color:var(--ink-3);margin-block-start:2em;text-align:start}
+.prose kbd{font-family:var(--en);font-size:12px;letter-spacing:.04em}
+.tcy{text-combine-upright:all;-webkit-text-combine:horizontal}
+.prose .back{margin-block-start:2.2em;display:block}
+.prose .back button{writing-mode:vertical-rl;font-size:12.5px;letter-spacing:.3em;color:var(--ink);padding:12px 6px;border-right:1px solid var(--ink);transition:border-color .3s,color .3s}
+.prose .back button:hover{color:var(--accent);border-color:var(--accent)}
+.prose .back button:focus-visible{outline:1px solid var(--ink);outline-offset:4px}
+
+/* ---- year indicator (lower mounting) ---- */
+.kyo{align-self:center;flex:none;display:flex;align-items:center;gap:9px;font-size:13px;letter-spacing:.3em;line-height:1;min-width:44px;min-height:44px;padding:0 2px 0 4px;transition:opacity .4s}
+.kyo::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent-hi);flex:none}
+.kyo.at{opacity:.66}
+.kyo:hover{opacity:1;color:var(--paper-hi)}
+.meter{position:relative;flex:1;min-width:0;align-self:center;padding:8px 0 6px;touch-action:none;cursor:pointer;-webkit-user-select:none;user-select:none;--k:0;--t:0}
+.seasons,.ticks,.sekki-l{display:flex;flex-direction:row-reverse}
+.seasons span{flex:1;text-align:right;font-size:11.5px;line-height:1;letter-spacing:0;color:var(--band-ink-2);padding:0 0 7px;transform:translateX(5px)}
+.ticks{height:20px;border-top:1px solid var(--band-3)}
+.ticks i{flex:1;background:linear-gradient(var(--band-ink-2),var(--band-ink-2)) center top/1px 6px no-repeat;opacity:.75}
+.ticks i.s{background-size:1px 11px;opacity:1}
+.ticks i.q{background-size:1px 20px;opacity:1}
+.sekki-l{height:16px;align-items:flex-end}
+.sekki-l span{flex:1;min-width:0;display:flex;justify-content:center;white-space:nowrap;font-size:10.5px;line-height:1;letter-spacing:.08em;color:var(--band-ink-2);transition:color .4s}
+.sekki-l span.on{color:var(--paper-hi)}
+.thumb,.t-mark{position:absolute;pointer-events:none}
+.thumb{top:24px;height:28px;width:3px;margin-right:-1.5px;background:var(--paper-hi);right:calc((var(--k) + .5)/72*100%);border-radius:1px}
+.t-mark{top:17px;width:5px;height:5px;margin-right:-2.5px;border-radius:50%;background:var(--accent-hi);right:calc((var(--t) + .5)/72*100%)}
+.emaki:not(.js) :is(.thumb,.t-mark){display:none}
+
+/* ---- arrival: ink soaking into the paper, then rest ---- */
+@keyframes k-ink{from{opacity:0;filter:blur(16px)}55%{opacity:1}}
+@keyframes k-rise{from{opacity:0;transform:translateY(-10px)}}
+@keyframes k-fade{from{opacity:0}}
+@keyframes k-stamp{from{opacity:0;transform:rotate(-1.5deg) scale(1.25)}}
+.emaki.arrive .panel.is-cur :is(.name,.t-name){animation:k-ink 1.15s var(--ease) backwards}
+.emaki.arrive .panel.is-cur :is(.meta,.kana,.t-kana){animation:k-rise .8s .3s var(--ease) backwards}
+.emaki.arrive .panel.is-cur :is(.note,.en,.t-sub,.t-en,.prose){animation:k-fade .9s .5s ease-out backwards}
+.emaki.arrive .seal{animation:k-stamp .42s 1.05s cubic-bezier(.3,1.5,.5,1) backwards}
+.emaki.arrive #sansui{animation:k-fade 1.5s ease-out backwards}
+.emaki.arrive .panel:not(.is-cur) .ko-in{animation:k-fade 1.2s .35s ease-out backwards}
+
+/* ---- phone: one ko per screen ---- */
+@media (max-width:740px){
+  :root{--pw:100vw;--ns:min(13.6vh,27.5vw);--top:7%;--ten:42px;--chi:76px}
+  @supports (height:1dvh){:root{--ns:min(13.6dvh,27.5vw)}}
+  .panel,.title-p,.pref-p,.colo-p{width:100%}
+  .ten{padding:0 max(18px,env(safe-area-inset-right)) 0 max(18px,env(safe-area-inset-left))}
+  .chi{gap:14px;padding:0 max(22px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left))}
+  .ten-title{font-size:12px;letter-spacing:.34em}
+  .ten-now{font-size:11px;letter-spacing:.22em}
+  .meta{font-size:12px;line-height:1.85}
+  .kana{margin:calc(var(--ns)*.1) 8px 0 10px}
+  .note{font-size:15px;line-height:1.95;margin-right:calc(var(--ns)*.17)}
+  .en{font-size:12px;margin-right:12px}
+  .prose{font-size:14px;line-height:1.9;letter-spacing:.05em;height:min(40em,calc(100% - 14px))}
+  .prose p+p{margin-block-start:.8em}
+  .prose .keys{display:none}
+  .prose .small{margin-block-start:1.1em}
+  .prose .back{margin-block-start:1.2em}
+  .prose h2{margin-block-end:.9em}
+  :is(.pref-p,.colo-p) .ko-in{top:4.5%}
+  .ko-in{padding:0 18px}
+  .kyo{font-size:12.5px;letter-spacing:.24em;gap:7px}
+  .seasons span{font-size:11px;padding-bottom:6px}
+  .ticks{height:16px}
+  .ticks i.q{background-size:1px 16px}
+  .sekki-l span{visibility:hidden}
+  .emaki.js .sekki-l span.on{visibility:visible}
+  .thumb{height:24px}
+}
+@media (max-width:1040px) and (min-width:741px){
+  .sekki-l span{visibility:hidden}
+  .emaki.js .sekki-l span.on{visibility:visible}
+}
+@media (max-width:740px),(hover:none) and (pointer:coarse){
+  .scroll{scroll-snap-type:x mandatory}
+  .panel{scroll-snap-align:center}
+}
+@media (max-height:520px){:root{--chi:70px;--ten:36px}.seasons span{padding-bottom:4px}}
+@media (prefers-reduced-motion:reduce){
+  .emaki.arrive *{animation:none!important}
+  .emaki *{transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="emaki" id="emaki">
+  <canvas id="sansui" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="ten">
+    <button type="button" class="ten-title" id="toStart">七十二候絵巻<span class="sr">の巻頭へ戻る</span></button>
+    <p class="ten-now" id="now" aria-hidden="true" hidden></p>
+  </header>
+
+  <main>
+    <div class="scroll" id="scroll" tabindex="0" role="region" aria-label="七十二候の絵巻。右端の立春から左へ、一年が進みます。左右の矢印キーで一候ずつ移動できます。">
+      <section class="panel title-p" aria-labelledby="ttl">
+        <div class="ko-in">
+          <p class="t-kana">しちじゅうにこうえまき</p>
+          <h1 class="t-name" id="ttl">七十二候絵巻</h1>
+          <p class="t-sub">立春より大寒まで、一年を一巻に。<span class="seal" aria-hidden="true">候</span></p>
+          <p class="t-en" lang="en">The year as one hand scroll, in seventy-two micro-seasons</p>
+        </div>
+      </section>
+      <section class="panel pref-p" aria-label="序">
+        <div class="ko-in">
+          <div class="prose">
+            <h2>序</h2>
+            <p>一年を二十四の節気に分け、そのひとつひとつをさらに初候・次候・末候の三つに刻む。こうして生まれる七十二の季節を、七十二候という。およそ五日ごとに名があらたまる、こまやかな暦である。</p>
+            <p>もとは古代中国で編まれた。一六八五年、天文学者の渋川春海がこれを日本の気候に合わせて改め、貞享暦の「本朝七十二候」とした。いま用いられる名は、明治七年（一八七四年）の略本暦による。</p>
+            <p>この絵巻は、立春を右の端に置き、左へ左へと一年を巻きすすめる。開いたところが、きょうの候。背後の山水も、候にあわせて移ろってゆく。</p>
+            <p class="small keys">左右の矢印キーで一候ずつ。ホイールでも、指でも巻ける。<kbd>Home</kbd>・<kbd>End</kbd>で巻頭と巻末へ、<kbd class="tcy">T</kbd>で今日へ戻る。</p>
+          </div>
+        </div>
+      </section>
+<article class="panel ko first" id="ko-1" data-no="1" data-sekki="立春" data-pos="初候" data-name="東風解凍" data-kana="はるかぜこおりをとく" aria-labelledby="n1"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>立春<rt>りっしゅん</rt></ruby><span class="pos">初候</span></span><span class="date">二月四日〜八日頃</span></p><h2 class="name" id="n1">東風解凍</h2><p class="kana">はるかぜこおりをとく</p><p class="note">張りつめていた池の氷が岸から緩み、昼にはぴしりと割れる音がする。</p><p class="en" lang="en"><span class="en-no">no. 1</span>East wind melts the ice</p></div></article>
+<article class="panel ko" id="ko-2" data-no="2" data-sekki="立春" data-pos="次候" data-name="黄鶯睍睆" data-kana="うぐいすなく" aria-labelledby="n2"><div class="ko-in"><p class="meta"><span class="sekki">立春<span class="pos">次候</span></span><span class="date">二月九日〜十三日頃</span></p><h2 class="name" id="n2">黄鶯睍睆</h2><p class="kana">うぐいすなく</p><p class="note">藪の奥で鶯が鳴きはじめる。まだ節がつかず、ホーホケで途切れる朝。</p><p class="en" lang="en"><span class="en-no">no. 2</span>Bush warblers start singing in the mountains</p></div></article>
+<article class="panel ko" id="ko-3" data-no="3" data-sekki="立春" data-pos="末候" data-name="魚上氷" data-kana="うおこおりをいずる" aria-labelledby="n3"><div class="ko-in"><p class="meta"><span class="sekki">立春<span class="pos">末候</span></span><span class="date">二月十四日〜十八日頃</span></p><h2 class="name" id="n3">魚上氷</h2><p class="kana">うおこおりをいずる</p><p class="note">割れた氷のすきまに、鮒の背がゆらりと浮く。水はまだ指を刺す冷たさ。</p><p class="en" lang="en"><span class="en-no">no. 3</span>Fish emerge from the ice</p></div></article>
+<article class="panel ko first" id="ko-4" data-no="4" data-sekki="雨水" data-pos="初候" data-name="土脉潤起" data-kana="つちのしょううるおいおこる" aria-labelledby="n4"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>雨水<rt>うすい</rt></ruby><span class="pos">初候</span></span><span class="date">二月十九日〜二十三日頃</span></p><h2 class="name" id="n4">土脉潤起</h2><p class="kana">つちのしょううるおいおこる</p><p class="note">雪が雨にかわり、凍てた畑が黒く湿る。踏むと靴底に土が重くつく。</p><p class="en" lang="en"><span class="en-no">no. 4</span>Rain moistens the soil</p></div></article>
+<article class="panel ko" id="ko-5" data-no="5" data-sekki="雨水" data-pos="次候" data-name="霞始靆" data-kana="かすみはじめてたなびく" aria-labelledby="n5"><div class="ko-in"><p class="meta"><span class="sekki">雨水<span class="pos">次候</span></span><span class="date">二月二十四日〜二十八日頃</span></p><h2 class="name" id="n5">霞始靆</h2><p class="kana">かすみはじめてたなびく</p><p class="note">遠い山の裾が白くぼやけ、稜線だけが宙に浮いて見える。</p><p class="en" lang="en"><span class="en-no">no. 5</span>Mist starts to linger</p></div></article>
+<article class="panel ko" id="ko-6" data-no="6" data-sekki="雨水" data-pos="末候" data-name="草木萌動" data-kana="そうもくめばえいずる" aria-labelledby="n6"><div class="ko-in"><p class="meta"><span class="sekki">雨水<span class="pos">末候</span></span><span class="date">三月一日〜五日頃</span></p><h2 class="name" id="n6">草木萌動</h2><p class="kana">そうもくめばえいずる</p><p class="note">柳の枝先がうっすら緑を帯び、土手には蓬の若芽が頭を出している。</p><p class="en" lang="en"><span class="en-no">no. 6</span>Grass sprouts, trees bud</p></div></article>
+<article class="panel ko first" id="ko-7" data-no="7" data-sekki="啓蟄" data-pos="初候" data-name="蟄虫啓戸" data-kana="すごもりむしとをひらく" aria-labelledby="n7"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>啓蟄<rt>けいちつ</rt></ruby><span class="pos">初候</span></span><span class="date">三月六日〜十日頃</span></p><h2 class="name" id="n7">蟄虫啓戸</h2><p class="kana">すごもりむしとをひらく</p><p class="note">日なたの土が温み、石をどけると蟻や団子虫がのろのろ動きだす。</p><p class="en" lang="en"><span class="en-no">no. 7</span>Hibernating insects surface</p></div></article>
+<article class="panel ko" id="ko-8" data-no="8" data-sekki="啓蟄" data-pos="次候" data-name="桃始笑" data-kana="ももはじめてさく" aria-labelledby="n8"><div class="ko-in"><p class="meta"><span class="sekki">啓蟄<span class="pos">次候</span></span><span class="date">三月十一日〜十五日頃</span></p><h2 class="name" id="n8">桃始笑</h2><p class="kana">ももはじめてさく</p><p class="note">桃のつぼみがほどけ、濃い桃色が枝に沿って点々とひらく。</p><p class="en" lang="en"><span class="en-no">no. 8</span>First peach blossoms</p></div></article>
+<article class="panel ko" id="ko-9" data-no="9" data-sekki="啓蟄" data-pos="末候" data-name="菜虫化蝶" data-kana="なむしちょうとなる" aria-labelledby="n9"><div class="ko-in"><p class="meta"><span class="sekki">啓蟄<span class="pos">末候</span></span><span class="date">三月十六日〜二十日頃</span></p><h2 class="name" id="n9">菜虫化蝶</h2><p class="kana">なむしちょうとなる</p><p class="note">冬を越した蛹が割れ、紋白蝶が濡れた翅を菜の花の上で乾かしている。</p><p class="en" lang="en"><span class="en-no">no. 9</span>Caterpillars become butterflies</p></div></article>
+<article class="panel ko first" id="ko-10" data-no="10" data-sekki="春分" data-pos="初候" data-name="雀始巣" data-kana="すずめはじめてすくう" aria-labelledby="n10"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>春分<rt>しゅんぶん</rt></ruby><span class="pos">初候</span></span><span class="date">三月二十一日〜二十五日頃</span></p><h2 class="name" id="n10">雀始巣</h2><p class="kana">すずめはじめてすくう</p><p class="note">雀が枯れ草をくわえて瓦のすきまへ運ぶ。昼と夜の長さがそろう頃。</p><p class="en" lang="en"><span class="en-no">no. 10</span>Sparrows start to nest</p></div></article>
+<article class="panel ko" id="ko-11" data-no="11" data-sekki="春分" data-pos="次候" data-name="桜始開" data-kana="さくらはじめてひらく" aria-labelledby="n11"><div class="ko-in"><p class="meta"><span class="sekki">春分<span class="pos">次候</span></span><span class="date">三月二十六日〜三十日頃</span></p><h2 class="name" id="n11">桜始開</h2><p class="kana">さくらはじめてひらく</p><p class="note">蕾の先が割れて白がのぞき、南向きの枝から五、六輪ずつ開いてゆく。</p><p class="en" lang="en"><span class="en-no">no. 11</span>First cherry blossoms</p></div></article>
+<article class="panel ko" id="ko-12" data-no="12" data-sekki="春分" data-pos="末候" data-name="雷乃発声" data-kana="かみなりすなわちこえをはっす" aria-labelledby="n12"><div class="ko-in"><p class="meta"><span class="sekki">春分<span class="pos">末候</span></span><span class="date">三月三十一日〜四月四日頃</span></p><h2 class="name" id="n12">雷乃発声</h2><p class="kana">かみなりすなわちこえをはっす</p><p class="note">遠くで春の雷がひとつ鳴り、ひとしきりの雨が花びらを土に貼りつける。</p><p class="en" lang="en"><span class="en-no">no. 12</span>Distant thunder</p></div></article>
+<article class="panel ko first" id="ko-13" data-no="13" data-sekki="清明" data-pos="初候" data-name="玄鳥至" data-kana="つばめきたる" aria-labelledby="n13"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>清明<rt>せいめい</rt></ruby><span class="pos">初候</span></span><span class="date">四月五日〜九日頃</span></p><h2 class="name" id="n13">玄鳥至</h2><p class="kana">つばめきたる</p><p class="note">南の海を渡ってきた燕が、去年の軒先を低くかすめて飛ぶ。</p><p class="en" lang="en"><span class="en-no">no. 13</span>Swallows return</p></div></article>
+<article class="panel ko" id="ko-14" data-no="14" data-sekki="清明" data-pos="次候" data-name="鴻雁北" data-kana="こうがんかえる" aria-labelledby="n14"><div class="ko-in"><p class="meta"><span class="sekki">清明<span class="pos">次候</span></span><span class="date">四月十日〜十四日頃</span></p><h2 class="name" id="n14">鴻雁北</h2><p class="kana">こうがんかえる</p><p class="note">冬を田で過ごした雁が、鉤になり竿になり、北の空へ帰っていく。</p><p class="en" lang="en"><span class="en-no">no. 14</span>Wild geese fly north</p></div></article>
+<article class="panel ko" id="ko-15" data-no="15" data-sekki="清明" data-pos="末候" data-name="虹始見" data-kana="にじはじめてあらわる" aria-labelledby="n15"><div class="ko-in"><p class="meta"><span class="sekki">清明<span class="pos">末候</span></span><span class="date">四月十五日〜十九日頃</span></p><h2 class="name" id="n15">虹始見</h2><p class="kana">にじはじめてあらわる</p><p class="note">通り雨のあと、東の空に淡い虹が立つ。春の虹は色が薄く、すぐ消える。</p><p class="en" lang="en"><span class="en-no">no. 15</span>First rainbows</p></div></article>
+<article class="panel ko first" id="ko-16" data-no="16" data-sekki="穀雨" data-pos="初候" data-name="葭始生" data-kana="あしはじめてしょうず" aria-labelledby="n16"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>穀雨<rt>こくう</rt></ruby><span class="pos">初候</span></span><span class="date">四月二十日〜二十四日頃</span></p><h2 class="name" id="n16">葭始生</h2><p class="kana">あしはじめてしょうず</p><p class="note">水辺の泥から葦の芽が錐のように突き出す。角ぐむ、と昔の人は言った。</p><p class="en" lang="en"><span class="en-no">no. 16</span>First reeds sprout</p></div></article>
+<article class="panel ko" id="ko-17" data-no="17" data-sekki="穀雨" data-pos="次候" data-name="霜止出苗" data-kana="しもやみてなえいずる" aria-labelledby="n17"><div class="ko-in"><p class="meta"><span class="sekki">穀雨<span class="pos">次候</span></span><span class="date">四月二十五日〜二十九日頃</span></p><h2 class="name" id="n17">霜止出苗</h2><p class="kana">しもやみてなえいずる</p><p class="note">朝の霜の心配が去り、苗代の早苗が指の長さほどに揃ってくる。</p><p class="en" lang="en"><span class="en-no">no. 17</span>Last frost, rice seedlings grow</p></div></article>
+<article class="panel ko" id="ko-18" data-no="18" data-sekki="穀雨" data-pos="末候" data-name="牡丹華" data-kana="ぼたんはなさく" aria-labelledby="n18"><div class="ko-in"><p class="meta"><span class="sekki">穀雨<span class="pos">末候</span></span><span class="date">四月三十日〜五月四日頃</span></p><h2 class="name" id="n18">牡丹華</h2><p class="kana">ぼたんはなさく</p><p class="note">牡丹が掌より大きな花を開く。重みで茎がしなり、雨の日は傘を借りる。</p><p class="en" lang="en"><span class="en-no">no. 18</span>Peonies bloom</p></div></article>
+<article class="panel ko first" id="ko-19" data-no="19" data-sekki="立夏" data-pos="初候" data-name="蛙始鳴" data-kana="かわずはじめてなく" aria-labelledby="n19"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>立夏<rt>りっか</rt></ruby><span class="pos">初候</span></span><span class="date">五月五日〜九日頃</span></p><h2 class="name" id="n19">蛙始鳴</h2><p class="kana">かわずはじめてなく</p><p class="note">水を張った田で、日が落ちると蛙がいっせいに鳴きだす。</p><p class="en" lang="en"><span class="en-no">no. 19</span>Frogs start singing</p></div></article>
+<article class="panel ko" id="ko-20" data-no="20" data-sekki="立夏" data-pos="次候" data-name="蚯蚓出" data-kana="みみずいずる" aria-labelledby="n20"><div class="ko-in"><p class="meta"><span class="sekki">立夏<span class="pos">次候</span></span><span class="date">五月十日〜十四日頃</span></p><h2 class="name" id="n20">蚯蚓出</h2><p class="kana">みみずいずる</p><p class="note">雨あがりの道に蚯蚓が這い出ている。土の下がよく肥えているしるし。</p><p class="en" lang="en"><span class="en-no">no. 20</span>Worms surface</p></div></article>
+<article class="panel ko" id="ko-21" data-no="21" data-sekki="立夏" data-pos="末候" data-name="竹笋生" data-kana="たけのこしょうず" aria-labelledby="n21"><div class="ko-in"><p class="meta"><span class="sekki">立夏<span class="pos">末候</span></span><span class="date">五月十五日〜二十日頃</span></p><h2 class="name" id="n21">竹笋生</h2><p class="kana">たけのこしょうず</p><p class="note">真竹の筍が皮をつけたまま土を割る。伸びる日は一日に一尺を超える。</p><p class="en" lang="en"><span class="en-no">no. 21</span>Bamboo shoots sprout</p></div></article>
+<article class="panel ko first" id="ko-22" data-no="22" data-sekki="小満" data-pos="初候" data-name="蚕起食桑" data-kana="かいこおきてくわをはむ" aria-labelledby="n22"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>小満<rt>しょうまん</rt></ruby><span class="pos">初候</span></span><span class="date">五月二十一日〜二十五日頃</span></p><h2 class="name" id="n22">蚕起食桑</h2><p class="kana">かいこおきてくわをはむ</p><p class="note">孵った蚕が桑の葉を食む。蚕室じゅうに小雨の降るような音が満ちる。</p><p class="en" lang="en"><span class="en-no">no. 22</span>Silkworms start feasting on mulberry leaves</p></div></article>
+<article class="panel ko" id="ko-23" data-no="23" data-sekki="小満" data-pos="次候" data-name="紅花栄" data-kana="べにばなさかう" aria-labelledby="n23"><div class="ko-in"><p class="meta"><span class="sekki">小満<span class="pos">次候</span></span><span class="date">五月二十六日〜三十日頃</span></p><h2 class="name" id="n23">紅花栄</h2><p class="kana">べにばなさかう</p><p class="note">紅花が薊に似た黄色い花をつける。朝露で棘がやわらかいうちに摘む。</p><p class="en" lang="en"><span class="en-no">no. 23</span>Safflowers bloom</p></div></article>
+<article class="panel ko" id="ko-24" data-no="24" data-sekki="小満" data-pos="末候" data-name="麦秋至" data-kana="むぎのときいたる" aria-labelledby="n24"><div class="ko-in"><p class="meta"><span class="sekki">小満<span class="pos">末候</span></span><span class="date">五月三十一日〜六月五日頃</span></p><h2 class="name" id="n24">麦秋至</h2><p class="kana">むぎのときいたる</p><p class="note">麦の穂が乾いた金色に熟れ、風が渡ると畑全体がざわざわと鳴る。</p><p class="en" lang="en"><span class="en-no">no. 24</span>Wheat ripens and is harvested</p></div></article>
+<article class="panel ko first" id="ko-25" data-no="25" data-sekki="芒種" data-pos="初候" data-name="蟷螂生" data-kana="かまきりしょうず" aria-labelledby="n25"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>芒種<rt>ぼうしゅ</rt></ruby><span class="pos">初候</span></span><span class="date">六月六日〜十日頃</span></p><h2 class="name" id="n25">蟷螂生</h2><p class="kana">かまきりしょうず</p><p class="note">泡の固まったような卵から、糸くずほどの子蟷螂が連なって垂れてくる。</p><p class="en" lang="en"><span class="en-no">no. 25</span>Praying mantises hatch</p></div></article>
+<article class="panel ko" id="ko-26" data-no="26" data-sekki="芒種" data-pos="次候" data-name="腐草為螢" data-kana="くされたるくさほたるとなる" aria-labelledby="n26"><div class="ko-in"><p class="meta"><span class="sekki">芒種<span class="pos">次候</span></span><span class="date">六月十一日〜十五日頃</span></p><h2 class="name" id="n26">腐草為螢</h2><p class="kana">くされたるくさほたるとなる</p><p class="note">日が暮れきると、川べりの草の間で源氏蛍がゆっくり明滅をはじめる。</p><p class="en" lang="en"><span class="en-no">no. 26</span>Rotten grass becomes fireflies</p></div></article>
+<article class="panel ko" id="ko-27" data-no="27" data-sekki="芒種" data-pos="末候" data-name="梅子黄" data-kana="うめのみきばむ" aria-labelledby="n27"><div class="ko-in"><p class="meta"><span class="sekki">芒種<span class="pos">末候</span></span><span class="date">六月十六日〜二十日頃</span></p><h2 class="name" id="n27">梅子黄</h2><p class="kana">うめのみきばむ</p><p class="note">梅の実が黄ばんで甘く匂い、長雨のなか、ひとつ、またひとつ落ちる。</p><p class="en" lang="en"><span class="en-no">no. 27</span>Plums turn yellow</p></div></article>
+<article class="panel ko first" id="ko-28" data-no="28" data-sekki="夏至" data-pos="初候" data-name="乃東枯" data-kana="なつかれくさかるる" aria-labelledby="n28"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>夏至<rt>げし</rt></ruby><span class="pos">初候</span></span><span class="date">六月二十一日〜二十六日頃</span></p><h2 class="name" id="n28">乃東枯</h2><p class="kana">なつかれくさかるる</p><p class="note">靫草の紫の花穂が、夏至の頃に茶色く枯れる。まわりの草は盛りの緑。</p><p class="en" lang="en"><span class="en-no">no. 28</span>Self-heal withers</p></div></article>
+<article class="panel ko" id="ko-29" data-no="29" data-sekki="夏至" data-pos="次候" data-name="菖蒲華" data-kana="あやめはなさく" aria-labelledby="n29"><div class="ko-in"><p class="meta"><span class="sekki">夏至<span class="pos">次候</span></span><span class="date">六月二十七日〜七月一日頃</span></p><h2 class="name" id="n29">菖蒲華</h2><p class="kana">あやめはなさく</p><p class="note">雨の湿地に花菖蒲が開く。垂れた紫の花びらの元に、黄色い筋が一本。</p><p class="en" lang="en"><span class="en-no">no. 29</span>Irises bloom</p></div></article>
+<article class="panel ko" id="ko-30" data-no="30" data-sekki="夏至" data-pos="末候" data-name="半夏生" data-kana="はんげしょうず" aria-labelledby="n30"><div class="ko-in"><p class="meta"><span class="sekki">夏至<span class="pos">末候</span></span><span class="date">七月二日〜六日頃</span></p><h2 class="name" id="n30">半夏生</h2><p class="kana">はんげしょうず</p><p class="note">烏柄杓が細い苞を立てる。田植えはこの日までに終えるものとされた。</p><p class="en" lang="en"><span class="en-no">no. 30</span>Crow-dipper sprouts</p></div></article>
+<article class="panel ko first" id="ko-31" data-no="31" data-sekki="小暑" data-pos="初候" data-name="温風至" data-kana="あつかぜいたる" aria-labelledby="n31"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>小暑<rt>しょうしょ</rt></ruby><span class="pos">初候</span></span><span class="date">七月七日〜十一日頃</span></p><h2 class="name" id="n31">温風至</h2><p class="kana">あつかぜいたる</p><p class="note">梅雨明けが近づき、南からの風が湿った熱を運んでくる。</p><p class="en" lang="en"><span class="en-no">no. 31</span>Warm winds blow</p></div></article>
+<article class="panel ko" id="ko-32" data-no="32" data-sekki="小暑" data-pos="次候" data-name="蓮始開" data-kana="はすはじめてひらく" aria-labelledby="n32"><div class="ko-in"><p class="meta"><span class="sekki">小暑<span class="pos">次候</span></span><span class="date">七月十二日〜十六日頃</span></p><h2 class="name" id="n32">蓮始開</h2><p class="kana">はすはじめてひらく</p><p class="note">夜明けとともに蓮が開き、昼には閉じる。それを四日くり返して散る。</p><p class="en" lang="en"><span class="en-no">no. 32</span>First lotus blossoms</p></div></article>
+<article class="panel ko" id="ko-33" data-no="33" data-sekki="小暑" data-pos="末候" data-name="鷹乃学習" data-kana="たかすなわちわざをならう" aria-labelledby="n33"><div class="ko-in"><p class="meta"><span class="sekki">小暑<span class="pos">末候</span></span><span class="date">七月十七日〜二十二日頃</span></p><h2 class="name" id="n33">鷹乃学習</h2><p class="kana">たかすなわちわざをならう</p><p class="note">巣立ったばかりの若鷹が、親のあとを追って風の乗りかたを覚える。</p><p class="en" lang="en"><span class="en-no">no. 33</span>Hawks learn to fly</p></div></article>
+<article class="panel ko first" id="ko-34" data-no="34" data-sekki="大暑" data-pos="初候" data-name="桐始結花" data-kana="きりはじめてはなをむすぶ" aria-labelledby="n34"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>大暑<rt>たいしょ</rt></ruby><span class="pos">初候</span></span><span class="date">七月二十三日〜二十八日頃</span></p><h2 class="name" id="n34">桐始結花</h2><p class="kana">きりはじめてはなをむすぶ</p><p class="note">桐の梢に卵形の実が固く結ぶ。来春に咲く花の蕾も、もうそばにある。</p><p class="en" lang="en"><span class="en-no">no. 34</span>Paulownia trees produce seeds</p></div></article>
+<article class="panel ko" id="ko-35" data-no="35" data-sekki="大暑" data-pos="次候" data-name="土潤溽暑" data-kana="つちうるおうてむしあつし" aria-labelledby="n35"><div class="ko-in"><p class="meta"><span class="sekki">大暑<span class="pos">次候</span></span><span class="date">七月二十九日〜八月二日頃</span></p><h2 class="name" id="n35">土潤溽暑</h2><p class="kana">つちうるおうてむしあつし</p><p class="note">夕立のあとの土から湯気が立ち、草いきれが肌にまとわりつく。</p><p class="en" lang="en"><span class="en-no">no. 35</span>Earth is damp, air is humid</p></div></article>
+<article class="panel ko" id="ko-36" data-no="36" data-sekki="大暑" data-pos="末候" data-name="大雨時行" data-kana="たいうときどきふる" aria-labelledby="n36"><div class="ko-in"><p class="meta"><span class="sekki">大暑<span class="pos">末候</span></span><span class="date">八月三日〜七日頃</span></p><h2 class="name" id="n36">大雨時行</h2><p class="kana">たいうときどきふる</p><p class="note">入道雲がにわかに崩れ、叩きつける雨が半時ほどで過ぎていく。</p><p class="en" lang="en"><span class="en-no">no. 36</span>Great rains sometimes fall</p></div></article>
+<article class="panel ko first" id="ko-37" data-no="37" data-sekki="立秋" data-pos="初候" data-name="涼風至" data-kana="すずかぜいたる" aria-labelledby="n37"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>立秋<rt>りっしゅう</rt></ruby><span class="pos">初候</span></span><span class="date">八月八日〜十二日頃</span></p><h2 class="name" id="n37">涼風至</h2><p class="kana">すずかぜいたる</p><p class="note">日中は猛暑のまま。ただ日暮れの風に、ふと冷たい筋がまじる。</p><p class="en" lang="en"><span class="en-no">no. 37</span>Cool winds blow</p></div></article>
+<article class="panel ko" id="ko-38" data-no="38" data-sekki="立秋" data-pos="次候" data-name="寒蝉鳴" data-kana="ひぐらしなく" aria-labelledby="n38"><div class="ko-in"><p class="meta"><span class="sekki">立秋<span class="pos">次候</span></span><span class="date">八月十三日〜十七日頃</span></p><h2 class="name" id="n38">寒蝉鳴</h2><p class="kana">ひぐらしなく</p><p class="note">夕方の杉林で蜩がカナカナと鳴く。声は高く澄んで、すぐに止む。</p><p class="en" lang="en"><span class="en-no">no. 38</span>Evening cicadas sing</p></div></article>
+<article class="panel ko" id="ko-39" data-no="39" data-sekki="立秋" data-pos="末候" data-name="蒙霧升降" data-kana="ふかききりまとう" aria-labelledby="n39"><div class="ko-in"><p class="meta"><span class="sekki">立秋<span class="pos">末候</span></span><span class="date">八月十八日〜二十二日頃</span></p><h2 class="name" id="n39">蒙霧升降</h2><p class="kana">ふかききりまとう</p><p class="note">朝の冷えた空気が谷に霧をため、杉の梢だけが白い海から出ている。</p><p class="en" lang="en"><span class="en-no">no. 39</span>Thick fog descends</p></div></article>
+<article class="panel ko first" id="ko-40" data-no="40" data-sekki="処暑" data-pos="初候" data-name="綿柎開" data-kana="わたのはなしべひらく" aria-labelledby="n40"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>処暑<rt>しょしょ</rt></ruby><span class="pos">初候</span></span><span class="date">八月二十三日〜二十七日頃</span></p><h2 class="name" id="n40">綿柎開</h2><p class="kana">わたのはなしべひらく</p><p class="note">綿の実の萼がはじけ、中から白い綿毛がふくらんでこぼれる。</p><p class="en" lang="en"><span class="en-no">no. 40</span>Cotton flowers bloom</p></div></article>
+<article class="panel ko" id="ko-41" data-no="41" data-sekki="処暑" data-pos="次候" data-name="天地始粛" data-kana="てんちはじめてさむし" aria-labelledby="n41"><div class="ko-in"><p class="meta"><span class="sekki">処暑<span class="pos">次候</span></span><span class="date">八月二十八日〜九月一日頃</span></p><h2 class="name" id="n41">天地始粛</h2><p class="kana">てんちはじめてさむし</p><p class="note">朝夕の空気が締まり、稲穂の上を蜻蛉が群れて飛ぶようになる。</p><p class="en" lang="en"><span class="en-no">no. 41</span>Heat starts to die down</p></div></article>
+<article class="panel ko" id="ko-42" data-no="42" data-sekki="処暑" data-pos="末候" data-name="禾乃登" data-kana="こくものすなわちみのる" aria-labelledby="n42"><div class="ko-in"><p class="meta"><span class="sekki">処暑<span class="pos">末候</span></span><span class="date">九月二日〜七日頃</span></p><h2 class="name" id="n42">禾乃登</h2><p class="kana">こくものすなわちみのる</p><p class="note">稲穂が垂れて田が黄ばむ。台風の来やすい頃で、人は空ばかり見上げる。</p><p class="en" lang="en"><span class="en-no">no. 42</span>Rice ripens</p></div></article>
+<article class="panel ko first" id="ko-43" data-no="43" data-sekki="白露" data-pos="初候" data-name="草露白" data-kana="くさのつゆしろし" aria-labelledby="n43"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>白露<rt>はくろ</rt></ruby><span class="pos">初候</span></span><span class="date">九月八日〜十二日頃</span></p><h2 class="name" id="n43">草露白</h2><p class="kana">くさのつゆしろし</p><p class="note">夜のうちに冷えた草の葉に露が結び、朝日が当たるまで白く光る。</p><p class="en" lang="en"><span class="en-no">no. 43</span>Dew glistens white on grass</p></div></article>
+<article class="panel ko" id="ko-44" data-no="44" data-sekki="白露" data-pos="次候" data-name="鶺鴒鳴" data-kana="せきれいなく" aria-labelledby="n44"><div class="ko-in"><p class="meta"><span class="sekki">白露<span class="pos">次候</span></span><span class="date">九月十三日〜十七日頃</span></p><h2 class="name" id="n44">鶺鴒鳴</h2><p class="kana">せきれいなく</p><p class="note">川原の石の上で、鶺鴒が長い尾を上下に振りながらチチンと鳴く。</p><p class="en" lang="en"><span class="en-no">no. 44</span>Wagtails sing</p></div></article>
+<article class="panel ko" id="ko-45" data-no="45" data-sekki="白露" data-pos="末候" data-name="玄鳥去" data-kana="つばめさる" aria-labelledby="n45"><div class="ko-in"><p class="meta"><span class="sekki">白露<span class="pos">末候</span></span><span class="date">九月十八日〜二十二日頃</span></p><h2 class="name" id="n45">玄鳥去</h2><p class="kana">つばめさる</p><p class="note">電線に並んでいた燕が、ある朝そろって消える。南へ数千キロの旅。</p><p class="en" lang="en"><span class="en-no">no. 45</span>Swallows leave</p></div></article>
+<article class="panel ko first" id="ko-46" data-no="46" data-sekki="秋分" data-pos="初候" data-name="雷乃収声" data-kana="かみなりすなわちこえをおさむ" aria-labelledby="n46"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>秋分<rt>しゅうぶん</rt></ruby><span class="pos">初候</span></span><span class="date">九月二十三日〜二十七日頃</span></p><h2 class="name" id="n46">雷乃収声</h2><p class="kana">かみなりすなわちこえをおさむ</p><p class="note">夕立の雷が鳴らなくなり、空には入道雲にかわって鱗雲が広がる。</p><p class="en" lang="en"><span class="en-no">no. 46</span>Thunder ceases</p></div></article>
+<article class="panel ko" id="ko-47" data-no="47" data-sekki="秋分" data-pos="次候" data-name="蟄虫坏戸" data-kana="むしかくれてとをふさぐ" aria-labelledby="n47"><div class="ko-in"><p class="meta"><span class="sekki">秋分<span class="pos">次候</span></span><span class="date">九月二十八日〜十月二日頃</span></p><h2 class="name" id="n47">蟄虫坏戸</h2><p class="kana">むしかくれてとをふさぐ</p><p class="note">虫たちが土にもぐり、蛇は穴に入る。冬ごもりの支度は静かに進む。</p><p class="en" lang="en"><span class="en-no">no. 47</span>Insects hole up underground</p></div></article>
+<article class="panel ko" id="ko-48" data-no="48" data-sekki="秋分" data-pos="末候" data-name="水始涸" data-kana="みずはじめてかるる" aria-labelledby="n48"><div class="ko-in"><p class="meta"><span class="sekki">秋分<span class="pos">末候</span></span><span class="date">十月三日〜七日頃</span></p><h2 class="name" id="n48">水始涸</h2><p class="kana">みずはじめてかるる</p><p class="note">田の水を落として土を乾かす。稲刈りを待つ畦に彼岸花の赤が残る。</p><p class="en" lang="en"><span class="en-no">no. 48</span>Farmers drain fields</p></div></article>
+<article class="panel ko first" id="ko-49" data-no="49" data-sekki="寒露" data-pos="初候" data-name="鴻雁来" data-kana="こうがんきたる" aria-labelledby="n49"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>寒露<rt>かんろ</rt></ruby><span class="pos">初候</span></span><span class="date">十月八日〜十二日頃</span></p><h2 class="name" id="n49">鴻雁来</h2><p class="kana">こうがんきたる</p><p class="note">北の国から雁が渡ってくる。その年はじめての声を、初雁と呼ぶ。</p><p class="en" lang="en"><span class="en-no">no. 49</span>Wild geese return</p></div></article>
+<article class="panel ko" id="ko-50" data-no="50" data-sekki="寒露" data-pos="次候" data-name="菊花開" data-kana="きくのはなひらく" aria-labelledby="n50"><div class="ko-in"><p class="meta"><span class="sekki">寒露<span class="pos">次候</span></span><span class="date">十月十三日〜十七日頃</span></p><h2 class="name" id="n50">菊花開</h2><p class="kana">きくのはなひらく</p><p class="note">菊が開き、朝の庭に薬のような青い香りが立つ。</p><p class="en" lang="en"><span class="en-no">no. 50</span>Chrysanthemums bloom</p></div></article>
+<article class="panel ko" id="ko-51" data-no="51" data-sekki="寒露" data-pos="末候" data-name="蟋蟀在戸" data-kana="きりぎりすとにあり" aria-labelledby="n51"><div class="ko-in"><p class="meta"><span class="sekki">寒露<span class="pos">末候</span></span><span class="date">十月十八日〜二十二日頃</span></p><h2 class="name" id="n51">蟋蟀在戸</h2><p class="kana">きりぎりすとにあり</p><p class="note">夜が冷えて、虫の声が戸口まで寄ってくる。鳴く間合いは日ごとに遅い。</p><p class="en" lang="en"><span class="en-no">no. 51</span>Crickets chirp around the door</p></div></article>
+<article class="panel ko first" id="ko-52" data-no="52" data-sekki="霜降" data-pos="初候" data-name="霜始降" data-kana="しもはじめてふる" aria-labelledby="n52"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>霜降<rt>そうこう</rt></ruby><span class="pos">初候</span></span><span class="date">十月二十三日〜二十七日頃</span></p><h2 class="name" id="n52">霜始降</h2><p class="kana">しもはじめてふる</p><p class="note">山里の朝、畑の菜の葉が白い霜にふちどられる。日が差せばすぐ消える。</p><p class="en" lang="en"><span class="en-no">no. 52</span>First frost</p></div></article>
+<article class="panel ko" id="ko-53" data-no="53" data-sekki="霜降" data-pos="次候" data-name="霎時施" data-kana="こさめときどきふる" aria-labelledby="n53"><div class="ko-in"><p class="meta"><span class="sekki">霜降<span class="pos">次候</span></span><span class="date">十月二十八日〜十一月一日頃</span></p><h2 class="name" id="n53">霎時施</h2><p class="kana">こさめときどきふる</p><p class="note">晴れていた空がふいに曇り、ぱらぱらと降っては止む。時雨のはじまり。</p><p class="en" lang="en"><span class="en-no">no. 53</span>Light rains sometimes fall</p></div></article>
+<article class="panel ko" id="ko-54" data-no="54" data-sekki="霜降" data-pos="末候" data-name="楓蔦黄" data-kana="もみじつたきばむ" aria-labelledby="n54"><div class="ko-in"><p class="meta"><span class="sekki">霜降<span class="pos">末候</span></span><span class="date">十一月二日〜六日頃</span></p><h2 class="name" id="n54">楓蔦黄</h2><p class="kana">もみじつたきばむ</p><p class="note">冷えこんだ朝をいくつか越えて、楓は赤く、蔦は黄から紅へと色を移す。</p><p class="en" lang="en"><span class="en-no">no. 54</span>Maple leaves and ivy turn yellow</p></div></article>
+<article class="panel ko first" id="ko-55" data-no="55" data-sekki="立冬" data-pos="初候" data-name="山茶始開" data-kana="つばきはじめてひらく" aria-labelledby="n55"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>立冬<rt>りっとう</rt></ruby><span class="pos">初候</span></span><span class="date">十一月七日〜十一日頃</span></p><h2 class="name" id="n55">山茶始開</h2><p class="kana">つばきはじめてひらく</p><p class="note">垣根の山茶花が咲きはじめる。椿と違い、花びらは一枚ずつ散る。</p><p class="en" lang="en"><span class="en-no">no. 55</span>Camellias bloom</p></div></article>
+<article class="panel ko" id="ko-56" data-no="56" data-sekki="立冬" data-pos="次候" data-name="地始凍" data-kana="ちはじめてこおる" aria-labelledby="n56"><div class="ko-in"><p class="meta"><span class="sekki">立冬<span class="pos">次候</span></span><span class="date">十一月十二日〜十六日頃</span></p><h2 class="name" id="n56">地始凍</h2><p class="kana">ちはじめてこおる</p><p class="note">夜のうちに土の水が凍り、畑の表を霜柱が持ち上げる。踏むと、ざくりと沈む。</p><p class="en" lang="en"><span class="en-no">no. 56</span>Land starts to freeze</p></div></article>
+<article class="panel ko" id="ko-57" data-no="57" data-sekki="立冬" data-pos="末候" data-name="金盞香" data-kana="きんせんかさく" aria-labelledby="n57"><div class="ko-in"><p class="meta"><span class="sekki">立冬<span class="pos">末候</span></span><span class="date">十一月十七日〜二十一日頃</span></p><h2 class="name" id="n57">金盞香</h2><p class="kana">きんせんかさく</p><p class="note">水仙が咲きはじめる。白い花の芯に黄の盃、冷えた空気に香りが通る。</p><p class="en" lang="en"><span class="en-no">no. 57</span>Daffodils bloom</p></div></article>
+<article class="panel ko first" id="ko-58" data-no="58" data-sekki="小雪" data-pos="初候" data-name="虹蔵不見" data-kana="にじかくれてみえず" aria-labelledby="n58"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>小雪<rt>しょうせつ</rt></ruby><span class="pos">初候</span></span><span class="date">十一月二十二日〜二十六日頃</span></p><h2 class="name" id="n58">虹蔵不見</h2><p class="kana">にじかくれてみえず</p><p class="note">日の光が弱まり、雨が降っても虹が立たなくなる。空は低く、鈍い灰色。</p><p class="en" lang="en"><span class="en-no">no. 58</span>Rainbows hide</p></div></article>
+<article class="panel ko" id="ko-59" data-no="59" data-sekki="小雪" data-pos="次候" data-name="朔風払葉" data-kana="きたかぜこのはをはらう" aria-labelledby="n59"><div class="ko-in"><p class="meta"><span class="sekki">小雪<span class="pos">次候</span></span><span class="date">十一月二十七日〜十二月一日頃</span></p><h2 class="name" id="n59">朔風払葉</h2><p class="kana">きたかぜこのはをはらう</p><p class="note">北風がひと晩吹いて、欅の葉をあらかた落とす。朝、道は落ち葉で鳴る。</p><p class="en" lang="en"><span class="en-no">no. 59</span>North wind blows the leaves from the trees</p></div></article>
+<article class="panel ko" id="ko-60" data-no="60" data-sekki="小雪" data-pos="末候" data-name="橘始黄" data-kana="たちばなはじめてきばむ" aria-labelledby="n60"><div class="ko-in"><p class="meta"><span class="sekki">小雪<span class="pos">末候</span></span><span class="date">十二月二日〜六日頃</span></p><h2 class="name" id="n60">橘始黄</h2><p class="kana">たちばなはじめてきばむ</p><p class="note">常緑の葉のあいだで、橘の小さな実が黄色く色づいてくる。</p><p class="en" lang="en"><span class="en-no">no. 60</span>Tachibana citrus tree leaves start to turn yellow</p></div></article>
+<article class="panel ko first" id="ko-61" data-no="61" data-sekki="大雪" data-pos="初候" data-name="閉塞成冬" data-kana="そらさむくふゆとなる" aria-labelledby="n61"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>大雪<rt>たいせつ</rt></ruby><span class="pos">初候</span></span><span class="date">十二月七日〜十一日頃</span></p><h2 class="name" id="n61">閉塞成冬</h2><p class="kana">そらさむくふゆとなる</p><p class="note">重い雲が空をふさぎ、日本海側は雪、太平洋側は乾いた風の日が続く。</p><p class="en" lang="en"><span class="en-no">no. 61</span>Cold sets in, winter begins</p></div></article>
+<article class="panel ko" id="ko-62" data-no="62" data-sekki="大雪" data-pos="次候" data-name="熊蟄穴" data-kana="くまあなにこもる" aria-labelledby="n62"><div class="ko-in"><p class="meta"><span class="sekki">大雪<span class="pos">次候</span></span><span class="date">十二月十二日〜十六日頃</span></p><h2 class="name" id="n62">熊蟄穴</h2><p class="kana">くまあなにこもる</p><p class="note">熊が木の洞や土穴にこもる。雌はこの冬のあいだに、穴の中で子を産む。</p><p class="en" lang="en"><span class="en-no">no. 62</span>Bears start hibernating in their dens</p></div></article>
+<article class="panel ko" id="ko-63" data-no="63" data-sekki="大雪" data-pos="末候" data-name="鱖魚群" data-kana="さけのうおむらがる" aria-labelledby="n63"><div class="ko-in"><p class="meta"><span class="sekki">大雪<span class="pos">末候</span></span><span class="date">十二月十七日〜二十一日頃</span></p><h2 class="name" id="n63">鱖魚群</h2><p class="kana">さけのうおむらがる</p><p class="note">鮭が群れをなして生まれた川をさかのぼる。浅瀬で背びれが水を切る。</p><p class="en" lang="en"><span class="en-no">no. 63</span>Salmon gather and swim upstream</p></div></article>
+<article class="panel ko first" id="ko-64" data-no="64" data-sekki="冬至" data-pos="初候" data-name="乃東生" data-kana="なつかれくさしょうず" aria-labelledby="n64"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>冬至<rt>とうじ</rt></ruby><span class="pos">初候</span></span><span class="date">十二月二十二日〜二十六日頃</span></p><h2 class="name" id="n64">乃東生</h2><p class="kana">なつかれくさしょうず</p><p class="note">草という草が枯れた野に、靫草だけが芽を出す。昼がいちばん短い頃。</p><p class="en" lang="en"><span class="en-no">no. 64</span>Self-heal sprouts</p></div></article>
+<article class="panel ko" id="ko-65" data-no="65" data-sekki="冬至" data-pos="次候" data-name="麋角解" data-kana="さわしかのつのおつる" aria-labelledby="n65"><div class="ko-in"><p class="meta"><span class="sekki">冬至<span class="pos">次候</span></span><span class="date">十二月二十七日〜三十一日頃</span></p><h2 class="name" id="n65">麋角解</h2><p class="kana">さわしかのつのおつる</p><p class="note">大鹿の雄が角を落とす。根元からぽろりと外れ、春にはまた生えてくる。</p><p class="en" lang="en"><span class="en-no">no. 65</span>Deer shed antlers</p></div></article>
+<article class="panel ko" id="ko-66" data-no="66" data-sekki="冬至" data-pos="末候" data-name="雪下出麦" data-kana="ゆきわたりてむぎのびる" aria-labelledby="n66"><div class="ko-in"><p class="meta"><span class="sekki">冬至<span class="pos">末候</span></span><span class="date">一月一日〜四日頃</span></p><h2 class="name" id="n66">雪下出麦</h2><p class="kana">ゆきわたりてむぎのびる</p><p class="note">雪の下で麦が芽を出している。霜で浮いた根を、人が踏んで押さえにくる。</p><p class="en" lang="en"><span class="en-no">no. 66</span>Wheat sprouts under snow</p></div></article>
+<article class="panel ko first" id="ko-67" data-no="67" data-sekki="小寒" data-pos="初候" data-name="芹乃栄" data-kana="せりすなわちさかう" aria-labelledby="n67"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>小寒<rt>しょうかん</rt></ruby><span class="pos">初候</span></span><span class="date">一月五日〜九日頃</span></p><h2 class="name" id="n67">芹乃栄</h2><p class="kana">せりすなわちさかう</p><p class="note">冷たい流れの縁に芹が競り合うように茂る。七草粥に摘まれる頃。</p><p class="en" lang="en"><span class="en-no">no. 67</span>Parsley flourishes</p></div></article>
+<article class="panel ko" id="ko-68" data-no="68" data-sekki="小寒" data-pos="次候" data-name="水泉動" data-kana="しみずあたたかをふくむ" aria-labelledby="n68"><div class="ko-in"><p class="meta"><span class="sekki">小寒<span class="pos">次候</span></span><span class="date">一月十日〜十四日頃</span></p><h2 class="name" id="n68">水泉動</h2><p class="kana">しみずあたたかをふくむ</p><p class="note">地表は凍ったままでも、地中では泉の水がわずかに温み、動きはじめる。</p><p class="en" lang="en"><span class="en-no">no. 68</span>Springs thaw</p></div></article>
+<article class="panel ko" id="ko-69" data-no="69" data-sekki="小寒" data-pos="末候" data-name="雉始雊" data-kana="きじはじめてなく" aria-labelledby="n69"><div class="ko-in"><p class="meta"><span class="sekki">小寒<span class="pos">末候</span></span><span class="date">一月十五日〜十九日頃</span></p><h2 class="name" id="n69">雉始雊</h2><p class="kana">きじはじめてなく</p><p class="note">枯れ野で雄の雉がケーンと鋭く鳴き、続けて翼を激しく打ち鳴らす。</p><p class="en" lang="en"><span class="en-no">no. 69</span>Pheasants start to call</p></div></article>
+<article class="panel ko first" id="ko-70" data-no="70" data-sekki="大寒" data-pos="初候" data-name="款冬華" data-kana="ふきのはなさく" aria-labelledby="n70"><div class="ko-in"><p class="meta"><span class="sekki"><ruby>大寒<rt>だいかん</rt></ruby><span class="pos">初候</span></span><span class="date">一月二十日〜二十四日頃</span></p><h2 class="name" id="n70">款冬華</h2><p class="kana">ふきのはなさく</p><p class="note">凍った土を割って蕗の薹が顔を出す。苞に包まれた、苦い黄緑の蕾。</p><p class="en" lang="en"><span class="en-no">no. 70</span>Butterburs bud</p></div></article>
+<article class="panel ko" id="ko-71" data-no="71" data-sekki="大寒" data-pos="次候" data-name="水沢腹堅" data-kana="さわみずこおりつめる" aria-labelledby="n71"><div class="ko-in"><p class="meta"><span class="sekki">大寒<span class="pos">次候</span></span><span class="date">一月二十五日〜二十九日頃</span></p><h2 class="name" id="n71">水沢腹堅</h2><p class="kana">さわみずこおりつめる</p><p class="note">沢の流れが厚く凍りつき、氷の下でかすかに水の音がする。寒さの底。</p><p class="en" lang="en"><span class="en-no">no. 71</span>Ice thickens on streams</p></div></article>
+<article class="panel ko" id="ko-72" data-no="72" data-sekki="大寒" data-pos="末候" data-name="鶏始乳" data-kana="にわとりはじめてとやにつく" aria-labelledby="n72"><div class="ko-in"><p class="meta"><span class="sekki">大寒<span class="pos">末候</span></span><span class="date">一月三十日〜二月三日頃</span></p><h2 class="name" id="n72">鶏始乳</h2><p class="kana">にわとりはじめてとやにつく</p><p class="note">日脚が伸びたのを感じて、鶏が卵を産みはじめる。次の候は、立春。</p><p class="en" lang="en"><span class="en-no">no. 72</span>Hens start laying eggs</p></div></article>
+
+      <footer class="panel colo-p" aria-label="奥付">
+        <div class="ko-in">
+          <div class="prose">
+            <h2>奥付</h2>
+            <p>候の日付はおよその目安である。太陽の動きで決まるため、年によって一日ほど前後する。</p>
+            <p>候の名は明治七年の略本暦に拠り、英語は慣用の訳を添えた。</p>
+            <p>書体は、しっぽり明朝<span class="tcy">B1</span>と<span lang="en">Newsreader</span>。</p>
+            <p>背後の山水は、開くたびにコードが描きおろしている。画像はひとつも使っていない。</p>
+            <p class="small">本作は独立したコンセプト作品であり、実在の団体や刊行物とは関係がない。</p>
+            <p class="back"><button type="button" id="toStart2">巻頭へ戻る</button></p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <nav class="chi" aria-label="一年のなかの位置">
+    <button type="button" class="kyo" id="kyo" aria-keyshortcuts="T" hidden>今日</button>
+    <div class="meter" id="meter">
+      <div class="seasons" aria-hidden="true"><span>春</span><span>夏</span><span>秋</span><span>冬</span></div>
+      <div class="ticks" id="ticks" aria-hidden="true"><i class="q"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="q"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="q"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="q"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i><i class="s"></i><i></i><i></i></div>
+      <div class="sekki-l" id="sekkiL" aria-hidden="true"><span>立春</span><span>雨水</span><span>啓蟄</span><span>春分</span><span>清明</span><span>穀雨</span><span>立夏</span><span>小満</span><span>芒種</span><span>夏至</span><span>小暑</span><span>大暑</span><span>立秋</span><span>処暑</span><span>白露</span><span>秋分</span><span>寒露</span><span>霜降</span><span>立冬</span><span>小雪</span><span>大雪</span><span>冬至</span><span>小寒</span><span>大寒</span></div>
+      <span class="thumb" aria-hidden="true"></span><span class="t-mark" aria-hidden="true"></span>
+    </div>
+  </nav>
+</div>
+
+<script>
+(function(){
+'use strict';
+var root=document.getElementById('emaki'),sc=document.getElementById('scroll');
+if(!root||!sc)return;
+var D=[[2,4,"w"],[2,9,"c"],[2,14,"c"],[2,19,"d"],[2,24,"m"],[3,1,"c"],[3,6,"c"],[3,11,"c"],[3,16,"c"],[3,21,"c"],[3,26,"p"],[3,31,"r"],[4,5,"s"],[4,10,"g"],[4,15,"b"],[4,20,"c"],[4,25,"c"],[4,30,"c"],[5,5,"c"],[5,10,"c"],[5,15,"d"],[5,21,"c"],[5,26,"c"],[5,31,"w"],[6,6,"c"],[6,11,"f"],[6,16,"r"],[6,21,"r"],[6,27,"d"],[7,2,"r"],[7,7,"w"],[7,12,"c"],[7,17,"c"],[7,23,"c"],[7,29,"m"],[8,3,"R"],[8,8,"w"],[8,13,"c"],[8,18,"m"],[8,23,"c"],[8,28,"c"],[9,2,"w"],[9,8,"e"],[9,13,"c"],[9,18,"s"],[9,23,"c"],[9,28,"c"],[10,3,"c"],[10,8,"g"],[10,13,"c"],[10,18,"c"],[10,23,"F"],[10,28,"d"],[11,2,"l"],[11,7,"c"],[11,12,"F"],[11,17,"c"],[11,22,"c"],[11,27,"L"],[12,2,"c"],[12,7,"N"],[12,12,"n"],[12,17,"t"],[12,22,"c"],[12,27,"n"],[1,1,"N"],[1,5,"c"],[1,10,"c"],[1,15,"c"],[1,20,"N"],[1,25,"n"],[1,30,"c"]];
+var NK=72,panels=Array.prototype.slice.call(sc.children),NP=panels.length,K0=2;
+var kyo=document.getElementById('kyo'),nowEl=document.getElementById('now'),meter=document.getElementById('meter'),
+    ticks=document.getElementById('ticks'),sekkiSpans=document.getElementById('sekkiL').children,cv=document.getElementById('sansui');
+var mqR=matchMedia('(prefers-reduced-motion: reduce)'),mqS=matchMedia('(max-width:740px), (hover:none) and (pointer:coarse)');
+var reduce=mqR.matches,snap=mqS.matches;
+function clamp(v,a,b){return v<a?a:v>b?b:v}
+function mod(a,n){return((a%n)+n)%n}
+function kan(n){var K=['','一','二','三','四','五','六','七','八','九'],t=Math.floor(n/10),o=n%10;return(t>1?K[t]:'')+(t?'十':'')+K[o]}
+root.classList.add('js');
+
+/* ---------- today ---------- */
+function todayKo(){var n=new Date(),key=(n.getMonth()+1)*100+n.getDate(),r=0,i,k;if(key<204)key+=1200;
+  for(i=0;i<NK;i++){k=D[i][0]*100+D[i][1];if(k<204)k+=1200;if(k<=key)r=i}return r}
+var tKo=todayKo(),tIdx=K0+tKo;
+(function(){var p=panels[tIdx],note=p.querySelector('.note'),s=document.createElement('span');
+  p.setAttribute('aria-current','date');s.className='seal';s.textContent='今日';note.appendChild(s);})();
+meter.style.setProperty('--t',tKo);
+
+/* ---------- geometry ---------- */
+var cx=[],W=0,minS=0,FX=.5,pwRef=360;
+function measure(){var r=sc.getBoundingClientRect(),s=sc.scrollLeft,i,b;W=sc.clientWidth;minS=-(sc.scrollWidth-W);cx=[];
+  for(i=0;i<NP;i++){b=panels[i].getBoundingClientRect();cx.push(b.left-r.left+b.width/2+s)}
+  pwRef=panels[K0].getBoundingClientRect().width||360}
+function stopOf(i){return clamp(cx[i]-W*FX,minS,0)}
+function posOf(s){var c=s+W*FX,i;if(c>=cx[0])return 0;if(c<=cx[NP-1])return NP-1;
+  for(i=0;i<NP-1;i++){if(c<=cx[i]&&c>=cx[i+1])return i+(cx[i]-c)/(cx[i]-cx[i+1])}return 0}
+
+/* ---------- travel ---------- */
+var anim=false,curF=0,target=0,ease=.14,lastSet=0,aimIdx=tIdx,aimUntil=0,dragging=false,settleT=0;
+function goTo(i,mode){i=clamp(i,0,NP-1);var t=stopOf(i);aimIdx=i;aimUntil=performance.now()+700;
+  if(mode==='jump'||reduce){anim=false;sc.scrollLeft=t;schedule();return}
+  if(snap){anim=false;sc.scrollTo({left:t,behavior:'smooth'});return}
+  if(!anim)curF=sc.scrollLeft;target=t;ease=mode||.13;anim=true;schedule()}
+function baseIdx(){return performance.now()<aimUntil?aimIdx:Math.round(posOf(sc.scrollLeft))}
+function settle(){clearTimeout(settleT);if(snap||reduce)return;
+  settleT=setTimeout(function(){var sl=sc.scrollLeft;if(anim||dragging||sl>-2||sl<minS+2)return;var i=Math.round(posOf(sc.scrollLeft));if(Math.abs(stopOf(i)-sc.scrollLeft)>1)goTo(i,.07)},240)}
+
+var wAcc=0,wLock=0;
+root.addEventListener('wheel',function(e){
+  if(e.ctrlKey)return;
+  var dx=e.deltaX,dy=e.deltaY;
+  if(Math.abs(dx)>=Math.abs(dy)){anim=false;return}           /* horizontal trackpad gestures stay native */
+  e.preventDefault();
+  var m=e.deltaMode===1?32:e.deltaMode===2?W*.8:1;
+  if(snap){var n=performance.now();wAcc+=dy*m;if(n>wLock&&Math.abs(wAcc)>40){goTo(baseIdx()+(wAcc>0?1:-1));wLock=n+320;wAcc=0}return}
+  if(reduce){sc.scrollLeft=clamp(sc.scrollLeft-dy*m,minS,0);return}
+  if(!anim){curF=sc.scrollLeft;target=curF}
+  target=clamp(target-dy*m*1.2,minS,0);ease=.17;anim=true;aimUntil=0;schedule();settle();
+},{passive:false});
+sc.addEventListener('scroll',function(){
+  if(anim&&Math.abs(sc.scrollLeft-lastSet)>4)anim=false;
+  if(!anim)settle();
+  schedule();
+},{passive:true});
+sc.addEventListener('pointerdown',function(){anim=false},{passive:true});
+sc.addEventListener('touchstart',function(){anim=false;aimUntil=0},{passive:true});
+
+document.addEventListener('keydown',function(e){
+  if(e.altKey||e.ctrlKey||e.metaKey)return;
+  var t=e.target,tag=t&&t.tagName,inRoot=t&&root.contains(t);
+  if(!inRoot&&t!==document.body&&t!==document.documentElement)return;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+  var onMeter=t===meter,k=e.key;
+  if(k==='ArrowLeft'||(onMeter&&k==='ArrowUp'))goTo(baseIdx()+1);
+  else if(k==='ArrowRight'||(onMeter&&k==='ArrowDown'))goTo(baseIdx()-1);
+  else if(k==='Home')goTo(onMeter?K0:0);
+  else if(k==='End')goTo(onMeter?K0+NK-1:NP-1);
+  else if(k==='t'||k==='T')goTo(tIdx);
+  else return;
+  e.preventDefault();
+});
+kyo.hidden=false;nowEl.hidden=false;
+kyo.addEventListener('click',function(){goTo(tIdx)});
+document.getElementById('toStart').addEventListener('click',function(){goTo(0)});
+document.getElementById('toStart2').addEventListener('click',function(){goTo(0);sc.focus({preventScroll:true})});
+
+/* ---------- year indicator ---------- */
+meter.setAttribute('role','slider');meter.tabIndex=0;meter.setAttribute('aria-label','候を選ぶ');
+meter.setAttribute('aria-orientation','horizontal');meter.setAttribute('aria-valuemin','1');meter.setAttribute('aria-valuemax','72');
+function seek(e,drag){var r=ticks.getBoundingClientRect(),i=clamp(Math.floor((r.right-e.clientX)/r.width*NK),0,NK-1);
+  if(snap)goTo(K0+i,drag?'jump':undefined);else goTo(K0+i,drag?.22:.13)}
+meter.addEventListener('pointerdown',function(e){if(e.button)return;dragging=true;try{meter.setPointerCapture(e.pointerId)}catch(_){}seek(e,false)});
+meter.addEventListener('pointermove',function(e){if(dragging)seek(e,true)});
+function endDrag(){dragging=false}
+meter.addEventListener('pointerup',endDrag);meter.addEventListener('pointercancel',endDrag);meter.addEventListener('lostpointercapture',endDrag);
+
+/* ---------- seasonal accent ---------- */
+var AK=[[0,176,58,82],[10,190,84,112],[18,92,132,58],[27,28,120,112],[36,44,98,150],[45,176,104,24],[52,170,52,30],[55,163,41,58],[63,58,70,128],[69,86,84,140],[72,176,58,82]];
+var ACC=[163,41,58],accKey=-1;
+function setAccent(y){var q=Math.round(y*4)/4,i,a,b,f;if(q===accKey)return;accKey=q;
+  for(i=0;i<AK.length-1;i++)if(q<=AK[i+1][0])break;a=AK[i];b=AK[Math.min(i+1,AK.length-1)];f=(q-a[0])/((b[0]-a[0])||1);
+  ACC=[Math.round(a[1]+(b[1]-a[1])*f),Math.round(a[2]+(b[2]-a[2])*f),Math.round(a[3]+(b[3]-a[3])*f)];
+  root.style.setProperty('--accent','rgb('+ACC.join(',')+')');
+  root.style.setProperty('--accent-hi','rgb('+ACC.map(function(v){return Math.round(v+(255-v)*.5)}).join(',')+')')}
+
+/* ---------- sync UI with scroll ---------- */
+var pos=tIdx,curIdx=-1,lit=[],lastK=-9,lastSek=-1;
+function sync(s){
+  var c=s+W*FX,i,d,f,ci,lo,hi,nl=[];
+  pos=posOf(s);ci=Math.round(pos);lo=Math.max(0,ci-3);hi=Math.min(NP-1,ci+3);
+  for(i=lo;i<=hi;i++){d=Math.abs(cx[i]-c)/(pwRef*.8);f=i<K0?clamp(1-(pos-1.35)/.75,0,1):i>=K0+NK?clamp((pos-(NP-2.75))/.6,0,1):clamp(1-d,0,1);f=f*f*(3-2*f);
+    panels[i].style.setProperty('--f',f.toFixed(3));nl.push(i)}
+  for(i=0;i<lit.length;i++)if(lit[i]<lo||lit[i]>hi)panels[lit[i]].style.removeProperty('--f');
+  lit=nl;
+  var y=clamp(pos-K0,0,NK-1);
+  if(Math.abs(y-lastK)>.004){lastK=y;meter.style.setProperty('--k',y.toFixed(3))}
+  setAccent(y);
+  if(ci!==curIdx){
+    if(curIdx>=0)panels[curIdx].classList.remove('is-cur');
+    curIdx=ci;var p=panels[ci];p.classList.add('is-cur');
+    var ki=clamp(ci-K0,0,NK-1),kp=panels[K0+ki],ds=kp.dataset,sek=Math.floor(ki/3);
+    if(ci<K0)nowEl.textContent='巻頭';else if(ci>=K0+NK)nowEl.textContent='巻末';
+    else{nowEl.textContent='';var b=document.createElement('b');b.textContent=ds.sekki+'　'+ds.pos;nowEl.appendChild(b);nowEl.appendChild(document.createTextNode('第'+kan(+ds.no)+'候'))}
+    meter.setAttribute('aria-valuenow',ki+1);
+    meter.setAttribute('aria-valuetext','第'+(ki+1)+'候 '+ds.name+'（'+ds.kana+'） '+ds.sekki+' '+ds.pos+(ki===tKo?' 今日の候':''));
+    if(sek!==lastSek){if(lastSek>=0)sekkiSpans[lastSek].classList.remove('on');sekkiSpans[sek].classList.add('on');lastSek=sek}
+    kyo.classList.toggle('at',ci===tIdx);
+  }
+}
+
+/* ---------- sumi-e landscape ---------- */
+var g=cv.getContext('2d'),CW=0,CH=0,dpr=1;
+function hex(v){v=v.trim().replace('#','');return[parseInt(v.substr(0,2),16),parseInt(v.substr(2,2),16),parseInt(v.substr(4,2),16)]}
+var cs=getComputedStyle(root),INK=hex(cs.getPropertyValue('--ink')),PAPER=hex(cs.getPropertyValue('--paper')),HI=hex(cs.getPropertyValue('--paper-hi'));
+function rgba(c,a){return'rgba('+c[0]+','+c[1]+','+c[2]+','+(a<0?0:a>1?1:a).toFixed(3)+')'}
+var SEED=Math.random()*900+7;
+function h(n){var s=Math.sin(n*127.1+SEED)*43758.5453;return s-Math.floor(s)}
+function n1(x){var i=Math.floor(x),f=x-i,u=f*f*(3-2*f);return h(i)*(1-u)+h(i+1)*u}
+function fbm(x,o){var a=.5,s=0,t=0,k;for(k=0;k<o;k++){s+=a*n1(x);t+=a;x=x*2.03+17.1;a*=.5}return s/t}
+var PR=[];(function(){for(var i=0;i<420;i++)PR.push({x:Math.random(),y:Math.random(),s:Math.random(),v:Math.random(),p:Math.random()})})();
+var LAY=[{k:.05,base:.615,amp:.235,sc:560,a:.115,oct:3,o:3.7,fade:.10},
+         {k:.11,base:.69,amp:.19,sc:400,a:.18,oct:4,o:41.3,fade:.10},
+         {k:.22,base:.775,amp:.15,sc:270,a:.27,oct:4,o:87.9,fade:.09},
+         {k:.5,base:.955,amp:.075,sc:230,a:.44,oct:3,o:131.2,fade:.07}];
+function resizeCanvas(){var r=cv.getBoundingClientRect();CW=Math.max(1,r.width);CH=Math.max(1,r.height);
+  dpr=Math.min(window.devicePixelRatio||1,CW<741?2:1.5);cv.width=Math.round(CW*dpr);cv.height=Math.round(CH*dpr)}
+function bump(y,c,w){var d=Math.abs(y-c);d=Math.min(d,72-d);return Math.exp(-(d*d)/(2*w*w))}
+function season(y){var snow=clamp(bump(y,66.5,5.6),0,1);
+  return{snow:snow,fol:.1+.9*bump(y,30,13),warm:bump(y,52.5,3.3),grass:.18+.82*bump(y,29,14),
+    sun:.5+.5*Math.cos((y-27.5)/72*6.2832),mist:.3+.4*bump(y,4,1.5)+.25*bump(y,34,1.2)+.15*snow,ice:clamp(bump(y,70,4.5)+.55*bump(y,55,1.3),0,1)}}
+function weather(p){var w={},i,v,c,i0=Math.max(0,Math.floor(p-1)),i1=Math.min(NK-1,Math.ceil(p+1));
+  for(i=i0;i<=i1;i++){v=1-Math.abs(p-i)/.9;if(v>0){v=v*v*(3-2*v);c=D[i][2];if(v>(w[c]||0))w[c]=v}}
+  function q(c){return w[c]||0}
+  return{rain:Math.min(1.3,q('r')*.75+q('R')*1.3+q('t')*.45),driz:q('d')+q('b')*.35,snow:Math.min(1,q('n')+q('N')*.42+q('t')*.4),
+    wind:Math.max(q('w'),q('L')),leaves:Math.min(1,q('l')*.7+q('L')),mist:q('m'),petals:q('p'),swal:q('s'),geese:q('g'),bow:q('b'),fire:q('f'),dew:q('e'),frost:q('F')}}
+
+function draw(t){
+  var s=sc.scrollLeft,y=clamp(pos-K0,0,NK-1),S=season(y),Wt=weather(pos-K0),u=clamp(CH/760,.62,1.45),i,j,a,gr,sx,yy;
+  g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,CW,CH);g.lineCap='round';
+
+  /* horizon wash */
+  var skyA=.035+.06*S.snow+.06*Math.min(1,Wt.rain)+.05*Wt.snow+.03*Wt.driz;
+  gr=g.createLinearGradient(0,CH*.2,0,CH);gr.addColorStop(0,rgba(INK,0));gr.addColorStop(.55,rgba(INK,skyA));gr.addColorStop(1,rgba(INK,skyA*.3));
+  g.fillStyle=gr;g.fillRect(0,CH*.2,CW,CH*.8);
+
+  /* the sun, left as bare paper inside a ring of wash */
+  var sunX=CW*(CW<741?.25:.2)+Math.sin(y/72*6.2832)*CW*.03,sunY=CH*(.4-.25*S.sun),sunR=CH*.043,hal=.07+.05*S.snow+.03*(1-S.sun);
+  gr=g.createRadialGradient(sunX,sunY,sunR,sunX,sunY,sunR*3.2);gr.addColorStop(0,rgba(INK,hal));gr.addColorStop(.35,rgba(INK,hal*.4));gr.addColorStop(1,rgba(INK,0));
+  g.fillStyle=gr;g.beginPath();g.arc(sunX,sunY,sunR*3.2,0,6.2832);g.arc(sunX,sunY,sunR,0,6.2832,true);g.fill();
+
+  /* rainbow */
+  if(Wt.bow>.01){g.lineWidth=13*u;g.strokeStyle=rgba(ACC,.085*Wt.bow);g.beginPath();g.arc(CW*.34,CH*.86,CH*.5,Math.PI,6.2832);g.stroke();
+    g.lineWidth=5*u;g.strokeStyle=rgba(INK,.06*Wt.bow);g.beginPath();g.arc(CW*.34,CH*.86,CH*.5-11*u,Math.PI,6.2832);g.stroke()}
+
+  var bankY=null,bankX0=0,bankSt=4,sway=reduce?0:Math.sin(t*1.3)*(.25+.9*Wt.wind);
+  for(i=0;i<4;i++){
+    var L=LAY[i],off=s*L.k,st=4,c0=Math.floor((off-12)/st)*st,ys=[],x0=c0-off,ymin=1e9,c,n,sh;
+    if(i===3){drawMist(s,t,S,Wt,u);drawWater(s,t,S,u)}
+    for(c=c0;c<=off+CW+12;c+=st){n=fbm(c/(L.sc*u)+L.o,L.oct);sh=i<3?Math.pow(n,1.55)*1.3:n;
+      yy=(L.base-L.amp*sh)*CH+(n1(c*.11+L.o)-.5)*(i<3?2.2:1.4)*u;ys.push(yy);if(yy<ymin)ymin=yy}
+    var foot=(L.base+L.fade)*CH,sn=clamp(S.snow*1.75-i*.4,0,1),al=L.a*(.74+.4*S.fol)*(1-.25*Wt.mist);
+    g.beginPath();g.moveTo(x0,ys[0]);for(j=1;j<ys.length;j++)g.lineTo(x0+j*st,ys[j]);
+    g.lineTo(x0+(ys.length-1)*st,foot);g.lineTo(x0,foot);g.closePath();
+    gr=g.createLinearGradient(0,ymin,0,foot);
+    gr.addColorStop(0,rgba(INK,al*(1-.9*sn)));gr.addColorStop(.05+.2*sn,rgba(INK,al*(1-.9*sn)));gr.addColorStop(.13+.3*sn,rgba(INK,al));
+    gr.addColorStop(.6,rgba(INK,al*.42));gr.addColorStop(1,rgba(INK,0));
+    g.fillStyle=gr;g.fill();
+    g.save();g.translate(0,-2.6*u);g.globalAlpha=.32;g.fill();g.restore();
+    g.beginPath();g.moveTo(x0,ys[0]);for(j=1;j<ys.length;j++)g.lineTo(x0+j*st,ys[j]);g.strokeStyle=rgba(INK,.2*sn+al*.42);g.lineWidth=.9;g.stroke();
+    if(i>=1){ /* foliage wash and bare trunks */
+      var fs=Math.max(5,Math.round((i===1?8:i===2?12:15)*u)),f0=Math.floor((off-30)/fs),f1=Math.ceil((off+CW+30)/fs),id,r1,r2,r3,rx,ry,q,
+          P1=new Path2D(),P2=new Path2D(),P3=new Path2D(),kk=i===1?.6:1;
+      for(id=f0;id<=f1;id++){r1=h(id*1.37+i*31.7);r2=h(id*2.11+i*7.3);r3=h(id*.73+i*3.1);sx=id*fs-off+(r2-.5)*fs;
+        q=(sx-x0)/st;if(q<0||q>=ys.length-1)continue;yy=ys[q|0];
+        if(i<3&&r1<.16+S.fol*.8){rx=(3.5+7*r2)*u*kk;ry=rx*(.34+.4*r3*S.fol+.12*S.fol);var TP=(r3<S.warm*.5&&i===2)?P2:P1;
+          TP.moveTo(sx+rx,yy-ry*.3);TP.ellipse(sx,yy-ry*.3,rx,ry,(r2-.5)*.5,0,6.2832)}
+        else if(i<3&&r1>1-.2*(1-S.fol)){P3.moveTo(sx,yy+2);P3.lineTo(sx+(r2-.5)*4*u,yy-(4+10*r3)*u*kk);
+          if(r3>.5){P3.moveTo(sx+(r2-.5)*1.6*u,yy-(2.5+5*r3)*u*kk);P3.lineTo(sx+(r3-.3)*6*u*kk,yy-(5+8*r3)*u*kk)}}
+        else if(i===3&&r1<.25+.7*S.grass){ry=(5+24*S.grass*r3+5*r2)*u;P3.moveTo(sx,yy+2);P3.quadraticCurveTo(sx+(r2-.5)*4,yy-ry*.5,sx+((r2-.5)*.7+sway*.12)*ry,yy-ry)}}
+      g.fillStyle=rgba(INK,al*(i===1?.42:.5));g.fill(P1);
+      if(S.warm>.02){g.fillStyle=rgba(ACC,.3*S.warm);g.fill(P2)}
+      g.strokeStyle=rgba(INK,Math.min(.6,al*(i===3?1.25:1.2)));g.lineWidth=(i===3?.9:.7)*Math.max(.8,u);g.stroke(P3)}
+    if(i===3){bankY=ys;bankX0=x0;bankSt=st}
+  }
+  if(Wt.mist>.01){gr=g.createLinearGradient(0,CH*.34,0,CH);gr.addColorStop(0,rgba(PAPER,0));gr.addColorStop(.45,rgba(PAPER,.6*Wt.mist));gr.addColorStop(.8,rgba(PAPER,.74*Wt.mist));gr.addColorStop(1,rgba(PAPER,.35*Wt.mist));
+    g.fillStyle=gr;g.fillRect(0,CH*.34,CW,CH*.66)}
+  if(Wt.fire>.01){gr=g.createLinearGradient(0,CH*.46,0,CH);gr.addColorStop(0,rgba(INK,0));gr.addColorStop(.5,rgba(INK,.2*Wt.fire));gr.addColorStop(1,rgba(INK,.3*Wt.fire));
+    g.fillStyle=gr;g.fillRect(0,CH*.46,CW,CH*.54)}
+
+  /* frost and dew sit on the near bank */
+  var fd=Math.max(Wt.frost,Wt.dew);
+  if(fd>.01&&bankY){
+    if(Wt.frost>.01){g.beginPath();g.moveTo(bankX0,bankY[0]);for(j=1;j<bankY.length;j++)g.lineTo(bankX0+j*bankSt,bankY[j]);
+      g.strokeStyle=rgba(HI,.85*Wt.frost);g.lineWidth=2.4*u;g.stroke();
+      g.translate(0,3.2*u);g.strokeStyle=rgba(HI,.4*Wt.frost);g.lineWidth=4*u;g.stroke();g.setTransform(dpr,0,0,dpr,0,0)}
+    var o3=s*LAY[3].k,ds=Math.max(4,Math.round(6*u)),d0=Math.floor((o3-10)/ds),d1=Math.ceil((o3+CW+10)/ds),A=new Path2D(),Bp=new Path2D();
+    for(j=d0;j<=d1;j++){var e1=h(j*3.31+5.5),e2=h(j*1.77+9.1),e3=h(j*.61+2.2);if(e1>.62*fd)continue;
+      sx=j*ds-o3+(e2-.5)*ds;var qi=(sx-bankX0)/bankSt;if(qi<0||qi>=bankY.length-1)continue;
+      yy=bankY[qi|0]+(Wt.dew>Wt.frost?-(2+15*e3)*u:(-4+30*e3*e3)*u);var rr=(Wt.dew>Wt.frost?1+1.5*e2:.6+1.1*e2)*u;
+      var tw=reduce?1:.6+.4*Math.sin(t*1.1+e3*40);(tw>.8?A:Bp).moveTo(sx+rr,yy);(tw>.8?A:Bp).arc(sx,yy,rr,0,6.2832)}
+    g.fillStyle=rgba(HI,.95*fd);g.fill(A);g.fillStyle=rgba(HI,.6*fd);g.fill(Bp);
+    if(Wt.dew>.01){g.strokeStyle=rgba(INK,.22*Wt.dew);g.lineWidth=.6;g.stroke(A)}}
+
+  drawWeather(t,Wt,S,u);
+}
+
+function drawMist(s,t,S,Wt,u){
+  var mA=clamp(S.mist+Wt.mist*.8,0,1.3),b,a,per=CW*1.9+400,x,yy,rw,rh,gr;
+  for(b=0;b<8;b++){a=PR[380+b];x=mod(a.x*per-s*(.08+.22*a.s)+(reduce?0:t*(3+7*a.v)),per)-per*.24;
+    yy=CH*(.63+.27*a.y);rw=Math.max(240,CW*(.26+.3*a.s));rh=CH*(.035+.05*a.v);
+    g.save();g.translate(x,yy);g.scale(rw/rh,1);gr=g.createRadialGradient(0,0,0,0,0,rh);
+    gr.addColorStop(0,rgba(PAPER,Math.min(.96,.6*mA+.08)));gr.addColorStop(.6,rgba(PAPER,.3*mA));gr.addColorStop(1,rgba(PAPER,0));
+    g.fillStyle=gr;g.beginPath();g.arc(0,0,rh,0,6.2832);g.fill();g.restore()}
+}
+function drawWater(s,t,S,u){
+  var per=CW+320,woff=s*.36,j,a,x,yy,len,dr,bk;
+  for(bk=0;bk<3;bk++){g.beginPath();
+    for(j=bk;j<57;j+=3){a=PR[300+j];x=mod(a.x*per-woff,per)-160;yy=CH*(.80+.135*a.y);len=(22+105*a.s)*u*(1+.7*S.ice);
+      dr=reduce?0:Math.sin(t*.4+a.p*6.2832)*6*(1-S.ice);g.moveTo(x+dr,yy);g.lineTo(x+dr+len,yy+(a.v-.5)*1.2)}
+    g.strokeStyle=rgba(INK,(.07+.055*bk)*(1-.4*S.ice));g.lineWidth=(.7+.35*bk)*Math.max(.8,u);g.stroke()}
+  if(S.ice>.05){g.beginPath();for(j=0;j<9;j++){a=PR[360+j];x=mod(a.x*per-woff,per)-160;yy=CH*(.815+.11*a.y);g.moveTo(x,yy);g.lineTo(x+(90+200*a.s)*u,yy)}
+    g.strokeStyle=rgba(HI,.75*S.ice);g.lineWidth=2.2*u;g.stroke()}
+}
+function drawWeather(t,Wt,S,u){
+  var i,n,a,x,y,r,len,I,P,Q;
+  /* rain */
+  I=Wt.rain;if(I>.01){n=Math.round(150*Math.min(1,I));g.beginPath();
+    for(i=0;i<n;i++){a=PR[i];y=mod(a.y+t*(1.05+.6*a.v)*(I>1?1.25:1),1)*(CH+120)-90;x=a.x*(CW+160)-20-y*.19;len=(22+44*a.s)*u*(I>1?1.3:1);g.moveTo(x,y);g.lineTo(x-len*.19,y+len)}
+    g.strokeStyle=rgba(INK,.2*Math.min(1,I*1.6)+(I>1?.07:0));g.lineWidth=.75*Math.max(.9,u);g.stroke()}
+  /* drizzle */
+  I=Wt.driz;if(I>.01){n=Math.round(120*Math.min(1,I));g.beginPath();
+    for(i=0;i<n;i++){a=PR[150+i];y=mod(a.y+t*(.42+.25*a.v),1)*(CH+40)-20;x=a.x*(CW+80)-10-y*.1;len=(5+9*a.s)*u;g.moveTo(x,y);g.lineTo(x-len*.1,y+len)}
+    g.strokeStyle=rgba(INK,.24*Math.min(1,I*1.5));g.lineWidth=.7*Math.max(.9,u);g.stroke()}
+  /* snow: bare paper flecks with the faintest ring */
+  I=Wt.snow;if(I>.01){n=Math.round(170*Math.min(1,I*1.15));P=new Path2D();Q=new Path2D();
+    for(i=0;i<n;i++){a=PR[i+40];y=mod(a.y+t*(.03+.045*a.v),1)*(CH+30)-15;x=mod(a.x+Math.sin(t*.55+a.p*6.2832)*.012-t*.006*(.4+a.v),1)*CW;r=(.9+2.5*a.s*a.s)*u;
+      P.moveTo(x+r,y);P.arc(x,y,r,0,6.2832);if(r>1.5*u){Q.moveTo(x+r+.4,y);Q.arc(x,y,r+.4,0,6.2832)}}
+    g.strokeStyle=rgba(INK,.16*Math.min(1,I*1.6));g.lineWidth=.6;g.stroke(Q);g.fillStyle=rgba(HI,.96*Math.min(1,I*1.6));g.fill(P)}
+  /* wind: long dry-brush streaks */
+  I=Wt.wind;if(I>.01){for(i=0;i<11;i++){a=PR[250+i];var ph=mod(a.x+t*(.045+.05*a.v),1),hx=CW*(1.35-ph*1.75);y=CH*(.1+.66*a.y);len=CW*(.16+.22*a.s);
+      g.beginPath();g.moveTo(hx,y);g.bezierCurveTo(hx+len*.3,y-46*u*(a.p-.5),hx+len*.65,y+52*u*(a.v-.5),hx+len,y+20*u*(a.p-.5));
+      g.setLineDash([len*.34,5*u,len*.12,9*u,len*.2,4*u]);g.strokeStyle=rgba(INK,Math.sin(ph*3.1416)*.11*I);g.lineWidth=(.6+1.1*a.s)*u;g.stroke()}
+    g.setLineDash([])}
+  /* petals, leaves */
+  I=Wt.petals;if(I>.01)flecks(t,Math.round(34*I),270,3.1*u,.03,.022,rgba([Math.round(ACC[0]*.5+HI[0]*.5),Math.round(ACC[1]*.5+HI[1]*.5),Math.round(ACC[2]*.5+HI[2]*.5)],.9*Math.min(1,I*1.5)),null);
+  I=Wt.leaves;if(I>.01)flecks(t,Math.round(30*I),270,4.3*u,.07,.03+.16*Wt.wind,rgba(ACC,.74*Math.min(1,I*1.5)),rgba(INK,.42*Math.min(1,I*1.5)));
+  /* fireflies */
+  I=Wt.fire;if(I>.01){for(i=0;i<24;i++){a=PR[330+i];x=(a.x+.035*Math.sin(t*.21+a.p*6.2832))*CW;y=(.56+.36*a.y+.03*Math.sin(t*.33+a.p*11))*CH;
+      var gl=Math.sin(t*(.8+.5*a.v)+a.p*20);gl=reduce?(.3+.7*a.s):(gl>0?gl*gl:0);if(gl<.03)continue;r=(7+6*a.s)*u;
+      var gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(244,250,196,'+(.98*gl*I).toFixed(3)+')');gr.addColorStop(.25,'rgba(214,232,120,'+(.6*gl*I).toFixed(3)+')');gr.addColorStop(1,'rgba(196,220,96,0)');
+      g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,6.2832);g.fill()}}
+  /* a skein of geese */
+  I=Wt.geese;if(I>.01){var gx=CW*(1.1-mod(t*.011+.25,1)*1.25),gy=CH*(.4+.02*Math.sin(t*.25));g.beginPath();
+    for(i=0;i<13;i++){a=PR[290+i];var side=i%2?1:-1,rk=Math.ceil(i/2);x=gx+rk*17*u+(a.x-.5)*6*u;y=gy+side*rk*6.5*u+(a.y-.5)*5*u;
+      var fl=reduce?.3:Math.sin(t*5.2+a.p*6.2832)*.55,wsp=5.2*u;g.moveTo(x-wsp,y-wsp*(.2+fl*.5));g.quadraticCurveTo(x-wsp*.4,y-wsp*.5,x,y);g.quadraticCurveTo(x+wsp*.5,y-wsp*.5,x+wsp,y-wsp*(.1+fl*.5))}
+    g.strokeStyle=rgba(INK,.62*I);g.lineWidth=1.25*u;g.stroke()}
+  /* swallows */
+  I=Wt.swal;if(I>.01){g.beginPath();for(i=0;i<3;i++){var w1=.47*(1+.28*i),w2=.81*(1+.19*i),tt=reduce?3.1+i:t;
+      x=CW*(.5+.4*Math.sin(tt*w1+i*2.1));y=CH*(.44+.13*Math.sin(tt*w2+i));
+      var vx=Math.cos(tt*w1+i*2.1)*w1*.4*CW,vy=Math.cos(tt*w2+i)*w2*.13*CH,an=Math.atan2(vy,vx),ca=Math.cos(an),sa=Math.sin(an),z=8.5*u;
+      var pt=function(px,py){return[x+(px*ca-py*sa)*z,y+(px*sa+py*ca)*z]},p0=pt(.2,0),p1=pt(-.5,-1.15),p2=pt(-.5,1.15),p3=pt(-1.25,-.32),p4=pt(-1.25,.32),p5=pt(-.3,0),pm1=pt(.15,-.6),pm2=pt(.15,.6);
+      g.moveTo(p1[0],p1[1]);g.quadraticCurveTo(pm1[0],pm1[1],p0[0],p0[1]);g.quadraticCurveTo(pm2[0],pm2[1],p2[0],p2[1]);
+      g.moveTo(p3[0],p3[1]);g.lineTo(p5[0],p5[1]);g.lineTo(p4[0],p4[1])}
+    g.strokeStyle=rgba(INK,.7*I);g.lineWidth=1.3*u;g.lineJoin='round';g.stroke()}
+}
+function flecks(t,n,o,sz,vy,vx,colA,colB){
+  var i,a,x,y,rot,P=new Path2D(),Q=new Path2D(),T;
+  for(i=0;i<n;i++){a=PR[o-i>=0?o-i:i];y=mod(a.y+t*vy*(.6+.8*a.v),1)*(CH+40)-20;x=mod(a.x-t*vx*(.5+a.v)+Math.sin(t*.9+a.p*9)*.02,1)*(CW+40)-20;
+    rot=t*(.6+a.v)+a.p*6.2832;T=(colB&&i%3===0)?Q:P;T.moveTo(x+Math.cos(rot)*sz,y+Math.sin(rot)*sz);T.ellipse(x,y,sz,sz*(.28+.3*Math.abs(Math.cos(rot*.7))),rot,0,6.2832)}
+  g.fillStyle=colA;g.fill(P);if(colB){g.fillStyle=colB;g.fill(Q)}
+}
+
+/* ---------- one loop ---------- */
+var raf=0,lastT=0,tA=Math.random()*40+5,visible=!document.hidden,onscreen=true,lastS=NaN,dirty=true,lastDraw=0;
+function schedule(){if(!raf&&visible&&onscreen)raf=requestAnimationFrame(frame)}
+function frame(now){
+  raf=0;var dt=Math.min(.05,(now-lastT)/1000);if(!(dt>0))dt=.016;lastT=now;
+  if(anim){curF+=(target-curF)*(1-Math.pow(1-ease,dt*60));if(Math.abs(target-curF)<.4){curF=target;anim=false}lastSet=curF;sc.scrollLeft=curF;if(!anim)settle()}
+  var s=sc.scrollLeft,moved=s!==lastS;
+  if(moved||dirty){sync(s);lastS=s}
+  if(reduce){if(moved||dirty)draw(7.3);dirty=false;if(anim)schedule();return}
+  tA+=dt;
+  if(moved||dirty||anim||now-lastDraw>30){draw(tA);lastDraw=now}
+  dirty=false;schedule();
+}
+document.addEventListener('visibilitychange',function(){visible=!document.hidden;if(visible){lastT=performance.now();schedule()}});
+if('IntersectionObserver'in window)new IntersectionObserver(function(en){onscreen=en[en.length-1].isIntersecting;if(onscreen){lastT=performance.now();schedule()}}).observe(root);
+function relayout(keep){var i=keep==null?Math.round(pos):keep;snap=mqS.matches;measure();resizeCanvas();anim=false;sc.scrollLeft=stopOf(i);dirty=true;lastS=NaN;schedule()}
+var rT=0;window.addEventListener('resize',function(){clearTimeout(rT);rT=setTimeout(function(){relayout()},120)});
+function onMq(){reduce=mqR.matches;relayout()}
+if(mqR.addEventListener){mqR.addEventListener('change',onMq);mqS.addEventListener('change',function(){relayout()})}
+
+/* ---------- arrival ---------- */
+relayout(tIdx);sync(sc.scrollLeft);lastS=sc.scrollLeft;draw(reduce?7.3:tA);
+if(!reduce){root.classList.add('arrive');setTimeout(function(){root.classList.remove('arrive')},2400)}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){relayout()});
+})();
+</script>
+</body>
+</html>

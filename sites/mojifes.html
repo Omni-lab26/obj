@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>もじフェス 2027</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="もじフェス 2027 — 文字と書き文字の二日間。2027年5月15日(土)・16日(日)、東京・清澄白河の古い印刷所にて。三色のインキで刷った、動くポスター。">
+<meta name="theme-color" content="#f3efe4">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f3efe4'/%3E%3Ccircle cx='13' cy='13' r='10' fill='%23ff48b0'/%3E%3Ccircle cx='19' cy='19' r='10' fill='%230078bf' style='mix-blend-mode:multiply'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,100..900&family=DM+Mono:wght@400;500&family=M+PLUS+1:wght@300..900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&text=%E3%80%82%E3%80%8C%E3%80%8D%E3%81%82%E3%81%98%E3%81%A0%E3%81%AC%E3%81%BE%E3%82%82%E3%82%8A%E3%82%91%E3%82%92%E3%82%A7%E3%82%B9%E3%83%95%E3%83%BB%E4%BB%98%E5%85%A5%E5%88%B7%E5%88%B8%E5%8D%B0%E5%A0%B4%E5%A5%A5%E5%AD%97%E5%AE%A3%E5%BD%93%E6%89%80%E6%97%A7%E7%89%88%E7%95%AA%E7%B5%84%E8%A1%A8%E8%A6%8B%E8%A8%80%E9%81%93%E9%A0%86&display=swap">
+<style>
+/* Layout concept: the whole page is one press sheet — a 12-column grid inside トンボ; every coloured shape belongs to one of three plates (P/B/Y) overprinted with multiply, and --px…--yy carry the live 版ズレ to all of them. */
+:root{
+  --paper:#f3efe4;
+  --pink:#ff48b0;
+  --blue:#0078bf;
+  --yellow:#ffe800;
+  --ov-py:#ff4200;
+  --ov-by:#006d00;
+  --ov-pb:#002284;
+  --ov-pby:#001f00;
+  --text:var(--ov-pb);
+  --f-dela:"Dela Gothic One","M PLUS 1","Hiragino Kaku Gothic StdN","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-jp:"M PLUS 1","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;
+  --f-any:"Anybody","M PLUS 1","Arial Black","Hiragino Sans",sans-serif;
+  --f-mono:"DM Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,"M PLUS 1",monospace;
+  --m:clamp(16px,4.4vw,72px);
+  --g:clamp(10px,1.6vw,24px);
+  --e-out:cubic-bezier(.16,.84,.24,1);
+  --e-press:cubic-bezier(.7,0,.2,1);
+  color-scheme:light;
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--paper);color:var(--text);font-family:var(--f-jp);font-size:16px}
+.mf{--px:0px;--py:0px;--bx:0px;--by:0px;--yx:0px;--yy:0px;
+  --mx:max(var(--m),env(safe-area-inset-left),env(safe-area-inset-right));
+  position:relative;background:var(--paper);color:var(--text);
+  font-family:var(--f-jp);font-size:16px;line-height:1.9;font-weight:450;font-variation-settings:"wght" 450;
+  font-feature-settings:"palt" 0;line-break:strict;overflow-wrap:anywhere;overflow-x:clip;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;
+  scrollbar-color:var(--pink) var(--paper)}
+.mf *,.mf *::before,.mf *::after{box-sizing:border-box}
+.mf ::selection{background:var(--yellow);color:var(--ov-pby)}
+.mf a{color:inherit}
+.mf :focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:2px}
+.mf p,.mf h1,.mf h2,.mf h3,.mf ul,.mf ol,.mf dl,.mf dd,.mf figure{margin:0;padding:0}
+.mf ul,.mf ol{list-style:none}
+.mf button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;border-radius:0;-webkit-tap-highlight-color:transparent}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.dela{font-family:var(--f-dela);font-weight:400;font-variation-settings:normal}
+.any{font-family:var(--f-any)}
+.mono{font-family:var(--f-mono);font-variation-settings:normal}
+
+/* ---- plates ---- */
+.ink-p,.ink-b,.ink-y{mix-blend-mode:multiply}
+.ink-p{color:var(--pink);translate:var(--px) var(--py)}
+.ink-b{color:var(--blue);translate:var(--bx) var(--by)}
+.ink-y{color:var(--yellow);translate:var(--yx) var(--yy)}
+.no-p .ink-p,.no-b .ink-b,.no-y .ink-y,.no-p .ink-p i.on,.no-b .ink-b i.on,.no-y .ink-y i.on{visibility:hidden}
+/* two-plate lettering: base ink + ::after ink, in register they make the overprint */
+.two{position:relative;display:inline-block;mix-blend-mode:multiply;color:var(--blue);translate:var(--bx) var(--by)}
+.two::after{content:attr(data-t);content:attr(data-t) / "";position:absolute;left:0;top:0;width:100%;color:var(--pink);mix-blend-mode:multiply;
+  translate:calc(var(--px) - var(--bx)) calc(var(--py) - var(--by));pointer-events:none}
+.two.mix-py{color:var(--yellow);translate:var(--yx) var(--yy)}
+.two.mix-py::after{translate:calc(var(--px) - var(--yx)) calc(var(--py) - var(--yy))}
+.two.mix-by{color:var(--yellow);translate:var(--yx) var(--yy)}
+.two.mix-by::after{color:var(--blue);translate:calc(var(--bx) - var(--yx)) calc(var(--by) - var(--yy))}
+.no-b .two:not(.mix-py):not(.mix-by),.no-y .two.mix-py,.no-y .two.mix-by{color:transparent}
+.no-p .two:not(.mix-by)::after,.no-b .two.mix-by::after{visibility:hidden}
+
+/* ink dropout: paper-coloured specks over everything */
+.grain{position:fixed;inset:0;z-index:60;pointer-events:none;background:var(--paper);opacity:.5;
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 8 0 0 0 -5.15'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 8 0 0 0 -5.15'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)'/%3E%3C/svg%3E");
+  -webkit-mask-size:260px 260px;mask-size:260px 260px}
+
+/* halftone: 45° screen, hard dots */
+.ht{--d:9px;background-color:currentColor;
+  -webkit-mask-image:radial-gradient(circle,#000 0 27%,transparent 29%),radial-gradient(circle,#000 0 27%,transparent 29%);
+  mask-image:radial-gradient(circle,#000 0 27%,transparent 29%),radial-gradient(circle,#000 0 27%,transparent 29%);
+  -webkit-mask-size:var(--d) var(--d);mask-size:var(--d) var(--d);-webkit-mask-position:0 0,calc(var(--d)/2) calc(var(--d)/2);mask-position:0 0,calc(var(--d)/2) calc(var(--d)/2)}
+.js .ht.is-ramp{-webkit-mask-image:var(--ramp);mask-image:var(--ramp);-webkit-mask-size:216px 300px;mask-size:216px 300px;-webkit-mask-repeat:repeat-x;mask-repeat:repeat-x;-webkit-mask-position:0 100%;mask-position:0 100%}
+
+/* ---- トンボ ---- */
+.tombo{position:absolute;width:22px;height:22px;color:var(--text);pointer-events:none;z-index:3}
+.tombo svg{display:block;width:100%;height:100%;overflow:visible}
+.tombo.tl{left:calc(var(--mx) - 24px);top:6px}
+.tombo.tr{right:calc(var(--mx) - 24px);top:6px;transform:scaleX(-1)}
+.tombo.bl{left:calc(var(--mx) - 24px);bottom:6px;transform:scaleY(-1)}
+.tombo.br{right:calc(var(--mx) - 24px);bottom:6px;transform:scale(-1)}
+.tombo.tc{left:50%;top:5px;margin-left:-11px}
+.tombo.bc{left:50%;bottom:5px;margin-left:-11px}
+@media (max-width:700px){.tombo{width:14px;height:14px}.tombo.tl,.tombo.bl{left:1px}.tombo.tr,.tombo.br{right:1px}.tombo.tc,.tombo.bc{margin-left:-7px}}
+
+/* ---- slug line ---- */
+.slug{position:relative;z-index:4;display:flex;align-items:center;gap:clamp(12px,2vw,32px);padding:30px var(--mx) 0;
+  font:500 11px/1.2 var(--f-mono);letter-spacing:.08em;text-transform:uppercase}
+.slug-job{display:flex;align-items:center;gap:12px;white-space:nowrap}
+.cbar{position:relative;display:block;width:112px;height:12px;flex:none}
+.cbar span{position:absolute;inset:0;background-repeat:no-repeat}
+.cbar .ink-p{background-image:linear-gradient(90deg,var(--pink) 0 14px,transparent 14px 42px,var(--pink) 42px 56px,transparent 56px 70px,var(--pink) 70px 98px,transparent 98px)}
+.cbar .ink-b{background-image:linear-gradient(90deg,transparent 0 14px,var(--blue) 14px 28px,transparent 28px 56px,var(--blue) 56px 98px,transparent 98px)}
+.cbar .ink-y{background-image:linear-gradient(90deg,transparent 0 28px,var(--yellow) 28px 70px,transparent 70px 84px,var(--yellow) 84px 98px,transparent 98px)}
+.nav{margin-left:auto;display:flex;gap:clamp(12px,1.8vw,28px);font-family:var(--f-jp);font-weight:700;font-variation-settings:"wght" 700;font-size:13px;letter-spacing:.14em;text-transform:none}
+.nav a{text-decoration:none;padding:8px 2px;position:relative}
+.nav a::after{content:"";position:absolute;left:0;right:0;bottom:3px;height:6px;background:var(--yellow);mix-blend-mode:multiply;transform:scaleX(0);transform-origin:0 50%;transition:transform .35s var(--e-out)}
+.nav a:hover::after,.nav a:focus-visible::after{transform:scaleX(1)}
+.plates{display:flex;gap:6px;align-items:center}
+.plates-l{margin-right:4px}
+.pl{display:inline-flex!important;align-items:center;gap:6px;padding:6px 8px 6px 6px!important;border:1.5px solid var(--text)!important;letter-spacing:.1em;font:500 11px/1 var(--f-mono)!important;transition:translate .2s var(--e-out)}
+.pl i{width:13px;height:13px;display:block;border:1.5px solid var(--text);background:var(--c);transition:background-color .2s}
+.pl[aria-pressed="false"] i{background:linear-gradient(to top right,transparent 0 44%,var(--text) 45% 55%,transparent 56%)}
+.pl[aria-pressed="false"]{border-style:dashed!important}
+.pl:hover{translate:0 -2px}
+.pl:active{translate:0 1px}
+.pl-p{--c:var(--pink)}.pl-b{--c:var(--blue)}.pl-y{--c:var(--yellow)}
+
+/* ---- hero ---- */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column}
+.stage{position:relative;flex:1;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--g);grid-template-rows:auto 1fr;
+  padding:clamp(6px,1.2vw,20px) var(--mx) clamp(22px,3vw,44px);
+  cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='none' stroke='%23002284' stroke-width='1.4'%3E%3Ccircle cx='14' cy='14' r='6.5'/%3E%3Cpath d='M14 1v26M1 14h26'/%3E%3C/svg%3E") 14 14,crosshair}
+.ttl-box{grid-column:1/-1;position:relative;--ts:min(18.1vw,calc((100vw - 2*var(--mx) - 14px)/4.86));z-index:1}
+.ttl{display:block;font-size:var(--ts);line-height:1;letter-spacing:-.03em;white-space:nowrap;margin:0 0 0 -.035em!important}
+h1.ttl{color:transparent;-webkit-user-select:none;user-select:none}
+.plate{position:absolute;left:0;top:0;pointer-events:none}
+.plate i{font-style:normal;visibility:hidden}
+.plate i.on{visibility:visible}
+.disc{position:absolute;right:calc(var(--mx) + 3.5vw);bottom:clamp(-70px,-5vw,-30px);width:min(47vw,82svh);aspect-ratio:1;border-radius:50%;background:var(--yellow)}
+.hero-ht{position:absolute;left:0;bottom:0;width:62%;height:300px;color:var(--pink)}
+.yr{grid-column:1/8;align-self:end;font-family:var(--f-any);font-size:clamp(88px,13.4vw,270px);line-height:.74;letter-spacing:-.02em;white-space:nowrap;
+  font-variation-settings:"wdth" var(--yw,150),"wght" var(--yg,900);font-stretch:150%;font-weight:900;margin-bottom:-.02em;justify-self:start;position:relative}
+.info{grid-column:8/-1;align-self:end;position:relative;z-index:2;color:var(--ov-pby);padding-bottom:4px}
+.info-k{font-weight:800;font-variation-settings:"wght" 800;font-size:clamp(14px,1.25vw,19px);letter-spacing:.12em;line-height:1.5}
+.info-k span{display:block;font-family:var(--f-any);font-variation-settings:"wdth" 130,"wght" 700;font-size:.68em;letter-spacing:.14em;text-transform:uppercase;margin-top:2px}
+.info-date{display:flex;align-items:flex-start;gap:.12em;font-family:var(--f-any);font-variation-settings:"wdth" 70,"wght" 800;font-size:clamp(64px,8.6vw,150px);line-height:.86;letter-spacing:-.01em;margin:clamp(10px,1.4vw,22px) 0 clamp(8px,.9vw,14px);white-space:nowrap}
+.info-date .wk{font-family:var(--f-jp);font-variation-settings:"wght" 900;font-size:.2em;line-height:1;width:1.7em;height:1.7em;border-radius:50%;background:var(--ov-pby);color:var(--yellow);display:inline-grid;place-items:center;margin:.36em .1em 0 .12em;letter-spacing:0}
+.info-date .bar{display:inline-block;width:.34em;height:.085em;background:currentColor;align-self:center;margin:0 .04em 0 0}
+.info-full{font-family:var(--f-mono);font-size:clamp(12px,1.05vw,15px);letter-spacing:.06em;line-height:1.6}
+.info-place{margin-top:clamp(10px,1.3vw,20px);padding-top:clamp(10px,1.2vw,18px);border-top:2px solid currentColor;display:grid;gap:4px}
+.info-place b{font-size:clamp(24px,3vw,46px);line-height:1.15;letter-spacing:.04em;font-weight:400;font-feature-settings:"palt"}
+.info-place span{font-weight:700;font-variation-settings:"wght" 700;font-size:clamp(13px,1.1vw,16px);letter-spacing:.1em}
+.regout{font:500 11px/1.5 var(--f-mono);letter-spacing:.06em;margin-top:clamp(12px,1.4vw,20px);font-variant-numeric:tabular-nums}
+
+/* marquee */
+.mq{position:relative;z-index:2;background:var(--blue);color:var(--paper);overflow:hidden;white-space:nowrap;padding:.42em 0 .36em;
+  font-family:var(--f-any);font-size:clamp(26px,3.6vw,56px);line-height:1;font-variation-settings:"wdth" var(--mw,100),"wght" 800;text-transform:uppercase;letter-spacing:.01em}
+.mq-track{display:inline-flex;animation:mq 46s linear infinite;will-change:transform}
+.mq-track>span{display:inline-flex;align-items:center;flex:none}
+.mq b{font-family:var(--f-jp);font-variation-settings:"wght" 900;font-weight:900;font-size:.82em;letter-spacing:.08em;margin:0 .1em}
+.mq i{display:inline-block;width:.42em;height:.42em;border-radius:50%;background:var(--yellow);margin:0 .5em;flex:none}
+@keyframes mq{to{transform:translate3d(-50%,0,0)}}
+.mq:hover .mq-track{animation-play-state:paused}
+
+/* stickers */
+.stk{position:absolute;z-index:5;display:grid;place-items:center;text-align:center;width:var(--w,118px);aspect-ratio:1;border-radius:50%;background:var(--paper);color:var(--ov-pby);
+  border:2px solid currentColor;font-weight:900;font-variation-settings:"wght" 900;font-size:15px;line-height:1.25;letter-spacing:.06em;rotate:var(--r,-8deg);
+  cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.stk::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--c,var(--pink))}
+.stk>span{position:relative}
+.stk small{display:block;font:500 9.5px/1.3 var(--f-mono);letter-spacing:.12em;margin-top:3px}
+.stk:active{cursor:grabbing}
+.stk-a{--c:var(--pink);left:calc(var(--mx) + 43%);top:44%}
+.stk-b{--c:var(--yellow);--r:9deg;--w:108px;right:-1.5%;top:4%}
+.stk-c{--c:var(--yellow);--r:-12deg;--w:112px;right:calc(var(--mx) + 6%);top:clamp(40px,7vw,110px)}
+
+/* ---- sections ---- */
+.sec{position:relative;padding:clamp(84px,12vw,190px) var(--mx) 0;scroll-margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--g)}
+.h2{font-size:clamp(56px,10.4vw,180px);line-height:1;letter-spacing:.01em;font-feature-settings:"palt";margin:0 0 0 -.04em!important}
+.h2 .two{display:inline-block}
+.h2-en{display:block;font-family:var(--f-any);font-variation-settings:"wdth" 140,"wght" 700;font-size:clamp(11px,.95vw,14px);letter-spacing:.24em;text-transform:uppercase;margin-top:clamp(10px,1.2vw,18px);color:var(--text)}
+.note{font:400 12px/1.7 var(--f-mono);letter-spacing:.04em}
+
+/* manifesto */
+.man-h{grid-column:1/6}
+.man-b{grid-column:6/-1;padding-top:clamp(8px,1.4vw,22px)}
+.lead{font-weight:900;font-variation-settings:"wght" 900;font-size:clamp(30px,4.4vw,72px);line-height:1.22;letter-spacing:.04em;font-feature-settings:"palt";color:var(--ov-pby);margin-bottom:clamp(22px,2.6vw,40px)!important;word-break:auto-phrase;text-wrap:balance}
+.lead em{font-style:normal;background:linear-gradient(var(--yellow),var(--yellow)) 0 88%/100% .34em no-repeat}
+.man-b p:not(.lead){max-width:33em;font-size:clamp(15px,1.18vw,17px);line-height:2.05;text-wrap:pretty;margin-bottom:1.3em}
+.man-b p.last{font-weight:800;font-variation-settings:"wght" 800}
+.kin{position:relative;margin:clamp(50px,7vw,110px) calc(var(--mx)*-1) 0;padding:clamp(18px,2.6vw,40px) var(--mx) clamp(10px,1.4vw,22px);touch-action:pan-y}
+.kin-band{position:absolute;left:0;right:0;top:34%;bottom:20%;color:var(--yellow);--d:11px}
+.kin-line{position:relative;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));font-family:var(--f-any);--cell:calc((100vw - 2*var(--mx))/8);font-size:calc(var(--cell)*1.72);line-height:.82;text-transform:uppercase;-webkit-user-select:none;user-select:none}
+.kin-line span{display:grid;place-items:center;white-space:nowrap;font-variation-settings:"wdth" var(--w,62),"wght" var(--g2,520);mix-blend-mode:multiply;height:.84em}
+.kin-line span:nth-child(odd){color:var(--pink);translate:var(--px) var(--py)}
+.kin-line span:nth-child(even){color:var(--blue);translate:var(--bx) var(--by)}
+.no-p .kin-line span:nth-child(odd),.no-b .kin-line span:nth-child(even){visibility:hidden}
+.kin-cap{position:relative;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:clamp(14px,1.6vw,24px);font-weight:800;font-variation-settings:"wght" 800;font-size:clamp(14px,1.2vw,17px);letter-spacing:.08em;color:var(--ov-pby)}
+.kin-cap .note{align-self:center}
+
+/* programme */
+.prog-top{grid-column:1/-1;display:flex;align-items:flex-end;justify-content:space-between;gap:24px 40px;flex-wrap:wrap;margin-bottom:clamp(28px,4vw,64px)}
+.filter{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filter-l{font:500 11px/1 var(--f-mono);letter-spacing:.1em;margin-right:6px}
+.chip{position:relative;padding:9px 14px 9px 12px!important;border:1.5px solid var(--text)!important;border-radius:999px!important;font-weight:700!important;font-variation-settings:"wght" 700;font-size:13.5px!important;line-height:1!important;letter-spacing:.08em;display:inline-flex!important;align-items:center;gap:7px;min-height:36px;
+  transition:background-color .25s var(--e-out),color .25s var(--e-out),font-variation-settings .25s var(--e-out)}
+.chip::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--k,var(--text));flex:none}
+.chip:hover{background:var(--yellow)}
+.chip[aria-pressed="true"]{background:var(--ov-pb);color:var(--paper);font-variation-settings:"wght" 900}
+.chip[aria-pressed="true"]::before{background:var(--yellow)}
+[data-kind="talk"]{--k:var(--blue)}[data-kind="ws"]{--k:var(--pink)}[data-kind="live"]{--k:var(--ov-py)}[data-kind="market"]{--k:var(--yellow)}[data-kind="kids"]{--k:var(--ov-by)}
+.day{grid-column:1/-1;display:grid;grid-template-columns:subgrid;margin-bottom:clamp(48px,6vw,96px);position:relative}
+.day-h{grid-column:1/4;align-self:start;position:sticky;top:20px;display:grid;grid-template-columns:auto 1fr;align-items:end;column-gap:14px;color:var(--ov-pby);padding-bottom:10px;z-index:2}
+.day-n{grid-column:1/-1;font-family:var(--f-any);font-variation-settings:"wdth" 140,"wght" 800;font-size:13px;letter-spacing:.22em;line-height:1}
+.day-d{position:relative;font-family:var(--f-any);font-variation-settings:"wdth" 60,"wght" 900;font-size:clamp(110px,15vw,250px);line-height:.8;letter-spacing:-.02em;margin-top:14px;justify-self:start}
+.day-d .num{position:relative;display:block}
+.day-dot{position:absolute;width:.62em;height:.62em;border-radius:50%;right:-.26em;top:-.06em;background:currentColor}
+.day-w{font-weight:800;font-variation-settings:"wght" 800;font-size:clamp(14px,1.2vw,17px);letter-spacing:.1em;line-height:1.5;padding-bottom:.4em}
+.day-w small{display:block;font:500 11px/1.5 var(--f-mono);letter-spacing:.08em}
+.ses-list{grid-column:4/-1;border-bottom:2px solid var(--text)}
+.ses{border-top:2px solid var(--text);position:relative}
+.ses-h{position:relative;isolation:isolate;display:grid!important;grid-template-columns:repeat(9,minmax(0,1fr));column-gap:var(--g);align-items:start;width:100%;text-align:left;
+  padding:clamp(14px,1.5vw,22px) clamp(8px,1vw,16px) clamp(13px,1.4vw,20px)!important;transition:color .3s var(--e-out)}
+.ses-h::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--flood,var(--yellow));transform:scaleX(0);transform-origin:0 50%;transition:transform .55s var(--e-out)}
+.ses-time{grid-column:1/3;font-family:var(--f-any);font-variation-settings:"wdth" 78,"wght" 650;font-size:clamp(26px,2.9vw,44px);line-height:1;letter-spacing:0;color:var(--blue);white-space:nowrap;font-variant-numeric:tabular-nums;
+  transition:font-variation-settings .45s var(--e-out),color .3s}
+.ses-time small{display:block;font:500 11.5px/1 var(--f-mono);letter-spacing:.06em;color:var(--text);margin-top:8px;font-variation-settings:normal}
+.ses-main{grid-column:3/8;display:block}
+.ses-kind{display:inline-flex;align-items:center;gap:6px;font:500 11px/1 var(--f-mono);letter-spacing:.1em;margin-bottom:9px}
+.ses-kind::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--k);outline:1.5px solid var(--text);outline-offset:-1.5px}
+.ses-t{display:block;font-weight:700;font-variation-settings:"wght" 640;font-size:clamp(19px,1.95vw,29px);line-height:1.38;letter-spacing:.03em;font-feature-settings:"palt";word-break:auto-phrase;
+  transition:font-variation-settings .4s var(--e-out)}
+.ses-meta{grid-column:8/10;display:grid;gap:3px;font-size:13px;line-height:1.5;padding-right:26px;padding-top:2px}
+.ses-who{font-weight:800;font-variation-settings:"wght" 800;letter-spacing:.06em;font-size:14px}
+.ses-who small{display:block;font-weight:500;font-variation-settings:"wght" 500;font-size:12px;letter-spacing:.04em}
+.ses-room{font:500 11.5px/1.5 var(--f-mono);letter-spacing:.06em;margin-top:4px}
+.ses-room::before{content:"@ "}
+.ses-x{position:absolute;right:clamp(8px,1vw,16px);top:clamp(14px,1.5vw,22px);width:18px;height:18px}
+.ses-x::before,.ses-x::after{content:"";position:absolute;left:0;right:0;top:8px;height:2px;background:currentColor;transition:rotate .4s var(--e-out)}
+.ses-x::after{rotate:90deg}
+.ses-h[aria-expanded="true"] .ses-x::after{rotate:0deg}
+.ses[data-kind="ws"]{--flood:var(--pink)}
+.ses-h:hover,.ses-h:focus-visible,.js .ses-h[aria-expanded="true"]{color:var(--ov-pby)}
+.ses-h:hover::before,.ses-h:focus-visible::before,.js .ses-h[aria-expanded="true"]::before{transform:scaleX(1)}
+.ses-h:hover .ses-time,.ses-h:focus-visible .ses-time,.js .ses-h[aria-expanded="true"] .ses-time{font-variation-settings:"wdth" 132,"wght" 850;color:var(--ov-pby)}
+.ses-h:hover .ses-time small,.ses-h:focus-visible .ses-time small,.js .ses-h[aria-expanded="true"] .ses-time small{color:inherit}
+.ses-h:hover .ses-t,.ses-h:focus-visible .ses-t,.js .ses-h[aria-expanded="true"] .ses-t{font-variation-settings:"wght" 900}
+.ses-h:focus-visible{outline-offset:-3px}
+.ses-d{display:grid;grid-template-rows:1fr;grid-template-columns:repeat(9,minmax(0,1fr));column-gap:var(--g);padding:0 clamp(8px,1vw,16px)}
+.ses-d>div{grid-column:3/8;overflow:hidden;min-height:0}
+.ses-d p{font-size:14.5px;line-height:1.95;padding:12px 0 22px;max-width:36em;text-wrap:pretty}
+.js .ses-d{transition:grid-template-rows .5s var(--e-out),visibility 0s}
+.js .ses-h[aria-expanded="false"]+.ses-d{grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .4s var(--e-out),visibility 0s .4s}
+.ses[hidden]{display:none}
+
+/* tickets */
+.tk-h{grid-column:1/-1;margin-bottom:clamp(28px,4vw,64px)}
+.tks{grid-column:1/-1;display:grid;grid-template-columns:subgrid;row-gap:var(--g)}
+.tk{position:relative;display:grid;grid-template-rows:auto 1fr auto;min-height:clamp(210px,19vw,300px);padding:clamp(16px,1.6vw,26px);color:var(--ov-pby);background:var(--bg);
+  transition:rotate .5s var(--e-out),translate .5s var(--e-out)}
+.tk:hover{rotate:var(--tilt,-1deg);translate:0 -4px}
+.tk::before,.tk::after{content:"";position:absolute;left:var(--perf,74%);width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--paper)}
+.tk::before{top:-10px}.tk::after{bottom:-10px}
+.tk-perf{position:absolute;left:var(--perf,74%);top:16px;bottom:16px;border-left:2px dashed var(--paper)}
+.tk-kind{font-weight:900;font-variation-settings:"wght" 900;font-size:clamp(22px,2.3vw,34px);line-height:1.1;letter-spacing:.06em}
+.tk-kind small{display:block;font-family:var(--f-any);font-variation-settings:"wdth" 140,"wght" 700;font-size:11px;letter-spacing:.22em;margin-top:8px}
+.tk-price{align-self:end;font-family:var(--f-any);font-variation-settings:"wdth" 64,"wght" 850;font-size:clamp(64px,8.2vw,140px);line-height:.82;letter-spacing:-.01em;white-space:nowrap;transition:font-variation-settings .6s var(--e-out);font-variant-numeric:tabular-nums}
+.tk-price i{font-style:normal;font-size:.42em;vertical-align:.86em;margin-right:.06em;font-variation-settings:"wdth" 100,"wght" 800}
+.tk-price.jp{font-family:var(--f-jp);font-variation-settings:"wght" 900;font-size:clamp(56px,7vw,116px);letter-spacing:.04em;line-height:.95}
+.tk:hover .tk-price:not(.jp){font-variation-settings:"wdth" 104,"wght" 900}
+.tk-note{font-size:13px;line-height:1.65;font-weight:600;font-variation-settings:"wght" 600;margin-top:14px;max-width:70%}
+.tk-no{position:absolute;right:clamp(10px,1.2vw,18px);top:50%;writing-mode:vertical-rl;translate:0 -50%;font:500 11px/1 var(--f-mono);letter-spacing:.14em;white-space:nowrap}
+.tk-1{grid-column:1/5;--bg:var(--yellow);--tilt:-1.2deg}
+.tk-2{grid-column:5/-1;--bg:var(--pink);--perf:50%;--tilt:.6deg}
+.tk-2 .tk-days{position:absolute;left:calc(50% + clamp(16px,1.6vw,26px));top:clamp(16px,1.6vw,26px);font-family:var(--f-any);font-variation-settings:"wdth" 140,"wght" 800;font-size:11px;letter-spacing:.22em}
+.tk-2 .tk-note{max-width:44%}
+.tk-2 .tk-big{position:absolute;right:11%;bottom:clamp(12px,1.4vw,22px);font-family:var(--f-any);font-variation-settings:"wdth" 150,"wght" 900;font-size:clamp(60px,9vw,150px);line-height:.8;color:var(--yellow);mix-blend-mode:multiply}
+.tk-3{grid-column:1/6;--bg:var(--paper);border:2.5px solid var(--blue);color:var(--ov-pb);--tilt:.8deg;overflow:hidden}
+.tk-3::before,.tk-3::after{display:none}
+.tk-3 .tk-perf{border-left-color:var(--blue)}
+.tk-3 .tk-price{color:var(--blue)}
+.tk-3 .tk-htc{position:absolute;right:0;top:0;bottom:0;width:26%;color:var(--blue);opacity:1;--d:8px}
+.tk-3 .tk-no{color:var(--ov-pby);background:var(--paper);padding:8px 3px}
+.tk-4{grid-column:6/10;--bg:var(--ov-by);color:var(--paper);--tilt:-.8deg}
+.tk-info{grid-column:10/-1;align-self:end;display:grid;gap:12px;font-size:13px;line-height:1.8}
+.tk-info p{text-wrap:pretty}
+.tk-info p:first-child{font-weight:800;font-variation-settings:"wght" 800}
+
+/* access */
+.ac-h{grid-column:1/-1;margin-bottom:clamp(28px,4vw,64px)}
+.map{grid-column:1/8;position:relative;border:2px solid var(--text);background:var(--paper);aspect-ratio:600/430;overflow:hidden}
+.map svg{display:block;width:100%;height:100%}
+.map .f-p{fill:var(--pink)}.map .f-b{fill:var(--blue)}.map .f-y{fill:var(--yellow)}.map .mul{mix-blend-mode:multiply}
+.map .ln{stroke:var(--text);fill:none}
+.map text{fill:var(--ov-pby);font-family:var(--f-jp);font-weight:800;font-size:15px;letter-spacing:.08em}
+.map text.sm{font-family:var(--f-mono);font-weight:500;font-size:10.5px;letter-spacing:.06em;fill:var(--text)}
+.map text.vn{font-family:var(--f-dela);font-weight:400;font-size:22px;letter-spacing:.04em}
+.ac-b{grid-column:9/-1;align-self:end}
+.ac-venue{font-size:clamp(30px,3.5vw,54px);line-height:1.15;letter-spacing:.03em;color:var(--ov-pby);font-feature-settings:"palt";margin-bottom:6px!important}
+.ac-sub{font-weight:800;font-variation-settings:"wght" 800;letter-spacing:.1em;margin-bottom:clamp(18px,2vw,30px)!important}
+.spec{display:grid;grid-template-columns:max-content 1fr;column-gap:20px;border-top:2px solid var(--text)}
+.spec>div{display:grid;grid-template-columns:subgrid;grid-column:1/-1;border-bottom:1.5px solid var(--text);padding:11px 0 10px;align-items:baseline}
+.spec dt{font:500 11.5px/1.9 var(--f-mono);letter-spacing:.08em;white-space:nowrap}
+.spec dd{font-size:14.5px;line-height:1.8;text-wrap:pretty}
+.spec dd b{font-weight:800;font-variation-settings:"wght" 800}
+
+/* colophon */
+.col{margin-top:clamp(84px,12vw,190px);padding-top:clamp(56px,7vw,110px);padding-bottom:clamp(56px,7vw,110px);background:var(--yellow);color:var(--ov-pby)}
+.col .h2-en{color:inherit}
+.col-h{grid-column:1/6}
+.col-fig{grid-column:1/6;position:relative;align-self:end;width:min(100%,420px);aspect-ratio:1;margin-top:clamp(28px,4vw,60px)!important;background:var(--paper);border-radius:50%}
+.col-fig i{position:absolute;width:46%;aspect-ratio:1;border-radius:50%;background:currentColor;display:block}
+.col-fig i:nth-child(1){left:27%;top:13%}.col-fig i:nth-child(2){left:14%;bottom:15%}.col-fig i:nth-child(3){right:14%;bottom:15%}
+.col-b{grid-column:7/-1;grid-row:1/3}
+.col .spec{border-top-color:currentColor}
+.col .spec>div{border-bottom-color:currentColor}
+.sw{display:inline-block;width:.9em;height:.9em;border-radius:50%;background:var(--c);vertical-align:-.08em;margin-right:.3em;outline:1.5px solid var(--ov-pby);outline-offset:-1px}
+.col-fig-cap{position:absolute;left:0;top:0;font:500 11px/1.5 var(--f-mono);letter-spacing:.08em}
+
+/* letter pit */
+.pit-sec{padding-top:clamp(70px,9vw,140px)}
+.pit-top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px 40px;flex-wrap:wrap;padding:0 var(--mx)}
+.pit-lede{max-width:25em;font-weight:700;font-variation-settings:"wght" 700;font-size:15px;line-height:1.9}
+.pit-ctl{display:flex;gap:8px;margin-top:14px}
+.btn{padding:11px 18px!important;border:2px solid var(--text)!important;font-weight:800!important;font-variation-settings:"wght" 800;font-size:14px!important;letter-spacing:.1em;line-height:1!important;background:var(--paper)!important;transition:background-color .2s,translate .2s var(--e-out)}
+.btn:hover{background:var(--yellow)!important;translate:0 -2px}
+.btn:active{translate:0 1px}
+.pit{position:relative;height:clamp(430px,74svh,760px);margin-top:clamp(10px,2vw,30px);overflow:hidden;border-bottom:2px solid var(--text)}
+.pit canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;visibility:hidden;font-variation-settings:normal}
+.pit-live .pit canvas{visibility:visible}
+.pit-live .pit-static{visibility:hidden}
+.pit-static{position:absolute;inset:0;font-size:clamp(84px,13.5vw,220px);line-height:1}
+.pit-static span{position:absolute;line-height:.8;mix-blend-mode:multiply;rotate:var(--r,0deg)}
+.pit-static .a{font-family:var(--f-any);font-variation-settings:"wdth" 150,"wght" 900}
+.pit-static .p{color:var(--pink)}.pit-static .b{color:var(--blue)}.pit-static .y{color:var(--yellow)}
+.foot{position:relative;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--g);row-gap:10px;padding:22px var(--mx) calc(40px + env(safe-area-inset-bottom));font:400 12px/1.8 var(--f-mono);letter-spacing:.04em}
+.foot p:nth-child(1){grid-column:1/5}
+.foot p:nth-child(2){grid-column:5/11;font-family:var(--f-jp);font-size:12.5px}
+.foot p:nth-child(3){grid-column:11/-1;text-align:right}
+.foot a{text-underline-offset:3px}
+
+/* ---- phone / narrow ---- */
+@media (max-width:900px){
+  .slug{flex-wrap:wrap;row-gap:10px;padding-top:24px}
+  .nav{order:3;width:100%;margin:0;justify-content:space-between;border-top:1.5px solid var(--text);border-bottom:1.5px solid var(--text);padding:2px 0}
+  .plates{margin-left:auto}
+  .plates-l,.slug-job>span:not(.cbar){display:none}
+  .man-h,.man-b,.col-h,.col-b,.col-fig,.ac-b,.map{grid-column:1/-1}
+  .col-b{grid-row:auto}
+  .man-b{padding-top:28px}
+  .day-h{grid-column:1/-1;top:0;background:var(--paper);grid-template-columns:auto auto 1fr;padding:10px 0 10px;margin-bottom:0;border-bottom:0;align-items:center}
+  .day-n{grid-column:auto;writing-mode:vertical-rl;rotate:180deg;font-size:10.5px}
+  .day-d{font-size:76px;margin-top:0}
+  .day-w{padding-bottom:0;padding-left:16px}
+  .ses-list{grid-column:1/-1}
+  .tk-1,.tk-2,.tk-3,.tk-4,.tk-info{grid-column:1/-1}
+  .tk-info{margin-top:10px}
+  .ac-b{margin-top:32px}
+  .col-fig{width:min(72%,300px)}
+  .col-b{margin-top:32px}
+  .foot p:nth-child(n){grid-column:1/-1;text-align:left}
+}
+@media (max-width:700px){
+  .ttl-box{--ts:calc((100vw - 2*var(--mx))/2.93)}
+  .ttl .ln{display:block}
+  .ttl{line-height:.96}
+  .stage{grid-template-rows:auto auto 1fr;padding-top:10px}
+  .yr{grid-column:1/-1;position:absolute;right:var(--mx);top:calc(10px + (100vw - 2*var(--mx))/2.93*.05);font-size:calc((100vw - 2*var(--mx))/2.93*.44);line-height:.84;text-align:right;letter-spacing:-.03em;--cap:1}
+  .yr span{display:block}
+  .info{grid-column:1/-1;margin-top:26px;align-self:end}
+  .info-date{font-size:clamp(64px,21vw,96px)}
+  .disc{width:92vw;right:-22vw;bottom:auto;top:calc((100vw - 2*var(--mx))/2.93*.86)}
+  .hero-ht{width:100%;height:240px}
+  .stk-a{left:auto;right:calc(var(--mx) - 4px);top:auto;bottom:118px;--w:92px;font-size:12.5px}
+  .stk-b{display:none}
+  .stk-c{--w:92px;font-size:12px;top:14px;right:var(--mx)}
+  .ses-h{grid-template-columns:auto 1fr;row-gap:10px;padding:16px 8px 15px!important}
+  .ses-time{grid-column:1;grid-row:1;font-size:30px;display:flex;align-items:baseline;gap:8px}
+  .ses-time small{margin:0}
+  .ses-main{grid-column:1/-1;grid-row:2;display:contents}
+  .ses-kind{grid-column:2;grid-row:1;justify-self:end;margin:0 30px 0 0;align-self:center}
+  .ses-t{grid-column:1/-1;grid-row:2;font-size:20px}
+  .ses-meta{grid-column:1/-1;grid-row:3;display:flex;flex-wrap:wrap;gap:2px 14px;align-items:baseline;padding-right:0}
+  .ses-who small{display:inline;margin-left:6px}
+  .ses-room{margin-top:0}
+  .ses-d{display:grid;grid-template-columns:1fr;padding:0 8px}
+  .ses-d>div{grid-column:1}
+  .tk{min-height:190px}
+  .tk-2 .tk-note{max-width:46%}
+  .tk-2 .tk-big{right:12%;font-size:22vw;bottom:auto;top:54px}
+  .tk-note{max-width:64%}
+  .spec{grid-template-columns:1fr}
+  .spec>div{grid-template-columns:1fr;padding:10px 0 9px}
+  .spec dt{line-height:1.5;margin-bottom:2px}
+  .kin-line{grid-template-columns:repeat(4,minmax(0,1fr));--cell:calc((100vw - 2*var(--mx))/4);font-size:calc(var(--cell)*1.5);row-gap:.06em}
+  .kin-band{top:20%;bottom:16%}
+  .pit-static{font-size:27vw}
+}
+@media (prefers-reduced-motion:reduce){
+  .mq-track{animation:none}
+  .mf *,.mf *::before,.mf *::after{transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div class="mf" id="top">
+<div class="grain" aria-hidden="true"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="tb-c" viewBox="0 0 22 22"><path d="M0 14h12M14 0v12M0 20h17M20 0v17" fill="none" stroke="currentColor" stroke-width="1"/></symbol>
+  <symbol id="tb-m" viewBox="0 0 22 22"><circle cx="11" cy="11" r="5.5" fill="none" stroke="currentColor" stroke-width="1"/><path d="M11 0v22M0 11h22" fill="none" stroke="currentColor" stroke-width="1"/></symbol>
+</svg>
+
+<div class="hero">
+  <span class="tombo tl" aria-hidden="true"><svg><use href="#tb-c"/></svg></span>
+  <span class="tombo tr" aria-hidden="true"><svg><use href="#tb-c"/></svg></span>
+  <span class="tombo tc" aria-hidden="true"><svg><use href="#tb-m"/></svg></span>
+
+  <header class="slug">
+    <div class="slug-job" aria-hidden="true">
+      <span class="cbar"><span class="ink-y"></span><span class="ink-p"></span><span class="ink-b"></span></span>
+      <span>MOJIFES-2027 / B1 / 3C</span>
+    </div>
+    <nav class="nav" aria-label="ページ内">
+      <a href="#manifesto">宣言</a><a href="#programme">番組表</a><a href="#tickets">入場券</a><a href="#access">道順</a><a href="#colophon">奥付</a>
+    </nav>
+    <div class="plates" role="group" aria-label="版の表示(分版を見る)">
+      <span class="plates-l" aria-hidden="true">版</span>
+      <button type="button" class="pl pl-p" data-plate="p" aria-pressed="true"><i></i><span>Pink</span></button>
+      <button type="button" class="pl pl-b" data-plate="b" aria-pressed="true"><i></i><span>Blue</span></button>
+      <button type="button" class="pl pl-y" data-plate="y" aria-pressed="true"><i></i><span>Yellow</span></button>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <span class="disc ink-y" aria-hidden="true"></span>
+    <span class="hero-ht ht is-ramp ink-p" aria-hidden="true"></span>
+
+    <div class="ttl-box">
+      <h1 class="ttl dela"><span class="ln">もじ</span><span class="ln">フェス</span><span class="vh"> 2027</span></h1>
+      <span class="ttl dela plate ink-y" aria-hidden="true"><span class="ln"><i class="on">も</i><i>じ</i></span><span class="ln"><i>フ</i><i class="on">ェ</i><i>ス</i></span></span>
+      <span class="ttl dela plate ink-p" aria-hidden="true"><span class="ln"><i class="on">も</i><i>じ</i></span><span class="ln"><i class="on">フ</i><i>ェ</i><i class="on">ス</i></span></span>
+      <span class="ttl dela plate ink-b" aria-hidden="true"><span class="ln"><i>も</i><i class="on">じ</i></span><span class="ln"><i>フ</i><i class="on">ェ</i><i class="on">ス</i></span></span>
+      <span class="stk stk-b" aria-hidden="true" data-r="9"><span>雨天決行<small>紙は屋内</small></span></span>
+    </div>
+
+    <div class="yr ink-b" aria-hidden="true"><span>20</span><span>27</span></div>
+
+    <div class="info">
+      <p class="info-k">文字と書き文字の二日間<span lang="en">Two days of type &amp; lettering</span></p>
+      <p class="info-date" aria-hidden="true">5.15<span class="wk">土</span><span class="bar"></span>16<span class="wk">日</span></p>
+      <p class="info-full">2027年5月15日(土)・16日(日) 10:00 開場</p>
+      <p class="info-place"><b class="dela">旧・見当印刷所</b><span>東京・清澄白河 — 古い印刷所をまるごと</span></p>
+      <p class="regout" id="regout" aria-hidden="true">見当ズレ / P&nbsp;+0.00&nbsp;+0.00 / B&nbsp;+0.00&nbsp;+0.00 / Y&nbsp;+0.00&nbsp;+0.00&nbsp;mm</p>
+    </div>
+    <span class="stk stk-a" aria-hidden="true" data-r="-8"><span>版ズレ<br>歓迎<small>MISREG OK</small></span></span>
+  </div>
+
+  <div class="mq" aria-hidden="true">
+    <div class="mq-track">
+      <span>Letters are loud<i></i><b>文字はうるさい</b><i></i>2027.5.15 Sat — 16 Sun<i></i><b>清澄白河・旧 見当印刷所</b><i></i>Talks, workshops, live lettering<i></i><b>もじ市 両日開催</b><i></i></span>
+      <span>Letters are loud<i></i><b>文字はうるさい</b><i></i>2027.5.15 Sat — 16 Sun<i></i><b>清澄白河・旧 見当印刷所</b><i></i>Talks, workshops, live lettering<i></i><b>もじ市 両日開催</b><i></i></span>
+    </div>
+  </div>
+</div>
+
+<main>
+<section class="sec" id="manifesto" aria-labelledby="h-man">
+  <div class="grid">
+    <div class="man-h">
+      <h2 class="h2 dela" id="h-man"><span class="two dela" data-t="宣言">宣言</span></h2>
+      <span class="h2-en" lang="en">Manifesto</span>
+    </div>
+    <div class="man-b">
+      <p class="lead">読むまえに、<em>見ている。</em></p>
+      <p>文字は、意味になる一瞬まえ、ただのかたちです。太さがあり、幅があり、刷ればインキの匂いがする。わたしたちは毎日それを何千と目にして、ほとんど気づかないまま通りすぎています。</p>
+      <p>もじフェスは、そのかたちを二日間、大きな声で面白がるための祭りです。書く人、設計する人、組む人、刷る人。それから、看板の「ぬ」がなんとなく好きなだけの人。古い印刷所に、三色のインキと紙を用意して待っています。</p>
+      <p class="last">少しくらいズレても、気にしません。むしろ歓迎します。</p>
+    </div>
+  </div>
+  <div class="kin" id="kin">
+    <span class="kin-band ht ink-y" aria-hidden="true"></span>
+    <div class="kin-line" aria-hidden="true"><span>M</span><span>O</span><span>J</span><span>I</span><span>M</span><span>O</span><span>J</span><span>I</span></div>
+    <p class="kin-cap"><span>もじもじしないで、さわってください。</span><span class="note" lang="en">Anybody — wdth 50–150 / wght 100–900</span></p>
+  </div>
+</section>
+
+<section class="sec" id="programme" aria-labelledby="h-prog">
+  <div class="grid">
+    <div class="prog-top">
+      <div>
+        <h2 class="h2 dela" id="h-prog"><span class="two mix-py dela" data-t="番組表">番組表</span></h2>
+        <span class="h2-en" lang="en">Programme — two days, five rooms</span>
+      </div>
+      <div class="filter" role="group" aria-label="種類でしぼる">
+        <span class="filter-l" aria-hidden="true">しぼる</span>
+        <button type="button" class="chip" data-f="all" aria-pressed="true">すべて</button>
+        <button type="button" class="chip" data-f="talk" data-kind="talk" aria-pressed="false">トーク</button>
+        <button type="button" class="chip" data-f="ws" data-kind="ws" aria-pressed="false">ワークショップ</button>
+        <button type="button" class="chip" data-f="live" data-kind="live" aria-pressed="false">ライブ</button>
+        <button type="button" class="chip" data-f="market" data-kind="market" aria-pressed="false">もじ市</button>
+        <button type="button" class="chip" data-f="kids" data-kind="kids" aria-pressed="false">こども</button>
+      </div>
+      <p class="vh" id="filter-live" aria-live="polite"></p>
+    </div>
+
+    <div class="day" id="day1">
+      <h3 class="day-h"><span class="day-n" lang="en">DAY 1</span><span class="day-d" aria-hidden="true"><i class="day-dot ink-y"></i><span class="num ink-b">15</span></span><span class="day-w">5月15日(土)<small>10:00–20:30</small></span></h3>
+      <ol class="ses-list">
+        <li class="ses" data-kind="market">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d1-1"><span class="ses-time">10:00<small>–18:00</small></span><span class="ses-main"><span class="ses-kind">もじ市</span><span class="ses-t">もじ市、開店</span></span><span class="ses-meta"><span class="ses-who">出店 38組</span><span class="ses-room">断裁場</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d1-1"><div><p>活字のばら売り、見本帳、手書きの値札。欠けた看板文字の量り売りは100グラムから。入場券があれば、何度でも出入りできます。</p></div></div>
+        </li>
+        <li class="ses" data-kind="talk">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d1-2"><span class="ses-time">10:30<small>–10:50</small></span><span class="ses-main"><span class="ses-kind">トーク</span><span class="ses-t">開会のことば「読むまえに、見ている」</span></span><span class="ses-meta"><span class="ses-who">版元 ズレ子<small>実行委員長</small></span><span class="ses-room">活版ホール</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d1-2"><div><p>20分きっかりで終わります。終わらなかった場合は、字間を詰めます。</p></div></div>
+        </li>
+        <li class="ses" data-kind="talk">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d1-3"><span class="ses-time">11:00<small>–12:00</small></span><span class="ses-main"><span class="ses-kind">トーク</span><span class="ses-t">「ぬ」と「め」は他人か</span></span><span class="ses-meta"><span class="ses-who">仮名 ひら<small>書体設計</small></span><span class="ses-room">活版ホール</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d1-3"><div><p>ひらがなの骨格をほどいて、親戚関係を調べます。「わ・ね・れ」三きょうだいの確執にも触れる予定です。</p></div></div>
+        </li>
+        <li class="ses" data-kind="kids">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d1-4"><span class="ses-time">11:00<small>–12:30</small></span><span class="ses-main"><span class="ses-kind">こども</span><span class="ses-t">じぶんの名前を、でっかく刷る</span></span><span class="ses-meta"><span class="ses-who">判子 ぽん<small>刷り師</small></span><span class="ses-room">インキ庫</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d1-4"><div><p>消しゴムとスチレン板で版をつくり、B3の紙いっぱいに名前を刷ります。対象は小学生以下。汚れてもいい服でどうぞ。</p></div></div>
+        </li>
+        <li class="ses" data-kind="ws">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d1-5"><span class="ses-time">13:00<small>–14:30</small></span><span class="ses-main"><span class="ses-kind">ワークショップ</span><span class="ses-t">字間だけで泣かせる</span></span><span class="ses-meta"><span class="ses-who">字間 あける<small>組版</small></span><span class="ses-room">製版室</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d1-5"><div><p>書体も級数も変えず、アキだけで三行の手紙を組みます。定員24名。整理券は当日10:00から受付で配ります。</p></div></div>
+        </li>
+        <li class="ses" data-kind="talk">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d1-6"><span class="ses-time">13:30<small>–14:30</small></span><span class="ses-main"><span class="ses-kind">トーク</span><span class="ses-t">インクトラップは罠ではない</span></span><span class="ses-meta"><span class="ses-who">墨 だまり<small>書体設計</small></span><span class="ses-room">活版ホール</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d1-6"><div><p>小さな文字の股に刻まれた、あの切れ込みの話。にじみを先回りする、やさしい設計について。</p></div></div>
+        </li>
+        <li class="ses" data-kind="live">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d1-7"><span class="ses-time">15:00<small>–15:45</small></span><span class="ses-main"><span class="ses-kind">ライブレタリング</span><span class="ses-t">10メートルの「あ」</span></span><span class="ses-meta"><span class="ses-who">大筆 ふるう<small>書き文字</small></span><span class="ses-room">中庭</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d1-7"><div><p>ロール紙10メートルに、ひと筆で「あ」を書きます。最前列は墨が飛びます。</p></div></div>
+        </li>
+        <li class="ses" data-kind="talk">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d1-8"><span class="ses-time">16:30<small>–17:30</small></span><span class="ses-main"><span class="ses-kind">トーク</span><span class="ses-t">欧文と和文、ベースラインで握手する</span></span><span class="ses-meta"><span class="ses-who">欧文 すみれ × 級数 Q太<small>混植相談</small></span><span class="ses-room">活版ホール</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d1-8"><div><p>「英数字だけ小さく見える問題」に、ふたりが別々の答えを出します。どちらも正しい、という結論になる見込みです。</p></div></div>
+        </li>
+        <li class="ses" data-kind="live">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d1-9"><span class="ses-time">18:30<small>–20:30</small></span><span class="ses-main"><span class="ses-kind">ライブ・夜の部</span><span class="ses-t">版ズレ品評会</span></span><span class="ses-meta"><span class="ses-who">司会 版元 ズレ子</span><span class="ses-room">活版ホール</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d1-9"><div><p>失敗した刷りものを持ち寄り、ズレの美しさを本気で講評します。最優秀ズレには、ズレた賞状を贈ります。</p></div></div>
+        </li>
+      </ol>
+    </div>
+
+    <div class="day" id="day2">
+      <h3 class="day-h"><span class="day-n" lang="en">DAY 2</span><span class="day-d" aria-hidden="true"><i class="day-dot ink-p"></i><span class="num ink-b">16</span></span><span class="day-w">5月16日(日)<small>10:00–18:00</small></span></h3>
+      <ol class="ses-list">
+        <li class="ses" data-kind="market">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d2-1"><span class="ses-time">10:00<small>–18:00</small></span><span class="ses-main"><span class="ses-kind">もじ市</span><span class="ses-t">もじ市、二日目</span></span><span class="ses-meta"><span class="ses-who">出店 38組</span><span class="ses-room">断裁場</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d2-1"><div><p>売り切れた活字は戻りません。「ゑ」をお探しの方は、お早めに。</p></div></div>
+        </li>
+        <li class="ses" data-kind="talk">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d2-2"><span class="ses-time">10:30<small>–11:30</small></span><span class="ses-main"><span class="ses-kind">トーク</span><span class="ses-t">禁則処理は思いやり</span></span><span class="ses-meta"><span class="ses-who">禁則 守<small>組版</small></span><span class="ses-room">活版ホール</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d2-2"><div><p>行頭に句点を置かない。それは規則というより、読む人への気づかいです。ぶら下げ派と追い込み派の公開討論つき。</p></div></div>
+        </li>
+        <li class="ses" data-kind="kids">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d2-3"><span class="ses-time">11:00<small>–11:40</small></span><span class="ses-main"><span class="ses-kind">こども</span><span class="ses-t">もじもじ体操</span></span><span class="ses-meta"><span class="ses-who">体操 かく<small>振付</small></span><span class="ses-room">屋上</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d2-3"><div><p>からだで「大」「の」「く」をつくります。大人の参加も歓迎。「鬱」は準備運動のあとで。</p></div></div>
+        </li>
+        <li class="ses" data-kind="ws">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d2-4"><span class="ses-time">11:30<small>–13:30</small></span><span class="ses-main"><span class="ses-kind">ワークショップ</span><span class="ses-t">リソグラフ三色刷り入門</span></span><span class="ses-meta"><span class="ses-who">重ね すり江<small>印刷</small></span><span class="ses-room">インキ庫</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d2-4"><div><p>ピンク・ブルー・イエローの三版で、七色を出します。見当合わせは、合わなくても楽しい。定員16名、要整理券。</p></div></div>
+        </li>
+        <li class="ses" data-kind="talk">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d2-5"><span class="ses-time">13:00<small>–14:00</small></span><span class="ses-main"><span class="ses-kind">トーク</span><span class="ses-t">看板の文字は、なぜ太る</span></span><span class="ses-meta"><span class="ses-who">平体 ひろし<small>町の文字観察</small></span><span class="ses-room">活版ホール</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d2-5"><div><p>商店街で集めた書き文字800枚から、「遠くで読ませる」ための工夫を読みとります。</p></div></div>
+        </li>
+        <li class="ses" data-kind="live">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d2-6"><span class="ses-time">14:00<small>–14:45</small></span><span class="ses-main"><span class="ses-kind">ライブレタリング</span><span class="ses-t">お題は客席から</span></span><span class="ses-meta"><span class="ses-who">大筆 ふるう/長体 のびる</span><span class="ses-room">中庭</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d2-6"><div><p>客席から出た言葉を、その場でレタリングします。「確定申告」のような画数の多いお題も、受けて立ちます。</p></div></div>
+        </li>
+        <li class="ses" data-kind="ws">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d2-7"><span class="ses-time">15:00<small>–16:30</small></span><span class="ses-main"><span class="ses-kind">ワークショップ</span><span class="ses-t">約物だけで自己紹介</span></span><span class="ses-meta"><span class="ses-who">約物 まる<small>編集</small></span><span class="ses-room">製版室</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d2-7"><div><p>かっこ、中黒、三点リーダー。文字を使わずに自分を語る名刺をつくります。定員24名、要整理券。</p></div></div>
+        </li>
+        <li class="ses" data-kind="talk">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d2-8"><span class="ses-time">16:00<small>–17:00</small></span><span class="ses-main"><span class="ses-kind">トーク</span><span class="ses-t">可変フォントは伸びる。では、心は</span></span><span class="ses-meta"><span class="ses-who">長体 のびる<small>タイプエンジニア</small></span><span class="ses-room">活版ホール</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d2-8"><div><p>幅と太さの軸を動かしながら、「ちょうどいい」がどこにあるのかを探します。wdth 50 から 150 まで、実演つき。</p></div></div>
+        </li>
+        <li class="ses" data-kind="talk">
+          <button type="button" class="ses-h" aria-expanded="true" aria-controls="d2-9"><span class="ses-time">17:30<small>–18:00</small></span><span class="ses-main"><span class="ses-kind">トーク・閉会</span><span class="ses-t">合字で乾杯</span></span><span class="ses-meta"><span class="ses-who">合字 むすぶ<small>書体設計</small></span><span class="ses-room">中庭</span></span><span class="ses-x" aria-hidden="true"></span></button>
+          <div class="ses-d" id="d2-9"><div><p>fi、fl、ffi の順に乾杯します。くっつくのは文字だけにしてください。</p></div></div>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="tickets" aria-labelledby="h-tk">
+  <div class="grid">
+    <div class="tk-h">
+      <h2 class="h2 dela" id="h-tk"><span class="two dela" data-t="入場券">入場券</span></h2>
+      <span class="h2-en" lang="en">Tickets — all prices include tax</span>
+      <span class="stk stk-c" aria-hidden="true" data-r="-12"><span>小学生<br>以下無料<small>KIDS FREE</small></span></span>
+    </div>
+    <ul class="tks">
+      <li class="tk tk-1"><span class="tk-perf" aria-hidden="true"></span>
+        <span class="tk-kind">1日券<small lang="en">ONE DAY</small></span>
+        <span class="tk-price"><i>¥</i>3,800</span>
+        <span class="tk-note">15日(土)か16日(日)、どちらか1日。</span>
+        <span class="tk-no" aria-hidden="true">No. 0515-A</span></li>
+      <li class="tk tk-2"><span class="tk-perf" aria-hidden="true"></span>
+        <span class="tk-kind">2日通し券<small lang="en">TWO-DAY PASS</small></span>
+        <span class="tk-days" aria-hidden="true">DAY 1 + DAY 2</span>
+        <span class="tk-big" aria-hidden="true">×2</span>
+        <span class="tk-price"><i>¥</i>6,400</span>
+        <span class="tk-note">二日とも入れます。半券は切り離さないでください。</span>
+        <span class="tk-no" aria-hidden="true">No. 0515-0516</span></li>
+      <li class="tk tk-3"><span class="tk-htc ht" aria-hidden="true"></span><span class="tk-perf" aria-hidden="true"></span>
+        <span class="tk-kind">学生<small lang="en">STUDENT / ONE DAY</small></span>
+        <span class="tk-price"><i>¥</i>2,000</span>
+        <span class="tk-note">1日券。受付で学生証を見せてください。</span>
+        <span class="tk-no" aria-hidden="true">No. 0515-S</span></li>
+      <li class="tk tk-4"><span class="tk-perf" aria-hidden="true"></span>
+        <span class="tk-kind">小学生以下<small lang="en">CHILDREN</small></span>
+        <span class="tk-price jp">無料</span>
+        <span class="tk-note">保護者の方と一緒にどうぞ。</span>
+        <span class="tk-no" aria-hidden="true">No. 0000</span></li>
+      <li class="tk-info">
+        <p>入場券で、トーク・ライブ・もじ市に入れます。</p>
+        <p>ワークショップは参加無料。各回の整理券を、当日10:00から受付で配ります。</p>
+        <p>前売は2027年3月1日(月)から。当日券は搬入口の受付で。</p>
+        <p class="note">このページはご案内のみで、購入の手続きはできません。</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="sec" id="access" aria-labelledby="h-ac">
+  <div class="grid">
+    <div class="ac-h">
+      <h2 class="h2 dela" id="h-ac"><span class="two mix-by dela" data-t="道順">道順</span></h2>
+      <span class="h2-en" lang="en">Access — Kiyosumi-shirakawa, Tokyo</span>
+    </div>
+    <figure class="map">
+      <svg viewBox="0 0 600 430" role="img" aria-labelledby="map-t">
+        <title id="map-t">会場周辺の略図。清澄白河駅から北東へ歩いて約7分のところに旧・見当印刷所。駅の南西に清澄庭園、西に隅田川。</title>
+        <defs>
+          <pattern id="dots-b" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="4.5" cy="4.5" r="2.5" class="f-b"/></pattern>
+          <pattern id="dots-p" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="4" cy="4" r="1.7" class="f-p"/></pattern>
+        </defs>
+        <rect x="330" y="0" width="270" height="215" fill="url(#dots-p)" class="mul ink-p"/>
+        <path d="M-10 0H86C70 90 108 150 92 240S60 370 84 430H-10Z" fill="url(#dots-b)" class="mul ink-b"/>
+        <rect x="150" y="258" width="150" height="112" rx="10" class="f-y mul ink-y"/>
+        <rect x="158" y="266" width="150" height="112" rx="10" fill="url(#dots-b)" class="mul ink-b"/>
+        <path class="ln" stroke-width="7" d="M96 222H600"/>
+        <path class="ln" stroke-width="7" d="M326 0V430"/>
+        <path class="ln" stroke-width="1.5" d="M110 120H600M110 330H600M200 0V430M450 0V430M540 0V430"/>
+        <path class="ln" stroke-width="4" stroke-dasharray="2 9" stroke-linecap="round" d="M340 208H450V118H478" style="stroke:var(--ov-pby)"/>
+        <circle cx="500" cy="96" r="40" class="f-p mul ink-p"/>
+        <circle cx="500" cy="96" r="8" style="fill:var(--ov-pby)"/>
+        <rect x="308" y="204" width="36" height="36" rx="18" style="fill:var(--paper);stroke:var(--ov-pby);stroke-width:5"/>
+        <text x="352" y="262">清澄白河駅</text>
+        <text x="352" y="280" class="sm">半蔵門線 / 大江戸線</text>
+        <text x="344" y="44" class="vn">旧・見当印刷所</text>
+        <text x="366" y="170" class="sm">徒歩 約7分</text>
+        <text x="182" y="322">清澄庭園</text>
+        <text x="30" y="150" style="writing-mode:vertical-rl">隅田川</text>
+        <text x="560" y="412" class="sm">N ↑</text>
+      </svg>
+    </figure>
+    <div class="ac-b">
+      <p class="ac-venue dela">旧・見当印刷所</p>
+      <p class="ac-sub">東京都江東区・清澄白河</p>
+      <dl class="spec">
+        <div><dt>最寄り</dt><dd>東京メトロ半蔵門線・都営大江戸線「清澄白河」駅から、歩いて約7分。</dd></div>
+        <div><dt>開場</dt><dd>両日 10:00。15日(土)は夜の部 20:30 まで、16日(日)は 18:00 まで。</dd></div>
+        <div><dt>目印</dt><dd>搬入口の大きなシャッター。紙とインキの匂いがしたら、もう近くです。</dd></div>
+        <div><dt>乗りもの</dt><dd>駐車場はありません。自転車は中庭へ。</dd></div>
+        <div><dt>服装</dt><dd>インキが付いても笑える服で。</dd></div>
+      </dl>
+      <p class="note" style="margin-top:14px">略図です。川と庭園と駅のほかは、だいたい想像で描いています。</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec col" id="colophon" aria-labelledby="h-col">
+  <div class="grid">
+    <div class="col-h">
+      <h2 class="h2 dela" id="h-col"><span class="two dela" data-t="奥付">奥付</span></h2>
+      <span class="h2-en" lang="en">Colophon — for print nerds</span>
+    </div>
+    <figure class="col-fig" aria-hidden="true">
+      <i class="ink-p"></i><i class="ink-b"></i><i class="ink-y"></i>
+    </figure>
+    <div class="col-b">
+      <dl class="spec">
+        <div><dt>版</dt><dd><b>3版。</b><span class="sw" style="--c:var(--pink)"></span>蛍光ピンク <span class="mono">#FF48B0</span> / <span class="sw" style="--c:var(--blue)"></span>ブルー <span class="mono">#0078BF</span> / <span class="sw" style="--c:var(--yellow)"></span>イエロー <span class="mono">#FFE800</span>。いずれも画面上の近似値です。</dd></div>
+        <div><dt>重ね</dt><dd>乗算(<span class="mono">mix-blend-mode: multiply</span>)。<span class="sw" style="--c:var(--ov-py)"></span>ピンク×イエロー、<span class="sw" style="--c:var(--ov-by)"></span>ブルー×イエロー、<span class="sw" style="--c:var(--ov-pb)"></span>ピンク×ブルー、<span class="sw" style="--c:var(--ov-pby)"></span>三版重ね。三つのインキで、あわせて七色。</dd></div>
+        <div><dt>網点</dt><dd>ぼかしもグラデーションも使わず、濃淡はすべて45°の網点で。</dd></div>
+        <div><dt>用紙</dt><dd>非塗工の上質紙、ややクリーム(という設定の <span class="mono">#F3EFE4</span>)。インキのかすれは <span class="mono">feTurbulence</span>。</dd></div>
+        <div><dt>書体</dt><dd><b>Dela Gothic One</b>(題字)/ <b>M PLUS 1</b>(本文、太さ可変)/ <b>Anybody</b>(欧文と数字、幅と太さ可変)/ <b>DM Mono</b>(注記)。</dd></div>
+        <div><dt>判型</dt><dd>あなたの画面いっぱい。<span class="mono" id="vp-out"></span></dd></div>
+        <div><dt>見当</dt><dd>ただいまのズレ <span class="mono" id="regout2">0.00 mm</span>。ポインタとスクロールで、いくらでもズレます。</dd></div>
+        <div><dt>刷</dt><dd><span id="ed-out">第1刷</span>。印刷所は、お使いのブラウザです。</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="pit-sec" id="pit-sec">
+  <div class="pit-top">
+    <div>
+      <h2 class="h2 dela" id="h-pit"><span class="two mix-py dela" data-t="もじだまり">もじだまり</span></h2>
+      <span class="h2-en" lang="en">The letter pit</span>
+    </div>
+    <div>
+      <p class="pit-lede">刷り損じの文字が、床にたまっています。つかんで、投げてください。重なったところは、ちゃんと色が混ざります。</p>
+      <div class="pit-ctl" id="pit-ctl" hidden>
+        <button type="button" class="btn" id="pit-shake">ゆらす</button>
+        <button type="button" class="btn" id="pit-reset">もう一度ふらせる</button>
+      </div>
+    </div>
+  </div>
+  <div class="pit" id="pit">
+    <div class="pit-static" aria-hidden="true">
+      <span class="dela p" style="left:3%;bottom:-2%;--r:-8deg">も</span>
+      <span class="dela b" style="left:16%;bottom:1%;--r:11deg">じ</span>
+      <span class="a y" style="left:29%;bottom:-3%;--r:-4deg">R</span>
+      <span class="dela p" style="left:41%;bottom:0%;--r:14deg">ぬ</span>
+      <span class="dela b" style="left:55%;bottom:-2%;--r:-12deg">字</span>
+      <span class="a p" style="left:69%;bottom:-4%;--r:7deg">&amp;</span>
+      <span class="dela y" style="left:80%;bottom:0%;--r:-16deg">フ</span>
+      <span class="dela y" style="left:9%;bottom:34%;--r:18deg">あ</span>
+      <span class="a b" style="left:24%;bottom:36%;--r:-20deg">g</span>
+      <span class="dela p" style="left:47%;bottom:38%;--r:6deg">版</span>
+      <span class="a b" style="left:63%;bottom:35%;--r:-9deg">?</span>
+      <span class="dela b" style="left:74%;bottom:40%;--r:22deg">ス</span>
+    </div>
+    <canvas id="pit-cv" aria-hidden="true"></canvas>
+    <span class="tombo bl" aria-hidden="true"><svg><use href="#tb-c"/></svg></span>
+    <span class="tombo br" aria-hidden="true"><svg><use href="#tb-c"/></svg></span>
+    <span class="tombo bc" aria-hidden="true"><svg><use href="#tb-m"/></svg></span>
+  </div>
+  <div class="foot">
+    <p>もじフェス 2027<br>2027.5.15 Sat — 16 Sun</p>
+    <p>もじフェス 2027 は架空の催しです。会場も出演者も実在せず、このサイトはコンセプト作品としてつくられました。</p>
+    <p><a href="#top">天へ戻る ↑</a></p>
+  </div>
+</footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+(function(){
+'use strict';
+var mf=document.querySelector('.mf'); if(!mf) return;
+mf.classList.add('js');
+var $=function(s,c){return (c||mf).querySelector(s)};
+var $$=function(s,c){return Array.prototype.slice.call((c||mf).querySelectorAll(s))};
+var RM=window.matchMedia('(prefers-reduced-motion: reduce)');
+var reduced=RM.matches;
+var clamp=function(v,a,b){return v<a?a:v>b?b:v};
+var fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+
+/* ---------- halftone ramp (dots grow towards the foot) ---------- */
+try{
+  var hc=document.createElement('canvas'),S=2,cell=9,cols=24,RH=300;
+  hc.width=cell*cols*S;hc.height=RH*S;
+  var hx=hc.getContext('2d');hx.fillStyle='#000';
+  for(var r=0;r*cell/2<=RH+cell;r++){
+    var yy=r*cell/2,t=clamp((yy-10)/(RH-10),0,1),rad=cell*.5*Math.pow(t,.85);
+    if(rad<.35) continue;
+    for(var q=-1;q<=cols;q++){hx.beginPath();hx.arc((q+(r%2?.5:0))*cell*S,yy*S,rad*S,0,6.2832);hx.fill();}
+  }
+  mf.style.setProperty('--ramp','url('+hc.toDataURL()+')');
+}catch(e){}
+
+/* ---------- plates on/off (分版) ---------- */
+$$('.pl').forEach(function(b){
+  b.addEventListener('click',function(){
+    var on=b.getAttribute('aria-pressed')!=='true';
+    b.setAttribute('aria-pressed',on?'true':'false');
+    mf.classList.toggle('no-'+b.dataset.plate,!on);
+    if(pit&&pit.setPlates) pit.setPlates();
+  });
+});
+
+/* ---------- 版ズレ: one engine feeds every plate ---------- */
+var reg={cx:0,cy:0,tx:0,ty:0,sv:0,intro:!reduced,t0:0,raf:0,press:1};
+var yr={w:150,g:900,tw:150,tg:900,el:$('.yr')};
+var mq={w:100,el:$('.mq')};
+var regout=$('#regout'),regout2=$('#regout2'),lastOut=0;
+var hero=$('.hero'),heroH=hero?hero.offsetHeight:800;
+var fmt=function(px){var mm=px*.2646,a=Math.abs(mm).toFixed(2);return (mm<0&&a!=='0.00'?'−':'+')+a};
+function plates(x,y){
+  return [[x,y],[-.75*x+.22*y,-.62*y-.2*x],[.4*y-.15*x,-.5*x+.28*y]];
+}
+function regTick(now){
+  reg.raf=0;
+  var ix=0,iy=0,live=false;
+  if(reg.intro){
+    var t=reg.t0?(now-reg.t0)/1150:0;
+    if(t>=1){reg.intro=false;}
+    else{var k=Math.pow(1-t,3)*Math.cos(t*8.4);ix=38*k;iy=-24*k;live=true;}
+  }
+  reg.cx+=(reg.tx*reg.press-reg.cx)*.14; reg.cy+=(reg.ty*reg.press+reg.sv-reg.cy)*.14;
+  reg.sv*=.9; if(Math.abs(reg.sv)<.04) reg.sv=0;
+  var x=reg.cx+ix,y=reg.cy+iy,P=plates(x,y),s=mf.style;
+  s.setProperty('--px',P[0][0].toFixed(2)+'px');s.setProperty('--py',P[0][1].toFixed(2)+'px');
+  s.setProperty('--bx',P[1][0].toFixed(2)+'px');s.setProperty('--by',P[1][1].toFixed(2)+'px');
+  s.setProperty('--yx',P[2][0].toFixed(2)+'px');s.setProperty('--yy',P[2][1].toFixed(2)+'px');
+  yr.w+=(yr.tw-yr.w)*.14; yr.g+=(yr.tg-yr.g)*.14;
+  if(yr.el){yr.el.style.setProperty('--yw',yr.w.toFixed(1));yr.el.style.setProperty('--yg',yr.g.toFixed(0));}
+  var mwT=100+Math.min(50,Math.abs(reg.sv)*2.2); mq.w+=(mwT-mq.w)*.12;
+  if(mq.el) mq.el.style.setProperty('--mw',mq.w.toFixed(1));
+  if(now-lastOut>110){
+    lastOut=now;
+    if(regout) regout.textContent='見当ズレ / P\u00a0'+fmt(P[0][0])+'\u00a0'+fmt(P[0][1])+' / B\u00a0'+fmt(P[1][0])+'\u00a0'+fmt(P[1][1])+' / Y\u00a0'+fmt(P[2][0])+'\u00a0'+fmt(P[2][1])+'\u00a0mm';
+    if(regout2) regout2.textContent=(Math.hypot(P[0][0]-P[1][0],P[0][1]-P[1][1])*.2646).toFixed(2)+' mm';
+  }
+  if(live||reg.sv||Math.abs(reg.tx*reg.press-reg.cx)>.03||Math.abs(reg.ty*reg.press-reg.cy)>.03||Math.abs(yr.tw-yr.w)>.3||Math.abs(yr.tg-yr.g)>1||Math.abs(mwT-mq.w)>.3) regKick();
+  else lastOut=0;
+}
+function regKick(){ if(!reg.raf&&!document.hidden) reg.raf=requestAnimationFrame(regTick); }
+function yrFromScroll(){
+  var sp=clamp(window.scrollY/Math.max(1,heroH*.8),0,1);
+  yr.sp=sp;
+}
+function yrTarget(nx,ny){
+  /* pointer x squeezes the width, pointer y thins the weight; scrolling away squeezes too */
+  var sp=yr.sp||0;
+  yr.tw=clamp(150-(nx==null?0:(1-(nx+1)/2)*70)-sp*90,50,150);
+  yr.tg=clamp(900-(ny==null?0:(1-(ny+1)/2)*480)-sp*200,300,900);
+}
+var lastPtr=null;
+if(!reduced){
+  regKick();
+  var go=function(){ if(!reg.t0){reg.t0=performance.now();regKick();} };
+  fontsReady.then(go,go);setTimeout(go,900);
+  window.addEventListener('pointermove',function(e){
+    var nx=(e.clientX/window.innerWidth-.5)*2,ny=(e.clientY/window.innerHeight-.5)*2;
+    reg.tx=nx*8;reg.ty=ny*6;lastPtr=[nx,ny];
+    yrTarget(nx,ny);regKick();
+  },{passive:true});
+  var release=function(e){
+    reg.press=1;
+    if(!e||e.pointerType!=='mouse'){reg.tx=0;reg.ty=0;lastPtr=null;yrTarget(null,null);}
+    regKick();
+  };
+  window.addEventListener('pointerdown',function(e){
+    if(hero&&hero.contains(e.target)&&!e.target.closest('button,a,.stk')){reg.press=3.4;regKick();}
+  },{passive:true});
+  window.addEventListener('pointerup',release,{passive:true});
+  window.addEventListener('pointercancel',release,{passive:true});
+  document.documentElement.addEventListener('mouseleave',function(){reg.tx=0;reg.ty=0;lastPtr=null;yrTarget(null,null);regKick();});
+  var lastY=window.scrollY;
+  window.addEventListener('scroll',function(){
+    var y=window.scrollY,dy=y-lastY;lastY=y;
+    reg.sv=clamp(reg.sv+dy*.22,-30,30);
+    yrFromScroll(); if(lastPtr) yrTarget(lastPtr[0],lastPtr[1]); else yrTarget(null,null);
+    regKick(); kinKick();
+  },{passive:true});
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden){regKick();} });
+}else{
+  mf.style.setProperty('--px','1.2px');mf.style.setProperty('--py','-.8px');
+  mf.style.setProperty('--yx','-1px');mf.style.setProperty('--yy','1.2px');
+  if(regout) regout.textContent='見当ズレ / P\u00a0+0.32\u00a0−0.21 / B\u00a0+0.00\u00a0+0.00 / Y\u00a0−0.26\u00a0+0.32\u00a0mm';
+  if(regout2) regout2.textContent='0.38 mm';
+}
+
+/* ---------- MOJIMOJI: letters stretch under the pointer, ripple with scroll ---------- */
+var kin=$('#kin'),kinLetters=$$('.kin-line span'),kinRaf=0,kinPtr=null,kinVis=false,kinCur=kinLetters.map(function(){return 0;});
+var kinPos=[],kinCw=100;
+function kinMeasure(){
+  kinPos=kinLetters.map(function(l){return [l.offsetLeft+l.offsetWidth/2,l.offsetTop+l.offsetHeight/2];});
+  kinCw=kinLetters.length?kinLetters[0].offsetWidth||100:100;
+}
+function kinTick(){
+  kinRaf=0; if(!kinVis) return;
+  if(!kinPos.length) kinMeasure();
+  var n=kinLetters.length,moving=false,sc=window.scrollY/110;
+  for(var i=0;i<n;i++){
+    var v=.22+.22*Math.sin(sc+i*.9);
+    if(kinPtr){var d=Math.hypot(kinPtr[0]-kinPos[i][0],(kinPtr[1]-kinPos[i][1])*.8)/kinCw;v=Math.max(v*.5,Math.exp(-d*d*.42));}
+    kinCur[i]+=(v-kinCur[i])*.2;
+    if(Math.abs(v-kinCur[i])>.004) moving=true;
+    var s=kinLetters[i].style;
+    s.setProperty('--w',(52+kinCur[i]*98).toFixed(1));s.setProperty('--g2',(380+kinCur[i]*520).toFixed(0));
+  }
+  if(moving) kinKick();
+}
+function kinKick(){ if(!kinRaf&&kinVis&&!reduced) kinRaf=requestAnimationFrame(kinTick); }
+if(kin&&!reduced){
+  var kline=$('.kin-line');
+  var kmove=function(e){var r=kline.getBoundingClientRect();kinPtr=[e.clientX-r.left,e.clientY-r.top];kinKick();};
+  kin.addEventListener('pointermove',kmove,{passive:true});
+  kin.addEventListener('pointerdown',kmove,{passive:true});
+  var kout=function(){kinPtr=null;kinKick();};
+  kin.addEventListener('pointerleave',kout,{passive:true});
+  kin.addEventListener('pointercancel',kout,{passive:true});
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(en){kinVis=en[0].isIntersecting;kinKick();},{rootMargin:'80px'}).observe(kin);
+  }else{kinVis=true;kinKick();}
+}
+
+/* ---------- programme: expand + filter ---------- */
+var heads=$$('.ses-h');
+heads.forEach(function(h){
+  h.setAttribute('aria-expanded','false');
+  h.addEventListener('click',function(){
+    h.setAttribute('aria-expanded',h.getAttribute('aria-expanded')==='true'?'false':'true');
+  });
+});
+var chips=$$('.chip'),live=$('#filter-live');
+chips.forEach(function(c){
+  c.addEventListener('click',function(){
+    var f=c.dataset.f,n=0;
+    chips.forEach(function(o){o.setAttribute('aria-pressed',o===c?'true':'false');});
+    $$('.ses').forEach(function(s){var show=f==='all'||s.dataset.kind===f;s.hidden=!show;if(show)n++;});
+    if(live) live.textContent=c.textContent+':'+n+'件';
+  });
+});
+
+/* ---------- stickers: flick them ---------- */
+$$('.stk').forEach(function(el){
+  var x=0,y=0,vx=0,vy=0,rot=parseFloat(el.dataset.r)||0,lx=0,ly=0,lt=0,drag=false,raf=0,bx0=0,bx1=0,by0=0,by1=0;
+  var put=function(){el.style.translate=x.toFixed(1)+'px '+y.toFixed(1)+'px';el.style.rotate=rot.toFixed(1)+'deg';};
+  var bounds=function(){
+    var sec=el.closest('.hero,.sec')||mf,sr=sec.getBoundingClientRect(),r=el.getBoundingClientRect();
+    bx0=sr.left-(r.left-x)+4;bx1=sr.right-(r.right-x)-4;by0=sr.top-(r.top-y)+4;by1=sr.bottom-(r.bottom-y)-4;
+  };
+  var glide=function(){
+    raf=0;x+=vx;y+=vy;vx*=.93;vy*=.93;rot+=vx*.35;
+    if(x<bx0){x=bx0;vx=-vx*.6;}else if(x>bx1){x=bx1;vx=-vx*.6;}
+    if(y<by0){y=by0;vy=-vy*.6;}else if(y>by1){y=by1;vy=-vy*.6;}
+    put();
+    if(Math.abs(vx)+Math.abs(vy)>.25) raf=requestAnimationFrame(glide);
+  };
+  el.addEventListener('pointerdown',function(e){
+    drag=true;try{el.setPointerCapture(e.pointerId);}catch(_){}
+    cancelAnimationFrame(raf);raf=0;bounds();lx=e.clientX;ly=e.clientY;lt=performance.now();vx=vy=0;e.preventDefault();
+  });
+  el.addEventListener('pointermove',function(e){
+    if(!drag) return;
+    var now=performance.now(),dt=Math.max(8,now-lt),dx=e.clientX-lx,dy=e.clientY-ly;
+    x=clamp(x+dx,bx0,bx1);y=clamp(y+dy,by0,by1);
+    vx=vx*.5+dx/dt*16*.5;vy=vy*.5+dy/dt*16*.5;lx=e.clientX;ly=e.clientY;lt=now;put();
+  });
+  var up=function(){ if(!drag) return; drag=false; if(reduced){vx=vy=0;return;} vx=clamp(vx,-40,40);vy=clamp(vy,-40,40); if(!raf) raf=requestAnimationFrame(glide); };
+  el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+});
+
+/* ---------- colophon read-outs ---------- */
+var vp=$('#vp-out');
+function vpOut(){ if(vp) vp.textContent='(いま '+window.innerWidth+' × '+window.innerHeight+' px)'; }
+vpOut();
+var ed=$('#ed-out');
+try{
+  var n=(parseInt(window.localStorage.getItem('mojifes-ed'),10)||0)+1;
+  window.localStorage.setItem('mojifes-ed',String(n));
+  if(ed) ed.textContent='このブラウザでは第'+n+'刷';
+}catch(e){}
+
+/* ---------- もじだまり: the letter pit ---------- */
+var pit=null;
+var GLYPHS=[/*PIT*/['も','d','p',1.25],['じ','d','b',1.1],['R','a','y',1.2],['ぬ','d','p',1],['字','d','b',1.3],['&','a','p',1.15],['フ','d','y',1.1],['あ','d','b',1.35],['g','a','b',1.2],['版','d','p',1],['?','a','b',1.1],['ス','d','y',1],['Q','a','p',1.1],['ェ','d','p',.8],['!','a','y',1.2],['を','d','b',.95],['a','a','p',1.1],['。','d','b',1.5],['ゑ','d','y',1.05],['「','d','p',1.1],['」','d','b',1.1],['M','a','y',.9]/*END*/];
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function makePit(){
+  var M=window.Matter,wrap=$('#pit'),cv=$('#pit-cv');
+  if(!M||reduced||!wrap||!cv||!cv.getContext) return null;
+  var ctx=cv.getContext('2d'); if(!ctx) return null;
+  var Bodies=M.Bodies,Comp=M.Composite,Body=M.Body,Sleeping=M.Sleeping;
+  var engine=M.Engine.create({enableSleeping:true});
+  engine.gravity.y=1.15;
+  var W=0,H=0,dpr=1,walls=[],bodies=[],drag=null,running=false,visible=false,raf=0,spawned=false;
+  var INK={p:css('--pink'),b:css('--blue'),y:css('--yellow')},off={p:false,b:false,y:false};
+  function size(){
+    W=wrap.clientWidth;H=wrap.clientHeight;dpr=Math.min(window.devicePixelRatio||1,2);
+    cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+    walls.forEach(function(w){Comp.remove(engine.world,w);});
+    var o={isStatic:true,friction:.6};
+    walls=[Bodies.rectangle(W/2,H+60,W+800,120,o),Bodies.rectangle(-60,-H,120,H*6,o),Bodies.rectangle(W+60,-H,120,H*6,o)];
+    Comp.add(engine.world,walls);
+  }
+  function spawn(){
+    bodies.forEach(function(b){Comp.remove(engine.world,b);});bodies=[];
+    var list=W<700?GLYPHS.slice(0,14):GLYPHS;
+    var base=clamp(Math.sqrt(.4*W*H/list.length)/.85,64,200);
+    list.forEach(function(g,i){
+      var fs=Math.round(base*g[3]);
+      var font=g[1]==='d'?'400 '+fs+'px "Dela Gothic One", sans-serif':'900 extra-expanded '+fs+'px Anybody, sans-serif';
+      ctx.font=font;
+      var m=ctx.measureText(g[0]),l=m.actualBoundingBoxLeft,r=m.actualBoundingBoxRight,a=m.actualBoundingBoxAscent,d=m.actualBoundingBoxDescent;
+      var bw=Math.max(14,l+r),bh=Math.max(14,a+d);
+      var x=bw/2+10+Math.random()*Math.max(1,W-bw-20),y=-bh-i*base*.42;
+      var b=g[0]==='。'?Bodies.circle(x,y,Math.max(bw,bh)/2,{restitution:.3,friction:.4,frictionAir:.01})
+        :Bodies.rectangle(x,y,bw,bh,{restitution:.16,friction:.55,frictionAir:.012,chamfer:{radius:Math.min(bw,bh)*.14},angle:(Math.random()-.5)*.9});
+      b.sleepThreshold=45;
+      b.glyph={ch:g[0],font:font,ink:g[2],ox:-bw/2+l,oy:-bh/2+a};
+      bodies.push(b);
+    });
+    Comp.add(engine.world,bodies);spawned=true;
+  }
+  function draw(){
+    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation='multiply';ctx.textBaseline='alphabetic';ctx.textAlign='left';
+    for(var i=0;i<bodies.length;i++){
+      var b=bodies[i],g=b.glyph; if(off[g.ink]) continue;
+      ctx.setTransform(dpr,0,0,dpr,b.position.x*dpr,b.position.y*dpr);ctx.rotate(b.angle);
+      ctx.font=g.font;ctx.fillStyle=INK[g.ink];ctx.fillText(g.ch,g.ox,g.oy);
+    }
+  }
+  function loop(){
+    raf=0;
+    if(!visible||document.hidden){running=false;return;}
+    M.Engine.update(engine,1000/60);
+    var awake=!!drag;
+    for(var i=0;i<bodies.length;i++){
+      var b=bodies[i];
+      if(b.position.y>H+300||b.position.x<-300||b.position.x>W+300){Body.setPosition(b,{x:W/2,y:-100});Body.setVelocity(b,{x:0,y:0});}
+      if(!b.isSleeping) awake=true;
+    }
+    draw();
+    if(awake) raf=requestAnimationFrame(loop); else running=false;
+  }
+  function wake(){ if(!running&&visible&&!document.hidden){running=true;raf=requestAnimationFrame(loop);} }
+  function pt(e){var r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
+  function hit(p){var h=M.Query.point(bodies,p);return h.length?h[h.length-1]:null;}
+  cv.addEventListener('touchstart',function(e){ if(e.touches.length===1&&hit(pt(e.touches[0]))) e.preventDefault(); },{passive:false});
+  cv.addEventListener('pointerdown',function(e){
+    if(drag) return;
+    var p=pt(e),b=hit(p); if(!b) return;
+    try{cv.setPointerCapture(e.pointerId);}catch(_){}
+    Sleeping.set(b,false);
+    var c=M.Constraint.create({pointA:p,bodyB:b,pointB:{x:p.x-b.position.x,y:p.y-b.position.y},length:0,stiffness:.16,damping:.14});
+    Comp.add(engine.world,c);drag={id:e.pointerId,c:c,b:b};cv.style.cursor='grabbing';wake();
+  });
+  cv.addEventListener('pointermove',function(e){
+    if(drag&&e.pointerId===drag.id){var p=pt(e);drag.c.pointA=p;Sleeping.set(drag.b,false);}
+    else if(!drag&&e.pointerType==='mouse'){cv.style.cursor=hit(pt(e))?'grab':'';}
+  },{passive:true});
+  function drop(e){ if(!drag||(e&&e.pointerId!==drag.id)) return; Comp.remove(engine.world,drag.c);drag=null;cv.style.cursor='';wake(); }
+  cv.addEventListener('pointerup',drop);cv.addEventListener('pointercancel',drop);cv.addEventListener('lostpointercapture',drop);
+  function shake(){
+    bodies.forEach(function(b){Sleeping.set(b,false);Body.setVelocity(b,{x:(Math.random()-.5)*22,y:-10-Math.random()*16});Body.setAngularVelocity(b,(Math.random()-.5)*.5);});
+    wake();
+  }
+  var ctl=$('#pit-ctl'); if(ctl) ctl.hidden=false;
+  var bs=$('#pit-shake'),br=$('#pit-reset');
+  if(bs) bs.addEventListener('click',shake);
+  if(br) br.addEventListener('click',function(){spawn();wake();});
+  var rt=0,lastW=0;
+  window.addEventListener('resize',function(){
+    clearTimeout(rt);rt=setTimeout(function(){
+      if(Math.abs(wrap.clientWidth-lastW)<2&&Math.abs(wrap.clientHeight-H)<2) return;
+      lastW=wrap.clientWidth;size();
+      bodies.forEach(function(b){Sleeping.set(b,false);if(b.position.x>W-20) Body.setPosition(b,{x:W-60,y:b.position.y-40});});
+      wake();
+    },180);
+  },{passive:true});
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) wake(); });
+  size();lastW=W;
+  mf.classList.add('pit-live');
+  return {
+    show:function(v){visible=v; if(v){ if(!spawned) spawn(); wake(); } },
+    setPlates:function(){off.p=mf.classList.contains('no-p');off.b=mf.classList.contains('no-b');off.y=mf.classList.contains('no-y'); if(running) return; draw();}
+  };
+}
+function bootPit(){
+  var wrap=$('#pit'); if(!wrap||!('IntersectionObserver' in window)) return;
+  var io=new IntersectionObserver(function(en){
+    var v=en[0].isIntersecting;
+    if(v&&!pit){ try{pit=makePit();}catch(e){pit=null;mf.classList.remove('pit-live');} if(!pit){io.disconnect();return;} pit.setPlates(); }
+    if(pit) pit.show(v);
+  },{threshold:.12});
+  io.observe(wrap);
+}
+var loads=[fontsReady];
+try{ if(document.fonts&&document.fonts.load){loads.push(document.fonts.load('400 80px "Dela Gothic One"','もじ字'));loads.push(document.fonts.load('900 extra-expanded 80px Anybody','Rg&'));} }catch(e){}
+var booted=false,boot=function(){ if(booted) return; booted=true; heroH=hero?hero.offsetHeight:heroH; kinPos=[]; bootPit(); };
+Promise.all(loads).then(boot,boot);
+setTimeout(boot,3500);
+
+window.addEventListener('resize',function(){heroH=hero?hero.offsetHeight:heroH;vpOut();kinPos=[];},{passive:true});
+})();
+</script>
+</body>
+</html>
