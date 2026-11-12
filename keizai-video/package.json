@@ -13,9 +13,15 @@
     "@remotion/fonts": "4.0.542",
     "@remotion/media": "4.0.542",
     "@remotion/transitions": "4.0.542",
+    "@types/d3-geo": "^3.1.1",
+    "@types/topojson-client": "^3.1.5",
+    "d3-geo": "^3.1.2",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "remotion": "4.0.542"
+    "remotion": "4.0.542",
+    "topojson-client": "^3.1.0",
+    "us-atlas": "^3.0.1",
+    "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.542",
@@ -36,7 +42,10 @@
     "render:line": "remotion render DenkidaiLine out/denkidai-master.mp4",
     "thumbnail:line": "remotion still LineThumbnail release/denkidai-line-thumbnail.png",
     "voice:line": "python scripts/tts.py --script src/line/lines.json --out public/line/voice --manifest src/line/voice-manifest.json --voice jm_kumo --speed 1.0",
-    "encode:line": "ffmpeg -y -i out/denkidai-master.mp4 -c:v libx264 -preset medium -crf 27 -pix_fmt yuv420p -af volume=-1.5dB -c:a aac -b:a 160k -movflags +faststart release/denkidai-line.mp4"
+    "encode:line": "ffmpeg -y -i out/denkidai-master.mp4 -c:v libx264 -preset medium -crf 27 -pix_fmt yuv420p -af volume=-1.5dB -c:a aac -b:a 160k -movflags +faststart release/denkidai-line.mp4",
+    "render:route": "remotion render DenkidaiRoute out/denkidai-route-master.mp4",
+    "encode:route": "ffmpeg -y -i out/denkidai-route-master.mp4 -c:v libx264 -preset medium -crf 27 -pix_fmt yuv420p -af volume=-1.5dB -c:a aac -b:a 160k -movflags +faststart release/denkidai-route.mp4",
+    "voice:route": "python scripts/tts_sbv2.py --script src/route/lines.json --out public/route/voice --manifest src/route/voice-manifest.json --voice jvnv-M1-jp --length 0.9"
   },
   "allowScripts": {
     "esbuild": false
