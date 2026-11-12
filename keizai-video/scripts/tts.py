@@ -32,11 +32,27 @@ def duration(path: Path) -> float:
     return round(float(out), 3)
 
 
+def opt(name: str, default: str) -> str:
+    """--name value"""
+    if name in sys.argv:
+        return sys.argv[sys.argv.index(name) + 1]
+    return default
+
+
 def main() -> None:
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    global OUT, MANIFEST, VOICE, SPEED
+    script = Path(opt("--script", str(SCRIPT)))
+    OUT = Path(opt("--out", str(OUT)))
+    MANIFEST = Path(opt("--manifest", str(MANIFEST)))
+    VOICE = opt("--voice", VOICE)
+    SPEED = float(opt("--speed", str(SPEED)))
+    valued = {"--script", "--out", "--manifest", "--voice", "--speed"}
+    argv = sys.argv[1:]
+    args = [a for i, a in enumerate(argv) if not a.startswith("--") and (i == 0 or argv[i - 1] not in valued)]
     manifest_only = "--manifest-only" in sys.argv
-    scenes = json.loads(SCRIPT.read_text())["scenes"]
-    lines = [l for s in scenes for l in s["lines"]]
+    data = json.loads(script.read_text())
+    # Either {"scenes": [{"lines": [...]}]} or a flat {"lines": [...]}
+    lines = data["lines"] if "lines" in data else [l for s in data["scenes"] for l in s["lines"]]
     OUT.mkdir(parents=True, exist_ok=True)
 
     if not manifest_only:

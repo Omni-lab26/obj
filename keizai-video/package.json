@@ -32,7 +32,11 @@
     "lint": "eslint src && tsc",
     "render": "remotion render NikkeiAiShock release/nikkei-ai-shock.mp4",
     "thumbnail": "remotion still Thumbnail release/thumbnail.png",
-    "voice": "python scripts/tts.py"
+    "voice": "python scripts/tts.py",
+    "render:line": "remotion render DenkidaiLine out/denkidai-master.mp4",
+    "thumbnail:line": "remotion still LineThumbnail release/denkidai-line-thumbnail.png",
+    "voice:line": "python scripts/tts.py --script src/line/lines.json --out public/line/voice --manifest src/line/voice-manifest.json --voice jm_kumo --speed 1.0",
+    "encode:line": "ffmpeg -y -i out/denkidai-master.mp4 -c:v libx264 -preset medium -crf 27 -pix_fmt yuv420p -af volume=-1.5dB -c:a aac -b:a 160k -movflags +faststart release/denkidai-line.mp4"
   },
   "allowScripts": {
     "esbuild": false

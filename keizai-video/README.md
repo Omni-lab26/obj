@@ -1,5 +1,14 @@
 # 経済ニュース解説動画（Remotion）
 
+このフォルダには動画が2本あります。
+
+| 動画 | 見た目 | 資料 |
+| --- | --- | --- |
+| `release/denkidai-line.mp4` | 写真ドキュメンタリー風（最新） | [`LINE.md`](./LINE.md) |
+| `release/nikkei-ai-shock.mp4` | 図とグラフ中心（初版） | [`YOUTUBE.md`](./YOUTUBE.md) |
+
+雰囲気の比較用ページは `moods/index.html` です。以下は初版の動画の説明です。
+
 「日経平均 3,643円安 ―『AI規制ショック』の正体」を約4分43秒で解説する YouTube 向け動画のソース一式です。
 
 - 完成動画: `release/nikkei-ai-shock.mp4`（1920×1080 / 30fps / ナレーション・字幕入り）
