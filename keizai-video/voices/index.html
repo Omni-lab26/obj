@@ -1,0 +1,224 @@
+<meta charset="utf-8">
+<title>Halftick 声の聴き比べ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Zen+Maru+Gothic:wght@700;900&display=swap">
+<style>
+/* Layout: one reading column; every voice is the same compact row so only the sound differs. */
+:root{
+  --bg:#EEF2F3; --surface:#FFFFFF; --fg:#22313A; --muted:#5B6B75; --line:#D3DCE1; --accent:#2B7A78; --accent-soft:#DDEDEB; --warn:#8A5A12; --warn-soft:#FBF1DC;
+  --round:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;
+  --body:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#141A1E; --surface:#1D252A; --fg:#E7EDF0; --muted:#9FB0BA; --line:#2E3A41; --accent:#6CC5BF; --accent-soft:#1F3A3A; --warn:#E8C27A; --warn-soft:#3A3120; color-scheme:dark } }
+:root[data-theme="dark"]{ --bg:#141A1E; --surface:#1D252A; --fg:#E7EDF0; --muted:#9FB0BA; --line:#2E3A41; --accent:#6CC5BF; --accent-soft:#1F3A3A; --warn:#E8C27A; --warn-soft:#3A3120; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.8;margin:0}
+.wrap{max-width:860px;margin:0 auto;padding-block:40px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--round);line-height:1.35;margin:0;text-wrap:balance}
+h1{font-size:clamp(28px,5vw,40px);font-weight:900}
+h2{font-size:clamp(21px,3.4vw,26px);font-weight:900}
+h3{font-size:17px;font-weight:700;color:var(--accent)}
+p{margin:0}
+.lead{color:var(--muted);margin-top:12px;max-width:40em}
+.sample{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-top:18px;font-size:15px}
+.sample b{font-family:var(--round);display:block;font-size:13px;color:var(--accent)}
+.group{display:flex;flex-direction:column;gap:14px}
+.group>p{color:var(--muted);font-size:14.5px;max-width:44em}
+ul.voices{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:14px}
+.voice{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.pick .voice{border:2px solid var(--accent)}
+.vhead{display:flex;gap:12px;align-items:center}
+.code{flex:none;font-family:var(--round);font-weight:900;font-size:15px;background:var(--accent);color:var(--surface);border-radius:8px;padding:2px 10px;font-variant-numeric:tabular-nums}
+.vname{min-width:0;display:flex;flex-direction:column;line-height:1.35}
+.vname b{font-family:var(--round);font-size:18px}
+.vname span{font-size:13px;color:var(--muted)}
+audio{width:100%;height:40px}
+.vnote{font-size:14.5px;line-height:1.7}
+.cond{font-size:13px;line-height:1.65;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.box{background:var(--accent-soft);border-radius:16px;padding:22px 26px}
+.box ul,.box ol{margin:10px 0 0;padding-left:1.3em}
+.box li{margin-bottom:6px}
+.warn{background:var(--warn-soft);color:var(--fg);border-radius:14px;padding:16px 20px;font-size:14.5px}
+.warn b{color:var(--warn);font-family:var(--round)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+.scroll{overflow-x:auto}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--round);font-size:13px;color:var(--muted);white-space:nowrap}
+td:first-child{font-weight:700;white-space:nowrap}
+.script{display:flex;flex-direction:column;gap:22px}
+.chap p{max-width:40em;margin-top:6px}
+details summary{cursor:pointer;font-family:var(--round);font-weight:700}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>声の聴き比べ</h1>
+    <p class="lead">同じ文章を21種類の声で読ませました。気に入った声の記号（M1、V13 など）を教えてください。その声で動画を作り直します。下のほうに、参考動画の口調に寄せて書き直した台本も載せています。</p>
+    <div class="sample"><b>読ませた文章</b>アメリカのオハイオ州で、ある家に電気代の請求書が届くんですけど、これ、この2年ぐらいでじわじわ上がってるんですよ。で、この1枚の紙が、めぐりめぐって、東京の株価を動かすことになります。請求書と株価。めちゃくちゃ遠い2つじゃないですか。でも実はこれ、1本の線でつながってるんです。</div>
+  </header>
+
+  <p class="warn"><b>先にお伝えしておくこと</b>　私は音を聴けません。下の「おすすめ」は、音声認識にかけて正しく聞き取れたかどうかと、その声がふだん何に使われているかで選んだものです。抑揚が自然かどうかは、ご自身の耳で決めてください。</p>
+
+  <section class="group pick">
+    <h2>まず聴いてほしい3つ</h2>
+    <p>「僕」で話す台本なので、男性の声から選びました。</p>
+    <ul class="voices"><li class="voice">
+  <div class="vhead"><span class="code">M1</span><div class="vname"><b>Keita</b><span>Microsoft・男性</span></div></div>
+  <audio id="au-M1" controls preload="none" src="audio/ms_keita.m4a"></audio>
+  <p class="vnote">くだけた語尾（〜なんですよ、〜じゃないですか）の読みがいちばん安定している系統です。聞き取りチェックは全文正解でした。</p>
+  <p class="cond">Microsoft Edge の読み上げ機能の音声です。公開する動画での利用は規約上はっきりしないので、公開するなら有料の正規版（Azure）に切り替える必要があります。台本の文章がMicrosoftに送られます。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V13</span><div class="vname"><b>青山龍星</b><span>VOICEVOX・男性（低め）</span></div></div>
+  <audio id="au-V13" controls preload="none" src="audio/vv_13.m4a"></audio>
+  <p class="vnote">落ち着いた低い声で、解説やナレーションによく使われます。聞き取りチェックは全文正解でした。</p>
+  <p class="cond">クレジット「VOICEVOX:青山龍星」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V11</span><div class="vname"><b>玄野武宏</b><span>VOICEVOX・男性（若め）</span></div></div>
+  <audio id="au-V11" controls preload="none" src="audio/vv_11.m4a"></audio>
+  <p class="vnote">軽めで速い語り。参考動画のテンポにいちばん近い系統です。聞き取りチェックはほぼ正解でした。</p>
+  <p class="cond">クレジット「VOICEVOX:玄野武宏」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li></ul>
+  </section>
+
+  <section class="group">
+    <h2>Microsoft の声（ほか4つ）</h2>
+    <ul class="voices"><li class="voice">
+  <div class="vhead"><span class="code">M2</span><div class="vname"><b>Nanami</b><span>Microsoft・女性</span></div></div>
+  <audio id="au-M2" controls preload="none" src="audio/ms_nanami.m4a"></audio>
+  <p class="vnote">Keita と同じ系統の女性の声。聞き取りチェックは全文正解。</p>
+  <p class="cond">Microsoft Edge の読み上げ機能の音声です。公開する動画での利用は規約上はっきりしないので、公開するなら有料の正規版（Azure）に切り替える必要があります。台本の文章がMicrosoftに送られます。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">M3</span><div class="vname"><b>Ava</b><span>Microsoft・女性（多言語）</span></div></div>
+  <audio id="au-M3" controls preload="none" src="audio/ms_ava.m4a"></audio>
+  <p class="vnote">英語が母体の会話向けの声で、間の取り方が人に近い一方、日本語に少し外国語なまりが出ることがあります。</p>
+  <p class="cond">Microsoft Edge の読み上げ機能の音声です。公開する動画での利用は規約上はっきりしないので、公開するなら有料の正規版（Azure）に切り替える必要があります。台本の文章がMicrosoftに送られます。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">M4</span><div class="vname"><b>Andrew</b><span>Microsoft・男性（多言語）</span></div></div>
+  <audio id="au-M4" controls preload="none" src="audio/ms_andrew.m4a"></audio>
+  <p class="vnote">会話向けの男性の声。「オハイオ」を読み違えました。</p>
+  <p class="cond">Microsoft Edge の読み上げ機能の音声です。公開する動画での利用は規約上はっきりしないので、公開するなら有料の正規版（Azure）に切り替える必要があります。台本の文章がMicrosoftに送られます。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">M5</span><div class="vname"><b>Brian</b><span>Microsoft・男性（多言語）</span></div></div>
+  <audio id="au-M5" controls preload="none" src="audio/ms_brian.m4a"></audio>
+  <p class="vnote">会話向けの男性の声。</p>
+  <p class="cond">Microsoft Edge の読み上げ機能の音声です。公開する動画での利用は規約上はっきりしないので、公開するなら有料の正規版（Azure）に切り替える必要があります。台本の文章がMicrosoftに送られます。</p>
+</li></ul>
+  </section>
+
+  <section class="group">
+    <h2>VOICEVOX の男性の声（ほか5つ）</h2>
+    <ul class="voices"><li class="voice">
+  <div class="vhead"><span class="code">V84</span><div class="vname"><b>青山龍星（しっとり）</b><span>VOICEVOX・男性</span></div></div>
+  <audio id="au-V84" controls preload="none" src="audio/vv_84.m4a"></audio>
+  <p class="vnote">V13 の静かな読み方。</p>
+  <p class="cond">クレジット「VOICEVOX:青山龍星」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V52</span><div class="vname"><b>雀松朱司</b><span>VOICEVOX・男性</span></div></div>
+  <audio id="au-V52" controls preload="none" src="audio/vv_52.m4a"></audio>
+  <p class="vnote">おだやかで柔らかい男性の声。聞き取りチェックは全文正解。</p>
+  <p class="cond">クレジット「VOICEVOX:雀松朱司」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V53</span><div class="vname"><b>麒ヶ島宗麟</b><span>VOICEVOX・男性（年配）</span></div></div>
+  <audio id="au-V53" controls preload="none" src="audio/vv_53.m4a"></audio>
+  <p class="vnote">年配の落ち着いた声。聞き取りチェックは全文正解。</p>
+  <p class="cond">クレジット「VOICEVOX:麒ヶ島宗麟」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V21</span><div class="vname"><b>剣崎雌雄</b><span>VOICEVOX・男性</span></div></div>
+  <audio id="au-V21" controls preload="none" src="audio/vv_21.m4a"></audio>
+  <p class="vnote">はっきりした男性の声。聞き取りチェックは全文正解。</p>
+  <p class="cond">クレジット「VOICEVOX:剣崎雌雄」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V99</span><div class="vname"><b>離途</b><span>VOICEVOX・男性</span></div></div>
+  <audio id="au-V99" controls preload="none" src="audio/vv_99.m4a"></audio>
+  <p class="vnote">静かな男性の声。「ある家」が少し不明瞭でした。</p>
+  <p class="cond">クレジット「VOICEVOX:離途」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li></ul>
+  </section>
+
+  <section class="group">
+    <h2>VOICEVOX の女性の声など（8つ）</h2>
+    <p>女性の声にする場合は、台本の「僕」を「わたし」に変えます。</p>
+    <ul class="voices"><li class="voice">
+  <div class="vhead"><span class="code">V2</span><div class="vname"><b>四国めたん</b><span>VOICEVOX・女性</span></div></div>
+  <audio id="au-V2" controls preload="none" src="audio/vv_2.m4a"></audio>
+  <p class="vnote">解説動画でよく使われる、はっきりした女性の声。</p>
+  <p class="cond">クレジット「VOICEVOX:四国めたん」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V8</span><div class="vname"><b>春日部つむぎ</b><span>VOICEVOX・女性</span></div></div>
+  <audio id="au-V8" controls preload="none" src="audio/vv_8.m4a"></audio>
+  <p class="vnote">明るい女性の声。「オハイオ州」が不明瞭でした。</p>
+  <p class="cond">クレジット「VOICEVOX:春日部つむぎ」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V16</span><div class="vname"><b>九州そら</b><span>VOICEVOX・女性（大人っぽい）</span></div></div>
+  <audio id="au-V16" controls preload="none" src="audio/vv_16.m4a"></audio>
+  <p class="vnote">ゆっくり落ち着いた女性の声。全文正解ですが、かなり遅めです。</p>
+  <p class="cond">クレジット「VOICEVOX:九州そら」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V23</span><div class="vname"><b>WhiteCUL</b><span>VOICEVOX・女性</span></div></div>
+  <audio id="au-V23" controls preload="none" src="audio/vv_23.m4a"></audio>
+  <p class="vnote">澄んだ女性の声。</p>
+  <p class="cond">クレジット「VOICEVOX:WhiteCUL」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V14</span><div class="vname"><b>冥鳴ひまり</b><span>VOICEVOX・女性</span></div></div>
+  <audio id="au-V14" controls preload="none" src="audio/vv_14.m4a"></audio>
+  <p class="vnote">やわらかい女性の声。</p>
+  <p class="cond">クレジット「VOICEVOX:冥鳴ひまり」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V107</span><div class="vname"><b>東北ずん子</b><span>VOICEVOX・女性</span></div></div>
+  <audio id="au-V107" controls preload="none" src="audio/vv_107.m4a"></audio>
+  <p class="vnote">やさしい女性の声。</p>
+  <p class="cond">クレジット「VOICEVOX:東北ずん子」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V30</span><div class="vname"><b>No.7（アナウンス）</b><span>VOICEVOX・女性</span></div></div>
+  <audio id="au-V30" controls preload="none" src="audio/vv_30.m4a"></audio>
+  <p class="vnote">アナウンサー風。商用利用は事前確認が必要な声です。</p>
+  <p class="cond">クレジット「VOICEVOX:No.7」で非商用なら使えます。収益化する場合は製作委員会への確認が必要です。</p>
+</li><li class="voice">
+  <div class="vhead"><span class="code">V3</span><div class="vname"><b>ずんだもん</b><span>VOICEVOX</span></div></div>
+  <audio id="au-V3" controls preload="none" src="audio/vv_3.m4a"></audio>
+  <p class="vnote">解説動画の定番キャラクター。本来は「〜なのだ」口調の声です。</p>
+  <p class="cond">クレジット「VOICEVOX:ずんだもん」を入れれば、YouTubeでも使えます。手元で生成でき、台本は外に送られません。</p>
+</li></ul>
+  </section>
+
+  <section class="group">
+    <h2>いまの動画の声</h2>
+    <ul class="voices"><li class="voice">
+  <div class="vhead"><span class="code">S1</span><div class="vname"><b>いまの動画の声</b><span>Style-Bert-VITS2・男性</span></div></div>
+  <audio id="au-S1" controls preload="none" src="audio/sbv2_M1.m4a"></audio>
+  <p class="vnote">比べるために入れました。同じ文章で「株価」「上がってる」が不明瞭でした。</p>
+  <p class="cond">クレジット表記で利用できます。</p>
+</li></ul>
+  </section>
+
+  <section class="group">
+    <h2>今回は試せなかった選択肢</h2>
+    <p>利用の鍵（APIキー）や手元のパソコンが必要なものです。使いたいものがあれば、鍵を安全に入力する画面をこちらから出せます。</p>
+    <div class="scroll"><table>
+      <tr><th>選択肢</th><th>特徴</th><th>必要なもの</th></tr>
+      <tr><td>ご自身の声で録る</td><td>参考動画は本人の肉声です。「〜なんですよ」の人間味は、合成音声ではどうしても届きません。台本と字幕のタイミングは録音に合わせて組み直せます。</td><td>マイクと録音（スマホでも可）</td></tr>
+      <tr><td>ElevenLabs</td><td>感情の乗った自然な読み。ご自身の声を数分録って「声の複製」を作ることもできます。</td><td>APIキー（無料枠は短い・クレジット表記が必要）</td></tr>
+      <tr><td>Gemini の音声合成</td><td>「ラジオのパーソナリティのように、くだけた感じで」と読み方を文章で指示できます。</td><td>Google の APIキー（無料枠あり）</td></tr>
+      <tr><td>OpenAI の音声合成</td><td>読み方を文章で指示できます。日本語は少し外国語なまりが出ることがあります。</td><td>APIキー（有料）</td></tr>
+      <tr><td>Azure / Google Cloud</td><td>上の Microsoft の声の正規版と、その Google 版。公開動画にそのまま使えます。</td><td>クラウドの契約とキー</td></tr>
+      <tr><td>AivisSpeech・VOICEPEAK</td><td>パソコンに入れて使う読み上げソフト。VOICEPEAK は買い切りで商用可のナレーター音声です。</td><td>ご自身のパソコン（VOICEPEAK は有料）</td></tr>
+    </table></div>
+  </section>
+
+  <section class="group">
+    <h2>参考動画の口調に寄せた台本</h2>
+    <p>海外Yパパラジオの2本の話し方に合わせました。「〜なんですよ」「〜じゃないですか」「で、」「めちゃくちゃ」「要は」「〜わけです」といった語り口です。構成と中身（請求書の道のりを3か所でたどる、仮説は「点線」と断る）は前回のままで、あちらの決まり文句そのもの（番組の名乗り、「話は大きく3つ」など）は使っていません。直したいところがあれば教えてください。</p>
+    <details open>
+      <summary>台本を読む（約2,400字、7分半ほど）</summary>
+      <div class="script" style="margin-top:14px"><section class="chap"><h3>掴み</h3><p>アメリカのオハイオ州で、ある家に電気代の請求書が届くんですけど、これ、この2年ぐらいでじわじわ上がってるんですよ。</p><p>で、この1枚の紙が、めぐりめぐって、東京の株価を動かすことになります。</p><p>11月6日、日経平均が1日で3,643円下がりました。下げ幅としては、過去3番目の大きさです。</p><p>請求書と株価。めちゃくちゃ遠い2つじゃないですか。</p><p>でも実はこれ、1本の線でつながってるんです。</p></section><section class="chap"><h3>挨拶と今日の道のり</h3><p>こんにちは、Halftickです。</p><p>頭の中でバラバラになってるニュースを、1本の線にしていく番組です。</p><p>今日は、オハイオの食卓から東京の兜町まで。この請求書がたどった道のりを、地図の上で追いかけていきます。</p><p>で、立ち寄るのは3か所。1か所目がアメリカの食卓。2か所目が投票所。3か所目が株式市場です。</p><p>最後に、これって結局何だったのか、僕なりの読みを話します。この順番でいきますね。</p></section><section class="chap"><h3>1か所目　アメリカの食卓</h3><p>まず1か所目、アメリカの食卓の話です。</p><p>今アメリカって、あちこちでデータセンターの建設に反対する動きが出てるんですよ。</p><p>で、ここでちょっと当ててみてほしいんですけど、反対してる人たちって、何を一番気にしてると思います？</p><p>AIに仕事を取られるから。まあ、普通そう思いますよね。</p><p>これ、答えは電気代なんです。</p><p>ロイターとイプソスが6月にやった世論調査だと、「AIのせいで電気代が上がる」って心配してる人が、8割近くいたんですよ。</p><p>しかもこれ、支持してる政党に関係なく、なんです。</p><p>で、実際に料金も上がってます。ロイターが伝えた政府の統計だと、家庭の電気料金は2024年から1割以上、上がってるんですね。</p><p>じゃあなんでデータセンターが、家の電気代に関係あるのか。これ、町内会で考えるとわかりやすいんですよ。</p><p>町内にめちゃくちゃ大きいお屋敷が引っ越してきたとします。で、そのために道路を広げて、街灯も増やすことになった。</p><p>お屋敷は、自分の家の電気代はちゃんと払うんです。でも道路とか街灯のお金は、町内会費に乗っかってくる。つまり、みんなで払うことになるわけです。</p><p>送電線とか発電所も、ざっくり言うとこれと同じ仕組みなんですよね。</p><p>ただ、ここは公平に言っておくと、値上がりが全部データセンターのせい、ってわけじゃないです。</p><p>ダラス連銀の試算だと、データセンターが卸の電気の値段を押し上げた分は、2%から6%ぐらいなんですよ。</p><p>それでも、請求書を見た人の目は、すぐそばに建ってる大きな建物に向かうわけです。</p></section><section class="chap"><h3>2か所目　投票所</h3><p>で、2か所目。投票所の話です。</p><p>11月3日、アメリカは中間選挙でした。</p><p>実はこの日、全米12の州で、データセンターの建設をめぐる住民投票もやってたんですよ。</p><p>AP通信が伝えた集計だと、開票が終わった45件のうち44件で、建設を制限する側が勝ってます。</p><p>ほぼ全部ですよね。しかも47件のうち21件は、オハイオ州なんです。</p><p>で、同じ日の議会選挙では、民主党が上院も下院も、両方取りました。</p><p>ただ、ここは点線で描かせてください。</p><p>電気代への不満が民主党を勝たせた、とまでは正直言えないんですよ。</p><p>AP通信の調査だと、データセンターを投票の決め手にした人って、4人に1人ぐらいなんですね。</p><p>同じ日に起きた。確かなのは、そこまでです。</p><p>あと、ニュースだと「AI規制」って見出しが並んだんですけど、国の法律は1本も変わってないんですよ。決まったのは、地元の自治体のルールなんです。</p><p>それでも市場は、これにめちゃくちゃ反応しました。</p></section><section class="chap"><h3>3か所目　株式市場</h3><p>3か所目、株式市場の話です。</p><p>選挙の2日後のニューヨークで、半導体メーカーの株をまとめた指数が、1日でだいたい12%下がったんですよ。</p><p>外為どっとコムによると、これ、2020年3月以来の下げなんですね。</p><p>要は、データセンターが建たないなら、中に入れる半導体も売れないよね、と。投資家はそう読んだわけです。</p><p>で、その翌日、この波が太平洋を渡ってくる。東京で日経平均が3,643円下がりました。</p><p>ここでもう1個、当ててみてください。</p><p>その週の月曜から木曜で、日経平均は3.5%下がってるんですけど、</p><p>東証全体の動きを見るTOPIXのほうは、どれぐらい下がったと思います？</p><p>0.6%なんですよ。同じ東京の株なのに、6倍近く違うんです。</p><p>これなんでかって言うと、日経平均って、1株の値段が高い会社ほど影響が大きくなる仕組みで、AIとか半導体の会社の比重がめちゃくちゃ大きいんですよ。</p><p>つまり、アメリカのAIの話に一番敏感に反応しちゃう物差しだった、ということなんです。</p><p>念のため言っておくと、金曜は銀行とか食品の会社まで売られてますし、アメリカの金利が上がりそうだ、っていう話も重なってました。</p><p>なので、電気代だけで全部説明できるわけじゃないです。</p></section><section class="chap"><h3>僕なりの読み</h3><p>で、ここからは僕なりの読みの話です。</p><p>今回揺らいだのって、AIの性能への期待じゃないと思うんですよ。</p><p>揺らいだのは、AIをどこに置くのか。で、その電気代を誰が払うのか、っていう、めちゃくちゃ身近な問題のほうなんです。</p><p>日経平均はその後の4日間で、3,400円ぐらい戻してます。売られすぎだった、っていう見方もある。</p><p>ただ、請求書って毎月届くじゃないですか。選挙が終わっても、これは止まらないんですよね。</p><p>なのでこの道は、これからも何回か通ることになると思います。</p></section><section class="chap"><h3>締め</h3><p>最後に、今日の道のりをまとめます。</p><p>オハイオの食卓に届いた請求書。投票所での「待った」。</p><p>ニューヨークの半導体株。そして、東京の日経平均。</p><p>ひとことに畳むと、「アメリカの電気代が、日本の株を動かした」です。</p><p>で、最後に1個だけ。日本でも、データセンターの建設をめぐって住民との摩擦が報じられてるんですよ。</p><p>もし自分の家の近くに建つってなったら、賛成しますか。それとも反対しますか。</p><p>よかったら、Halftickのコメント欄で聞かせてください。この話の続きは、概要欄のリンクからどうぞ。</p><p>それでは、また次の線で。</p></section></div>
+    </details>
+  </section>
+
+  <section class="box">
+    <h2>決めてほしいこと</h2>
+    <ol>
+      <li>どの声にするか（記号で教えてください）。迷ったら、2つ選んでもらえれば両方で冒頭30秒を作ります。</li>
+      <li>台本の口調はこの方向でよいか。</li>
+    </ol>
+  </section>
+</div>
