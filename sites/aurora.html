@@ -261,7 +261,7 @@ body{
 .inst{ position:absolute; z-index:3; left:0; right:0; top:calc(100svh - var(--hz)); height:var(--hz); pointer-events:none; }
 .js .inst{ position:fixed; top:auto; bottom:0; }
 .inst::before{ content:""; position:absolute; inset:0; opacity:var(--dock);
-  background:linear-gradient(180deg, rgb(var(--night-rgb)/0) 0, rgb(var(--night-rgb)/.86) 7px, var(--night-0) 15px, var(--night-0) 100%); }
+  background:linear-gradient(180deg, rgb(var(--night-rgb)/.9) 0, var(--night-0) 2px, var(--night-0) 100%); } /* opaque from the ruler line down: scrolling text sinks below the horizon instead of running through the ticks */
 .inst::after{ content:""; position:absolute; inset:34px 0 0 0;
   background:linear-gradient(180deg, rgb(var(--night-rgb)/0) 0, rgb(var(--night-rgb)/.44) 55%, rgb(var(--night-rgb)/.7) 100%); }
 .rule{ position:absolute; z-index:1; top:0; height:0;
@@ -709,8 +709,8 @@ var FS = [
 ' c+=RED*smoothstep(4.4,8.4,k)*smoothstep(.35,1.25,d)*exp(-1.3*max(d-.9,0.))*.62;',
 ' c+=VIOL*smoothstep(5.5,9.,k)*smoothstep(.0,.3,d)*exp(-2.6*d)*.42;',
 ' c*=le*rays;',
-' float pb=exp(-max(y,0.)/(hh*.05+.004))*smoothstep(-ew*1.2,0.,y);',
-' c+=PINK*smoothstep(4.8,7.5,k)*pb*mix(1.,rays,.6)*1.15;',
+' float pb=exp(-max(y,0.)/(hh*.07+.006))*smoothstep(-ew*1.4,0.,y);',
+' c+=PINK*smoothstep(4.8,7.5,k)*pb*mix(1.,rays,.6)*.8;',
 ' return c*(1.+.6*kink*fold);',
 '}',
 'vec3 aurora(float x,float e,float soft){',
@@ -722,9 +722,9 @@ var FS = [
 ' float w1=smoothstep(2.2,4.4,k);',
 ' if(w1>.002)c+=w1*mx*curtain(x,e,1.,mix(.2,.35,a),.05,mix(.1,.3,a),1.3,soft);',
 ' float w2=smoothstep(5.2,7.6,k);',
-' if(w2>.002)c+=w2*curtain(x,e,2.,mix(.38,.52,a),.02,mix(.2,.55,a),1.7,soft);',
+' if(w2>.002)c+=w2*curtain(x,e,2.,mix(.38,.52,a),.02,mix(.2,.55,a),1.25,soft);',
 ' float g=(e-(b0-a0*x*x)-.05)/(.06+.07*a);',
-' c+=GREEN*(.07+.05*a)*exp(-g*g)*mx*smoothstep(-.03,.05,e-(b0-a0*x*x));',
+' c+=GREEN*(.08+.05*a)*exp(-g*g)*mx*smoothstep(-.03,.05,e-(b0-a0*x*x))*(1.-.92*smoothstep(1.4,4.2,k));',
 ' c+=RED*.07*smoothstep(6.,9.,k)*smoothstep(.3,.9,e);',
 ' float I=.12+.10*k+.002*k*k;',
 ' float bb=(x-uBx)/.45;',
