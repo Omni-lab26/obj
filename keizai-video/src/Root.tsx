@@ -4,6 +4,8 @@ import { Documentary } from "./line/Documentary";
 import { LineThumbnail } from "./line/LineThumbnail";
 import { Film } from "./route/Film";
 import { totalFrames as routeFrames } from "./route/timeline";
+import { TalkFilm } from "./talk/Film";
+import { totalFrames as talkFrames } from "./talk/timeline";
 import { totalFrames as lineFrames } from "./line/timeline";
 import { FPS, getScene, HEIGHT, totalFrames, WIDTH } from "./timeline";
 import { Thumbnail } from "./Thumbnail";
@@ -18,6 +20,14 @@ const previews = SCENES.map((scene) => ({
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      <Composition
+        id="DenkidaiTalk"
+        component={TalkFilm}
+        durationInFrames={talkFrames}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
       <Composition
         id="DenkidaiRoute"
         component={Film}

@@ -1,10 +1,11 @@
 # 経済ニュース解説動画（Remotion）
 
-このフォルダには動画が3本あります。
+このフォルダには動画が4本あります。
 
 | 動画 | 見た目 | 資料 |
 | --- | --- | --- |
-| `release/denkidai-route.mp4` | 写真と地図のドキュメンタリー風（最新） | [`ROUTE.md`](./ROUTE.md) |
+| `release/denkidai-talk.mp4` | ずんだもん担当・目を引く配色と図（最新） | [`TALK.md`](./TALK.md) |
+| `release/denkidai-route.mp4` | 写真と地図のドキュメンタリー風（第2版） | [`ROUTE.md`](./ROUTE.md) |
 | `release/denkidai-line.mp4` | 写真ドキュメンタリー風（第1版） | [`LINE.md`](./LINE.md) |
 | `release/nikkei-ai-shock.mp4` | 図とグラフ中心（初版） | [`YOUTUBE.md`](./YOUTUBE.md) |
 
