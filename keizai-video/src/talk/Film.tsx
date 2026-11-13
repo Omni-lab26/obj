@@ -14,7 +14,17 @@ import "../line/fonts";
 import { GraphView } from "./Graphs";
 import { MapView } from "./Maps";
 import { Overlay, Shot, SHOTS } from "./shots";
-import { ACCENT, HOST, INK, MINCHO, NIGHT, SANS, tone, U } from "./theme";
+import {
+  ACCENT,
+  HOST,
+  INK,
+  MINCHO,
+  NIGHT,
+  READER,
+  SANS,
+  tone,
+  U,
+} from "./theme";
 import {
   allLines,
   CROSS,
@@ -360,6 +370,157 @@ const HostCard: React.FC<{
   );
 };
 
+/** A sourced quotation: who said it, the Japanese rendering, and the original words. */
+const QuoteCard: React.FC<{
+  o: Extract<Overlay, { kind: "quote" }>;
+  shotStart: number;
+}> = ({ o, shotStart }) => {
+  const frame = useCurrentFrame();
+  const line = lineTiming(o.at);
+  const at = line.start - shotStart;
+  const card = interpolate(frame, [10, 34], [0, 1], { ...clamp, easing: EASE });
+  const said = interpolate(frame, [at - 4, at + 14], [0, 1], {
+    ...clamp,
+    easing: EASE,
+  });
+  const text = line.chunks.map((c) => c.text).join("");
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 7 * U,
+        right: 7 * U,
+        top: 10 * U,
+        boxSizing: "border-box",
+        padding: "36px 56px 34px 150px",
+        borderRadius: 30,
+        backgroundColor: "rgba(9,13,28,0.92)",
+        border: "2px solid rgba(255,255,255,0.16)",
+        borderLeft: `14px solid ${ACCENT}`,
+        boxShadow: "0 30px 80px rgba(0,0,0,0.5)",
+        color: INK,
+        opacity: card,
+        translate: `0px ${(1 - card) * 30}px`,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: 44,
+          top: 6,
+          fontFamily: MINCHO,
+          fontWeight: 800,
+          fontSize: 190,
+          lineHeight: 1,
+          color: ACCENT,
+        }}
+      >
+        {"“"}
+      </div>
+      <div
+        style={{
+          fontFamily: MINCHO,
+          fontWeight: 800,
+          fontSize: 54,
+          lineHeight: 1.25,
+        }}
+      >
+        {o.name}
+      </div>
+      <div
+        style={{
+          fontFamily: SANS,
+          fontWeight: 700,
+          fontSize: 28,
+          color: "rgba(255,255,255,0.8)",
+          marginTop: 6,
+        }}
+      >
+        {o.role}
+      </div>
+      <div style={{ opacity: said, translate: `0px ${(1 - said) * 16}px` }}>
+        {o.about ? (
+          <div
+            style={{
+              display: "inline-block",
+              fontFamily: SANS,
+              fontWeight: 700,
+              fontSize: 26,
+              color: NIGHT,
+              backgroundColor: "rgba(255,255,255,0.86)",
+              padding: "3px 16px",
+              borderRadius: 8,
+              marginTop: 26,
+            }}
+          >
+            {o.about}
+          </div>
+        ) : null}
+        <div
+          lang="ja"
+          style={{
+            fontFamily: MINCHO,
+            fontWeight: 800,
+            fontSize: 66,
+            lineHeight: 1.45,
+            marginTop: o.about ? 12 : 30,
+            wordBreak: "auto-phrase",
+            textWrap: "balance",
+          }}
+        >
+          {"「" + text + "」"}
+        </div>
+        <div
+          style={{
+            fontFamily: SANS,
+            fontWeight: 500,
+            fontStyle: "italic",
+            fontSize: 27,
+            lineHeight: 1.5,
+            color: "rgba(255,255,255,0.72)",
+            marginTop: 18,
+          }}
+        >
+          {"“" + o.original + "”"}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 30,
+            fontFamily: SANS,
+            fontWeight: 500,
+            fontSize: 24,
+            color: "rgba(255,255,255,0.72)",
+            marginTop: 20,
+          }}
+        >
+          <span>{o.source + "　日本語訳は番組によるもの"}</span>
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                backgroundColor: READER.accent,
+              }}
+            />
+            {"読み上げ：" + READER.name}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const EndCard: React.FC<{ shotStart: number }> = ({ shotStart }) => {
   const frame = useCurrentFrame();
   const at = lineTiming("g06").start - shotStart;
@@ -422,7 +583,11 @@ const EndCard: React.FC<{ shotStart: number }> = ({ shotStart }) => {
           }
         </div>
         <div style={{ marginTop: 6 }}>
-          {"音声：" + HOST.credit + "　／　地図：Natural Earth　／　写真："}
+          {"音声：" +
+            HOST.credit +
+            "、" +
+            READER.credit +
+            "　／　地図：Natural Earth　／　写真："}
           {used}
         </div>
       </div>
@@ -459,6 +624,9 @@ const ShotView: React.FC<{ shot: Shot; timing: ShotTiming }> = ({
         <GraphView graph={o.graph} shotStart={timing.start} />
       ) : null}
       {o?.kind === "chapter" ? <Chapter o={o} /> : null}
+      {o?.kind === "quote" ? (
+        <QuoteCard o={o} shotStart={timing.start} />
+      ) : null}
       {o?.kind === "host" ? <HostCard o={o} shotStart={timing.start} /> : null}
       {o?.kind === "end" ? <EndCard shotStart={timing.start} /> : null}
       {shot.map || !shot.photo || o?.kind === "end" ? null : (
@@ -550,7 +718,13 @@ const Grain: React.FC = () => {
 };
 
 const silent = new Set(
-  SHOTS.flatMap((s) => (s.overlay?.kind === "chapter" ? s.lines : [])),
+  SHOTS.flatMap((s) =>
+    s.overlay?.kind === "chapter"
+      ? s.lines
+      : s.overlay?.kind === "quote"
+        ? [s.overlay.at]
+        : [],
+  ),
 );
 const raised = new Set(
   SHOTS.flatMap((s) => (s.overlay?.kind === "end" ? s.lines : [])),

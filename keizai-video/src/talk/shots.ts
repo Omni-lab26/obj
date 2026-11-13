@@ -1,4 +1,4 @@
-import { PLACES } from "../route/geo";
+import { PLACES } from "./geo";
 import { Graph } from "./Graphs";
 import { MapSpec } from "./Maps";
 import { Tone } from "./theme";
@@ -22,6 +22,18 @@ export type Overlay =
   | { kind: "graph"; graph: Graph }
   | { kind: "chapter"; no: string; kicker?: string; title: string }
   | { kind: "host"; at: string; delay?: number }
+  | {
+      /** A sourced quotation, read aloud by the other host */
+      kind: "quote";
+      /** The line that carries the quotation */
+      at: string;
+      name: string;
+      role: string;
+      /** What the remark is about, when the quote needs it */
+      about?: string;
+      original: string;
+      source: string;
+    }
   | { kind: "end" };
 
 export type Shot = {
@@ -104,7 +116,6 @@ export const SHOTS: Shot[] = [
         {
           at: ohio,
           label: "食卓",
-          note: "オハイオ州",
           side: "left",
           cue: "b04",
           delay: 45,
@@ -202,8 +213,8 @@ export const SHOTS: Shot[] = [
     },
   },
   { photo: "alley.jpg", tag: STOP1, trail: 0, lines: ["c09"] },
-  { photo: "suburb.jpg", tag: STOP1, trail: 0, move: "out", lines: ["c10"] },
-  { photo: "living.jpg", tag: STOP1, trail: 0, lines: ["c11"] },
+  { photo: "bighouse.jpg", tag: STOP1, trail: 0, move: "out", lines: ["c10"] },
+  { photo: "roadwork.jpg", tag: STOP1, trail: 0, lines: ["c11"] },
   {
     photo: "towers_orange.jpg",
     tag: STOP1,
@@ -229,7 +240,7 @@ export const SHOTS: Shot[] = [
       top: 11,
     },
   },
-  { photo: "suburb_night.jpg", tag: STOP1, trail: 1, lines: ["c15"] },
+  { photo: "suburb_night.jpg", tag: STOP1, trail: 1, lines: ["c15", "c16"] },
 
   // 2か所目
   {
@@ -278,6 +289,21 @@ export const SHOTS: Shot[] = [
     tag: STOP2,
     trail: 1,
     lines: ["d05"],
+  },
+  {
+    photo: "sticker.jpg",
+    dim: 0.6,
+    tag: STOP2,
+    trail: 1,
+    lines: ["d05b", "q1", "d05c"],
+    overlay: {
+      kind: "quote",
+      at: "q1",
+      name: "スティーブン・サンダースさん",
+      role: "テキサス州ラボック　データセンター反対グループの共同設立者（共和党員）",
+      original: "I would say data centers were on the ballot.",
+      source: "AP通信の取材に（2026年11月）",
+    },
   },
   {
     photo: "capitol_dusk.jpg",
@@ -342,6 +368,23 @@ export const SHOTS: Shot[] = [
     move: "out",
     lines: ["d11"],
   },
+  {
+    photo: "wafer.jpg",
+    dim: 0.6,
+    tag: STOP2,
+    trail: 1,
+    lines: ["d11b", "q2"],
+    overlay: {
+      kind: "quote",
+      at: "q2",
+      name: "ダン・ディオリオさん",
+      role: "業界団体「データセンター連合」",
+      about: "建設の一時停止を公約して当選した人たちについて",
+      original:
+        "We should expect them to want to deliver on those promises, but there are going to be real-world consequences of that.",
+      source: "AP通信のインタビューで（2026年11月）",
+    },
+  },
   { photo: "capitol.jpg", tag: STOP2, trail: 2, move: "left", lines: ["d12"] },
 
   // 3か所目
@@ -353,7 +396,7 @@ export const SHOTS: Shot[] = [
     overlay: { kind: "chapter", no: "3", kicker: "3か所目", title: "株式市場" },
   },
   {
-    photo: "wafer.jpg",
+    photo: "nyse.jpg",
     tag: STOP3,
     trail: 2,
     lines: ["e02", "e03"],
@@ -435,11 +478,11 @@ export const SHOTS: Shot[] = [
     lines: ["e11"],
   },
   { photo: "aisle.jpg", tag: STOP3, trail: 2, lines: ["e12"] },
-  { photo: "meters.jpg", tag: STOP3, trail: 3, move: "out", lines: ["e13"] },
+  { photo: "switch.jpg", tag: STOP3, trail: 3, move: "out", lines: ["e13"] },
 
   // ボクなりの読み
   {
-    photo: "towers_orange.jpg",
+    photo: "coast.jpg",
     dim: 0.4,
     trail: 3,
     lines: ["f01"],
@@ -447,6 +490,22 @@ export const SHOTS: Shot[] = [
   },
   { photo: "chip2.jpg", tag: READ, trail: 3, lines: ["f02"] },
   { photo: "suburb.jpg", tag: READ, trail: 3, move: "out", lines: ["f03"] },
+  {
+    photo: "newsprint.jpg",
+    dim: 0.6,
+    tag: READ,
+    trail: 3,
+    lines: ["f03b", "q3"],
+    overlay: {
+      kind: "quote",
+      at: "q3",
+      name: "ドミニク・トゥブランさん",
+      role: "バークレイズ　米国クレジット戦略責任者",
+      original:
+        "AI pushback is bipartisan but local, making the buildout pricier rather than stalling it.",
+      source: "11月4日付のレポート（CNBCが報道）",
+    },
+  },
   {
     photo: "tokyo_dusk.jpg",
     tag: READ,
@@ -468,7 +527,7 @@ export const SHOTS: Shot[] = [
       },
     },
   },
-  { photo: "mailboxes.jpg", tag: READ, trail: 3, lines: ["f05"] },
+  { photo: "meters2.jpg", tag: READ, trail: 3, lines: ["f05"] },
   {
     photo: "living_night.jpg",
     tag: READ,
@@ -550,9 +609,9 @@ export const SHOTS: Shot[] = [
     tag: "今日の道のり",
     lines: ["g02b", "g03"],
   },
-  { photo: "alley.jpg", tag: "最後に1個だけ", lines: ["g04", "g05"] },
+  { photo: "shotengai.jpg", tag: "最後に1個だけ", lines: ["g04", "g05"] },
   {
-    photo: "us_night.jpg",
+    photo: "city_night.jpg",
     dim: 0.5,
     move: "out",
     lines: ["g06", "g07"],

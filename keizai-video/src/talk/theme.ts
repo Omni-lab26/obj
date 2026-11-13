@@ -20,6 +20,9 @@ const HOSTS = {
   },
 } as const;
 export const HOST = HOSTS[(script.host as keyof typeof HOSTS) ?? "zundamon"];
+/** The other host reads quotations aloud. */
+export const READER =
+  script.host === "tsumugi" ? HOSTS.zundamon : HOSTS.tsumugi;
 
 export const INK = "#FFFFFF";
 export const NIGHT = "#0A0F1F";

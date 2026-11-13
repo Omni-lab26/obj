@@ -1,7 +1,14 @@
 import React from "react";
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import {
+  AbsoluteFill,
+  Easing,
+  Img,
+  interpolate,
+  staticFile,
+  useCurrentFrame,
+} from "remotion";
 import { ACCENT, COOL, INK, MINCHO, SANS } from "./theme";
-import { LonLat, PACIFIC, US, XY } from "../route/geo";
+import { LonLat, PACIFIC, US, XY } from "./geo";
 import { lineTiming } from "./timeline";
 
 const EASE = Easing.bezier(0.16, 1, 0.3, 1);
@@ -77,38 +84,57 @@ export const MapView: React.FC<{
   });
 
   return (
-    <AbsoluteFill
-      style={{
-        background:
-          "radial-gradient(ellipse at 50% 40%, #1B2B52 0%, #0E1630 60%, #070B18 100%)",
-      }}
-    >
+    <AbsoluteFill style={{ backgroundColor: "#050913", overflow: "hidden" }}>
+      {/* the still base map, pre-rendered by `npm run maps:talk` */}
+      <Img
+        src={staticFile(`talk/map-${spec.kind}.jpg`)}
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: 1920,
+          height: 1080,
+          maxWidth: "none",
+          transformOrigin: "0 0",
+          transform: `translate(${960 - cx * scale}px, ${540 - cy * scale}px) scale(${scale})`,
+        }}
+      />
       <svg width={1920} height={1080} style={{ position: "absolute" }}>
-        <g
-          transform={`translate(${960 - cx * scale} ${540 - cy * scale}) scale(${scale})`}
-        >
-          <path d={map.land} fill="#3B4C74" />
-          {spec.kind === "pacific" && spec.highlight === "usa-japan" ? (
-            <>
-              <path d={PACIFIC.usa} fill="#5B72A8" />
-              <path d={PACIFIC.japan} fill="#5B72A8" />
-            </>
-          ) : null}
-          {spec.kind === "us" && spec.highlight === "ohio" ? (
+        <defs>
+          <filter id="map-line" x="-10%" y="-30%" width="120%" height="160%">
+            <feGaussianBlur stdDeviation="9" />
+          </filter>
+        </defs>
+        {spec.kind === "us" && spec.highlight === "ohio" ? (
+          <g
+            transform={`translate(${960 - cx * scale} ${540 - cy * scale}) scale(${scale})`}
+          >
             <path
-              d={US.ohio}
+              d={map.ohio}
               fill={ACCENT}
-              opacity={interpolate(frame, [8, 40], [0, 0.9], clamp)}
+              opacity={interpolate(frame, [8, 40], [0, 0.92], clamp)}
             />
-          ) : null}
-          <path
-            d={map.borders}
-            fill="none"
-            stroke="rgba(255,255,255,0.3)"
-            strokeWidth={1.5}
-            vectorEffect="non-scaling-stroke"
-          />
-        </g>
+          </g>
+        ) : null}
+
+        {map.labels.map((label) => {
+          const pt = toScreen(map.point(label.at));
+          return (
+            <text
+              key={label.text}
+              x={pt.x}
+              y={pt.y}
+              textAnchor="middle"
+              fontFamily={SANS}
+              fontWeight={700}
+              fontSize={30}
+              letterSpacing="0.35em"
+              fill="rgba(190,210,255,0.42)"
+            >
+              {label.text}
+            </text>
+          );
+        })}
 
         {(spec.links ?? []).map((link, i) => {
           const a = toScreen(map.point(link.from));
@@ -144,15 +170,35 @@ export const MapView: React.FC<{
           const ly = 0.25 * a.y + 0.5 * my + 0.25 * b.y;
           return (
             <g key={i}>
+              {/* glow under the route */}
               <polyline
                 points={pts.join(" ")}
                 fill="none"
                 stroke={link.dotted ? COOL : ACCENT}
-                strokeWidth={8}
+                strokeWidth={16}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={link.dotted ? 0.35 : 0.6}
+                filter="url(#map-line)"
+              />
+              <polyline
+                points={pts.join(" ")}
+                fill="none"
+                stroke={link.dotted ? COOL : ACCENT}
+                strokeWidth={7}
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeDasharray={link.dotted ? "3 17" : undefined}
               />
+              {/* bright head while the line is being drawn */}
+              {t < 1 && !link.dotted ? (
+                <circle
+                  cx={Number(pts[pts.length - 1].split(",")[0])}
+                  cy={Number(pts[pts.length - 1].split(",")[1])}
+                  r={11}
+                  fill="#FFFFFF"
+                />
+              ) : null}
               {link.label ? (
                 <text
                   x={lx}

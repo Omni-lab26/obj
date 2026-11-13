@@ -48,7 +48,8 @@
     "voice:route": "python scripts/tts_sbv2.py --script src/route/lines.json --out public/route/voice --manifest src/route/voice-manifest.json --voice jvnv-M1-jp --length 0.9",
     "render:talk": "remotion render DenkidaiTalk out/denkidai-talk-master.mp4",
     "encode:talk": "ffmpeg -y -i out/denkidai-talk-master.mp4 -c:v libx264 -preset medium -crf 27 -pix_fmt yuv420p -af volume=-1.5dB -c:a aac -b:a 160k -movflags +faststart release/denkidai-talk.mp4",
-    "voice:talk": "python scripts/tts_voicevox.py --script src/talk/lines.json --out public/talk/voice --manifest src/talk/voice-manifest.json"
+    "voice:talk": "python scripts/tts_voicevox.py --script src/talk/lines.json --out public/talk/voice --manifest src/talk/voice-manifest.json",
+    "maps:talk": "remotion still MapBaseUs public/talk/map-us.jpg --scale=3 --image-format=jpeg --jpeg-quality=92 && remotion still MapBasePacific public/talk/map-pacific.jpg --scale=1.5 --image-format=jpeg --jpeg-quality=92"
   },
   "allowScripts": {
     "esbuild": false

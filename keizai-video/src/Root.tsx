@@ -5,6 +5,7 @@ import { LineThumbnail } from "./line/LineThumbnail";
 import { Film } from "./route/Film";
 import { totalFrames as routeFrames } from "./route/timeline";
 import { TalkFilm } from "./talk/Film";
+import { MapBasePacific, MapBaseUs } from "./talk/MapBase";
 import { totalFrames as talkFrames } from "./talk/timeline";
 import { totalFrames as lineFrames } from "./line/timeline";
 import { FPS, getScene, HEIGHT, totalFrames, WIDTH } from "./timeline";
@@ -53,6 +54,13 @@ export const RemotionRoot: React.FC = () => {
         height={HEIGHT}
       />
       <Still id="Thumbnail" component={Thumbnail} width={1280} height={720} />
+      <Still id="MapBaseUs" component={MapBaseUs} width={1920} height={1080} />
+      <Still
+        id="MapBasePacific"
+        component={MapBasePacific}
+        width={1920}
+        height={1080}
+      />
       <Still
         id="LineThumbnail"
         component={LineThumbnail}

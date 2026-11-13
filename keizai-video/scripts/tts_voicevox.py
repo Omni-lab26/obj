@@ -65,26 +65,28 @@ def main():
         root = Path(os.environ["VOICEVOX_DIR"])
         ort = sorted(glob.glob(str(root / "onnxruntime" / "libvoicevox_onnxruntime.so.*")))[-1]
         synth = Synthesizer(Onnxruntime.load_once(filename=ort), OpenJtalk(str(root / "open_jtalk_dic_utf_8-1.11")))
+        # A line may name another speaker with "voice" (used when a quotation is read out).
+        wanted = {style_id} | {HOSTS[l["voice"]][1] for l in lines if l.get("voice")}
         for vvm in sorted((root / "vvm").glob("*.vvm")):
             with VoiceModelFile.open(vvm) as model:
-                if any(st.id == style_id for ch in model.metas for st in ch.styles):
+                if any(st.id in wanted for ch in model.metas for st in ch.styles):
                     synth.load_voice_model(model)
-                    break
         out.mkdir(parents=True, exist_ok=True)
         print(f"host: {name}", flush=True)
         for line in lines:
             if only and line["id"] not in only:
                 continue
-            query = synth.create_audio_query(spoken(line), style_id)
+            sid = HOSTS[line["voice"]][1] if line.get("voice") else style_id
+            query = synth.create_audio_query(spoken(line), sid)
             if "--kana" in sys.argv:
                 print(line["id"], query.kana, flush=True)
                 continue
-            query.speed_scale = speed
+            query.speed_scale = speed if not line.get("voice") else speed * 0.93
             query.intonation_scale = 1.1
             query.pre_phoneme_length = 0.08
             query.post_phoneme_length = 0.08
             wav = out / f"{line['id']}.wav"
-            wav.write_bytes(synth.synthesis(query, style_id))
+            wav.write_bytes(synth.synthesis(query, sid))
             m4a = out / f"{line['id']}.m4a"
             subprocess.run(
                 ["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-af",
