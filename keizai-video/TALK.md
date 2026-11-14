@@ -1,6 +1,6 @@
 # 線の回（第4版）ずんだもん担当「アメリカの電気代が、日本の株を動かした」
 
-担当キャラクターが語る版です（約10分50秒）。番組名は「Plotline」です。配色を目を引くものに変え、図とグラフを入れました。
+担当キャラクターが語る版です（約11分20秒）。番組名は「Plotline」です。配色を目を引くものに変え、図とグラフを入れました。
 声の抑揚を抑え、話の「間」を設計し、用語やほかの見方を補う「ちなみに」のコーナーを足しています。
 
 - 動画: `release/denkidai-talk.mp4`（1920×1080 / 30fps）
@@ -123,7 +123,7 @@ npm run encode:talk   # 配布用に圧縮して release/ に置く
 
 ## 使った数字と出典
 
-原稿の事実を1か所ずつ採点した表は [`ACCURACY.md`](./ACCURACY.md) にあります（総合81点）。要確認リストは第2版（[`ROUTE.md`](./ROUTE.md)）のものがそのまま当てはまります。
+原稿の事実を1か所ずつ採点した表は [`ACCURACY.md`](./ACCURACY.md) にあります（総合82点）。理解しやすさの採点は [`CLARITY.md`](./CLARITY.md)、制作の決まりごとは [`PLAYBOOK.md`](./PLAYBOOK.md)。要確認リストは第2版（[`ROUTE.md`](./ROUTE.md)）のものがそのまま当てはまります。
 日経平均の終値は 10/30〜11/12 の9営業日分を折れ線に使っています（日本経済新聞、マネックス証券、株探）。
 
 ## 概要欄
@@ -138,10 +138,10 @@ npm run encode:talk   # 配布用に圧縮して release/ に置く
 00:00 1枚の請求書
 00:36 今日の担当と道のり
 01:15 1か所目、アメリカの食卓
-03:52 2か所目、投票所
-06:48 3か所目、株式市場
-08:45 ボクなりの読み
-09:52 1本の線につなげる
+03:56 2か所目、投票所
+07:05 3か所目、株式市場
+09:18 ボクなりの読み
+10:26 1本の線につなげる
 
 ■ 出典
 日本経済新聞／AP通信／ロイター・イプソス世論調査（2026年6月）／AP通信・NORC・シカゴ大学の世論調査（2026年7月）／国際エネルギー機関／ブルームバーグ／外為どっとコム／OANDA証券／株探
@@ -230,21 +230,23 @@ The script was drafted with AI assistance. Photos are stock images.
 | c11 | The mansion pays its own electricity bill, of course. But the cost of the road and the streetlights gets added to the neighborhood dues. In other words, everyone pays. |
 | c12 | Power lines and power plants work in roughly the same way. |
 | c13 | To be fair, though: data centers aren't behind the whole price increase. |
-| c14 | A Dallas Fed working paper estimates that data centers have pushed up wholesale prices, what utilities pay to buy power, by about 2 to 6 percent. |
+| c14 | The Dallas Fed, one branch of America's central bank, has put out an estimate. |
+| c14b | It says data centers have pushed up wholesale prices, what utilities pay to buy power, by about 2 to 6 percent. |
 | c15 | Even so, when people look at their bill, their eyes go to the big building going up nearby. |
 | c16 | That's stop one. The bill and the data center are now connected by a line. |
 | d01 | Second stop: the polling place. |
 | d02 | November 3 was the U.S. midterm election. |
 | d02b | By the way, the midterms are the congressional elections held halfway through a president's four-year term. People often call them a report card on the administration. |
 | d03 | On that same day, in 12 states, people also voted on local measures about data center construction. |
-| d04 | According to a tally reported by the AP, in 44 of the 45 measures that had been counted, the side restricting construction won. |
+| d03b | These are votes where residents decide yes or no directly. There were 47 of them in all. |
+| d04 | According to a tally reported by the AP, 45 of them had been counted. In 44 of those 45, the side restricting construction won. |
 | d04b | That's almost all of them. So where was the one exception? |
 | d04c | Harwood, North Dakota, a town of a little over 800 people. A big data center was already under construction there, and the measure to tighten reviews was voted down. |
-| d05 | And of the 47 measures in total, 21 were in Ohio. |
+| d05 | By the way, 21 of the 47 measures, nearly half, were in Ohio. |
 | d05b | Let's hear from someone who is actually part of the opposition. This is Stephen Sanders, who co-founded a data center protest group in Lubbock, Texas. After the election, here's what Sanders told the AP. |
 | q1 | I would say data centers were on the ballot. |
 | d05c | By the way, Sanders is a Republican. So you can see this isn't really a party-line issue. |
-| d06 | In the congressional elections that same day, Democrats won both the House and the Senate. |
+| d06 | In the congressional elections that same day, Democrats won a majority in both chambers of Congress, the House and the Senate. |
 | d07 | But let me connect these two with a dotted line. |
 | d08 | We can't honestly say that anger over power bills is what won it for the Democrats. |
 | d09 | In the AP's voter survey, only about one in four voters called data centers crucial to their vote. |
@@ -255,7 +257,7 @@ The script was drafted with AI assistance. Photos are stock images.
 | d11c | The consequences Diorio means are things like the taxes a data center pays to its host community. Block the project, and that money doesn't arrive either. |
 | d12 | Even so, the market connected these two with a line and reacted hard. |
 | e01 | Third stop: the stock market. |
-| e02 | In New York, two days after the election, an index of semiconductor stocks fell about 12 percent in a single day. |
+| e02 | In New York, two days after the election, an index of companies that make semiconductors, the chips that act as AI's brain, fell about 12 percent in a single day. |
 | e03 | According to Gaitame.com, that was its biggest drop since March 2020. |
 | e03b | By the way, this index is known as the SOX. It tracks about 30 chip-related companies, Nvidia among them. |
 | e04 | The logic: if data centers don't get built, the chips that go inside them don't get sold. That's how investors read it. |
@@ -264,15 +266,17 @@ The script was drafted with AI assistance. Photos are stock images.
 | e07 | From Monday through Thursday of that week, the Nikkei average fell 3.5 percent. |
 | e08 | So how much do you think the TOPIX fell, the index that tracks the whole Tokyo market? |
 | e09 | 0.6 percent. Same Tokyo stocks, and yet the gap is nearly sixfold. |
-| e10 | Here's why. In the Nikkei average, companies with a higher share price carry more weight, and AI and chip companies make up a very large part of it. |
+| e10 | The reason lies in how it's calculated. The Nikkei average is built from the share prices of 225 leading Japanese companies, and the higher a company's share price, the more weight it carries. |
+| e10b | And right now, the companies with the highest share prices include a whole row of AI and chip names. |
 | e11 | So it was the yardstick most sensitive to AI news from America. |
-| e12 | To be clear, on Friday even banks and food companies were sold, and there was also talk that U.S. interest rates were about to rise. |
+| e12 | To be clear, that wasn't the only reason. On Friday, even banks and food companies were sold. |
+| e12a | There was also talk that U.S. interest rates were about to rise. |
 | e12b | Another view is that chip-company earnings fell short. The outlooks from Qualcomm and Arm, out the day before, are the examples people cite. |
 | e13 | So power bills alone don't explain everything. |
 | f01 | From here, this is my own read. |
 | f02 | What got shaken this time, I think, wasn't faith in how capable AI is. |
 | f03 | What got shaken was where AI gets put, and who pays its power bill. A much more down-to-earth problem. |
-| f03b | Let me also bring in how one market professional sees it. Dominique Toublan heads U.S. credit strategy at Barclays, the big British bank. This is from a note published the day after the election. |
+| f03b | Let me also bring in how one market professional sees it. Dominique Toublan heads U.S. credit strategy, the analysis of corporate debt, at Barclays, the big British bank. This is from a note published the day after the election. |
 | q3 | AI pushback is bipartisan but local, making the buildout pricier rather than stalling it. |
 | f04 | Over the next four trading days, the Nikkei average recovered about 3,400 yen. Some say the selling was overdone. |
 | f05 | But the bill comes every month, doesn't it? That doesn't stop when the election is over. |
@@ -318,21 +322,23 @@ The script was drafted with AI assistance. Photos are stock images.
 | c11 | お屋敷は、自分の家の電気代はちゃんと払うんです。でも道路とか街灯のお金は、町内会費に乗っかってくる。つまり、みんなで払うことになるわけです。 |
 | c12 | 送電線とか発電所も、ざっくり言うとこれと同じ仕組みなんですよね。 |
 | c13 | ただ、ここは公平に言っておきます。値上がりが全部データセンターのせい、というわけではないんです。 |
-| c14 | ダラス連銀の試算だと、電力会社が電気を仕入れるときの値段、つまり卸値を、データセンターが押し上げた分は、2%から6%ぐらいなんですよ。 |
+| c14 | アメリカの中央銀行の一部である、ダラス連銀が試算を出してます。 |
+| c14b | 電力会社が電気を仕入れるときの値段、つまり卸値を、データセンターが押し上げた分は、2%から6%ぐらいなんですよ。 |
 | c15 | それでも、請求書を見た人の目は、すぐそばに建ってる大きな建物に向かうわけです。 |
 | c16 | これで1つ目。請求書とデータセンターが、線でつながりました。 |
 | d01 | 2か所目は、投票所の話です。 |
 | d02 | 11月3日、アメリカは中間選挙でした。 |
 | d02b | ちなみに中間選挙というのは、大統領の任期4年の、ちょうど真ん中にある議会の選挙です。政権の通信簿、なんて言われたりもします。 |
 | d03 | 実はこの日、全米12の州で、データセンターの建設をめぐる住民投票もやってたんですよ。 |
-| d04 | AP通信が伝えた集計だと、開票が終わった45件のうち44件で、建設を制限する側が勝ってます。 |
+| d03b | 住民が直接、賛成か反対かを決める投票です。全部で47件ありました。 |
+| d04 | AP通信が伝えた集計だと、そのうち開票が終わったのが45件。その45件のうち44件で、建設を制限する側が勝ってます。 |
 | d04b | ほぼ全部ですよね。じゃあ、残りの1件はどこなのか。 |
 | d04c | ノースダコタ州の、ハーウッドという人口800人あまりの町です。ここはもうデータセンターの工事が始まっていて、審査を厳しくする案が否決されました。 |
-| d05 | そして、47件のうち21件が、オハイオ州に集まってます。 |
+| d05 | ちなみに、全部で47件のうち21件、半分近くがオハイオ州に集まってます。 |
 | d05b | ここで、実際に反対運動をしている人の声を聞いてみましょう。テキサス州のラボックという町で、データセンターに反対するグループを立ち上げた一人、スティーブン・サンダースさんです。選挙のあと、AP通信の取材にこう答えています。 |
 | q1 | データセンターが、投票にかけられていたんだと思う。 |
 | d05c | ちなみにこの人、共和党員なんですよ。党派の話じゃない、というのがよくわかりますよね。 |
-| d06 | 同じ日の議会選挙では、民主党が上院も下院も、両方取りました。 |
+| d06 | 同じ日の議会選挙では、議会に2つある院、上院と下院の両方で、民主党が多数を取りました。 |
 | d07 | ただ、ここは点線でつなげさせてください。 |
 | d08 | 電気代への不満が民主党を勝たせた、とまでは正直言えないんですよ。 |
 | d09 | AP通信の調査だと、データセンターを投票の決め手にした人は、4人に1人ぐらいなんですね。 |
@@ -343,7 +349,7 @@ The script was drafted with AI assistance. Photos are stock images.
 | d11c | ディオリオさんの言う代償は、データセンターが地元に払う税金などのことです。建てなければ、それも入ってこない、という話ですね。 |
 | d12 | それでも市場は、この2つを線でつなげて、めちゃくちゃ反応しました。 |
 | e01 | 3か所目は、株式市場の話です。 |
-| e02 | 選挙の2日後のニューヨークで、半導体メーカーの株をまとめた指数が、1日でだいたい12%下がったんですよ。 |
+| e02 | 選挙の2日後のニューヨークで、AIの頭脳にあたる部品、半導体。それに関わる会社の株価指数が、1日でだいたい12%下がったんですよ。 |
 | e03 | 外為どっとコムによると、これ、2020年3月以来の下げなんですね。 |
 | e03b | ちなみにこの指数、SOXと呼ばれていて、エヌビディアとか、半導体に関わる会社、約30社の株価を、まとめたものです。 |
 | e04 | 要は、データセンターが建たないなら、中に入れる半導体も売れないよね、と。投資家はそう読んだわけです。 |
@@ -352,15 +358,17 @@ The script was drafted with AI assistance. Photos are stock images.
 | e07 | その週の月曜から木曜で、日経平均は3.5%下がってます。 |
 | e08 | じゃあ、東証全体の動きを見るTOPIXのほうは、どれぐらい下がったと思います？ |
 | e09 | 0.6%なんですよ。同じ東京の株なのに、6倍近く違うんです。 |
-| e10 | なんでかと言うと、日経平均は、1株の値段が高い会社ほど影響が大きくなる仕組みで、AIとか半導体の会社の比重がめちゃくちゃ大きいんですよ。 |
+| e10 | なんでかと言うと、計算の仕方に理由があります。日経平均は、日本を代表する225社の株価から出すんですけど、1株の値段が高い会社ほど、影響が大きくなる仕組みなんです。 |
+| e10b | で、今その値段が高い会社に、AIとか半導体の会社がずらっと並んでるんですよ。 |
 | e11 | つまり、アメリカのAIの話に一番敏感に反応しちゃう物差しだったんです。 |
-| e12 | 念のため言っておくと、金曜は銀行とか食品の会社まで売られてますし、アメリカの金利が上がりそうだ、という話も重なってました。 |
+| e12 | 念のため言っておくと、理由はこれだけじゃないです。金曜は、銀行とか食品の会社まで売られてました。 |
+| e12a | アメリカの金利が上がりそうだ、という話も重なってたんですよね。 |
 | e12b | それと、半導体の会社の決算が物足りなかった、という見方もあるんですよ。前の日に出た、クアルコムとアームの見通しがそうです。 |
 | e13 | だから、電気代だけで全部説明できるわけじゃないです。 |
 | f01 | ここからは、ボクなりの読みの話です。 |
 | f02 | 今回揺らいだのは、AIの性能への期待じゃないと思うんですよ。 |
 | f03 | 揺らいだのは、AIをどこに置くのか。その電気代を誰が払うのか、という、めちゃくちゃ身近な問題のほうなんです。 |
-| f03b | ここで、市場のプロはどう見ているのかも、1つ紹介させてください。イギリスの大手銀行バークレイズで、アメリカの社債の分析を率いている、ドミニク・トゥブランさん。選挙の翌日に出したレポートに、こう書いています。 |
+| f03b | ここで、市場のプロはどう見ているのかも、1つ紹介させてください。イギリスの大手銀行バークレイズで、会社の借金にあたる「社債」の分析を率いている、ドミニク・トゥブランさん。選挙の翌日に出したレポートに、こう書いています。 |
 | q3 | AIへの反発は、党派を超えているが、地元の話だ。建設を止めるというより、高くつくものにしている。 |
 | f04 | 日経平均はその後の4日間で、3,400円ぐらい戻してます。売られすぎだった、という見方もあります。 |
 | f05 | ただ、請求書って毎月届くじゃないですか。選挙が終わっても、これは止まらないんですよね。 |

@@ -282,11 +282,11 @@ export const SHOTS: Shot[] = [
     photo: "fed.jpg",
     tag: STOP1,
     trail: 0,
-    lines: ["c13", "c14"],
+    lines: ["c13", "c14", "c14b"],
     overlay: {
       kind: "big",
-      at: "c14",
-      delay: 110,
+      at: "c14b",
+      delay: 100,
       text: "2〜6",
       unit: "%",
       lead: "データセンターが押し上げた分",
@@ -335,7 +335,7 @@ export const SHOTS: Shot[] = [
     tag: STOP2,
     trail: 1,
     move: "right",
-    lines: ["d03"],
+    lines: ["d03", "d03b"],
   },
   {
     photo: "sticker_hand.jpg",
@@ -583,7 +583,7 @@ export const SHOTS: Shot[] = [
       },
     },
   },
-  { photo: "chip.jpg", tag: STOP3, trail: 2, lines: ["e10"] },
+  { photo: "chip.jpg", tag: STOP3, trail: 2, lines: ["e10", "e10b"] },
   {
     photo: "tse_wide.jpg",
     tag: STOP3,
@@ -591,7 +591,7 @@ export const SHOTS: Shot[] = [
     move: "right",
     lines: ["e11"],
   },
-  { photo: "aisle.jpg", tag: STOP3, trail: 2, lines: ["e12"] },
+  { photo: "aisle.jpg", tag: STOP3, trail: 2, lines: ["e12", "e12a"] },
   {
     photo: "wallst.jpg",
     tag: STOP3,

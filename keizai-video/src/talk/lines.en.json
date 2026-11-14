@@ -119,8 +119,12 @@
     },
     {
       "id": "c14",
-      "text": "A Dallas Fed working paper estimates|that data centers have pushed up wholesale prices,|what utilities pay to buy power, by about 2 to 6 percent.",
-      "say": "A Dallas Fed working paper estimates that data centers have pushed up wholesale prices, what utilities pay to buy power, by about two to six percent."
+      "text": "The Dallas Fed, one branch of America's central bank,|has put out an estimate."
+    },
+    {
+      "id": "c14b",
+      "text": "It says data centers have pushed up wholesale prices,|what utilities pay to buy power, by about *2 to 6 percent*.",
+      "say": "It says data centers have pushed up wholesale prices, what utilities pay to buy power, by about two to six percent."
     },
     {
       "id": "c15",
@@ -148,9 +152,14 @@
       "say": "On that same day, in twelve states, people also voted on local measures about data center construction."
     },
     {
+      "id": "d03b",
+      "text": "These are votes where residents decide yes or no directly.|There were 47 of them in all.",
+      "say": "These are votes where residents decide yes or no directly. There were forty-seven of them in all."
+    },
+    {
       "id": "d04",
-      "text": "According to a tally reported by the AP,|in *44* of the 45 measures that had been counted,|the side restricting construction won.",
-      "say": "According to a tally reported by the A.P., in forty-four of the forty-five measures that had been counted, the side restricting construction won."
+      "text": "According to a tally reported by the AP,|45 of them had been counted.|In *44* of those 45, the side restricting construction won.",
+      "say": "According to a tally reported by the A.P., forty-five of them had been counted. In forty-four of those forty-five, the side restricting construction won."
     },
     {
       "id": "d04b",
@@ -163,8 +172,8 @@
     },
     {
       "id": "d05",
-      "text": "And of the 47 measures in total,|21 were in Ohio.",
-      "say": "And of the forty-seven measures in total, twenty-one were in Ohio."
+      "text": "By the way, 21 of the 47 measures,|nearly half, were in Ohio.",
+      "say": "By the way, twenty-one of the forty-seven measures, nearly half, were in Ohio."
     },
     {
       "id": "d05b",
@@ -182,7 +191,7 @@
     },
     {
       "id": "d06",
-      "text": "In the congressional elections that same day,|Democrats won both the House and the Senate."
+      "text": "In the congressional elections that same day,|Democrats won a majority in both chambers of Congress,|the House and the Senate."
     },
     {
       "id": "d07",
@@ -231,7 +240,8 @@
     },
     {
       "id": "e02",
-      "text": "In New York, two days after the election,|an index of semiconductor stocks|fell about *12 percent* in a single day."
+      "text": "In New York, two days after the election,|an index of companies that make semiconductors, the chips that act as AI's brain,|fell about *12 percent* in a single day.",
+      "say": "In New York, two days after the election, an index of companies that make semiconductors, the chips that act as A.I.'s brain, fell about twelve percent in a single day."
     },
     {
       "id": "e03",
@@ -273,7 +283,13 @@
     },
     {
       "id": "e10",
-      "text": "Here's why.|In the Nikkei average, companies with a higher share price carry more weight,|and AI and chip companies make up a very large part of it."
+      "text": "The reason lies in how it's calculated.|The Nikkei average is built from the share prices of 225 leading Japanese companies,|and the higher a company's share price, the more weight it carries.",
+      "say": "The reason lies in how it's calculated. The Nikkei average is built from the share prices of two hundred twenty-five leading Japanese companies, and the higher a company's share price, the more weight it carries."
+    },
+    {
+      "id": "e10b",
+      "text": "And right now, the companies with the highest share prices|include a whole row of AI and chip names.",
+      "say": "And right now, the companies with the highest share prices include a whole row of A.I. and chip names."
     },
     {
       "id": "e11",
@@ -281,7 +297,11 @@
     },
     {
       "id": "e12",
-      "text": "To be clear, on Friday even banks and food companies were sold,|and there was also talk that U.S. interest rates were about to rise."
+      "text": "To be clear, that wasn't the only reason.|On Friday, even banks and food companies were sold."
+    },
+    {
+      "id": "e12a",
+      "text": "There was also talk|that U.S. interest rates were about to rise."
     },
     {
       "id": "e12b",
@@ -305,8 +325,8 @@
     },
     {
       "id": "f03b",
-      "text": "Let me also bring in how one market professional sees it.|Dominique Toublan heads U.S. credit strategy|at Barclays, the big British bank.|This is from a note published the day after the election.",
-      "say": "Let me also bring in how one market professional sees it. Dominique Too-blahn heads U.S. credit strategy at Barclays, the big British bank. This is from a note published the day after the election."
+      "text": "Let me also bring in how one market professional sees it.|Dominique Toublan heads U.S. credit strategy,|the analysis of corporate debt, at Barclays, the big British bank.|This is from a note published the day after the election.",
+      "say": "Let me also bring in how one market professional sees it. Dominique Too-blahn heads U.S. credit strategy, the analysis of corporate debt, at Barclays, the big British bank. This is from a note published the day after the election."
     },
     {
       "id": "q3",

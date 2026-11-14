@@ -747,6 +747,15 @@ const silent = new Set(
         : [],
   ),
 );
+// The line that hands over to a quotation: its subtitle leaves when the voice
+// stops, so it is gone before the quoted words come up on the card.
+const handover = new Set(
+  SHOTS.flatMap((s) => {
+    if (s.overlay?.kind !== "quote") return [];
+    const i = s.lines.indexOf(s.overlay.at);
+    return i > 0 ? [s.lines[i - 1]] : [];
+  }),
+);
 const raised = new Set(
   SHOTS.flatMap((s) => (s.overlay?.kind === "end" ? s.lines : [])),
 );
@@ -779,20 +788,25 @@ export const TalkFilm: React.FC = () => {
           ) : null}
           {silent.has(line.id)
             ? null
-            : line.chunks.map((chunk) => (
-                <Sequence
-                  key={chunk.from}
-                  name={`Sub ${line.id}`}
-                  from={chunk.from}
-                  durationInFrames={chunk.to - chunk.from}
-                >
-                  <Phrase
-                    text={chunk.text}
-                    length={chunk.to - chunk.from}
-                    high={raised.has(line.id)}
-                  />
-                </Sequence>
-              ))}
+            : line.chunks.map((chunk) => {
+                const to = handover.has(line.id)
+                  ? Math.min(chunk.to, line.start + line.duration + 6)
+                  : chunk.to;
+                return (
+                  <Sequence
+                    key={chunk.from}
+                    name={`Sub ${line.id}`}
+                    from={chunk.from}
+                    durationInFrames={to - chunk.from}
+                  >
+                    <Phrase
+                      text={chunk.text}
+                      length={to - chunk.from}
+                      high={raised.has(line.id)}
+                    />
+                  </Sequence>
+                );
+              })}
         </React.Fragment>
       ))}
     </AbsoluteFill>
