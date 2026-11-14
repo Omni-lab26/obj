@@ -9,6 +9,7 @@ import {
 } from "remotion";
 import { ACCENT, COOL, INK, MINCHO, SANS } from "./theme";
 import { LonLat, PACIFIC, US, XY } from "./geo";
+import { t as tr } from "./lang";
 import { lineTiming } from "./timeline";
 
 const EASE = Easing.bezier(0.16, 1, 0.3, 1);
@@ -131,7 +132,7 @@ export const MapView: React.FC<{
               letterSpacing="0.35em"
               fill="rgba(190,210,255,0.42)"
             >
-              {label.text}
+              {tr(label.text, "map")}
             </text>
           );
         })}
@@ -213,7 +214,7 @@ export const MapView: React.FC<{
                   strokeWidth={7}
                   style={{ paintOrder: "stroke" }}
                 >
-                  {link.label}
+                  {tr(link.label, "map")}
                 </text>
               ) : null}
             </g>
@@ -264,7 +265,7 @@ export const MapView: React.FC<{
                 strokeWidth={9}
                 style={{ paintOrder: "stroke" }}
               >
-                {mark.label}
+                {tr(mark.label, "map")}
               </text>
               {mark.note ? (
                 <text
@@ -279,7 +280,7 @@ export const MapView: React.FC<{
                   strokeWidth={7}
                   style={{ paintOrder: "stroke" }}
                 >
-                  {mark.note}
+                  {tr(mark.note, "map")}
                 </text>
               ) : null}
             </g>

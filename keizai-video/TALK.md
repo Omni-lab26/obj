@@ -112,6 +112,128 @@ npm run encode:talk   # 配布用に圧縮して release/ に置く
 ※台本の下書きにAIを使っています。写真は資料写真です。
 ```
 
+## 英語版
+
+同じ動画の英語版です（約6分45秒）。`REMOTION_LANG=en` を付けて書き出すと、台本・字幕・画面の文字・音声がすべて英語に切り替わります。
+
+- 動画: `release/denkidai-talk-en.mp4`
+- 台本: `src/talk/lines.en.json`
+- 画面の文字の対訳: `src/talk/lang.ts`（日本語のまま残った文字があると、書き出しがエラーで止まります）
+- 音声: Kokoro TTS（Apache-2.0）。VOICEVOX は日本語専用なので、英語は別の音声です。引用は別の声で読みます
+
+```bash
+npm run voice:talk:en    # 英語ナレーションを作り直す
+npm run render:talk:en   # 高画質の元動画を out/ に書き出す
+npm run encode:talk:en   # 配布用に圧縮して release/ に置く
+```
+
+日本語版と違うところ：
+
+- 担当キャラクターの名乗りと「今日の担当」のカードはありません（声が別のため）
+- 引用は英語の原文をそのまま見せます（訳文はなし）。読み上げは本人の声ではないとカードに明記
+- 金額は「¥3,643」「3,643 yen」、指数名は画面では「Nikkei 225」
+
+英語版の概要欄：
+
+```
+America's power bills moved Japan's stocks. We follow one electricity bill from a kitchen table in Ohio to the Tokyo stock market, on a map.
+
+Chapters
+00:00 One electricity bill
+00:30 Today's route
+00:58 Stop 1: The American kitchen table
+02:32 Stop 2: The polling place
+04:06 Stop 3: The stock market
+05:19 My own read
+06:03 Connecting the dots
+
+Sources
+Nikkei / Associated Press / Reuters-Ipsos poll (June 2026) / Dallas Fed working paper (March 2026) / CNBC / Gaitame.com / Kabutan
+
+Credits
+Voice: Kokoro TTS. Map data: Natural Earth. Photos: credited at the end of the video.
+
+This video is not a recommendation to buy or sell any financial product.
+The script was drafted with AI assistance. Photos are stock images.
+```
+
+英語の台本：
+
+| Line | Subtitle |
+| --- | --- |
+| a01 | In Ohio, an electricity bill lands in someone's mailbox. And over the past two years or so, that bill has been creeping up. |
+| a02 | This one piece of paper, by a long and winding route, ends up moving stock prices in Tokyo. |
+| a03 | On November 6, the Nikkei average fell 3,643 yen in a single day. That's the third-largest point drop on record. |
+| a04 | A power bill and a stock index. Those two feel miles apart, don't they? |
+| a05 | But they're actually connected by a single line. |
+| b01 | Hi, this is Halftick. |
+| b02 | We take the news that's scattered around in your head and connect it into one line. |
+| b03 | Today we go from a kitchen table in Ohio to Kabutocho, Tokyo's financial district. We'll connect the bill and the stock price on a map. |
+| b04 | We'll make three stops. First, the American kitchen table. Second, the polling place. Third, the stock market. |
+| b05 | At the end, I'll connect all three into one line and give you my own read. |
+| c01 | First stop: the American kitchen table. |
+| c02 | Right now, across the United States, people are pushing back against new data centers. |
+| c03 | Here's a quick guess for you. What's a worry that keeps coming up among the people who object? |
+| c04 | That AI will take their jobs. That's what most of us would say, right? |
+| c05 | One that keeps coming up is the power bill. |
+| c06 | In a Reuters/Ipsos poll taken in June, nearly eight in ten people said they worry that AI will make electricity more expensive. |
+| c07 | And that held true no matter which party they support. |
+| c08 | Prices really are going up. According to government data reported by Reuters, home electricity prices have risen more than 10 percent since 2024. |
+| c09 | So why would a data center affect what a household pays? Think of it like a neighborhood association. |
+| c10 | Say a huge mansion moves into the neighborhood. To serve it, the road gets widened and more streetlights go up. |
+| c11 | The mansion pays its own electricity bill, of course. But the cost of the road and the streetlights gets added to the neighborhood dues. In other words, everyone pays. |
+| c12 | Power lines and power plants work in roughly the same way. |
+| c13 | To be fair, though: electricity isn't the only reason people object, and data centers aren't behind the whole price increase either. |
+| c14 | A Dallas Fed working paper estimates that data centers have pushed up wholesale power prices by about 2 to 6 percent. |
+| c15 | Even so, when people look at their bill, their eyes go to the big building going up nearby. |
+| c16 | That's stop one. The bill and the data center are now connected by a line. |
+| d01 | Second stop: the polling place. |
+| d02 | November 3 was the U.S. midterm election. |
+| d03 | On that same day, in 12 states, people also voted on local measures about data center construction. |
+| d04 | According to a tally reported by the AP, in 44 of the 45 measures that had been counted, the side restricting construction won. |
+| d05 | That's almost all of them. And of the 47 measures in total, 21 were in Ohio. |
+| d05b | Let's hear from someone in the opposition movement. This is Stephen Sanders, from Texas. Here's what he told the AP. |
+| q1 | (quotation, second voice) I would say data centers were on the ballot. |
+| d05c | By the way, he's a Republican. So you can see this isn't really a party-line issue. |
+| d06 | In the congressional elections that same day, Democrats won both the House and the Senate. |
+| d07 | But let me connect these two with a dotted line. |
+| d08 | We can't honestly say that anger over power bills is what won it for the Democrats. |
+| d09 | In the AP's voter survey, only about one in four voters called data centers crucial to their vote. |
+| d10 | They happened on the same day. That's as far as the facts go. |
+| d11 | Also, a lot of headlines said "AI regulation," but not a single federal law has changed. What got decided were local rules. |
+| d11b | Let's hear from the other side, too. This is Dan Diorio of the Data Center Coalition, an industry group. |
+| q2 | (quotation, second voice) We should expect them to want to deliver on those promises, but there are going to be real-world consequences of that. |
+| d12 | Even so, the market connected these two with a line and reacted hard. |
+| e01 | Third stop: the stock market. |
+| e02 | In New York, two days after the election, an index of semiconductor stocks fell about 12 percent in a single day. |
+| e03 | According to Gaitame.com, that was its biggest drop since March 2020. |
+| e04 | The logic: if data centers don't get built, the chips that go inside them don't get sold. That's how investors read it. |
+| e05 | The next day, the line crosses the Pacific and reaches Tokyo. The Nikkei average fell 3,643 yen. |
+| e06 | Here's one more guess for you. |
+| e07 | From Monday through Thursday of that week, the Nikkei average fell 3.5 percent. |
+| e08 | So how much do you think the TOPIX fell, the index that tracks the whole Tokyo market? |
+| e09 | 0.6 percent. Same Tokyo stocks, and yet the gap is nearly sixfold. |
+| e10 | Here's why. In the Nikkei average, companies with a higher share price carry more weight, and AI and chip companies make up a very large part of it. |
+| e11 | So it was the yardstick most sensitive to AI news from America. |
+| e12 | To be clear, on Friday even banks and food companies were sold, and there was also talk that U.S. interest rates were about to rise. |
+| e13 | So power bills alone don't explain everything. |
+| f01 | From here, this is my own read. |
+| f02 | What got shaken this time, I think, wasn't faith in how capable AI is. |
+| f03 | What got shaken was where AI gets put, and who pays its power bill. A much more down-to-earth problem. |
+| f03b | Let's look at one professional view as well. This is from a note that Dominique Toublan of Barclays put out the day after the election. |
+| q3 | (quotation, second voice) AI pushback is bipartisan but local, making the buildout pricier rather than stalling it. |
+| f04 | Over the next four trading days, the Nikkei average recovered about 3,400 yen. Some say the selling was overdone. |
+| f05 | But the bill comes every month, doesn't it? That doesn't stop when the election is over. |
+| f06 | So I think this line will keep connecting to other news from here on. |
+| g01 | Finally, let's connect today's dots into one line. |
+| g02a | The bill that arrived at a kitchen table in Ohio. The "not so fast" at the polling place. |
+| g02b | Chip stocks in New York. And the Nikkei average in Tokyo. |
+| g03 | Connect them all, and you get: "America's power bills moved Japan's stocks." |
+| g04 | One last thing. In Japan, too, friction with residents over data center construction has been reported. |
+| g05 | If one were going to be built near your home, would you be for it? Or against it? |
+| g06 | If you like, tell us in the comments on Halftick. You'll find the rest of this story at the link in the description. |
+| g07 | Next time, we'll connect more scattered news into one line. See you on the next line. |
+
 ## 台本
 
 | 行 | 字幕 |

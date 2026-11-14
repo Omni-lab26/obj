@@ -1,4 +1,4 @@
-import script from "./lines.json";
+import { EN, script } from "./lang";
 
 export const MINCHO =
   "'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif";
@@ -7,7 +7,8 @@ export const SANS = "'Noto Sans JP', sans-serif";
 export const U = 15;
 
 // Each host brings their own colour; everything else stays the same.
-const HOSTS = {
+type Host = { name: string; accent: string; credit: string };
+const HOSTS: Record<string, Host> = {
   zundamon: {
     name: "ずんだもん",
     accent: "#9BEA3F",
@@ -18,11 +19,17 @@ const HOSTS = {
     accent: "#FFC53D",
     credit: "VOICEVOX:春日部つむぎ",
   },
-} as const;
-export const HOST = HOSTS[(script.host as keyof typeof HOSTS) ?? "zundamon"];
-/** The other host reads quotations aloud. */
-export const READER =
-  script.host === "tsumugi" ? HOSTS.zundamon : HOSTS.tsumugi;
+  // English version: an unnamed narrator and a second voice for quotations
+  narrator: { name: "", accent: "#9BEA3F", credit: "Kokoro TTS" },
+  reader: { name: "a narrator", accent: "#FFC53D", credit: "Kokoro TTS" },
+};
+export const HOST: Host = HOSTS[script.host] ?? HOSTS.zundamon;
+/** The other voice reads quotations aloud. */
+export const READER: Host = EN
+  ? HOSTS.reader
+  : script.host === "tsumugi"
+    ? HOSTS.zundamon
+    : HOSTS.tsumugi;
 
 export const INK = "#FFFFFF";
 export const NIGHT = "#0A0F1F";

@@ -12,6 +12,7 @@ import {
 import credits from "../line/credits.json";
 import "../line/fonts";
 import { GraphView } from "./Graphs";
+import { EN, t, voiceDir, voiceSeconds } from "./lang";
 import { MapView } from "./Maps";
 import { Overlay, Shot, SHOTS } from "./shots";
 import {
@@ -32,12 +33,21 @@ import {
   ShotTiming,
   shotTimings,
 } from "./timeline";
-import manifest from "./voice-manifest.json";
 
 const EASE = Easing.bezier(0.16, 1, 0.3, 1);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const photoCredits = credits as Record<string, string>;
-const hasAudio = manifest as Record<string, number>;
+/** Photographer and licence; the English version uses ASCII brackets. */
+const credit = (photo: string) =>
+  EN
+    ? photoCredits[photo].replace("（", " (").replace("）", ")")
+    : photoCredits[photo];
+/** Big words are sized in layout units; long English words are capped so they fit. */
+const bigSize = (o: { text: string; size?: number }) => {
+  const size = (o.size ?? 15) * U;
+  return EN ? Math.min(size, 1050 / (t(o.text).length * 0.56)) : size;
+};
+const hasAudio = voiceSeconds;
 const SHADOW = "0 2px 24px rgba(0,0,0,0.7), 0 0 4px rgba(0,0,0,0.55)";
 
 /** Full-bleed photograph that drifts slowly for the whole shot. */
@@ -150,7 +160,7 @@ const Credit: React.FC<{ photo: string }> = ({ photo }) =>
         textShadow: "0 1px 6px rgba(0,0,0,0.6)",
       }}
     >
-      写真：{photoCredits[photo]}
+      {t("写真：") + credit(photo)}
     </div>
   ) : null;
 
@@ -189,21 +199,21 @@ const Big: React.FC<{
       >
         {o.lead ? (
           <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 44 }}>
-            {o.lead}
+            {t(o.lead)}
           </div>
         ) : null}
         <div
           style={{
             fontFamily: MINCHO,
             fontWeight: 800,
-            fontSize: (o.size ?? 15) * U,
+            fontSize: bigSize(o),
             lineHeight: 1.12,
             letterSpacing: "0.03em",
             color,
             whiteSpace: "nowrap",
           }}
         >
-          {o.text}
+          {t(o.text)}
           {o.unit ? (
             <span style={{ fontSize: "0.38em", marginLeft: "0.1em" }}>
               {o.unit}
@@ -230,7 +240,7 @@ const Big: React.FC<{
               color: "rgba(255,255,255,0.9)",
             }}
           >
-            {o.caption}
+            {t(o.caption)}
           </div>
         ) : null}
       </div>
@@ -300,7 +310,7 @@ const Chapter: React.FC<{ o: Extract<Overlay, { kind: "chapter" }> }> = ({
                 marginBottom: 0.6 * U,
               }}
             >
-              {o.kicker}
+              {t(o.kicker)}
             </div>
           ) : null}
           <div
@@ -312,7 +322,7 @@ const Chapter: React.FC<{ o: Extract<Overlay, { kind: "chapter" }> }> = ({
               whiteSpace: "pre-line",
             }}
           >
-            {o.title}
+            {t(o.title)}
           </div>
         </div>
       </div>
@@ -383,7 +393,7 @@ const QuoteCard: React.FC<{
     ...clamp,
     easing: EASE,
   });
-  const text = line.chunks.map((c) => c.text).join("");
+  const text = line.chunks.map((c) => c.text).join(EN ? " " : "");
   return (
     <div
       style={{
@@ -425,7 +435,7 @@ const QuoteCard: React.FC<{
           lineHeight: 1.25,
         }}
       >
-        {o.name}
+        {t(o.name)}
       </div>
       <div
         style={{
@@ -436,7 +446,7 @@ const QuoteCard: React.FC<{
           marginTop: 6,
         }}
       >
-        {o.role}
+        {t(o.role)}
       </div>
       <div style={{ opacity: said, translate: `0px ${(1 - said) * 16}px` }}>
         {o.about ? (
@@ -453,11 +463,11 @@ const QuoteCard: React.FC<{
               marginTop: 26,
             }}
           >
-            {o.about}
+            {t(o.about)}
           </div>
         ) : null}
         <div
-          lang="ja"
+          lang={EN ? "en" : "ja"}
           style={{
             fontFamily: MINCHO,
             fontWeight: 800,
@@ -468,21 +478,23 @@ const QuoteCard: React.FC<{
             textWrap: "balance",
           }}
         >
-          {"「" + text + "」"}
+          {EN ? "\u201C" + text + "\u201D" : "「" + text + "」"}
         </div>
-        <div
-          style={{
-            fontFamily: SANS,
-            fontWeight: 500,
-            fontStyle: "italic",
-            fontSize: 27,
-            lineHeight: 1.5,
-            color: "rgba(255,255,255,0.72)",
-            marginTop: 18,
-          }}
-        >
-          {"“" + o.original + "”"}
-        </div>
+        {EN ? null : (
+          <div
+            style={{
+              fontFamily: SANS,
+              fontWeight: 500,
+              fontStyle: "italic",
+              fontSize: 27,
+              lineHeight: 1.5,
+              color: "rgba(255,255,255,0.72)",
+              marginTop: 18,
+            }}
+          >
+            {"“" + o.original + "”"}
+          </div>
+        )}
         <div
           style={{
             display: "flex",
@@ -496,7 +508,9 @@ const QuoteCard: React.FC<{
             marginTop: 20,
           }}
         >
-          <span>{o.source + "　日本語訳は番組によるもの"}</span>
+          <span>
+            {EN ? t(o.source) : o.source + "　日本語訳は番組によるもの"}
+          </span>
           <span
             style={{
               display: "flex",
@@ -513,7 +527,9 @@ const QuoteCard: React.FC<{
                 backgroundColor: READER.accent,
               }}
             />
-            {"読み上げ：" + READER.name}
+            {EN
+              ? "Read aloud by a narrator, not the speaker's own voice"
+              : "読み上げ：" + READER.name}
           </span>
         </div>
       </div>
@@ -529,9 +545,9 @@ const EndCard: React.FC<{ shotStart: number }> = ({ shotStart }) => {
     easing: EASE,
   });
   const photos = SHOTS.flatMap((s) => (s.photo && !s.map ? [s.photo] : []));
-  const used = Array.from(new Set(photos.map((f) => photoCredits[f])))
+  const used = Array.from(new Set(photos.map((f) => credit(f))))
     .filter(Boolean)
-    .join("　／　");
+    .join(EN ? " / " : "　／　");
   return (
     <AbsoluteFill style={{ color: INK, textShadow: SHADOW }}>
       <div
@@ -561,7 +577,7 @@ const EndCard: React.FC<{ shotStart: number }> = ({ shotStart }) => {
             textShadow: "none",
           }}
         >
-          バラバラのニュースを、1本の線に。
+          {t("バラバラのニュースを、1本の線に。")}
         </div>
       </div>
       <div
@@ -578,16 +594,18 @@ const EndCard: React.FC<{ shotStart: number }> = ({ shotStart }) => {
         }}
       >
         <div style={{ fontSize: 20, color: "rgba(255,255,255,0.9)" }}>
-          {
-            "※この動画は特定の金融商品の売買を勧めるものではありません。　※写真は資料写真で、ニュースの現場を写したものではありません。"
-          }
+          {t(
+            "※この動画は特定の金融商品の売買を勧めるものではありません。　※写真は資料写真で、ニュースの現場を写したものではありません。",
+          )}
         </div>
         <div style={{ marginTop: 6 }}>
-          {"音声：" +
-            HOST.credit +
-            "、" +
-            READER.credit +
-            "　／　地図：Natural Earth　／　写真："}
+          {EN
+            ? "Voice: Kokoro TTS / Map: Natural Earth / Photos: "
+            : "音声：" +
+              HOST.credit +
+              "、" +
+              READER.credit +
+              "　／　地図：Natural Earth　／　写真："}
           {used}
         </div>
       </div>
@@ -617,7 +635,7 @@ const ShotView: React.FC<{ shot: Shot; timing: ShotTiming }> = ({
         <Photo shot={shot} length={timing.duration + CROSS} />
       )}
       <Veil dim={shot.dim} />
-      {shot.tag ? <Tag text={shot.tag} /> : null}
+      {shot.tag ? <Tag text={t(shot.tag)} /> : null}
       {shot.trail !== undefined ? <Trail filled={shot.trail} /> : null}
       {o?.kind === "big" ? <Big o={o} shotStart={timing.start} /> : null}
       {o?.kind === "graph" ? (
@@ -627,7 +645,9 @@ const ShotView: React.FC<{ shot: Shot; timing: ShotTiming }> = ({
       {o?.kind === "quote" ? (
         <QuoteCard o={o} shotStart={timing.start} />
       ) : null}
-      {o?.kind === "host" ? <HostCard o={o} shotStart={timing.start} /> : null}
+      {o?.kind === "host" && !EN ? (
+        <HostCard o={o} shotStart={timing.start} />
+      ) : null}
       {o?.kind === "end" ? <EndCard shotStart={timing.start} /> : null}
       {shot.map || !shot.photo || o?.kind === "end" ? null : (
         <Credit photo={shot.photo} />
@@ -645,7 +665,7 @@ const Phrase: React.FC<{ text: string; length: number; high?: boolean }> = ({
   const frame = useCurrentFrame();
   return (
     <div
-      lang="ja"
+      lang={EN ? "en" : "ja"}
       style={{
         position: "absolute",
         left: 7 * U,
@@ -653,7 +673,7 @@ const Phrase: React.FC<{ text: string; length: number; high?: boolean }> = ({
         bottom: (high ? 21 : 6.4) * U,
         fontFamily: MINCHO,
         fontWeight: 500,
-        fontSize: 5.2 * U,
+        fontSize: (EN ? 4.3 : 5.2) * U,
         lineHeight: 1.5,
         color: INK,
         textShadow: SHADOW,
@@ -675,7 +695,7 @@ const Phrase: React.FC<{ text: string; length: number; high?: boolean }> = ({
               color: ACCENT,
               fontWeight: 800,
               // short highlights stay on one line
-              whiteSpace: part.length <= 8 ? "nowrap" : undefined,
+              whiteSpace: part.length <= (EN ? 18 : 8) ? "nowrap" : undefined,
             }}
           >
             {part}
@@ -753,7 +773,7 @@ export const TalkFilm: React.FC = () => {
               durationInFrames={line.duration + 15}
               layout="none"
             >
-              <Audio src={staticFile(`talk/voice/${line.id}.m4a`)} />
+              <Audio src={staticFile(`${voiceDir}/${line.id}.m4a`)} />
             </Sequence>
           ) : null}
           {silent.has(line.id)

@@ -1,6 +1,5 @@
-import linesFile from "./lines.json";
+import { script, voiceSeconds } from "./lang";
 import { SHOTS } from "./shots";
-import manifest from "./voice-manifest.json";
 
 export const FPS = 30;
 export const WIDTH = 1920;
@@ -14,8 +13,8 @@ const TAIL = 75;
 /** How long a new picture takes to fade in over the previous one */
 export const CROSS = 20;
 
-const seconds = manifest as Record<string, number>;
-const text = new Map(linesFile.lines.map((l) => [l.id, l.text]));
+const seconds = voiceSeconds;
+const text = new Map(script.lines.map((l) => [l.id, l.text]));
 
 export type Chunk = { text: string; from: number; to: number };
 export type LineTiming = {

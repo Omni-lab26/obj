@@ -1,6 +1,7 @@
 import React from "react";
 import { Easing, interpolate, useCurrentFrame } from "remotion";
 import { ACCENT, COOL, DOWN, INK, MINCHO, SANS, Tone, tone, U } from "./theme";
+import { EN, t as tr } from "./lang";
 import { lineTiming } from "./timeline";
 
 const EASE = Easing.bezier(0.16, 1, 0.3, 1);
@@ -112,7 +113,7 @@ const Panel: React.FC<{
           lineHeight: 1.35,
         }}
       >
-        {title}
+        {tr(title)}
       </div>
       {children}
       <div
@@ -124,7 +125,7 @@ const Panel: React.FC<{
           marginTop: 18,
         }}
       >
-        {source}
+        {tr(source)}
       </div>
     </div>
   );
@@ -230,7 +231,7 @@ const Grid: React.FC<{
           </span>
           <span style={{ fontSize: 50, marginLeft: 12 }}>
             / {g.total}
-            {g.unit}
+            {tr(g.unit)}
           </span>
         </div>
       </div>
@@ -293,7 +294,7 @@ const People: React.FC<{
             whiteSpace: "nowrap",
           }}
         >
-          {g.label}
+          {tr(g.label)}
         </div>
       </div>
     </Panel>
@@ -308,9 +309,9 @@ const Bars: React.FC<{
   const first = Math.min(
     ...g.rows.map((r) => cue(r.ask ?? r.at, shotStart, r.ask ? 0 : r.delay)),
   );
-  const TRACK = 520;
+  const TRACK = 340; // sized so neither bar is squeezed by its row
   return (
-    <Panel at={first - 6} width={960} title={g.title} source={g.source}>
+    <Panel at={first - 6} width={1010} title={g.title} source={g.source}>
       <div
         style={{
           display: "flex",
@@ -349,7 +350,7 @@ const Bars: React.FC<{
             >
               <div
                 style={{
-                  width: 200,
+                  width: EN ? 250 : 200,
                   flexShrink: 0,
                   whiteSpace: "nowrap",
                   fontFamily: SANS,
@@ -357,11 +358,12 @@ const Bars: React.FC<{
                   fontSize: 40,
                 }}
               >
-                {row.label}
+                {tr(row.label)}
               </div>
               <div
                 style={{
                   width: Math.max(8, (row.value / g.max) * TRACK * p),
+                  flexShrink: 0,
                   height: 64,
                   borderRadius: 10,
                   backgroundColor: p > 0 ? color : "rgba(255,255,255,0.25)",
@@ -406,7 +408,7 @@ const Bars: React.FC<{
             ),
           }}
         >
-          {g.note.text}
+          {tr(g.note.text)}
         </div>
       ) : null}
     </Panel>
@@ -467,7 +469,7 @@ const Line: React.FC<{
           fontSize={24}
           fill="rgba(255,255,255,0.8)"
         >
-          6万円
+          {tr("6万円")}
         </text>
         {pts.slice(1).map((pt, idx) => {
           const i = idx + 1;
@@ -523,11 +525,11 @@ const Line: React.FC<{
             textAnchor="end"
             fontFamily={MINCHO}
             fontWeight={800}
-            fontSize={60}
+            fontSize={EN ? 50 : 60}
             fill={DOWN}
             opacity={interpolate(progress, [3.5, 4], [0, 1], clamp)}
           >
-            {g.drop}
+            {tr(g.drop)}
           </text>
         ) : null}
         {g.rebound && done ? (
@@ -537,10 +539,10 @@ const Line: React.FC<{
             textAnchor="end"
             fontFamily={MINCHO}
             fontWeight={800}
-            fontSize={60}
+            fontSize={EN ? 50 : 60}
             fill={ACCENT}
           >
-            {g.rebound}
+            {tr(g.rebound)}
           </text>
         ) : null}
       </svg>

@@ -49,7 +49,10 @@
     "render:talk": "remotion render DenkidaiTalk out/denkidai-talk-master.mp4",
     "encode:talk": "ffmpeg -y -i out/denkidai-talk-master.mp4 -c:v libx264 -preset medium -crf 27 -pix_fmt yuv420p -af volume=-1.5dB -c:a aac -b:a 160k -movflags +faststart release/denkidai-talk.mp4",
     "voice:talk": "python scripts/tts_voicevox.py --script src/talk/lines.json --out public/talk/voice --manifest src/talk/voice-manifest.json",
-    "maps:talk": "remotion still MapBaseUs public/talk/map-us.jpg --scale=3 --image-format=jpeg --jpeg-quality=92 && remotion still MapBasePacific public/talk/map-pacific.jpg --scale=1.5 --image-format=jpeg --jpeg-quality=92"
+    "maps:talk": "remotion still MapBaseUs public/talk/map-us.jpg --scale=3 --image-format=jpeg --jpeg-quality=92 && remotion still MapBasePacific public/talk/map-pacific.jpg --scale=1.5 --image-format=jpeg --jpeg-quality=92",
+    "voice:talk:en": "python scripts/tts_en.py",
+    "render:talk:en": "REMOTION_LANG=en remotion render DenkidaiTalk out/denkidai-talk-en-master.mp4",
+    "encode:talk:en": "ffmpeg -y -i out/denkidai-talk-en-master.mp4 -c:v libx264 -preset medium -crf 27 -pix_fmt yuv420p -af volume=-1.5dB -c:a aac -b:a 160k -movflags +faststart release/denkidai-talk-en.mp4"
   },
   "allowScripts": {
     "esbuild": false
