@@ -1,4 +1,5 @@
 import { EN, script } from "./lang";
+import palettes from "./palettes.json";
 
 export const MINCHO =
   "'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif";
@@ -31,14 +32,21 @@ export const READER: Host = EN
     ? HOSTS.zundamon
     : HOSTS.tsumugi;
 
+// A script may name a topic palette ("palette": "kawase"); see palettes/index.html.
+// Without one, the host colour leads, as in the first video.
+const PALETTE = palettes.find((p) => p.id === script.palette);
+if (script.palette && !PALETTE) {
+  throw new Error(`Unknown palette: ${script.palette}`);
+}
+
 export const INK = "#FFFFFF";
-export const NIGHT = "#0A0F1F";
-/** The host colour: answers, highlights, the route on the map */
-export const ACCENT: string = HOST.accent;
+export const NIGHT: string = PALETTE?.base ?? "#0A0F1F";
+/** The lead colour: answers, highlights, the route on the map */
+export const ACCENT: string = PALETTE?.accent ?? HOST.accent;
 /** Falls and warnings */
-export const DOWN = "#FF4F72";
+export const DOWN: string = PALETTE?.warn ?? "#FF4F72";
 /** The thing being compared against, and anything uncertain */
-export const COOL = "#3CCBFF";
+export const COOL: string = PALETTE?.compare ?? "#3CCBFF";
 
 export type Tone = "accent" | "down" | "cool" | "ink";
 export const tone = (t: Tone | undefined): string =>

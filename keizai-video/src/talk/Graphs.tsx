@@ -1,6 +1,17 @@
 import React from "react";
 import { Easing, interpolate, useCurrentFrame } from "remotion";
-import { ACCENT, COOL, DOWN, INK, MINCHO, SANS, Tone, tone, U } from "./theme";
+import {
+  ACCENT,
+  COOL,
+  DOWN,
+  INK,
+  MINCHO,
+  NIGHT,
+  SANS,
+  Tone,
+  tone,
+  U,
+} from "./theme";
 import { EN, t as tr } from "./lang";
 import { lineTiming } from "./timeline";
 
@@ -25,7 +36,39 @@ export type Graph =
       total: number;
       on: number;
       unit: string;
+      /** Points out the one cell that stays unlit, from this line on */
+      odd?: {
+        /** The cell is ringed when this line asks about it … */
+        ask: string;
+        askDelay?: number;
+        /** … and named when this line answers */
+        at: string;
+        delay?: number;
+        label: string;
+      };
       source: string;
+    }
+  | {
+      /** A side note: a term explained, or another point of view */
+      kind: "note";
+      at: string;
+      delay?: number;
+      /** Pill above the title ("ちなみに" unless given) */
+      label?: string;
+      title: string;
+      /** Lines without `at` sit above the number; lines with one appear below it, on cue */
+      body?: { text: string; at?: string; delay?: number }[];
+      /** A row of dated points; the one marked `on` takes the host colour */
+      timeline?: { label: string; note: string; on?: boolean }[];
+      stat?: {
+        at: string;
+        delay?: number;
+        lead?: string;
+        text: string;
+        unit?: string;
+        tone?: Tone;
+      };
+      source?: string;
     }
   | {
       kind: "people";
@@ -78,9 +121,12 @@ const Panel: React.FC<{
   at: number;
   width: number;
   title: string;
-  source: string;
+  source?: string;
+  /** Pill above the title; side notes use it */
+  label?: string;
+  edge?: string;
   children: React.ReactNode;
-}> = ({ at, width, title, source, children }) => {
+}> = ({ at, width, title, source, label, edge = ACCENT, children }) => {
   const frame = useCurrentFrame();
   const p = interpolate(frame, [at, at + 20], [0, 1], {
     ...clamp,
@@ -98,13 +144,31 @@ const Panel: React.FC<{
         borderRadius: 30,
         backgroundColor: "rgba(9,13,28,0.9)",
         border: "2px solid rgba(255,255,255,0.16)",
-        borderTop: `12px solid ${ACCENT}`,
+        borderTop: `12px solid ${edge}`,
         boxShadow: "0 30px 80px rgba(0,0,0,0.5)",
         opacity: p,
         translate: `${(1 - p) * 60}px 0px`,
         color: INK,
       }}
     >
+      {label ? (
+        <div
+          style={{
+            display: "inline-block",
+            fontFamily: SANS,
+            fontWeight: 800,
+            fontSize: 26,
+            letterSpacing: "0.1em",
+            color: NIGHT,
+            backgroundColor: edge,
+            padding: "4px 18px",
+            borderRadius: 8,
+            marginBottom: 14,
+          }}
+        >
+          {tr(label)}
+        </div>
+      ) : null}
       <div
         style={{
           fontFamily: SANS,
@@ -116,17 +180,19 @@ const Panel: React.FC<{
         {tr(title)}
       </div>
       {children}
-      <div
-        style={{
-          fontFamily: SANS,
-          fontWeight: 500,
-          fontSize: 23,
-          color: "rgba(255,255,255,0.66)",
-          marginTop: 18,
-        }}
-      >
-        {tr(source)}
-      </div>
+      {source ? (
+        <div
+          style={{
+            fontFamily: SANS,
+            fontWeight: 500,
+            fontSize: 23,
+            color: "rgba(255,255,255,0.66)",
+            marginTop: 18,
+          }}
+        >
+          {tr(source)}
+        </div>
+      ) : null}
     </div>
   );
 };
@@ -192,6 +258,16 @@ const Grid: React.FC<{
   const frame = useCurrentFrame();
   const at = cue(g.at, shotStart, g.delay);
   const lit = interpolate(frame, [at + 14, at + 64], [0, g.on], clamp);
+  const ringAt = g.odd ? cue(g.odd.ask, shotStart, g.odd.askDelay) : Infinity;
+  const ring = interpolate(frame, [ringAt, ringAt + 16], [0, 1], {
+    ...clamp,
+    easing: EASE,
+  });
+  const oddAt = g.odd ? cue(g.odd.at, shotStart, g.odd.delay) : Infinity;
+  const odd = interpolate(frame, [oddAt, oddAt + 16], [0, 1], {
+    ...clamp,
+    easing: EASE,
+  });
   return (
     <Panel at={at} width={1010} title={g.title} source={g.source}>
       <div
@@ -218,7 +294,8 @@ const Grid: React.FC<{
                 borderRadius: 8,
                 boxSizing: "border-box",
                 backgroundColor: i < lit ? ACCENT : "transparent",
-                border: `3px solid ${i < lit ? ACCENT : "rgba(255,255,255,0.4)"}`,
+                border: `3px solid ${i < lit ? ACCENT : i >= g.on && ring > 0.5 ? COOL : "rgba(255,255,255,0.4)"}`,
+                scale: i >= g.on ? String(1 + 0.2 * ring) : undefined,
               }}
             />
           ))}
@@ -235,6 +312,183 @@ const Grid: React.FC<{
           </span>
         </div>
       </div>
+      {g.odd ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
+            marginTop: 20,
+            fontFamily: SANS,
+            fontWeight: 800,
+            fontSize: 32,
+            color: COOL,
+            opacity: odd,
+            translate: `0px ${(1 - odd) * 12}px`,
+          }}
+        >
+          <span
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 6,
+              boxSizing: "border-box",
+              border: `3px solid ${COOL}`,
+              flexShrink: 0,
+            }}
+          />
+          {tr(g.odd.label)}
+        </div>
+      ) : null}
+    </Panel>
+  );
+};
+
+/** "By the way": a term in one sentence, optionally with one number. */
+const Note: React.FC<{
+  g: Extract<Graph, { kind: "note" }>;
+  shotStart: number;
+}> = ({ g, shotStart }) => {
+  const frame = useCurrentFrame();
+  const at = cue(g.at, shotStart, g.delay);
+  const show = (from: number) =>
+    interpolate(frame, [from, from + 18], [0, 1], { ...clamp, easing: EASE });
+  const statAt = g.stat ? cue(g.stat.at, shotStart, g.stat.delay) : 0;
+  const stat = g.stat ? show(statAt) : 0;
+  const color = tone(g.stat?.tone);
+  const above = (g.body ?? []).filter((b) => !b.at);
+  const below = (g.body ?? []).filter((b) => b.at);
+  const line = (
+    b: { text: string; at?: string; delay?: number },
+    i: number,
+  ) => {
+    const p = show(b.at ? cue(b.at, shotStart, b.delay) : at + 10 + i * 8);
+    return (
+      <div
+        key={b.text}
+        style={{
+          fontFamily: SANS,
+          fontWeight: 500,
+          fontSize: 34,
+          lineHeight: 1.5,
+          marginTop: b.at ? 16 : i === 0 ? 10 : 6,
+          opacity: p,
+          translate: `0px ${(1 - p) * 12}px`,
+          wordBreak: "auto-phrase",
+        }}
+      >
+        {tr(b.text)}
+      </div>
+    );
+  };
+  return (
+    <Panel
+      at={at}
+      width={900}
+      title={g.title}
+      source={g.source}
+      label={g.label ?? "ちなみに"}
+      edge={INK}
+    >
+      {above.map(line)}
+      {g.timeline ? (
+        <div
+          style={{
+            display: "flex",
+            marginTop: 26,
+            opacity: show(at + 16),
+          }}
+        >
+          {g.timeline.map((pt, i) => (
+            <div key={i} style={{ flex: 1, textAlign: "center" }}>
+              <div
+                style={{
+                  position: "relative",
+                  height: 34,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: i === 0 ? "50%" : 0,
+                    right: i === g.timeline!.length - 1 ? "50%" : 0,
+                    height: 5,
+                    backgroundColor: "rgba(255,255,255,0.4)",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "relative",
+                    width: pt.on ? 34 : 22,
+                    height: pt.on ? 34 : 22,
+                    borderRadius: "50%",
+                    backgroundColor: pt.on ? ACCENT : INK,
+                  }}
+                />
+              </div>
+              <div
+                style={{
+                  fontFamily: MINCHO,
+                  fontWeight: 800,
+                  fontSize: 44,
+                  marginTop: 8,
+                  color: pt.on ? ACCENT : INK,
+                }}
+              >
+                {tr(pt.label)}
+              </div>
+              <div
+                style={{
+                  fontFamily: SANS,
+                  fontWeight: 700,
+                  fontSize: 28,
+                  color: pt.on ? ACCENT : "rgba(255,255,255,0.8)",
+                }}
+              >
+                {tr(pt.note)}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {g.stat ? (
+        <div
+          style={{
+            marginTop: 20,
+            paddingTop: 18,
+            borderTop: "2px solid rgba(255,255,255,0.2)",
+            opacity: stat,
+            translate: `0px ${(1 - stat) * 14}px`,
+          }}
+        >
+          {g.stat.lead ? (
+            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 30 }}>
+              {tr(g.stat.lead)}
+            </div>
+          ) : null}
+          <div
+            style={{
+              fontFamily: MINCHO,
+              fontWeight: 800,
+              fontSize: EN ? 96 : 118,
+              lineHeight: 1.15,
+              color,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {tr(g.stat.text)}
+            {g.stat.unit ? (
+              <span style={{ fontSize: "0.42em", marginLeft: "0.12em" }}>
+                {tr(g.stat.unit)}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+      {below.map(line)}
     </Panel>
   );
 };
@@ -559,6 +813,8 @@ export const GraphView: React.FC<{ graph: Graph; shotStart: number }> = ({
       return <Dots g={graph} shotStart={shotStart} />;
     case "grid":
       return <Grid g={graph} shotStart={shotStart} />;
+    case "note":
+      return <Note g={graph} shotStart={shotStart} />;
     case "people":
       return <People g={graph} shotStart={shotStart} />;
     case "bars":

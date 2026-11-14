@@ -162,6 +162,30 @@ export const SHOTS: Shot[] = [
     trail: 0,
     lines: ["c02"],
   },
+  {
+    photo: "server_person.jpg",
+    tag: STOP1,
+    trail: 0,
+    move: "out",
+    lines: ["c02b", "c02c"],
+    overlay: {
+      kind: "graph",
+      graph: {
+        kind: "note",
+        at: "c02b",
+        delay: 20,
+        title: "データセンターって？",
+        body: [{ text: "AIを動かすコンピューターを、大量に並べた建物" }],
+        stat: {
+          at: "c02c",
+          delay: 70,
+          lead: "AI向けの大型施設、1か所が使う電気",
+          text: "10万世帯分",
+        },
+        source: "国際エネルギー機関（IEA）の報告書「Energy and AI」",
+      },
+    },
+  },
   { photo: "townhall.jpg", tag: STOP1, trail: 0, lines: ["c03", "c04"] },
   {
     photo: "meters.jpg",
@@ -192,6 +216,38 @@ export const SHOTS: Shot[] = [
         title: "「AIのせいで電気代が上がる」と心配している人",
         value: 77,
         source: "ロイター／イプソス世論調査（2026年6月、約4,500人）",
+      },
+    },
+  },
+  {
+    photo: "lake.jpg",
+    tag: STOP1,
+    trail: 0,
+    move: "left",
+    lines: ["c07b", "c07c"],
+    overlay: {
+      kind: "graph",
+      graph: {
+        kind: "note",
+        at: "c07b",
+        delay: 30,
+        title: "心配ごとは、電気代だけじゃない",
+        stat: {
+          at: "c07b",
+          delay: 150,
+          lead: "地元の水への影響を「強く心配」している人",
+          text: "57",
+          unit: "%",
+          tone: "cool",
+        },
+        body: [
+          {
+            text: "コンピューターの冷却に、大量の水を使うため",
+            at: "c07c",
+            delay: 10,
+          },
+        ],
+        source: "AP通信・NORC／シカゴ大学の世論調査（2026年7月）",
       },
     },
   },
@@ -252,6 +308,29 @@ export const SHOTS: Shot[] = [
   },
   { photo: "polling.jpg", tag: STOP2, trail: 1, lines: ["d02"] },
   {
+    photo: "whitehouse.jpg",
+    tag: STOP2,
+    trail: 1,
+    move: "out",
+    lines: ["d02b"],
+    overlay: {
+      kind: "graph",
+      graph: {
+        kind: "note",
+        at: "d02b",
+        delay: 20,
+        title: "中間選挙って？",
+        body: [{ text: "大統領の任期（4年）の真ん中にある、議会の選挙" }],
+        timeline: [
+          { label: "2024", note: "大統領選挙" },
+          { label: "2026", note: "中間選挙", on: true },
+          { label: "2028", note: "大統領選挙" },
+        ],
+        source: "下院は全議席、上院はおよそ3分の1が改選",
+      },
+    },
+  },
+  {
     photo: "votesign.jpg",
     tag: STOP2,
     trail: 1,
@@ -262,7 +341,7 @@ export const SHOTS: Shot[] = [
     photo: "sticker_hand.jpg",
     tag: STOP2,
     trail: 1,
-    lines: ["d04"],
+    lines: ["d04", "d04b", "d04c"],
     overlay: {
       kind: "graph",
       graph: {
@@ -273,7 +352,14 @@ export const SHOTS: Shot[] = [
         total: 45,
         on: 44,
         unit: "件",
-        source: "開票が済んだ45件（AP通信が伝えた集計）",
+        odd: {
+          ask: "d04b",
+          askDelay: 40,
+          at: "d04c",
+          delay: 6,
+          label: "残りの1件：ノースダコタ州ハーウッド（人口約850人）",
+        },
+        source: "開票が済んだ45件（AP通信が伝えた集計）、ブルームバーグ",
       },
     },
   },
@@ -385,6 +471,13 @@ export const SHOTS: Shot[] = [
       source: "AP通信のインタビューで（2026年11月）",
     },
   },
+  {
+    photo: "mainstreet.jpg",
+    tag: STOP2,
+    trail: 1,
+    move: "out",
+    lines: ["d11c"],
+  },
   { photo: "capitol.jpg", tag: STOP2, trail: 2, move: "left", lines: ["d12"] },
 
   // 3か所目
@@ -411,6 +504,27 @@ export const SHOTS: Shot[] = [
       tone: "down",
       size: 17,
       top: 9,
+    },
+  },
+  {
+    photo: "nasdaq.jpg",
+    tag: STOP3,
+    trail: 2,
+    dim: 0.25,
+    lines: ["e03b"],
+    overlay: {
+      kind: "graph",
+      graph: {
+        kind: "note",
+        at: "e03b",
+        delay: 14,
+        title: "SOX（フィラデルフィア半導体株指数）",
+        body: [
+          { text: "半導体に関わる、約30社の株価をまとめた指数" },
+          { text: "エヌビディア、ブロードコム、AMD など" },
+        ],
+        source: "アメリカ市場に上場する半導体関連株が対象",
+      },
     },
   },
   { photo: "servers.jpg", tag: STOP3, trail: 2, lines: ["e04"] },
@@ -478,6 +592,30 @@ export const SHOTS: Shot[] = [
     lines: ["e11"],
   },
   { photo: "aisle.jpg", tag: STOP3, trail: 2, lines: ["e12"] },
+  {
+    photo: "wallst.jpg",
+    tag: STOP3,
+    trail: 2,
+    dim: 0.2,
+    move: "right",
+    lines: ["e12b"],
+    overlay: {
+      kind: "graph",
+      graph: {
+        kind: "note",
+        label: "ほかの見方",
+        at: "e12b",
+        delay: 14,
+        title: "株が下がった理由は、1つじゃない",
+        body: [
+          { text: "① データセンター規制への警戒" },
+          { text: "② アメリカの金利が上がりそう" },
+          { text: "③ 半導体の会社の決算が物足りない" },
+        ],
+        source: "OANDA証券、外為どっとコムなどの市場解説",
+      },
+    },
+  },
   { photo: "switch.jpg", tag: STOP3, trail: 3, move: "out", lines: ["e13"] },
 
   // ボクなりの読み
@@ -607,7 +745,7 @@ export const SHOTS: Shot[] = [
       links: [{ from: newYork, to: tokyo, delay: 10, draw: 100, bow: -0.2 }],
     },
     tag: "今日の道のり",
-    lines: ["g02b", "g03"],
+    lines: ["g02b", "g03", "g03b"],
   },
   { photo: "shotengai.jpg", tag: "最後に1個だけ", lines: ["g04", "g05"] },
   {

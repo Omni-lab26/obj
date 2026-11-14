@@ -15,6 +15,7 @@ the .vvm voice files. Point VOICEVOX_DIR at a folder laid out like this:
         --out public/talk/voice --manifest src/talk/voice-manifest.json
     python scripts/tts_voicevox.py ... a01 b03      # only these lines
     python scripts/tts_voicevox.py ... --kana       # print the readings, write nothing
+    python scripts/tts_voicevox.py ... --intonation 0.85 --pause 1.25 --speed 1.15
 """
 import glob
 import json
@@ -25,7 +26,7 @@ import sys
 from pathlib import Path
 
 HOSTS = {"zundamon": ("ずんだもん", 3), "tsumugi": ("春日部つむぎ", 8)}
-VALUED = {"--script", "--out", "--manifest", "--host", "--speed"}
+VALUED = {"--script", "--out", "--manifest", "--host", "--speed", "--intonation", "--pause"}
 
 
 def opt(name, default):
@@ -50,6 +51,10 @@ def main():
     out = Path(opt("--out", "public/talk/voice"))
     manifest_path = Path(opt("--manifest", "src/talk/voice-manifest.json"))
     speed = float(opt("--speed", "1.15"))
+    # Below 1.0 flattens the pitch movement: a calmer, less sing-song delivery.
+    intonation = float(opt("--intonation", "0.85"))
+    # Stretches the pauses the voice takes at commas inside a sentence.
+    pause = float(opt("--pause", "1.25"))
     argv = sys.argv[1:]
     only = [a for i, a in enumerate(argv) if not a.startswith("--") and (i == 0 or argv[i - 1] not in VALUED)]
     data = json.loads(script.read_text())
@@ -82,7 +87,13 @@ def main():
                 print(line["id"], query.kana, flush=True)
                 continue
             query.speed_scale = speed if not line.get("voice") else speed * 0.93
-            query.intonation_scale = 1.1
+            query.intonation_scale = intonation
+            for phrase in query.accent_phrases:
+                mora = phrase.pause_mora
+                if isinstance(mora, dict):  # some versions hand back plain dicts here
+                    mora["vowel_length"] *= pause
+                elif mora is not None:
+                    mora.vowel_length *= pause
             query.pre_phoneme_length = 0.08
             query.post_phoneme_length = 0.08
             wav = out / f"{line['id']}.wav"

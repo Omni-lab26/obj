@@ -10,7 +10,9 @@ import jaVoice from "./voice-manifest.json";
 export const EN = process.env.REMOTION_LANG === "en";
 
 type Line = { id: string; text: string; say?: string; voice?: string };
-export const script: { host: string; lines: Line[] } = EN ? en : ja;
+export const script: { host: string; palette?: string; lines: Line[] } = EN
+  ? en
+  : ja;
 export const voiceSeconds: Record<string, number> = EN ? enVoice : jaVoice;
 export const voiceDir = EN ? "talk/voice-en" : "talk/voice";
 
@@ -83,8 +85,6 @@ const DICT: Record<string, string> = {
   "住民投票で、建設を制限する側が勝った数":
     "Local votes won by the side restricting construction",
   件: "",
-  "開票が済んだ45件（AP通信が伝えた集計）":
-    "Of 45 measures counted (tally reported by the AP)",
   データセンターを投票の決め手にした人:
     "Voters who called data centers crucial to their vote",
   "4人に1人": "1 in 4",
@@ -94,6 +94,47 @@ const DICT: Record<string, string> = {
   "6倍近い差": "Nearly a sixfold gap",
   "11月2日〜5日、終値から計算": "Nov. 2–5, calculated from closing prices",
   "6万円": "¥60,000",
+  // side notes
+  ちなみに: "BY THE WAY",
+  ほかの見方: "OTHER VIEWS",
+  "データセンターって？": "What is a data center?",
+  "AIを動かすコンピューターを、大量に並べた建物":
+    "A building packed with the computers that run AI",
+  "AI向けの大型施設、1か所が使う電気":
+    "Electricity used by one large AI-focused site",
+  "10万世帯分": "100,000 homes",
+  "国際エネルギー機関（IEA）の報告書「Energy and AI」":
+    "International Energy Agency, “Energy and AI”",
+  "心配ごとは、電気代だけじゃない": "The power bill isn't the only worry",
+  "地元の水への影響を「強く心配」している人":
+    "Extremely or very concerned about local water",
+  "コンピューターの冷却に、大量の水を使うため":
+    "Cooling the computers takes a lot of water",
+  "AP通信・NORC／シカゴ大学の世論調査（2026年7月）":
+    "AP-NORC / University of Chicago poll (July 2026)",
+  "中間選挙って？": "What are the midterms?",
+  "大統領の任期（4年）の真ん中にある、議会の選挙":
+    "Congressional elections held halfway through a president's four-year term",
+  大統領選挙: "Presidential",
+  中間選挙: "Midterms",
+  "下院は全議席、上院はおよそ3分の1が改選":
+    "All House seats and about a third of the Senate are up",
+  "残りの1件：ノースダコタ州ハーウッド（人口約850人）":
+    "The one exception: Harwood, North Dakota (pop. about 850)",
+  "開票が済んだ45件（AP通信が伝えた集計）、ブルームバーグ":
+    "Of 45 measures counted (tally reported by the AP); Bloomberg",
+  "SOX（フィラデルフィア半導体株指数）": "SOX (PHLX Semiconductor Index)",
+  "半導体に関わる、約30社の株価をまとめた指数":
+    "An index of about 30 chip-related companies",
+  "エヌビディア、ブロードコム、AMD など": "Nvidia, Broadcom, AMD and others",
+  アメリカ市場に上場する半導体関連株が対象:
+    "Covers chip-related stocks listed in the U.S.",
+  "株が下がった理由は、1つじゃない": "There wasn't just one reason stocks fell",
+  "① データセンター規制への警戒": "1. Fear of data center restrictions",
+  "② アメリカの金利が上がりそう": "2. U.S. interest rates look set to rise",
+  "③ 半導体の会社の決算が物足りない": "3. Chip-company earnings fell short",
+  "OANDA証券、外為どっとコムなどの市場解説":
+    "Market commentary from OANDA Japan, Gaitame.com and others",
   // quotations
   スティーブン・サンダースさん: "Stephen Sanders",
   "テキサス州ラボック　データセンター反対グループの共同設立者（共和党員）":

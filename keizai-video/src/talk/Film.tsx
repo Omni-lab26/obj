@@ -389,7 +389,8 @@ const QuoteCard: React.FC<{
   const line = lineTiming(o.at);
   const at = line.start - shotStart;
   const card = interpolate(frame, [10, 34], [0, 1], { ...clamp, easing: EASE });
-  const said = interpolate(frame, [at - 4, at + 14], [0, 1], {
+  // The words come up in the pause before the voice, the way a caption precedes a clip.
+  const said = interpolate(frame, [at - 16, at + 2], [0, 1], {
     ...clamp,
     easing: EASE,
   });

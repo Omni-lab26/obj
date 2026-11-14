@@ -1,317 +1,368 @@
 {
- "host": "narrator",
- "lines": [
-  {
-   "id": "a01",
-   "text": "In Ohio, an electricity bill lands in someone's mailbox.|And over the past two years or so, that bill has been creeping up."
-  },
-  {
-   "id": "a02",
-   "text": "This one piece of paper, by a long and winding route,|ends up moving *stock prices in Tokyo*."
-  },
-  {
-   "id": "a03",
-   "text": "On November 6, the Nikkei average fell *3,643 yen* in a single day.|That's the third-largest point drop on record.",
-   "say": "On November sixth, the Nikkei average fell three thousand six hundred forty-three yen in a single day. That's the third-largest point drop on record."
-  },
-  {
-   "id": "a04",
-   "text": "A power bill and a stock index.|Those two feel miles apart, don't they?"
-  },
-  {
-   "id": "a05",
-   "text": "But they're actually connected by *a single line*."
-  },
-  {
-   "id": "b01",
-   "text": "Hi, this is Halftick.",
-   "say": "Hi, this is Half Tick."
-  },
-  {
-   "id": "b02",
-   "text": "We take the news that's scattered around in your head|and *connect it into one line*."
-  },
-  {
-   "id": "b03",
-   "text": "Today we go from a kitchen table in Ohio|to Kabutocho, Tokyo's financial district.|We'll connect the bill and the stock price on a map.",
-   "say": "Today we go from a kitchen table in Ohio, to Kah-boo-toe-cho, Tokyo's financial district. We'll connect the bill and the stock price on a map."
-  },
-  {
-   "id": "b04",
-   "text": "We'll make three stops.|First, the American kitchen table. Second, the polling place.|Third, the stock market."
-  },
-  {
-   "id": "b05",
-   "text": "At the end, I'll connect all three into one line|and give you my own read."
-  },
-  {
-   "id": "c01",
-   "text": "First stop: the American kitchen table."
-  },
-  {
-   "id": "c02",
-   "text": "Right now, across the United States,|people are pushing back against new data centers."
-  },
-  {
-   "id": "c03",
-   "text": "Here's a quick guess for you.|What's a worry that keeps coming up among the people who object?"
-  },
-  {
-   "id": "c04",
-   "text": "That AI will take their jobs.|That's what most of us would say, right?"
-  },
-  {
-   "id": "c05",
-   "text": "One that keeps coming up is *the power bill*."
-  },
-  {
-   "id": "c06",
-   "text": "In a Reuters/Ipsos poll taken in June,|*nearly eight in ten* people said they worry|that AI will make electricity more expensive.",
-   "say": "In a Reuters Ipsos poll taken in June, nearly eight in ten people said they worry that A.I. will make electricity more expensive."
-  },
-  {
-   "id": "c07",
-   "text": "And that held true no matter which party they support."
-  },
-  {
-   "id": "c08",
-   "text": "Prices really are going up.|According to government data reported by Reuters,|home electricity prices have risen *more than 10 percent* since 2024.",
-   "say": "Prices really are going up. According to government data reported by Reuters, home electricity prices have risen more than ten percent since twenty twenty-four."
-  },
-  {
-   "id": "c09",
-   "text": "So why would a data center affect what a household pays?|Think of it like a neighborhood association."
-  },
-  {
-   "id": "c10",
-   "text": "Say a huge mansion moves into the neighborhood.|To serve it, the road gets widened and more streetlights go up."
-  },
-  {
-   "id": "c11",
-   "text": "The mansion pays its own electricity bill, of course.|But the cost of the road and the streetlights|gets added to the neighborhood dues.|In other words, *everyone pays*."
-  },
-  {
-   "id": "c12",
-   "text": "Power lines and power plants work in roughly the same way."
-  },
-  {
-   "id": "c13",
-   "text": "To be fair, though:|electricity isn't the only reason people object,|and data centers aren't behind the whole price increase either."
-  },
-  {
-   "id": "c14",
-   "text": "A Dallas Fed working paper estimates|that data centers have pushed up wholesale power prices|by about 2 to 6 percent."
-  },
-  {
-   "id": "c15",
-   "text": "Even so, when people look at their bill,|their eyes go to the big building going up nearby."
-  },
-  {
-   "id": "c16",
-   "text": "That's stop one.|The bill and the data center are now *connected by a line*."
-  },
-  {
-   "id": "d01",
-   "text": "Second stop: the polling place."
-  },
-  {
-   "id": "d02",
-   "text": "November 3 was the U.S. midterm election."
-  },
-  {
-   "id": "d03",
-   "text": "On that same day, in 12 states,|people also voted on local measures about data center construction.",
-   "say": "On that same day, in twelve states, people also voted on local measures about data center construction."
-  },
-  {
-   "id": "d04",
-   "text": "According to a tally reported by the AP,|in *44* of the 45 measures that had been counted,|the side restricting construction won.",
-   "say": "According to a tally reported by the A.P., in forty-four of the forty-five measures that had been counted, the side restricting construction won."
-  },
-  {
-   "id": "d05",
-   "text": "That's almost all of them.|And of the 47 measures in total, 21 were in Ohio.",
-   "say": "That's almost all of them. And of the forty-seven measures in total, twenty-one were in Ohio."
-  },
-  {
-   "id": "d05b",
-   "text": "Let's hear from someone in the opposition movement.|This is Stephen Sanders, from Texas.|Here's what he told the AP.",
-   "say": "Let's hear from someone in the opposition movement. This is Stephen Sanders, from Texas. Here's what he told the A.P."
-  },
-  {
-   "id": "q1",
-   "text": "I would say data centers were on the ballot.",
-   "voice": "reader"
-  },
-  {
-   "id": "d05c",
-   "text": "By the way, he's a Republican.|So you can see this isn't really a party-line issue."
-  },
-  {
-   "id": "d06",
-   "text": "In the congressional elections that same day,|Democrats won both the House and the Senate."
-  },
-  {
-   "id": "d07",
-   "text": "But let me connect these two with a *dotted line*."
-  },
-  {
-   "id": "d08",
-   "text": "We can't honestly say|that anger over power bills is what won it for the Democrats."
-  },
-  {
-   "id": "d09",
-   "text": "In the AP's voter survey,|only about one in four voters|called data centers crucial to their vote.",
-   "say": "In the A.P.'s voter survey, only about one in four voters called data centers crucial to their vote."
-  },
-  {
-   "id": "d10",
-   "text": "They happened on the same day.|That's as far as the facts go."
-  },
-  {
-   "id": "d11",
-   "text": "Also, a lot of headlines said \"AI regulation,\"|but not a single federal law has changed.|What got decided were local rules.",
-   "say": "Also, a lot of headlines said A.I. regulation, but not a single federal law has changed. What got decided were local rules."
-  },
-  {
-   "id": "d11b",
-   "text": "Let's hear from the other side, too.|This is Dan Diorio of the Data Center Coalition, an industry group.",
-   "say": "Let's hear from the other side, too. This is Dan Dee-oh-ree-oh, of the Data Center Coalition, an industry group."
-  },
-  {
-   "id": "q2",
-   "text": "We should expect them to want to deliver on those promises,|but there are going to be real-world consequences of that.",
-   "voice": "reader"
-  },
-  {
-   "id": "d12",
-   "text": "Even so, the market connected these two with a line|and reacted hard."
-  },
-  {
-   "id": "e01",
-   "text": "Third stop: the stock market."
-  },
-  {
-   "id": "e02",
-   "text": "In New York, two days after the election,|an index of semiconductor stocks|fell about *12 percent* in a single day."
-  },
-  {
-   "id": "e03",
-   "text": "According to Gaitame.com,|that was its biggest drop since March 2020.",
-   "say": "According to Guy-tah-may dot com, that was its biggest drop since March twenty twenty."
-  },
-  {
-   "id": "e04",
-   "text": "The logic: if data centers don't get built,|the chips that go inside them don't get sold.|That's how investors read it."
-  },
-  {
-   "id": "e05",
-   "text": "The next day, the line crosses the Pacific and reaches Tokyo.|The Nikkei average fell 3,643 yen.",
-   "say": "The next day, the line crosses the Pacific and reaches Tokyo. The Nikkei average fell three thousand six hundred forty-three yen."
-  },
-  {
-   "id": "e06",
-   "text": "Here's one more guess for you."
-  },
-  {
-   "id": "e07",
-   "text": "From Monday through Thursday of that week,|the Nikkei average fell *3.5 percent*.",
-   "say": "From Monday through Thursday of that week, the Nikkei average fell three point five percent."
-  },
-  {
-   "id": "e08",
-   "text": "So how much do you think the TOPIX fell,|the index that tracks the whole Tokyo market?",
-   "say": "So how much do you think the Toe-picks fell, the index that tracks the whole Tokyo market?"
-  },
-  {
-   "id": "e09",
-   "text": "*0.6 percent*.|Same Tokyo stocks, and yet the gap is nearly sixfold.",
-   "say": "Zero point six percent. Same Tokyo stocks, and yet the gap is nearly sixfold."
-  },
-  {
-   "id": "e10",
-   "text": "Here's why.|In the Nikkei average, companies with a higher share price carry more weight,|and AI and chip companies make up a very large part of it."
-  },
-  {
-   "id": "e11",
-   "text": "So it was *the yardstick*|most sensitive to AI news from America."
-  },
-  {
-   "id": "e12",
-   "text": "To be clear, on Friday even banks and food companies were sold,|and there was also talk that U.S. interest rates were about to rise."
-  },
-  {
-   "id": "e13",
-   "text": "So power bills alone don't explain everything."
-  },
-  {
-   "id": "f01",
-   "text": "From here, this is my own read."
-  },
-  {
-   "id": "f02",
-   "text": "What got shaken this time, I think,|wasn't faith in how capable AI is."
-  },
-  {
-   "id": "f03",
-   "text": "What got shaken was *where AI gets put*,|and *who pays its power bill*.|A much more down-to-earth problem."
-  },
-  {
-   "id": "f03b",
-   "text": "Let's look at one professional view as well.|This is from a note that Dominique Toublan of Barclays|put out the day after the election.",
-   "say": "Let's look at one professional view as well. This is from a note that Dominique Too-blahn, of Barclays, put out the day after the election."
-  },
-  {
-   "id": "q3",
-   "text": "AI pushback is bipartisan but local,|making the buildout pricier rather than stalling it.",
-   "voice": "reader"
-  },
-  {
-   "id": "f04",
-   "text": "Over the next four trading days,|the Nikkei average recovered about 3,400 yen.|Some say the selling was overdone.",
-   "say": "Over the next four trading days, the Nikkei average recovered about three thousand four hundred yen. Some say the selling was overdone."
-  },
-  {
-   "id": "f05",
-   "text": "But the bill comes every month, doesn't it?|That doesn't stop when the election is over."
-  },
-  {
-   "id": "f06",
-   "text": "So I think this line will keep|connecting to other news from here on."
-  },
-  {
-   "id": "g01",
-   "text": "Finally, let's connect today's dots into one line."
-  },
-  {
-   "id": "g02a",
-   "text": "The bill that arrived at a kitchen table in Ohio.|The \"not so fast\" at the polling place.",
-   "say": "The bill that arrived at a kitchen table in Ohio. The not so fast, at the polling place."
-  },
-  {
-   "id": "g02b",
-   "text": "Chip stocks in New York.|And the Nikkei average in Tokyo."
-  },
-  {
-   "id": "g03",
-   "text": "Connect them all, and you get:|\"*America's power bills moved Japan's stocks.*\""
-  },
-  {
-   "id": "g04",
-   "text": "One last thing.|In Japan, too, friction with residents|over data center construction has been reported."
-  },
-  {
-   "id": "g05",
-   "text": "If one were going to be built near your home,|would you be for it? Or against it?"
-  },
-  {
-   "id": "g06",
-   "text": "If you like, tell us in the comments on Halftick.|You'll find the rest of this story at the link in the description.",
-   "say": "If you like, tell us in the comments on Half Tick. You'll find the rest of this story at the link in the description."
-  },
-  {
-   "id": "g07",
-   "text": "Next time, we'll connect more scattered news into one line.|See you on the next line."
-  }
- ]
+  "host": "narrator",
+  "lines": [
+    {
+      "id": "a01",
+      "text": "In Ohio, an electricity bill lands in someone's mailbox.|And over the past two years or so, that bill has been creeping up."
+    },
+    {
+      "id": "a02",
+      "text": "This one piece of paper, by a long and winding route,|ends up moving *stock prices in Tokyo*."
+    },
+    {
+      "id": "a03",
+      "text": "On November 6, the Nikkei average fell *3,643 yen* in a single day.|That's the third-largest point drop on record.",
+      "say": "On November sixth, the Nikkei average fell three thousand six hundred forty-three yen in a single day. That's the third-largest point drop on record."
+    },
+    {
+      "id": "a04",
+      "text": "A power bill and a stock index.|Those two feel miles apart, don't they?"
+    },
+    {
+      "id": "a05",
+      "text": "But they're actually connected by *a single line*."
+    },
+    {
+      "id": "b01",
+      "text": "Hi, this is Halftick.",
+      "say": "Hi, this is Half Tick."
+    },
+    {
+      "id": "b02",
+      "text": "We take the news that's scattered around in your head|and *connect it into one line*."
+    },
+    {
+      "id": "b03",
+      "text": "Today we go from a kitchen table in Ohio|to Kabutocho, home of the Tokyo Stock Exchange.|We'll connect the bill and the stock price on a map.",
+      "say": "Today we go from a kitchen table in Ohio, to Kah-boo-toe-cho, home of the Tokyo Stock Exchange. We'll connect the bill and the stock price on a map."
+    },
+    {
+      "id": "b04",
+      "text": "We'll make three stops.|First, the American kitchen table. Second, the polling place.|Third, the stock market."
+    },
+    {
+      "id": "b05",
+      "text": "At the end, I'll connect all three into one line|and give you my own read."
+    },
+    {
+      "id": "c01",
+      "text": "First stop: the American kitchen table."
+    },
+    {
+      "id": "c02",
+      "text": "Right now, across the United States,|people are pushing back against new data centers."
+    },
+    {
+      "id": "c02b",
+      "text": "By the way, a data center is a building|packed with row after row of the computers that run AI.",
+      "say": "By the way, a data center is a building packed with row after row of the computers that run A.I."
+    },
+    {
+      "id": "c02c",
+      "text": "According to the International Energy Agency,|a large AI-focused one can use as much electricity|as *100,000 households*.",
+      "say": "According to the International Energy Agency, a large A.I. focused one can use as much electricity as one hundred thousand households."
+    },
+    {
+      "id": "c03",
+      "text": "Here's a quick guess for you.|What's a worry that keeps coming up among the people who object?"
+    },
+    {
+      "id": "c04",
+      "text": "That AI will take their jobs.|That's what most of us would say, right?"
+    },
+    {
+      "id": "c05",
+      "text": "One that keeps coming up is *the power bill*."
+    },
+    {
+      "id": "c06",
+      "text": "In a Reuters/Ipsos poll taken in June,|*nearly eight in ten* people said they worry|that AI will make electricity more expensive.",
+      "say": "In a Reuters Ipsos poll taken in June, nearly eight in ten people said they worry that A.I. will make electricity more expensive."
+    },
+    {
+      "id": "c07",
+      "text": "And that held true no matter which party they support."
+    },
+    {
+      "id": "c07b",
+      "text": "By the way, the power bill isn't the only worry.|In a poll by the AP and the University of Chicago,|nearly six in ten were also very concerned about *local water*.",
+      "say": "By the way, the power bill isn't the only worry. In a poll by the A.P. and the University of Chicago, nearly six in ten were also very concerned about local water."
+    },
+    {
+      "id": "c07c",
+      "text": "That's because data centers use a lot of water|to keep their computers cool."
+    },
+    {
+      "id": "c08",
+      "text": "Prices really are going up.|According to government data reported by Reuters,|home electricity prices have risen *more than 10 percent* since 2024.",
+      "say": "Prices really are going up. According to government data reported by Reuters, home electricity prices have risen more than ten percent since twenty twenty-four."
+    },
+    {
+      "id": "c09",
+      "text": "So why would a data center affect what a household pays?|Think of it like a neighborhood association."
+    },
+    {
+      "id": "c10",
+      "text": "Say a huge mansion moves into the neighborhood.|To serve it, the road gets widened and more streetlights go up."
+    },
+    {
+      "id": "c11",
+      "text": "The mansion pays its own electricity bill, of course.|But the cost of the road and the streetlights|gets added to the neighborhood dues.|In other words, *everyone pays*."
+    },
+    {
+      "id": "c12",
+      "text": "Power lines and power plants work in roughly the same way."
+    },
+    {
+      "id": "c13",
+      "text": "To be fair, though:|data centers aren't behind|the whole price increase."
+    },
+    {
+      "id": "c14",
+      "text": "A Dallas Fed working paper estimates|that data centers have pushed up wholesale prices,|what utilities pay to buy power, by about 2 to 6 percent.",
+      "say": "A Dallas Fed working paper estimates that data centers have pushed up wholesale prices, what utilities pay to buy power, by about two to six percent."
+    },
+    {
+      "id": "c15",
+      "text": "Even so, when people look at their bill,|their eyes go to the big building going up nearby."
+    },
+    {
+      "id": "c16",
+      "text": "That's stop one.|The bill and the data center are now *connected by a line*."
+    },
+    {
+      "id": "d01",
+      "text": "Second stop: the polling place."
+    },
+    {
+      "id": "d02",
+      "text": "November 3 was the U.S. midterm election."
+    },
+    {
+      "id": "d02b",
+      "text": "By the way, the midterms are the congressional elections|held halfway through a president's four-year term.|People often call them a report card on the administration."
+    },
+    {
+      "id": "d03",
+      "text": "On that same day, in 12 states,|people also voted on local measures about data center construction.",
+      "say": "On that same day, in twelve states, people also voted on local measures about data center construction."
+    },
+    {
+      "id": "d04",
+      "text": "According to a tally reported by the AP,|in *44* of the 45 measures that had been counted,|the side restricting construction won.",
+      "say": "According to a tally reported by the A.P., in forty-four of the forty-five measures that had been counted, the side restricting construction won."
+    },
+    {
+      "id": "d04b",
+      "text": "That's almost all of them.|So where was the one exception?"
+    },
+    {
+      "id": "d04c",
+      "text": "Harwood, North Dakota, a town of a little over 800 people.|A big data center was already under construction there,|and the measure to tighten reviews was voted down.",
+      "say": "Harwood, North Dakota, a town of a little over eight hundred people. A big data center was already under construction there, and the measure to tighten reviews was voted down."
+    },
+    {
+      "id": "d05",
+      "text": "And of the 47 measures in total,|21 were in Ohio.",
+      "say": "And of the forty-seven measures in total, twenty-one were in Ohio."
+    },
+    {
+      "id": "d05b",
+      "text": "Let's hear from someone in the opposition movement.|This is Stephen Sanders, from Texas.|Here's what he told the AP.",
+      "say": "Let's hear from someone in the opposition movement. This is Stephen Sanders, from Texas. Here's what he told the A.P."
+    },
+    {
+      "id": "q1",
+      "text": "I would say data centers were on the ballot.",
+      "voice": "reader"
+    },
+    {
+      "id": "d05c",
+      "text": "By the way, he's a Republican.|So you can see this isn't really a party-line issue."
+    },
+    {
+      "id": "d06",
+      "text": "In the congressional elections that same day,|Democrats won both the House and the Senate."
+    },
+    {
+      "id": "d07",
+      "text": "But let me connect these two with a *dotted line*."
+    },
+    {
+      "id": "d08",
+      "text": "We can't honestly say|that anger over power bills is what won it for the Democrats."
+    },
+    {
+      "id": "d09",
+      "text": "In the AP's voter survey,|only about one in four voters|called data centers crucial to their vote.",
+      "say": "In the A.P.'s voter survey, only about one in four voters called data centers crucial to their vote."
+    },
+    {
+      "id": "d10",
+      "text": "They happened on the same day.|That's as far as the facts go."
+    },
+    {
+      "id": "d11",
+      "text": "Also, a lot of headlines said \"AI regulation,\"|but not a single federal law has changed.|What got decided were local rules.",
+      "say": "Also, a lot of headlines said A.I. regulation, but not a single federal law has changed. What got decided were local rules."
+    },
+    {
+      "id": "d11b",
+      "text": "Let's hear from the other side, too.|This is Dan Diorio of the Data Center Coalition, an industry group.",
+      "say": "Let's hear from the other side, too. This is Dan Dee-oh-ree-oh, of the Data Center Coalition, an industry group."
+    },
+    {
+      "id": "q2",
+      "text": "We should expect them to want to deliver on those promises,|but there are going to be real-world consequences of that.",
+      "voice": "reader"
+    },
+    {
+      "id": "d11c",
+      "text": "The consequences he means are things like|the taxes a data center pays to its host community.|Block the project, and that money doesn't arrive either."
+    },
+    {
+      "id": "d12",
+      "text": "Even so, the market connected these two with a line|and reacted hard."
+    },
+    {
+      "id": "e01",
+      "text": "Third stop: the stock market."
+    },
+    {
+      "id": "e02",
+      "text": "In New York, two days after the election,|an index of semiconductor stocks|fell about *12 percent* in a single day."
+    },
+    {
+      "id": "e03",
+      "text": "According to Gaitame.com,|that was its biggest drop since March 2020.",
+      "say": "According to Guy-tah-may dot com, that was its biggest drop since March twenty twenty."
+    },
+    {
+      "id": "e03b",
+      "text": "By the way, this index is known as the SOX.|It tracks about 30 chip-related companies,|Nvidia among them.",
+      "say": "By the way, this index is known as the Socks. It tracks about thirty chip-related companies, N-vidia among them."
+    },
+    {
+      "id": "e04",
+      "text": "The logic: if data centers don't get built,|the chips that go inside them don't get sold.|That's how investors read it."
+    },
+    {
+      "id": "e05",
+      "text": "The next day, the line crosses the Pacific and reaches Tokyo.|The Nikkei average fell 3,643 yen.",
+      "say": "The next day, the line crosses the Pacific and reaches Tokyo. The Nikkei average fell three thousand six hundred forty-three yen."
+    },
+    {
+      "id": "e06",
+      "text": "Here's one more guess for you."
+    },
+    {
+      "id": "e07",
+      "text": "From Monday through Thursday of that week,|the Nikkei average fell *3.5 percent*.",
+      "say": "From Monday through Thursday of that week, the Nikkei average fell three point five percent."
+    },
+    {
+      "id": "e08",
+      "text": "So how much do you think the TOPIX fell,|the index that tracks the whole Tokyo market?",
+      "say": "So how much do you think the Toe-picks fell, the index that tracks the whole Tokyo market?"
+    },
+    {
+      "id": "e09",
+      "text": "*0.6 percent*.|Same Tokyo stocks, and yet the gap is nearly sixfold.",
+      "say": "Zero point six percent. Same Tokyo stocks, and yet the gap is nearly sixfold."
+    },
+    {
+      "id": "e10",
+      "text": "Here's why.|In the Nikkei average, companies with a higher share price carry more weight,|and AI and chip companies make up a very large part of it."
+    },
+    {
+      "id": "e11",
+      "text": "So it was *the yardstick*|most sensitive to AI news from America."
+    },
+    {
+      "id": "e12",
+      "text": "To be clear, on Friday even banks and food companies were sold,|and there was also talk that U.S. interest rates were about to rise."
+    },
+    {
+      "id": "e12b",
+      "text": "Another view is that chip-company earnings fell short.|The outlooks from Qualcomm and Arm,|out the day before, are the examples people cite."
+    },
+    {
+      "id": "e13",
+      "text": "So power bills alone don't explain everything."
+    },
+    {
+      "id": "f01",
+      "text": "From here, this is my own read."
+    },
+    {
+      "id": "f02",
+      "text": "What got shaken this time, I think,|wasn't faith in how capable AI is."
+    },
+    {
+      "id": "f03",
+      "text": "What got shaken was *where AI gets put*,|and *who pays its power bill*.|A much more down-to-earth problem."
+    },
+    {
+      "id": "f03b",
+      "text": "Let's look at one professional view as well.|This is from a note that Dominique Toublan of Barclays|put out the day after the election.",
+      "say": "Let's look at one professional view as well. This is from a note that Dominique Too-blahn, of Barclays, put out the day after the election."
+    },
+    {
+      "id": "q3",
+      "text": "AI pushback is bipartisan but local,|making the buildout pricier rather than stalling it.",
+      "voice": "reader"
+    },
+    {
+      "id": "f04",
+      "text": "Over the next four trading days,|the Nikkei average recovered about 3,400 yen.|Some say the selling was overdone.",
+      "say": "Over the next four trading days, the Nikkei average recovered about three thousand four hundred yen. Some say the selling was overdone."
+    },
+    {
+      "id": "f05",
+      "text": "But the bill comes every month, doesn't it?|That doesn't stop when the election is over."
+    },
+    {
+      "id": "f06",
+      "text": "So I think this line will keep|connecting to other news from here on."
+    },
+    {
+      "id": "g01",
+      "text": "Finally, let's connect today's dots into one line."
+    },
+    {
+      "id": "g02a",
+      "text": "The bill that arrived at a kitchen table in Ohio.|The \"not so fast\" at the polling place.",
+      "say": "The bill that arrived at a kitchen table in Ohio. The not so fast, at the polling place."
+    },
+    {
+      "id": "g02b",
+      "text": "Chip stocks in New York.|And the Nikkei average in Tokyo."
+    },
+    {
+      "id": "g03",
+      "text": "Connect them all, and you get:"
+    },
+    {
+      "id": "g03b",
+      "text": "\"*America's power bills moved Japan's stocks.*\"",
+      "say": "America's power bills moved Japan's stocks."
+    },
+    {
+      "id": "g04",
+      "text": "One last thing.|In Japan, too, friction with residents|over data center construction has been reported."
+    },
+    {
+      "id": "g05",
+      "text": "If one were going to be built near your home,|would you be for it? Or against it?"
+    },
+    {
+      "id": "g06",
+      "text": "If you like, tell us in the comments on Halftick.|You'll find the rest of this story at the link in the description.",
+      "say": "If you like, tell us in the comments on Half Tick. You'll find the rest of this story at the link in the description."
+    },
+    {
+      "id": "g07",
+      "text": "Next time, we'll connect more scattered news into one line.|See you on the next line."
+    }
+  ]
 }

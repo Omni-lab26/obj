@@ -1,0 +1,191 @@
+<title>Halftick 配色リスト</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Shippori+Mincho:wght@500;800&display=swap">
+<style>
+/* Layout: one left-aligned column of text, then a grid of palette cards, each led by a 16:9 frame drawn in that palette. */
+:root {
+  color-scheme: dark;
+  --ground: #0b0e17;
+  --panel: #131826;
+  --line: #2a3145;
+  --ink: #f3f5fa;
+  --muted: #a4acc0;
+  --mark: #e8ecf6;
+  --serif: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --sans: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.8;
+  padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 44px; }
+header { display: grid; gap: 12px; }
+h1 { font-family: var(--serif); font-weight: 800; font-size: clamp(30px, 5vw, 46px); line-height: 1.25; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--serif); font-weight: 800; font-size: 26px; line-height: 1.4; margin: 0 0 14px; }
+p { margin: 0; max-width: 40em; }
+.lead { color: var(--muted); }
+.roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0; border-top: 1px solid var(--line); }
+.role { padding: 16px 20px 16px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.role b { display: block; font-size: 17px; }
+.role span { color: var(--muted); font-size: 14.5px; line-height: 1.7; display: block; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 28px 24px; }
+.card { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.card h3 { font-size: 19px; font-weight: 800; margin: 0; line-height: 1.45; }
+.card .topics { color: var(--muted); font-size: 14px; line-height: 1.6; }
+.frame {
+  container-type: inline-size;
+  position: relative; aspect-ratio: 16 / 9; max-width: 100%; overflow: hidden; border-radius: 10px;
+  background:
+    radial-gradient(120% 90% at 78% 18%, color-mix(in srgb, var(--a) 16%, transparent), transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--b) 78%, #6b7280) 0%, var(--b) 62%);
+  color: #fff;
+}
+.frame .tag { position: absolute; left: 5.5cqw; top: 6cqw; background: var(--a); color: var(--b); font-weight: 800; font-size: 3cqw; line-height: 1; padding: 1.3cqw 2cqw; border-radius: 1cqw; letter-spacing: .06em; }
+.frame .trail { position: absolute; right: 5.5cqw; top: 6.6cqw; display: flex; align-items: center; }
+.frame .trail i { width: 2.2cqw; height: 2.2cqw; border-radius: 50%; border: .5cqw solid #fff; }
+.frame .trail i.on { background: var(--a); border-color: var(--a); }
+.frame .trail s { width: 4cqw; height: .6cqw; background: rgba(255,255,255,.4); }
+.frame .trail s.on { background: var(--a); }
+.frame .big { position: absolute; right: 5.5cqw; top: 12.5cqw; text-align: right; }
+.frame .big strong { display: block; font-family: var(--serif); font-weight: 800; font-size: 12cqw; line-height: 1.1; color: var(--a); white-space: nowrap; }
+.frame .big u { display: block; height: 1.3cqw; border-radius: 1cqw; background: var(--a); margin-top: .8cqw; }
+.frame .chips { position: absolute; right: 5.5cqw; top: 30cqw; display: flex; gap: 1.6cqw; font-weight: 800; font-size: 2.9cqw; line-height: 1; }
+.frame .chips span { padding: 1.1cqw 1.6cqw; border-radius: 1cqw; border: .45cqw solid currentColor; }
+.frame .chips .w { color: var(--w); }
+.frame .chips .c { color: var(--c); }
+.frame .sub { position: absolute; left: 5.5cqw; right: 12cqw; bottom: 5.5cqw; font-family: var(--serif); font-weight: 500; font-size: 5.2cqw; line-height: 1.45; text-shadow: 0 .2cqw 2cqw rgba(0,0,0,.6); text-wrap: balance; }
+.frame .sub em { font-style: normal; font-weight: 800; color: var(--a); }
+.swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.sw { display: grid; gap: 4px; min-width: 0; font-size: 12.5px; line-height: 1.4; }
+.sw i { display: block; height: 34px; border-radius: 6px; border: 1px solid var(--line); }
+.sw b { font-weight: 700; }
+.sw code { font-family: var(--mono); font-size: 12px; color: var(--muted); user-select: all; }
+.card dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 14px; line-height: 1.7; }
+.card dt { color: var(--muted); white-space: nowrap; }
+.card dd { margin: 0; min-width: 0; }
+.card dd.num { font-variant-numeric: tabular-nums; }
+ol.steps { margin: 0; padding-left: 1.4em; display: grid; gap: 10px; max-width: 44em; }
+ol.steps b { color: var(--mark); }
+ul.plain { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; max-width: 44em; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 40px; }
+.two > section { min-width: 0; }
+.note { color: var(--muted); font-size: 14px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Halftick 配色リスト</h1>
+    <p class="lead">動画ごとに変えるのは「主役色」と背景の色味だけです。文字の白、書体、レイアウトはそのままにして、色で「今日は何の話か」が伝わるようにします。下の枠は、それぞれの配色で描いた動画の1コマです。</p>
+  </header>
+
+  <section>
+    <h2>4つの色の役割</h2>
+    <div class="roles">
+      <div class="role"><b>主役色</b><span>章のタグ、答えの数字、字幕の強調、地図の線。画面の1割までに抑えます。</span></div>
+      <div class="role"><b>背景</b><span>写真にかぶせる暗い色。ほぼ黒で、主役色と同じ方向に少しだけ色味を寄せます。</span></div>
+      <div class="role"><b>注意色</b><span>下落、リスク、値上がりなど「気をつけたい数字」。どの回も赤系にして意味を固定します。</span></div>
+      <div class="role"><b>比較色</b><span>比べる相手、仮説、まだ確かでないもの。主役色から離れた淡い色にします。</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>トピック別の配色</h2>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <div class="two">
+    <section>
+      <h2>新しいトピックの色の決め方</h2>
+      <ol class="steps">
+        <li><b>現場の光を1つ思い浮かべる。</b>その話題の現場で光っているものを探します。電気ならメーターのランプ、為替なら両替ボード。その色が主役色の出発点です。</li>
+        <li><b>明るく、白に近づける。</b>暗い背景の上で読める明るさまで上げます。目安は、背景とのコントラスト比 7 以上です。</li>
+        <li><b>背景は主役色の方向へ少しだけ寄せる。</b>完全な黒にせず、主役色と同じ色味をわずかに混ぜた濃い色にします。</li>
+        <li><b>注意色は赤系のまま。</b>主役色が赤やピンクに近い回だけ、注意色をオレンジ寄りにずらして見分けがつくようにします。</li>
+        <li><b>比較色は色相環で離れた色。</b>主役色と並べて、白黒にしても明るさで区別できるかを確かめます。</li>
+        <li><b>直前の回と見比べる。</b>色相環で隣どうしの配色（為替と半導体、株と物価）は続けて使わないようにします。</li>
+      </ol>
+    </section>
+    <section>
+      <h2>気をつけること</h2>
+      <ul class="plain">
+        <li>色だけで上げ下げを伝えない。日本の株価ボードは「赤が上昇」なので、赤を下落に使うときは必ず「−」や「▼」を添えます。</li>
+        <li>1つの画面で主役色を使う場所は3か所まで。全部が光ると、どれも目立たなくなります。</li>
+        <li>写真は主役色と反対の色が強いものを避けるか、暗めのベールを濃くします。</li>
+        <li>サムネイルも同じ主役色にします。色でシリーズの中の「どの話題の回か」が分かるようになります。</li>
+        <li>担当キャラクターの色（ずんだもんの黄緑、つむぎの黄）は「今日の担当」カードと読み上げ表示だけに使い、主役色とは分けるのがおすすめです。</li>
+      </ul>
+    </section>
+  </div>
+
+  <p class="note">コントラスト比は WCAG の計算式で、このページが色の値から計算しています。配色のデータは <code>src/talk/palettes.json</code> にあり、台本ファイルに <code>"palette": "kawase"</code> のように書くと動画に反映されます。</p>
+</div>
+
+<script>
+const PALETTES = [{"id": "denki", "name": "電気・エネルギー・AIインフラ", "topics": "電気代、データセンター、原発、再エネ、電力不足", "base": "#0A0F1F", "accent": "#9BEA3F", "warn": "#FF4F72", "compare": "#3CCBFF", "image": "通電ランプ、蛍光の安全表示", "photo": "夜景、送電線、窓の明かり。暗部は青寄り", "sample": {"big": "10万世帯分", "sub": "1か所で*10万世帯分*の電気を使う"}}, {"id": "kabu", "name": "株・決算・マーケット", "topics": "日経平均、米国株、決算、IPO、新NISA", "base": "#0E1019", "accent": "#FFDD4A", "warn": "#FF5A6E", "compare": "#62B6FF", "image": "株価ボードの電光、取引所の照明", "photo": "取引所、ビル街の夕方、ボードを見上げる人", "sample": {"big": "過去3番目", "sub": "下げ幅は*過去3番目*の大きさ"}}, {"id": "kawase", "name": "為替・円安円高", "topics": "ドル円、為替介入、輸入物価、海外旅行", "base": "#07181B", "accent": "#2EE6C5", "warn": "#FF7A59", "compare": "#C9B6FF", "image": "紙幣の緑青、空港の両替ボード", "photo": "空港、港、コンテナ、両替所", "sample": {"big": "160円", "sub": "1ドル＝*160円*台に乗せた"}}, {"id": "kinri", "name": "金利・日銀・FRB", "topics": "利上げ・利下げ、国債、中央銀行の人事", "base": "#130F2A", "accent": "#C4A1FF", "warn": "#FF6B8B", "compare": "#6FE3E1", "image": "夜明け前の空、石造りの建物の重さ", "photo": "中央銀行、官庁街、薄明の街", "sample": {"big": "利上げ", "sub": "市場は12月の*追加利上げ*を織り込んだ"}}, {"id": "bukka", "name": "物価・家計・値上げ", "topics": "食品の値上げ、光熱費、コメ、実質賃金", "base": "#1C120B", "accent": "#FF8A4C", "warn": "#FF4F8B", "compare": "#7FD8BE", "image": "値札、スーパーの暖色の照明", "photo": "食卓、商店街、レジ、買い物かご", "sample": {"big": "値上げ", "sub": "食品の*値上げ*は、来年も続く見通し"}}, {"id": "tech", "name": "半導体・テック企業", "topics": "エヌビディア、AI企業の上場、スマホ、巨大IT", "base": "#060B18", "accent": "#36E2FF", "warn": "#FF4FA3", "compare": "#B6F36B", "image": "基板、クリーンルームの光", "photo": "基板のマクロ、サーバー室、工場", "sample": {"big": "−12%", "sub": "半導体株の指数が1日で*12%*下がった"}}, {"id": "sumai", "name": "住まい・不動産", "topics": "住宅ローン、マンション価格、家賃、空き家", "base": "#0E1814", "accent": "#7EE08F", "warn": "#FF7461", "compare": "#8FB8FF", "image": "住宅地の緑、間取り図の線", "photo": "住宅街、団地、建設中のマンション", "sample": {"big": "住宅ローン", "sub": "*変動金利*で借りている人はどうなる？"}}, {"id": "shigoto", "name": "雇用・賃金・働き方", "topics": "賃上げ、最低賃金、人手不足、AIと仕事", "base": "#17101A", "accent": "#FFA8C5", "warn": "#FF5533", "compare": "#7CC6FF", "image": "春闘の季節の桜、人の体温", "photo": "通勤、オフィス、工場、店先", "sample": {"big": "賃上げ", "sub": "*賃上げ*は、物価に追いついたのか"}}, {"id": "boeki", "name": "貿易・関税・地政学", "topics": "関税、輸出規制、資源、海運", "base": "#0A1526", "accent": "#6FA8FF", "warn": "#FF5A5F", "compare": "#FFD166", "image": "海図、コンテナ船の塗装", "photo": "港、海、クレーン、国境", "sample": {"big": "関税", "sub": "*関税*は、最後に誰が払うのか"}}, {"id": "seiji", "name": "税・財政・選挙", "topics": "消費税、予算、年金、選挙と市場", "base": "#170E1E", "accent": "#E58BFF", "warn": "#FF5A5F", "compare": "#6FE3B8", "image": "議場のビロード、判子の朱とは別の色", "photo": "議事堂、役所、投票所", "sample": {"big": "中間選挙", "sub": "*中間選挙*は、政権の通信簿"}}];
+const lum = (hex) => {
+  const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+};
+const ratio = (a, b) => {
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return ((hi + 0.05) / (lo + 0.05)).toFixed(1);
+};
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const grid = document.getElementById("grid");
+for (const p of PALETTES) {
+  const card = el("article", "card");
+  const frame = el("div", "frame");
+  frame.style.setProperty("--a", p.accent);
+  frame.style.setProperty("--b", p.base);
+  frame.style.setProperty("--w", p.warn);
+  frame.style.setProperty("--c", p.compare);
+  frame.append(el("div", "tag", p.name.split("・")[0]));
+  const trail = el("div", "trail");
+  ["i on", "s on", "i on", "s", "i"].forEach((c) => trail.append(el(c[0], c.slice(2))));
+  frame.append(trail);
+  const big = el("div", "big");
+  big.append(el("strong", "", p.sample.big), el("u"));
+  frame.append(big);
+  const chips = el("div", "chips");
+  chips.append(el("span", "w", "▼ 注意色"), el("span", "c", "比較色"));
+  frame.append(chips);
+  const sub = el("div", "sub");
+  p.sample.sub.split("*").forEach((part, i) => sub.append(i % 2 ? el("em", "", part) : document.createTextNode(part)));
+  frame.append(sub);
+  card.append(frame);
+
+  const head = el("div");
+  head.append(el("h3", "", p.name), el("div", "topics", p.topics));
+  card.append(head);
+
+  const sw = el("div", "swatches");
+  [["主役色", p.accent], ["背景", p.base], ["注意色", p.warn], ["比較色", p.compare]].forEach(([role, hex]) => {
+    const s = el("div", "sw");
+    const chip = el("i");
+    chip.style.background = hex;
+    s.append(chip, el("b", "", role), el("code", "", hex));
+    sw.append(s);
+  });
+  card.append(sw);
+
+  const dl = el("dl");
+  [["連想", p.image], ["合う写真", p.photo]].forEach(([k, v]) => dl.append(el("dt", "", k), el("dd", "", v)));
+  dl.append(el("dt", "", "コントラスト比"), el("dd", "num", `主役色 ${ratio(p.accent, p.base)}　注意色 ${ratio(p.warn, p.base)}　比較色 ${ratio(p.compare, p.base)}`));
+  card.append(dl);
+  grid.append(card);
+}
+</script>
