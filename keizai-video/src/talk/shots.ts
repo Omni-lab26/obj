@@ -31,7 +31,8 @@ export type Overlay =
       role: string;
       /** What the remark is about, when the quote needs it */
       about?: string;
-      original: string;
+      /** The words in their original language; leave out when they were said in Japanese */
+      original?: string;
       source: string;
     }
   | { kind: "end" };

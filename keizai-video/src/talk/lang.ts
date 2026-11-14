@@ -1,3 +1,6 @@
+import enyasu from "./enyasu.lines.json";
+import enyasuVoice from "./enyasu.voice-manifest.json";
+import { ENYASU } from "./episode";
 import en from "./lines.en.json";
 import ja from "./lines.json";
 import enVoice from "./voice-manifest.en.json";
@@ -9,12 +12,23 @@ import jaVoice from "./voice-manifest.json";
  */
 export const EN = process.env.REMOTION_LANG === "en";
 
+if (EN && ENYASU) {
+  throw new Error("The enyasu episode has no English version yet");
+}
+
 type Line = { id: string; text: string; say?: string; voice?: string };
-export const script: { host: string; palette?: string; lines: Line[] } = EN
-  ? en
-  : ja;
-export const voiceSeconds: Record<string, number> = EN ? enVoice : jaVoice;
-export const voiceDir = EN ? "talk/voice-en" : "talk/voice";
+type Script = { host: string; palette?: string; lines: Line[] };
+export const script: Script = ENYASU ? enyasu : EN ? en : ja;
+export const voiceSeconds: Record<string, number> = ENYASU
+  ? enyasuVoice
+  : EN
+    ? enVoice
+    : jaVoice;
+export const voiceDir = ENYASU
+  ? "talk/voice-enyasu"
+  : EN
+    ? "talk/voice-en"
+    : "talk/voice";
 
 // On-screen strings are written in Japanese in shots.ts; this maps them to English.
 const DICT: Record<string, string> = {

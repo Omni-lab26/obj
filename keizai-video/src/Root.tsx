@@ -21,6 +21,15 @@ const previews = SCENES.map((scene) => ({
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* The same film under a neutral name; REMOTION_EPISODE picks the episode. */}
+      <Composition
+        id="Talk"
+        component={TalkFilm}
+        durationInFrames={talkFrames}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
       <Composition
         id="DenkidaiTalk"
         component={TalkFilm}

@@ -14,7 +14,8 @@ import "../line/fonts";
 import { GraphView } from "./Graphs";
 import { EN, t, voiceDir, voiceSeconds } from "./lang";
 import { MapView } from "./Maps";
-import { Overlay, Shot, SHOTS } from "./shots";
+import { SHOTS } from "./episodes";
+import { Overlay, Shot } from "./shots";
 import {
   ACCENT,
   HOST,
@@ -481,7 +482,7 @@ const QuoteCard: React.FC<{
         >
           {EN ? "\u201C" + text + "\u201D" : "「" + text + "」"}
         </div>
-        {EN ? null : (
+        {EN || !o.original ? null : (
           <div
             style={{
               fontFamily: SANS,
@@ -510,7 +511,9 @@ const QuoteCard: React.FC<{
           }}
         >
           <span>
-            {EN ? t(o.source) : o.source + "　日本語訳は番組によるもの"}
+            {EN
+              ? t(o.source)
+              : o.source + (o.original ? "　日本語訳は番組によるもの" : "")}
           </span>
           <span
             style={{
@@ -538,9 +541,13 @@ const QuoteCard: React.FC<{
   );
 };
 
-const EndCard: React.FC<{ shotStart: number }> = ({ shotStart }) => {
+/** Closing card. It comes up with the first line of the last shot. */
+const EndCard: React.FC<{ shotStart: number; first: string }> = ({
+  shotStart,
+  first,
+}) => {
   const frame = useCurrentFrame();
-  const at = lineTiming("g06").start - shotStart;
+  const at = lineTiming(first).start - shotStart;
   const p = interpolate(frame, [at, at + 30], [0, 1], {
     ...clamp,
     easing: EASE,
@@ -649,7 +656,9 @@ const ShotView: React.FC<{ shot: Shot; timing: ShotTiming }> = ({
       {o?.kind === "host" && !EN ? (
         <HostCard o={o} shotStart={timing.start} />
       ) : null}
-      {o?.kind === "end" ? <EndCard shotStart={timing.start} /> : null}
+      {o?.kind === "end" ? (
+        <EndCard shotStart={timing.start} first={shot.lines[0]} />
+      ) : null}
       {shot.map || !shot.photo || o?.kind === "end" ? null : (
         <Credit photo={shot.photo} />
       )}

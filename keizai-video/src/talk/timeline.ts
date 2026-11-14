@@ -1,6 +1,5 @@
 import { script, voiceSeconds } from "./lang";
-import { PACING } from "./pacing";
-import { SHOTS } from "./shots";
+import { PACING, SHOTS } from "./episodes";
 
 export const FPS = 30;
 export const WIDTH = 1920;

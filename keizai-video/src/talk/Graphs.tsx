@@ -26,6 +26,10 @@ export type Graph =
       title: string;
       /** How many of the 100 dots are lit */
       value: number;
+      /** What the lit dots stand for, shown as a legend */
+      label?: string;
+      /** When the remaining dots are a second answer (not "no"), name it: they take the comparison colour */
+      rest?: { label: string; at?: string; delay?: number };
       source: string;
     }
   | {
@@ -59,7 +63,14 @@ export type Graph =
       /** Lines without `at` sit above the number; lines with one appear below it, on cue */
       body?: { text: string; at?: string; delay?: number }[];
       /** A row of dated points; the one marked `on` takes the host colour */
-      timeline?: { label: string; note: string; on?: boolean }[];
+      timeline?: {
+        label: string;
+        note: string;
+        on?: boolean;
+        /** Appears with this line (all at once when left out) */
+        at?: string;
+        delay?: number;
+      }[];
       stat?: {
         at: string;
         delay?: number;
@@ -204,6 +215,12 @@ const Dots: React.FC<{
   const frame = useCurrentFrame();
   const at = cue(g.at, shotStart, g.delay);
   const lit = interpolate(frame, [at + 14, at + 74], [0, g.value], clamp);
+  const restAt = g.rest
+    ? g.rest.at
+      ? cue(g.rest.at, shotStart, g.rest.delay)
+      : at + 80
+    : Infinity;
+  const rest = interpolate(frame, [restAt, restAt + 16], [0, 1], clamp);
   return (
     <Panel at={at} width={980} title={g.title} source={g.source}>
       <div
@@ -228,7 +245,12 @@ const Dots: React.FC<{
                 width: 20,
                 height: 20,
                 borderRadius: "50%",
-                backgroundColor: i < lit ? ACCENT : "rgba(255,255,255,0.16)",
+                backgroundColor:
+                  i < lit
+                    ? ACCENT
+                    : g.rest && i >= g.value && rest > 0.5
+                      ? COOL
+                      : "rgba(255,255,255,0.16)",
               }}
             />
           ))}
@@ -247,6 +269,27 @@ const Dots: React.FC<{
           <span style={{ fontSize: 64 }}>%</span>
         </div>
       </div>
+      {g.label || g.rest ? (
+        <div
+          style={{
+            display: "flex",
+            gap: 36,
+            marginTop: 18,
+            fontFamily: SANS,
+            fontWeight: 800,
+            fontSize: 30,
+          }}
+        >
+          {g.label ? (
+            <span style={{ color: ACCENT }}>● {tr(g.label)}</span>
+          ) : null}
+          {g.rest ? (
+            <span style={{ color: COOL, opacity: rest }}>
+              ● {tr(g.rest.label)}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
     </Panel>
   );
 };
@@ -400,7 +443,14 @@ const Note: React.FC<{
           }}
         >
           {g.timeline.map((pt, i) => (
-            <div key={i} style={{ flex: 1, textAlign: "center" }}>
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                textAlign: "center",
+                opacity: pt.at ? show(cue(pt.at, shotStart, pt.delay)) : 1,
+              }}
+            >
               <div
                 style={{
                   position: "relative",
@@ -433,8 +483,9 @@ const Note: React.FC<{
                 style={{
                   fontFamily: MINCHO,
                   fontWeight: 800,
-                  fontSize: 44,
+                  fontSize: g.timeline!.length > 3 ? 36 : 44,
                   marginTop: 8,
+                  whiteSpace: "nowrap",
                   color: pt.on ? ACCENT : INK,
                 }}
               >
@@ -444,7 +495,8 @@ const Note: React.FC<{
                 style={{
                   fontFamily: SANS,
                   fontWeight: 700,
-                  fontSize: 28,
+                  fontSize: g.timeline!.length > 3 ? 24 : 28,
+                  whiteSpace: "nowrap",
                   color: pt.on ? ACCENT : "rgba(255,255,255,0.8)",
                 }}
               >
