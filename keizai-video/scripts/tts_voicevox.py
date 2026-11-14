@@ -15,7 +15,7 @@ the .vvm voice files. Point VOICEVOX_DIR at a folder laid out like this:
         --out public/talk/voice --manifest src/talk/voice-manifest.json
     python scripts/tts_voicevox.py ... a01 b03      # only these lines
     python scripts/tts_voicevox.py ... --kana       # print the readings, write nothing
-    python scripts/tts_voicevox.py ... --intonation 0.85 --pause 1.25 --speed 1.15
+    python scripts/tts_voicevox.py ... --intonation 0.93 --pause 1.15 --speed 1.15
 """
 import glob
 import json
@@ -52,9 +52,9 @@ def main():
     manifest_path = Path(opt("--manifest", "src/talk/voice-manifest.json"))
     speed = float(opt("--speed", "1.15"))
     # Below 1.0 flattens the pitch movement: a calmer, less sing-song delivery.
-    intonation = float(opt("--intonation", "0.85"))
+    intonation = float(opt("--intonation", "0.93"))
     # Stretches the pauses the voice takes at commas inside a sentence.
-    pause = float(opt("--pause", "1.25"))
+    pause = float(opt("--pause", "1.15"))
     argv = sys.argv[1:]
     only = [a for i, a in enumerate(argv) if not a.startswith("--") and (i == 0 or argv[i - 1] not in VALUED)]
     data = json.loads(script.read_text())

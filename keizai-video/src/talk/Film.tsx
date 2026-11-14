@@ -562,7 +562,7 @@ const EndCard: React.FC<{ shotStart: number }> = ({ shotStart }) => {
             lineHeight: 1.1,
           }}
         >
-          Halftick
+          Plotline
         </div>
         <div
           style={{

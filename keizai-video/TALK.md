@@ -1,6 +1,6 @@
-# 線の回（第3版）ずんだもん担当「アメリカの電気代が、日本の株を動かした」
+# 線の回（第4版）ずんだもん担当「アメリカの電気代が、日本の株を動かした」
 
-担当キャラクターが語る版です（約10分半）。配色を目を引くものに変え、図とグラフを入れました。
+担当キャラクターが語る版です（約10分50秒）。番組名は「Plotline」です。配色を目を引くものに変え、図とグラフを入れました。
 声の抑揚を抑え、話の「間」を設計し、用語やほかの見方を補う「ちなみに」のコーナーを足しています。
 
 - 動画: `release/denkidai-talk.mp4`（1920×1080 / 30fps）
@@ -43,7 +43,7 @@ npm run encode:talk   # 配布用に圧縮して release/ に置く
 
 ## 発言の紹介（インタビュー）コーナー
 
-「ここで、〇〇さんの声を聞いてみましょう」と振って、実際の発言をカードで見せます。発言はもう一人の担当（今回は春日部つむぎ）が読み上げます。
+「ここで、〇〇さんの声を聞いてみましょう」と振って、実際の発言をカードで見せます。紹介では、その人がどこの誰で、いつ、何について話したのかまで言ってから発言に入ります（16〜18秒）。発言はもう一人の担当（今回は春日部つむぎ）が読み上げます。
 
 | 場所 | 誰の発言か | 出どころ |
 | --- | --- | --- |
@@ -60,7 +60,7 @@ npm run encode:talk   # 配布用に圧縮して release/ に置く
 
 ## 声の抑揚と、間の取り方
 
-声は VOICEVOX の抑揚を標準の 0.85 倍に抑え、文の途中の読点の間を 1.25 倍に伸ばしています（`npm run voice:talk -- --intonation 0.85 --pause 1.25` で変えられます）。
+声は VOICEVOX の抑揚を標準の 0.93 倍に抑え、文の途中の読点の間を 1.15 倍に伸ばしています（`npm run voice:talk -- --intonation 0.93 --pause 1.15` で変えられます）。
 
 セリフとセリフの間は `src/talk/pacing.ts` で1行ずつ決めています。人が目の前の相手に話すときに自然に空く場所で、少し待ちます。
 
@@ -131,17 +131,17 @@ npm run encode:talk   # 配布用に圧縮して release/ に置く
 ```
 アメリカの電気代が、日本の株を動かした。1枚の請求書の道のりを、ずんだもんが地図でたどります。
 
-■ この話の続き（数字と詳しい解説）と、みんなの議論はHalftickで
+■ この話の続き（数字と詳しい解説）と、みんなの議論はPlotlineで
 《深掘り記事へのリンク》
 
 ■ チャプター
 00:00 1枚の請求書
-00:37 今日の担当と道のり
-01:16 1か所目、アメリカの食卓
-03:54 2か所目、投票所
-06:34 3か所目、株式市場
-08:32 ボクなりの読み
-09:32 1本の線につなげる
+00:36 今日の担当と道のり
+01:15 1か所目、アメリカの食卓
+03:52 2か所目、投票所
+06:48 3か所目、株式市場
+08:45 ボクなりの読み
+09:52 1本の線につなげる
 
 ■ 出典
 日本経済新聞／AP通信／ロイター・イプソス世論調査（2026年6月）／AP通信・NORC・シカゴ大学の世論調査（2026年7月）／国際エネルギー機関／ブルームバーグ／外為どっとコム／OANDA証券／株探
@@ -155,7 +155,8 @@ npm run encode:talk   # 配布用に圧縮して release/ に置く
 
 ## 英語版
 
-同じ動画の英語版です（約8分40秒）。`REMOTION_LANG=en` を付けて書き出すと、台本・字幕・画面の文字・音声がすべて英語に切り替わります。
+同じ動画の英語版です（約8分40秒）。
+**いま `release/` にある英語版の動画は1つ前の版です**（番組名が Halftick のまま、発言の紹介も短い版）。下の台本は新しい内容に直してありますが、音声と動画はまだ作り直していません。`REMOTION_LANG=en` を付けて書き出すと、台本・字幕・画面の文字・音声がすべて英語に切り替わります。
 
 - 動画: `release/denkidai-talk-en.mp4`
 - 台本: `src/talk/lines.en.json`
@@ -207,7 +208,7 @@ The script was drafted with AI assistance. Photos are stock images.
 | a03 | On November 6, the Nikkei average fell 3,643 yen in a single day. That's the third-largest point drop on record. |
 | a04 | A power bill and a stock index. Those two feel miles apart, don't they? |
 | a05 | But they're actually connected by a single line. |
-| b01 | Hi, this is Halftick. |
+| b01 | Hi, this is Plotline. |
 | b02 | We take the news that's scattered around in your head and connect it into one line. |
 | b03 | Today we go from a kitchen table in Ohio to Kabutocho, home of the Tokyo Stock Exchange. We'll connect the bill and the stock price on a map. |
 | b04 | We'll make three stops. First, the American kitchen table. Second, the polling place. Third, the stock market. |
@@ -240,18 +241,18 @@ The script was drafted with AI assistance. Photos are stock images.
 | d04b | That's almost all of them. So where was the one exception? |
 | d04c | Harwood, North Dakota, a town of a little over 800 people. A big data center was already under construction there, and the measure to tighten reviews was voted down. |
 | d05 | And of the 47 measures in total, 21 were in Ohio. |
-| d05b | Let's hear from someone in the opposition movement. This is Stephen Sanders, from Texas. Here's what he told the AP. |
+| d05b | Let's hear from someone who is actually part of the opposition. This is Stephen Sanders, who co-founded a data center protest group in Lubbock, Texas. After the election, here's what Sanders told the AP. |
 | q1 | I would say data centers were on the ballot. |
-| d05c | By the way, he's a Republican. So you can see this isn't really a party-line issue. |
+| d05c | By the way, Sanders is a Republican. So you can see this isn't really a party-line issue. |
 | d06 | In the congressional elections that same day, Democrats won both the House and the Senate. |
 | d07 | But let me connect these two with a dotted line. |
 | d08 | We can't honestly say that anger over power bills is what won it for the Democrats. |
 | d09 | In the AP's voter survey, only about one in four voters called data centers crucial to their vote. |
 | d10 | They happened on the same day. That's as far as the facts go. |
 | d11 | Also, a lot of headlines said "AI regulation," but not a single federal law has changed. What got decided were local rules. |
-| d11b | Let's hear from the other side, too. This is Dan Diorio of the Data Center Coalition, an industry group. |
+| d11b | So how does the other side see it? Let's hear from them, too. This is Dan Diorio of the Data Center Coalition, the industry group for companies that run data centers, on the winners who promised to pause construction. |
 | q2 | We should expect them to want to deliver on those promises, but there are going to be real-world consequences of that. |
-| d11c | The consequences he means are things like the taxes a data center pays to its host community. Block the project, and that money doesn't arrive either. |
+| d11c | The consequences Diorio means are things like the taxes a data center pays to its host community. Block the project, and that money doesn't arrive either. |
 | d12 | Even so, the market connected these two with a line and reacted hard. |
 | e01 | Third stop: the stock market. |
 | e02 | In New York, two days after the election, an index of semiconductor stocks fell about 12 percent in a single day. |
@@ -271,7 +272,7 @@ The script was drafted with AI assistance. Photos are stock images.
 | f01 | From here, this is my own read. |
 | f02 | What got shaken this time, I think, wasn't faith in how capable AI is. |
 | f03 | What got shaken was where AI gets put, and who pays its power bill. A much more down-to-earth problem. |
-| f03b | Let's look at one professional view as well. This is from a note that Dominique Toublan of Barclays put out the day after the election. |
+| f03b | Let me also bring in how one market professional sees it. Dominique Toublan heads U.S. credit strategy at Barclays, the big British bank. This is from a note published the day after the election. |
 | q3 | AI pushback is bipartisan but local, making the buildout pricier rather than stalling it. |
 | f04 | Over the next four trading days, the Nikkei average recovered about 3,400 yen. Some say the selling was overdone. |
 | f05 | But the bill comes every month, doesn't it? That doesn't stop when the election is over. |
@@ -283,7 +284,7 @@ The script was drafted with AI assistance. Photos are stock images.
 | g03b | "America's power bills moved Japan's stocks." |
 | g04 | One last thing. In Japan, too, friction with residents over data center construction has been reported. |
 | g05 | If one were going to be built near your home, would you be for it? Or against it? |
-| g06 | If you like, tell us in the comments on Halftick. You'll find the rest of this story at the link in the description. |
+| g06 | If you like, tell us in the comments on Plotline. You'll find the rest of this story at the link in the description. |
 | g07 | Next time, we'll connect more scattered news into one line. See you on the next line. |
 
 ## 台本
@@ -295,7 +296,7 @@ The script was drafted with AI assistance. Photos are stock images.
 | a03 | 11月6日、日経平均が1日で3,643円下がりました。下げ幅としては、過去3番目の大きさです。 |
 | a04 | 請求書と株価。めちゃくちゃ遠い2つじゃないですか。 |
 | a05 | でも実はこれ、1本の線でつながってるんです。 |
-| b01 | こんにちは、Halftickです。今日は、ずんだもんがお送りします。 |
+| b01 | こんにちは、Plotlineです。今日は、ずんだもんがお送りします。 |
 | b02 | 頭の中でバラバラになってるニュースを、1本の線につなげる番組です。 |
 | b03 | 今日は、オハイオの食卓から、東京証券取引所のある兜町まで。請求書と株価を、地図の上で1本の線につなげていきます。 |
 | b04 | 立ち寄るのは3か所。1か所目がアメリカの食卓。2か所目が投票所。3か所目が株式市場です。 |
@@ -328,7 +329,7 @@ The script was drafted with AI assistance. Photos are stock images.
 | d04b | ほぼ全部ですよね。じゃあ、残りの1件はどこなのか。 |
 | d04c | ノースダコタ州の、ハーウッドという人口800人あまりの町です。ここはもうデータセンターの工事が始まっていて、審査を厳しくする案が否決されました。 |
 | d05 | そして、47件のうち21件が、オハイオ州に集まってます。 |
-| d05b | ここで、反対運動をしてる人の声を聞いてみましょう。テキサス州の、スティーブン・サンダースさん。AP通信の取材に、こう答えています。 |
+| d05b | ここで、実際に反対運動をしている人の声を聞いてみましょう。テキサス州のラボックという町で、データセンターに反対するグループを立ち上げた一人、スティーブン・サンダースさんです。選挙のあと、AP通信の取材にこう答えています。 |
 | q1 | データセンターが、投票にかけられていたんだと思う。 |
 | d05c | ちなみにこの人、共和党員なんですよ。党派の話じゃない、というのがよくわかりますよね。 |
 | d06 | 同じ日の議会選挙では、民主党が上院も下院も、両方取りました。 |
@@ -337,7 +338,7 @@ The script was drafted with AI assistance. Photos are stock images.
 | d09 | AP通信の調査だと、データセンターを投票の決め手にした人は、4人に1人ぐらいなんですね。 |
 | d10 | 同じ日に起きた。確かなのは、そこまでです。 |
 | d11 | あと、ニュースだと「AI規制」という見出しが並んだんですけど、国の法律は1本も変わってないんですよ。決まったのは、地元の自治体のルールなんです。 |
-| d11b | 逆の立場の声も聞いてみましょう。業界団体、データセンター連合のダン・ディオリオさんです。 |
+| d11b | では、逆の立場の人はどう見ているのか。こちらの声も聞いてみましょう。データセンターを運営する会社でつくる業界団体、データセンター連合の、ダン・ディオリオさんです。建設の一時停止を公約して当選した人たちについて、こう話しています。 |
 | q2 | 当選した人たちは、公約を果たそうとするでしょう。ただ、それには現実の代償がともないます。 |
 | d11c | ディオリオさんの言う代償は、データセンターが地元に払う税金などのことです。建てなければ、それも入ってこない、という話ですね。 |
 | d12 | それでも市場は、この2つを線でつなげて、めちゃくちゃ反応しました。 |
@@ -359,7 +360,7 @@ The script was drafted with AI assistance. Photos are stock images.
 | f01 | ここからは、ボクなりの読みの話です。 |
 | f02 | 今回揺らいだのは、AIの性能への期待じゃないと思うんですよ。 |
 | f03 | 揺らいだのは、AIをどこに置くのか。その電気代を誰が払うのか、という、めちゃくちゃ身近な問題のほうなんです。 |
-| f03b | プロの見方も1つ見てみましょう。バークレイズのドミニク・トゥブランさんが、選挙の翌日に出したレポートです。 |
+| f03b | ここで、市場のプロはどう見ているのかも、1つ紹介させてください。イギリスの大手銀行バークレイズで、アメリカの社債の分析を率いている、ドミニク・トゥブランさん。選挙の翌日に出したレポートに、こう書いています。 |
 | q3 | AIへの反発は、党派を超えているが、地元の話だ。建設を止めるというより、高くつくものにしている。 |
 | f04 | 日経平均はその後の4日間で、3,400円ぐらい戻してます。売られすぎだった、という見方もあります。 |
 | f05 | ただ、請求書って毎月届くじゃないですか。選挙が終わっても、これは止まらないんですよね。 |
@@ -371,5 +372,5 @@ The script was drafted with AI assistance. Photos are stock images.
 | g03b | 「アメリカの電気代が、日本の株を動かした」です。 |
 | g04 | 最後に1個だけ。日本でも、データセンターの建設をめぐって住民との摩擦が報じられてるんですよ。 |
 | g05 | もし自分の家の近くに建つとなったら、賛成しますか。それとも反対しますか。 |
-| g06 | よかったら、Halftickのコメント欄で聞かせてください。この話の続きは、概要欄のリンクからどうぞ。 |
+| g06 | よかったら、Plotlineのコメント欄で聞かせてください。この話の続きは、概要欄のリンクからどうぞ。 |
 | g07 | 次の回も、バラバラのニュースを1本の線につなげます。それでは、また次の線で。 |

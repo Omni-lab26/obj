@@ -24,8 +24,8 @@
     },
     {
       "id": "b01",
-      "text": "Hi, this is Halftick.",
-      "say": "Hi, this is Half Tick."
+      "text": "Hi, this is Plotline.",
+      "say": "Hi, this is Plotline."
     },
     {
       "id": "b02",
@@ -168,8 +168,8 @@
     },
     {
       "id": "d05b",
-      "text": "Let's hear from someone in the opposition movement.|This is Stephen Sanders, from Texas.|Here's what he told the AP.",
-      "say": "Let's hear from someone in the opposition movement. This is Stephen Sanders, from Texas. Here's what he told the A.P."
+      "text": "Let's hear from someone who is actually part of the opposition.|This is Stephen Sanders, who co-founded|a data center protest group in Lubbock, Texas.|After the election, here's what Sanders told the AP.",
+      "say": "Let's hear from someone who is actually part of the opposition. This is Stephen Sanders, who co-founded a data center protest group in Lubbock, Texas. After the election, here's what Sanders told the A.P."
     },
     {
       "id": "q1",
@@ -178,7 +178,7 @@
     },
     {
       "id": "d05c",
-      "text": "By the way, he's a Republican.|So you can see this isn't really a party-line issue."
+      "text": "By the way, Sanders is a Republican.|So you can see this isn't really a party-line issue."
     },
     {
       "id": "d06",
@@ -208,8 +208,8 @@
     },
     {
       "id": "d11b",
-      "text": "Let's hear from the other side, too.|This is Dan Diorio of the Data Center Coalition, an industry group.",
-      "say": "Let's hear from the other side, too. This is Dan Dee-oh-ree-oh, of the Data Center Coalition, an industry group."
+      "text": "So how does the other side see it?|Let's hear from them, too.|This is Dan Diorio of the Data Center Coalition,|the industry group for companies that run data centers,|on the winners who promised to pause construction.",
+      "say": "So how does the other side see it? Let's hear from them, too. This is Dan Dee-oh-ree-oh, of the Data Center Coalition, the industry group for companies that run data centers, on the winners who promised to pause construction."
     },
     {
       "id": "q2",
@@ -218,7 +218,8 @@
     },
     {
       "id": "d11c",
-      "text": "The consequences he means are things like|the taxes a data center pays to its host community.|Block the project, and that money doesn't arrive either."
+      "text": "The consequences Diorio means are things like|the taxes a data center pays to its host community.|Block the project, and that money doesn't arrive either.",
+      "say": "The consequences Dee-oh-ree-oh means are things like the taxes a data center pays to its host community. Block the project, and that money doesn't arrive either."
     },
     {
       "id": "d12",
@@ -304,8 +305,8 @@
     },
     {
       "id": "f03b",
-      "text": "Let's look at one professional view as well.|This is from a note that Dominique Toublan of Barclays|put out the day after the election.",
-      "say": "Let's look at one professional view as well. This is from a note that Dominique Too-blahn, of Barclays, put out the day after the election."
+      "text": "Let me also bring in how one market professional sees it.|Dominique Toublan heads U.S. credit strategy|at Barclays, the big British bank.|This is from a note published the day after the election.",
+      "say": "Let me also bring in how one market professional sees it. Dominique Too-blahn heads U.S. credit strategy at Barclays, the big British bank. This is from a note published the day after the election."
     },
     {
       "id": "q3",
@@ -357,8 +358,8 @@
     },
     {
       "id": "g06",
-      "text": "If you like, tell us in the comments on Halftick.|You'll find the rest of this story at the link in the description.",
-      "say": "If you like, tell us in the comments on Half Tick. You'll find the rest of this story at the link in the description."
+      "text": "If you like, tell us in the comments on Plotline.|You'll find the rest of this story at the link in the description.",
+      "say": "If you like, tell us in the comments on Plotline. You'll find the rest of this story at the link in the description."
     },
     {
       "id": "g07",

@@ -5,12 +5,13 @@
 | 動画 | 見た目 | 資料 |
 | --- | --- | --- |
 | `release/denkidai-talk.mp4` | ずんだもん担当・目を引く配色と図（最新） | [`TALK.md`](./TALK.md) |
-| `release/denkidai-talk-en.mp4` | 上の動画の英語版 | [`TALK.md`](./TALK.md) の「英語版」 |
+| `release/denkidai-talk-en.mp4` | 上の動画の英語版（1つ前の版のまま） | [`TALK.md`](./TALK.md) の「英語版」 |
 | `release/denkidai-route.mp4` | 写真と地図のドキュメンタリー風（第2版） | [`ROUTE.md`](./ROUTE.md) |
 | `release/denkidai-line.mp4` | 写真ドキュメンタリー風（第1版） | [`LINE.md`](./LINE.md) |
 | `release/nikkei-ai-shock.mp4` | 図とグラフ中心（初版） | [`YOUTUBE.md`](./YOUTUBE.md) |
 
-雰囲気の比較用ページは `moods/index.html`、トピック別の配色リストは `palettes/index.html` です。以下は初版の動画の説明です。
+雰囲気の比較用ページは `moods/index.html`、トピック別の配色リストは `palettes/index.html` です。
+原稿の採点は、事実の精度が [`ACCURACY.md`](./ACCURACY.md)、理解しやすさが [`CLARITY.md`](./CLARITY.md) にあります。以下は初版の動画の説明です。
 
 「日経平均 3,643円安 ―『AI規制ショック』の正体」を約4分43秒で解説する YouTube 向け動画のソース一式です。
 
