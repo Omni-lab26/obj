@@ -10,6 +10,7 @@ import { totalFrames as talkFrames } from "./talk/timeline";
 import { totalFrames as lineFrames } from "./line/timeline";
 import { FPS, getScene, HEIGHT, totalFrames, WIDTH } from "./timeline";
 import { Thumbnail } from "./Thumbnail";
+import { EnyasuThumbA, EnyasuThumbB, EnyasuThumbC } from "./talk/Thumbnails";
 import { NikkeiAiShock, SCENES, withBackground } from "./Video";
 
 // Scene previews (without narration) for quick iteration in Studio.
@@ -63,6 +64,24 @@ export const RemotionRoot: React.FC = () => {
         height={HEIGHT}
       />
       <Still id="Thumbnail" component={Thumbnail} width={1280} height={720} />
+      <Still
+        id="EnyasuThumbA"
+        component={EnyasuThumbA}
+        width={1280}
+        height={720}
+      />
+      <Still
+        id="EnyasuThumbB"
+        component={EnyasuThumbB}
+        width={1280}
+        height={720}
+      />
+      <Still
+        id="EnyasuThumbC"
+        component={EnyasuThumbC}
+        width={1280}
+        height={720}
+      />
       <Still id="MapBaseUs" component={MapBaseUs} width={1920} height={1080} />
       <Still
         id="MapBasePacific"
