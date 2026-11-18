@@ -16,18 +16,14 @@ npm run encode:enyasu   # 配布用に圧縮して release/ に置く
 
 ## サムネイル
 
-3案あります（`npm run thumb:enyasu` で作り直せます。作り方は `src/talk/Thumbnails.tsx`）。
+採用：`release/enyasu-thumbnail.png`（1280×720。`npm run thumb:enyasu` で作り直せます。作り方は `src/talk/Thumbnails.tsx` の `EnyasuThumbA`）
 
-| 案 | ねらい | 写真 |
-| --- | --- | --- |
-| A `release/enyasu-thumbnail-A.png` | 数字で引く。「1ドル160円」を大きく | 一万円札：kalleboo（CC BY 2.0） |
-| B `release/enyasu-thumbnail-B.png` | 番組の「1本の線」を絵にする。アメリカのレシートと、輸入小麦でできたパンを線で結ぶ | レシート：Stacy Spensley（CC BY 2.0）、パン：Tom Ipri（CC BY-SA 2.0） |
-| C `release/enyasu-thumbnail-C.png` | 疑問で引く。「なぜ、また1ドル160円？」と夏の介入 | 地図：Natural Earth |
+明朝体の大きい「160円」と、一万円札の写真の案です。ほかに作った案（レシートとパンを線で結ぶ案、地図と問いの案、太いゴシックで縁取りした案）は不採用で、ファイルは git の履歴にだけ残しています。
+文字と写真は確認役の確認で合格しています（[`FACTCHECK-enyasu.md`](./FACTCHECK-enyasu.md) の「11. サムネイルの確認」）。
 
-3案とも、確認役の確認で合格しています（[`FACTCHECK-enyasu.md`](./FACTCHECK-enyasu.md) の「11. サムネイルの確認」）。B は確認役の注文に沿って、大根をパンに替え、レシートの「159」（ポイント残高）が入らないように位置をずらしました。
-公開までに円相場が大きく円高に戻ったら、A・B は「11月13日 1ドル160円台」のように日付を入れます。
+概要欄に足すクレジット：「サムネイル写真：kalleboo（CC BY 2.0）」
 
-写真は CC BY・CC BY-SA なので、使った案の写真のクレジットを概要欄に足します（例：「サムネイル写真：kalleboo（CC BY 2.0）」）。
+公開までに円相場が大きく円高に戻ったら、「11月13日 1ドル160円台」のように日付を入れます。
 
 ## 事実確認で直したところ
 
