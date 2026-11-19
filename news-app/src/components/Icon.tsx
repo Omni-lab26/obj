@@ -12,6 +12,7 @@ export type IconName =
   | 'bell'
   | 'plus'
   | 'up'
+  | 'upFilled'
   | 'talk'
   | 'save'
   | 'saved'
@@ -73,6 +74,7 @@ export function Icon({ name, size = 22, color = colors.text, strokeWidth = 1.8 }
       )}
       {name === 'plus' && <Path {...p} d="M12 5v14M5 12h14" />}
       {name === 'up' && <Path {...p} d="M12 5l7 12H5z" />}
+      {name === 'upFilled' && <Path {...p} fill={color} d="M12 5l7 12H5z" />}
       {name === 'save' && <Path {...p} d="M7 4h10v16l-5-3.5L7 20z" />}
       {name === 'saved' && <Path {...p} fill={color} d="M7 4h10v16l-5-3.5L7 20z" />}
       {name === 'down' && <Path {...p} d="M6 9l6 6 6-6" />}

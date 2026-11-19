@@ -1,17 +1,28 @@
 import { GeistMono_500Medium } from '@expo-google-fonts/geist-mono/500Medium';
 import { GeistMono_600SemiBold } from '@expo-google-fonts/geist-mono/600SemiBold';
 import { useFonts } from 'expo-font';
-import { DarkTheme, SplashScreen, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, SplashScreen, Stack, ThemeProvider, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ErrorView } from '@/components/ErrorView';
+import { Page } from '@/components/Page';
 import { ToastHost } from '@/components/Toast';
 import { TabBarProvider } from '@/hooks/useTabBar';
 import { colors } from '@theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// どこかの画面で思わぬエラーが起きたときの受け皿（アプリごと落とさない）
+export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  return (
+    <Page>
+      <ErrorView title="common.errorTitle" sub="common.errorSub" retry={retry} />
+    </Page>
+  );
+}
 
 const theme = {
   ...DarkTheme,

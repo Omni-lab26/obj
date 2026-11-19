@@ -31,7 +31,12 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "sitemap": false
+        }
+      ],
       "expo-font",
       "expo-image",
       [

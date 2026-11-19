@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from 'react';
 
 import demo from './demo.json';
+import type { CommentSort } from '../format';
 import type { Article, Comment, Genre, Notice, Room, UserPost } from './types';
 
 const articles = demo.articles as unknown as Article[];
@@ -20,6 +21,7 @@ type State = {
   votes: Record<string, number>;
   discussions: Record<string, Comment[]>;
   liked: Set<number>;
+  commentSort: CommentSort; // コメントの並び順は、その人の好み（記事をまたいで覚えておく）
 };
 let cid = 1000;
 const C = (who: string, t: string, up: number, min: number, kids: Comment[] = []): Comment => ({
@@ -35,6 +37,7 @@ const state: State = {
   votes: {},
   discussions: JSON.parse(JSON.stringify(demo.discussions)) as Record<string, Comment[]>,
   liked: new Set(),
+  commentSort: 'top',
 };
 let version = 0;
 const listeners = new Set<() => void>();
@@ -79,6 +82,7 @@ export const getComments = (id: string): Comment[] =>
 export const isSaved = (id: string) => state.saved.has(id);
 export const voteOf = (pollId: string): number | undefined => state.votes[pollId];
 export const isLiked = (commentId: number) => state.liked.has(commentId);
+export const getCommentSort = (): CommentSort => state.commentSort;
 
 // ---- 書く
 export const toggleSave = (id: string): boolean => {
@@ -96,9 +100,24 @@ export const toggleLike = (commentId: number) => {
   else state.liked.add(commentId);
   emit();
 };
-export const addComment = (id: string, text: string): Comment => {
+export const setCommentSort = (by: CommentSort) => {
+  state.commentSort = by;
+  emit();
+};
+const findComment = (list: Comment[], id: number): Comment | undefined => {
+  for (const c of list) {
+    if (c.id === id) return c;
+    const k = findComment(c.kids, id);
+    if (k) return k;
+  }
+  return undefined;
+};
+/** コメントを書く。parentId があれば、その人への返信としてその下に付ける */
+export const addComment = (id: string, text: string, parentId?: number): Comment => {
   const c = C('あなた', text, 0, 0);
-  getComments(id).unshift(c);
+  const parent = parentId == null ? undefined : findComment(getComments(id), parentId);
+  if (parent) parent.kids.push(c);
+  else getComments(id).unshift(c);
   emit();
   return c;
 };

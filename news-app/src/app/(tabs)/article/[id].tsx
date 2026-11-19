@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams, useNavigation, type ErrorBoundaryProps } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolate,
@@ -11,9 +11,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { BlockView, FigureCtx } from '@/components/blocks/Blocks';
 import { CommentSheet, type BarGeo } from '@/components/CommentSheet';
+import { ErrorView } from '@/components/ErrorView';
 import { Glass } from '@/components/Glass';
 import { Icon } from '@/components/Icon';
 import { Page } from '@/components/Page';
@@ -22,23 +24,49 @@ import { toast } from '@/components/Toast';
 import { useScreen } from '@/hooks/useScreen';
 import { useShrinkOnScroll, useTabBar } from '@/hooks/useTabBar';
 import { getArticle, getComments, getRelated, isSaved, toggleSave, useDataVersion } from '@/lib/data';
-import { countComments, kindOf, readingMinutes } from '@/lib/format';
+import type { Article } from '@/lib/data/types';
+import { countComments, kindOf, readingMinutes, sortComments } from '@/lib/format';
 import { t } from '@/i18n';
 import { colors, layout, motion, space, type } from '@theme';
 
+// 記事の中で思わぬエラーが起きたとき。下のタブは残したまま、ここだけ出し直せるようにする
+export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  return (
+    <Page bg={colors.paper}>
+      <ErrorView title="common.errorTitle" sub="common.errorSub" retry={retry} />
+    </Page>
+  );
+}
+
 export default function ArticleScreen() {
-  useDataVersion();
   const { id, c } = useLocalSearchParams<{ id: string; c?: string }>();
   const a = getArticle(id);
+  if (!a) {
+    return (
+      <Page bg={colors.paper}>
+        <ErrorView title="article.missing" sub="article.missingSub" />
+      </Page>
+    );
+  }
+  // 記事が変わったら中身を作り直す（前の記事のグラフの選択や書きかけを持ちこまない）
+  return <ArticleBody key={a.id} a={a} c={c} />;
+}
+
+function ArticleBody({ a, c }: { a: Article; c?: string }) {
+  useDataVersion();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { width, height, side } = useScreen();
+  const { width, height } = useScreen();
   const { mini, hidden } = useTabBar();
   const onScroll = useShrinkOnScroll();
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const open = useSharedValue(0);
   const [sheet, setSheet] = useState(false);
+  const [sheetGen, setSheetGen] = useState(0);
   const [quote, setQuote] = useState<string | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
+  const autoOpen = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const underOverlay = useRef(false);
   const miniP = useDerivedValue(() => withTiming(mini.get(), { duration: motion.tabShrink }));
 
   const openSheet = useCallback(() => {
@@ -46,42 +74,58 @@ export default function ArticleScreen() {
     hidden.set(1);
     open.set(withTiming(1, { duration: motion.morph }));
   }, [hidden, open]);
-  const closeSheet = () => {
+  // 閉じ終わったときにだけ外す（途中で開き直したら、そのまま開いておく）
+  const closeSheet = useCallback(() => {
     hidden.set(0);
-    open.set(withTiming(0, { duration: motion.morph - 60 }));
-    setTimeout(() => setSheet(false), motion.morph);
-  };
+    setQuote(null);
+    open.set(
+      withTiming(0, { duration: motion.morph - 60 }, (done) => {
+        if (done) scheduleOnRN(setSheet, false);
+      })
+    );
+  }, [hidden, open]);
 
-  // 開いたときは、タブを全部出す。「議論をのぞく」から来たら、コメント欄も開く
+  // 開いたときは、タブを全部出して一番上から。「議論をのぞく」から来たら、コメント欄も開く。
+  // 検索など上に重なる画面から戻ったときは、読んでいた位置とコメント欄をそのままにする。
   useFocusEffect(
     useCallback(() => {
-      mini.set(0);
-      scrollRef.current?.scrollTo({ y: 0, animated: false });
-      if (c === '1') setTimeout(openSheet, 380);
+      const backFromOverlay = underOverlay.current;
+      underOverlay.current = false;
+      if (!backFromOverlay) {
+        mini.set(0);
+        scrollRef.current?.scrollTo({ y: 0, animated: false });
+        if (c === '1') autoOpen.current = setTimeout(openSheet, 380);
+      }
       return () => {
+        clearTimeout(autoOpen.current);
+        underOverlay.current = navigation.getParent()?.isFocused() === false;
+        if (underOverlay.current) return;
         hidden.set(0);
         open.set(0);
         setSheet(false);
+        setQuote(null);
+        setMenu(null);
+        setSheetGen((g) => g + 1);
       };
-    }, [id, c]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [c, openSheet, navigation, mini, hidden, open, scrollRef])
   );
 
-  if (!a) return null;
   const k = kindOf(a);
   const total = countComments(getComments(a.id));
   const saved = isSaved(a.id);
 
   // みんなの声のバー：タブを全部出しているときはタブの上、小さいときは小さいタブと検索の丸の間
   const tabBottom = insets.bottom + layout.tabBarBottom;
+  // バーとコメント欄は Page（440 の列）の中に置くので、左右の余りは足さない
   const barFull: BarGeo = {
-    left: side + 14,
-    right: side + 14,
+    left: 14,
+    right: 14,
     bottom: tabBottom + layout.tabBarHeight + 10,
-    height: 46,
+    height: layout.voiceBar,
   };
   const barMini: BarGeo = {
-    left: side + 14 + 58 + 8,
-    right: side + 14 + layout.tabBarMini + 8,
+    left: 14 + 58 + 8,
+    right: 14 + layout.tabBarMini + 8,
     bottom: tabBottom,
     height: layout.tabBarMini,
   };
@@ -91,6 +135,8 @@ export default function ArticleScreen() {
       <Page bg={colors.paper}>
         <Animated.ScrollView
           ref={scrollRef}
+          accessibilityElementsHidden={sheet}
+          importantForAccessibility={sheet ? 'no-hide-descendants' : 'auto'}
           onScroll={onScroll}
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
@@ -172,7 +218,11 @@ export default function ArticleScreen() {
         </Animated.ScrollView>
 
         {/* 戻るボタンと右上のボタンは、スクロールしても動かさない */}
-        <View pointerEvents="box-none" style={[styles.topBtns, { top: insets.top + 10 }]}>
+        <View
+          pointerEvents="box-none"
+          accessibilityElementsHidden={sheet}
+          importantForAccessibility={sheet ? 'no-hide-descendants' : 'auto'}
+          style={[styles.topBtns, { top: insets.top + 10 }]}>
           <View style={styles.glassBtn}>
             <Glass style={[StyleSheet.absoluteFill, { borderRadius: 999 }]} interactive />
             <Pressable
@@ -188,30 +238,31 @@ export default function ArticleScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('article.share')}
-              onPress={() => toast('共有（見本）')}
+              onPress={() => toast(t('article.shareSoon'))}
               style={styles.pillBtn}>
               <Icon name="share" size={19} />
             </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('article.lang')}
-              onPress={() => toast(t('article.lang'))}
+              onPress={() => toast(t('article.langSoon'))}
               style={styles.pillBtn}>
               <Text style={styles.lang}>文A</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('common.more')}
-              onPress={() => toast('通報・ミュート（見本）')}
+              onPress={() => toast(t('article.moreSoon'))}
               style={styles.pillBtn}>
               <Icon name="more" size={19} />
             </Pressable>
           </View>
         </View>
 
-        <VoiceBar total={total} barFull={barFull} barMini={barMini} onPress={openSheet} hiddenWhenOpen={sheet} />
+        <VoiceBar a={a} total={total} barFull={barFull} barMini={barMini} onPress={openSheet} sheetOpen={sheet} />
 
         <CommentSheet
+          key={sheetGen}
           articleId={a.id}
           open={open}
           visible={sheet}
@@ -230,12 +281,13 @@ export default function ArticleScreen() {
             <View style={[styles.menu, { width: width - 32, marginBottom: insets.bottom + 16 }]}>
               <Text style={styles.menuH}>{menu}</Text>
               {[
-                ['コメントに付けて話す', () => (setQuote(menu), openSheet())],
-                ['グループ・個人に送る', () => toast('送り先を選ぶ画面は次の段階で作ります')],
-                ['画像として保存', () => toast('画像として保存しました（見本）')],
+                [t('figure.talk'), () => (setQuote(menu), openSheet())],
+                [t('figure.send'), () => toast(t('figure.sendSoon'))],
+                [t('figure.save'), () => toast(t('figure.saveSoon'))],
               ].map(([label, fn]) => (
                 <Pressable
                   key={label as string}
+                  accessibilityRole="button"
                   onPress={() => {
                     setMenu(null);
                     (fn as () => void)();
@@ -253,19 +305,22 @@ export default function ArticleScreen() {
 }
 
 function VoiceBar({
+  a,
   total,
   barFull,
   barMini,
   onPress,
-  hiddenWhenOpen,
+  sheetOpen,
 }: {
+  a: Article;
   total: number;
   barFull: BarGeo;
   barMini: BarGeo;
   onPress: () => void;
-  hiddenWhenOpen: boolean;
+  sheetOpen: boolean;
 }) {
   const { mini } = useTabBar();
+  const { width } = useScreen();
   const p = useDerivedValue(() => withTiming(mini.get(), { duration: motion.tabShrink }));
   const geo = useAnimatedStyle(() => ({
     left: interpolate(p.get(), [0, 1], [barFull.left, barMini.left]),
@@ -274,8 +329,15 @@ function VoiceBar({
     height: interpolate(p.get(), [0, 1], [barFull.height, barMini.height]),
   }));
   const sub = useAnimatedStyle(() => ({ opacity: 1 - p.get() }));
+  // この記事でいちばん支持されている声を、ひとつだけ見せる
+  const top = sortComments(getComments(a.id), 'top')[0];
+  const label = width < 360 ? t('article.voicesShort', { n: total }) : t('article.voices', { n: total });
   return (
-    <Animated.View style={[styles.bar, geo, { opacity: hiddenWhenOpen ? 0 : 1 }]}>
+    // コメント欄はこのバーと同じ位置からふくらんで上にかぶさるので、バー自体は消さない
+    <Animated.View
+      accessibilityElementsHidden={sheetOpen}
+      importantForAccessibility={sheetOpen ? 'no-hide-descendants' : 'auto'}
+      style={[styles.bar, geo]}>
       <Glass style={[StyleSheet.absoluteFill, { borderRadius: 999 }]} interactive />
       <Pressable
         accessibilityRole="button"
@@ -284,9 +346,15 @@ function VoiceBar({
         style={styles.barIn}>
         <Icon name="talk" size={17} />
         <Text style={styles.barT} numberOfLines={1}>
-          {t('article.voices', { n: total })}
-          <Animated.Text style={[styles.barS, sub]}>　s.tanaka「一部に」から「広がり」へ…</Animated.Text>
+          {label}
         </Text>
+        {top ? (
+          <Animated.Text style={[styles.barS, sub]} numberOfLines={1}>
+            {t('article.teaser', { who: top.who, text: top.t })}
+          </Animated.Text>
+        ) : (
+          <View style={{ flex: 1 }} />
+        )}
         <View style={styles.barUp}>
           <Icon name="chevronUp" size={16} />
         </View>
@@ -351,8 +419,8 @@ const styles = StyleSheet.create({
   lang: { color: colors.text, fontSize: 14, fontWeight: '600' },
   bar: { position: 'absolute', borderRadius: 999, overflow: 'hidden' },
   barIn: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 5 },
-  barT: { color: colors.text, fontSize: 12.5, fontWeight: '700', flex: 1 },
-  barS: { color: 'rgba(255,255,255,0.65)', fontWeight: '400' },
+  barT: { color: colors.text, fontSize: 12.5, fontWeight: '700', flexShrink: 0 },
+  barS: { color: 'rgba(255,255,255,0.65)', fontSize: 12.5, flex: 1 },
   barUp: {
     width: 34,
     height: 34,

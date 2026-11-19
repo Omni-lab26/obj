@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
-import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
+import { AccessibilityInfo, StyleSheet, Text } from 'react-native';
+import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors } from '@theme';
+import { colors, layout } from '@theme';
 
-// 上に短く出る知らせ。どこからでも toast('…') で出せる。
+// 下（タブと「みんなの声」のバーの上）に短く出る知らせ。どこからでも toast('…') で出せる。
+// 上に出すと、記事の戻るボタンや右上のボタンにかぶるため下に置く。読み上げにも伝える。
 let show: ((s: string) => void) | null = null;
 export const toast = (s: string) => show?.(s);
 
@@ -16,6 +17,7 @@ export function ToastHost() {
     let timer: ReturnType<typeof setTimeout> | undefined;
     show = (s) => {
       setMsg({ s, k: Date.now() });
+      AccessibilityInfo.announceForAccessibility(s);
       clearTimeout(timer);
       timer = setTimeout(() => setMsg(null), 1900);
     };
@@ -28,10 +30,13 @@ export function ToastHost() {
   return (
     <Animated.View
       key={msg.k}
-      entering={FadeInUp.duration(220)}
-      exiting={FadeOutUp.duration(200)}
+      entering={FadeInDown.duration(220)}
+      exiting={FadeOutDown.duration(200)}
       pointerEvents="none"
-      style={[styles.wrap, { top: insets.top + 8 }]}>
+      style={[
+        styles.wrap,
+        { bottom: insets.bottom + layout.tabBarBottom + layout.tabBarHeight + 10 + layout.voiceBar + 12 },
+      ]}>
       <Text style={styles.t}>{msg.s}</Text>
     </Animated.View>
   );
@@ -41,6 +46,7 @@ const styles = StyleSheet.create({
   wrap: {
     position: 'absolute',
     alignSelf: 'center',
+    maxWidth: layout.maxWidth - 32,
     zIndex: 100,
     paddingHorizontal: 16,
     paddingVertical: 10,

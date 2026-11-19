@@ -75,7 +75,7 @@ export type Article = {
   blocks: Block[] | null;
 };
 
-export type Comment = { id: number; who: string; t: string; up: number; min: number; kids: Comment[]; liked?: boolean };
+export type Comment = { id: number; who: string; t: string; up: number; min: number; kids: Comment[] };
 
 export type UserPost = {
   id: string;

@@ -59,6 +59,11 @@ describe('format', () => {
     expect(sortComments(list, 'new').map((x) => x.id)).toEqual([1, 2]);
   });
 
+  it('counts my own ▲ when sorting by top', () => {
+    const list = [c(1, 5, 0), c(2, 5, 0)];
+    expect(sortComments(list, 'top', (x) => x.id === 2).map((x) => x.id)).toEqual([2, 1]);
+  });
+
   it('splits <mark>', () => {
     expect(splitMarks('賃金は<mark>一部に</mark>みられる')).toEqual([
       { t: '賃金は', mark: false },

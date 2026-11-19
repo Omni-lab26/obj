@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import type { Article, Comment, PostKind } from './data/types';
 
 // 1,234 → 1.2k
@@ -19,14 +20,28 @@ export const readingMinutes = (a: Article): number => {
 // コメントの数（返信も含む）
 export const countComments = (list: Comment[]): number => list.reduce((n, c) => n + 1 + countComments(c.kids), 0);
 
-// 並び替え：人気順（▲の数）／新しい順（分の少ない順）。返信の中も同じ順にする
-export const sortComments = (list: Comment[], by: 'top' | 'new'): Comment[] =>
-  [...list]
-    .sort((a, b) => (by === 'top' ? b.up + (b.liked ? 1 : 0) - (a.up + (a.liked ? 1 : 0)) : a.min - b.min))
-    .map((c) => ({ ...c, kids: sortComments(c.kids, by) }));
+// 並び替え：人気順（▲の数。自分の▲も足す）／新しい順（分の少ない順）。返信の中も同じ順にする
+export type CommentSort = 'top' | 'new';
+export const sortComments = (
+  list: Comment[],
+  by: CommentSort,
+  liked: (c: Comment) => boolean = () => false
+): Comment[] => {
+  const score = (c: Comment) => c.up + (liked(c) ? 1 : 0);
+  return [...list]
+    .sort((a, b) => (by === 'top' ? score(b) - score(a) : a.min - b.min))
+    .map((c) => ({ ...c, kids: sortComments(c.kids, by, liked) }));
+};
 
+// 何分前・何時間前・何日前（文言は翻訳ファイルから）
 export const ago = (min: number): string =>
-  min <= 0 ? 'たった今' : min < 60 ? `${min}分前` : `${Math.floor(min / 60)}時間前`;
+  min <= 0
+    ? t('time.now')
+    : min < 60
+      ? t('time.min', { n: min })
+      : min < 1440
+        ? t('time.hour', { n: Math.floor(min / 60) })
+        : t('time.day', { n: Math.floor(min / 1440) });
 
 // 「…<mark>強調</mark>…」を、ふつうの文字と強調の文字に分ける
 export const splitMarks = (s: string): { t: string; mark: boolean }[] =>

@@ -14,7 +14,8 @@ export default function Search() {
   const [q, setQ] = useState('');
   const feed = getFeed();
   const hits = q.trim() ? feed.filter((a) => (a.title + a.tag + (a.text ?? '')).includes(q.trim())) : [];
-  const open = (id: string) => router.replace({ pathname: '/article/[id]', params: { id } });
+  // 下にあるタブの画面まで戻ってから記事を開く（タブの画面を重ねて作らない）
+  const open = (id: string) => router.dismissTo({ pathname: '/article/[id]', params: { id } });
   return (
     <Page>
       <View style={[styles.bar, { paddingTop: insets.top + 10 }]}>

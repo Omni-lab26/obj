@@ -3276,20 +3276,15 @@
               "t": "会見は「データ次第」の連発でした",
               "up": 1,
               "min": 3,
-              "kids": [],
-              "liked": false
+              "kids": []
              }
-            ],
-            "liked": false
+            ]
            }
-          ],
-          "liked": false
+          ]
          }
-        ],
-        "liked": false
+        ]
        }
-      ],
-      "liked": false
+      ]
      },
      {
       "id": 106,
@@ -3297,11 +3292,9 @@
       "t": "12月は年末の流動性も気になる。決めるなら1月では？",
       "up": 6,
       "min": 10,
-      "kids": [],
-      "liked": false
+      "kids": []
      }
-    ],
-    "liked": false
+    ]
    },
    {
     "id": 108,
@@ -3309,8 +3302,7 @@
     "t": "Statement tweak matters more than the hold. Watching JGB 2y auction tomorrow.",
     "up": 27,
     "min": 22,
-    "kids": [],
-    "liked": false
+    "kids": []
    },
    {
     "id": 110,
@@ -3325,11 +3317,9 @@
       "t": "メガは逆に、利上げ前に預金を集めに動いてます",
       "up": 7,
       "min": 20,
-      "kids": [],
-      "liked": false
+      "kids": []
      }
-    ],
-    "liked": false
+    ]
    },
    {
     "id": 112,
@@ -3344,11 +3334,9 @@
       "t": "「次はいつ上げるか」の見通しで動くからです。今回は時期が読めず、円を買う理由が弱い",
       "up": 15,
       "min": 4,
-      "kids": [],
-      "liked": false
+      "kids": []
      }
-    ],
-    "liked": false
+    ]
    }
   ],
   "p1": [
@@ -3365,11 +3353,9 @@
       "t": "同意。ただ債券の反応は鈍い",
       "up": 5,
       "min": 20,
-      "kids": [],
-      "liked": false
+      "kids": []
      }
-    ],
-    "liked": false
+    ]
    },
    {
     "id": 115,
@@ -3377,8 +3363,7 @@
     "t": "Interesting read. Volumes were light though.",
     "up": 8,
     "min": 44,
-    "kids": [],
-    "liked": false
+    "kids": []
    },
    {
     "id": 116,
@@ -3386,8 +3371,7 @@
     "t": "個人的には来週のデータが本番",
     "up": 3,
     "min": 60,
-    "kids": [],
-    "liked": false
+    "kids": []
    }
   ],
   "p2": [
@@ -3404,11 +3388,9 @@
       "t": "同意。ただ債券の反応は鈍い",
       "up": 5,
       "min": 20,
-      "kids": [],
-      "liked": false
+      "kids": []
      }
-    ],
-    "liked": false
+    ]
    },
    {
     "id": 119,
@@ -3416,8 +3398,7 @@
     "t": "Interesting read. Volumes were light though.",
     "up": 8,
     "min": 44,
-    "kids": [],
-    "liked": false
+    "kids": []
    },
    {
     "id": 120,
@@ -3425,8 +3406,7 @@
     "t": "個人的には来週のデータが本番",
     "up": 3,
     "min": 60,
-    "kids": [],
-    "liked": false
+    "kids": []
    }
   ],
   "p3": [
@@ -3443,11 +3423,9 @@
       "t": "同意。ただ債券の反応は鈍い",
       "up": 5,
       "min": 20,
-      "kids": [],
-      "liked": false
+      "kids": []
      }
-    ],
-    "liked": false
+    ]
    },
    {
     "id": 123,
@@ -3455,8 +3433,7 @@
     "t": "Interesting read. Volumes were light though.",
     "up": 8,
     "min": 44,
-    "kids": [],
-    "liked": false
+    "kids": []
    },
    {
     "id": 124,
@@ -3464,8 +3441,7 @@
     "t": "個人的には来週のデータが本番",
     "up": 3,
     "min": 60,
-    "kids": [],
-    "liked": false
+    "kids": []
    }
   ],
   "p4": [
@@ -3482,11 +3458,9 @@
       "t": "同意。ただ債券の反応は鈍い",
       "up": 5,
       "min": 20,
-      "kids": [],
-      "liked": false
+      "kids": []
      }
-    ],
-    "liked": false
+    ]
    },
    {
     "id": 127,
@@ -3494,8 +3468,7 @@
     "t": "Interesting read. Volumes were light though.",
     "up": 8,
     "min": 44,
-    "kids": [],
-    "liked": false
+    "kids": []
    },
    {
     "id": 128,
@@ -3503,8 +3476,7 @@
     "t": "個人的には来週のデータが本番",
     "up": 3,
     "min": 60,
-    "kids": [],
-    "liked": false
+    "kids": []
    }
   ],
   "p6": [
@@ -3521,11 +3493,9 @@
       "t": "同意。ただ債券の反応は鈍い",
       "up": 5,
       "min": 20,
-      "kids": [],
-      "liked": false
+      "kids": []
      }
-    ],
-    "liked": false
+    ]
    },
    {
     "id": 131,
@@ -3533,8 +3503,7 @@
     "t": "Interesting read. Volumes were light though.",
     "up": 8,
     "min": 44,
-    "kids": [],
-    "liked": false
+    "kids": []
    },
    {
     "id": 132,
@@ -3542,8 +3511,7 @@
     "t": "個人的には来週のデータが本番",
     "up": 3,
     "min": 60,
-    "kids": [],
-    "liked": false
+    "kids": []
    }
   ],
   "p7": [
@@ -3560,11 +3528,9 @@
       "t": "同意。ただ債券の反応は鈍い",
       "up": 5,
       "min": 20,
-      "kids": [],
-      "liked": false
+      "kids": []
      }
-    ],
-    "liked": false
+    ]
    },
    {
     "id": 135,
@@ -3572,8 +3538,7 @@
     "t": "Interesting read. Volumes were light though.",
     "up": 8,
     "min": 44,
-    "kids": [],
-    "liked": false
+    "kids": []
    },
    {
     "id": 136,
@@ -3581,8 +3546,7 @@
     "t": "個人的には来週のデータが本番",
     "up": 3,
     "min": 60,
-    "kids": [],
-    "liked": false
+    "kids": []
    }
   ],
   "p5": [
@@ -3599,11 +3563,9 @@
       "t": "同意。ただ債券の反応は鈍い",
       "up": 5,
       "min": 20,
-      "kids": [],
-      "liked": false
+      "kids": []
      }
-    ],
-    "liked": false
+    ]
    },
    {
     "id": 139,
@@ -3611,8 +3573,7 @@
     "t": "Interesting read. Volumes were light though.",
     "up": 8,
     "min": 44,
-    "kids": [],
-    "liked": false
+    "kids": []
    },
    {
     "id": 140,
@@ -3620,8 +3581,7 @@
     "t": "個人的には来週のデータが本番",
     "up": 3,
     "min": 60,
-    "kids": [],
-    "liked": false
+    "kids": []
    }
   ]
  },
@@ -3654,7 +3614,6 @@
    "min": 25,
    "tag": "#債券",
    "up": 48,
-   "liked": false,
    "saved": false,
    "t": "今週の米国債の入札をまとめました。\n\n火曜 3年債、水曜 10年債、木曜 30年債。先週の10年債は人気がいまひとつだったので、今週も「入札の結果が出る時間（日本時間の深夜3時）」に金利がはねやすいです。\n\n個人的には、海外の買い手がどれくらい入るか（間接入札の割合）を見ています。",
    "link": {
@@ -3668,7 +3627,6 @@
    "min": 52,
    "tag": "#為替",
    "up": 31,
-   "liked": false,
    "saved": false,
    "t": "Asia FX this week: KRW and TWD both saw steady exporter selling. Feels like the same flow Tokyo desks describe for USDJPY at 152.",
    "quote": "yen"
@@ -3679,7 +3637,6 @@
    "min": 130,
    "tag": "#銀行",
    "up": 27,
-   "liked": false,
    "saved": false,
    "t": "地方銀行の現場から。\n日銀が据え置きでも、預金の金利を上げる競争はじわじわ続いています。ネット銀行のキャンペーンに合わせて動くお客さんが、思ったより多いです。"
   },
@@ -3689,7 +3646,6 @@
    "min": 190,
    "tag": "#日銀",
    "up": 19,
-   "liked": false,
    "saved": false,
    "t": "今日の声明、「広がり」の一語でここまで議論が伸びるのは面白い。配信の議論、まだ読んでない人はぜひ。",
    "quote": "boj"
@@ -3700,7 +3656,6 @@
    "min": 75,
    "tag": "#物価",
    "up": 22,
-   "liked": false,
    "saved": false,
    "t": "電気代の配信を読んで、うちの明細を見直しました。去年の同じ月より 1,200円高い…。みなさんの家はどうですか？"
   },
@@ -3710,7 +3665,6 @@
    "min": 240,
    "tag": "#仕事",
    "up": 17,
-   "liked": false,
    "saved": false,
    "t": "取引先の中小企業でも、今年は賃上げが3%を超えたところが多いです。人手が足りないのが一番の理由みたい。"
   },
@@ -3720,7 +3674,6 @@
    "min": 300,
    "tag": "#マクロ",
    "up": 12,
-   "liked": false,
    "saved": false,
    "t": "London open take: gilts calmer than expected. Watching whether the BoE minutes next week lean dovish."
   }

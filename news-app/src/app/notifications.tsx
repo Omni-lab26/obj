@@ -34,7 +34,9 @@ export default function Notifications() {
               .map((n, i) => (
                 <Pressable
                   key={i}
-                  onPress={() => n.art && router.push({ pathname: '/article/[id]', params: { id: n.art, c: '1' } })}
+                  onPress={() =>
+                    n.art && router.dismissTo({ pathname: '/article/[id]', params: { id: n.art, c: '1' } })
+                  }
                   style={[styles.row, n.unread && styles.unread]}>
                   {n.unread ? <View style={styles.dot} /> : <View style={{ width: 6 }} />}
                   <View style={{ flex: 1 }}>
