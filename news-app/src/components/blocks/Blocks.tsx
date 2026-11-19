@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useRef, useState, type ReactNode } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import Svg, { Circle, Line, Polyline } from 'react-native-svg';
@@ -8,7 +8,7 @@ import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 import { useDataVersion, vote, voteOf } from '@/lib/data';
 import { refImage } from '@/lib/data/images';
 import type { Block } from '@/lib/data/types';
-import { calcOut, linePoints, num, splitMarks } from '@/lib/format';
+import { CALC, calcOut, calcSnap, calcStep, linePoints, num, splitMarks } from '@/lib/format';
 import { t } from '@/i18n';
 import { chartColors, colors, fonts, space, type } from '@theme';
 
@@ -20,45 +20,92 @@ import { toast } from '../Toast';
 
 /** 図を長押ししたときに呼ぶ（記事の画面が受け取って、メニューを出す） */
 export const FigureCtx = createContext<(title: string) => void>(() => {});
+/** 図の中の部品（なぞる場所・切りかえ・マス）からも、長押しでメニューを出せるようにする */
+const MenuCtx = createContext<() => void>(() => {});
+const LONG_PRESS = 450;
+
+function useFigureMenu(title: string) {
+  const onFigure = useContext(FigureCtx);
+  return () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    onFigure(title);
+  };
+}
 
 function Obj({ title, tag, children, hint }: { title?: string; tag?: string; children: ReactNode; hint?: string }) {
-  const onFigure = useContext(FigureCtx);
+  const openMenu = useFigureMenu(title ?? t('blocks.figure'));
   return (
-    <Pressable
-      delayLongPress={450}
-      onLongPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-        onFigure(title ?? '図');
-      }}
-      style={({ pressed }) => [s.obj, pressed && { transform: [{ scale: 0.985 }] }]}>
-      {title || tag ? (
-        <View style={s.ohd}>
-          <Text style={s.ohdT}>{title}</Text>
-          {tag ? <Text style={s.otag}>{tag}</Text> : null}
-        </View>
-      ) : null}
-      {children}
-      {hint ? <Text style={s.hint}>{hint}</Text> : null}
-    </Pressable>
+    <MenuCtx.Provider value={openMenu}>
+      {/* 図全体を1つの部品にしない（読み上げで中のボタンを1つずつ選べるように） */}
+      <Pressable
+        accessible={false}
+        delayLongPress={LONG_PRESS}
+        onLongPress={openMenu}
+        style={({ pressed }) => [s.obj, pressed && { transform: [{ scale: 0.985 }] }]}>
+        {title || tag ? (
+          <View
+            style={s.ohd}
+            accessible
+            accessibilityRole="header"
+            accessibilityLabel={title}
+            accessibilityActions={[{ name: 'longpress', label: t('figure.menu') }]}
+            onAccessibilityAction={(e) => {
+              if (e.nativeEvent.actionName === 'longpress') openMenu();
+            }}>
+            <Text style={s.ohdT}>{title}</Text>
+            {tag ? <Text style={s.otag}>{tag}</Text> : null}
+          </View>
+        ) : null}
+        {children}
+        {hint ? <Text style={s.hint}>{hint}</Text> : null}
+      </Pressable>
+    </MenuCtx.Provider>
   );
 }
 
+type TouchEv = { nativeEvent: { locationX: number; pageX: number; pageY: number } };
+
 // 指でなぞる場所（0〜1）を返す。縦のスクロールより先に受け取る。
-function useScrub(onPos: (x: number) => void) {
-  const [w, setW] = useState(1);
-  const handle = (e: { nativeEvent: { locationX: number } }) =>
-    onPos(Math.max(0, Math.min(1, e.nativeEvent.locationX / w)));
+// 位置はなぞる面そのものから測る（pointerEvents="box-only"。中の棒から測ると、いつも左端になる）。
+// 指を離すか、ページのスクロールに取られたら onEnd。動かさずに押し続けたら図のメニュー。
+function useScrub(onPos: (x: number) => void, onEnd?: () => void) {
+  const openMenu = useContext(MenuCtx);
+  const [w, setW] = useState(0);
+  const hold = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const start = useRef({ x: 0, y: 0 });
+  const handle = (e: TouchEv) => onPos(Math.max(0, Math.min(1, e.nativeEvent.locationX / (w || 1))));
+  const end = () => {
+    clearTimeout(hold.current);
+    onEnd?.();
+  };
   return {
-    onLayout: (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width),
-    onStartShouldSetResponder: () => true,
-    onMoveShouldSetResponder: () => true,
-    onResponderTerminationRequest: () => false,
-    onResponderGrant: handle,
-    onResponderMove: handle,
+    width: w,
+    view: {
+      pointerEvents: 'box-only' as const,
+      onLayout: (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width),
+      onStartShouldSetResponder: () => true,
+      onMoveShouldSetResponder: () => true,
+      onResponderTerminationRequest: () => false,
+      onResponderGrant: (e: TouchEv) => {
+        start.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
+        clearTimeout(hold.current);
+        hold.current = setTimeout(openMenu, LONG_PRESS);
+        handle(e);
+      },
+      onResponderMove: (e: TouchEv) => {
+        const dx = e.nativeEvent.pageX - start.current.x;
+        const dy = e.nativeEvent.pageY - start.current.y;
+        if (dx * dx + dy * dy > 64) clearTimeout(hold.current);
+        handle(e);
+      },
+      onResponderRelease: end,
+      onResponderTerminate: end,
+    },
   };
 }
 
 function Seg({ items, value, onChange }: { items: string[]; value: string; onChange: (v: string) => void }) {
+  const openMenu = useContext(MenuCtx);
   return (
     <View style={s.seg}>
       {items.map((it) => (
@@ -66,7 +113,10 @@ function Seg({ items, value, onChange }: { items: string[]; value: string; onCha
           key={it}
           accessibilityRole="button"
           accessibilityState={{ selected: it === value }}
+          delayLongPress={LONG_PRESS}
+          onLongPress={openMenu}
           onPress={() => {
+            if (it === value) return;
             Haptics.selectionAsync().catch(() => {});
             onChange(it);
           }}
@@ -83,18 +133,25 @@ function LineChart({ b }: { b: Extract<Block, { t: 'line' }> }) {
   const [frame, setFrame] = useState(b.def);
   const pts = linePoints(b.frames[frame]);
   const [pick, setPick] = useState<number | null>(null);
-  const scrub = useScrub((x) => setPick(Math.round(x * (pts.length - 1))));
-  const W = 300;
+  // 離したら「いま」の値に戻す
+  const scrub = useScrub(
+    (x) => setPick(Math.round(x * (pts.length - 1))),
+    () => setPick(null)
+  );
+  // 実際の幅で描く（引きのばすと丸がつぶれる）。両端は丸の半径ぶん内側に
+  const W = scrub.width || 300;
   const H = 110;
+  const R = 7;
   const min = Math.min(...pts);
   const max = Math.max(...pts);
-  const y = (v: number) => H - 6 - ((v - min) / (max - min || 1)) * (H - 12);
-  const x = (i: number) => (i / (pts.length - 1)) * W;
+  const y = (v: number) => H - R - ((v - min) / (max - min || 1)) * (H - R * 2);
+  const x = (i: number) => R + (i / (pts.length - 1)) * (W - R * 2);
   const d = pts.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
   const i = pick ?? pts.length - 1;
   const first = pts[0];
   const cur = pts[i];
   const ch = cur - first;
+  const sign = ch >= 0 ? '+' : '−';
   return (
     <Obj title={b.title} tag="PULL" hint={t('blocks.lineHint')}>
       <View style={s.bigRow}>
@@ -102,10 +159,12 @@ function LineChart({ b }: { b: Extract<Block, { t: 'line' }> }) {
         <Text style={s.unit}>{b.unit}</Text>
       </View>
       <Text style={[s.chg, { color: ch >= 0 ? colors.ok : colors.accent }]}>
-        {ch >= 0 ? '▲' : '▼'} {num(Math.abs(ch), b.dec)} ({((ch / first) * 100).toFixed(2)}%)
+        {ch >= 0 ? '▲' : '▼'} {sign}
+        {num(Math.abs(ch), b.dec)}（{sign}
+        {Math.abs((ch / first) * 100).toFixed(2)}%）
       </Text>
-      <View {...scrub} onTouchEnd={() => setPick(null)} style={{ height: H, marginTop: 10 }}>
-        <Svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+      <View {...scrub.view} style={{ height: H, marginTop: 10 }}>
+        <Svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}>
           <Polyline points={d} fill="none" stroke={chartColors.accent} strokeWidth={2} strokeLinejoin="round" />
           {pick !== null ? <Line x1={x(i)} x2={x(i)} y1={0} y2={H} stroke={chartColors.grid} strokeWidth={1} /> : null}
           <Circle cx={x(i)} cy={y(cur)} r={4.5} fill={colors.white} stroke={chartColors.accent} strokeWidth={2.5} />
@@ -121,20 +180,26 @@ function Bars({ b }: { b: Extract<Block, { t: 'bars' }> }) {
   const scrub = useScrub((x) => setPick(Math.min(b.cols.length - 1, Math.floor(x * b.cols.length))));
   const max = Math.max(...b.cols.map((c) => c[1].reduce((p, q) => p + q, 0)));
   const vs = b.cols[pick][1];
+  // 割合（%）のグラフは、足すといつも 100 なので合計は出さない
+  const showTotal = b.unit !== '%';
   return (
     <Obj title={b.title} tag="SCRUB" hint={t('blocks.barsHint')}>
       {b.sub ? <Text style={s.osub}>{b.sub}</Text> : null}
       <View style={s.bigRow}>
-        <Text style={s.big}>
-          {num(
-            vs.reduce((p, q) => p + q, 0),
-            b.dec ?? 0
-          )}
-        </Text>
-        <Text style={s.unit}>{b.unit}</Text>
+        {showTotal ? (
+          <>
+            <Text style={s.big}>
+              {num(
+                vs.reduce((p, q) => p + q, 0),
+                b.dec ?? 0
+              )}
+            </Text>
+            <Text style={s.unit}>{b.unit}</Text>
+          </>
+        ) : null}
         <Text style={[s.unit, { marginLeft: 'auto', fontFamily: fonts.mono }]}>{b.cols[pick][0]}</Text>
       </View>
-      <View {...scrub} style={s.bars}>
+      <View {...scrub.view} style={s.bars}>
         {b.cols.map((c, i) => {
           const tot = c[1].reduce((p, q) => p + q, 0);
           return (
@@ -153,6 +218,7 @@ function Bars({ b }: { b: Extract<Block, { t: 'bars' }> }) {
           <Text key={sr[0]} style={s.legendT}>
             <Text style={{ color: sr[1] }}>■ </Text>
             {sr[0]} {num(vs[j], b.dec ?? 0)}
+            {b.unit === '%' ? '%' : ''}
           </Text>
         ))}
       </View>
@@ -184,7 +250,12 @@ function Steps({ b }: { b: Extract<Block, { t: 'steps' }> }) {
   return (
     <Obj title={b.title} tag="STEPS">
       {b.items.map(([when, what], i) => (
-        <Pressable key={when} onPress={() => setOn(i)} style={s.step}>
+        <Pressable
+          key={when}
+          accessibilityRole="button"
+          accessibilityState={{ selected: i === on }}
+          onPress={() => setOn(i)}
+          style={s.step}>
           <View style={s.stepRail}>
             <View style={[s.stepDot, i < on && { backgroundColor: colors.text }, i === on && s.stepDotOn]} />
           </View>
@@ -207,6 +278,7 @@ function Poll({ b }: { b: Extract<Block, { t: 'poll' }> }) {
         <Pressable
           key={label}
           accessibilityRole="button"
+          accessibilityState={{ selected: mine === i, disabled: mine !== undefined }}
           disabled={mine !== undefined}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -239,6 +311,9 @@ function Cards({ b }: { b: Extract<Block, { t: 'cards' }> }) {
           return (
             <Pressable
               key={it[0]}
+              accessible={depth === 0}
+              accessibilityRole="button"
+              accessibilityHint={t('blocks.cardsHint')}
               onPress={() => setTop((top + 1) % n)}
               style={[
                 s.card,
@@ -265,9 +340,19 @@ function Cards({ b }: { b: Extract<Block, { t: 'cards' }> }) {
 
 function Calc({ b }: { b: Extract<Block, { t: 'calc' }> }) {
   const [v, setV] = useState(b.val);
-  const step = Math.max(1, Math.round((b.max - b.min) / 20));
+  const step = calcStep(b.kind);
   const out = calcOut(b.kind, v);
-  const lead = { loan: '毎月の返済が', power: '1か月の電気代が', fx: '受け取れるのは', rice: '1年で' }[b.kind];
+  const repeat = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const bump = (dir: number) => setV((x) => calcSnap(x + dir * step, b.min, b.max, step));
+  const stop = () => clearInterval(repeat.current);
+  const note =
+    b.kind === 'power'
+      ? t('blocks.calcNote.power', { r: CALC.power.perKwh })
+      : b.kind === 'loan'
+        ? t('blocks.calcNote.loan', { from: CALC.loan.from, to: CALC.loan.to, years: CALC.loan.years })
+        : b.kind === 'rice'
+          ? t('blocks.calcNote.rice', { d: num(CALC.rice.diff) })
+          : t('blocks.calcNote.fx', { rate: CALC.fx.rate, alt: CALC.fx.alt, alt2: out.sub ?? '' });
   return (
     <Obj title={b.title} tag="CALC">
       <View style={s.calcRow}>
@@ -281,25 +366,35 @@ function Calc({ b }: { b: Extract<Block, { t: 'calc' }> }) {
           <Pressable
             key={dir}
             accessibilityRole="button"
-            accessibilityLabel={dir < 0 ? '減らす' : '増やす'}
+            accessibilityLabel={dir < 0 ? t('blocks.decrease') : t('blocks.increase')}
             onPress={() => {
               Haptics.selectionAsync().catch(() => {});
-              setV((x) => Math.max(b.min, Math.min(b.max, x + dir * step)));
+              bump(dir);
             }}
+            // 押し続けると続けて変わる
+            delayLongPress={350}
+            onLongPress={() => {
+              stop();
+              repeat.current = setInterval(() => bump(dir), 90);
+            }}
+            onPressOut={stop}
             style={s.stepBtn}>
             <Text style={s.stepBtnT}>{dir < 0 ? '−' : '+'}</Text>
           </Pressable>
         ))}
       </View>
       <View style={s.bigRow}>
-        <Text style={s.unit}>{lead}</Text>
-        <Text style={s.big}>{out.main}</Text>
-        {b.kind !== 'fx' ? <Text style={s.unit}>増えます</Text> : null}
+        <Text style={s.unit}>{t(`blocks.calcLead.${b.kind}`)}</Text>
+        {/* 「増えます」と続けるので「+」は付けない */}
+        <Text style={s.big}>{out.main.replace(/^\+/, '')}</Text>
+        {b.kind !== 'fx' ? <Text style={s.unit}>{t('blocks.calcMore')}</Text> : null}
       </View>
-      {out.sub ? <Text style={s.osub}>{out.sub}</Text> : null}
+      <Text style={s.osub}>{note}</Text>
     </Obj>
   );
 }
+
+const AMOUNTS = [5, 10, 30];
 
 function Swap({ b }: { b: Extract<Block, { t: 'swap' }> }) {
   const [amt, setAmt] = useState(b.amt);
@@ -307,18 +402,22 @@ function Swap({ b }: { b: Extract<Block, { t: 'swap' }> }) {
   return (
     <Obj title={b.title} tag="SWAP">
       <View style={s.swapBox}>
-        <Text style={s.osub}>両替する円</Text>
+        <Text style={s.osub}>{t('blocks.swapFrom')}</Text>
         <Text style={s.big}>¥{num(amt)}</Text>
       </View>
       <View style={s.swapBox}>
-        <Text style={s.osub}>受け取れるドル（1ドル {b.rate}円）</Text>
+        <Text style={s.osub}>{t('blocks.swapTo', { rate: num(b.rate, 2) })}</Text>
         <Text style={s.big}>${num(usd)}</Text>
       </View>
       <Seg
-        items={['5万円', '10万円', '30万円']}
-        value={`${amt / 10000}万円`}
-        onChange={(x) => setAmt(Number(x.replace('万円', '')) * 10000)}
+        items={AMOUNTS.map((n) => t('blocks.manYen', { n }))}
+        value={t('blocks.manYen', { n: amt / 10000 })}
+        onChange={(x) => {
+          const i = AMOUNTS.findIndex((n) => t('blocks.manYen', { n }) === x);
+          if (i >= 0) setAmt(AMOUNTS[i] * 10000);
+        }}
       />
+      <Text style={s.osub}>{t('blocks.swapNote')}</Text>
     </Obj>
   );
 }
@@ -328,6 +427,8 @@ function ICompare({ b }: { b: Extract<Block, { t: 'icompare' }> }) {
   const W = 300;
   const H = 110;
   const all = [...b.a.pts, ...b.b.pts];
+  // 小数の桁をそろえる（0.68 と 1.1 を 0.68 / 1.10 に）
+  const dec = Math.max(...all.map((v) => (String(v).split('.')[1] ?? '').length));
   const min = Math.min(...all) - 0.2;
   const max = Math.max(...all) + 0.2;
   const pts = (arr: number[]) =>
@@ -356,7 +457,7 @@ function ICompare({ b }: { b: Extract<Block, { t: 'icompare' }> }) {
       <View style={s.xlabels}>
         {b.xlabels.map((x, i) => (
           <Text key={x} style={s.legendT}>
-            {x} {(side === 'a' ? b.a.pts : b.b.pts)[i]}
+            {x} {num((side === 'a' ? b.a.pts : b.b.pts)[i], dec)}
             {b.ylab}
           </Text>
         ))}
@@ -375,6 +476,8 @@ function Heat({ b }: { b: Extract<Block, { t: 'heat' }> }) {
   const min = Math.min(...all);
   const max = Math.max(...all);
   const [pick, setPick] = useState<[number, number] | null>(null);
+  const openMenu = useContext(MenuCtx);
+  const fmt = (v: number) => `${b.pre ?? ''}${num(v, b.dec ?? 0)}${b.unit ?? ''}`;
   return (
     <Obj title={b.title} tag="HEAT">
       <View style={s.heatRow}>
@@ -391,31 +494,38 @@ function Heat({ b }: { b: Extract<Block, { t: 'heat' }> }) {
           {b.vals[i].map((v, j) => (
             <Pressable
               key={j}
+              accessibilityRole="button"
+              accessibilityLabel={`${r} ${b.cols[j]} ${fmt(v)}`}
+              accessibilityState={{ selected: pick?.[0] === i && pick?.[1] === j }}
+              delayLongPress={LONG_PRESS}
+              onLongPress={openMenu}
               onPress={() => setPick([i, j])}
-              style={[
-                s.heatC,
-                { backgroundColor: `rgba(255,106,26,${(0.12 + ((v - min) / (max - min || 1)) * 0.78).toFixed(2)})` },
-                pick?.[0] === i && pick?.[1] === j && s.heatOn,
-              ]}
-            />
+              style={s.heatHit}>
+              <View
+                style={[
+                  s.heatC,
+                  // いちばん薄いマスでも地と見分けられる濃さにする
+                  { backgroundColor: `rgba(255,106,26,${(0.3 + ((v - min) / (max - min || 1)) * 0.65).toFixed(2)})` },
+                  pick?.[0] === i && pick?.[1] === j && s.heatOn,
+                ]}
+              />
+            </Pressable>
           ))}
         </View>
       ))}
       <Text style={[s.osub, { marginTop: 8 }]}>
-        {pick
-          ? `${b.rows[pick[0]]} · ${b.cols[pick[1]]}：${num(b.vals[pick[0]][pick[1]])}${b.money ? '円' : ''}`
-          : 'マスをタップすると数字が出ます'}
+        {pick ? `${b.rows[pick[0]]} · ${b.cols[pick[1]]}：${fmt(b.vals[pick[0]][pick[1]])}` : t('blocks.heatHint')}
       </Text>
     </Obj>
   );
 }
 
 /** 図の画像：横幅いっぱい、縦は画像の比率のまま。長押しでメニュー */
-function FigImage({ src }: { src: number }) {
-  const onFigure = useContext(FigureCtx);
+function FigImage({ src, title }: { src: number; title: string }) {
+  const openMenu = useFigureMenu(title);
   const [ratio, setRatio] = useState(1.6);
   return (
-    <Pressable delayLongPress={450} onLongPress={() => onFigure('図')}>
+    <Pressable accessibilityRole="image" accessibilityLabel={title} delayLongPress={LONG_PRESS} onLongPress={openMenu}>
       <Image
         source={src}
         onLoad={(e) => setRatio(e.source.width / e.source.height)}
@@ -432,7 +542,12 @@ function Accordion({ b }: { b: Extract<Block, { t: 'accordion' }> }) {
     <Obj title={b.title} tag="TIMELINE">
       <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
         {b.items.map((it, i) => (
-          <Pressable key={it.h} onPress={() => setOn(i)} style={[s.accTab, i === on && s.accTabOn]}>
+          <Pressable
+            key={it.h}
+            accessibilityRole="button"
+            accessibilityState={{ selected: i === on }}
+            onPress={() => setOn(i)}
+            style={[s.accTab, i === on && s.accTabOn]}>
             <Text style={[s.accTabT, i === on && { color: '#111' }]}>{it.h}</Text>
           </Pressable>
         ))}
@@ -447,14 +562,92 @@ function Accordion({ b }: { b: Extract<Block, { t: 'accordion' }> }) {
   );
 }
 
+/** 「Q. …　A. …」の段落を、問いと答えに分けて出す */
+function QA({ q, a }: { q: string; a: string }) {
+  return (
+    <View style={s.qa}>
+      <Text style={s.qaQ} maxFontSizeMultiplier={type.body.max}>
+        {q}
+      </Text>
+      <Text style={s.p} maxFontSizeMultiplier={type.body.max}>
+        {a}
+      </Text>
+    </View>
+  );
+}
+
+/** 「用語：説明／用語：説明」の段落を、用語ごとの行に分けて出す */
+function Glossary({ items }: { items: [string, string][] }) {
+  return (
+    <View style={s.gl}>
+      {items.map(([term, desc]) => (
+        <Text key={term} style={s.p} maxFontSizeMultiplier={type.body.max}>
+          <Text style={s.glT}>{term}</Text>
+          {'　'}
+          {desc}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
+function Paragraph({ x }: { x: string }) {
+  const qa = x.match(/^Q\. (.+?)　A\. (.+)$/s);
+  if (qa) return <QA q={qa[1]} a={qa[2]} />;
+  const parts = x.split('／');
+  if (parts.length > 1 && parts.every((p) => p.includes('：'))) {
+    return (
+      <Glossary
+        items={parts.map((p) => {
+          const k = p.indexOf('：');
+          return [p.slice(0, k), p.slice(k + 1)] as [string, string];
+        })}
+      />
+    );
+  }
+  return (
+    <Text style={s.p} maxFontSizeMultiplier={type.body.max}>
+      {x}
+    </Text>
+  );
+}
+
+function VideoBlock({ b }: { b: Extract<Block, { t: 'video' }> }) {
+  const openMenu = useFigureMenu(b.title);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={b.title}
+      onPress={() => toast(t('blocks.videoOpen'))}
+      delayLongPress={LONG_PRESS}
+      onLongPress={openMenu}
+      style={s.video}>
+      {refImage(`th${b.img}`) ? (
+        <>
+          <Image source={refImage(`th${b.img}`)} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.3)' }]} />
+        </>
+      ) : null}
+      <View style={s.play}>
+        <Icon name="play" size={22} color={colors.white} />
+      </View>
+      {refImage(`th${b.img}`) ? null : (
+        <Text style={s.videoT} numberOfLines={2}>
+          {b.title}
+        </Text>
+      )}
+      <View style={s.len}>
+        <Icon name="play" size={10} color={colors.youtube} />
+        <Text style={s.lenT}>{t('blocks.video', { len: b.len })}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
 export function BlockView({ b }: { b: Block }) {
   switch (b.t) {
     case 'p':
-      return (
-        <Text style={s.p} maxFontSizeMultiplier={type.body.max}>
-          {b.x}
-        </Text>
-      );
+      return <Paragraph x={b.x} />;
     case 'h':
       return (
         <Text style={s.h} accessibilityRole="header" maxFontSizeMultiplier={type.headline.max}>
@@ -462,38 +655,13 @@ export function BlockView({ b }: { b: Block }) {
         </Text>
       );
     case 'video':
-      return (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={b.title}
-          onPress={() => toast(t('blocks.videoOpen'))}
-          style={s.video}>
-          {refImage(`th${b.img}`) ? (
-            <>
-              <Image source={refImage(`th${b.img}`)} style={StyleSheet.absoluteFill} contentFit="cover" />
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.3)' }]} />
-            </>
-          ) : null}
-          <View style={s.play}>
-            <Icon name="play" size={22} color={colors.white} />
-          </View>
-          {refImage(`th${b.img}`) ? null : (
-            <Text style={s.videoT} numberOfLines={2}>
-              {b.title}
-            </Text>
-          )}
-          <View style={s.len}>
-            <Icon name="play" size={10} color={colors.youtube} />
-            <Text style={s.lenT}>{t('blocks.video', { len: b.len })}</Text>
-          </View>
-        </Pressable>
-      );
+      return <VideoBlock b={b} />;
     case 'fig': {
       const src = refImage(b.img);
       if (!src) return null;
       return (
         <View>
-          <FigImage src={src} />
+          <FigImage src={src} title={b.cap ?? t('blocks.figure')} />
           {b.cap ? <Text style={s.cap}>{b.cap}</Text> : null}
         </View>
       );
@@ -502,7 +670,10 @@ export function BlockView({ b }: { b: Block }) {
       return (
         <Obj title={b.label} tag="KEY NUMBER">
           <View style={s.bigRow}>
-            <Text style={[s.big, { fontSize: 34, lineHeight: 40 }]}>{num(b.value, b.dec)}</Text>
+            <Text style={[s.big, { fontSize: 34, lineHeight: 40 }]}>
+              {b.pre ?? ''}
+              {num(b.value, b.dec)}
+            </Text>
             <Text style={s.unit}>{b.suf}</Text>
           </View>
           {b.sub ? <Text style={s.osub}>{b.sub}</Text> : null}
@@ -584,7 +755,7 @@ const s = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
-  segB: { flex: 1, height: 32, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  segB: { flex: 1, minHeight: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   segOn: { backgroundColor: 'rgba(255,255,255,0.92)' },
   segT: { color: colors.faint, fontSize: 12, fontWeight: '600' },
   segTOn: { color: '#16161A' },
@@ -601,7 +772,8 @@ const s = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   cmpT: { color: colors.text, fontSize: 14.5, lineHeight: 25 },
-  mark: { color: '#FFB98F', backgroundColor: 'rgba(255,106,26,0.25)' },
+  // 変わったところは色だけでなく太字でも示す
+  mark: { color: '#FFB98F', backgroundColor: 'rgba(255,106,26,0.25)', fontWeight: '700' },
   step: { flexDirection: 'row', gap: 12 },
   stepRail: { width: 14, alignItems: 'center', borderLeftWidth: 0 },
   stepDot: { marginTop: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.25)' },
@@ -645,7 +817,7 @@ const s = StyleSheet.create({
   stepper: { flexDirection: 'row', gap: 8, marginTop: 10 },
   stepBtn: {
     flex: 1,
-    height: 38,
+    height: 44,
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
@@ -655,7 +827,8 @@ const s = StyleSheet.create({
   swapBox: { marginTop: 8, padding: 14, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.06)' },
   xlabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
   heatRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 5 },
-  heatC: { flex: 1, height: 26, borderRadius: 7 },
+  heatHit: { flex: 1, height: 36, justifyContent: 'center' },
+  heatC: { height: 28, borderRadius: 7 },
   heatOn: { borderWidth: 2, borderColor: colors.white },
   accTab: {
     flex: 1,
@@ -720,5 +893,9 @@ const s = StyleSheet.create({
     marginBottom: 8,
   },
   refT: { color: colors.text, fontSize: 13, lineHeight: 18 },
+  qa: { gap: 6, paddingLeft: 12, borderLeftWidth: 2, borderLeftColor: colors.line },
+  qaQ: { color: colors.text, fontSize: type.body.fontSize, lineHeight: type.body.lineHeight, fontWeight: '700' },
+  gl: { gap: 8 },
+  glT: { color: colors.text, fontWeight: '700' },
   refS: { color: 'rgba(255,255,255,0.55)', fontSize: 11, marginTop: 2 },
 });

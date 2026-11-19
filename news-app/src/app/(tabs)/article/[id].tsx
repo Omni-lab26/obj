@@ -141,7 +141,8 @@ function ArticleBody({ a, c }: { a: Article; c?: string }) {
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 200 }}>
-          <View>
+          {/* 記事の写真も、長押しでコメントに付けたり送ったりできる */}
+          <Pressable accessible={false} delayLongPress={450} onLongPress={() => setMenu(t('blocks.photo'))}>
             <Poster
               a={a}
               img={k === 'deep' ? `th${a.img}` : `sq${a.img}`}
@@ -154,7 +155,7 @@ function ArticleBody({ a, c }: { a: Article; c?: string }) {
               locations={[0, 0.4, 0.75, 1]}
               style={styles.fade}
             />
-          </View>
+          </Pressable>
           {a.brk || k === 'deep' ? (
             <View style={[styles.strip, { backgroundColor: a.brk ? colors.alert : '#6A4FD6' }]}>
               <Text style={styles.stripB}>{a.brk ? t('article.breakingBand') : t('article.deepBand')}</Text>

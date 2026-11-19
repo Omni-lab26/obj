@@ -71,19 +71,37 @@ export const linePoints = (f: { base: number; end: number; n: number; vol: numbe
 // 画面幅：320〜440 に収める
 export const clampWidth = (w: number, min = 320, max = 440): number => Math.max(min, Math.min(max, w));
 
-// 記事の計算の部品（電気代・住宅ローン・お米・両替）。結果の文字を返す
-export const calcOut = (kind: 'power' | 'loan' | 'fx' | 'rice', v: number): { main: string; sub?: string } => {
+// 記事の計算の部品（電気代・住宅ローン・お米・両替）。
+// 計算の前提はここにまとめ、画面の「目安です」の文にも同じ数字を出す（文と計算がずれないように）
+export type CalcKind = 'power' | 'loan' | 'fx' | 'rice';
+export const CALC = {
+  power: { perKwh: 1.15, step: 10 }, // 1kWh あたりの値上がり（円）
+  loan: { from: 0.68, to: 0.93, years: 35, step: 100 }, // 金利（%）
+  rice: { diff: 4280 - 3560, step: 1 }, // 5kg 1袋あたりの値上がり（円）
+  fx: { rate: 152.4, alt: 150, step: 1 }, // 1ドルの円
+} as const;
+
+/** ＋−の刻み（記事の例の数字に合わせられるよう、きりのいい数） */
+export const calcStep = (kind: CalcKind): number => CALC[kind].step;
+
+/** 刻みの目にそろえて、はみ出さないようにする */
+export const calcSnap = (v: number, min: number, max: number, step: number): number =>
+  Math.max(min, Math.min(max, min + Math.round((v - min) / step) * step));
+
+/** 結果の文字を返す。増える額には「+」を付ける */
+export const calcOut = (kind: CalcKind, v: number): { main: string; sub?: string } => {
   const yen = (n: number) => Math.round(n).toLocaleString('ja-JP');
-  if (kind === 'fx') return { main: `$${yen((v * 10000) / 152.4)}`, sub: `150円なら $${yen((v * 10000) / 150)}` };
-  if (kind === 'rice') return { main: `+${yen(v * (4280 - 3560) * 12)}円` };
+  if (kind === 'fx') return { main: `$${yen((v * 10000) / CALC.fx.rate)}`, sub: `$${yen((v * 10000) / CALC.fx.alt)}` };
+  if (kind === 'rice') return { main: `+${yen(v * CALC.rice.diff * 12)}円` };
   if (kind === 'loan') {
-    const pay = (P: number, r: number) => {
-      const i = r / 12;
-      const n = 420;
+    const n = CALC.loan.years * 12;
+    const pay = (P: number, rate: number) => {
+      const i = rate / 100 / 12;
       return (P * i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
     };
     const P = v * 10000;
-    return { main: `+${yen(pay(P, 0.0093) - pay(P, 0.0068))}円` };
+    return { main: `+${yen(pay(P, CALC.loan.to) - pay(P, CALC.loan.from))}円` };
   }
-  return { main: `+${yen(v * 1.15)}円` };
+  // 電気代は 10円単位の目安にする（見出しの「+300円」とそろう）
+  return { main: `+${yen(Math.round((v * CALC.power.perKwh) / 10) * 10)}円` };
 };

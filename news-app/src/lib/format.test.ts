@@ -1,6 +1,7 @@
 import type { Article, Comment } from './data/types';
 import {
   calcOut,
+  calcSnap,
   clampWidth,
   countComments,
   kfmt,
@@ -88,9 +89,18 @@ describe('format', () => {
   });
 });
 
+describe('calcSnap', () => {
+  it('keeps values on the step grid and inside the range', () => {
+    expect(calcSnap(260 + 10, 120, 600, 10)).toBe(270);
+    expect(calcSnap(4000 - 100, 1000, 8000, 100)).toBe(3900);
+    expect(calcSnap(5, 120, 600, 10)).toBe(120);
+    expect(calcSnap(999, 120, 600, 10)).toBe(600);
+  });
+});
+
 describe('calcOut', () => {
   it('power and rice', () => {
-    expect(calcOut('power', 260).main).toBe('+299円');
+    expect(calcOut('power', 260).main).toBe('+300円');
     expect(calcOut('rice', 4).main).toBe('+34,560円');
   });
   it('loan: 0.25% more on 40M yen over 35 years is about 5,000 yen a month', () => {

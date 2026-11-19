@@ -7,7 +7,7 @@ export type Block =
   | { t: 'h'; x: string }
   | { t: 'video'; len: string; title: string; img?: number }
   | { t: 'fig'; img: string; cap?: string }
-  | { t: 'count'; label: string; value: number; dec: number; suf: string; sub?: string }
+  | { t: 'count'; label: string; value: number; dec: number; pre?: string; suf: string; sub?: string }
   | { t: 'compare'; title: string; a: [string, string]; b: [string, string] }
   | { t: 'steps'; title: string; items: [string, string][] }
   | { t: 'poll'; id: string; q: string; opts: [string, number][]; n: number }
@@ -40,7 +40,16 @@ export type Block =
       b: { label: string; pts: number[] };
       note?: string;
     }
-  | { t: 'heat'; title: string; rows: string[]; cols: string[]; vals: number[][]; money?: boolean }
+  | {
+      t: 'heat';
+      title: string;
+      rows: string[];
+      cols: string[];
+      vals: number[][];
+      unit?: string;
+      dec?: number;
+      pre?: string;
+    }
   | {
       t: 'calc';
       kind: 'power' | 'loan' | 'fx' | 'rice';
