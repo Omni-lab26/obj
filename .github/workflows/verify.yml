@@ -1,5 +1,6 @@
 name: verify
 
+# アプリは news-app/ の中にある。GitHub は一番上の .github/workflows だけを読むので、ここに置く
 on:
   push:
   pull_request:
@@ -7,11 +8,15 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: news-app
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: news-app/package-lock.json
       - run: npm ci
       - run: npm run verify
