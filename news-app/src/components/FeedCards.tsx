@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { isSaved, toggleSave, useDataVersion } from '@/lib/data';
+import { isSaved, toggleSave, useDataVersion, videoLen } from '@/lib/data';
 import type { Article } from '@/lib/data/types';
 import { kfmt, kindOf, readingMinutes } from '@/lib/format';
 import { t } from '@/i18n';
-import { colors, fonts, radius, space, type } from '@theme';
+import { colors, feedback, fonts, radius, space, type } from '@theme';
 
 import { Icon } from './Icon';
 import { Mark } from './Mark';
@@ -17,6 +17,15 @@ const KIND_STYLE = {
   note: { bg: 'rgba(46,196,182,0.18)', fg: colors.noteSoft, line: colors.note },
   deep: { bg: 'rgba(155,123,255,0.2)', fg: colors.deepSoft, line: colors.deep },
 } as const;
+
+const STRIPE = 3;
+const pressed = ({ pressed: p }: { pressed: boolean }) => (p ? { opacity: feedback.pressedOpacity } : null);
+
+/** 速報・ひとこと・深掘りの左の色の線。幅を取らないように重ねて描く（中身の左端をほかのカードとそろえる） */
+function Stripe({ color }: { color?: string }) {
+  if (!color) return null;
+  return <View pointerEvents="none" style={[styles.stripe, { backgroundColor: color }]} />;
+}
 
 const open = (id: string, comments?: boolean) =>
   router.push({ pathname: '/article/[id]', params: comments ? { id, c: '1' } : { id } });
@@ -42,20 +51,21 @@ function Acts({ a, go, onGo }: { a: Article; go: string; onGo: () => void }) {
   const saved = isSaved(a.id);
   return (
     <View style={styles.acts}>
-      <View style={styles.act} accessibilityLabel={`反応 ${a.r}`}>
+      <View style={styles.act} accessible accessibilityLabel={t('home.reactions', { n: a.r })}>
         <Icon name="up" size={15} color={colors.faint} strokeWidth={1.9} />
         <Text style={styles.actT}>{kfmt(a.r)}</Text>
       </View>
-      <View style={styles.act} accessibilityLabel={`声 ${a.c}`}>
+      <View style={styles.act} accessible accessibilityLabel={t('home.voices', { n: a.c })}>
         <Icon name="talk" size={15} color={colors.faint} strokeWidth={1.9} />
         <Text style={styles.actT}>{kfmt(a.c)}</Text>
       </View>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('article.save')}
+        accessibilityState={{ selected: saved }}
         hitSlop={8}
         onPress={() => toggleSave(a.id)}
-        style={styles.act}>
+        style={(st) => [styles.act, pressed(st)]}>
         <Icon
           name={saved ? 'saved' : 'save'}
           size={15}
@@ -63,10 +73,7 @@ function Acts({ a, go, onGo }: { a: Article; go: string; onGo: () => void }) {
           strokeWidth={1.9}
         />
       </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        onPress={onGo}
-        style={({ pressed }) => [styles.go, pressed && { opacity: 0.6 }]}>
+      <Pressable accessibilityRole="button" onPress={onGo} style={(st) => [styles.go, pressed(st)]}>
         <Text style={styles.goT}>{go}</Text>
       </Pressable>
     </View>
@@ -75,17 +82,23 @@ function Acts({ a, go, onGo }: { a: Article; go: string; onGo: () => void }) {
 
 export function SlotCard({ a }: { a: Article }) {
   const k = kindOf(a);
+  const len = videoLen(a);
   return (
-    <View
-      style={[styles.item, KIND_STYLE[k].line ? { borderLeftWidth: 3, borderLeftColor: KIND_STYLE[k].line } : null]}>
+    <View style={styles.item}>
+      <Stripe color={KIND_STYLE[k].line} />
       <By a={a} />
-      <Pressable accessibilityRole="link" accessibilityLabel={a.title} onPress={() => open(a.id)} style={styles.thumb}>
+      {/* 読み上げでは題名だけを記事へのリンクにする（同じ題名を2回読ませない） */}
+      <Pressable
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        onPress={() => open(a.id)}
+        style={(st) => [styles.thumb, pressed(st)]}>
         <Poster a={a} img={`sq${a.img}`} />
-        {k === 'slot' && a.vlen ? (
+        {len ? (
           <View style={styles.yt}>
             <Icon name="play" size={11} color={colors.white} />
             <Text style={styles.ytT}>
-              {t('home.youtube')} · {a.vlen}
+              {t('home.youtube')} · {len}
             </Text>
           </View>
         ) : null}
@@ -99,7 +112,7 @@ export function SlotCard({ a }: { a: Article }) {
         <Text style={styles.labT}>{(a.lab ?? '').toUpperCase()}</Text>
         <Text style={styles.tag}>{a.tag}</Text>
       </View>
-      <Pressable onPress={() => open(a.id)}>
+      <Pressable accessibilityRole="link" onPress={() => open(a.id)} style={pressed}>
         <Text style={styles.title} maxFontSizeMultiplier={type.headline.max}>
           {a.title}
         </Text>
@@ -111,9 +124,10 @@ export function SlotCard({ a }: { a: Article }) {
 
 export function NoteCard({ a }: { a: Article }) {
   return (
-    <View style={[styles.item, { borderLeftWidth: 3, borderLeftColor: colors.note }]}>
+    <View style={styles.item}>
+      <Stripe color={colors.note} />
       <By a={a} />
-      <Pressable accessibilityRole="button" onPress={() => open(a.id, true)} style={styles.note}>
+      <Pressable accessibilityRole="button" onPress={() => open(a.id, true)} style={(st) => [styles.note, pressed(st)]}>
         <Text style={styles.q}>“</Text>
         <Text style={styles.noteT} maxFontSizeMultiplier={type.body.max}>
           {a.text}
@@ -127,9 +141,14 @@ export function NoteCard({ a }: { a: Article }) {
 
 export function DeepCard({ a }: { a: Article }) {
   return (
-    <View style={[styles.item, { borderLeftWidth: 3, borderLeftColor: colors.deep }]}>
+    <View style={styles.item}>
+      <Stripe color={colors.deep} />
       <By a={a} />
-      <Pressable accessibilityRole="link" accessibilityLabel={a.title} onPress={() => open(a.id)} style={styles.thumb}>
+      <Pressable
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        onPress={() => open(a.id)}
+        style={(st) => [styles.thumb, pressed(st)]}>
         <Poster a={a} img={`th${a.img}`} aspect={16 / 9} compact />
         <View style={styles.band}>
           <Text style={styles.bandT}>
@@ -137,7 +156,7 @@ export function DeepCard({ a }: { a: Article }) {
           </Text>
         </View>
       </Pressable>
-      <Pressable onPress={() => open(a.id)}>
+      <Pressable accessibilityRole="link" onPress={() => open(a.id)} style={pressed}>
         <Text style={styles.title}>{a.title}</Text>
         {a.lead ? <Text style={styles.lead}>{a.lead}</Text> : null}
       </Pressable>
@@ -158,6 +177,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.hairline,
   },
+  stripe: { position: 'absolute', left: 0, top: 0, bottom: 0, width: STRIPE },
   by: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   av: {
     width: 26,

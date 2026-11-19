@@ -1,19 +1,23 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/Icon';
 import { Page } from '@/components/Page';
 import { getFeed } from '@/lib/data';
+import { searchArticles } from '@/lib/format';
 import { t } from '@/i18n';
-import { colors, space } from '@theme';
+import { colors, feedback, space } from '@theme';
 
 export default function Search() {
   const insets = useSafeAreaInsets();
   const [q, setQ] = useState('');
   const feed = getFeed();
-  const hits = q.trim() ? feed.filter((a) => (a.title + a.tag + (a.text ?? '')).includes(q.trim())) : [];
+  const hits = searchArticles(feed, q);
+  const trends = [...feed].sort((a, b) => b.c - a.c).slice(0, 5);
+  const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const row = ({ pressed }: { pressed: boolean }) => [styles.row, pressed && { opacity: feedback.pressedOpacity }];
   // 下にあるタブの画面まで戻ってから記事を開く（タブの画面を重ねて作らない）
   const open = (id: string) => router.dismissTo({ pathname: '/article/[id]', params: { id } });
   return (
@@ -29,39 +33,58 @@ export default function Search() {
             placeholderTextColor={colors.muted}
             style={styles.input}
             returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+            // パソコンの Enter では、いちばん上の記事を開く
+            onSubmitEditing={() => Platform.OS === 'web' && hits[0] && open(hits[0].id)}
           />
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('common.back')}
-          onPress={() => router.back()}
-          style={styles.x}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={back} style={styles.x}>
           <Icon name="close" size={16} />
         </Pressable>
       </View>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.page, gap: 4 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
+        contentContainerStyle={{ padding: space.page, gap: 4 }}>
         {!q.trim() ? (
           <>
             <Text style={styles.h}>{t('search.trends')}</Text>
-            {[...feed]
-              .sort((a, b) => b.c - a.c)
-              .slice(0, 5)
-              .map((a) => (
-                <Pressable key={a.id} onPress={() => open(a.id)} style={styles.row}>
-                  <Text style={styles.tag}>{a.tag}</Text>
-                  <Text style={styles.sub}>{a.c}件の声</Text>
-                </Pressable>
-              ))}
+            {trends.map((a) => (
+              <Pressable key={a.id} accessibilityRole="link" onPress={() => open(a.id)} style={row}>
+                <Text style={styles.tag}>{a.tag}</Text>
+                <Text style={styles.title} numberOfLines={2}>
+                  {a.title}
+                </Text>
+                <Text style={styles.sub}>{t('search.voices', { n: a.c })}</Text>
+              </Pressable>
+            ))}
           </>
         ) : hits.length ? (
           hits.map((a) => (
-            <Pressable key={a.id} onPress={() => open(a.id)} style={styles.row}>
+            <Pressable key={a.id} accessibilityRole="link" onPress={() => open(a.id)} style={row}>
               <Text style={styles.title}>{a.title}</Text>
               <Text style={styles.sub}>{a.when.split(' · ')[0]}</Text>
             </Pressable>
           ))
         ) : (
-          <Text style={styles.sub}>{t('search.none', { q })}</Text>
+          // 見つからないときは、言い換えの例を出す（押すとその言葉で探す）
+          <View style={styles.none}>
+            <Text style={styles.noneT}>{t('search.none', { q: q.trim() })}</Text>
+            <Text style={styles.noneS}>{t('search.noneHint')}</Text>
+            <View style={styles.tries}>
+              {trends.slice(0, 3).map((a) => (
+                <Pressable
+                  key={a.id}
+                  accessibilityRole="button"
+                  onPress={() => setQ(a.tag.replace(/^#/, ''))}
+                  style={styles.try}>
+                  <Text style={styles.tag}>{a.tag}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
         )}
       </ScrollView>
     </Page>
@@ -94,4 +117,15 @@ const styles = StyleSheet.create({
   tag: { color: colors.tag, fontSize: 15, fontWeight: '600' },
   title: { color: colors.text, fontSize: 14, lineHeight: 20 },
   sub: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  none: { alignItems: 'center', paddingTop: 40, gap: 8 },
+  noneT: { color: colors.text, fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  noneS: { color: colors.muted, fontSize: 13, lineHeight: 20, textAlign: 'center' },
+  tries: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 6 },
+  try: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: colors.surface2,
+  },
 });

@@ -115,6 +115,7 @@ export type Notice = {
   text: string;
   q?: string;
   art?: string;
+  room?: string;
   at: string;
   unread?: boolean;
 };

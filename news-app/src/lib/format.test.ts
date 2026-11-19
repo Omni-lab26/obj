@@ -2,6 +2,8 @@ import type { Article, Comment } from './data/types';
 import {
   calcOut,
   calcSnap,
+  ago,
+  searchArticles,
   clampWidth,
   countComments,
   kfmt,
@@ -86,6 +88,35 @@ describe('format', () => {
     expect(clampWidth(300)).toBe(320);
     expect(clampWidth(393)).toBe(393);
     expect(clampWidth(800)).toBe(440);
+  });
+});
+
+describe('searchArticles', () => {
+  const a = (id: string, title: string, extra: Partial<Article> = {}): Article =>
+    ({ id, title, tag: '', tm: '', when: '', c: 0, r: 0, blocks: null, ...extra }) as Article;
+  const list = [
+    a('fomc', 'FOMCは利下げ', { tag: '#FOMC' }),
+    a('boj', '日銀は据え置き', { blocks: [{ t: 'p', x: '金利は0.75%のまま' }] }),
+  ];
+  it('ignores case and full-width letters', () => {
+    expect(searchArticles(list, 'fomc').map((x) => x.id)).toEqual(['fomc']);
+    expect(searchArticles(list, 'ＦＯＭＣ').map((x) => x.id)).toEqual(['fomc']);
+  });
+  it('needs every word, and searches the body', () => {
+    expect(searchArticles(list, '日銀 金利').map((x) => x.id)).toEqual(['boj']);
+    expect(searchArticles(list, '日銀 FOMC')).toEqual([]);
+    expect(searchArticles(list, '   ')).toEqual([]);
+  });
+});
+
+describe('ago', () => {
+  it('steps from minutes to hours to days', () => {
+    expect(ago(59)).toMatch(/59/);
+    expect(ago(60)).toMatch(/1/);
+    expect(ago(1439)).toMatch(/23/);
+    expect(ago(1440)).toMatch(/1/);
+    expect(ago(1440)).not.toMatch(/24/);
+    expect(ago(4320)).toMatch(/3/);
   });
 });
 

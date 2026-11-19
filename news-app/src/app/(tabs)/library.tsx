@@ -1,21 +1,24 @@
-import { router } from 'expo-router';
+import { router, useScrollToTop } from 'expo-router';
+import { useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Icon } from '@/components/Icon';
 import { Page } from '@/components/Page';
 import { Poster } from '@/components/Poster';
+import { StatusFade } from '@/components/StatusFade';
 import { useShrinkOnScroll } from '@/hooks/useTabBar';
-import { getFeed, getGenres, isSaved, useDataVersion } from '@/lib/data';
+import { getFeed, getGenreLead, getGenres, isSaved, useDataVersion } from '@/lib/data';
 import { t } from '@/i18n';
-import { colors, space } from '@theme';
+import { colors, feedback, space } from '@theme';
 
 // ライブラリ。ページ左上の題名と説明は出さない（オーナー指定）。
 export default function Library() {
   useDataVersion();
   const insets = useSafeAreaInsets();
   const onScroll = useShrinkOnScroll();
+  const ref = useRef<React.ComponentRef<typeof Animated.ScrollView>>(null);
+  useScrollToTop(ref);
   const feed = getFeed().filter((a) => a.type !== 'note');
   const saved = getFeed().filter((a) => isSaved(a.id));
   const open = (id: string) => router.push({ pathname: '/article/[id]', params: { id } });
@@ -23,6 +26,7 @@ export default function Library() {
   return (
     <Page>
       <Animated.ScrollView
+        ref={ref}
         onScroll={onScroll}
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 130 }}
@@ -30,9 +34,10 @@ export default function Library() {
         <Sec title={t('library.genres')} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
           {getGenres().map((g) => {
-            const a = feed.find((x) => g.ids?.includes(x.id)) ?? feed[0];
+            // ジャンルの画面ができるまでは、そのジャンルの代表の記事を開く
+            const a = getGenreLead(g) ?? feed[0];
             return (
-              <Pressable key={g.name} style={styles.genre} onPress={() => a && open(a.id)}>
+              <Pressable key={g.name} style={pressedStyle(styles.genre)} onPress={() => open(a.id)}>
                 <Poster a={{ ...a, tag: g.name }} img={`sq${g.img}`} compact style={styles.genreImg} />
                 <Text style={styles.genreT}>{g.name}</Text>
               </Pressable>
@@ -43,7 +48,7 @@ export default function Library() {
         <Sec title={t('library.latest')} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
           {feed.slice(0, 6).map((a) => (
-            <Pressable key={a.id} style={styles.big} onPress={() => open(a.id)}>
+            <Pressable key={a.id} style={pressedStyle(styles.big)} onPress={() => open(a.id)}>
               <Poster a={a} img={`sq${a.img}`} />
               <View style={{ padding: 10 }}>
                 <Text style={styles.small}>{a.when.split(' · ')[0]}</Text>
@@ -56,9 +61,10 @@ export default function Library() {
         </ScrollView>
 
         <Sec title={t('library.saved')} />
+        {saved.length ? null : <Text style={styles.empty}>{t('library.savedEmpty')}</Text>}
         <View style={styles.grid}>
           {saved.map((a) => (
-            <Pressable key={a.id} style={styles.cell} onPress={() => open(a.id)}>
+            <Pressable key={a.id} style={pressedStyle(styles.cell)} onPress={() => open(a.id)}>
               <Poster a={a} img={`th${a.img}`} aspect={16 / 10} compact style={{ borderRadius: 12 }} />
               <Text style={styles.cellT} numberOfLines={2}>
                 {a.title}
@@ -67,15 +73,22 @@ export default function Library() {
           ))}
         </View>
       </Animated.ScrollView>
+      <StatusFade />
     </Page>
   );
 }
 
+const pressedStyle =
+  <T,>(base: T) =>
+  ({ pressed }: { pressed: boolean }) => [base, pressed && { opacity: feedback.pressedOpacity }];
+
+// 見出し。「すべて見る」の画面ができるまでは › を出さない（押せそうで押せない印を残さない）
 function Sec({ title }: { title: string }) {
   return (
     <View style={styles.sec}>
-      <Text style={styles.secT}>{title}</Text>
-      <Icon name="next" size={16} color={colors.muted} />
+      <Text style={styles.secT} accessibilityRole="header">
+        {title}
+      </Text>
     </View>
   );
 }
@@ -100,4 +113,5 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: space.page },
   cell: { width: '47%' },
   cellT: { color: colors.text, fontSize: 12.5, lineHeight: 18, marginTop: 6 },
+  empty: { color: colors.muted, fontSize: 13, lineHeight: 20, paddingHorizontal: space.page },
 });

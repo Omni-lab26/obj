@@ -18,9 +18,14 @@ export function TopBar({ children }: { children: ReactNode }) {
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { height: h + FADE }]}>
       {Platform.OS === 'ios' ? <BlurView intensity={24} tint="dark" style={[styles.blur, { height: h }]} /> : null}
+      {/* ぼかしのない Android とブラウザでは、題名が透けないよう濃いめにする（下の端はぼかしたまま） */}
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(17,18,20,0.86)', 'rgba(17,18,20,0.62)', 'rgba(17,18,20,0)']}
+        colors={
+          Platform.OS === 'ios'
+            ? ['rgba(17,18,20,0.86)', 'rgba(17,18,20,0.62)', 'rgba(17,18,20,0)']
+            : ['rgba(17,18,20,0.97)', 'rgba(17,18,20,0.92)', 'rgba(17,18,20,0)']
+        }
         locations={[0, (h * 0.8) / (h + FADE), 1]}
         style={StyleSheet.absoluteFill}
       />

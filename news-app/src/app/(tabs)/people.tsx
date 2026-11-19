@@ -1,27 +1,36 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useScrollToTop } from 'expo-router';
+import { useRef } from 'react';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Face } from '@/components/Face';
 import { Icon } from '@/components/Icon';
 import { Page } from '@/components/Page';
+import { StatusFade } from '@/components/StatusFade';
 import { useShrinkOnScroll } from '@/hooks/useTabBar';
 import { getPosts, roleOf } from '@/lib/data';
 import { ago, kfmt } from '@/lib/format';
-import { colors, fonts, space } from '@theme';
+import { t } from '@/i18n';
+import { colors, feedback, fonts, space } from '@theme';
 
 // みんなの投稿。ページ左上の題名と説明は出さない（オーナー指定）。
 export default function People() {
   const insets = useSafeAreaInsets();
   const onScroll = useShrinkOnScroll();
+  const ref = useRef<React.ComponentRef<typeof Animated.ScrollView>>(null);
+  useScrollToTop(ref);
+  const posts = getPosts();
   return (
     <Page>
       <Animated.ScrollView
+        ref={ref}
         onScroll={onScroll}
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 130 }}
         showsVerticalScrollIndicator={false}>
-        {getPosts().map((p) => (
+        {posts.length ? null : <Text style={styles.empty}>{t('people.empty')}</Text>}
+        {posts.map((p) => (
           <View key={p.id} style={styles.post}>
             <View style={styles.by}>
               <Face who={p.who} size={34} />
@@ -34,12 +43,15 @@ export default function People() {
             </View>
             <Text style={styles.t}>{p.t}</Text>
             {p.link ? (
-              <View style={styles.link}>
+              <Pressable
+                accessibilityRole="link"
+                onPress={() => p.link && Linking.openURL(`https://${p.link.dom}/`)}
+                style={({ pressed }) => [styles.link, pressed && { opacity: feedback.pressedOpacity }]}>
                 <Icon name="link" size={14} color={colors.muted} />
                 <Text style={styles.linkT} numberOfLines={1}>
                   {p.link.title} · {p.link.dom}
                 </Text>
-              </View>
+              </Pressable>
             ) : null}
             <View style={styles.acts}>
               <Text style={styles.tag}>{p.tag}</Text>
@@ -51,6 +63,7 @@ export default function People() {
           </View>
         ))}
       </Animated.ScrollView>
+      <StatusFade />
     </Page>
   );
 }
@@ -89,4 +102,5 @@ const styles = StyleSheet.create({
   tag: { color: colors.tag, fontSize: 12 },
   act: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   actT: { color: colors.faint, fontFamily: fonts.mono, fontSize: 12.5 },
+  empty: { color: colors.muted, fontSize: 13, padding: space.page },
 });

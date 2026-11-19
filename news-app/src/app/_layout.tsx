@@ -15,6 +15,9 @@ import { colors } from '@theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+// 検索やお知らせをリンクから直接開いても、下にタブの画面を置いて「戻る」が効くようにする
+export const unstable_settings = { anchor: '(tabs)' };
+
 // どこかの画面で思わぬエラーが起きたときの受け皿（アプリごと落とさない）
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   return (

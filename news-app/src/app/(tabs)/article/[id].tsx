@@ -194,18 +194,23 @@ function ArticleBody({ a, c }: { a: Article; c?: string }) {
             {k !== 'note' ? (
               <View style={{ marginTop: 10 }}>
                 <Text style={styles.relH}>{t('article.related')}</Text>
+                {/* 横の並びは画面の端まで流す（本文の余白で途中が切れないように） */}
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   snapToInterval={192}
                   decelerationRate="fast"
-                  contentContainerStyle={{ gap: 12 }}>
+                  style={{ marginHorizontal: -space.article }}
+                  contentContainerStyle={{ gap: 12, paddingHorizontal: space.article }}>
                   {getRelated(a.id).map((r) => (
                     <Pressable
                       key={r.id}
                       onPress={() => router.replace({ pathname: '/article/[id]', params: { id: r.id } })}
                       style={styles.rel}>
                       <Poster a={r} img={`sq${r.img}`} aspect={4 / 3} compact />
+                      <Text style={styles.relM} numberOfLines={1}>
+                        {r.tm} · {r.tag}
+                      </Text>
                       <Text style={styles.relT} numberOfLines={3}>
                         {r.title}
                       </Text>
@@ -403,7 +408,8 @@ const styles = StyleSheet.create({
   noteT: { color: colors.text, fontSize: 17, lineHeight: 29, fontWeight: '500' },
   relH: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '700', marginBottom: 10, letterSpacing: 0.5 },
   rel: { width: 180, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.surface },
-  relT: { color: colors.text, fontSize: 12.5, lineHeight: 18, padding: 10 },
+  relM: { color: colors.muted, fontSize: 11, paddingHorizontal: 10, paddingTop: 8 },
+  relT: { color: colors.text, fontSize: 12.5, lineHeight: 18, paddingHorizontal: 10, paddingTop: 2, paddingBottom: 10 },
   sample: { color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 4 },
   topBtns: { position: 'absolute', left: 14, right: 14, flexDirection: 'row', justifyContent: 'space-between' },
   closeIn: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },

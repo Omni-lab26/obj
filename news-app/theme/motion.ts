@@ -7,5 +7,8 @@ export const motion = {
   press: 120,
 } as const;
 
+// 押したときの見た目（押した瞬間に少し薄くして、反応したことを伝える）
+export const feedback = { pressedOpacity: 0.7 } as const;
+
 // スクロールでタブを小さくする判定（px）
 export const scrollRules = { topZone: 40, downStep: 6, upStep: 10 } as const;

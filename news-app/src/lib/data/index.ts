@@ -6,7 +6,7 @@ import demo from './demo.json';
 import type { CommentSort } from '../format';
 import type { Article, Comment, Genre, Notice, Room, UserPost } from './types';
 
-const articles = demo.articles as unknown as Article[];
+const articles = (demo.articles as unknown as Article[]).map(withVideo);
 const posts = demo.posts as unknown as UserPost[];
 const rooms = demo.rooms as unknown as Room[];
 const notices = demo.notifications as unknown as Notice[];
@@ -15,6 +15,12 @@ const roles = demo.roles as Record<string, string>;
 const bios = demo.bios as Record<string, string>;
 const faces = demo.faces as Record<string, number>;
 
+// YouTube の解説がある記事は、記事の上にも同じ動画を置く（2026-11-05 オーナー決定）
+function withVideo(a: Article): Article {
+  if (!a.vlen || !a.blocks || a.blocks.some((b) => b.t === 'video')) return a;
+  return { ...a, blocks: [{ t: 'video', len: a.vlen, title: a.title, img: a.img }, ...a.blocks] };
+}
+
 // ---- 変わる値（保存・コメント・投票）は小さな入れ物に入れ、変わったら画面に知らせる
 type State = {
   saved: Set<string>;
@@ -22,6 +28,7 @@ type State = {
   discussions: Record<string, Comment[]>;
   liked: Set<number>;
   commentSort: CommentSort; // コメントの並び順は、その人の好み（記事をまたいで覚えておく）
+  noticesRead: boolean; // お知らせを開いたら、すべて既読にする
 };
 let cid = 1000;
 const C = (who: string, t: string, up: number, min: number, kids: Comment[] = []): Comment => ({
@@ -38,6 +45,7 @@ const state: State = {
   discussions: JSON.parse(JSON.stringify(demo.discussions)) as Record<string, Comment[]>,
   liked: new Set(),
   commentSort: 'top',
+  noticesRead: false,
 };
 let version = 0;
 const listeners = new Set<() => void>();
@@ -60,11 +68,33 @@ export const useDataVersion = () =>
 // ---- 読む
 export const getFeed = (): Article[] => articles;
 export const getArticle = (id: string): Article | undefined => articles.find((a) => a.id === id);
-export const getRelated = (id: string, n = 4): Article[] =>
-  articles.filter((a) => a.id !== id && a.type !== 'note').slice(0, n);
+const genresOf = (id: string) => genres.filter((g) => g.ids?.includes(id)).map((g) => g.name);
+/** あわせて読みたい：同じジャンルが多い順（同じなら新しい順）。ひとことと本文がまだの記事は出さない */
+export const getRelated = (id: string, n = 4): Article[] => {
+  const mine = genresOf(id);
+  return articles
+    .filter((a) => a.id !== id && a.type !== 'note' && !a.placeholder)
+    .map((a, i) => ({ a, i, score: genresOf(a.id).filter((g) => mine.includes(g)).length }))
+    .sort((x, y) => y.score - x.score || x.i - y.i)
+    .slice(0, n)
+    .map((x) => x.a);
+};
+/** ジャンルの入口に出す記事：そのジャンルの並びで、本文がある記事を先に */
+export const getGenreLead = (g: Genre): Article | undefined => {
+  const list = (g.ids ?? [])
+    .map((id) => articles.find((a) => a.id === id))
+    .filter((a): a is Article => !!a && a.type !== 'note');
+  return list.find((a) => !a.placeholder) ?? list[0];
+};
+/** 記事の YouTube の長さ（記事の上の動画から。なければ一覧用の値） */
+export const videoLen = (a: Article): string | undefined => {
+  const v = (a.blocks ?? []).find((b) => b.t === 'video');
+  return (v?.t === 'video' ? v.len : undefined) ?? a.vlen;
+};
 export const getPosts = (): UserPost[] => posts;
 export const getRooms = (): Room[] => rooms;
-export const getNotices = (): Notice[] => notices;
+export const getNotices = (): Notice[] => (state.noticesRead ? notices.map((n) => ({ ...n, unread: false })) : notices);
+export const hasUnreadNotices = (): boolean => getNotices().some((n) => n.unread);
 export const getGenres = (): Genre[] => genres;
 export const roleOf = (who: string): string => roles[who] ?? '';
 export const bioOf = (who: string): string => bios[who] ?? '';
@@ -98,6 +128,11 @@ export const vote = (pollId: string, i: number) => {
 export const toggleLike = (commentId: number) => {
   if (state.liked.has(commentId)) state.liked.delete(commentId);
   else state.liked.add(commentId);
+  emit();
+};
+export const markNoticesRead = () => {
+  if (state.noticesRead) return;
+  state.noticesRead = true;
   emit();
 };
 export const setCommentSort = (by: CommentSort) => {

@@ -33,6 +33,19 @@ export const sortComments = (
     .map((c) => ({ ...c, kids: sortComments(c.kids, by, liked) }));
 };
 
+// 検索：全角・半角や大文字・小文字の違いをならし、空白で区切った言葉がすべて入っている記事を返す。
+// 題名・タグ・ラベル・リード・ひとこと・本文（段落と見出し）を探す
+const fold = (s: string) => (typeof s.normalize === 'function' ? s.normalize('NFKC') : s).toLowerCase();
+export const searchArticles = (list: Article[], q: string): Article[] => {
+  const terms = fold(q).split(/\s+/).filter(Boolean);
+  if (!terms.length) return [];
+  return list.filter((a) => {
+    const body = (a.blocks ?? []).map((b) => (b.t === 'p' || b.t === 'h' ? b.x : '')).join(' ');
+    const hay = fold([a.title, a.tag, a.lab ?? '', a.lead ?? '', a.text ?? '', body].join(' '));
+    return terms.every((w) => hay.includes(w));
+  });
+};
+
 // 何分前・何時間前・何日前（文言は翻訳ファイルから）
 export const ago = (min: number): string =>
   min <= 0

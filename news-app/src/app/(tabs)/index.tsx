@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useScrollToTop } from 'expo-router';
+import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -8,25 +8,29 @@ import { FeedCard } from '@/components/FeedCards';
 import { Icon } from '@/components/Icon';
 import { Mark } from '@/components/Mark';
 import { Page } from '@/components/Page';
+import { toast } from '@/components/Toast';
 import { TopBar, useTopInset } from '@/components/TopBar';
 import { useShrinkOnScroll } from '@/hooks/useTabBar';
-import { getFeed, getNotices } from '@/lib/data';
+import { getFeed, hasUnreadNotices, useDataVersion } from '@/lib/data';
 import { kindOf } from '@/lib/format';
 import { t } from '@/i18n';
-import { colors, space } from '@theme';
+import { colors, feedback, space } from '@theme';
 
 type Chip = 'latest' | 'slot' | 'breaking' | 'note' | 'deep' | 'hot';
 const CHIPS: Chip[] = ['latest', 'slot', 'breaking', 'note', 'deep', 'hot'];
 const chipLabel = (c: Chip) => (c === 'latest' ? t('chips.latest') : c === 'hot' ? t('chips.hot') : t(`kind.${c}`));
 
 export default function Home() {
+  useDataVersion();
   const top = useTopInset();
+  const ref = useRef<React.ComponentRef<typeof Animated.ScrollView>>(null);
+  useScrollToTop(ref);
   const onScroll = useShrinkOnScroll();
   const [chip, setChip] = useState<Chip>('latest');
   const [brkClosed, setBrkClosed] = useState(false);
   const feed = getFeed();
   const breaking = feed.find((a) => a.brk);
-  const unread = getNotices().some((n) => n.unread);
+  const unread = hasUnreadNotices();
 
   const list = (() => {
     if (chip === 'latest') return feed.slice(0, 8);
@@ -37,6 +41,7 @@ export default function Home() {
   return (
     <Page>
       <Animated.ScrollView
+        ref={ref}
         onScroll={onScroll}
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingTop: top, paddingBottom: 130 }}
@@ -46,7 +51,7 @@ export default function Home() {
             <Pressable
               accessibilityRole="button"
               onPress={() => router.push({ pathname: '/article/[id]', params: { id: breaking.id, c: '1' } })}
-              style={styles.brk}>
+              style={({ pressed }) => [styles.brk, pressed && styles.pressed]}>
               <View style={styles.pulse} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.brkK}>
@@ -77,8 +82,10 @@ export default function Home() {
               accessibilityRole="button"
               accessibilityState={{ selected: chip === c }}
               onPress={() => setChip(c)}
-              style={[styles.chip, chip === c && styles.chipOn]}>
-              <Text style={[styles.chipT, chip === c && styles.chipTOn]}>{chipLabel(c)}</Text>
+              style={styles.chipHit}>
+              <View style={[styles.chip, chip === c && styles.chipOn]}>
+                <Text style={[styles.chipT, chip === c && styles.chipTOn]}>{chipLabel(c)}</Text>
+              </View>
             </Pressable>
           ))}
         </ScrollView>
@@ -91,16 +98,22 @@ export default function Home() {
       </Animated.ScrollView>
 
       <TopBar>
-        <View style={styles.me} accessibilityLabel="プロフィール">
+        {/* プロフィールの画面はまだないので、押したら「次の段階で作ります」と伝える */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('home.profile')}
+          hitSlop={6}
+          onPress={() => toast(t('common.soon'))}
+          style={({ pressed }) => [styles.me, pressed && styles.pressed]}>
           <Face who="あなた" size={30} />
-        </View>
+        </Pressable>
         <View style={styles.wm}>
           <Mark height={15} />
           <Text style={styles.wmT}>Orchard</Text>
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('notice.title')}
+          accessibilityLabel={unread ? t('home.bellUnread') : t('notice.title')}
           hitSlop={8}
           onPress={() => router.push('/notifications')}
           style={styles.bell}>
@@ -140,7 +153,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chips: { gap: 8, paddingHorizontal: space.page, paddingTop: 8, paddingBottom: 4 },
+  chips: { gap: 4, paddingHorizontal: space.page - 2, paddingTop: 2 },
+  chipHit: { minHeight: 44, paddingHorizontal: 2, justifyContent: 'center' },
   chip: { paddingHorizontal: 13, paddingVertical: 9, borderRadius: 999, backgroundColor: colors.surface2 },
   chipOn: { backgroundColor: colors.white },
   chipT: { color: '#D7D8DC', fontSize: 11.5, fontWeight: '600' },
@@ -159,5 +173,7 @@ const styles = StyleSheet.create({
   wm: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   wmT: { color: colors.text, fontSize: 18, fontWeight: '700' },
   bell: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
-  dot: { position: 'absolute', top: 6, right: 7, width: 7, height: 7, borderRadius: 4, backgroundColor: colors.alert },
+  // 未読の点はオレンジ（赤は速報だけ。design.md）
+  dot: { position: 'absolute', top: 6, right: 7, width: 7, height: 7, borderRadius: 4, backgroundColor: colors.accent },
+  pressed: { opacity: feedback.pressedOpacity },
 });
