@@ -16,7 +16,7 @@ export function TabBarProvider({ children }: { children: ReactNode }) {
 
 export const useTabBar = () => {
   const c = useContext(TabBarCtx);
-  if (!c) throw new Error('TabBarProvider がありません');
+  if (!c) throw new Error('useTabBar must be used inside TabBarProvider');
   return c;
 };
 

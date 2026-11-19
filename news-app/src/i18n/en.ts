@@ -89,6 +89,7 @@ export const en: Dict = {
     swapTo: 'Dollars you get (¥{rate} per dollar)',
     swapNote: 'Fees not included · Estimate',
     manYen: '¥{n}0k',
+    yen: '¥{n}',
     figure: 'Figure',
     photo: 'Article photo',
     video: 'YouTube explainer · {len}',

@@ -6,6 +6,7 @@
 // - 第三者の作品なので、リポジトリ（公開）には入れない。assets/ref/ と生成物は .gitignore 済み
 // - 画像がないときは空の表を作り、アプリは文字組みのサムネで表示する
 // - npm install のあと（postinstall）と、npm start / verify の前に自動で動く
+// - `--off` を付けると空の表を作る（公開用の Web 書き出し `npm run export:web` で使う。他の人の画像を入れない）
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -13,11 +14,13 @@ const ROOT = process.cwd();
 const DIR = resolve(ROOT, 'assets/ref');
 const OUT = resolve(ROOT, 'src/lib/data/refImages.generated.ts');
 
-const files = existsSync(DIR)
-  ? readdirSync(DIR)
-      .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
-      .sort()
-  : [];
+const off = process.argv.includes('--off');
+const files =
+  !off && existsSync(DIR)
+    ? readdirSync(DIR)
+        .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
+        .sort()
+    : [];
 
 const lines = files.map((f) => `  '${f.replace(/\.\w+$/, '')}': require('../../../assets/ref/${f}'),`);
 const body = `// 自動で作るファイル（scripts/gen-ref-images.mjs）。手で直さない。リポジトリに入れない。
@@ -28,5 +31,7 @@ ${lines.join('\n')}
 mkdirSync(resolve(ROOT, 'src/lib/data'), { recursive: true });
 writeFileSync(OUT, body);
 console.log(
-  `見本の画像：${files.length} 枚（${files.length ? 'assets/ref/' : '画像なし。文字組みのサムネで表示します'}）`
+  off
+    ? '見本の画像：入れません（公開用）'
+    : `見本の画像：${files.length} 枚（${files.length ? 'assets/ref/' : '画像なし。文字組みのサムネで表示します'}）`
 );

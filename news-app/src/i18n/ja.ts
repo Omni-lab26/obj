@@ -87,6 +87,7 @@ export const ja = {
     swapTo: '受け取れるドル（1ドル {rate}円）',
     swapNote: '手数料は入っていません · 目安です',
     manYen: '{n}万円',
+    yen: '{n}円',
     figure: '図',
     photo: '記事の写真',
     video: 'YouTube の解説 · {len}',

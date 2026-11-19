@@ -7,5 +7,3 @@ news-app/mock/ref/
 # ワイヤーの撮影（参考画像が写るので入れない）
 news-app/mock/*.png
 
-# lefthook install が自動で作る見本（中身はコメントだけ）。設定は news-app/lefthook.yml
-/lefthook.yml

@@ -1,0 +1,17 @@
+# コミット前に整形・lint・型チェックを自動で実行する（アプリは news-app/ の中）。
+# 入れ方：cd news-app && npx lefthook install
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      root: 'news-app/'
+      glob: '*.{js,jsx,ts,tsx,json,md,css,yml}'
+      run: npx prettier --check --ignore-unknown {staged_files}
+    lint:
+      root: 'news-app/'
+      glob: '*.{js,jsx,ts,tsx}'
+      run: npx eslint {staged_files}
+    typecheck:
+      root: 'news-app/'
+      glob: '*.{ts,tsx}'
+      run: npx tsc --noEmit

@@ -1,3 +1,21 @@
+# Orchard（コード名：news-app）
+
+経済のニュースに、みんながコメントして議論するアプリ。YouTube の解説動画から記事に来て、より深く読み、話す。
+
+```bash
+cd news-app
+npm install
+npm run live        # 開発サーバー（8093番）。スマホの Expo Go で QR を読む
+```
+
+- 同じ Wi-Fi でないとき：`npm run live:tunnel`、ブラウザ：`npm run live:web`
+- 仕様：`docs/brief.md`・`docs/screens.md`・`docs/design.md`・`docs/data-model.md`。AI 向けのルール：`CLAUDE.md`
+- 途中経過：`notes/`
+
+以下は、このリポジトリを始めたときのテンプレートの説明です。
+
+---
+
 # アプリ立ち上げテンプレート
 
 Evently・Pawroom・Inchly・Lento の4本の振り返りから作った、新しいアプリの始め方です。

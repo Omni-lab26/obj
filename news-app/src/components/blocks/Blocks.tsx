@@ -368,8 +368,10 @@ function Calc({ b }: { b: Extract<Block, { t: 'calc' }> }) {
             accessibilityRole="button"
             accessibilityLabel={dir < 0 ? t('blocks.decrease') : t('blocks.increase')}
             onPress={() => {
+              const next = calcSnap(v + dir * step, b.min, b.max, step);
+              if (next === v) return; // 端まで来たら何もしない（震わせない）
               Haptics.selectionAsync().catch(() => {});
-              bump(dir);
+              setV(next);
             }}
             // 押し続けると続けて変わる
             delayLongPress={350}

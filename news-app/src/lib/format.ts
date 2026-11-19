@@ -103,9 +103,10 @@ export const calcSnap = (v: number, min: number, max: number, step: number): num
 
 /** 結果の文字を返す。増える額には「+」を付ける */
 export const calcOut = (kind: CalcKind, v: number): { main: string; sub?: string } => {
-  const yen = (n: number) => Math.round(n).toLocaleString('ja-JP');
-  if (kind === 'fx') return { main: `$${yen((v * 10000) / CALC.fx.rate)}`, sub: `$${yen((v * 10000) / CALC.fx.alt)}` };
-  if (kind === 'rice') return { main: `+${yen(v * CALC.rice.diff * 12)}円` };
+  const yen = (n: number) => t('blocks.yen', { n: Math.round(n).toLocaleString('ja-JP') });
+  const usd = (n: number) => `$${Math.round(n).toLocaleString('ja-JP')}`;
+  if (kind === 'fx') return { main: usd((v * 10000) / CALC.fx.rate), sub: usd((v * 10000) / CALC.fx.alt) };
+  if (kind === 'rice') return { main: `+${yen(v * CALC.rice.diff * 12)}` };
   if (kind === 'loan') {
     const n = CALC.loan.years * 12;
     const pay = (P: number, rate: number) => {
@@ -113,8 +114,8 @@ export const calcOut = (kind: CalcKind, v: number): { main: string; sub?: string
       return (P * i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
     };
     const P = v * 10000;
-    return { main: `+${yen(pay(P, CALC.loan.to) - pay(P, CALC.loan.from))}円` };
+    return { main: `+${yen(pay(P, CALC.loan.to) - pay(P, CALC.loan.from))}` };
   }
   // 電気代は 10円単位の目安にする（見出しの「+300円」とそろう）
-  return { main: `+${yen(Math.round((v * CALC.power.perKwh) / 10) * 10)}円` };
+  return { main: `+${yen(Math.round((v * CALC.power.perKwh) / 10) * 10)}` };
 };

@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -10,6 +11,7 @@ import { colors, feedback, fonts, radius, space, type } from '@theme';
 import { Icon } from './Icon';
 import { Mark } from './Mark';
 import { Poster } from './Poster';
+import { toast } from './Toast';
 
 const KIND_STYLE = {
   slot: { bg: 'rgba(255,255,255,0.1)', fg: '#E6E6E8', line: undefined },
@@ -26,6 +28,13 @@ function Stripe({ color }: { color?: string }) {
   if (!color) return null;
   return <View pointerEvents="none" style={[styles.stripe, { backgroundColor: color }]} />;
 }
+
+/** 保存は手ごたえ（成功の振動）と知らせで伝える（design.md） */
+export const onSave = (id: string) => {
+  const on = toggleSave(id);
+  if (on) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  toast(on ? t('article.saved') : t('article.unsaved'));
+};
 
 const open = (id: string, comments?: boolean) =>
   router.push({ pathname: '/article/[id]', params: comments ? { id, c: '1' } : { id } });
@@ -64,7 +73,7 @@ function Acts({ a, go, onGo }: { a: Article; go: string; onGo: () => void }) {
         accessibilityLabel={t('article.save')}
         accessibilityState={{ selected: saved }}
         hitSlop={8}
-        onPress={() => toggleSave(a.id)}
+        onPress={() => onSave(a.id)}
         style={(st) => [styles.act, pressed(st)]}>
         <Icon
           name={saved ? 'saved' : 'save'}

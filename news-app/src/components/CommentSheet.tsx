@@ -82,7 +82,7 @@ function Item({ c, depth, onReply }: { c: Comment; depth: number; onReply: (to: 
             accessibilityLabel={t('comments.like', { n: ups })}
             accessibilityState={{ selected: liked }}
             onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
               toggleLike(c.id);
             }}
             style={styles.act}>

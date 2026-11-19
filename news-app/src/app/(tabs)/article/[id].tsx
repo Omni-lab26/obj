@@ -7,6 +7,7 @@ import Animated, {
   useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
+  useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -15,6 +16,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { BlockView, FigureCtx } from '@/components/blocks/Blocks';
 import { CommentSheet, type BarGeo } from '@/components/CommentSheet';
+import { onSave } from '@/components/FeedCards';
 import { ErrorView } from '@/components/ErrorView';
 import { Glass } from '@/components/Glass';
 import { Icon } from '@/components/Icon';
@@ -23,7 +25,7 @@ import { Poster } from '@/components/Poster';
 import { toast } from '@/components/Toast';
 import { useScreen } from '@/hooks/useScreen';
 import { useShrinkOnScroll, useTabBar } from '@/hooks/useTabBar';
-import { getArticle, getComments, getRelated, isSaved, toggleSave, useDataVersion } from '@/lib/data';
+import { getArticle, getComments, getRelated, isSaved, useDataVersion } from '@/lib/data';
 import type { Article } from '@/lib/data/types';
 import { countComments, kindOf, readingMinutes, sortComments } from '@/lib/format';
 import { t } from '@/i18n';
@@ -68,22 +70,29 @@ function ArticleBody({ a, c }: { a: Article; c?: string }) {
   const autoOpen = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const underOverlay = useRef(false);
   const miniP = useDerivedValue(() => withTiming(mini.get(), { duration: motion.tabShrink }));
+  // 端末で「動きを減らす」がオンのときは、ふくらむ動きをせず、そのまま出し入れする
+  const reduce = useReducedMotion();
 
   const openSheet = useCallback(() => {
     setSheet(true);
     hidden.set(1);
-    open.set(withTiming(1, { duration: motion.morph }));
-  }, [hidden, open]);
+    open.set(reduce ? 1 : withTiming(1, { duration: motion.morph }));
+  }, [hidden, open, reduce]);
   // 閉じ終わったときにだけ外す（途中で開き直したら、そのまま開いておく）
   const closeSheet = useCallback(() => {
     hidden.set(0);
     setQuote(null);
+    if (reduce) {
+      open.set(0);
+      setSheet(false);
+      return;
+    }
     open.set(
       withTiming(0, { duration: motion.morph - 60 }, (done) => {
         if (done) scheduleOnRN(setSheet, false);
       })
     );
-  }, [hidden, open]);
+  }, [hidden, open, reduce]);
 
   // 開いたときは、タブを全部出して一番上から。「議論をのぞく」から来たら、コメント欄も開く。
   // 検索など上に重なる画面から戻ったときは、読んでいた位置とコメント欄をそのままにする。
@@ -176,7 +185,7 @@ function ArticleBody({ a, c }: { a: Article; c?: string }) {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('article.save')}
-              onPress={() => toast(toggleSave(a.id) ? t('article.saved') : t('article.unsaved'))}
+              onPress={() => onSave(a.id)}
               style={[styles.round, saved && styles.roundOn]}>
               <Icon name={saved ? 'saved' : 'save'} size={18} color={saved ? '#111' : colors.text} />
             </Pressable>

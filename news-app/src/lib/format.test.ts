@@ -131,8 +131,9 @@ describe('calcSnap', () => {
 
 describe('calcOut', () => {
   it('power and rice', () => {
-    expect(calcOut('power', 260).main).toBe('+300円');
-    expect(calcOut('rice', 4).main).toBe('+34,560円');
+    // 通貨の書き方（300円 / ¥300）は端末の言語で変わるので、数字だけを見る
+    expect(calcOut('power', 260).main).toMatch(/^\+\D*300\D*$/);
+    expect(calcOut('rice', 4).main).toMatch(/^\+\D*34,560\D*$/);
   });
   it('loan: 0.25% more on 40M yen over 35 years is about 5,000 yen a month', () => {
     const v = Number(calcOut('loan', 4000).main.replace(/[^\d]/g, ''));

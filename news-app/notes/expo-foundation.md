@@ -15,8 +15,9 @@ npm run live
 - `npm run live:web`：ブラウザで開く
 
 - スマホに **Expo Go**（SDK 58 に対応した最新版）を入れ、表示された QR コードを読む
-- PC とスマホは同じ Wi-Fi に。つながらないときは `npx expo start --tunnel`
-- ブラウザで見るときは `npx expo start --web`
+- PC とスマホは同じ Wi-Fi に。つながらないときは `npm run live:tunnel`
+- ブラウザで見るときは `npm run live:web`
+- 公開用に Web を書き出すときは `npm run export:web`（見本の画像を入れない）
 
 ## 見本の画像（ワイヤーと同じ画像を使う）
 
